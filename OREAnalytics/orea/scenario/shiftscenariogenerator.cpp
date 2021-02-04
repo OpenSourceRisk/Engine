@@ -151,6 +151,15 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     }
 }
 
+std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ShiftType& shiftType) {
+    if (shiftType == ShiftScenarioGenerator::ShiftType::Absolute)
+        return out << "Absolute";
+    else if (shiftType == ShiftScenarioGenerator::ShiftType::Relative)
+        return out << "Relative";
+    else
+        QL_FAIL("Invalid ShiftType " << shiftType);
+}
+
 ostream& operator<<(ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription) {
     out << scenarioDescription.typeString();
     if (scenarioDescription.factor1() != "")

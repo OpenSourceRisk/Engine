@@ -20,7 +20,8 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
-#include <boost/serialization/export.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 using namespace QuantLib;
 using std::ostream;
@@ -29,25 +30,19 @@ using std::string;
 namespace ore {
 namespace data {
 
-bool operator==(const Expiry& lhs, const Expiry& rhs) {
-    return lhs.equal_to(rhs);
-}
+bool operator==(const Expiry& lhs, const Expiry& rhs) { return lhs.equal_to(rhs); }
+
+template <class Archive> void Expiry::serialize(Archive& ar, const unsigned int version) {}
 
 ExpiryDate::ExpiryDate() {}
 
 ExpiryDate::ExpiryDate(const Date& expiryDate) : expiryDate_(expiryDate) {}
 
-const Date& ExpiryDate::expiryDate() const {
-    return expiryDate_;
-}
+const Date& ExpiryDate::expiryDate() const { return expiryDate_; }
 
-void ExpiryDate::fromString(const string& strExpiryDate) {
-    expiryDate_ = parseDate(strExpiryDate);
-}
+void ExpiryDate::fromString(const string& strExpiryDate) { expiryDate_ = parseDate(strExpiryDate); }
 
-string ExpiryDate::toString() const {
-    return to_string(expiryDate_);
-}
+string ExpiryDate::toString() const { return to_string(expiryDate_); }
 
 bool ExpiryDate::equal_to(const Expiry& other) const {
     if (const ExpiryDate* p = dynamic_cast<const ExpiryDate*>(&other)) {
@@ -57,21 +52,20 @@ bool ExpiryDate::equal_to(const Expiry& other) const {
     }
 }
 
+template <class Archive> void ExpiryDate::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<Expiry>(*this);
+    ar& expiryDate_;
+}
+
 ExpiryPeriod::ExpiryPeriod() {}
 
 ExpiryPeriod::ExpiryPeriod(const Period& expiryPeriod) : expiryPeriod_(expiryPeriod) {}
 
-const Period& ExpiryPeriod::expiryPeriod() const {
-    return expiryPeriod_;
-}
+const Period& ExpiryPeriod::expiryPeriod() const { return expiryPeriod_; }
 
-void ExpiryPeriod::fromString(const string& strExpiryPeriod) {
-    expiryPeriod_ = parsePeriod(strExpiryPeriod);
-}
+void ExpiryPeriod::fromString(const string& strExpiryPeriod) { expiryPeriod_ = parsePeriod(strExpiryPeriod); }
 
-string ExpiryPeriod::toString() const {
-    return to_string(expiryPeriod_);
-}
+string ExpiryPeriod::toString() const { return to_string(expiryPeriod_); }
 
 bool ExpiryPeriod::equal_to(const Expiry& other) const {
     if (const ExpiryPeriod* p = dynamic_cast<const ExpiryPeriod*>(&other)) {
@@ -81,11 +75,14 @@ bool ExpiryPeriod::equal_to(const Expiry& other) const {
     }
 }
 
+template <class Archive> void ExpiryPeriod::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<Expiry>(*this);
+    ar& expiryPeriod_;
+}
+
 FutureContinuationExpiry::FutureContinuationExpiry(QuantLib::Natural expiryIndex) : expiryIndex_(expiryIndex) {}
 
-QuantLib::Natural FutureContinuationExpiry::expiryIndex() const {
-    return expiryIndex_;
-}
+QuantLib::Natural FutureContinuationExpiry::expiryIndex() const { return expiryIndex_; }
 
 void FutureContinuationExpiry::fromString(const string& strIndex) {
     QL_REQUIRE(strIndex.size() > 1, "Future continuation expiry must have at least 2 characters");
@@ -93,9 +90,7 @@ void FutureContinuationExpiry::fromString(const string& strIndex) {
     expiryIndex_ = parseInteger(strIndex.substr(1));
 }
 
-string FutureContinuationExpiry::toString() const {
-    return "c" + to_string(expiryIndex_);
-}
+string FutureContinuationExpiry::toString() const { return "c" + to_string(expiryIndex_); }
 
 bool FutureContinuationExpiry::equal_to(const Expiry& other) const {
     if (const FutureContinuationExpiry* p = dynamic_cast<const FutureContinuationExpiry*>(&other)) {
@@ -105,9 +100,12 @@ bool FutureContinuationExpiry::equal_to(const Expiry& other) const {
     }
 }
 
-ostream& operator<<(ostream& os, const Expiry& expiry) {
-    return os << expiry.toString();
+template <class Archive> void FutureContinuationExpiry::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<Expiry>(*this);
+    ar& expiryIndex_;
 }
+
+ostream& operator<<(ostream& os, const Expiry& expiry) { return os << expiry.toString(); }
 
 boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
 
@@ -130,9 +128,18 @@ boost::shared_ptr<Expiry> parseExpiry(const string& strExpiry) {
     }
 }
 
-}
-}
+template void Expiry::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void Expiry::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ExpiryDate::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ExpiryDate::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ExpiryPeriod::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ExpiryPeriod::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void FutureContinuationExpiry::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void FutureContinuationExpiry::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
 
-BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryDate, "ExpiryDate");
-BOOST_CLASS_EXPORT_GUID(ore::data::ExpiryPeriod, "ExpiryPeriod");
-BOOST_CLASS_EXPORT_GUID(ore::data::FutureContinuationExpiry, "FutureContinuationExpiry");
+} // namespace data
+} // namespace ore
+
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ExpiryDate);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ExpiryPeriod);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FutureContinuationExpiry);

@@ -31,14 +31,15 @@
 
 namespace ore {
 namespace data {
-using std::string;
-using std::vector;
+
 using ore::data::XMLNode;
-using QuantLib::Period;
+using QuantLib::BusinessDayConvention;
+using QuantLib::Calendar;
 using QuantLib::DayCounter;
 using QuantLib::Natural;
-using QuantLib::Calendar;
-using QuantLib::BusinessDayConvention;
+using QuantLib::Period;
+using std::string;
+using std::vector;
 
 //! Inflation CapFloor volatility curve configuration class
 /*! \ingroup configuration
@@ -54,11 +55,11 @@ public:
                                            const QuoteType& quoteType, const VolatilityType& volatilityType,
                                            const bool extrapolate, const vector<string>& tenors,
                                            const vector<string>& capStrikes, const vector<string>& floorStrikes,
-					   const vector<string>& strikes, const DayCounter& dayCounter,
+                                           const vector<string>& strikes, const DayCounter& dayCounter,
                                            Natural settleDays, const Calendar& calendar,
                                            const BusinessDayConvention& businessDayConvention, const string& index,
                                            const string& indexCurve, const string& yieldTermStructure,
-                                           const Period& observationLag);
+                                           const Period& observationLag, const std::string& quoteIndex = "");
 
     //! \name XMLSerializable interface
     //@{
@@ -85,6 +86,7 @@ public:
     const string& yieldTermStructure() const { return yieldTermStructure_; }
     const vector<string>& quotes() override;
     const Period& observationLag() const { return observationLag_; }
+    const std::string& quoteIndex() const { return quoteIndex_; }
     //@}
 
     //! \name Setters
@@ -104,9 +106,12 @@ public:
     string& indexCurve() { return indexCurve_; }
     string& yieldTermStructure() { return yieldTermStructure_; }
     Period& observationLag() { return observationLag_; }
+    std::string& quoteIndex() { return quoteIndex_; }
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     Type type_;
     QuoteType quoteType_;
     VolatilityType volatilityType_;
@@ -123,9 +128,13 @@ private:
     string indexCurve_;
     string yieldTermStructure_;
     Period observationLag_;
+
+    // Can be different from the index_ string to allow the surface to be configured against another index's quotes.
+    std::string quoteIndex_;
 };
 
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::VolatilityType t);
 std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConfig::QuoteType t);
+
 } // namespace data
 } // namespace ore

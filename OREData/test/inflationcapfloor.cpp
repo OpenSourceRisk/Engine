@@ -70,7 +70,7 @@ public:
             Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100)));
             boost::shared_ptr<YoYInflationTraits::helper> anInstrument =
                 boost::make_shared<YearOnYearInflationSwapHelper>(quote, Period(3, Months), datesZCII[i], cal, bdc, dc,
-                                                                  index);
+                                                                  index, nominalTs);
             instruments.push_back(anInstrument);
         };
         boost::shared_ptr<YoYInflationTermStructure> yoyTs = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
@@ -84,11 +84,11 @@ public:
         // Add EUHICPXT yoy volatility term structure
         boost::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface =
             boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.01, 0, cal, bdc, dc, Period(3, Months),
-                                                                         Monthly, index->interpolated());
+                                                                         Monthly, index->interpolated(), -1.0, 100.0,
+                                                                         VolatilityType::Normal);
 
         yoyCapFloorVolSurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
-            Handle<QuantExt::YoYOptionletVolatilitySurface>(
-                boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(volSurface, VolatilityType::Normal));
+            Handle<QuantExt::YoYOptionletVolatilitySurface>(volSurface);
     }
 
     BusinessDayConvention bdc;
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     bool isPayerYY = false;
     string indexYY = "EUHICPXT";
     string lag = "3M";
-    LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, 0), isPayerYY,
-        "EUR", scheduleYY, dc, notional, vector<string>(), paymentConvention, false, true);
+    LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, 0), isPayerYY, "EUR", scheduleYY, dc, notional,
+                  vector<string>(), paymentConvention, false, true);
 
     std::vector<double> caps(1, 0.009);
     // Build capfloor trades
@@ -174,9 +174,13 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
 
     boost::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
-    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(market->yoyCapFloorVol("EUHICPXT")->yoyVolSurface());
+    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs = market->yoyCapFloorVol("EUHICPXT");
+    // Should we get this nominalTs from the index's inflation term structure or is this going to be deprecated as well?
+    // Or should we use the market discount curve here?
+    Handle<YieldTermStructure> nominalTs =
+        market->yoyInflationIndex("EUHICPXT")->yoyInflationTermStructure()->nominalTermStructure();
     auto dscEngine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(
-        market->yoyInflationIndex("EUHICPXT").currentLink(), hovs);
+        market->yoyInflationIndex("EUHICPXT").currentLink(), hovs, nominalTs);
     qlCap->setPricingEngine(dscEngine);
     BOOST_CHECK_CLOSE(yyCap->instrument()->NPV(), qlCap->NPV(), 1E-8); // this is 1E-10 rel diff
 }

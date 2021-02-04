@@ -3,8 +3,8 @@
  All rights reserved.
 */
 
-#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <ql/utilities/vectors.hpp>
+#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 
 using QuantLib::AcyclicVisitor;
 using QuantLib::BusinessDayConvention;
@@ -12,77 +12,39 @@ using QuantLib::Calendar;
 using QuantLib::CashFlow;
 using QuantLib::Date;
 using QuantLib::Integer;
-using QuantLib::io::iso_date;
-using QuantLib::Real;
-using QuantLib::Visitor;
 using QuantLib::MakeSchedule;
+using QuantLib::Real;
 using QuantLib::Schedule;
+using QuantLib::Visitor;
+using QuantLib::io::iso_date;
 using std::vector;
 
 namespace QuantExt {
 
-CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(Real quantity,
-    const Date& startDate,
-    const Date& endDate,
-    const Date& paymentDate,
-    const ext::shared_ptr<CommodityIndex>& index,
-    const Calendar& pricingCalendar,
-    QuantLib::Real spread,
-    QuantLib::Real gearing,
-    bool useFuturePrice,
-    Natural deliveryDateRoll,
-    Natural futureMonthOffset,
-    const ext::shared_ptr<FutureExpiryCalculator>& calc,
-    bool includeEndDate,
-    bool excludeStartDate)
-    : quantity_(quantity),
-      startDate_(startDate),
-      endDate_(endDate),
-      paymentDate_(paymentDate),
-      index_(index),
-      pricingCalendar_(pricingCalendar),
-      spread_(spread),
-      gearing_(gearing),
-      useFuturePrice_(useFuturePrice),
-      deliveryDateRoll_(deliveryDateRoll),
-      futureMonthOffset_(futureMonthOffset),
-      includeEndDate_(includeEndDate),
+CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
+    Real quantity, const Date& startDate, const Date& endDate, const Date& paymentDate,
+    const ext::shared_ptr<CommoditySpotIndex>& spotIndex, const Calendar& pricingCalendar, QuantLib::Real spread,
+    QuantLib::Real gearing, bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
+    const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate)
+    : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDate), spotIndex_(spotIndex),
+      pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice),
+      deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate) {
     init(calc);
 }
 
-CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(Real quantity,
-    const Date& startDate,
-    const Date& endDate,
-    Natural paymentLag,
-    Calendar paymentCalendar,
-    BusinessDayConvention paymentConvention,
-    const ext::shared_ptr<CommodityIndex>& index,
-    const Calendar& pricingCalendar,
-    QuantLib::Real spread,
-    QuantLib::Real gearing,
-    bool payInAdvance,
-    bool useFuturePrice,
-    Natural deliveryDateRoll,
-    Natural futureMonthOffset,
-    const ext::shared_ptr<FutureExpiryCalculator>& calc,
-    bool includeEndDate,
-    bool excludeStartDate,
+CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
+    Real quantity, const Date& startDate, const Date& endDate, Natural paymentLag, Calendar paymentCalendar,
+    BusinessDayConvention paymentConvention, const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+    const Calendar& pricingCalendar, QuantLib::Real spread, QuantLib::Real gearing, bool payInAdvance,
+    bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
+    const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     const QuantLib::Date& paymentDateOverride)
-    : quantity_(quantity),
-      startDate_(startDate),
-      endDate_(endDate),
-      paymentDate_(paymentDateOverride),
-      index_(index),
-      pricingCalendar_(pricingCalendar),
-      spread_(spread),
-      gearing_(gearing),
-      useFuturePrice_(useFuturePrice),
-      deliveryDateRoll_(deliveryDateRoll),
-      futureMonthOffset_(futureMonthOffset),
-      includeEndDate_(includeEndDate),
-      excludeStartDate_(excludeStartDate) {
-    
+    : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDateOverride),
+      spotIndex_(spotIndex), pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing),
+      useFuturePrice_(useFuturePrice), deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset),
+      includeEndDate_(includeEndDate), excludeStartDate_(excludeStartDate) {
+
     // Derive the payment date
     if (paymentDate_ == Date()) {
         paymentDate_ = payInAdvance ? startDate : endDate;
@@ -100,9 +62,9 @@ Real CommodityIndexedAverageCashFlow::amount() const {
         averagePrice += kv.second->fixing(kv.first);
     }
     averagePrice /= indices_.size();
-    
+
     // Amount is just average price times quantity
-    return quantity_ * gearing_ * (averagePrice + spread_);
+    return quantity_ * (gearing_ * averagePrice + spread_);
 }
 
 void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
@@ -112,9 +74,7 @@ void CommodityIndexedAverageCashFlow::accept(AcyclicVisitor& v) {
         CashFlow::accept(v);
 }
 
-void CommodityIndexedAverageCashFlow::update() {
-    notifyObservers();
-}
+void CommodityIndexedAverageCashFlow::update() { notifyObservers(); }
 
 void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc) {
 
@@ -122,7 +82,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
     if (pricingCalendar_ == Calendar()) {
         pricingCalendar_ = index_->fixingCalendar();
     }
-    
+
     // If we are going to reference a future settlement price, check that we have a valid expiry calculator
     if (useFuturePrice_) {
         QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future expiry calculator when using first future");
@@ -131,7 +91,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
     // Store the relevant index for each pricing date taking account of the flags and the pricing calendar
     Date pdStart = startDate_;
     Date pdEnd = endDate_;
-    
+
     if (pricingCalendar_.isBusinessDay(pdStart) && excludeStartDate_) {
         pdStart = pricingCalendar_.advance(pdStart, 1, Days);
     }
@@ -142,18 +102,21 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
     }
     pdEnd = pricingCalendar_.adjust(pdEnd, Preceding);
 
-    QL_REQUIRE(pdEnd > pdStart, "CommodityIndexedAverageCashFlow: end date, " << io::iso_date(pdEnd) <<
-        ", must be greater than start date, " << io::iso_date(pdStart) << ", for a valid coupon.");
-    
+    QL_REQUIRE(pdEnd > pdStart, "CommodityIndexedAverageCashFlow: end date, "
+                                    << io::iso_date(pdEnd) << ", must be greater than start date, "
+                                    << io::iso_date(pdStart) << ", for a valid coupon.");
+
     // Populate first expiry date and roll date if averaging a future settlement price
     Date expiry;
     Date roll;
     if (useFuturePrice_) {
         expiry = calc->nextExpiry(deliveryDateRoll_ == 0, pdStart, futureMonthOffset_);
-        roll = deliveryDateRoll_ == 0 ? expiry : 
-            pricingCalendar_.advance(expiry, -static_cast<Integer>(deliveryDateRoll_), Days);
-        QL_REQUIRE(expiry >= pdStart, "Expected the future's expiry date (" << io::iso_date(expiry) <<
-            ") to be on or after the first pricing date (" << io::iso_date(pdStart) << ") in the averaging period");
+        roll = deliveryDateRoll_ == 0
+                   ? expiry
+                   : pricingCalendar_.advance(expiry, -static_cast<Integer>(deliveryDateRoll_), Days);
+        QL_REQUIRE(expiry >= pdStart, "Expected the future's expiry date ("
+                                          << io::iso_date(expiry) << ") to be on or after the first pricing date ("
+                                          << io::iso_date(pdStart) << ") in the averaging period");
     }
 
     while (pdStart <= pdEnd) {
@@ -161,8 +124,9 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
             // On the first date after the roll date, use the next future contract and update the roll date
             if (pdStart > roll) {
                 expiry = calc->nextExpiry(false, expiry);
-                roll = deliveryDateRoll_ == 0 ? expiry :
-                    pricingCalendar_.advance(expiry, -static_cast<Integer>(deliveryDateRoll_), Days);
+                roll = deliveryDateRoll_ == 0
+                           ? expiry
+                           : pricingCalendar_.advance(expiry, -static_cast<Integer>(deliveryDateRoll_), Days);
             }
             indices_[pdStart] = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
         } else {
@@ -174,9 +138,9 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 }
 
 CommodityIndexedAverageLeg::CommodityIndexedAverageLeg(const Schedule& schedule,
-    const ext::shared_ptr<CommodityIndex>& index)
+                                                       const ext::shared_ptr<CommoditySpotIndex>& index)
     : schedule_(schedule), index_(index), paymentLag_(0), paymentCalendar_(NullCalendar()),
-      paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), payInAdvance_(false), useFuturePrice_(false), 
+      paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), payInAdvance_(false), useFuturePrice_(false),
       deliveryDateRoll_(0), futureMonthOffset_(0), payAtMaturity_(false), includeEndDate_(true),
       excludeStartDate_(true), quantityPerDay_(false) {}
 
@@ -250,8 +214,8 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withFutureMonthOffset(Na
     return *this;
 }
 
-CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withFutureExpiryCalculator(
-    const ext::shared_ptr<FutureExpiryCalculator>& calc) {
+CommodityIndexedAverageLeg&
+CommodityIndexedAverageLeg::withFutureExpiryCalculator(const ext::shared_ptr<FutureExpiryCalculator>& calc) {
     calc_ = calc;
     return *this;
 }
@@ -293,18 +257,22 @@ CommodityIndexedAverageLeg::operator Leg() const {
 
     // Initial consistency checks
     QL_REQUIRE(!quantities_.empty(), "No quantities given");
-    QL_REQUIRE(quantities_.size() <= numberCashflows, "Too many quantities (" << quantities_.size() <<
-        "), only " << numberCashflows << " required");
+    QL_REQUIRE(quantities_.size() <= numberCashflows,
+               "Too many quantities (" << quantities_.size() << "), only " << numberCashflows << " required");
     if (useFuturePrice_) {
         QL_REQUIRE(calc_, "CommodityIndexedCashFlow needs a valid future expiry calculator when using first future");
     }
     if (!pricingDates_.empty()) {
-        QL_REQUIRE(pricingDates_.size() == numberCashflows, "Expected the number of explicit pricing dates (" <<
-            pricingDates_.size() << ") to equal the number of calculation periods (" << numberCashflows << ")");
+        QL_REQUIRE(pricingDates_.size() == numberCashflows, "Expected the number of explicit pricing dates ("
+                                                                << pricingDates_.size()
+                                                                << ") to equal the number of calculation periods ("
+                                                                << numberCashflows << ")");
     }
     if (!paymentDates_.empty()) {
-        QL_REQUIRE(paymentDates_.size() == numberCashflows, "Expected the number of explicit payment dates (" <<
-            paymentDates_.size() << ") to equal the number of calculation periods (" << numberCashflows << ")");
+        QL_REQUIRE(paymentDates_.size() == numberCashflows, "Expected the number of explicit payment dates ("
+                                                                << paymentDates_.size()
+                                                                << ") to equal the number of calculation periods ("
+                                                                << numberCashflows << ")");
     }
 
     // If pay at maturity, populate payment date.
@@ -314,12 +282,12 @@ CommodityIndexedAverageLeg::operator Leg() const {
     }
 
     // Leg to hold the result
-    // We always include the schedule start and schedule termination date in the averaging so the first and last 
+    // We always include the schedule start and schedule termination date in the averaging so the first and last
     // coupon have special treatment here that overrides the includeEndDate_ and excludeStartDate_ flags
     Leg leg;
     leg.reserve(numberCashflows);
     for (Size i = 0; i < numberCashflows; ++i) {
-        
+
         Date start = schedule_.date(i);
         Date end = schedule_.date(i + 1);
         bool excludeStart = i == 0 ? false : excludeStartDate_;
@@ -342,12 +310,13 @@ CommodityIndexedAverageLeg::operator Leg() const {
             quantity *= factor;
         }
 
-        leg.push_back(ext::make_shared<CommodityIndexedAverageCashFlow>(quantity, start, end, paymentLag_,
-            paymentCalendar_, paymentConvention_, index_, pricingCalendar_, spread, gearing, payInAdvance_,
-            useFuturePrice_, deliveryDateRoll_, futureMonthOffset_, calc_, includeEnd, excludeStart, paymentDate));
+        leg.push_back(ext::make_shared<CommodityIndexedAverageCashFlow>(
+            quantity, start, end, paymentLag_, paymentCalendar_, paymentConvention_, index_, pricingCalendar_, spread,
+            gearing, payInAdvance_, useFuturePrice_, deliveryDateRoll_, futureMonthOffset_, calc_, includeEnd,
+            excludeStart, paymentDate));
     }
 
     return leg;
 }
 
-}
+} // namespace QuantExt

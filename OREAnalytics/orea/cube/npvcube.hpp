@@ -31,8 +31,8 @@
 
 namespace ore {
 namespace analytics {
-using QuantLib::Size;
 using QuantLib::Real;
+using QuantLib::Size;
 //! NPV Cube class stores both future and current NPV values.
 /*! The cube class stores futures NPV values in a 3-D array, i.e. each side can be of a different
  *  length (so a cuboid).
@@ -97,7 +97,7 @@ public:
 protected:
     virtual Size index(const std::string& id) const {
         auto it = std::find(ids().begin(), ids().end(), id);
-        QL_REQUIRE(it != ids().end(), "NPVCube can't find an index for trade " << id);
+        QL_REQUIRE(it != ids().end(), "NPVCube can't find an index for id " << id);
         return std::distance(ids().begin(), it);
     };
 

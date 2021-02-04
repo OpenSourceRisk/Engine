@@ -17,8 +17,8 @@
 */
 
 /*! \file portfolio/builders/capfloor.hpp
-    \brief
-    \ingroup builders
+  \brief builder that returns an engine to price a cap or floor on IBOR instrument
+  \ingroup builders
 */
 
 #pragma once

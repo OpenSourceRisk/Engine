@@ -24,10 +24,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
 VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr,
-                                               Volatility bf, bool firstApprox,
-                                               const DeltaVolQuote::AtmType& atmType,
-                                               const DeltaVolQuote::DeltaType& deltaType,
-                                               const Real delta)
+                                               Volatility bf, bool firstApprox, const DeltaVolQuote::AtmType& atmType,
+                                               const DeltaVolQuote::DeltaType& deltaType, const Real delta)
     : FxSmileSection(spot, rd, rf, t), atmVol_(atmVol), rr_(rr), bf_(bf), firstApprox_(firstApprox) {
 
     // Consistent Pricing of FX Options
@@ -36,19 +34,39 @@ VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time
     vol_c_ = atmVol + bf_ + 0.5 * rr_;
     vol_p_ = atmVol + bf_ - 0.5 * rr_;
 
-    // infer strikes from delta and vol quote 
-    BlackDeltaCalculator a(Option::Type::Call, deltaType, spot, 
-                           domesticDiscount(), foreignDiscount(), 
-                           sqrt(t)*atmVol); 
-    BlackDeltaCalculator c(Option::Type::Call, deltaType, spot, 
-                           domesticDiscount(), foreignDiscount(), 
-                           sqrt(t)*vol_c_); 
-    BlackDeltaCalculator p(Option::Type::Put, deltaType, spot, 
-                           domesticDiscount(), foreignDiscount(), 
-                           sqrt(t)*vol_p_); 
-    k_atm_ = a.atmStrike(atmType); 
-    k_c_ = c.strikeFromDelta(delta); 
-    k_p_ = p.strikeFromDelta(-delta); 
+    // infer strikes from delta and vol quote
+    try {
+        BlackDeltaCalculator a(Option::Type::Call, deltaType, spot, domesticDiscount(), foreignDiscount(),
+                               sqrt(t) * atmVol);
+        k_atm_ = a.atmStrike(atmType);
+    } catch (const std::exception& e) {
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating atm strike: "
+                << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr << ", vol_c="
+                << vol_c_ << ", vol_p=" << vol_p_ << ", atmType=" << atmType << ", deltaType=" << deltaType
+                << ", spot=" << spot << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
+    }
+
+    try {
+        BlackDeltaCalculator c(Option::Type::Call, deltaType, spot, domesticDiscount(), foreignDiscount(),
+                               sqrt(t) * vol_c_);
+        k_c_ = c.strikeFromDelta(delta);
+    } catch (const std::exception& e) {
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating call strike at delta "
+                << delta << ": " << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr
+                << ", vol_c=" << vol_c_ << ", vol_p=" << vol_p_ << ", deltaType=" << deltaType << ", spot=" << spot
+                << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
+    }
+
+    try {
+        BlackDeltaCalculator p(Option::Type::Put, deltaType, spot, domesticDiscount(), foreignDiscount(),
+                               sqrt(t) * vol_p_);
+        k_p_ = p.strikeFromDelta(-delta);
+    } catch (const std::exception& e) {
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating put strike at delta "
+                << delta << ": " << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr
+                << ", vol_c=" << vol_c_ << ", vol_p=" << vol_p_ << ", deltaType=" << deltaType << ", spot=" << spot
+                << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
+    }
 }
 
 Real VannaVolgaSmileSection::d1(Real x) const {
@@ -74,7 +92,7 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
 
     Real sigma1_k = r1 * vol_p_ + r2 * atmVol_ + r3 * vol_c_;
     if (firstApprox_) {
-        return std::max(sigma1_k, Real(0.0001));    // for extreme ends: cannot return negative impl vols
+        return std::max(sigma1_k, Real(0.0001)); // for extreme ends: cannot return negative impl vols
     }
 
     Real D1 = sigma1_k - atmVol_;

@@ -27,20 +27,21 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/date.hpp>
+#include <set>
 
 namespace ore {
 namespace data {
 
 //! Base class for reference data
 /*! Each reference datum object is a subclass of this base and has it's own accessor functions.
-    *  Instances of ReferenceDatum can be gotten from the ReferenceDataManager below, and then cast up as required.
-    *  Each instance should be uniquely identified by it's type (which defines it's subclass, e.g. "Bond" for
-    *  BondReferenceDatum) and it's id, which is a string. Here it can be any string but in applications there can be
-    *  a naming scheme like ISIN for Bonds.
-    */
+ *  Instances of ReferenceDatum can be gotten from the ReferenceDataManager below, and then cast up as required.
+ *  Each instance should be uniquely identified by it's type (which defines it's subclass, e.g. "Bond" for
+ *  BondReferenceDatum) and it's id, which is a string. Here it can be any string but in applications there can be
+ *  a naming scheme like ISIN for Bonds.
+ */
 class ReferenceDatum : public XMLSerializable {
 public:
-    //! DEfault Constructor
+    //! Default Constructor
     ReferenceDatum() {}
     //! Base class constructor
     ReferenceDatum(const std::string& type, const std::string& id) : type_(type), id_(id) {}
@@ -52,7 +53,7 @@ public:
     //! getters
     const std::string& type() const { return type_; }
     const std::string& id() const { return id_; }
-    
+
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
@@ -81,19 +82,22 @@ class BondReferenceDatum : public ReferenceDatum {
 public:
     static constexpr const char* TYPE = "Bond";
 
-    struct BondData {
+    struct BondData : XMLSerializable {
         string issuerId;
         string settlementDays;
         string calendar;
         string issueDate;
         string creditCurveId;
         string referenceCurveId;
+        string proxySecurityId;
         string incomeCurveId;
         string volatilityCurveId;
         std::vector<LegData> legData;
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(ore::data::XMLDocument& doc) override;
     };
 
-    BondReferenceDatum() {}
+    BondReferenceDatum() { setType(TYPE); }
 
     BondReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
 
@@ -110,39 +114,61 @@ private:
     static ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> reg_;
 };
 
-class EquityReferenceDatum : public ReferenceDatum {
+/*! Hold reference data on a constituent of a credit index.
+
+    Gives the name and the weight of the credit index constituent. A weight of zero indicates that there has been a
+    credit event relating to the constituent. In this case, the weight of the constituent prior to the credit event
+    is supplied along with the recovery rate, i.e. final auction price.
+*/
+class CreditIndexConstituent : public XMLSerializable {
 public:
-    static constexpr const char* TYPE = "Equity";
+    CreditIndexConstituent();
 
-    struct EquityData {
-        std::string equityId;
-        std::string equityName;
-        std::string currency;
-        QuantLib::Size scalingFactor;
-        std::string preferredISIN;
-        std::string exchangeCode;
-        bool isIndex;
-        QuantLib::Date equityStartDate;
-        std::string proxyIdentifier;
-    };
-
-    EquityReferenceDatum() { setType(TYPE); }
-
-    EquityReferenceDatum(const string& id) : ReferenceDatum(TYPE, id) {}
-
-    EquityReferenceDatum(const string& id, const EquityData& equityData) : ReferenceDatum(TYPE, id), equityData_(equityData) {}
+    CreditIndexConstituent(const std::string& name,
+        QuantLib::Real weight,
+        QuantLib::Real priorWeight = QuantLib::Null<QuantLib::Real>(),
+        QuantLib::Real recovery = QuantLib::Null<QuantLib::Real>());
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
-    const EquityData& equityData() const { return equityData_; }
-    void setEquityData(const EquityData& equityData) { equityData_ = equityData; }
-
-protected:
-    EquityData equityData_;
+    const std::string& name() const;
+    QuantLib::Real weight() const;
+    QuantLib::Real priorWeight() const;
+    QuantLib::Real recovery() const;
 
 private:
-    static ReferenceDatumRegister<ReferenceDatumBuilder<EquityReferenceDatum>> reg_;
+    std::string name_;
+    QuantLib::Real weight_;
+    QuantLib::Real priorWeight_;
+    QuantLib::Real recovery_;
+};
+
+//! Compare CreditIndexConstituent instances using their name
+bool operator<(const CreditIndexConstituent& lhs, const CreditIndexConstituent& rhs);
+
+//! Credit index reference data, contains a set of index constituents.
+class CreditIndexReferenceDatum : public ReferenceDatum {
+public:
+    static constexpr const char* TYPE = "CreditIndex";
+
+    CreditIndexReferenceDatum();
+
+    CreditIndexReferenceDatum(const std::string& name);
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    //! Add a constituent. The constituent is not added if already present.
+    void add(const CreditIndexConstituent& c);
+
+    //! Get all of the underlying constituents.
+    const std::set<CreditIndexConstituent>& constituents() const;
+
+private:
+    std::set<CreditIndexConstituent> constituents_;
+
+    static ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> reg_;
 };
 
 //! Interface for Reference Data lookups
@@ -165,6 +191,7 @@ private:
  */
 class ReferenceDataManager {
 public:
+    virtual ~ReferenceDataManager() {}
     virtual bool hasData(const string& type, const string& id) const = 0;
     virtual boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) = 0;
     virtual void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) = 0;
@@ -178,7 +205,7 @@ public:
 
     // Load extra data and append to this manger
     void appendData(const string& filename) { fromFile(filename); }
-    
+
     boost::shared_ptr<ReferenceDatum> buildReferenceDatum(const string& refDataType);
 
     void fromXML(XMLNode* node) override;
@@ -194,8 +221,6 @@ public:
 protected:
     map<pair<string, string>, boost::shared_ptr<ReferenceDatum>> data_;
 };
-
-
 
 } // namespace data
 } // namespace ore

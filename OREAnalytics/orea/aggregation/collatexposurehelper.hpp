@@ -58,8 +58,9 @@ public:
       -- (our margin postings settle instantaneously)
       - 'AsymmetricDVA' => margin postings to ctp only settle after margin period of risk
       -- (margin calls to receive collateral from counterparty settle instantaneously)
+      - 'NoLag' => margin calls/postings settled without margin period of risk delay
     */
-    enum CalculationType { Symmetric, AsymmetricCVA, AsymmetricDVA };
+    enum CalculationType { Symmetric, AsymmetricCVA, AsymmetricDVA, NoLag };
 
     /*!
       Calculates CSA margin requirement, taking the following into account
@@ -89,6 +90,14 @@ public:
                                  const Date& simulationDate, const Real& accrualFactor,
                                  const CalculationType& calcType = Symmetric, const bool& eligMarginReqDateUs = true,
                                  const bool& eligMarginReqDateCtp = true);
+
+    /*!
+        Computes the Credit Support Amount for the portfolio, given an unsecured exposure as input
+        All calculations done in CSA currency
+    */
+    static Real creditSupportAmount(
+        const boost::shared_ptr<ore::data::NettingSetDefinition>& nettingSet,
+        const Real& uncollatValueCsaCur);
 
     /*!
       Takes a netting set (and scenario exposures) as input

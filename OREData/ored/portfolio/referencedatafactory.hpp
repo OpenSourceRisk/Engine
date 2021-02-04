@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ql/patterns/singleton.hpp>
 #include <functional>
+#include <ql/patterns/singleton.hpp>
 #include <string>
 
 namespace ore {
@@ -52,22 +52,22 @@ class ReferenceDatumFactory : public QuantLib::Singleton<ReferenceDatumFactory> 
     friend class QuantLib::Singleton<ReferenceDatumFactory>;
 
 public:
-
     typedef std::map<std::string, std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()>> map_type;
 
     boost::shared_ptr<ReferenceDatum> build(const std::string& refDatumType);
 
-    void addBuilder(const std::string& refDatumType, std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder);
+    void addBuilder(const std::string& refDatumType,
+                    std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder);
 
 private:
     map_type map_;
 };
 
-template<class T>
-boost::shared_ptr<AbstractReferenceDatumBuilder> createReferenceDatumBuilder() { return boost::make_shared<T>(); }
+template <class T> boost::shared_ptr<AbstractReferenceDatumBuilder> createReferenceDatumBuilder() {
+    return boost::make_shared<T>();
+}
 
-template<class T>
-struct ReferenceDatumRegister {
+template <class T> struct ReferenceDatumRegister {
 public:
     ReferenceDatumRegister(const std::string& refDatumType) {
         ReferenceDatumFactory::instance().addBuilder(refDatumType, &createReferenceDatumBuilder<T>);

@@ -30,15 +30,15 @@
 
 namespace ore {
 namespace analytics {
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+using ore::data::XMLUtils;
 using QuantLib::Period;
 using QuantLib::Rate;
-using std::vector;
-using std::string;
-using std::pair;
 using std::map;
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
-using ore::data::XMLUtils;
+using std::pair;
+using std::string;
+using std::vector;
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
@@ -86,7 +86,7 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData() : computeGamma_(true){};
+    SensitivityScenarioData() : computeGamma_(true), useSpreadedTermStructures_(false){};
 
     //! \name Inspectors
     //@{
@@ -133,9 +133,17 @@ public:
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
     const bool computeGamma() const { return computeGamma_; }
+    const bool useSpreadedTermStructures() const { return useSpreadedTermStructures_; }
 
     //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
     const ShiftData& shiftData(const ore::analytics::RiskFactorKey::KeyType& keyType, const std::string& name) const;
+
+    //! Check if a two sided delta has been configured for the given risk factor key type, \p keyType.
+    bool twoSidedDelta(const RiskFactorKey::KeyType& keyType) const;
+
+    //! Return the set of risk factor key types configured for two sided delta.
+    const std::set<RiskFactorKey::KeyType>& twoSidedDeltas() const { return twoSidedDeltas_; }
+
     //@}
 
     //! \name Setters
@@ -173,7 +181,9 @@ public:
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
     bool& computeGamma() { return computeGamma_; }
+    bool& useSpreadedTermStructures() { return useSpreadedTermStructures_; }
 
+    std::set<RiskFactorKey::KeyType>& twoSidedDeltas() { return twoSidedDeltas_; }
     //@}
 
     //! \name Serialisation
@@ -205,25 +215,26 @@ protected:
     void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
     //@}
 
-    map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_; // key: ccy
-    map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_;    // key: indexName
-    map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;    // key: yieldCurveName
-    map<string, SpotShiftData> fxShiftData_;                                // key: ccy pair
+    map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_;     // key: ccy
+    map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_;        // key: indexName
+    map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;        // key: yieldCurveName
+    map<string, SpotShiftData> fxShiftData_;                                    // key: ccy pair
     map<string, boost::shared_ptr<CapFloorVolShiftData>> capFloorVolShiftData_; // key: ccy
-    map<string, GenericYieldVolShiftData> swaptionVolShiftData_;            // key: ccy
-    map<string, GenericYieldVolShiftData> yieldVolShiftData_;               // key: securityId
-    map<string, VolShiftData> fxVolShiftData_;                              // key: ccy pair
-    map<string, CdsVolShiftData> cdsVolShiftData_;                          // key: ccy pair
+    map<string, GenericYieldVolShiftData> swaptionVolShiftData_;                // key: ccy
+    map<string, GenericYieldVolShiftData> yieldVolShiftData_;                   // key: securityId
+    map<string, VolShiftData> fxVolShiftData_;                                  // key: ccy pair
+    map<string, CdsVolShiftData> cdsVolShiftData_;                              // key: ccy pair
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
     map<string, boost::shared_ptr<CurveShiftData>> zeroInflationCurveShiftData_; // key: inflation index name
     map<string, boost::shared_ptr<CurveShiftData>> yoyInflationCurveShiftData_;  // key: yoy inflation index name
-    map<string, boost::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_;  // key: inflation index name
-    map<string, boost::shared_ptr<CapFloorVolShiftData>> zeroInflationCapFloorVolShiftData_;  // key: inflation index name
+    map<string, boost::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_; // key: inflation index name
+    map<string, boost::shared_ptr<CapFloorVolShiftData>>
+        zeroInflationCapFloorVolShiftData_; // key: inflation index name
     map<string, string> creditCcys_;
-    map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_;         // key: credit name
-    map<string, SpotShiftData> equityShiftData_;                                  // key: equity name
-    map<string, VolShiftData> equityVolShiftData_;                                // key: equity name
-    map<string, boost::shared_ptr<CurveShiftData>> dividendYieldShiftData_;       // key: equity name
+    map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_;   // key: credit name
+    map<string, SpotShiftData> equityShiftData_;                            // key: equity name
+    map<string, VolShiftData> equityVolShiftData_;                          // key: equity name
+    map<string, boost::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
     map<string, std::string> commodityCurrencies_;
     map<string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
     map<string, VolShiftData> correlationShiftData_;
@@ -232,6 +243,11 @@ protected:
 
     vector<pair<string, string>> crossGammaFilter_;
     bool computeGamma_;
+    bool useSpreadedTermStructures_;
+
+    /*! Set of risk factor keys for which a two sided delta has been configured.
+    */
+    std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
 };
 } // namespace analytics
 } // namespace ore

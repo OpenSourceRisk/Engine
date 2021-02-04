@@ -20,6 +20,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -52,15 +53,20 @@ CrossAssetStateProcess::discretization parseDiscretization(const string& s) {
     }
 }
 
-std::ostream& operator<<(std::ostream& out, const QuantExt::CrossAssetStateProcess::discretization& dis) {
-    switch (dis) {
-    case QuantExt::CrossAssetStateProcess::exact:
-        return out << "Exact";
-    case QuantExt::CrossAssetStateProcess::euler:
-        return out << "Euler";
-    default:
-        return out << "?";
+void ScenarioGeneratorData::setGrid(boost::shared_ptr<DateGrid> grid) { 
+    grid_ = grid;
+    
+    std::ostringstream oss;
+    if (grid->tenors().size() == 0) {
+        oss << "";
+    } else {
+        oss << grid->tenors()[0];
+        for (Size i = 1; i < grid->tenors().size(); i++) {
+            oss << ", " << grid->tenors()[i];
+        }
     }
+
+    gridString_ = oss.str();
 }
 
 void ScenarioGeneratorData::fromXML(XMLNode* root) {
@@ -75,14 +81,17 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     std::string calString = XMLUtils::getChildValue(node, "Calendar", true);
     Calendar cal = parseCalendar(calString);
 
-    std::string gridString = XMLUtils::getChildValue(node, "Grid", true);
+    std::string dcString = XMLUtils::getChildValue(node, "DayCounter", false);
+    DayCounter dc = dcString.empty() ? ActualActual() : parseDayCounter(dcString);
+
+    gridString_ = XMLUtils::getChildValue(node, "Grid", true);
     std::vector<std::string> tokens;
-    boost::split(tokens, gridString, boost::is_any_of(","));
+    boost::split(tokens, gridString_, boost::is_any_of(","));
     if (tokens.size() <= 2) {
-        grid_ = boost::make_shared<DateGrid>(gridString, cal);
+        grid_ = boost::make_shared<DateGrid>(gridString_, cal, dc);
     } else {
         std::vector<Period> gridTenors = XMLUtils::getChildrenValuesAsPeriods(node, "Grid", true);
-        grid_ = boost::make_shared<DateGrid>(gridTenors, cal);
+        grid_ = boost::make_shared<DateGrid>(gridTenors, cal, dc);
     }
     LOG("ScenarioGeneratorData grid points size = " << grid_->size());
 
@@ -99,7 +108,7 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     // overwrite samples with enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES
     if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
         samples_ = std::stol(c);
-        ALOG("Overwrite samples with " << samples_ << " from enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
+        LOG("Overwrite samples with " << samples_ << " from enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
     }
 
     if (auto n = XMLUtils::getChildNode(node, "Ordering"))
@@ -112,11 +121,63 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     else
         directionIntegers_ = SobolRsg::JoeKuoD7;
 
+    withCloseOutLag_ = false;
+    if (XMLUtils::getChildNode(node, "CloseOutLag") != NULL) {
+        withCloseOutLag_ = true;
+        closeOutLag_ = parsePeriod(XMLUtils::getChildValue(node, "CloseOutLag", true));
+        grid_->addCloseOutDates(closeOutLag_);
+        LOG("Use lagged close out grid, lag period is " << closeOutLag_);
+    }
+    withMporStickyDate_ = false;
+    if (XMLUtils::getChildNode(node, "MporMode") != NULL) {
+        string mporMode = XMLUtils::getChildValue(node, "MporMode", true);
+        if (mporMode == "StickyDate") {
+            withMporStickyDate_ = true;
+            LOG("Use Mpor sticky date mode");
+        } else if (mporMode == "ActualDate") {
+            withMporStickyDate_ = false;
+            LOG("Use Mpor actual date mode");
+        } else {
+            QL_FAIL("MporMode " << mporMode << " not recognised");
+        }
+    }
+
     LOG("ScenarioGeneratorData done.");
 }
 
 XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Simulation");
+    XMLNode* pNode = XMLUtils::addChild(doc, node, "Parameters");
+
+    XMLUtils::addChild(doc, pNode, "Discretization", ore::data::to_string((QuantExt::CrossAssetStateProcess::discretization) discretization_));
+
+    if (grid_) {
+        XMLUtils::addChild(doc, pNode, "Calendar", grid_->calendar().name());
+        XMLUtils::addChild(doc, pNode, "DayCounter", grid_->dayCounter().name());
+        if (gridString_ != "") {
+            XMLUtils::addChild(doc, node, "Grid", gridString_);
+        } else {
+            XMLUtils::addGenericChildAsList(doc, node, "Grid", grid_->tenors());
+        }
+    }
+
+    
+    XMLUtils::addChild(doc, pNode, "Sequence", ore::data::to_string( sequenceType_));
+    XMLUtils::addChild(doc, pNode, "Seed", to_string(seed_));
+    XMLUtils::addChild(doc, pNode, "Samples", to_string(samples_));
+
+    XMLUtils::addChild(doc, pNode, "Ordering", ore::data::to_string((SobolBrownianGenerator::Ordering) ordering_) );
+    XMLUtils::addChild(doc, pNode, "DirectionIntegers", ore::data::to_string(directionIntegers_));
+
+    if (withCloseOutLag_) {
+        XMLUtils::addChild(doc, pNode, "CloseOutLag", closeOutLag_);
+    }
+    if (withMporStickyDate_) {
+        XMLUtils::addChild(doc, pNode, "MporMode", "StickyDate");
+    } else {
+        XMLUtils::addChild(doc, pNode, "MporMode", "ActualDate");
+    }
+
     return node;
 }
 } // namespace analytics

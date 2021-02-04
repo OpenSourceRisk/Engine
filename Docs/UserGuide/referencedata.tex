@@ -3,16 +3,14 @@
 \label{sec:referencedata}
 %--------------------------------------------------------
 
-Reference Data is used to ease the burden on portfolio xml represetnation, by taking common elements and storing them as
-static data. Currently this can be used for \textit{Bond Derivatives} that require bond static information and
-\textit{Equity Derivatives}.
+Reference Data is used to ease the burden on portfolio xml representation, by taking common elements and storing them as
+static data. Currently this can be used for \textit{Bond Derivatives} that require bond static information.
 
 Bond reference data is also used to build yield curves fitted to liquid bond prices, see \ref{sec:fitted_bond_segment}.
 
 The allowable types for ReferenceData is
 \begin{enumerate}
 \item \textbf{Bond} static data consists of the Leg data for a given bond.
-\item \textbf{Equity} static data for an Equity.
 \end{enumerate}
 
 \begin{minted}{xml}
@@ -57,14 +55,6 @@ The allowable types for ReferenceData is
         </ScheduleData>
       </LegData>
     </BondReferenceData>
-  </ReferenceDatum>
-  <!-- Equity reference datum -->
-  <ReferenceDatum id="RIC:.SPX">
-    <Type>Equity</Type>
-    <EquityReferenceData>
-      <EquityId>RIC:.SPX</EquityId>
-      <Currency>USD</Currency>
-    </EquityReferenceData>
   </ReferenceDatum>
 </ReferenceData>
 \end{minted}

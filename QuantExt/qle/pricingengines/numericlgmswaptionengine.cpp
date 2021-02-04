@@ -47,7 +47,8 @@ Real NumericLgmSwaptionEngineBase::rebatePv(const Real x, const Real t, const Si
 
 Real NumericLgmSwaptionEngineBase::calculate() const {
 
-    iborModelCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model(), iborIndex_->forwardingTermStructure(), DayCounter(), false, true);
+    iborModelCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model(), iborIndex_->forwardingTermStructure(),
+                                                                       DayCounter(), false, true);
 
     iborIndexCorrected_ = iborIndex_->clone(Handle<YieldTermStructure>(iborModelCurve_));
 
@@ -97,11 +98,17 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
 
 } // NumericLgmSwaptionEngineBase::calculate
 
+std::map<std::string, boost::any> NumericLgmSwaptionEngineBase::additionalResults() const {
+    return getAdditionalResultsMap(model()->getCalibrationInfo());
+}
+
 void NumericLgmSwaptionEngine::calculate() const {
     // TODO ParYieldCurve cash-settled swaptions are priced as if CollateralizedCashPrice, this can be refined
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();
+    auto tmp = NumericLgmSwaptionEngineBase::additionalResults();
+    results_.additionalResults.insert(tmp.begin(), tmp.end());
 } // NumericLgmSwaptionEngine::calculate
 
 Real NumericLgmSwaptionEngine::conditionalSwapValue(Real x, Real t, const Date expiry0) const {
@@ -139,6 +146,8 @@ void NumericLgmNonstandardSwaptionEngine::calculate() const {
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();
+    auto tmp = NumericLgmSwaptionEngineBase::additionalResults();
+    results_.additionalResults.insert(tmp.begin(), tmp.end());
 } // NumericLgmSwaptionEngine::calculate
 
 Real NumericLgmNonstandardSwaptionEngine::conditionalSwapValue(Real x, Real t, const Date expiry0) const {

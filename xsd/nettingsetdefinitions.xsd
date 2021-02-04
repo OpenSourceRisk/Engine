@@ -6,13 +6,13 @@
     <xs:sequence>
       <xs:element name="NettingSet" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
-          <xs:sequence>
+          <xs:all>
             <xs:element type="xs:string" name="NettingSetId" minOccurs="1"/>
             <xs:element type="xs:string" name="Counterparty" minOccurs="1"/>
             <xs:element type="xs:boolean" name="ActiveCSAFlag" minOccurs="1"/>
             <xs:element name="CSADetails">
               <xs:complexType mixed="true">
-                <xs:sequence>
+                <xs:all>
                   <xs:element type="csaType" name="Bilateral" minOccurs="0"/>
                   <xs:element type="currencyCode" name="CSACurrency" minOccurs="0"/>
                   <xs:element type="xs:string" name="Index" minOccurs="0"/>
@@ -22,18 +22,18 @@
                   <xs:element type="non-negative-decimal" name="MinimumTransferAmountReceive" minOccurs="0"/>
                   <xs:element name="IndependentAmount" minOccurs="0">
                     <xs:complexType>
-                      <xs:sequence>
+                      <xs:all>
                         <xs:element type="xs:decimal" name="IndependentAmountHeld"/>
                         <xs:element type="independentAmountType" name="IndependentAmountType"/>
-                      </xs:sequence>
+                      </xs:all>
                     </xs:complexType>
                   </xs:element>
                   <xs:element name="MarginingFrequency" minOccurs="0">
                     <xs:complexType>
-                      <xs:sequence>
+                      <xs:all>
                         <xs:element type="xs:string" name="CallFrequency"/>
                         <xs:element type="xs:string" name="PostFrequency"/>
-                      </xs:sequence>
+                      </xs:all>
                     </xs:complexType>
                   </xs:element>
                   <xs:element type="xs:string" name="MarginPeriodOfRisk" minOccurs="0"/>
@@ -41,7 +41,7 @@
                   <xs:element type="xs:decimal" name="CollateralCompoundingSpreadPay" minOccurs="0"/>
                   <xs:element name="EligibleCollaterals" minOccurs="0">
                     <xs:complexType>
-                      <xs:sequence>
+                      <xs:all>
                         <xs:element name="Currencies">
                           <xs:complexType>
                             <xs:sequence>
@@ -49,13 +49,16 @@
                             </xs:sequence>
                           </xs:complexType>
                         </xs:element>
-                      </xs:sequence>
+                      </xs:all>
                     </xs:complexType>
                   </xs:element>
-                </xs:sequence>
+                  <xs:element type="xs:boolean" name="ApplyInitialMargin" maxOccurs="1" minOccurs="0"/>
+                  <xs:element type="csaType" name="InitialMarginType" maxOccurs="1" minOccurs="0"/>
+                </xs:all>
               </xs:complexType>
             </xs:element>
-          </xs:sequence>
+            <xs:element type="xs:decimal" name="RiskWeight" maxOccurs="1" minOccurs="0"/>
+          </xs:all>
         </xs:complexType>
       </xs:element>
     </xs:sequence>

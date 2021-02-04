@@ -33,6 +33,7 @@ CollateralExposureHelper::CalculationType parseCollateralCalculationType(const s
         {"Symmetric", CollateralExposureHelper::Symmetric},
         {"AsymmetricCVA", CollateralExposureHelper::AsymmetricCVA},
         {"AsymmetricDVA", CollateralExposureHelper::AsymmetricDVA},
+        {"NoLag", CollateralExposureHelper::NoLag}
     };
     auto it = m.find(s);
     if (it != m.end()) {
@@ -49,6 +50,8 @@ std::ostream& operator<<(std::ostream& out, CollateralExposureHelper::Calculatio
         out << "AsymmetricCVA";
     else if (t == CollateralExposureHelper::AsymmetricDVA)
         out << "AsymmetricDVA";
+    else if (t == CollateralExposureHelper::NoLag)
+        out << "NoLag";
     else
         QL_FAIL("Collateral calculation type not covered");
     return out;
@@ -60,30 +63,40 @@ Real CollateralExposureHelper::marginRequirementCalc(const boost::shared_ptr<Col
     //        collat->updateAccountBalance(simulationDate);
 
     Real collatBalance = collat->accountBalance();
-    Real ia = collat->csaDef()->independentAmountHeld();
-    Real threshold, mta, creditSupportAmount;
-    if (uncollatValue - ia >= 0) {
-        threshold = collat->csaDef()->thresholdRcv();
-        creditSupportAmount = max(uncollatValue - ia - threshold, 0.0);
-    } else {
-        threshold = collat->csaDef()->thresholdPay();
-        // N.B. the min and change of sign on threshold.
-        creditSupportAmount = min(uncollatValue - ia + threshold, 0.0);
-    }
+    Real csa = creditSupportAmount(collat->csaDef(), uncollatValue);
 
     Real openMargins = collat->outstandingMarginAmount(simulationDate);
-    Real collatShortfall = creditSupportAmount - collatBalance - openMargins;
+    Real collatShortfall = csa - collatBalance - openMargins;
 
+    Real mta;
     if (collatShortfall >= 0.0)
-        mta = collat->csaDef()->mtaRcv();
+      mta = collat->csaDef()->csaDetails()->mtaRcv();
     else
-        mta = collat->csaDef()->mtaPay();
+      mta = collat->csaDef()->csaDetails()->mtaPay();
 
     Real deliveryAmount = fabs(collatShortfall) >= mta ? (collatShortfall) : 0.0;
 
     return deliveryAmount;
 }
 
+ Real CollateralExposureHelper::creditSupportAmount(
+    const boost::shared_ptr<ore::data::NettingSetDefinition>& nettingSet, 
+    const Real& uncollatValueCsaCur) {
+
+   Real ia = nettingSet->csaDetails()->independentAmountHeld();
+    Real threshold, csa;
+    if (uncollatValueCsaCur - ia >= 0) {
+        threshold = nettingSet->csaDetails()->thresholdRcv();
+        csa = max(uncollatValueCsaCur - ia - threshold, 0.0);
+    }
+    else {
+        threshold = nettingSet->csaDetails()->thresholdPay();
+        // N.B. the min and change of sign on threshold.
+        csa = min(uncollatValueCsaCur - ia + threshold, 0.0);
+    }
+    return csa;
+}
+  
 template <class T>
 Real CollateralExposureHelper::estimateUncollatValue(const Date& simulationDate, const Real& npv_t0,
                                                      const Date& date_t0, const vector<vector<T>>& scenPvProfiles,
@@ -151,13 +164,22 @@ void CollateralExposureHelper::updateMarginCall(const boost::shared_ptr<Collater
         // settle margin call on appropriate date
         // (dependent upon MPR and collateralised calculation methodology)
         Date marginPayDate;
+	// RL 2020-07-17
+	// 1) If the calculation type is set to NoLag:
+	//    Collateral balances are NOT delayed by the MPoR, but we use the close-out NPV in exposure calculations,
+	//    see similar comment and the equivalent change in the post processor.
+	// 2) Otherwise:
+	//    Collateral balances are delayed by the MPoR (if possible, i.e. the valuation grid has MPoR spacing),
+	//    and we use the default date NPV.
+	//    This is the treatment in the ORE releases up to June 2020).
+	Period lag = (calcType == NoLag ? 0*Days : collat->csaDef()->csaDetails()->marginPeriodOfRisk());
         if (margin > 0.0 && eligMarginReqDateUs) {
-            marginPayDate =
-                (calcType == AsymmetricDVA ? simulationDate : simulationDate + collat->csaDef()->marginPeriodOfRisk());
+	    marginPayDate =
+                (calcType == AsymmetricDVA ? simulationDate : simulationDate + lag);
             collat->updateMarginCall(margin, marginPayDate, simulationDate);
         } else if (margin < 0.0 && eligMarginReqDateCtp) {
             marginPayDate =
-                (calcType == AsymmetricCVA ? simulationDate : simulationDate + collat->csaDef()->marginPeriodOfRisk());
+                (calcType == AsymmetricCVA ? simulationDate : simulationDate + lag);
             collat->updateMarginCall(margin, marginPayDate, simulationDate);
         } else {
         }
@@ -186,7 +208,7 @@ boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> CollateralExposu
         // step 4; start loop over scenarios
         Size numScenarios = nettingSetValues.front().size();
         QL_REQUIRE(numScenarios == csaFxScenarioRates.front().size(), "netting values -v- scenario FX rate mismatch");
-        Date simEndDate = std::min(nettingSet_maturity, dateGrid.back()) + csaDef->marginPeriodOfRisk();
+        Date simEndDate = std::min(nettingSet_maturity, dateGrid.back()) + csaDef->csaDetails()->marginPeriodOfRisk();
         for (unsigned i = 0; i < numScenarios; i++) {
             boost::shared_ptr<CollateralAccount> collat(new CollateralAccount(baseAcc));
             Date tmpDate = date_t0; // the date which gets evolved
@@ -207,9 +229,9 @@ boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> CollateralExposu
                                  eligMarginReqDateCtp);
 
                 if (nextMarginReqDateUs == tmpDate)
-                    nextMarginReqDateUs = tmpDate + collat->csaDef()->marginCallFrequency();
+                    nextMarginReqDateUs = tmpDate + collat->csaDef()->csaDetails()->marginCallFrequency();
                 if (nextMarginReqDateCtp == tmpDate)
-                    nextMarginReqDateCtp = tmpDate + collat->csaDef()->marginPostFrequency();
+                    nextMarginReqDateCtp = tmpDate + collat->csaDef()->csaDetails()->marginPostFrequency();
                 tmpDate = std::min(nextMarginReqDateUs, nextMarginReqDateCtp);
             }
             QL_REQUIRE(tmpDate > simEndDate,

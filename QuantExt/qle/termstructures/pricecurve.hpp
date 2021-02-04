@@ -27,12 +27,12 @@
 
 #include <qle/termstructures/pricetermstructure.hpp>
 
+#include <ql/currency.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
-#include <ql/currency.hpp>
 
 namespace QuantExt {
 
@@ -274,7 +274,7 @@ template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::convert
         QL_REQUIRE(dates_[i] > dates_[i - 1], "invalid date (" << dates_[i] << ", vs " << dates_[i - 1] << ")");
         this->times_[i] = timeFromReference(dates_[i]);
         QL_REQUIRE(!QuantLib::close(this->times_[i], this->times_[i - 1]), "two dates correspond to the same time "
-            "under this curve's day count convention");
+                                                                           "under this curve's day count convention");
     }
 }
 

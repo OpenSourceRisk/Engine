@@ -42,10 +42,12 @@ CurrencySwap::CurrencySwap(Size nLegs) {
 }
 
 CurrencySwap::CurrencySwap(const std::vector<Leg>& legs, const std::vector<bool>& payer,
-                           const std::vector<Currency>& currency)
-    : legs_(legs), payer_(legs.size(), 1.0), currency_(currency), legNPV_(legs.size(), 0.0),
-      inCcyLegNPV_(legs.size(), 0.0), legBPS_(legs.size(), 0.0), inCcyLegBPS_(legs.size(), 0.0),
-      startDiscounts_(legs.size(), 0.0), endDiscounts_(legs.size(), 0.0), npvDateDiscount_(0.0) {
+                           const std::vector<Currency>& currency, const bool isPhysicallySettled,
+                           const bool isResettable)
+    : legs_(legs), payer_(legs.size(), 1.0), currency_(currency), isPhysicallySettled_(isPhysicallySettled),
+      isResettable_(isResettable), legNPV_(legs.size(), 0.0), inCcyLegNPV_(legs.size(), 0.0), legBPS_(legs.size(), 0.0),
+      inCcyLegBPS_(legs.size(), 0.0), startDiscounts_(legs.size(), 0.0), endDiscounts_(legs.size(), 0.0),
+      npvDateDiscount_(0.0) {
     QL_REQUIRE(payer.size() == legs_.size(),
                "size mismatch between payer (" << payer.size() << ") and legs (" << legs_.size() << ")");
     QL_REQUIRE(currency.size() == legs_.size(),
@@ -86,6 +88,8 @@ void CurrencySwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->legs = legs_;
     arguments->payer = payer_;
     arguments->currency = currency_;
+    arguments->isPhysicallySettled = isPhysicallySettled_;
+    arguments->isResettable = isResettable_;
 }
 
 void CurrencySwap::fetchResults(const PricingEngine::results* r) const {
@@ -185,8 +189,12 @@ VanillaCrossCurrencySwap::VanillaCrossCurrencySwap(bool payFixed, Currency fixed
                                                    const DayCounter& fixedDayCount, Currency floatCcy,
                                                    Real floatNominal, const Schedule& floatSchedule,
                                                    const boost::shared_ptr<IborIndex>& iborIndex, Rate floatSpread,
-                                                   boost::optional<BusinessDayConvention> paymentConvention)
+                                                   boost::optional<BusinessDayConvention> paymentConvention,
+                                                   const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
+
+    isPhysicallySettled_ = isPhysicallySettled;
+    isResettable_ = isResettable;
 
     BusinessDayConvention convention;
     if (paymentConvention)
@@ -236,8 +244,12 @@ CrossCurrencySwap::CrossCurrencySwap(bool payFixed, Currency fixedCcy, std::vect
                                      const DayCounter& fixedDayCount, Currency floatCcy,
                                      std::vector<Real> floatNominals, const Schedule& floatSchedule,
                                      const boost::shared_ptr<IborIndex>& iborIndex, std::vector<Rate> floatSpreads,
-                                     boost::optional<BusinessDayConvention> paymentConvention)
+                                     boost::optional<BusinessDayConvention> paymentConvention,
+                                     const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
+
+    isPhysicallySettled_ = isPhysicallySettled;
+    isResettable_ = isResettable;
 
     BusinessDayConvention convention;
     if (paymentConvention)
@@ -300,8 +312,12 @@ CrossCurrencySwap::CrossCurrencySwap(bool pay1, Currency ccy1, std::vector<Real>
                                      std::vector<Rate> rates1, const DayCounter& dayCount1, Currency ccy2,
                                      std::vector<Real> nominals2, const Schedule& schedule2, std::vector<Rate> rates2,
                                      const DayCounter& dayCount2,
-                                     boost::optional<BusinessDayConvention> paymentConvention)
+                                     boost::optional<BusinessDayConvention> paymentConvention,
+                                     const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
+
+    isPhysicallySettled_ = isPhysicallySettled;
+    isResettable_ = isResettable;
 
     BusinessDayConvention convention;
     if (paymentConvention)
@@ -361,8 +377,12 @@ CrossCurrencySwap::CrossCurrencySwap(bool pay1, Currency ccy1, std::vector<Real>
                                      const boost::shared_ptr<IborIndex>& iborIndex1, std::vector<Rate> spreads1,
                                      Currency ccy2, std::vector<Real> nominals2, const Schedule& schedule2,
                                      const boost::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
-                                     boost::optional<BusinessDayConvention> paymentConvention)
+                                     boost::optional<BusinessDayConvention> paymentConvention,
+                                     const bool isPhysicallySettled, const bool isResettable)
     : CurrencySwap(4) {
+
+    isPhysicallySettled_ = isPhysicallySettled;
+    isResettable_ = isResettable;
 
     BusinessDayConvention convention;
     if (paymentConvention)

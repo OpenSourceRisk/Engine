@@ -2,6 +2,7 @@
 
 \usepackage{supertabular}
 \usepackage{hyperref}
+\usepackage{minted}
 
 \addtolength{\textwidth}{0.8in}
 \addtolength{\oddsidemargin}{-.4in}
@@ -33,6 +34,8 @@ Version & Date & Author & Comment \\
 0.3 & 4 November 2016 & Niall O'Sullivan& multiple repos and comments from RL\\
 \hline
 0.4 & 5 Janurary 2017 & Niall O'Sullivan& clarification on line endings and formatting\\
+\hline
+0.5 & 30 October 2020 & Roland Lichters & clarification on using namespaces\\
 \hline
 \end{supertabular}
 \end{center}
@@ -100,7 +103,30 @@ ORE is a single threaded application, the use of singletons is to be avoided whe
 \end{itemize}
 
 \subsection*{Namespace}
-With the exception of QuantExt, all code will be in the namespace openxva, nested namespaces should be used for logical modules (like boost), all namespaces should be in lower case, e.g. \textbf{openxva::data, openxva::analytics}.
+All code in QuantExt will be in namespace \textbf{QuantExt}, code in in OREData and OREAnalytics in nested namespaces \textbf{ore::data} and \textbf{ore::analytics}, respectively. 
+
+\subsection*{QuantLib namespace}
+When making use of the \textbf{using namespace QuantLib;} statement in header files, this must follow and not precede the QuantExt/OREData/OREAnalytics namespace declaration. For example
+
+\begin{minted}{c} 
+using namespace QuantLib;
+namespace QuantExt {
+  // ...
+}
+\end{minted}
+
+\noindent
+is forbidden, whereas
+
+\begin{minted}{c} 
+namespace QuantExt {
+using namespace QuantLib;
+  // ...
+}
+\end{minted}
+
+\noindent
+is allowed. This is necessary, in particular, to avoid conflicts in the ORE SWIG module build.
 
 \subsection*{Comments}
 All code should be commented, all comments are to be in (British) English, no swear words are to be included.

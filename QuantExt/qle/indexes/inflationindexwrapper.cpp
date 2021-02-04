@@ -101,7 +101,7 @@ void YoYInflationCouponPricer2::initialize(const InflationCoupon& coupon) {
     paymentDate_ = coupon_->date();
 
     // this is different from QuantLib::YoYInflationCouponPricer
-    rateCurve_ = nominalTs_;
+    rateCurve_ = nominalTermStructure_;
 
     // past or future fixing is managed in YoYInflationIndex::fixing()
     // use yield curve from index (which sets discount)

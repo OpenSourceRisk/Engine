@@ -42,11 +42,12 @@ public:
         \param sep              seperator character for the csv file. It defaults to a comma.
         \param commentCharacter if \c true, the first row starts with the \c # character.
         \param quoteChar        character to use to quote strings. If not provided, strings are not quoted.
-        \param nullString       string used to represent \c QuantLib::Null values or infinite values. If not provided, 
+        \param nullString       string used to represent \c QuantLib::Null values or infinite values. If not provided,
                                 this defaults to \c \#N/A.
+        \param lowerHeader      if \c true, makes the first character of each header lower case.
     */
     CSVFileReport(const string& filename, const char sep = ',', const bool commentCharacter = true,
-        char quoteChar = '\0', const std::string& nullString = "#N/A");
+                  char quoteChar = '\0', const std::string& nullString = "#N/A", bool lowerHeader = false);
     ~CSVFileReport();
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
@@ -63,6 +64,7 @@ private:
     bool commentCharacter_;
     char quoteChar_;
     std::string nullString_;
+    bool lowerHeader_;
     Size i_;
     FILE* fp_;
 };

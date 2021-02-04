@@ -1,52 +1,49 @@
+/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
- All rights reserved.
+ Copyright (C) 2009 Chris Kenyon
 
- This file is part of ORE, a free-software/open-source library
- for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of QuantLib, a free-software/open-source library
+ for financial quantitative analysts and developers - http://quantlib.org/
 
- ORE is free software: you can redistribute it and/or modify it
- under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program.
- The license is also available online at <http://opensourcerisk.org>
+ QuantLib is free software: you can redistribute it and/or modify it
+ under the terms of the QuantLib license.  You should have received a
+ copy of the license along with this program; if not, please email
+ <quantlib-dev@lists.sf.net>. The license is also available online at
+ <http://quantlib.org/license.shtml>.
 
- This program is distributed on the basis that it will form a useful
- contribution to risk analytics and model standardisation, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
 /*! \file kinterpolatedyoyoptionletvolatilitysurface.hpp
-    \brief Interpolated yoy optionlet volatility, derived from QuantLib's to control extrapolation
-           and fix bug in updateSlice() where the observation lag is subtracted twice
+    \brief fixed version of ql class (see patch 1,2,3 in the comments below)
 */
 
-#ifndef quantext_strike_interpolated_yoy_optionlet_volatility_surface_hpp
-#define quantext_strike_interpolated_yoy_optionlet_volatility_surface_hpp
+#pragma once
 
-#include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
+#include <ql/experimental/inflation/yoyoptionletstripper.hpp>
 
 namespace QuantExt {
+    using namespace QuantLib;
 
-using namespace QuantLib;
+    //! K-interpolated YoY optionlet volatility
+    /*! The stripper provides curves in the T direction along each K.
+        We don't know whether this is interpolating or fitting in the
+        T direction.  Our K direction interpolations are not model
+        fitting.
 
-//! Strike-interpolated YoY optionlet volatility
-/*! The stripper provides curves in the T direction along each K.
-    We don't know whether this is interpolating or fitting in the
-    T direction.  Our K direction interpolations are not model
-    fitting.
+        An alternative design would be a
+        FittedYoYOptionletVolatilitySurface taking a model, e.g. SABR
+        in the interest rate world.  This could use the same stripping
+        in the T direction along each K.
 
-    An alternative design would be a
-    FittedYoYOptionletVolatilitySurface taking a model, e.g. SABR
-    in the interest rate world.  This could use the same stripping
-    in the T direction along each K.
-
-    \bug Tests currently fail.
-*/
-
+        \bug Tests currently fail.
+    */
     template<class Interpolator1D>
     class KInterpolatedYoYOptionletVolatilitySurface
-        : public QuantLib::YoYOptionletVolatilitySurface {
+        : public YoYOptionletVolatilitySurface {
       public:
         //! \name Constructor
         //! calculate the reference date based on the global evaluation date
@@ -55,12 +52,14 @@ using namespace QuantLib;
            const Calendar&,
            const BusinessDayConvention bdc,
            const DayCounter& dc,
-           const Period &lag,
-           const ext::shared_ptr<YoYCapFloorTermPriceSurface> &capFloorPrices,
-           const ext::shared_ptr<YoYInflationCapFloorEngine> &pricer,
-           const ext::shared_ptr<YoYOptionletStripper> &yoyOptionletStripper,
+           const Period& lag,
+           const ext::shared_ptr<YoYCapFloorTermPriceSurface>& capFloorPrices,
+           const ext::shared_ptr<YoYInflationCapFloorEngine>& pricer,
+           const ext::shared_ptr<YoYOptionletStripper>& yoyOptionletStripper,
            const Real slope,
-           const Interpolator1D &interpolator = Interpolator1D());
+           const Interpolator1D& interpolator = Interpolator1D(),
+           VolatilityType volType = ShiftedLognormal,
+           Real displacement = 0.0);
 
         virtual Real minStrike() const;
         virtual Real maxStrike() const;
@@ -104,10 +103,13 @@ using namespace QuantLib;
          const ext::shared_ptr<YoYInflationCapFloorEngine> &pricer,
          const ext::shared_ptr<YoYOptionletStripper> &yoyOptionletStripper,
          const Real slope,
-         const Interpolator1D &interpolator)
-     : QuantLib::YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, lag,
+         const Interpolator1D &interpolator,
+         VolatilityType volType,
+         Real displacement)
+    : YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, lag,
                                     capFloorPrices->yoyIndex()->frequency(),
-                                    capFloorPrices->yoyIndex()->interpolated()),
+                                    capFloorPrices->yoyIndex()->interpolated(),
+                                    volType, displacement),
       capFloorPrices_(capFloorPrices), yoyInflationCouponPricer_(pricer),
       yoyOptionletStripper_(yoyOptionletStripper),
       factory1D_(interpolator), slope_(slope), lastDateisSet_(false) {
@@ -173,6 +175,7 @@ using namespace QuantLib;
     template<class Interpolator1D>
     Volatility KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
     volatilityImpl(Time length,  Rate strike) const {
+
         Natural years = (Natural)floor(length);
         Natural days = (Natural)floor((length - years) * 365.0);
         Date d = referenceDate() + Period(years, Years) + Period(days, Days);
@@ -190,7 +193,7 @@ using namespace QuantLib;
             Date d_eff = d + capFloorPrices_->observationLag();
             // patch 3 for QL class:
             // flat extrapolation in date direction, if extrapolation is enabled
-            if(this->allowsExtrapolation())
+            if (this->allowsExtrapolation())
                 d_eff = std::min(d_eff, maxDate());
             slice_ = yoyOptionletStripper_->slice(d_eff);
 
@@ -205,4 +208,3 @@ using namespace QuantLib;
 
 }
 
-#endif

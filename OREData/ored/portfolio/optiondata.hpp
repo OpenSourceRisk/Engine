@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/portfolio/optionexercisedata.hpp>
+#include <ored/portfolio/optionpaymentdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 
 namespace ore {
@@ -35,7 +37,7 @@ namespace data {
 class OptionData : public XMLSerializable {
 public:
     //! Default constructor
-    OptionData() : payoffAtExpiry_(true), premium_(0.0) {}
+    OptionData() : payoffAtExpiry_(true), premium_(0.0), automaticExercise_(false) {}
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
                string settlement = "Cash", string settlementMethod = "", double premium = 0, string premiumCcy = "",
@@ -44,7 +46,9 @@ public:
                string noticeConvention = "", const vector<string>& exerciseFeeDates = vector<string>(),
                const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
                string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
-               string payoffType = "")
+               string payoffType = "", const boost::optional<bool>& automaticExercise = boost::none,
+               const boost::optional<OptionExerciseData>& exerciseData = boost::none,
+               const boost::optional<OptionPaymentData>& paymentData = boost::none)
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
@@ -52,7 +56,8 @@ public:
           premiumPayDate_(premiumPayDate), exerciseFees_(exerciseFees), exerciseFeeDates_(exerciseFeeDates),
           exerciseFeeTypes_(exerciseFeeTypes), exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
-          exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices) {}
+          exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
+          automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData) {}
 
     //! \name Inspectors
     //@{
@@ -77,6 +82,20 @@ public:
     const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
     const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
     const vector<double>& exercisePrices() const { return exercisePrices_; }
+    boost::optional<bool> automaticExercise() const { return automaticExercise_; }
+    const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
+    const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    //@}
+
+    //! \name Setters
+    //@{
+    void setExerciseDates(const std::vector<std::string>& exerciseDates) {
+        exerciseDates_ = exerciseDates;
+    }
+    void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
+    void setPaymentData(const OptionPaymentData& paymentData) {
+        paymentData_ = paymentData;
+    }
     //@}
 
     //! \name Serialisation
@@ -84,6 +103,11 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+    //! Automatic exercise assumed false if not explicitly provided.
+    bool isAutomaticExercise() const {
+        return automaticExercise_ ? *automaticExercise_ : false;
+    }
 
 private:
     string longShort_;    // long or short
@@ -107,6 +131,9 @@ private:
     string exerciseFeeSettlementCalendar_;
     string exerciseFeeSettlementConvention_;
     vector<double> exercisePrices_;
+    boost::optional<bool> automaticExercise_;
+    boost::optional<OptionExerciseData> exerciseData_;
+    boost::optional<OptionPaymentData> paymentData_;
 };
 } // namespace data
 } // namespace ore

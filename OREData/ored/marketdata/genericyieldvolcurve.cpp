@@ -20,12 +20,12 @@
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <ored/utilities/parsers.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -70,15 +70,13 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         for (auto& p : config->quotes()) {
             // optional, because we do not require all spread quotes; we check below that we have all atm quotes
             boost::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
-            if(md == nullptr)
+            if (md == nullptr)
                 continue;
             Period expiry, term;
             if (md->quoteType() == volatilityType && matchAtmQuote(md, expiry, term)) {
                 quotesRead++;
-                Size i = std::find(optionTenors.begin(), optionTenors.end(), expiry) -
-                         optionTenors.begin();
-                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) -
-                         underlyingTenors.begin();
+                Size i = std::find(optionTenors.begin(), optionTenors.end(), expiry) - optionTenors.begin();
+                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) - underlyingTenors.begin();
                 QL_REQUIRE(i < config->optionTenors().size(),
                            "expiry " << expiry << " not in configuration, this is unexpected");
                 QL_REQUIRE(j < config->underlyingTenors().size(),
@@ -87,8 +85,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
             if (isSln && md->quoteType() == MarketDatum::QuoteType::SHIFT && matchShiftQuote(md, term)) {
                 shiftQuotesRead++;
-                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) -
-                         underlyingTenors.begin();
+                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) - underlyingTenors.begin();
                 QL_REQUIRE(j < config->underlyingTenors().size(),
                            "term " << term << " not in configuration, this is unexpected");
                 for (Size i = 0; i < shifts.rows(); ++i)
@@ -116,17 +113,24 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
         boost::shared_ptr<SwaptionVolatilityStructure> atm;
 
-        QL_REQUIRE(quotesRead > 0, "GenericYieldVolCurve: did not read any quotes, are option and swap tenors defined?");
+        QL_REQUIRE(quotesRead > 0,
+                   "GenericYieldVolCurve: did not read any quotes, are option and swap tenors defined?");
         if (quotesRead > 1) {
             atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
-                asof, config->calendar(), config->businessDayConvention(), optionTenors,
-                underlyingTenors, vols, config->dayCounter(), config->flatExtrapolation(),
+                asof, config->calendar(), config->businessDayConvention(), optionTenors, underlyingTenors, vols,
+                config->dayCounter(), config->flatExtrapolation(),
                 config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                     ? QuantLib::Normal
                     : QuantLib::ShiftedLognormal,
                 isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0)));
 
             atm->enableExtrapolation(config->extrapolate());
+            TLOG("built atm surface with vols:");
+            TLOGGERSTREAM << vols;
+            if(isSln) {
+                TLOG("built atm surface with shifts:");
+                TLOGGERSTREAM << shifts;
+            }
         } else {
             // Constant volatility
             atm = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
@@ -144,14 +148,15 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         } else {
             LOG("Building Cube for config " << config->curveID());
             vector<Period> smileOptionTenors = parseVectorOfValues<Period>(config->smileOptionTenors(), &parsePeriod);
-            vector<Period> smileUnderlyingTenors = parseVectorOfValues<Period>(config->smileUnderlyingTenors(), &parsePeriod);
+            vector<Period> smileUnderlyingTenors =
+                parseVectorOfValues<Period>(config->smileUnderlyingTenors(), &parsePeriod);
             vector<Spread> spreads = parseVectorOfValues<Real>(config->smileSpreads(), &parseReal);
 
-            // add smile spread 0, if not already existent
-            auto spr = std::upper_bound(spreads.begin(), spreads.end(), 0.0);
-            if (!close_enough(*spr, 0.0)) {
-                spreads.insert(spr, 0.0);
-            }
+            // add smile spread 0, if not already existent and sort the spreads
+            if (std::find_if(spreads.begin(), spreads.end(), [](const Real x) { return close_enough(x, 0.0); }) ==
+                spreads.end())
+                spreads.push_back(0.0);
+            std::sort(spreads.begin(), spreads.end());
 
             vector<vector<bool>> zero(smileOptionTenors.size() * smileUnderlyingTenors.size(),
                                       std::vector<bool>(spreads.size(), true));
@@ -163,8 +168,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             QL_REQUIRE(spreads.size() > 0, "Need at least 1 strike spread for a SwaptionVolCube");
 
             Size n = smileOptionTenors.size() * smileUnderlyingTenors.size();
-            vector<vector<Handle<Quote>>> volSpreadHandles(
-                n, vector<Handle<Quote>>(spreads.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0))));
+            vector<vector<Handle<Quote>>> volSpreadHandles(n, vector<Handle<Quote>>(spreads.size()));
+            for (auto& i : volSpreadHandles)
+                for (auto& j : i)
+                    j = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 
             LOG("vol cube smile option tenors " << smileOptionTenors.size());
             LOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
@@ -209,8 +216,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
                     Real lastNonZeroValue = 0.0;
                     for (Size k = 0; k < spreads.size(); ++k) {
-                        boost::shared_ptr<SimpleQuote> q = boost::static_pointer_cast<SimpleQuote>(
+                        boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(
                             *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
+                        QL_REQUIRE(q, "internal error: expected simple quote");
                         // do not overwrite vol spread for zero strike spread (ATM point)
                         if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k] &&
                             !close_enough(spreads[spreads.size() - 1 - k], 0.0)) {
@@ -219,7 +227,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                  << config->curveID() << "/" << smileOptionTenors[i] << "/" << smileUnderlyingTenors[j]
                                  << "/" << spreads[spreads.size() - 1 - k] << " with " << lastNonZeroValue
                                  << " since market quote is zero");
-                        } else {
+                        }
+                        // update last non-zero value
+                        if (!zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
                             lastNonZeroValue = q->value();
                         }
                     }

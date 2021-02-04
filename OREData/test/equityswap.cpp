@@ -62,13 +62,14 @@ public:
         iborIndices_[make_pair(Market::defaultConfiguration, "USD-LIBOR-3M")] = hUSD;
 
         // build SP5 Equity Curve
-        hSP5 = Handle<EquityIndex>(
-            boost::shared_ptr<EquityIndex>(new EquityIndex("SP5", UnitedStates(), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
+        hSP5 = Handle<EquityIndex>(boost::shared_ptr<EquityIndex>(
+            new EquityIndex("SP5", UnitedStates(), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
 
         // add fixings
         hUSD->addFixing(Date(14, July, 2016), 0.035);
         hUSD->addFixing(Date(18, October, 2016), 0.037);
+	hSP5->addFixing(Date(18, October, 2016), 2100.0);
     }
 
     Handle<IborIndex> hUSD;
@@ -265,7 +266,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
     // build market
     boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
     Date today = market->asofDate();
-    // Move on 4 months so we during next period, check we can get a notional 
+    // Move on 4 months so we during next period, check we can get a notional
     Settings::instance().evaluationDate() = today + Period(4, Months);
 
     CommonVars vars;
@@ -295,11 +296,11 @@ BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
     BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
-        << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
-        << " QL = " << qlSwap->legNPV(0));
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
+                       << " QL = " << qlSwap->legNPV(0));
     BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
-        << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
-        << " QL = " << qlSwap->legNPV(1));
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
+                       << " QL = " << qlSwap->legNPV(1));
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8);
 }
 

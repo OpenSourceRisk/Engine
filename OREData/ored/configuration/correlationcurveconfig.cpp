@@ -79,6 +79,15 @@ CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const stri
         QL_REQUIRE(optionTenors.size() == 1,
                    "Only one tenor should be supplied for a constant correlation termstructure");
     }
+
+    populateRequiredCurveIds();
+}
+
+void CorrelationCurveConfig::populateRequiredCurveIds() {
+    if (!swaptionVolatility().empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(swaptionVolatility());
+    if (!discountCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurve());
 }
 
 const vector<string>& CorrelationCurveConfig::quotes() {
@@ -181,6 +190,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
             discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
         }
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
@@ -234,7 +244,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
 
     Size s1, s2;
 
-    if (tokens1[0] == "CMS")
+    if (tokens1[1] == "CMS")
         s1 = 4;
     else if (tokens1[0] == "FX")
         s1 = 2;
@@ -245,7 +255,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
     else
         s1 = 3; // assume Ibor
 
-    if (tokens2[0] == "CMS")
+    if (tokens2[1] == "CMS")
         s2 = 4;
     else if (tokens2[0] == "FX")
         s2 = 2;

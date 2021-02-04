@@ -33,23 +33,25 @@ boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const stri
     Handle<QuantExt::YoYOptionletVolatilitySurface> ovs =
         market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing));
     if (ovs.empty())
-        return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*yoyTs,
-                                                                   Handle<QuantLib::YoYOptionletVolatilitySurface>());
-    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs->yoyVolSurface());
+        return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
+            *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>());
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
         if (ovs->displacement() == 0.0) {
             LOG("Build YoYInflationBlackCapFloorEngine for inflation index " << indexName);
-            return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(*yoyTs, hovs, discount);
+            return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
+                *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(ovs), discount);
             break;
         } else {
             LOG("Build YoYInflationUnitDisplacedBlackCapFloorEngine for inflation index " << indexName);
-            return boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(*yoyTs, hovs, discount);
+            return boost::make_shared<QuantExt::YoYInflationUnitDisplacedBlackCapFloorEngine>(
+                *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(ovs), discount);
             break;
         }
     case Normal:
         LOG("Build YoYInflationBachelierCapFloorEngine for inflation index " << indexName);
-        return boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(*yoyTs, hovs, discount);
+        return boost::make_shared<QuantExt::YoYInflationBachelierCapFloorEngine>(
+            *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(ovs), discount);
         break;
     default:
         QL_FAIL("Caplet volatility type, " << ovs->volatilityType() << ", not covered in EngineFactory");

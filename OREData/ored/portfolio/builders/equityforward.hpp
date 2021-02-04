@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/equityforward.hpp
-    \brief
+  \brief Builder that returns an engine to price an equity forward
     \ingroup builders
 */
 

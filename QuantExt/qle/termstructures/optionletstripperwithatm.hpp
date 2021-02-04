@@ -24,20 +24,20 @@
 #ifndef quantext_optionletstripper_with_atm_hpp
 #define quantext_optionletstripper_with_atm_hpp
 
-#include <qle/termstructures/optionletstripper.hpp>
-#include <qle/termstructures/strippedoptionletadapter.hpp>
-#include <qle/termstructures/spreadedoptionletvolatility.hpp>
-#include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <qle/termstructures/capfloortermvolcurve.hpp>
+#include <qle/termstructures/optionletstripper.hpp>
+#include <qle/termstructures/spreadedoptionletvolatility.hpp>
+#include <qle/termstructures/strippedoptionletadapter.hpp>
 
 namespace QuantExt {
 
-/*! Optionlet stripper that amends existing stripped optionlets to incoroporate ATM cap floor 
+/*! Optionlet stripper that amends existing stripped optionlets to incoroporate ATM cap floor
     term volatilities
     \ingroup termstructures
 */
@@ -46,16 +46,14 @@ class OptionletStripperWithAtm : public QuantExt::OptionletStripper {
 
 public:
     //! Constructor
-    OptionletStripperWithAtm(
-        const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
-        const QuantLib::Handle<CapFloorTermVolCurve>& atmCurve,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discount = QuantLib::Handle<QuantLib::YieldTermStructure>(),
-        const QuantLib::VolatilityType atmVolatilityType = QuantLib::ShiftedLognormal,
-        QuantLib::Real atmDisplacement = 0.0,
-        QuantLib::Size maxEvaluations = 10000,
-        QuantLib::Real accuracy = 1.0e-12,
-        const TimeInterpolator& ti = TimeInterpolator(),
-        const SmileInterpolator& si = SmileInterpolator());
+    OptionletStripperWithAtm(const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
+                             const QuantLib::Handle<CapFloorTermVolCurve>& atmCurve,
+                             const QuantLib::Handle<QuantLib::YieldTermStructure>& discount =
+                                 QuantLib::Handle<QuantLib::YieldTermStructure>(),
+                             const QuantLib::VolatilityType atmVolatilityType = QuantLib::ShiftedLognormal,
+                             QuantLib::Real atmDisplacement = 0.0, QuantLib::Size maxEvaluations = 10000,
+                             QuantLib::Real accuracy = 1.0e-12, const TimeInterpolator& ti = TimeInterpolator(),
+                             const SmileInterpolator& si = SmileInterpolator());
 
     //! \name Inspectors
     std::vector<QuantLib::Rate> atmStrikes() const;
@@ -70,18 +68,17 @@ public:
 
 private:
     //! Return the implied optionlet spreads to retrieve the ATM cap floor term volatilities
-    std::vector<QuantLib::Volatility> volSpreads(const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-        const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& ovs) const;
+    std::vector<QuantLib::Volatility>
+    volSpreads(const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
+               const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& ovs) const;
 
     //! Class that is used to imply the spreads at each tenor such that the ATM cap floor volatilities are retrieved
     class ObjectiveFunction {
     public:
-        ObjectiveFunction(
-            const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& ovs,
-            const boost::shared_ptr<QuantLib::CapFloor>& cap,
-            QuantLib::Real targetValue,
-            const QuantLib::Handle<QuantLib::YieldTermStructure>& discount);
-        
+        ObjectiveFunction(const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& ovs,
+                          const boost::shared_ptr<QuantLib::CapFloor>& cap, QuantLib::Real targetValue,
+                          const QuantLib::Handle<QuantLib::YieldTermStructure>& discount);
+
         Real operator()(QuantLib::Volatility volSpread) const;
 
     private:
@@ -127,38 +124,25 @@ private:
     mutable std::vector<boost::shared_ptr<QuantLib::CapFloor> > caps_;
 };
 
-
 template <class TimeInterpolator, class SmileInterpolator>
 OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::OptionletStripperWithAtm(
     const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
     const QuantLib::Handle<CapFloorTermVolCurve>& atmCurve,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-    const QuantLib::VolatilityType atmVolatilityType,
-    QuantLib::Real atmDisplacement,
-    QuantLib::Size maxEvaluations,
-    QuantLib::Real accuracy,
-    const TimeInterpolator& ti,
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, const QuantLib::VolatilityType atmVolatilityType,
+    QuantLib::Real atmDisplacement, QuantLib::Size maxEvaluations, QuantLib::Real accuracy, const TimeInterpolator& ti,
     const SmileInterpolator& si)
-    : QuantExt::OptionletStripper(osBase->termVolSurface(), osBase->iborIndex(),
-        discount, osBase->volatilityType(), osBase->displacement()),
-      osBase_(osBase),
-      atmCurve_(atmCurve),
-      atmVolatilityType_(atmVolatilityType),
-      atmDisplacement_(atmDisplacement),
-      maxEvaluations_(maxEvaluations),
-      accuracy_(accuracy),
-      dayCounter_(osBase_->termVolSurface()->dayCounter()),
-      nAtmExpiries_(atmCurve_->optionTenors().size()),
-      atmStrikes_(nAtmExpiries_),
-      atmPrices_(nAtmExpiries_),
-      volSpreads_(nAtmExpiries_),
-      caps_(nAtmExpiries_) {
+    : QuantExt::OptionletStripper(osBase->termVolSurface(), osBase->iborIndex(), discount, osBase->volatilityType(),
+                                  osBase->displacement()),
+      osBase_(osBase), atmCurve_(atmCurve), atmVolatilityType_(atmVolatilityType), atmDisplacement_(atmDisplacement),
+      maxEvaluations_(maxEvaluations), accuracy_(accuracy), dayCounter_(osBase_->termVolSurface()->dayCounter()),
+      nAtmExpiries_(atmCurve_->optionTenors().size()), atmStrikes_(nAtmExpiries_), atmPrices_(nAtmExpiries_),
+      volSpreads_(nAtmExpiries_), caps_(nAtmExpiries_) {
 
     registerWith(osBase_);
     registerWith(atmCurve_);
 
-    QL_REQUIRE(dayCounter_ == atmCurve_->dayCounter(), 
-        "The ATM curve day counter should equal that of the underlying base optionlet stripper");
+    QL_REQUIRE(dayCounter_ == atmCurve_->dayCounter(),
+               "The ATM curve day counter should equal that of the underlying base optionlet stripper");
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
@@ -174,7 +158,8 @@ inline std::vector<QuantLib::Real> OptionletStripperWithAtm<TimeInterpolator, Sm
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
-inline std::vector<QuantLib::Volatility> OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::volSpreads() const {
+inline std::vector<QuantLib::Volatility>
+OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::volSpreads() const {
     calculate();
     return volSpreads_;
 }
@@ -183,16 +168,16 @@ template <class TimeInterpolator, class SmileInterpolator>
 void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalculations() const {
 
     // Some localised typedefs and using declarations to make the code more readable
+    using QuantLib::BachelierCapFloorEngine;
+    using QuantLib::BlackCapFloorEngine;
+    using QuantLib::Handle;
+    using QuantLib::MakeCapFloor;
+    using QuantLib::OptionletVolatilityStructure;
+    using QuantLib::Period;
     using QuantLib::Size;
     using QuantLib::Time;
-    using QuantLib::Period;
-    using QuantLib::Handle;
-    using QuantLib::YieldTermStructure;
-    using QuantLib::OptionletVolatilityStructure;
     using QuantLib::Volatility;
-    using QuantLib::BlackCapFloorEngine;
-    using QuantLib::BachelierCapFloorEngine;
-    using QuantLib::MakeCapFloor;
+    using QuantLib::YieldTermStructure;
     using std::vector;
 
     // Possible update based on underlying optionlet stripper data
@@ -220,7 +205,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
 
     // Populate ATM strikes and prices
     for (Size j = 0; j < nAtmExpiries_; ++j) {
-        
+
         // Create a cap for each pillar point on ATM curve and attach relevant pricing engine
         Volatility atmVol = atmCurve_->volatility(atmTimes[j], 0.01);
         boost::shared_ptr<PricingEngine> engine;
@@ -236,8 +221,8 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
         // a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp BlackCapFloorEngine with a
         // dummy vol to calculate ATM rate. Needs to be fixed in QL.
         boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
-        caps_[j] = MakeCapFloor(CapFloor::Cap, atmTenors[j], iborIndex_, Null<Rate>(), 0 * Days)
-            .withPricingEngine(tempEngine);
+        caps_[j] =
+            MakeCapFloor(CapFloor::Cap, atmTenors[j], iborIndex_, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
 
         // Now set correct engine and get the ATM rate and the price
         caps_[j]->setPricingEngine(engine);
@@ -246,8 +231,8 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     }
 
     // Create an optionlet volatility structure from the underlying stripped optionlet surface
-    boost::shared_ptr<OptionletVolatilityStructure> ovs = 
-        boost::make_shared<QuantExt::StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>>(
+    boost::shared_ptr<OptionletVolatilityStructure> ovs =
+        boost::make_shared<QuantExt::StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator> >(
             atmCurve_->referenceDate(), osBase_);
     ovs->enableExtrapolation();
 
@@ -258,7 +243,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     for (Size j = 0; j < nAtmExpiries_; ++j) {
         for (Size i = 0; i < optionletTimes_.size(); ++i) {
             if (i < caps_[j]->floatingLeg().size()) {
-                
+
                 Volatility unadjustedVol = ovs->volatility(optionletTimes_[i], atmStrikes_[j]);
                 Volatility adjustedVol = unadjustedVol + volSpreads_[j];
 
@@ -288,32 +273,29 @@ inline std::vector<QuantLib::Volatility> OptionletStripperWithAtm<TimeInterpolat
     Volatility guess = 0.0001;
     Volatility minSpread = -0.1;
     Volatility maxSpread = 0.1;
-    
+
     for (Size j = 0; j < nAtmExpiries_; ++j) {
         ObjectiveFunction f(ovs, caps_[j], atmPrices_[j], discount);
         solver.setMaxEvaluations(maxEvaluations_);
         Volatility root = solver.solve(f, accuracy_, guess, minSpread, maxSpread);
         result[j] = root;
     }
-    
+
     return result;
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
 OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction::ObjectiveFunction(
     const QuantLib::Handle<QuantLib::OptionletVolatilityStructure>& ovs,
-    const boost::shared_ptr<QuantLib::CapFloor>& cap,
-    QuantLib::Real targetValue,
+    const boost::shared_ptr<QuantLib::CapFloor>& cap, QuantLib::Real targetValue,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount)
-    : cap_(cap),
-      targetValue_(targetValue),
-      discount_(discount) {
+    : cap_(cap), targetValue_(targetValue), discount_(discount) {
 
     // Some localised typedefs and using declarations to make the code more readable
-    using QuantLib::SimpleQuote;
+    using QuantLib::Handle;
     using QuantLib::OptionletVolatilityStructure;
     using QuantLib::Quote;
-    using QuantLib::Handle;
+    using QuantLib::SimpleQuote;
 
     // set an implausible value, so that calculation is forced at first operator()(Volatility x) call
     spreadQuote_ = boost::make_shared<SimpleQuote>(-1.0);
@@ -333,13 +315,14 @@ OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
-QuantLib::Real OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction::operator()(QuantLib::Volatility volSpread) const {
+QuantLib::Real OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::ObjectiveFunction::operator()(
+    QuantLib::Volatility volSpread) const {
     if (volSpread != spreadQuote_->value()) {
         spreadQuote_->setValue(volSpread);
     }
     return cap_->NPV() - targetValue_;
 }
 
-}
+} // namespace QuantExt
 
 #endif

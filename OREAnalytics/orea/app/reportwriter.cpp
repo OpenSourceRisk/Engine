@@ -20,7 +20,7 @@
 
 #include <orea/app/reportwriter.hpp>
 
-//FIXME: including all is slow and bad
+// FIXME: including all is slow and bad
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -30,12 +30,13 @@
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
 
+using ore::data::to_string;
+using QuantLib::Date;
 using std::string;
 using std::vector;
-using QuantLib::Date;
-using ore::data::to_string;
 
 namespace ore {
 namespace analytics {
@@ -124,6 +125,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("Currency", string())
         .addColumn("Coupon", double(), 10)
         .addColumn("Accrual", double(), 10)
+        .addColumn("AccrualStartDate", Date(), 4)
+        .addColumn("AccrualEndDate", Date(), 4)
+        .addColumn("AccruedAmount", double(), 4)
         .addColumn("fixingDate", Date())
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
@@ -132,6 +136,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         report.addColumn("DiscountFactor", double(), 10);
         report.addColumn("PresentValue", double(), 10);
     }
+
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
@@ -163,15 +168,24 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         Real coupon;
                         Real accrual;
                         Real notional;
+                        Date accrualStartDate, accrualEndDate;
+                        Real accruedAmount;
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
                             notional = ptrCoupon->nominal();
+                            accrualStartDate = ptrCoupon->accrualStartDate();
+                            accrualEndDate = ptrCoupon->accrualEndDate();
+                            accruedAmount = ptrCoupon->accruedAmount(asof);
+                            if (payer)
+                                accruedAmount *= -1.0;
                             flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
                             notional = Null<Real>();
+                            accrualStartDate = accrualEndDate = Null<Date>();
+                            accruedAmount = Null<Real>();
                             flowType = "Notional";
                         }
                         // This BMA part here (and below) is necessary because the fixingDay() method of
@@ -201,7 +215,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
-                            fixingValue = ptrInfl->index()->fixing(fixingDate);
+                            fixingValue = ptrInfl->indexFixing();
                             flowType = "Inflation";
                         } else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
@@ -226,6 +240,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(ccy)
                             .add(coupon)
                             .add(accrual)
+                            .add(accrualStartDate)
+                            .add(accrualEndDate)
+                            .add(accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier))
                             .add(fixingDate)
                             .add(fixingValue)
                             .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
@@ -236,61 +253,60 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             Real presentValue = discountFactor * effectiveAmount;
                             report.add(presentValue);
                         }
+
                     }
                 }
             }
 
-            // write conditional cashflows that might be provided as additional results
-            // we assume fixed labels and types for these results, otherwise we don't
-            // write out any conditional flows
+            // write cashflows that are provided as additional results
+            // we assume a fixed label and type for these results, if we do not find that we do not write out anything
             auto qlInstr = trades[k]->instrument()->qlInstrument();
-            auto condCfAmounts = qlInstr->additionalResults().find("cashflowAmounts");
-            auto condCfDates = qlInstr->additionalResults().find("cashflowDates");
-            auto condCfCurrencies = qlInstr->additionalResults().find("cashflowCurrencies");
-            if (condCfAmounts != qlInstr->additionalResults().end() &&
-                condCfDates != qlInstr->additionalResults().end() &&
-                condCfCurrencies != qlInstr->additionalResults().end()) {
-                QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
-                           "cashflowAmounts type not handled");
-                QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>), "cashflowDates type not handled");
-                QL_REQUIRE(condCfAmounts->second.type() == typeid(std::vector<Real>),
-                           "cashflowCurrencies type not handled");
-                std::vector<Real> condCfAmountsVec = boost::any_cast<std::vector<Real>>(condCfAmounts->second);
-                std::vector<Date> condCfDatesVec = boost::any_cast<std::vector<Date>>(condCfDates->second);
-                std::vector<string> condCfCurrenciesVec =
-                    boost::any_cast<std::vector<string>>(condCfCurrencies->second);
-                QL_REQUIRE(condCfAmountsVec.size() == condCfDatesVec.size(),
-                           "cashflowAmounts and cashflowDates size mismatch");
-                QL_REQUIRE(condCfAmountsVec.size() == condCfCurrenciesVec.size(),
-                           "cashflowAmounts and cashflowCurrencies size mismatch");
-                for (Size i = 0; i < condCfAmountsVec.size(); ++i) {
-                    Real effectiveAmount = condCfAmountsVec[i] * (condCfAmountsVec[i] == Null<Real>() ? 1.0 : multiplier);
-                    report.next()
-                        .add(trades[k]->id())
-                        .add(trades[k]->tradeType())
-                        .add(i + 1)
-                        .add(i)
-                        .add(condCfDatesVec[i])
-                        .add("")
-                        .add(effectiveAmount)
-                        .add(condCfCurrenciesVec[i])
-                        .add(Null<Real>())
-                        .add(Null<Real>())
-                        .add(Null<Date>())
-                        .add(Null<Real>())
-                        .add(Null<Real>());
-                    if (write_discount_factor) {
-                        Handle<YieldTermStructure> discountCurve = market->discountCurve(condCfCurrenciesVec[i]);
-                        Real discountFactor = discountCurve->discount(condCfDatesVec[i]);
-                        report.add(discountFactor).add(discountFactor * effectiveAmount);
+            // we don't require a ql instrument always
+            if (qlInstr) {
+                auto tmp = qlInstr->additionalResults().find("cashFlowResults");
+                if (tmp != qlInstr->additionalResults().end()) {
+                    QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
+                               "cashflowResults type not handlded");
+                    std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
+                    std::map<Size,Size> cashflowNumber;
+                    for (auto const& cf : cfResults) {
+                        Real effectiveAmount =
+                            cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
+                        report.next()
+                            .add(trades[k]->id())
+                            .add(trades[k]->tradeType())
+                            .add(++cashflowNumber[cf.legNumber])
+                            .add(cf.legNumber)
+                            .add(cf.payDate)
+                            .add(cf.type)
+                            .add(effectiveAmount)
+                            .add(cf.currency)
+                            .add(cf.rate)
+                            .add(cf.accrualPeriod)
+                            .add(cf.accrualStartDate)
+                            .add(cf.accrualEndDate)
+                            .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
+                            .add(cf.fixingDate)
+                            .add(cf.fixingValue)
+                            .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier));
+                        if (write_discount_factor) {
+                            if (!cf.currency.empty() && cf.payDate != Null<Date>()) {
+                                Handle<YieldTermStructure> discountCurve = market->discountCurve(cf.currency);
+                                Real discountFactor = discountCurve->discount(cf.payDate);
+                                report.add(discountFactor).add(discountFactor * effectiveAmount);
+                            } else {
+                                // fallback if currency or pay date are not given in the additional results
+                                report.add(1.0).add(effectiveAmount);
+                            }
+                        }
                     }
                 }
             }
 
         } catch (std::exception& e) {
-            LOG("Exception writing cashflow report : " << e.what());
+            ALOG("Exception writing cashflow report : " << e.what());
         } catch (...) {
-            LOG("Exception writing cashflow report : Unkown Exception");
+            ALOG("Exception writing cashflow report : Unkown Exception");
         }
     }
     report.end();
@@ -420,7 +436,6 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
         .addColumn("PFE", double())
         .addColumn("BaselEE", double())
         .addColumn("BaselEEE", double());
-
     report.next()
         .add(tradeId)
         .add(today)
@@ -433,6 +448,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
         .add(ee_b[0])
         .add(eee_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
+        
         Time time = dc.yearFraction(today, dates[j]);
         report.next()
             .add(tradeId)
@@ -449,7 +465,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
     report.end();
 }
 
-void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void addNettingSetExposure(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                             const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -460,15 +476,6 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     const vector<Real>& eee_b = postProcess->netEEE_B(nettingSetId);
     const vector<Real>& pfe = postProcess->netPFE(nettingSetId);
     const vector<Real>& ecb = postProcess->expectedCollateral(nettingSetId);
-    report.addColumn("NettingSet", string())
-        .addColumn("Date", Date())
-        .addColumn("Time", double(), 6)
-        .addColumn("EPE", double(), 2)
-        .addColumn("ENE", double(), 2)
-        .addColumn("PFE", double(), 2)
-        .addColumn("ExpectedCollateral", double(), 2)
-        .addColumn("BaselEE", double(), 2)
-        .addColumn("BaselEEE", double(), 2);
 
     report.next()
         .add(nettingSetId)
@@ -493,6 +500,61 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
             .add(ee_b[j + 1])
             .add(eee_b[j + 1]);
     }
+}
+
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const string& nettingSetId) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double(), 2)
+        .addColumn("ENE", double(), 2)
+        .addColumn("PFE", double(), 2)
+        .addColumn("ExpectedCollateral", double(), 2)
+        .addColumn("BaselEE", double(), 2)
+        .addColumn("BaselEEE", double(), 2);
+    addNettingSetExposure(report, postProcess, nettingSetId);
+    report.end();
+}
+
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess) {
+    report.addColumn("NettingSet", string())
+        .addColumn("Date", Date())
+        .addColumn("Time", double(), 6)
+        .addColumn("EPE", double(), 2)
+        .addColumn("ENE", double(), 2)
+        .addColumn("PFE", double(), 2)
+        .addColumn("ExpectedCollateral", double(), 2)
+        .addColumn("BaselEE", double(), 2)
+        .addColumn("BaselEEE", double(), 2);
+    
+    for (auto n : postProcess->nettingSetIds()) {
+        addNettingSetExposure(report, postProcess, n);
+    }
+    report.end();
+}
+
+void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
+                                                   boost::shared_ptr<PostProcess> postProcess,
+                                                   const string& nettingSetId) {
+    const vector<Real> grid = postProcess->spreadSensitivityTimes();
+    const vector<Real>& sensiHazardRate = postProcess->netCvaHazardRateSensitivity(nettingSetId);
+    const vector<Real>& sensiCdsSpread = postProcess->netCvaSpreadSensitivity(nettingSetId);
+    report.addColumn("NettingSet", string())
+        .addColumn("Time", double(), 6)
+        .addColumn("CvaHazardRateSensitivity", double(), 6)
+        .addColumn("CvaSpreadSensitivity", double(), 6);
+
+    if (sensiHazardRate.size() == 0 || sensiCdsSpread.size() == 0)
+        return; 
+    
+    for (Size j = 0; j < grid.size(); ++j) {
+        report.next()
+            .add(nettingSetId)
+            .add(grid[j])
+            .add(sensiHazardRate[j])
+            .add(sensiCdsSpread[j]);
+    }
     report.end();
 }
 
@@ -500,28 +562,29 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
                             boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
+    Size precision = 2;
     report.addColumn("TradeId", string())
         .addColumn("NettingSetId", string())
-        .addColumn("CVA", double(), 2)
-        .addColumn("DVA", double(), 2)
-        .addColumn("FBA", double(), 2)
-        .addColumn("FCA", double(), 2)
-        .addColumn("FBAexOwnSP", double(), 2)
-        .addColumn("FCAexOwnSP", double(), 2)
-        .addColumn("FBAexAllSP", double(), 2)
-        .addColumn("FCAexAllSP", double(), 2)
-        .addColumn("COLVA", double(), 2)
-        .addColumn("MVA", double(), 2)
-        .addColumn("OurKVACCR", double(), 2)
-        .addColumn("TheirKVACCR", double(), 2)
-        .addColumn("OurKVACVA", double(), 2)
-        .addColumn("TheirKVACVA", double(), 2)
-        .addColumn("CollateralFloor", double(), 2)
-        .addColumn("AllocatedCVA", double(), 2)
-        .addColumn("AllocatedDVA", double(), 2)
+        .addColumn("CVA", double(), precision)
+        .addColumn("DVA", double(), precision)
+        .addColumn("FBA", double(), precision)
+        .addColumn("FCA", double(), precision)
+        .addColumn("FBAexOwnSP", double(), precision)
+        .addColumn("FCAexOwnSP", double(), precision)
+        .addColumn("FBAexAllSP", double(), precision)
+        .addColumn("FCAexAllSP", double(), precision)
+        .addColumn("COLVA", double(), precision)
+        .addColumn("MVA", double(), precision)
+        .addColumn("OurKVACCR", double(), precision)
+        .addColumn("TheirKVACCR", double(), precision)
+        .addColumn("OurKVACVA", double(), precision)
+        .addColumn("TheirKVACVA", double(), precision)
+        .addColumn("CollateralFloor", double(), precision)
+        .addColumn("AllocatedCVA", double(), precision)
+        .addColumn("AllocatedDVA", double(), precision)
         .addColumn("AllocationMethod", string())
-        .addColumn("BaselEPE", double(), 2)
-        .addColumn("BaselEEPE", double(), 2);
+        .addColumn("BaselEPE", double(), precision)
+        .addColumn("BaselEEPE", double(), precision);
 
     for (auto n : postProcess->nettingSetIds()) {
         report.next()
@@ -647,7 +710,8 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
     report.end();
 }
 
-void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+void ReportWriter::writeScenarioReport(ore::data::Report& report,
+                                       const boost::shared_ptr<SensitivityCube>& sensitivityCube,
                                        Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -681,11 +745,10 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::s
                 report.add(baseNpv);
                 report.add(scenarioNpv);
                 report.add(difference);
-            }
-            else if (!std::isfinite(difference)) {
+            } else if (!std::isfinite(difference)) {
                 // TODO: is this needed?
                 ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
-                    << " is not finite (" << difference << ")");
+                                                       << " is not finite (" << difference << ")");
             }
         }
     }
@@ -695,20 +758,23 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::s
 }
 
 void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_ptr<SensitivityStream>& ss,
-                                          Real outputThreshold) {
+                                          Real outputThreshold, Size outputPrecision) {
 
     LOG("Writing Sensitivity report");
+
+    Size shiftSizePrecision = outputPrecision < 6 ? 6 : outputPrecision;
+    Size amountPrecision = outputPrecision < 2 ? 2 : outputPrecision;
 
     report.addColumn("TradeId", string());
     report.addColumn("IsPar", string());
     report.addColumn("Factor_1", string());
-    report.addColumn("ShiftSize_1", double(), 6);
+    report.addColumn("ShiftSize_1", double(), shiftSizePrecision);
     report.addColumn("Factor_2", string());
-    report.addColumn("ShiftSize_2", double(), 6);
+    report.addColumn("ShiftSize_2", double(), shiftSizePrecision);
     report.addColumn("Currency", string());
-    report.addColumn("Base NPV", double(), 2);
-    report.addColumn("Delta", double(), 2);
-    report.addColumn("Gamma", double(), 2);
+    report.addColumn("Base NPV", double(), amountPrecision);
+    report.addColumn("Delta", double(), amountPrecision);
+    report.addColumn("Gamma", double(), amountPrecision);
 
     // Make sure that we are starting from the start
     ss->reset();
@@ -733,6 +799,228 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
 
     report.end();
     LOG("Sensitivity report finished");
+}
+
+void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Market> market, const std::string& baseCurrency) {
+    
+    LOG("Writing AdditionalResults report");
+
+    report.addColumn("TradeId", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    for (auto trade : portfolio->trades()) {
+        // we first add any additional trade data.
+        string tradeId = trade->id();
+        Real notional2 = Null<Real>();
+        string notional2Ccy = "";
+        // Get the additional data for the current instrument.
+        auto additionalData = trade->additionalData();
+        for (const auto& kv : additionalData) {
+            auto p = parseBoostAny(kv.second);
+            report.next()
+                .add(tradeId)
+                .add(kv.first)
+                .add(p.first)
+                .add(p.second);
+        }
+
+        // if the 'notionalTwo' has been provided convert it to base currency
+        if (additionalData.count("notionalTwo") != 0 && additionalData.count("notionalTwoCurrency") != 0) {
+            notional2 = trade->additionalDatum<Real>("notionalTwo");
+            notional2Ccy = trade->additionalDatum<string>("notionalTwoCurrency");
+        }
+
+        if (trade->instrument()->qlInstrument()) {
+            auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
+            if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
+                notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
+                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency"); 
+            }
+        }
+
+        if (notional2 != Null<Real>() && notional2Ccy != "") {
+            Real fx = 1.0;
+            if (notional2Ccy != baseCurrency)
+                fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(8) << notional2 * fx;
+            report.next()
+                .add(tradeId)
+                .add("notionalTwoInBaseCurrency")
+                .add("double")
+                .add(oss.str());
+        }
+
+        // Just use the unadjusted trade ID in the additional results report for the main instrument.
+        // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each 
+        // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the 
+        // multiplier as an extra additional result if additional results exist.
+        auto instruments = trade->instrument()->additionalInstruments();
+        auto multipliers = trade->instrument()->additionalMultipliers();
+        QL_REQUIRE(instruments.size() == multipliers.size(), "Expected the number of " <<
+            "additional instruments (" << instruments.size() << ") to equal the number of " <<
+            "additional multipliers (" << multipliers.size() << ").");
+        instruments.insert(instruments.begin(), trade->instrument()->qlInstrument());
+        multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
+
+        for (Size i = 0; i < instruments.size(); ++i) {
+
+            const auto& instrument = instruments[i];
+
+            if (!instrument)
+                continue;
+
+            // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in 
+            // the portfolio (still a risk).
+            tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
+
+            // Get the additional results for the current instrument.
+            auto additionalResults = instrument->additionalResults();
+
+            // Add the multiplier if there are additional results.
+            // Check on 'inst_multiplier' already existing is probably unnecessary.
+            if (!additionalResults.empty() && additionalResults.count("inst_multiplier") == 0) {
+                additionalResults["inst_multiplier"] = multipliers[i];
+            }
+
+            // Write current instrument's additional results.
+            for (const auto& kv : additionalResults) {
+                auto p = parseBoostAny(kv.second);
+                report.next()
+                    .add(tradeId)
+                    .add(kv.first)
+                    .add(p.first)
+                    .add(p.second);
+            }
+        }
+
+    }
+
+    report.end();
+
+    LOG("AdditionalResults report written");
+}
+
+namespace {
+void addRowMktCalReport(ore::data::Report& report, const std::string& moType, const std::string& moId,
+                        const std::string& resId, const std::string& key1, const std::string& key2,
+                        const std::string& key3, const boost::any& value) {
+    auto p = parseBoostAny(value);
+    report.next().add(moType).add(moId).add(resId).add(key1).add(key2).add(key3).add(p.first).add(p.second);
+}
+
+void addYieldCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                  boost::shared_ptr<YieldCurveCalibrationInfo> info) {
+
+    if (info == nullptr)
+        return;
+
+    // common results
+    addRowMktCalReport(report, "yieldCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "yieldCurve", id, "currency", "", "", "", info->currency);
+
+    for (Size i = 0; i < info->pillarDates.size(); ++i) {
+        std::string key1 = ore::data::to_string(info->pillarDates[i]);
+        addRowMktCalReport(report, "yieldCurve", id, "time", key1, "", "", info->times.at(i));
+        addRowMktCalReport(report, "yieldCurve", id, "zeroRate", key1, "", "", info->zeroRates.at(i));
+        addRowMktCalReport(report, "yieldCurve", id, "discountFactor", key1, "", "", info->discountFactors.at(i));
+    }
+
+    // fitted bond curve results
+    auto y = boost::dynamic_pointer_cast<FittedBondCurveCalibrationInfo>(info);
+    if (y) {
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.fittingMethod", "", "", "", y->fittingMethod);
+        for (Size k = 0; k < y->solution.size(); ++k) {
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.solution", std::to_string(k), "", "",
+                               y->solution[k]);
+        }
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.iterations", "", "", "", y->iterations);
+        addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.costValue", "", "", "", y->costValue);
+        for (Size i = 0; i < y->securities.size(); ++i) {
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.bondMaturity", y->securities.at(i), "", "",
+                               y->securityMaturityDates.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.marketPrice", y->securities.at(i), "", "",
+                               y->marketPrices.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.modelPrice", y->securities.at(i), "", "",
+                               y->modelPrices.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.marketYield", y->securities.at(i), "", "",
+                               y->marketYields.at(i));
+            addRowMktCalReport(report, "yieldCurve", id, "fittedBondCurve.modelYield", y->securities.at(i), "", "",
+                               y->modelYields.at(i));
+        }
+    }
+}
+
+void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::string& id,
+                                      boost::shared_ptr<InflationCurveCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    // common results
+    addRowMktCalReport(report, "inflationCurve", id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, "inflationCurve", id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, "inflationCurve", id, "baseDate", "", "", "", info->baseDate);
+
+    // zero inflation
+    auto z = boost::dynamic_pointer_cast<ZeroInflationCurveCalibrationInfo>(info);
+    if (z) {
+        addRowMktCalReport(report, "inflationCurve", id, "baseCpi", "", "", "", z->baseCpi);
+        for (Size i = 0; i < z->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(z->pillarDates[i]);
+            addRowMktCalReport(report, "inflationCurve", id, "time", key1, "", "", z->times.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "zeroRate", key1, "", "", z->zeroRates.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "cpi", key1, "", "", z->forwardCpis.at(i));
+        }
+    }
+
+    // yoy inflation
+    auto y = boost::dynamic_pointer_cast<YoYInflationCurveCalibrationInfo>(info);
+    if (y) {
+        for (Size i = 0; i < y->pillarDates.size(); ++i) {
+            std::string key1 = ore::data::to_string(y->pillarDates[i]);
+            addRowMktCalReport(report, "inflationCurve", id, "time", key1, "", "", y->times.at(i));
+            addRowMktCalReport(report, "inflationCurve", id, "yoyRate", key1, "", "", y->yoyRates.at(i));
+        }
+    }
+}
+
+} // namespace
+
+void ReportWriter::writeTodaysMarketCalibrationReport(
+    ore::data::Report& report, boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo) {
+    LOG("Writing TodaysMarketCalibration report");
+
+    report.addColumn("MarketObjectType", string())
+        .addColumn("MarketObjectId", string())
+        .addColumn("ResultId", string())
+        .addColumn("ResultKey1", string())
+        .addColumn("ResultKey2", string())
+        .addColumn("ResultKey3", string())
+        .addColumn("ResultType", string())
+        .addColumn("ResultValue", string());
+
+    // yield curve results
+
+    for (auto const& r : calibrationInfo->yieldCurveCalibrationInfo) {
+        addYieldCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    for (auto const& r : calibrationInfo->dividendCurveCalibrationInfo) {
+        addYieldCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    // inflation curve results
+
+    for (auto const& r : calibrationInfo->inflationCurveCalibrationInfo) {
+        addInflationCurveCalibrationInfo(report, r.first, r.second);
+    }
+
+    // ...
+
+    report.end();
+    LOG("TodaysMktCalibration report written");
 }
 
 } // namespace analytics

@@ -83,19 +83,26 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // add equity indexing
         QL_REQUIRE(eqLegData->quantity() != Null<Real>(),
                    "indexing can only be added to funding leg, if quantity is given on equity leg");
-        Indexing eqIndexing("EQ-" + eqLegData->eqName(), 0, "", eqLegData->quantity(), eqLegData->initialPrice(),
-                            valuationSchedule, 0, "", "U", false);
+        Indexing eqIndexing("EQ-" + eqLegData->eqName(), 0, "", false, false, false, eqLegData->quantity(),
+                            eqLegData->initialPrice(), valuationSchedule, 0, "", "U", false);
         legData_[irLegIndex_].indexing().push_back(eqIndexing);
 
         // add fx indexing, if applicable
         if (!eqLegData->fxIndex().empty()) {
-            Indexing fxIndexing(eqLegData->fxIndex(), eqLegData->fxIndexFixingDays(), eqLegData->fxIndexCalendar(), 1.0,
-                                Null<Real>(), valuationSchedule, 0, "", "U", false);
+            Real initialFxFixing = Null<Real>();
+            // if the eq leg has an initial price and this is in the eq leg currency, we do not want an FX conversion
+            // for this price
+            if (!eqLegData->initialPriceCurrency().empty() &&
+                eqLegData->initialPriceCurrency() == legData_[equityLegIndex_].currency() &&
+                eqLegData->initialPrice() != Null<Real>())
+                initialFxFixing = 1.0;
+            Indexing fxIndexing(eqLegData->fxIndex(), eqLegData->fxIndexFixingDays(), eqLegData->fxIndexCalendar(),
+                                false, false, false, 1.0, initialFxFixing, valuationSchedule, 0, "", "U", false);
             legData_[irLegIndex_].indexing().push_back(fxIndexing);
         }
 
         // set notional node to 1.0
-        legData_[irLegIndex_].notionals() = std::vector<Real>(1,1.0);
+        legData_[irLegIndex_].notionals() = std::vector<Real>(1, 1.0);
         legData_[irLegIndex_].notionalDates() = std::vector<std::string>();
 
         // reset flag that told us to pull the indexing information from the equity leg
@@ -105,6 +112,24 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // 2 now build the swap using the updated leg data
 
     Swap::build(engineFactory);
+
+    notionalCurrency_ = legCurrencies_[equityLegIndex_];
+}
+
+QuantLib::Real EquitySwap::notional() const {
+    Date asof = Settings::instance().evaluationDate();
+    // Get the current resp. next cash flow amount (quantity * spot/forward price) from the equity leg,
+    // include gearings and spreads.
+    Size i = equityLegIndex_;
+    for (Size j = 0; j < legs_[i].size(); ++j) {
+        boost::shared_ptr<CashFlow> flow = legs_[i][j];
+        // pick flow with earliest payment date on this leg
+        if (flow->date() > asof)
+            return flow->amount();
+    }
+
+    ALOG("Error retrieving current notional for equity swap " << id() << " as of " << io::iso_date(asof));
+    return Null<Real>();
 }
 
 } // namespace data

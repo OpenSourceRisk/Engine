@@ -22,9 +22,17 @@ Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equit
 
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 
-\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to determine the initial price. The Initial price is assumed to be in the currency of the underlying equity.
+\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to
+  determine the initial price. If InitialPrice is zero then each coupon's price is just the discounted fixing from the coupon's FixingEndDate. For any divisions we assume the value is one, i.e. when NotionalReset = true we have instead Quantity = Notional. The Initial price can be either given in the currency of the equity or in the leg
+  currency, see InitialPriceCurrency.
 
 Allowable values: Any positive real number
+
+\item InitialPriceCurrency [Optional]: If an initial price is given, it can be either given in the original equity ccy
+  or the leg currency (if these are different). This field determines in which currency the initial price is given. If
+  omitted, it is assumed that the initial price is given in equity currency.
+
+Allowable values: A valid currency code, See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
 
 \item NotionalReset [Optional]: Defaults to \emph{true}.  Notional resets only affect the equity leg. If NotionalReset
   is set to \emph{true} the quantity or number of shares of the underlying equity is fixed for all the coupons on the
@@ -54,7 +62,7 @@ Here, the Notional is taken to be the Notional specified in the leg or - if the 
 
 \item DividendFactor [Optional]: Factor of dividend to be included in return. Note that the DividendFactor is only relevant when the ReturnType is set to  \emph{Total}. It is not used if the ReturnType is set to \emph{Price}.
 
-Allowable values: 0 $\leq$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
+Allowable values: 0 $<$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
 
 \item ValuationSchedule [Optional]: Schedule of dates for equity valuation.
 
@@ -62,17 +70,26 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
 
 \item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
 
-\item FXTerms [Optional]: Only present if the currency of the underlying equity is different from the leg: contains the following nodes:
+Allowable values: Any non-negative integer.
 
-\item EquityCurrency: Currency underlying equity is quoted in. Required if FXTerms present.
+\item FXTerms [Mandatory when leg and equity currencies differ]: For the case when the currency  the underlying equity is quoted in, is different from the leg currency.  The \lstinline!FXTerm! node contains the following elements:
+\begin{itemize}
+	\item EquityCurrency [Mandatory within \lstinline!FXTerms!]: Currency underlying equity is quoted in. Required if FXTerms is present.
 
-\item FXIndex: Name of the index for FX fixings, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
+	Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
 
-\item FXIndexFixingDays [Optional]: Number of fixing days for FX Index, defaults to \emph{0}.
+	\item FXIndex [Mandatory within \lstinline!FXTerms!]: Name of the index for FX fixings for the leg vs equity currency pair, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
 
-\item FXIndexCalendar [Optional]: Calendar for FX Index.
+	Allowable values:  See Table \ref{tab:fxindex_data}
 
-%Allowable values:  Any positive real number.
+	\item FXIndexFixingDays [Optional]: Number of fixing days for FX Index, defaults to \emph{0}.
+
+	Allowable values: Any non-negative integer.
+
+	\item FXIndexCalendar [Optional]: Calendar for FX Index.
+
+	Allowable values: See Table \ref{tab:calendar} Calendar.
+\end{itemize}
 \end{itemize}
 
 \begin{listing}[H]

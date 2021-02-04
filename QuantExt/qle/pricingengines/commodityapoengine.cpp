@@ -6,8 +6,8 @@
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/processes/ornsteinuhlenbeckprocess.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 
 using std::adjacent_difference;
@@ -22,11 +22,9 @@ using std::vector;
 namespace QuantExt {
 
 CommodityAveragePriceOptionBaseEngine::CommodityAveragePriceOptionBaseEngine(
-    const Handle<YieldTermStructure>& discountCurve,
-    const Handle<BlackVolTermStructure>& vol,
-    Real beta)
+    const Handle<YieldTermStructure>& discountCurve, const Handle<BlackVolTermStructure>& vol, Real beta)
     : discountCurve_(discountCurve), volStructure_(vol), beta_(beta) {
-    
+
     QL_REQUIRE(beta_ >= 0.0, "beta >= 0 required, found " << beta_);
     registerWith(discountCurve_);
     registerWith(volStructure_);
@@ -56,9 +54,10 @@ pair<Real, Size> CommodityAveragePriceOptionBaseEngine::calculateAccrued() const
         result.second++;
     }
 
-    // We should have hit some pricing dates by now
-    QL_REQUIRE(result.second > 0, "APO coupon accrued calculation has a degenerate coupon");
-    result.first /= result.second;
+    // We should have pricing dates in the period but check.
+    auto n = arguments_.flow->indices().size();
+    QL_REQUIRE(n > 0, "APO coupon accrued calculation has a degenerate coupon.");
+    result.first /= n;
 
     return result;
 }
@@ -82,7 +81,7 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent(const pair<Real, Si
     // Valuation date
     Date today = Settings::instance().evaluationDate();
 
-    // If all pricing dates are on or before today. This can happen when the APO payment date is a positive number 
+    // If all pricing dates are on or before today. This can happen when the APO payment date is a positive number
     // of days after the final APO pricing date and today is in between.
     if (today >= arguments_.flow->indices().rbegin()->first) {
 
@@ -96,7 +95,7 @@ bool CommodityAveragePriceOptionBaseEngine::isModelDependent(const pair<Real, Si
         return false;
     }
 
-    // If a portion of the average price has already accrued, the effective strike of the APO will 
+    // If a portion of the average price has already accrued, the effective strike of the APO will
     // have changed by the accrued amount. The strike could be non-positive.
     Real effectiveStrike = arguments_.effectiveStrike - accrued.first;
     if (effectiveStrike <= 0.0) {
@@ -120,8 +119,20 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     // Calculate the accrued portion
     pair<Real, Size> accrued = calculateAccrued();
 
+    // Populate some additional results that don't change
+    auto& mp = results_.additionalResults;
+    Real discount = discountCurve_->discount(arguments_.flow->date());
+    mp["gearing"] = arguments_.flow->gearing();
+    mp["spread"] = arguments_.flow->spread();
+    mp["strike"] = arguments_.strikePrice;
+    mp["payment_date"] = arguments_.flow->date();
+    mp["accrued"] = accrued.first;
+    mp["discount"] = discount;
+
     // If not model dependent, return early.
     if (!isModelDependent(accrued)) {
+        mp["effective_strike"] = arguments_.effectiveStrike;
+        mp["npv"] = results_.value;
         return;
     }
 
@@ -134,12 +145,14 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     Date today = Settings::instance().evaluationDate();
 
     // Expected value of the non-accrued portion of the average commodity prices
+    // In general, m will equal n below if there is no accrued. If accrued, m > n.
     Real EA = 0.0;
     vector<Real> forwards;
     vector<Time> times;
     vector<Date> futureExpiries;
     map<Date, Real> futureVols;
     vector<Real> spotVars;
+    auto m = arguments_.flow->indices().size();
     for (const auto& p : arguments_.flow->indices()) {
         if (p.first > today) {
             forwards.push_back(p.second->fixing(p.first));
@@ -156,7 +169,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             EA += forwards.back();
         }
     }
-    EA /= forwards.size();
+    EA /= m;
 
     // Expected value of A^2. Different calculation depending on whether APO references future prices or spot price.
     Real EA2 = 0.0;
@@ -182,22 +195,28 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             }
         }
     }
-    EA2 /= n * n;
+    EA2 /= m * m;
 
     // Calculate value
     Real tn = times.back();
     Real sigma = sqrt(log(EA2 / (EA * EA)) / tn);
-    Real discount = discountCurve_->discount(arguments_.flow->date());
-    
+
     // Populate results
-    results_.value = arguments_.quantity * arguments_.flow->gearing() * 
-        blackFormula(arguments_.type, effectiveStrike, EA, sigma * sqrt(tn), discount);
-    results_.underlyingForwardValue = EA;
-    results_.sigma = sigma;
+    results_.value = arguments_.quantity * arguments_.flow->gearing() *
+                     blackFormula(arguments_.type, effectiveStrike, EA, sigma * sqrt(tn), discount);
+
+    // Add more additional results
+    // Could be part of a strip so we add the value also.
+    mp["effective_strike"] = effectiveStrike;
+    mp["forward"] = EA;
+    mp["exp_A_2"] = EA2;
+    mp["tte"] = tn;
+    mp["sigma"] = sigma;
+    mp["npv"] = results_.value;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {
-    
+
     // Calculate the accrued portion
     pair<Real, Size> accrued = calculateAccrued();
 
@@ -222,7 +241,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
     // Variable to hold the payoff
     Real payoff = 0.0;
 
-    // Vector of timesteps from today = t_0 out to last pricing date t_n 
+    // Vector of timesteps from today = t_0 out to last pricing date t_n
     // i.e. {t_1 - t_0, t_2 - t_1,..., t_n - t_{n-1}}
     vector<Date> dates;
     vector<Real> dt = timegrid(dates);
@@ -258,6 +277,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
     Array factors = expHalfFwdVar * fwdRatio;
 
     // Loop over each sample
+    auto m = arguments_.flow->indices().size();
     for (Size k = 0; k < samples_; k++) {
 
         // Sequence is n independent standard normal random variables
@@ -278,7 +298,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
         }
 
         // Average price on this sample
-        samplePayoff /= dt.size();
+        samplePayoff /= m;
 
         // Finally, the payoff on this sample
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
@@ -290,12 +310,10 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateSpot(const pair<Real,
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
-    results_.underlyingForwardValue = Null<Real>();
-    results_.sigma = Null<Real>();
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Real, Size>& accrued) const {
-    
+
     // Discount factor to the APO payment date
     Real discount = discountCurve_->discount(arguments_.flow->date());
 
@@ -317,16 +335,16 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
     vector<Size> futureIndex;
     setupFuture(vols, sqrtCorr, prices, futureIndex, effectiveStrike);
 
-    // Vector of timesteps from today = t_0 out to last pricing date t_n 
+    // Vector of timesteps from today = t_0 out to last pricing date t_n
     // i.e. {t_1 - t_0, t_2 - t_1,..., t_n - t_{n-1}}. Don't need the dates here.
     vector<Date> dates;
     vector<Real> dt = timegrid(dates);
 
     // On each Monte Carlo sample, we must generate the paths for N (size of vols) future contracts where
-    // each path has n time steps. We will represent the paths with an N x n matrix. First step is to fill the 
+    // each path has n time steps. We will represent the paths with an N x n matrix. First step is to fill the
     // matrix with N x n _independent_ standard normal variables. Then correlate the N variables in each column
-    // using the sqrtCorr matrix and then fill each entry F_{i, j} in the matrix with the value of the i-th 
-    // future price process at timestep j. Note, we will possibly simulate contracts past their expiries but not 
+    // using the sqrtCorr matrix and then fill each entry F_{i, j} in the matrix with the value of the i-th
+    // future price process at timestep j. Note, we will possibly simulate contracts past their expiries but not
     // use the price in the APO rate averaging.
     LowDiscrepancy::rsg_type rsg = LowDiscrepancy::make_sequence_generator(vols.size() * dt.size(), seed_);
 
@@ -341,6 +359,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
     }
 
     // Loop over each sample
+    auto m = arguments_.flow->indices().size();
     for (Size k = 0; k < samples_; k++) {
 
         // Sequence is N x n independent standard normal random variables
@@ -361,7 +380,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
                     // If on first timestep, multiply by F_i(0)
                     paths[i][j] *= prices[i];
                 } else {
-                    // If on timestep greater than t_0, multiply by F_i(t_{j-1}) i.e. value of contract at 
+                    // If on timestep greater than t_0, multiply by F_i(t_{j-1}) i.e. value of contract at
                     // previous time
                     paths[i][j] *= paths[i][j - 1];
                 }
@@ -375,7 +394,7 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
         }
 
         // Average price on this sample
-        samplePayoff /= dt.size();
+        samplePayoff /= m;
 
         // Finally, the payoff on this sample
         samplePayoff = max(omega * (samplePayoff - effectiveStrike), 0.0);
@@ -387,12 +406,11 @@ void CommodityAveragePriceOptionMonteCarloEngine::calculateFuture(const pair<Rea
 
     // Populate the result value
     results_.value = arguments_.quantity * arguments_.flow->gearing() * payoff * discount;
-    results_.underlyingForwardValue = Null<Real>();
-    results_.sigma = Null<Real>();
 }
 
-void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outVolatilities,
-    Matrix& outSqrtCorr, vector<Real>& prices, vector<Size>& futureIndex, Real strike) const {
+void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outVolatilities, Matrix& outSqrtCorr,
+                                                              vector<Real>& prices, vector<Size>& futureIndex,
+                                                              Real strike) const {
 
     // Ensure that vectors are empty
     outVolatilities.clear();
@@ -403,9 +421,9 @@ void CommodityAveragePriceOptionMonteCarloEngine::setupFuture(vector<Real>& outV
     map<Date, Real> result;
 
     // Note that here we make the simplifying assumption that the volatility can be read from the volatility
-    // term structure at the future contract's expiry date. In most cases, if the volatility term structure is built 
-    // from options on futures, the option contract expiry will be a number of days before the future contract expiry 
-    // and we should really read off the term structure at that date. Also populate a temp vector containing the key 
+    // term structure at the future contract's expiry date. In most cases, if the volatility term structure is built
+    // from options on futures, the option contract expiry will be a number of days before the future contract expiry
+    // and we should really read off the term structure at that date. Also populate a temp vector containing the key
     // dates for use in the loop below where we populate the sqrt correlation matrix.
 
     // Initialise result with expiry date keys that are still live in the APO
@@ -456,5 +474,4 @@ vector<Real> CommodityAveragePriceOptionMonteCarloEngine::timegrid(vector<Date>&
     return dt;
 }
 
-
-}
+} // namespace QuantExt

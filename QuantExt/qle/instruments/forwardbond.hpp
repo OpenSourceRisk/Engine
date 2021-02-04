@@ -34,7 +34,6 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -58,7 +57,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<QuantLib::Bond>& underlying();
+    const boost::shared_ptr<QuantLib::Bond>& underlying() { return underlying_; }
     //@}
 
 private:

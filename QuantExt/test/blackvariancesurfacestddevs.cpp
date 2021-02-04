@@ -22,6 +22,8 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/currencies/europe.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 
 using namespace boost::unit_test_framework;
@@ -48,26 +50,26 @@ BOOST_AUTO_TEST_CASE(testFlatSurface) {
     vector<Real> stdDevs = { -1.0, -0.5, 0, 0.5, 1.0 };
     Volatility flatVol = 0.12;
     Handle<Quote> flatVolQ = Handle<Quote>(boost::make_shared<SimpleQuote>(flatVol));
-    vector<vector<Handle<Quote> > > blackVolMatrix(
-        stdDevs.size(), vector<Handle<Quote> > (times.size(), flatVolQ));
+    vector<vector<Handle<Quote> > > blackVolMatrix(stdDevs.size(), vector<Handle<Quote> >(times.size(), flatVolQ));
     DayCounter dc = ActualActual();
-    Handle<YieldTermStructure> forTS(boost::make_shared<FlatForward>(
-        today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual()));
-    Handle<YieldTermStructure> domTS(boost::make_shared<FlatForward>(
-        today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
+    Handle<YieldTermStructure> forTS(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual()));
+    Handle<YieldTermStructure> domTS(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
 
-    QuantExt::BlackVarianceSurfaceStdDevs surface(cal, spot, times, stdDevs, blackVolMatrix, dc, forTS, domTS);
+    boost::shared_ptr<QuantExt::FxIndex> fxIndex = boost::make_shared<QuantExt::FxIndex>("dummy", 2, EURCurrency(),
+        GBPCurrency(), cal, spot, forTS, domTS);
+    QuantExt::BlackVarianceSurfaceStdDevs surface(cal, spot, times, stdDevs, blackVolMatrix, dc, fxIndex);
 
     // Now get a vol for different times and strikes
     for (Time t = 0.05; t < 5.0; t += 0.1) {
         // spot is 100 so strikes should range from (say) 70 to 150
         for (Real k = 70; k < 150; k += 0.5) {
             Volatility vol = surface.blackVol(t, k);
-            //BOOST_TEST_MESSAGE("BlackVarianceSurfaceStdDevs vol for t=" << t << " and k=" << k << " is " << vol);
+            // BOOST_TEST_MESSAGE("BlackVarianceSurfaceStdDevs vol for t=" << t << " and k=" << k << " is " << vol);
             BOOST_CHECK_CLOSE(vol, flatVol, 1e-12);
         }
     }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

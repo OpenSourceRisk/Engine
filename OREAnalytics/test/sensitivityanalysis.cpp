@@ -17,7 +17,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -58,6 +57,7 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -69,22 +69,22 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-using testsuite::TestMarket;
-using testsuite::buildSwap;
-using testsuite::buildEuropeanSwaption;
-using testsuite::TestConfigurationObjects;
-using testsuite::buildBermudanSwaption;
-using testsuite::buildFxOption;
-using testsuite::buildCap;
-using testsuite::buildFloor;
-using testsuite::buildZeroBond;
-using testsuite::buildEquityOption;
-using testsuite::buildCPIInflationSwap;
-using testsuite::buildYYInflationSwap;
-using testsuite::buildCommodityForward;
-using testsuite::buildCommodityOption;
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
+using testsuite::buildBermudanSwaption;
+using testsuite::buildCap;
+using testsuite::buildCommodityForward;
+using testsuite::buildCommodityOption;
+using testsuite::buildCPIInflationSwap;
+using testsuite::buildEquityOption;
+using testsuite::buildEuropeanSwaption;
+using testsuite::buildFloor;
+using testsuite::buildFxOption;
+using testsuite::buildSwap;
+using testsuite::buildYYInflationSwap;
+using testsuite::buildZeroBond;
+using testsuite::TestConfigurationObjects;
+using testsuite::TestMarket;
 
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
@@ -149,6 +149,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
+    data->model("CapFlooredIborLeg") = "BlackOrBachelier";
+    data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     data->model("Bond") = "DiscountedCashflows";
     data->engine("Bond") = "DiscountingRiskyBondEngine";
     data->engineParameters("Bond")["TimestepPeriod"] = "6M";
@@ -170,7 +172,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -212,7 +214,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
-    
+
     // build the scenario valuation engine
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
@@ -234,6 +236,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         Real sensi;
     };
 
+    // clang-format off
     std::vector<Results> cachedResults = {
         {"1_Swap_EUR", "Up:DiscountCurve/EUR/0/6M", -928826, -2.51631},
         {"1_Swap_EUR", "Up:DiscountCurve/EUR/1/1Y", -928826, 14.6846},
@@ -706,22 +709,15 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, 9317.978340855800},
         {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, -4256.075631047075},
         {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, -9477.947397496144},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
-         2631.321446832444},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
-         -2953.560262204672},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
-         41151.505618994124},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
-         -42848.872082053742},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
-         -2592.135488447500},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
-         2940.729887370544},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
-         -37770.406281976204},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
-         46207.778528712981}};
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/3/1Y/0.95", -491152.228798501019, -169.914415647450 },
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/6/1Y/ATM", -491152.228798501019, -167.260480643541 },
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/5/5Y/0.95", -491152.228798501019, -2553.579689398874 },
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/8/5Y/ATM", -491152.228798501019, -2513.783958086802 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/3/1Y/0.95", -491152.228798501019, 168.278235032340 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/6/1Y/ATM", -491152.228798501019, 165.649017560529 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/5/5Y/0.95", -491152.228798501019, 2540.538653619646 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/8/5Y/ATM", -491152.228798501019, 2500.755505821493 }};
+    // clang-format on
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -743,7 +739,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
-                // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
+                BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " <<
+                    std::fixed << std::setprecision(12) << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(),
                            "pair (" << p.first << ", " << p.second << ") not found in npv map");
@@ -1691,6 +1688,8 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
+    data->model("CapFlooredIborLeg") = "BlackOrBachelier";
+    data->engine("CapFlooredIborLeg") = "BlackIborCouponPricer";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());

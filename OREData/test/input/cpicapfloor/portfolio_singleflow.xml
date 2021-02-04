@@ -147,6 +147,7 @@
 	  <Caps>
 	    <Cap>0.03</Cap>
 	  </Caps>
+            <FinalFlowCap>0.03</FinalFlowCap>
         </CPILegData>
       </LegData>
     </SwapData>

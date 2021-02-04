@@ -31,25 +31,15 @@ namespace data {
 
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(bool parseTerm) : parseTerm_(parseTerm) {}
 
-CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(
-    const string& curveId,
-    const string& curveDescription,
-    const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-    const string& dayCounter,
-    const string& calendar,
-    const string& strikeType,
-    const string& quoteName,
-    Real strikeFactor,
-    bool parseTerm)
-    : CurveConfig(curveId, curveDescription),
-      volatilityConfig_(volatilityConfig),
-      dayCounter_(dayCounter),
-      calendar_(calendar),
-      strikeType_(strikeType),
-      quoteName_(quoteName),
-      strikeFactor_(strikeFactor),
+CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveId, const string& curveDescription,
+                                                   const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                                   const string& dayCounter, const string& calendar,
+                                                   const string& strikeType, const string& quoteName, Real strikeFactor,
+                                                   bool parseTerm)
+    : CurveConfig(curveId, curveDescription), volatilityConfig_(volatilityConfig), dayCounter_(dayCounter),
+      calendar_(calendar), strikeType_(strikeType), quoteName_(quoteName), strikeFactor_(strikeFactor),
       parseTerm_(parseTerm) {
-    
+
     populateNameTerm();
     populateQuotes();
 }
@@ -90,15 +80,15 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         quoteName_ = XMLUtils::getNodeValue(n);
 
     if (XMLUtils::getChildNode(node, "Expiries")) {
-        
+
         // Giving just an Expiries node is allowed to be backwards compatible but is discouraged.
-        WLOG("Using an Expiries node only in CDSVolatilityCurveConfig is deprecated. " <<
-            "A volatility configuration node should be used instead.");
-        
+        WLOG("Using an Expiries node only in CDSVolatilityCurveConfig is deprecated. "
+             << "A volatility configuration node should be used instead.");
+
         // Get the expiries
         vector<string> quotes = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
         QL_REQUIRE(quotes.size() > 0, "Need at least one expiry in the Expiries node.");
-        
+
         // Build the quotes by appending the expiries to the quote stem.
         string stem = quoteStem();
         for (string& q : quotes) {
@@ -126,7 +116,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
             QL_FAIL("CDSVolatilityCurveConfig does not yet support a MoneynessSurface.");
         } else {
             QL_FAIL("CDSVolatility node expects one child node with name in list: Constant,"
-                << " Curve, StrikeSurface.");
+                    << " Curve, StrikeSurface.");
         }
         volatilityConfig_->fromXML(n);
     }
@@ -187,14 +177,14 @@ void CDSVolatilityCurveConfig::populateQuotes() {
 
     // The quotes depend on the type of volatility structure that has been configured.
     if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
-        quotes_ = { vc->quote() };
+        quotes_ = {vc->quote()};
     } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
         quotes_ = vc->quotes();
     } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
-        
+
         // Clear the quotes_ if necessary and populate with surface quotes
         quotes_.clear();
-        
+
         // Build the quotes by appending the expiries and strikes to the quote stem.
         string stem = quoteStem();
         for (const pair<string, string>& p : vc->quotes()) {
@@ -208,7 +198,7 @@ void CDSVolatilityCurveConfig::populateQuotes() {
 
 string CDSVolatilityCurveConfig::quoteStem() const {
 
-    string stem{ "INDEX_CDS_OPTION/RATE_LNVOL/" };
+    string stem{"INDEX_CDS_OPTION/RATE_LNVOL/"};
 
     if (!quoteName_.empty()) {
         // If an explicit quote name has been provided use this.
@@ -252,5 +242,5 @@ pair<string, string> extractTermFromId(const string& id) {
     return result;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

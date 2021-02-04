@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <ored/utilities/log.hpp>
-#include <ql/patterns/singleton.hpp>
 #include <boost/make_shared.hpp>
 #include <functional>
 #include <map>
+#include <ored/utilities/log.hpp>
+#include <ql/patterns/singleton.hpp>
 
 namespace ore {
 namespace data {
@@ -40,31 +40,30 @@ class LegAdditionalData;
 
 /*! Function that is used to build instances of LegAdditionalData
 
-    The template parameter is simply a particular instance of a \c LegAdditionalData class that is default 
-    constructable. The function returns the default constructed LegAdditionalData object. A simple example is the 
+    The template parameter is simply a particular instance of a \c LegAdditionalData class that is default
+    constructable. The function returns the default constructed LegAdditionalData object. A simple example is the
     function to build an instance of \c FixedLegData would be called via \c createLegData<FixedLegData>().
 
     \ingroup portfolio
 */
-template<class T>
-boost::shared_ptr<LegAdditionalData> createLegData() { return boost::make_shared<T>(); }
+template <class T> boost::shared_ptr<LegAdditionalData> createLegData() { return boost::make_shared<T>(); }
 
 /*! Leg data factory class
 
     This class is a repository of functions that can build instances of \c LegAdditionalData. The functions are keyed
-    on the leg data type that they can build. An instance of this factory class can be asked to build a particular 
-    instance of the LegAdditionalData class via a call to <code>build(const std::string& legType)</code> with the 
-    correct \c legType name. For example, a call to <code>build("Fixed")</code> should return a \c FixedLegData 
+    on the leg data type that they can build. An instance of this factory class can be asked to build a particular
+    instance of the LegAdditionalData class via a call to <code>build(const std::string& legType)</code> with the
+    correct \c legType name. For example, a call to <code>build("Fixed")</code> should return a \c FixedLegData
     instance if the fixed leg data building function has been added to the factory.
 
-    It is up to each class derived from \c LegAdditionalData to register itself with the \c LegDataFactory via the 
+    It is up to each class derived from \c LegAdditionalData to register itself with the \c LegDataFactory via the
     \c LegDataRegister class below. All registration does is add a function that can build an instance of that class
     to the factory and store it against its leg type key.
-    
+
     \ingroup portfolio
 */
 class LegDataFactory : public QuantLib::Singleton<LegDataFactory> {
-    
+
     friend class QuantLib::Singleton<LegDataFactory>;
 
 public:
@@ -76,13 +75,13 @@ public:
     /*! A call to \c build should return an instance of \c LegAdditionalData corresponding to the required \p legType.
         For example, a call to <code>build("Fixed")</code> should return a \c FixedLegData instance.
 
-        \warning If the \p legType has not been added to the factory then a call to this method for that \p legType 
+        \warning If the \p legType has not been added to the factory then a call to this method for that \p legType
                  will return a \c nullptr
     */
     boost::shared_ptr<LegAdditionalData> build(const std::string& legType);
 
     /*! Add a builder function \p builder for a given \p legType
-    */
+     */
     void addBuilder(const std::string& legType, std::function<boost::shared_ptr<LegAdditionalData>()> builder);
 
 private:
@@ -94,9 +93,9 @@ private:
     This class is used in any class derived from \c LegAdditionalData to register itself with the \c LegDataFactory so
     that it can be built via a call to <code>LegDataFactory::instance().build(const std::string& legType)</code>
 
-    As a concrete example, a \c FixedLegData class derived from \c LegAdditionalData should have the following form 
+    As a concrete example, a \c FixedLegData class derived from \c LegAdditionalData should have the following form
     in order to register it with the \c LegDataFactory:
-    
+
     In fixedlegdata.hpp
     \code{.cpp}
     class FixedLegData : public LegAdditionalData {
@@ -106,20 +105,17 @@ private:
     }
     \endcode
 
-    In fixedlegdata.hpp
+    In fixedlegdata.cpp
     \code{.cpp}
     LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
     \endcode
 
     \ingroup portfolio
 */
-template<class T>
-struct LegDataRegister {
+template <class T> struct LegDataRegister {
 public:
-    LegDataRegister(const std::string& legType) {
-        LegDataFactory::instance().addBuilder(legType, &createLegData<T>);
-    }
+    LegDataRegister(const std::string& legType) { LegDataFactory::instance().addBuilder(legType, &createLegData<T>); }
 };
 
-}
-}
+} // namespace data
+} // namespace ore

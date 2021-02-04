@@ -80,13 +80,13 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
             Option::Call, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
             cal, conv, cap_, Handle<ZeroInflationIndex>(underlying_->cpiIndex()), underlying_->observationLag(),
             underlying_->observationInterpolation());
-	// std::cout << "Capped/Floored CPI Coupon" << std::endl
-	// 	  << "  nominal = " << underlying_->nominal() << std::endl
-	// 	  << "  paymentDate = " << QuantLib::io::iso_date(underlying_->date()) << std::endl
-	// 	  << "  startDate = " << QuantLib::io::iso_date(startDate_) << std::endl
-	// 	  << "  baseCPI = " << underlying_->baseCPI() << std::endl
-	// 	  << "  lag = " << underlying_->observationLag() << std::endl
-	// 	  << "  interpolation = " << underlying_->observationInterpolation() << std::endl;
+        // std::cout << "Capped/Floored CPI Coupon" << std::endl
+        // 	  << "  nominal = " << underlying_->nominal() << std::endl
+        // 	  << "  paymentDate = " << QuantLib::io::iso_date(underlying_->date()) << std::endl
+        // 	  << "  startDate = " << QuantLib::io::iso_date(startDate_) << std::endl
+        // 	  << "  baseCPI = " << underlying_->baseCPI() << std::endl
+        // 	  << "  lag = " << underlying_->observationLag() << std::endl
+        // 	  << "  interpolation = " << underlying_->observationInterpolation() << std::endl;
     }
     if (isFloored_) {
         cpiFloor_ = boost::make_shared<CPICapFloor>(
@@ -138,7 +138,7 @@ void CappedFlooredCPICoupon::accept(AcyclicVisitor& v) {
 CappedFlooredCPICashFlow::CappedFlooredCPICashFlow(const ext::shared_ptr<CPICashFlow>& underlying, Date startDate,
                                                    Period observationLag, Rate cap, Rate floor)
     : CPICashFlow(underlying->notional(), boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index()),
-                  startDate_, underlying->baseFixing(), underlying->fixingDate(), underlying->date(),
+                  startDate - observationLag, underlying->baseFixing(), underlying->fixingDate(), underlying->date(),
                   underlying->growthOnly(), underlying->interpolation(), underlying->frequency()),
       underlying_(underlying), startDate_(startDate), observationLag_(observationLag), isFloored_(false),
       isCapped_(false) {
@@ -214,7 +214,8 @@ CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationInde
     : schedule_(schedule), index_(index), baseCPI_(baseCPI), observationLag_(observationLag),
       paymentDayCounter_(Thirty360()), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
-      spreads_(std::vector<Real>(1, 0)), startDate_(schedule_.dates().front()) {
+      spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()),
+      startDate_(schedule_.dates().front()) {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
 
@@ -295,6 +296,16 @@ CPILeg& CPILeg::withCaps(const std::vector<Rate>& caps) {
 
 CPILeg& CPILeg::withFloors(Rate floor) {
     floors_ = std::vector<Rate>(1, floor);
+    return *this;
+}
+
+CPILeg& CPILeg::withFinalFlowCap(Rate cap) {
+    finalFlowCap_ = cap;
+    return *this;
+}
+
+CPILeg& CPILeg::withFinalFlowFloor(Rate floor) {
+    finalFlowFloor_ = floor;
     return *this;
 }
 
@@ -382,15 +393,14 @@ CPILeg::operator Leg() const {
     Date fixingDate = paymentDate - observationLag_;
 
     ext::shared_ptr<CPICashFlow> xnl = ext::make_shared<CPICashFlow>(
-        detail::get(notionals_, n, 0.0), index_, startDate_, baseCPI_, fixingDate, paymentDate,
+        detail::get(notionals_, n, 0.0), index_, startDate_ - observationLag_, baseCPI_, fixingDate, paymentDate,
         subtractInflationNominal_, observationInterpolation_, index_->frequency());
 
-    if (caps_.size() == 0 && floors_.size() == 0) {
+    if (finalFlowCap_ == Null<Real>() && finalFlowFloor_ == Null<Real>()) {
         leg.push_back(xnl);
     } else {
         ext::shared_ptr<CappedFlooredCPICashFlow> cfxnl = ext::make_shared<CappedFlooredCPICashFlow>(
-            xnl, startDate_, observationLag_, detail::get(caps_, n, Null<Rate>()),
-            detail::get(floors_, n, Null<Rate>()));
+            xnl, startDate_, observationLag_, finalFlowCap_, finalFlowFloor_);
         leg.push_back(cfxnl);
     }
 

@@ -21,21 +21,23 @@
 
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/yoycapfloorhelper.hpp>
+#include <qle/models/yoyswaphelper.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 
+using QuantExt::InfJyParameterization;
+using std::map;
+using std::ostringstream;
+using std::right;
+using std::setprecision;
+using std::setw;
+using std::string;
+using std::vector;
+
 namespace ore {
 namespace data {
-
-Real getCalibrationError(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket) {
-    Real rmse = 0.0;
-    for (auto const& h : basket) {
-        Real tmp = h->calibrationError();
-        rmse += tmp * tmp;
-    }
-    return std::sqrt(rmse / static_cast<Real>(basket.size()));
-}
 
 namespace {
 Real impliedVolatility(const boost::shared_ptr<BlackCalibrationHelper>& h) {
@@ -54,9 +56,73 @@ Real impliedVolatility(const boost::shared_ptr<BlackCalibrationHelper>& h) {
         return 0.0;
     }
 }
+
+// Struct to store some helper values needed below when printing out calibration details.
+struct HelperValues {
+    Real modelValue;
+    Real marketValue;
+    Real error;
+    Time maturity;
+};
+
+// Deal with possible JY inflation helpers. Use Date key to order the results so as to avoid re-calculating the
+// time in the parameterisation.
+map<Date, HelperValues> jyHelperValues(const vector<boost::shared_ptr<CalibrationHelper>>& cb, const Array& times) {
+
+    map<Date, HelperValues> result;
+
+    for (const auto& ci : cb) {
+
+        if (boost::shared_ptr<CpiCapFloorHelper> h = boost::dynamic_pointer_cast<CpiCapFloorHelper>(ci)) {
+            HelperValues hv;
+            hv.modelValue = h->modelValue();
+            hv.marketValue = h->marketValue();
+            hv.error = hv.modelValue - hv.marketValue;
+            auto d = h->instrument()->fixingDate();
+            result[d] = hv;
+            continue;
+        }
+
+        if (boost::shared_ptr<YoYCapFloorHelper> h = boost::dynamic_pointer_cast<YoYCapFloorHelper>(ci)) {
+            HelperValues hv;
+            hv.modelValue = h->modelValue();
+            hv.marketValue = h->marketValue();
+            hv.error = hv.modelValue - hv.marketValue;
+            auto d = h->yoyCapFloor()->lastYoYInflationCoupon()->fixingDate();
+            result[d] = hv;
+            continue;
+        }
+
+        if (boost::shared_ptr<YoYSwapHelper> h = boost::dynamic_pointer_cast<YoYSwapHelper>(ci)) {
+            HelperValues hv;
+            hv.modelValue = h->modelRate();
+            hv.marketValue = h->marketRate();
+            hv.error = hv.modelValue - hv.marketValue;
+            auto d = h->yoySwap()->maturityDate();
+            result[d] = hv;
+            continue;
+        }
+
+        QL_FAIL("Expected JY calibration instruments to be one of: CPI cap floor, YoY cap floor or YoY swap.");
+    }
+
+    QL_REQUIRE(result.size() == times.size() + 1, "Expected JY times to be 1 less the number of instruments.");
+
+    Size ctr = 0;
+    for (auto& kv : result) {
+        if (ctr < times.size())
+            kv.second.maturity = times[ctr++];
+        else
+            kv.second.maturity = times.back();
+    }
+
+    return result;
+}
+
 } // namespace
 
-std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+std::string getCalibrationDetails(LgmCalibrationInfo& info,
+                                  const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                                   const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelVol" << std::setw(14)
@@ -64,6 +130,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         << std::setw(14) << "(diff)" << std::setw(14) << "irlgm1fAlpha" << std::setw(14) << "irlgm1fKappa"
         << std::setw(16) << "irlgm1fHwSigma\n";
     Real t = 0.0, modelAlpha = 0.0, modelKappa = 0.0, modelHwSigma = 0.0;
+    info.lgmCalibrationData.clear();
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
         Real marketValue = basket[j]->marketValue();
@@ -85,6 +152,8 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
             << std::setw(14) << marketVol << std::setw(14) << volDiff << std::setw(14) << modelValue << std::setw(14)
             << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelAlpha << std::setw(14) << modelKappa
             << std::setw(16) << modelHwSigma << "\n";
+        info.lgmCalibrationData.push_back(
+            LgmCalibrationData{t, modelVol, marketVol, modelValue, marketValue, modelAlpha, modelKappa, modelHwSigma});
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
@@ -167,18 +236,18 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
 }
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<InfDkParametrization>& parametrization,
-                                  const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+                                  const boost::shared_ptr<InfDkParametrization>& parametrization) {
     std::ostringstream log;
-    log << std::right << std::setw(3) << "#" << std::setw(14) << "modelValue" << std::setw(14) << "marketValue"
-        << std::setw(14) << "(diff)" << std::setw(14) << "infdkAlpha" << std::setw(14) << "infdkH\n";
+    log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelValue"
+        << std::setw(14) << "marketValue" << std::setw(14) << "(diff)" << std::setw(14) << "infdkAlpha" << std::setw(14)
+        << "infdkH\n";
     Real t = 0.0, modelAlpha = 0.0, modelH = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = (modelValue - marketValue);
         boost::shared_ptr<CpiCapFloorHelper> instr = boost::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
-        if (instr != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
+        if (instr != nullptr && parametrization != nullptr) {
             // report alpha, H at t_expiry^-
             t = inflationYearFraction(
                     parametrization->termStructure()->frequency(),
@@ -190,8 +259,9 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
             modelH = parametrization->H(t);
         }
         // TODO handle other calibration helpers, too (capfloor)
-        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << modelValue << std::setw(14) << marketValue
-            << std::setw(14) << valueDiff << std::setw(14) << modelAlpha << std::setw(14) << modelH << "\n";
+        log << std::setw(3) << j << std::setprecision(6) << std::setw(14) << t << std::setw(14) << modelValue
+            << std::setw(14) << marketValue << std::setw(14) << valueDiff << std::setw(14) << modelAlpha
+            << std::setw(14) << modelH << "\n";
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
@@ -201,6 +271,131 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
     }
     log << "t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH << "\n";
     return log.str();
+}
+
+string getCalibrationDetails(const vector<boost::shared_ptr<CalibrationHelper>>& rrBasket,
+                             const vector<boost::shared_ptr<CalibrationHelper>>& idxBasket,
+                             const boost::shared_ptr<InfJyParameterization>& p, bool calibrateRealRateVol) {
+
+    ostringstream log;
+    Real epsTime = 0.0001;
+
+    // Real rate basket: if it has instruments, the real rate was calibrated.
+    if (!rrBasket.empty()) {
+
+        // Header rows
+        log << "Real rate calibration:\n";
+        log << right << setw(3) << "#" << setw(5) << "](-" << setw(12) << "inst_date" << setw(12) << "time" << setw(14)
+            << "modelValue" << setw(14) << "marketValue" << setw(14) << "(diff)" << setw(14) << "infJyAlpha" << setw(14)
+            << "infJyH\n";
+
+        // Parameter values for corresponding to maturity of each instrument
+        Array times = calibrateRealRateVol ? p->realRate()->parameterTimes(0) : p->realRate()->parameterTimes(1);
+        auto helperValues = jyHelperValues(rrBasket, times);
+        Size ctr = 0;
+        Time t = 0.0;
+        for (const auto& kv : helperValues) {
+            auto hv = kv.second;
+            t = hv.maturity - epsTime;
+            string bound = "<=";
+            if (helperValues.size() == 1) {
+                bound = " -";
+            } else if (ctr == helperValues.size() - 1) {
+                t += 2 * epsTime;
+                bound = " >";
+            }
+            auto alpha = p->realRate()->alpha(t);
+            auto h = p->realRate()->H(t);
+            log << setw(3) << ctr++ << setw(5) << bound << setw(6) << io::iso_date(kv.first) << setprecision(6)
+                << setw(12) << hv.maturity << setw(14) << hv.modelValue << setw(14) << hv.marketValue << setw(14)
+                << hv.error << setw(14) << alpha << setw(14) << h << "\n";
+        }
+    }
+
+    // Inflation index basket: if it has instruments, the inflation index was calibrated.
+    if (!idxBasket.empty()) {
+
+        // Header rows
+        log << "Inflation index calibration:\n";
+        log << right << setw(3) << "#" << setw(5) << "](-" << setw(12) << "inst_date" << setw(12) << "time" << setw(14)
+            << "modelValue" << setw(14) << "marketValue" << setw(14) << "(diff)" << setw(14) << "infJySigma\n";
+
+        // Parameter values for corresponding to maturity of each instrument
+        Array times = p->index()->parameterTimes(0);
+        auto helperValues = jyHelperValues(idxBasket, times);
+        Size ctr = 0;
+        Time t = 0.0;
+        for (const auto& kv : helperValues) {
+            auto hv = kv.second;
+            t = hv.maturity - epsTime;
+            string bound = "<=";
+            if (helperValues.size() == 1) {
+                bound = " -";
+            } else if (ctr == helperValues.size() - 1) {
+                t += 2 * epsTime;
+                bound = " >";
+            }
+            auto sigma = p->index()->sigma(t);
+            log << setw(3) << ctr++ << setw(5) << bound << setw(6) << io::iso_date(kv.first) << setprecision(6)
+                << setw(12) << hv.maturity << setw(14) << hv.modelValue << setw(14) << hv.marketValue << setw(14)
+                << hv.error << setw(14) << sigma << "\n";
+        }
+    }
+
+    return log.str();
+}
+
+namespace {
+
+struct MaturityGetter : boost::static_visitor<Date> {
+
+    MaturityGetter(const Calendar& calendar, const Date& referenceDate)
+        : calendar(calendar), referenceDate(referenceDate) {}
+
+    Date operator()(const Date& d) const { return d; }
+
+    Date operator()(const Period& p) const { return calendar.advance(referenceDate, p); }
+
+    Calendar calendar;
+    Date referenceDate;
+};
+
+} // namespace
+
+Date optionMaturity(const boost::variant<Date, Period>& maturity, const QuantLib::Calendar& calendar,
+                    const QuantLib::Date& referenceDate) {
+
+    return boost::apply_visitor(MaturityGetter(calendar, referenceDate), maturity);
+}
+
+Real cpiCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
+                            const boost::shared_ptr<ZeroInflationTermStructure>& curve,
+                            const QuantLib::Date& optionMaturityDate) {
+    if (auto abs = boost::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
+        return abs->strike();
+    } else if (auto atm = boost::dynamic_pointer_cast<AtmStrike>(strike)) {
+        QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
+                   "only atm forward allowed as atm strike for cpi cap floors");
+        return curve->zeroRate(optionMaturityDate);
+    } else {
+        QL_FAIL("cpi cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
+                << strike->toString());
+    }
+}
+
+Real yoyCapFloorStrikeValue(const boost::shared_ptr<BaseStrike>& strike,
+                            const boost::shared_ptr<YoYInflationTermStructure>& curve,
+                            const QuantLib::Date& optionMaturityDate) {
+    if (auto abs = boost::dynamic_pointer_cast<AbsoluteStrike>(strike)) {
+        return abs->strike();
+    } else if (auto atm = boost::dynamic_pointer_cast<AtmStrike>(strike)) {
+        QL_REQUIRE(atm->atmType() == DeltaVolQuote::AtmFwd,
+                   "only atm forward allowed as atm strike for cpi cap floors");
+        return curve->yoyRate(optionMaturityDate);
+    } else {
+        QL_FAIL("yoy cap floor strike type not supported, expected absolute strike or atm fwd strike, got '"
+                << strike->toString());
+    }
 }
 
 } // namespace data

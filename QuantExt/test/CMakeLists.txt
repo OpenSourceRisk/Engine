@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt-Test_SRC analyticlgmswaptionengine.cpp
+set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
+analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
@@ -11,6 +12,7 @@ cashflow.cpp
 commodityforward.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
+crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
@@ -19,13 +21,16 @@ crossccybasismtmresetswaphelper.cpp
 crossccyfixfloatswap.cpp
 crossccyfixfloatswaphelper.cpp
 currency.cpp
+dategeneration.cpp
 deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
 discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
+durationadjustedcmscoupon.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
+equityblackvolsurfaceproxy.cpp
 equityforwardcurvestripper.cpp
 fillemptymatrix.cpp
 forwardbond.cpp

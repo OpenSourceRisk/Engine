@@ -41,15 +41,16 @@
 #include <ql/currency.hpp>
 #include <ql/exchangerate.hpp>
 #include <ql/handle.hpp>
-#include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
+#include <qle/indexes/eqfxindexbase.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
 //! FX Index
 /*! \ingroup indexes */
-class FxIndex : public Index, public Observer {
+class FxIndex : public EqFxIndexBase {
 public:
     /*! familyName may be e.g. ECB
         settlementDays determine the spot date of the currency pair
@@ -86,12 +87,16 @@ public:
     const Currency& sourceCurrency() const { return sourceCurrency_; }
     const Currency& targetCurrency() const { return targetCurrency_; }
     const bool inverseIndex() const { return inverseIndex_; }
+    // fx quote does _not_ include the inversion, if inverseIndex() is true
+    const Handle<Quote>& fxQuote() const { return fxQuote_; }
+    const bool useQuote() const { return useQuote_; }
     //@}
     /*! \name Date calculations */
     virtual Date valueDate(const Date& fixingDate) const;
     //! \name Fixing calculations
     //@{
     //! It can be overridden to implement particular conventions
+    virtual Real forecastFixing(const Time& fixingTime) const;
     virtual Real forecastFixing(const Date& fixingDate) const;
     Real pastFixing(const Date& fixingDate) const;
     // @}

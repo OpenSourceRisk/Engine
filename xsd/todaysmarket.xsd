@@ -110,9 +110,9 @@
     <xs:sequence>
       <xs:element name="SwapIndex" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
-          <xs:sequence>
+          <xs:all>
             <xs:element type="indexNameType" name="Discounting"/>
-          </xs:sequence>
+          </xs:all>
           <xs:attribute type="indexNameType" name="name" use="required"/>
         </xs:complexType>
       </xs:element>

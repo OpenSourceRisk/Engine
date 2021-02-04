@@ -29,10 +29,10 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
-#include <qle/termstructures/pricecurve.hpp>
-#include <qle/math/flatextrapolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/pricecurve.hpp>
 
 namespace ore {
 namespace data {
@@ -45,14 +45,11 @@ public:
     CommodityCurve() : regexQuotes_(false) {}
 
     //! Detailed constructor
-    CommodityCurve(const QuantLib::Date& asof,
-        const CommodityCurveSpec& spec,
-        const Loader& loader,
-        const CurveConfigurations& curveConfigs,
-        const Conventions& conventions,
-        const FXTriangulation& fxSpots = FXTriangulation(),
-        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
-        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {});
+    CommodityCurve(const QuantLib::Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
+                   const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                   const FXTriangulation& fxSpots = FXTriangulation(),
+                   const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
+                   const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {});
     //@}
 
     //! \name Inspectors
@@ -85,40 +82,38 @@ private:
 
     //! Populate \p data with dates and prices from the loader
     void populateData(std::map<QuantLib::Date, QuantLib::Real>& data, const QuantLib::Date& asof,
-        const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader, const Conventions& conventions);
+                      const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader,
+                      const Conventions& conventions);
 
     //! Add node to price curve \p data with check for duplicate expiry dates
     void add(const QuantLib::Date& asof, const QuantLib::Date& expiry, QuantLib::Real value,
-        std::map<QuantLib::Date, QuantLib::Real>& data, bool outright, QuantLib::Real pointsFactor = 1.0);
+             std::map<QuantLib::Date, QuantLib::Real>& data, bool outright, QuantLib::Real pointsFactor = 1.0);
 
     //! Build price curve using the curve \p data
     void buildCurve(const QuantLib::Date& asof, const std::map<QuantLib::Date, QuantLib::Real>& data,
-        const boost::shared_ptr<CommodityCurveConfig>& config);
+                    const boost::shared_ptr<CommodityCurveConfig>& config);
 
     //! Build cross currency commodity price curve
-    void buildCrossCurrencyPriceCurve(const QuantLib::Date& asof,
-        const boost::shared_ptr<CommodityCurveConfig>& config,
-        const boost::shared_ptr<CommodityCurveConfig>& baseConfig, const FXTriangulation& fxSpots,
-        const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
+    void buildCrossCurrencyPriceCurve(const QuantLib::Date& asof, const boost::shared_ptr<CommodityCurveConfig>& config,
+                                      const boost::shared_ptr<CommodityCurveConfig>& baseConfig,
+                                      const FXTriangulation& fxSpots,
+                                      const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                      const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
 
     //! Build commodity basis price curve
-    void buildBasisPriceCurve(const QuantLib::Date& asof,
-        const CommodityCurveConfig& config,
-        const Conventions& conventions,
-        const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts,
-        const Loader& loader);
+    void buildBasisPriceCurve(const QuantLib::Date& asof, const CommodityCurveConfig& config,
+                              const Conventions& conventions,
+                              const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts, const Loader& loader);
 
     //! Get the configured quotes
-    std::vector<boost::shared_ptr<CommodityForwardQuote>> getQuotes(const QuantLib::Date& asof,
-        const CommodityCurveConfig& config, const Loader& loader);
+    std::vector<boost::shared_ptr<CommodityForwardQuote>>
+    getQuotes(const QuantLib::Date& asof, const CommodityCurveConfig& config, const Loader& loader);
 
     //! Method for populating the price curve
-    template<template <class> class CurveType, typename... Args> void populateCurve(Args... args);
+    template <template <class> class CurveType, typename... Args> void populateCurve(Args... args);
 };
 
-template<template <class> class CurveType, typename... Args>
-void CommodityCurve::populateCurve(Args... args) {
+template <template <class> class CurveType, typename... Args> void CommodityCurve::populateCurve(Args... args) {
 
     if (interpolationMethod_ == "Linear") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::Linear>>(args...);
@@ -135,8 +130,7 @@ void CommodityCurve::populateCurve(Args... args) {
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }
-
 }
 
-}
-}
+} // namespace data
+} // namespace ore

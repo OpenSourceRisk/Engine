@@ -18,19 +18,26 @@
 
 #include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
 
+using QuantLib::Date;
+using QuantLib::Size;
+using QuantLib::Time;
+
 namespace QuantExt {
 
 DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
     const boost::shared_ptr<CrossAssetModel>& model, Size index)
-    : ZeroInflationTermStructure(
-          model->infdk(index)->termStructure()->dayCounter(), model->infdk(index)->termStructure()->baseRate(),
-          model->infdk(index)->termStructure()->observationLag(), model->infdk(index)->termStructure()->frequency(),
-          model->infdk(index)->termStructure()->indexIsInterpolated(),
-          model->infdk(index)->termStructure()->nominalTermStructure()),
-      model_(model), index_(index), referenceDate_(model_->infdk(index)->termStructure()->referenceDate()),
-      state_z_(0.0), state_y_(0.0) {
-    registerWith(model_);
-    update();
+    : ZeroInflationModelTermStructure(model, index) {}
+
+Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
+    QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");
+    auto p = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_[0], state_[1]);
+    return std::pow(p.second, 1 / t) - 1;
 }
 
-} // namespace QuantExt
+void DkImpliedZeroInflationTermStructure::checkState() const {
+    // For DK, expect the state to be two variables i.e. z_I and y_I.
+    QL_REQUIRE(state_.size() == 2, "DkImpliedZeroInflationTermStructure: expected state to have " <<
+        "two elements but got " << state_.size());
+}
+
+}

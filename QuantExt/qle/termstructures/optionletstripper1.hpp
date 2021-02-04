@@ -49,8 +49,8 @@ public:
                        Real accuracy = 1.0e-6, Natural maxIter = 100,
                        const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
-                       bool dontThrow = false, const optional<VolatilityType> targetVolatilityType = boost::none,
-                       const optional<Real> targetDisplacement = boost::none, Real dontThrowMinVol = 0.0);
+                       const optional<VolatilityType> targetVolatilityType = boost::none,
+                       const optional<Real> targetDisplacement = boost::none);
 
     const Matrix& capFloorPrices() const;
     const Matrix& capletVols() const;
@@ -78,8 +78,6 @@ private:
     mutable Rate switchStrike_;
     Real accuracy_;
     Natural maxIter_;
-    bool dontThrow_;
-    Real dontThrowMinVol_;
     const VolatilityType inputVolatilityType_;
     const Real inputDisplacement_;
 };

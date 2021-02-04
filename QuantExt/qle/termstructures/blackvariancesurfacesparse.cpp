@@ -26,15 +26,15 @@ namespace QuantExt {
 BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate, const Calendar& cal,
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
-                                                       const DayCounter& dayCounter,
-                                                       bool lowerStrikeConstExtrap,
-                                                       bool upperStrikeConstExtrap, 
-                                                       bool timeFlatExtrapolation) 
-    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>
-        (referenceDate, dayCounter, lowerStrikeConstExtrap, upperStrikeConstExtrap), timeFlatExtrapolation_(timeFlatExtrapolation) {
+                                                       const DayCounter& dayCounter, bool lowerStrikeConstExtrap,
+                                                       bool upperStrikeConstExtrap, bool timeFlatExtrapolation)
+    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter,
+                                                                                           lowerStrikeConstExtrap,
+                                                                                           upperStrikeConstExtrap),
+      timeFlatExtrapolation_(timeFlatExtrapolation) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
-        "dates, strikes and volatilities vectors not of equal size.");
+               "dates, strikes and volatilities vectors not of equal size.");
 
     // convert volatilities to variance
     vector<Real> variances(volatilities.size());
@@ -54,8 +54,8 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
         modStrikes.push_back(tempStrikes[i]);
         variances.push_back(0.0);
     }
-    
-    initialise(modDates, modStrikes, variances);    
+
+    initialise(modDates, modStrikes, variances);
 }
 
 QuantLib::Real BlackVarianceSurfaceSparse::blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const {

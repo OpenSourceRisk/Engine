@@ -10,12 +10,12 @@
 #ifndef quantext_commodity_indexed_cash_flow_hpp
 #define quantext_commodity_indexed_cash_flow_hpp
 
+#include <boost/optional.hpp>
 #include <ql/cashflow.hpp>
 #include <ql/patterns/visitor.hpp>
+#include <ql/time/schedule.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
-#include <ql/time/schedule.hpp>
-#include <boost/optional.hpp>
 
 namespace QuantExt {
 
@@ -24,39 +24,27 @@ class CommodityIndexedCashFlow : public CashFlow, public Observer {
 
 public:
     //! Constructor taking an explicit \p pricingDate and \p paymentDate
-    CommodityIndexedCashFlow(QuantLib::Real quantity,
-        const QuantLib::Date& pricingDate,
-        const QuantLib::Date& paymentDate,
-        const ext::shared_ptr<CommodityIndex>& index,
-        QuantLib::Real spread = 0.0,
-        QuantLib::Real gearing = 1.0,
-        bool useFuturePrice = false,
-        boost::optional<QuantLib::Month> contractMonth = boost::none,
-        boost::optional<QuantLib::Year> contractYear = boost::none,
-        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
+    CommodityIndexedCashFlow(QuantLib::Real quantity, const QuantLib::Date& pricingDate,
+                             const QuantLib::Date& paymentDate, const ext::shared_ptr<CommoditySpotIndex>& index,
+                             QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0, bool useFuturePrice = false,
+                             boost::optional<QuantLib::Month> contractMonth = boost::none,
+                             boost::optional<QuantLib::Year> contractYear = boost::none,
+                             const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
 
-    /*! Constructor taking a period \p startDate, \p endDate and some conventions. The pricing date and payment date 
+    /*! Constructor taking a period \p startDate, \p endDate and some conventions. The pricing date and payment date
         are derived from the start date and end date using the conventions.
     */
-    CommodityIndexedCashFlow(QuantLib::Real quantity,
-        const QuantLib::Date& startDate,
-        const QuantLib::Date& endDate,
-        const ext::shared_ptr<CommodityIndex>& index,
-        QuantLib::Natural paymentLag,
-        const QuantLib::Calendar& paymentCalendar,
-        QuantLib::BusinessDayConvention paymentConvention,
-        QuantLib::Natural pricingLag,
-        const QuantLib::Calendar& pricingLagCalendar,
-        QuantLib::Real spread = 0.0,
-        QuantLib::Real gearing = 1.0,
-        bool payInAdvance = false,
-        bool isInArrears = true,
-        bool useFuturePrice = false,
-        bool useFutureExpiryDate = true,
-        QuantLib::Natural futureMonthOffset = 0,
-        const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
-        const QuantLib::Date& paymentDateOverride = Date(),
-        const QuantLib::Date& pricingDateOverride = Date());
+    CommodityIndexedCashFlow(QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+                             const ext::shared_ptr<CommoditySpotIndex>& index, QuantLib::Natural paymentLag,
+                             const QuantLib::Calendar& paymentCalendar,
+                             QuantLib::BusinessDayConvention paymentConvention, QuantLib::Natural pricingLag,
+                             const QuantLib::Calendar& pricingLagCalendar, QuantLib::Real spread = 0.0,
+                             QuantLib::Real gearing = 1.0, bool payInAdvance = false, bool isInArrears = true,
+                             bool useFuturePrice = false, bool useFutureExpiryDate = true,
+                             QuantLib::Natural futureMonthOffset = 0,
+                             const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
+                             const QuantLib::Date& paymentDateOverride = Date(),
+                             const QuantLib::Date& pricingDateOverride = Date());
 
     //! \name Inspectors
     //@{
@@ -69,7 +57,7 @@ public:
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     //@}
-    
+
     //! \name Event interface
     //@{
     QuantLib::Date date() const { return paymentDate_; }
@@ -103,7 +91,7 @@ private:
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc, boost::optional<QuantLib::Month> contractMonth,
-        boost::optional<QuantLib::Year> contractYear);
+              boost::optional<QuantLib::Year> contractYear);
 };
 
 //! Helper class building a sequence of commodity indexed cashflows
@@ -132,7 +120,7 @@ public:
     CommodityIndexedLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
     CommodityIndexedLeg& quantityPerDay(bool flag = false);
     CommodityIndexedLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
-    
+
     operator Leg() const;
 
 private:
@@ -158,6 +146,6 @@ private:
     std::vector<QuantLib::Date> paymentDates_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

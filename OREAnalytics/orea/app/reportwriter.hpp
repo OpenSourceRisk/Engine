@@ -30,11 +30,12 @@
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/engine/sensitivitystream.hpp>
-#include <ored/utilities/dategrid.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
+#include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <string>
 
@@ -70,6 +71,11 @@ public:
     virtual void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                           const std::string& nettingSetId);
 
+    virtual void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess);
+    
+    virtual void writeNettingSetCvaSensitivities(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                          const std::string& nettingSetId);
+
     virtual void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                       const std::string& nettingSetId);
 
@@ -83,7 +89,14 @@ public:
                                      QuantLib::Real outputThreshold = 0.0);
 
     virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
-                                        QuantLib::Real outputThreshold = 0.0);
+                                        QuantLib::Real outputThreshold = 0.0, QuantLib::Size outputPrecision = 2);
+
+    virtual void writeAdditionalResultsReport(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+                                        boost::shared_ptr<Market> market, const std::string& baseCurrency);
+
+    virtual void
+    writeTodaysMarketCalibrationReport(ore::data::Report& report,
+                                       boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
 
     const std::string& nullString() const { return nullString_; }
 

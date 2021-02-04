@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/swap.hpp
-    \brief
+    \brief Engine builders for Swaptions
     \ingroup builders
 */
 

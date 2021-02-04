@@ -24,23 +24,17 @@
 #ifndef quantext_brl_cdi_swap_hpp
 #define quantext_brl_cdi_swap_hpp
 
-#include <qle/indexes/ibor/brlcdi.hpp>
 #include <ql/instruments/overnightindexedswap.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
 
 namespace QuantExt {
 
 //! Standard BRL CDI swap
 class BRLCdiSwap : public QuantLib::OvernightIndexedSwap {
 public:
-    BRLCdiSwap(
-        Type type,
-        QuantLib::Real nominal, 
-        const QuantLib::Date& startDate,
-        const QuantLib::Date& endDate,
-        QuantLib::Rate fixedRate,
-        const boost::shared_ptr<BRLCdi>& overnightIndex,
-        QuantLib::Spread spread = 0.0,
-        bool telescopicValueDates = false);
+    BRLCdiSwap(Type type, QuantLib::Real nominal, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
+               QuantLib::Rate fixedRate, const boost::shared_ptr<BRLCdi>& overnightIndex, QuantLib::Spread spread = 0.0,
+               bool telescopicValueDates = false);
 
     //! \name Results
     //@{
@@ -55,6 +49,6 @@ private:
     boost::shared_ptr<QuantLib::OvernightIndex> index_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

@@ -94,6 +94,9 @@ using namespace data;
   Conversion into par (flat cap/floor) volatility sensis has to be implemented as a
   postprocessor step.
 
+  If sensitivityData_->generateSpreadScenarios() = true spread scenarios will be generated for
+  supported risk factor types.
+
   \ingroup scenario
  */
 class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
@@ -103,7 +106,8 @@ public:
                                  const boost::shared_ptr<Scenario>& baseScenario,
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                  const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
-                                 const bool overrideTenors, const bool continueOnError = false);
+                                 const bool overrideTenors, const bool continueOnError = false,
+                                 const boost::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 
@@ -156,13 +160,16 @@ private:
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
     ScenarioDescription yieldVolScenarioDescription(string securityId, Size expiryBucket, Size termBucket, bool up);
-    ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up, bool isAtm);
+    ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up,
+                                                       bool isAtm);
     ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
     ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription zeroInflationScenarioDescription(string index, Size bucket, bool up);
     ScenarioDescription yoyInflationScenarioDescription(string index, Size bucket, bool up);
-    ScenarioDescription zeroInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
-    ScenarioDescription yoyInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription zeroInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket,
+                                                                    bool up);
+    ScenarioDescription yoyInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket,
+                                                                   bool up);
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
                                                            bool up);
     ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket,
@@ -178,6 +185,8 @@ private:
 
     //! Holds the shift sizes for each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
+
+    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
 };
 } // namespace analytics
 } // namespace ore

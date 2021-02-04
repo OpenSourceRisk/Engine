@@ -16,30 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/exercise.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/instruments/commodityapo.hpp>
 #include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <ql/exercise.hpp>
 
 using namespace QuantLib;
 using std::vector;
 
 namespace QuantExt {
 
-ApoFutureSurface::ApoFutureSurface(const Date& referenceDate,
-    const vector<Real>& moneynessLevels,
-    const boost::shared_ptr<CommodityIndex>& index,
-    const Handle<PriceTermStructure>& pts,
-    const Handle<YieldTermStructure>& yts,
-    const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
-    const Handle<BlackVolTermStructure>& baseVts,
-    const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc,
-    Real beta,
-    bool flatStrikeExtrapolation,
-    const boost::optional<Period>& maxTenor)
+ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>& moneynessLevels,
+                                   const boost::shared_ptr<CommoditySpotIndex>& index,
+                                   const Handle<PriceTermStructure>& pts, const Handle<YieldTermStructure>& yts,
+                                   const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
+                                   const Handle<BlackVolTermStructure>& baseVts,
+                                   const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc, Real beta,
+                                   bool flatStrikeExtrapolation, const boost::optional<Period>& maxTenor)
     : BlackVolatilityTermStructure(referenceDate, baseVts->calendar(), baseVts->businessDayConvention(),
-        baseVts->dayCounter()), index_(index), baseExpCalc_(baseExpCalc), vols_(moneynessLevels.size()) {
+                                   baseVts->dayCounter()),
+      index_(index), baseExpCalc_(baseExpCalc), vols_(moneynessLevels.size()) {
 
     // Checks.
     QL_REQUIRE(!pts.empty(), "The price term structure should not be empty.");
@@ -64,13 +61,14 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate,
         if (maxDate == Date::maxDate() || maxDate == Date()) {
             maxDate = pts->maxDate();
             QL_REQUIRE(maxDate != Date::maxDate() && maxDate != Date(),
-                "Could not determine a maximum date for the ApoFutureSurface");
+                       "Could not determine a maximum date for the ApoFutureSurface");
         }
     }
-    QL_REQUIRE(maxDate > referenceDate, "Expected the max date, " << io::iso_date(maxDate) <<
-        ", to be greater than the reference date, " << io::iso_date(referenceDate) << ".");
+    QL_REQUIRE(maxDate > referenceDate, "Expected the max date, " << io::iso_date(maxDate)
+                                                                  << ", to be greater than the reference date, "
+                                                                  << io::iso_date(referenceDate) << ".");
 
-    // Get the start and end dates of each APO that will be used to create the APO surface in the expiry direction. 
+    // Get the start and end dates of each APO that will be used to create the APO surface in the expiry direction.
     // Here, we use the expiry calculator, expCalc. This expiry calculator will generally be from the corresponding
     // averaging future contracts. We will be using this APO surface to price these averaging futures as standard
     // non-averaging commodity options. The averaging future contract expiry will equal the APO expiry.
@@ -83,17 +81,17 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate,
 
     // Spot quote based on the price curve and adatped yield term structure
     Handle<Quote> spot(boost::make_shared<DerivedPriceQuote>(pts));
-    Handle<YieldTermStructure> pyts = Handle<YieldTermStructure>(
-        boost::make_shared<PriceTermStructureAdapter>(*pts, *yts));
+    Handle<YieldTermStructure> pyts =
+        Handle<YieldTermStructure>(boost::make_shared<PriceTermStructureAdapter>(*pts, *yts));
     pyts->enableExtrapolation();
 
     // Hard-code this to false.
     bool stickyStrike = false;
 
-    // Initialise the matrix of quotes for use in vts_. These will be populated/updated in performCalculations by 
-    // pricing all of the APOs and extracting the volatility from each of them. Rows are moneyness levels and columns 
+    // Initialise the matrix of quotes for use in vts_. These will be populated/updated in performCalculations by
+    // pricing all of the APOs and extracting the volatility from each of them. Rows are moneyness levels and columns
     // are expiry times in the matrix of quotes that are fed to vts_'s ctor.
-    vector<vector<Handle<Quote>>> vols(moneynessLevels.size());
+    vector<vector<Handle<Quote> > > vols(moneynessLevels.size());
     for (Size i = 0; i < moneynessLevels.size(); i++) {
         for (Size j = 0; j < apoTimes.size(); j++) {
             vols_[i].push_back(boost::make_shared<SimpleQuote>(0.0));
@@ -102,26 +100,21 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate,
     }
 
     // Initialise the underlying helping volatility structure.
-    vts_ = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(calendar_, spot, apoTimes,
-        moneynessLevels, vols, baseVts->dayCounter(), pyts, yts, stickyStrike, flatStrikeExtrapolation);
-    
+    vts_ = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(calendar_, spot, apoTimes, moneynessLevels, vols,
+                                                                    baseVts->dayCounter(), pyts, yts, stickyStrike,
+                                                                    flatStrikeExtrapolation);
+
     vts_->enableExtrapolation();
 
     // Initialise the engine for performing the APO valuations.
     apoEngine_ = boost::make_shared<CommodityAveragePriceOptionAnalyticalEngine>(yts, baseVts, beta);
 }
 
-Date ApoFutureSurface::maxDate() const {
-    return vts_->maxDate();
-}
+Date ApoFutureSurface::maxDate() const { return vts_->maxDate(); }
 
-Real ApoFutureSurface::minStrike() const {
-    return vts_->minStrike();
-}
+Real ApoFutureSurface::minStrike() const { return vts_->minStrike(); }
 
-Real ApoFutureSurface::maxStrike() const {
-    return vts_->maxStrike();
-}
+Real ApoFutureSurface::maxStrike() const { return vts_->maxStrike(); }
 
 void ApoFutureSurface::accept(AcyclicVisitor& v) {
     if (auto v1 = dynamic_cast<Visitor<ApoFutureSurface>*>(&v))
@@ -136,28 +129,29 @@ void ApoFutureSurface::update() {
 }
 
 void ApoFutureSurface::performCalculations() const {
-    
+
     // Quantity is 1.0 everywhere below.
     Real quantity = 1.0;
 
     for (Size j = 1; j < apoDates_.size(); j++) {
-        
+
         // Set up the APO cashflow with from apoDates_[j-1] to apoDates_[j]
-        auto cf = boost::make_shared<CommodityIndexedAverageCashFlow>(quantity, apoDates_[j - 1], apoDates_[j],
-            apoDates_[j], index_, Calendar(), 0.0, 1.0, true, 0, 0, baseExpCalc_);
+        auto cf =
+            boost::make_shared<CommodityIndexedAverageCashFlow>(quantity, apoDates_[j - 1], apoDates_[j], apoDates_[j],
+                                                                index_, Calendar(), 0.0, 1.0, true, 0, 0, baseExpCalc_);
 
         // The APO cashflow forward rate is the amount
         Real forward = cf->amount();
 
-        // Some of the sigmas will be Null<Real>() in the first APO period if the accrued is already greater than the 
+        // Some of the sigmas will be Null<Real>() in the first APO period if the accrued is already greater than the
         // strike. So store the sigmas in a vector in the first step and then update the quotes as a second step.
         // idx will point to the first element in sigmas not equal to Null<Real>().
         vector<Real> sigmas(vts_->moneyness().size());
         for (Size i = 0; i < vts_->moneyness().size(); i++) {
-            
+
             // "exercise date" is just the last date of the APO cashflow.
             auto exercise = boost::make_shared<EuropeanExercise>(apoDates_[j]);
-            
+
             // Apply moneyness to forward rate to get current strike
             Real strike = vts_->moneyness()[i] * forward;
 
@@ -166,7 +160,11 @@ void ApoFutureSurface::performCalculations() const {
             apo.setPricingEngine(apoEngine_);
             apo.NPV();
 
-            sigmas[i] = apo.sigma();
+            auto it = apo.additionalResults().find("sigma");
+            if (it != apo.additionalResults().end())
+                sigmas[i] = boost::any_cast<Real>(it->second);
+            else
+                sigmas[i] = Null<Real>();
         }
 
         QL_REQUIRE(sigmas.back() != Null<Real>(), "All of the sigmas are null.");
@@ -180,18 +178,14 @@ void ApoFutureSurface::performCalculations() const {
             // Update the quote
             vols_[i - 1][j - 1]->setValue(sigmas[i - 1]);
         }
-        
     }
 }
 
-const boost::shared_ptr<BlackVarianceSurfaceMoneyness>& ApoFutureSurface::vts() const {
-    return vts_;
-}
+const boost::shared_ptr<BlackVarianceSurfaceMoneyness>& ApoFutureSurface::vts() const { return vts_; }
 
 Volatility ApoFutureSurface::blackVolImpl(Time t, Real strike) const {
     calculate();
     return vts_->blackVol(t, strike, true);
 }
 
-}
-
+} // namespace QuantExt

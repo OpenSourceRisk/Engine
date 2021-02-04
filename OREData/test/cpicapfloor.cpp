@@ -17,9 +17,10 @@
 */
 
 #include <boost/make_shared.hpp>
+// clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include <oret/toplevelfixture.hpp>
+// clang-format on
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/csvloader.hpp>
@@ -31,6 +32,7 @@
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <oret/datapaths.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <tuple>
 
 using namespace QuantLib;
@@ -51,24 +53,24 @@ namespace {
 class F : public TopLevelFixture {
 public:
     Date today;
-    Conventions conventions;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
     boost::shared_ptr<EngineFactory> engineFactory;
 
     F() {
         today = Date(31, Dec, 2018);
         Settings::instance().evaluationDate() = today;
 
-        conventions.fromFile(TEST_INPUT_FILE("conventions.xml"));
+        conventions->fromFile(TEST_INPUT_FILE("conventions.xml"));
 
-        TodaysMarketParameters todaysMarketParams;
-        todaysMarketParams.fromFile(TEST_INPUT_FILE("todaysmarket.xml"));
+        auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+        todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket.xml"));
 
-        CurveConfigurations curveConfigs;
-        curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig.xml"));
+        auto curveConfigs = boost::make_shared<CurveConfigurations>();
+        curveConfigs->fromFile(TEST_INPUT_FILE("curveconfig.xml"));
 
         string marketFile = TEST_INPUT_FILE("market.txt");
         string fixingsFile = TEST_INPUT_FILE("fixings.txt");
-        CSVLoader loader(marketFile, fixingsFile, false);
+        auto loader = boost::make_shared<CSVLoader>(marketFile, fixingsFile, false);
 
         bool continueOnError = false;
         boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(

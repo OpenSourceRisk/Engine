@@ -37,7 +37,6 @@ namespace ore {
 namespace data {
 using namespace QuantLib;
 
-
 //! Builder for a Linear Gauss Markov model component
 /*!
   This class is a utility that turns a Linear Gauss Markov
@@ -53,7 +52,8 @@ public:
       engines for swaptions etc. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
-               const bool continueOnError = false, const std::string& referenceCalibrationGrid = "");
+               const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
+               const bool setCalibrationInfo = false);
     //! Return calibration error
     Real error() const;
 
@@ -62,10 +62,9 @@ public:
     std::string currency() { return data_->ccy(); }
     boost::shared_ptr<QuantExt::LGM> model() const;
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
-    RelinkableHandle<YieldTermStructure> discountCurve() { return discountCurve_; }
+    RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
     std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() const;
     //@}
-
 
     //! \name ModelBuilder interface
     //@{
@@ -77,7 +76,7 @@ private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
     void updateSwaptionBasketVols() const;
-    std::string getBasketDetails() const;
+    std::string getBasketDetails(QuantExt::LgmCalibrationInfo& info) const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
     // populate expiry and term
@@ -92,6 +91,7 @@ private:
     const Real bootstrapTolerance_;
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
+    const bool setCalibrationInfo_;
 
     mutable Real error_;
     mutable boost::shared_ptr<QuantExt::LGM> model_;
@@ -106,7 +106,8 @@ private:
     mutable Array swaptionMaturities_;
     mutable Date swaptionBasketRefDate_;
 
-    RelinkableHandle<YieldTermStructure> discountCurve_;
+    RelinkableHandle<YieldTermStructure> modelDiscountCurve_;
+    Handle<YieldTermStructure> calibrationDiscountCurve_;
     Handle<QuantLib::SwaptionVolatilityStructure> svts_;
     Handle<SwapIndex> swapIndex_, shortSwapIndex_;
 

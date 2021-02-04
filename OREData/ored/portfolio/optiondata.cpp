@@ -52,6 +52,22 @@ void OptionData::fromXML(XMLNode* node) {
     exerciseFeeSettlementConvention_ = XMLUtils::getChildValue(node, "ExerciseFeeSettlementConvention", false);
     exercisePrices_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExercisePrices", "ExercisePrice", false);
     exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate", false);
+
+    automaticExercise_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "AutomaticExercise"))
+        automaticExercise_ = parseBool(XMLUtils::getNodeValue(n));
+
+    exerciseData_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "ExerciseData")) {
+        exerciseData_ = OptionExerciseData();
+        exerciseData_->fromXML(n);
+    }
+
+    paymentData_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PaymentData")) {
+        paymentData_ = OptionPaymentData();
+        paymentData_->fromXML(n);
+    }
 }
 
 XMLNode* OptionData::toXML(XMLDocument& doc) {
@@ -63,8 +79,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "PayoffType", payoffType_);
     if (style_ != "")
         XMLUtils::addChild(doc, node, "Style", style_);
-    // if (noticePeriod_ != "")
-        XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
+    XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
     if (noticeCalendar_ != "")
         XMLUtils::addChild(doc, node, "NoticeCalendar", noticeCalendar_);
     if (noticeConvention_ != "")
@@ -87,6 +102,18 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "ExerciseFeeSettlementConvention", exerciseFeeSettlementConvention_);
     XMLUtils::addChildren(doc, node, "ExercisePrices", "ExercisePrice", exercisePrices_);
     XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
+
+    if (automaticExercise_)
+        XMLUtils::addChild(doc, node, "AutomaticExercise", *automaticExercise_);
+
+    if (exerciseData_) {
+        XMLUtils::appendNode(node, exerciseData_->toXML(doc));
+    }
+
+    if (paymentData_) {
+        XMLUtils::appendNode(node, paymentData_->toXML(doc));
+    }
+
     return node;
 }
 } // namespace data

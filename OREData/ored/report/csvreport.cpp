@@ -68,9 +68,11 @@ private:
 
     // Shared implementation to include the quote character.
     void fprintString(const string& s) const {
-        if (quoteChar_ != '\0') fputc(quoteChar_, fp_);
+        if (quoteChar_ != '\0')
+            fputc(quoteChar_, fp_);
         fprintf(fp_, "%s", s.c_str());
-        if (quoteChar_ != '\0') fputc(quoteChar_, fp_);
+        if (quoteChar_ != '\0')
+            fputc(quoteChar_, fp_);
     }
 
     FILE* fp_;
@@ -79,10 +81,10 @@ private:
     string null_;
 };
 
-CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter,
-    char quoteChar, const string& nullString)
+CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
+                             const string& nullString, bool lowerHeader)
     : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), quoteChar_(quoteChar),
-      nullString_(nullString), i_(0), fp_(NULL) {
+      nullString_(nullString), lowerHeader_(lowerHeader), i_(0), fp_(NULL) {
     fp_ = fopen(filename_.c_str(), "w+");
     QL_REQUIRE(fp_, "Error opening file " << filename_);
 }
@@ -98,7 +100,10 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
         fprintf(fp_, "#");
     if (i_ > 0)
         fprintf(fp_, "%c", sep_);
-    fprintf(fp_, "%s", name.c_str());
+    string cpName = name;
+    if (lowerHeader_ && !cpName.empty())
+        cpName[0] = std::tolower(static_cast<unsigned char>(cpName[0]));
+    fprintf(fp_, "%s", cpName.c_str());
     i_++;
     return *this;
 }

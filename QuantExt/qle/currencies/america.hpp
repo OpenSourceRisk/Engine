@@ -43,6 +43,17 @@ public:
     MXVCurrency();
 };
 
+//! Unidad de Valor Real
+/*! The ISO three-letter code is COU; the numeric code is 970.
+ A unit of account used in Colombia.
+
+ \ingroup currencies
+*/
+class COUCurrency : public Currency {
+public:
+    COUCurrency();
+};
+
 //! Unidad de Fomento (funds code)
 /*! The ISO three-letter code is CLF; the numeric code is 990.
  A unit of account used in Chile.

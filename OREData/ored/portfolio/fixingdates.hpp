@@ -51,6 +51,7 @@ class StrippedCappedFlooredCoupon;
 namespace QuantExt {
 class AverageONIndexedCoupon;
 class OvernightIndexedCoupon;
+class CappedFlooredOvernightIndexedCoupon;
 class EquityCoupon;
 class FloatingRateFXLinkedNotionalCoupon;
 class FXLinkedCashFlow;
@@ -117,6 +118,11 @@ public:
     /*! add data from another RequiredFixings instance */
     void addData(const RequiredFixings& requiredFixings);
 
+    /*! Set all pay dates to Date::maxDate(), fixingDatesIndices() will then not filter the required fixings by the
+      given settlement date any more. Needed by total return swaps on bonds for example, where a cashflow in a bond with
+      past payment date can still be relevant for the payment of the current return period. */
+    void unsetPayDates();
+
 private:
     // FixingEntry = indexName, fixingDate, payDate, alwaysAddIfPaysOnSettlement
     using FixingEntry = std::tuple<std::string, QuantLib::Date, QuantLib::Date, bool>;
@@ -154,6 +160,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantLib::YoYInflationCoupon>,
                          public QuantLib::Visitor<QuantLib::OvernightIndexedCoupon>,
                          public QuantLib::Visitor<QuantExt::OvernightIndexedCoupon>,
+                         public QuantLib::Visitor<QuantExt::CappedFlooredOvernightIndexedCoupon>,
                          public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
                          public QuantLib::Visitor<QuantLib::CmsSpreadCoupon>,
                          public QuantLib::Visitor<QuantLib::DigitalCoupon>,
@@ -185,6 +192,7 @@ public:
     void visit(QuantLib::YoYInflationCoupon& c);
     void visit(QuantLib::OvernightIndexedCoupon& c);
     void visit(QuantExt::OvernightIndexedCoupon& c);
+    void visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c);
     void visit(QuantLib::AverageBMACoupon& c);
     void visit(QuantLib::CmsSpreadCoupon& c);
     void visit(QuantLib::DigitalCoupon& c);
@@ -207,19 +215,26 @@ protected:
 void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter);
 
 /*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its
-    fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st of the
-    applicable month. Some market data providers by convention supply the inflation fixings with the date as the last
-    date of the month. This function scans the \p fixings map, and moves any inflation fixing dates from the 1st of
-    the month to the last day of the month. The key in the \p fixings map is the index name and the value is the set
-    of dates for which we require the fixings.
+    fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st day of the
+    applicable inflation period. Some market data providers by convention supply the inflation fixings with the date 
+    as the last date of the applicable inflation period. This function scans the \p fixings map, and moves any 
+    inflation fixing dates from the 1st day of the inflation period to the last day of the inflation period. The key 
+    in the \p fixings map is the index name and the value is the set of dates for which we require the fixings.
+
+    If inflation indices have been set up via ZeroInflationIndex entries in the Conventions, the \p conventions 
+    should be passed here. If not, the default \c nullptr parameter will be sufficient.
 */
-void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
+void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
+    const boost::shared_ptr<Conventions>& conventions = nullptr);
 
 /*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
 
     These additional index and fixing date pairs are found by scanning the \p mktParams and:
     - for MarketObject::IndexCurve, take the ibor index name and add the dates for each weekday between settlement
-      date minus \p iborLookback period and settlement date
+      date minus \p iborLookback period or \p oisLookback period and settlement date. The distinction between 
+      Ibor and OIS is made here to cover the fixings necessary for OIS futures. The default value of 4 months 
+      covers OIS futures with a contract period of up to 3 months. It would need to be configured differently 
+      if OIS futures with a longer contract period are possible.
     - for MarketObject::ZeroInflationCurve, take the inflation index and add the first of each month between
       settlement date minus \p inflationLookback period and settlement date
     - for MarketObject::YoYInflationCurve, take the inflation index and add the first of each month between
@@ -235,6 +250,7 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
 void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
                           const TodaysMarketParameters& mktParams,
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
+                          const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
                           const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
                           const std::string& configuration = Market::defaultConfiguration);
 

@@ -66,10 +66,10 @@ void ScheduleDates::fromXML(XMLNode* node) {
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Dates");
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
-        if (convention_ != "")
-    XMLUtils::addChild(doc, node, "Convention", convention_);
+    if (convention_ != "")
+        XMLUtils::addChild(doc, node, "Convention", convention_);
     XMLUtils::addChild(doc, node, "Tenor", tenor_);
-    if(endOfMonth_ != "")
+    if (endOfMonth_ != "")
         XMLUtils::addChild(doc, node, "EndOfMonth", endOfMonth_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
     return node;
@@ -102,7 +102,10 @@ Schedule makeSchedule(const ScheduleDates& data) {
     BusinessDayConvention convention = Unadjusted;
     if (data.convention() != "")
         convention = parseBusinessDayConvention(data.convention());
-    boost::optional<Period> tenor = boost::none;
+    // Avoid compiler warning on gcc
+    // https://www.boost.org/doc/libs/1_74_0/libs/optional/doc/html/boost_optional/tutorial/
+    // gotchas/false_positive_with__wmaybe_uninitialized.html
+    auto tenor = boost::make_optional(false, Period());
     if (data.tenor() != "")
         tenor = parsePeriod(data.tenor());
     bool endOfMonth = false;
@@ -180,10 +183,8 @@ void updateData(const std::string& s, T& t, bool& hasT, bool& hasConsistentT, co
         }
     }
 }
-//local wrapper function to get around optional parameter in parseCalendar
-Calendar parseCalendarTemp(const string& s){
-    return parseCalendar(s);
-}
+// local wrapper function to get around optional parameter in parseCalendar
+Calendar parseCalendarTemp(const string& s) { return parseCalendar(s); }
 } // namespace
 
 Schedule makeSchedule(const ScheduleData& data) {

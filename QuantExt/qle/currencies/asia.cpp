@@ -22,13 +22,6 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-// Kazakhstani tenge
-KZTCurrency::KZTCurrency() {
-    static boost::shared_ptr<Data> kztData(
-        new Data("Kazakhstani tenge", "KZT", 398, "KZT", "", 100, Rounding(), "1$.2f %3%"));
-    data_ = kztData;
-}
-
 // Qatari riyal
 QARCurrency::QARCurrency() {
     static boost::shared_ptr<Data> qarData(
@@ -48,6 +41,13 @@ OMRCurrency::OMRCurrency() {
     static boost::shared_ptr<Data> omrData(
         new Data("Omani rial", "OMR", 512, "OMR", "", 1000, Rounding(), "1$.2f %3%"));
     data_ = omrData;
+}
+
+// Jordanian dinar
+JODCurrency::JODCurrency() {
+    static boost::shared_ptr<Data> jodData(
+        new Data("Jordanian dinar", "JOD", 400, "JOD", "", 1000, Rounding(), "1$.2f %3%"));
+    data_ = jodData;
 }
 
 // United Arab Emirates dirham
@@ -77,4 +77,5 @@ LKRCurrency::LKRCurrency() {
         new Data("Sri Lankan rupee", "LKR", 144, "LKR", "", 100, Rounding(), "1$.2f %3%"));
     data_ = lkrData;
 }
+
 } // namespace QuantExt

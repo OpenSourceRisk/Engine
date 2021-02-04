@@ -17,7 +17,7 @@
 */
 
 /*! \file portfolio/builders/fxoption.hpp
-    \brief
+    \brief Engine builder for FX Options
     \ingroup builders
 */
 
@@ -35,8 +35,16 @@ namespace data {
  */
 class FxEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
-    FxEuropeanOptionEngineBuilder()
-        : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
+    FxEuropeanOptionEngineBuilder() : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
+};
+
+/*! Engine builder for European cash-settled FX options.
+    \ingroup builders
+ */
+class FxEuropeanCSOptionEngineBuilder : public EuropeanCSOptionEngineBuilder {
+public:
+    FxEuropeanCSOptionEngineBuilder()
+        : EuropeanCSOptionEngineBuilder("GarmanKohlhagen", {"FxOptionEuropeanCS"}, AssetClass::FX) {}
 };
 
 //! Engine Builder for American Fx Options using Finite Difference Method
@@ -47,8 +55,7 @@ public:
 class FxAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
     FxAmericanOptionFDEngineBuilder()
-        : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"},
-                                        AssetClass::FX, expiryDate_) {}
+        : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX, expiryDate_) {}
 };
 
 //! Engine Builder for American Fx Options using Barone Adesi Whaley Approximation

@@ -27,31 +27,27 @@
 
 namespace QuantExt {
 
-    //! Year counter for when we want a whole number year fraction.
-    /*! This day counter computes a day count fraction using an underlying
-        day counter (ACTACT) before rounding the result to
-        the nearest integer.
+//! Year counter for when we want a whole number year fraction.
+/*! This day counter computes a day count fraction using an underlying
+    day counter (ACTACT) before rounding the result to
+    the nearest integer.
 
-        \ingroup daycounters
-    */
-    class YearCounter : public QuantLib::DayCounter {
-      public:
-        YearCounter()
-        : QuantLib::DayCounter(boost::shared_ptr<DayCounter::Impl>(
-                                             new YearCounter::Impl())){}
-      private:
-        class Impl : public DayCounter::Impl {
-          public:
-            std::string name() const { return "Year"; }
-            QuantLib::Date::serial_type dayCount(const QuantLib::Date& d1,
-                                       const QuantLib::Date& d2) const;
-            QuantLib::Time yearFraction(const QuantLib::Date& d1,
-                              const QuantLib::Date& d2,
-                              const QuantLib::Date&,
-                              const QuantLib::Date&) const;
-        };
+    \ingroup daycounters
+*/
+class YearCounter : public QuantLib::DayCounter {
+public:
+    YearCounter() : QuantLib::DayCounter(boost::shared_ptr<DayCounter::Impl>(new YearCounter::Impl())) {}
+
+private:
+    class Impl : public DayCounter::Impl {
+    public:
+        std::string name() const { return "Year"; }
+        QuantLib::Date::serial_type dayCount(const QuantLib::Date& d1, const QuantLib::Date& d2) const;
+        QuantLib::Time yearFraction(const QuantLib::Date& d1, const QuantLib::Date& d2, const QuantLib::Date&,
+                                    const QuantLib::Date&) const;
     };
+};
 
-}
+} // namespace QuantExt
 
 #endif

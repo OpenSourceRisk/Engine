@@ -54,13 +54,16 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<ore::data::EngineData>& engineData,
                        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                        const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
-                       const CurveConfigurations& curveConfigs,
-                       const TodaysMarketParameters& todaysMarketParams,
-                       boost::shared_ptr<ScenarioFactory> scenarioFactory, bool continueOnError) {
+                       const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
+                       boost::shared_ptr<ScenarioFactory> scenarioFactory,
+                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
+                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData, bool continueOnError) {
 
     LOG("Build Simulation Market");
     boost::shared_ptr<ScenarioSimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions, Market::defaultConfiguration, curveConfigs, todaysMarketParams, continueOnError);
+        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions, Market::defaultConfiguration,
+                                              curveConfigs, todaysMarketParams, continueOnError);
 
     LOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
@@ -73,7 +76,8 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
     LOG("Build Engine Factory");
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration;
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket, configurations);
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
+        engineData, simMarket, configurations, extraEngineBuilders, extraLegBuilders, referenceData);
 
     LOG("Reset and Build Portfolio");
     portfolio->reset();

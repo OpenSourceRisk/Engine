@@ -37,21 +37,30 @@ using std::string;
 class EquityOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
+    EquityOption() : VanillaOptionTrade(AssetClass::EQ), localStrike_(0.0) { tradeType_ = "EquityOption"; }
     //! Constructor
-    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, double strike, double quantity)
-        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(),
-            currency, strike, quantity), equityUnderlying_(equityUnderlying) { tradeType_ = "EquityOption"; }
+    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, QuantLib::Real strike,
+        QuantLib::Real quantity, string strikeCurrency = "")
+        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity),
+          equityUnderlying_(equityUnderlying), localCurrency_(currency), localStrike_(strike), strikeCurrency_(strikeCurrency) {
+        tradeType_ = "EquityOption";
+        setCcyStrike();
+    }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! Add underlying Equity names
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
+    //! set the strike & ccy, might need minor to major currency conversion
+    void setCcyStrike();
 
     //! \name Inspectors
     //@{
     const string& equityName() const { return equityUnderlying_.name(); }
+    const string& strikeCurrency() const { return strikeCurrency_; }
     //@}
 
     //! \name Serialisation
@@ -60,8 +69,11 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
-private:
+protected:
     EquityUnderlying equityUnderlying_;
+    string localCurrency_;
+    QuantLib::Real localStrike_;
+    string strikeCurrency_;
 };
 } // namespace data
 } // namespace ore

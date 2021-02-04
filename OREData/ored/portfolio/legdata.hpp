@@ -24,19 +24,19 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
-#include <ored/portfolio/underlying.hpp>
+#include <ored/portfolio/indexing.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
-#include <ored/portfolio/indexing.hpp>
-#include <ored/utilities/parsers.hpp>
+#include <ored/portfolio/underlying.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/experimental/coupons/swapspreadindex.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/position.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
-#include <ql/position.hpp>
 
 #include <vector>
 
@@ -47,6 +47,7 @@ using std::string;
 
 class EngineFactory;
 class Market;
+class RequiredFixings;
 
 //! Serializable Additional Leg Data
 /*!
@@ -66,7 +67,7 @@ public:
 
 protected:
     /*! Store the set of ORE index names that appear on this leg.
-        Should be populated by dervied classes.
+        Should be populated by derived classes.
     */
     std::set<std::string> indices_;
 
@@ -180,8 +181,8 @@ class FloatingLegData : public LegAdditionalData {
 public:
     //! Default constructor
     FloatingLegData()
-        : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), lookback_(0 * Days), isInArrears_(true),
-          isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
+        : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), lookback_(0 * Days), rateCutoff_(Null<Size>()),
+          isInArrears_(true), isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
     //! Constructor
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -190,12 +191,13 @@ public:
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
-                    QuantLib::Period lookback = 0 * Days)
+                    QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
+                    bool localCapFloor = false)
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
-          lookback_(lookback), isInArrears_(isInArrears), isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods),
-          includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
-          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
-          nakedOption_(nakedOption) {
+          lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
+          hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
+          caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
+          gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor) {
         indices_.insert(index_);
     }
 
@@ -204,6 +206,7 @@ public:
     const string& index() const { return index_; }
     QuantLib::Size fixingDays() const { return fixingDays_; }
     QuantLib::Period lookback() const { return lookback_; }
+    QuantLib::Size rateCutoff() const { return rateCutoff_; }
     bool isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     bool hasSubPeriods() const { return hasSubPeriods_; }
@@ -217,6 +220,17 @@ public:
     const vector<double>& gearings() const { return gearings_; }
     const vector<string>& gearingDates() const { return gearingDates_; }
     bool nakedOption() const { return nakedOption_; }
+    bool localCapFloor() const { return localCapFloor_; }
+    //@}
+
+    //! \name Modifiers
+    //@{
+    vector<double>& caps() { return caps_; }
+    vector<string>& capDates() { return capDates_; }
+    vector<double>& floors() { return floors_; }
+    vector<string>& floorDates() { return floorDates_; }
+    bool& nakedOption() { return nakedOption_; }
+    bool& localCapFloor() { return localCapFloor_; }
     //@}
 
     //! \name Serialisation
@@ -228,6 +242,7 @@ private:
     string index_;
     QuantLib::Size fixingDays_;
     QuantLib::Period lookback_;
+    QuantLib::Size rateCutoff_;
     bool isInArrears_;
     bool isAveraged_;
     bool hasSubPeriods_;
@@ -241,6 +256,7 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
+    bool localCapFloor_;
 
     static LegDataRegister<FloatingLegData> reg_;
 };
@@ -259,11 +275,13 @@ public:
                const vector<double>& rates, const vector<string>& rateDates = std::vector<string>(),
                bool subtractInflationNominal = true, const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false)
+               const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
+               double finalFlowFloor = Null<Real>(), bool nakedOption = false)
         : LegAdditionalData("CPI"), index_(index), startDate_(startDate), baseCPI_(baseCPI),
           observationLag_(observationLag), interpolation_(interpolation), rates_(rates), rateDates_(rateDates),
           subtractInflationNominal_(subtractInflationNominal), caps_(caps), capDates_(capDates), floors_(floors),
-          floorDates_(floorDates), nakedOption_(nakedOption) {
+          floorDates_(floorDates), finalFlowCap_(finalFlowCap), finalFlowFloor_(finalFlowFloor),
+          nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
@@ -281,6 +299,8 @@ public:
     const vector<string>& capDates() const { return capDates_; }
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
+    double finalFlowCap() const { return finalFlowCap_; }
+    double finalFlowFloor() const { return finalFlowFloor_; }
     bool nakedOption() const { return nakedOption_; }
     //@}
 
@@ -302,6 +322,8 @@ private:
     vector<string> capDates_;
     vector<double> floors_;
     vector<string> floorDates_;
+    double finalFlowCap_;
+    double finalFlowFloor_;
     bool nakedOption_;
 
     static LegDataRegister<CPILegData> reg_;
@@ -572,11 +594,12 @@ public:
     EquityLegData(string returnType, Real dividendFactor, EquityUnderlying equityUnderlying, Real initialPrice,
                   bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
                   string eqCurrency = "", string fxIndex = "", Natural fxIndexFixingDays = 2,
-                  string fxIndexCalendar = "", Real quantity = Null<Real>())
+                  string fxIndexCalendar = "", Real quantity = Null<Real>(), string initialPriceCurrency = "")
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor),
           equityUnderlying_(equityUnderlying), initialPrice_(initialPrice), notionalReset_(notionalReset),
           fixingDays_(fixingDays), valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex),
-          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar), quantity_(quantity) {
+          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar), quantity_(quantity),
+          initialPriceCurrency_(initialPriceCurrency) {
         indices_.insert("EQ-" + eqName());
     }
 
@@ -594,7 +617,8 @@ public:
     Natural fxIndexFixingDays() const { return fxIndexFixingDays_; }
     const string& fxIndexCalendar() const { return fxIndexCalendar_; }
     bool notionalReset() const { return notionalReset_; }
-    Real quantity() const { return quantity_; } // might be null
+    Real quantity() const { return quantity_; }                                  // might be null
+    const string& initialPriceCurrency() const { return initialPriceCurrency_; } // might be empty
     //@}
 
     //! \name Serialisation
@@ -615,6 +639,7 @@ private:
     Natural fxIndexFixingDays_ = 2;
     string fxIndexCalendar_ = "";
     Real quantity_;
+    string initialPriceCurrency_;
 
     static LegDataRegister<EquityLegData> reg_;
 };
@@ -676,7 +701,8 @@ public:
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
-            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false);
+            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
+            const string& lastPeriodDayCounter = "");
 
     //! \name Serialisation
     //@{
@@ -711,6 +737,7 @@ public:
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
     const std::vector<Indexing>& indexing() const { return indexing_; }
     const bool indexingFromAssetLeg() const { return indexingFromAssetLeg_; }
+    const string& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
     //@}
 
     //! \name modifiers
@@ -718,6 +745,7 @@ public:
     vector<double>& notionals() { return notionals_; }
     vector<string>& notionalDates() { return notionalDates_; }
     bool& isPayer() { return isPayer_; }
+    boost::shared_ptr<LegAdditionalData>& concreteLegData() { return concreteLegData_; }
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
     //@}
@@ -757,6 +785,7 @@ private:
     std::vector<std::string> paymentDates_;
     std::vector<Indexing> indexing_;
     bool indexingFromAssetLeg_;
+    string lastPeriodDayCounter_;
 };
 
 //! \name Utilities for building QuantLib Legs
@@ -765,7 +794,8 @@ Leg makeFixedLeg(const LegData& data);
 Leg makeZCFixedLeg(const LegData& data);
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
-Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);
+Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index,
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper);
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
@@ -781,7 +811,7 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                             const boost::shared_ptr<EngineFactory>& engineFactory);
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve, 
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve,
                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
 Real currentNotional(const Leg& leg);
 
@@ -827,7 +857,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames);
+                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings);
 
 // template implementations
 
@@ -900,7 +930,19 @@ vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<s
 // build an FX Index needed by legbuilders / makeLeg methods
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
                                                   const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays = 0);
+                                                  const string& calendar, Size fixingDays = 0,
+                                                  bool useXbsCurves = false);
+
+// build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
+class BondData;
+boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
+                                                      const bool relative, const Calendar& fixingCalendar,
+                                                      const bool conditionalOnSurvival,
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                      RequiredFixings& requiredFixings);
+
+// join a vector of legs to a single leg, check if the legs have adjacent periods
+Leg joinLegs(const std::vector<Leg>& legs);
 
 } // namespace data
 } // namespace ore

@@ -24,15 +24,15 @@
 #ifndef quantext_apo_surface_hpp
 #define quantext_apo_surface_hpp
 
+#include <boost/optional.hpp>
+#include <ql/patterns/lazyobject.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/pricingengines/commodityapoengine.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/patterns/lazyobject.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <boost/optional.hpp>
 
 namespace QuantExt {
 
@@ -40,18 +40,16 @@ namespace QuantExt {
 class ApoFutureSurface : public QuantLib::LazyObject, public QuantLib::BlackVolatilityTermStructure {
 
 public:
-    ApoFutureSurface(const QuantLib::Date& referenceDate,
-        const std::vector<QuantLib::Real>& moneynessLevels,
-        const boost::shared_ptr<CommodityIndex>& index,
-        const QuantLib::Handle<PriceTermStructure>& pts,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
-        const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
-        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
-        const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc,
-        QuantLib::Real beta = 0.0,
-        bool flatStrikeExtrapolation = true,
-        const boost::optional<QuantLib::Period>& maxTenor = boost::none);
-    
+    ApoFutureSurface(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Real>& moneynessLevels,
+                     const boost::shared_ptr<CommoditySpotIndex>& index,
+                     const QuantLib::Handle<PriceTermStructure>& pts,
+                     const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
+                     const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
+                     const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
+                     const boost::shared_ptr<FutureExpiryCalculator>& baseExpCalc, QuantLib::Real beta = 0.0,
+                     bool flatStrikeExtrapolation = true,
+                     const boost::optional<QuantLib::Period>& maxTenor = boost::none);
+
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const override;
@@ -94,9 +92,9 @@ private:
 
     //! The APO schedule dates.
     std::vector<QuantLib::Date> apoDates_;
-    
+
     //! This will keep a handle on the APO vol quotes that are calculated.
-    std::vector<std::vector<boost::shared_ptr<QuantLib::SimpleQuote>>> vols_;
+    std::vector<std::vector<boost::shared_ptr<QuantLib::SimpleQuote> > > vols_;
 
     //! The surface that is created to do the work.
     boost::shared_ptr<BlackVarianceSurfaceMoneyness> vts_;
@@ -105,7 +103,6 @@ private:
     boost::shared_ptr<CommodityAveragePriceOptionBaseEngine> apoEngine_;
 };
 
-}
-
+} // namespace QuantExt
 
 #endif

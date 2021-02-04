@@ -24,82 +24,80 @@
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <qle/indexes/commodityindex.hpp>
 
-#include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace std;
 using namespace QuantLib;
+using QuantExt::CommodityFuturesIndex;
+using QuantExt::CommoditySpotIndex;
+using QuantExt::PriceTermStructure;
 
 namespace ore {
 namespace data {
 
+CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { tradeType_ = "CommodityOption"; }
+
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
-                                 const string& currency, Real strike, Real quantity)
-    : Trade("CommodityOption", env), optionData_(optionData), commodityName_(commodityName), currency_(currency),
-      strike_(strike), quantity_(quantity) {}
+                                 const string& currency, Real strike, Real quantity,
+                                 const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
+    : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, strike, quantity),
+      isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
+    tradeType_ = "CommodityOption";
+}
 
 void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Checks
     QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
     QL_REQUIRE(strike_ > 0, "Commodity option requires a positive strike");
-    QL_REQUIRE(tradeActions().empty(), "Trade actions not supported for commodity option");
-    QL_REQUIRE(optionData_.style() == "European",
-               "Option style is '" << optionData_.style() << "'. Only European style is supported");
-    QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Expect a single exercise date for European option");
 
-    // Build up option trade data
-    Currency ccy = parseCurrency(currency_);
-    Option::Type type = parseOptionType(optionData_.callPut());
-    Date expiryDate = parseDate(optionData_.exerciseDates().front());
-    Position::Type positionType = parsePositionType(optionData_.longShort());
+    // Get the price curve for the commodity.
+    const boost::shared_ptr<Market>& market = engineFactory->market();
+    Handle<PriceTermStructure> priceCurve =
+        market->commodityPriceCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
 
-    // Create the QuantLib instrument (option for unit of commodity)
-    boost::shared_ptr<StrikedTypePayoff> payoff = boost::make_shared<PlainVanillaPayoff>(type, strike_);
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
-    boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
+    // Populate the index_ in case the option is automatic exercise.
+    // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
+    if (!isFuturePrice_ || *isFuturePrice_) {
 
-    // Attach our engine
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<CommodityOptionEngineBuilder> engineBuilder =
-        boost::dynamic_pointer_cast<CommodityOptionEngineBuilder>(builder);
-    vanilla->setPricingEngine(engineBuilder->engine(commodityName_, ccy));
+        // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
 
-    // Take care of fees
-    vector<boost::shared_ptr<Instrument>> additionalInstruments;
-    vector<Real> additionalMultipliers;
-    if (optionData_.premiumPayDate() != "" && optionData_.premiumCcy() != "") {
-        // Pay premium if long, receive if short
-        Real premiumAmount = optionData_.premium();
-        if (positionType == Position::Long)
-            premiumAmount *= -1.0;
+        // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
+        Date expiryDate;
+        if (futureExpiryDate_ != Date()) {
+            expiryDate = futureExpiryDate_;
+        } else {
+            // Get the expiry date of the option. This is the expiry date of the commodity future index.
+            const vector<string>& expiryDates = option_.exerciseDates();
+            QL_REQUIRE(expiryDates.size() == 1,
+                       "Expected exactly one expiry date for CommodityOption but got " << expiryDates.size() << ".");
+            expiryDate = parseDate(expiryDates[0]);
+        }
 
-        Currency premiumCurrency = parseCurrency(optionData_.premiumCcy());
-        Date premiumDate = parseDate(optionData_.premiumPayDate());
+        index_ = boost::make_shared<CommodityFuturesIndex>(assetName_, expiryDate, NullCalendar(), priceCurve);
 
-        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
-                   engineFactory, engineBuilder->configuration(MarketContext::pricing));
-
-        DLOG("Option premium added for commodity option " << id());
+    } else {
+        // If the underlying is a commodity spot, create a spot index.
+        index_ = boost::make_shared<CommoditySpotIndex>(assetName_, NullCalendar(), priceCurve);
     }
 
-    // Create the composite instrument wrapper (option trade + fee "trade")
-    Real factor = positionType == Position::Long ? quantity_ : -quantity_;
-    instrument_ = boost::make_shared<VanillaInstrument>(vanilla, factor, additionalInstruments, additionalMultipliers);
+    VanillaOptionTrade::build(engineFactory);
 
-    // We just use strike to get notional rather than spot price
-    notional_ = strike_ * quantity_;
-
-    notionalCurrency_ = currency_;
-    npvCurrency_ = currency_;
-    maturity_ = expiryDate;
+    // LOG the volatility if the trade expiry date is in the future.
+    if (expiryDate_ > Settings::instance().evaluationDate()) {
+        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
+                                << " and strike " << strike_ << " is "
+                                << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_));
+    }
 }
 
-std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
-    return { {AssetClass::COM, std::set<std::string>({ commodityName_ })} };
+std::map<AssetClass, std::set<std::string>>
+CommodityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    return {{AssetClass::COM, std::set<std::string>({assetName_})}};
 }
 
 void CommodityOption::fromXML(XMLNode* node) {
@@ -109,12 +107,20 @@ void CommodityOption::fromXML(XMLNode* node) {
     XMLNode* commodityNode = XMLUtils::getChildNode(node, "CommodityOptionData");
     QL_REQUIRE(commodityNode, "A commodity option needs a 'CommodityOptionData' node");
 
-    optionData_.fromXML(XMLUtils::getChildNode(commodityNode, "OptionData"));
+    option_.fromXML(XMLUtils::getChildNode(commodityNode, "OptionData"));
 
-    commodityName_ = XMLUtils::getChildValue(commodityNode, "Name", true);
+    assetName_ = XMLUtils::getChildValue(commodityNode, "Name", true);
     currency_ = XMLUtils::getChildValue(commodityNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(commodityNode, "Strike", true);
     quantity_ = XMLUtils::getChildValueAsDouble(commodityNode, "Quantity", true);
+
+    isFuturePrice_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(commodityNode, "IsFuturePrice"))
+        isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
+
+    futureExpiryDate_ = Date();
+    if (XMLNode* n = XMLUtils::getChildNode(commodityNode, "FutureExpiryDate"))
+        futureExpiryDate_ = parseDate(XMLUtils::getNodeValue(n));
 }
 
 XMLNode* CommodityOption::toXML(XMLDocument& doc) {
@@ -124,12 +130,18 @@ XMLNode* CommodityOption::toXML(XMLDocument& doc) {
     XMLNode* eqNode = doc.allocNode("CommodityOptionData");
     XMLUtils::appendNode(node, eqNode);
 
-    XMLUtils::appendNode(eqNode, optionData_.toXML(doc));
+    XMLUtils::appendNode(eqNode, option_.toXML(doc));
 
-    XMLUtils::addChild(doc, eqNode, "Name", commodityName_);
+    XMLUtils::addChild(doc, eqNode, "Name", assetName_);
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
     XMLUtils::addChild(doc, eqNode, "Strike", strike_);
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
+
+    if (isFuturePrice_)
+        XMLUtils::addChild(doc, eqNode, "IsFuturePrice", *isFuturePrice_);
+
+    if (futureExpiryDate_ != Date())
+        XMLUtils::addChild(doc, eqNode, "FutureExpiryDate", to_string(futureExpiryDate_));
 
     return node;
 }

@@ -23,39 +23,39 @@
 #ifndef quantext_large_joint_calendar_h
 #define quantext_large_joint_calendar_h
 
-#include <ql/time/calendars/jointcalendar.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 namespace QuantExt {
 
-    //! Large Joint calendar
-    /*! Similar to QuantLib's "JointCalendar" but allows a larger number of 
-        underlying calendars.
+//! Large Joint calendar
+/*! Similar to QuantLib's "JointCalendar" but allows a larger number of
+    underlying calendars.
 
-        \ingroup calendars
+    \ingroup calendars
 
-        \test the correctness of the returned results is tested by
-              reproducing the calculations.
-    */
-    class LargeJointCalendar : public QuantLib::Calendar {
-      private:
-        class Impl : public Calendar::Impl {
-          public:
-            Impl(const std::vector<QuantLib::Calendar>& calendar,
-                 QuantLib::JointCalendarRule rule);
-            std::string name() const;
-            bool isWeekend(QuantLib::Weekday) const;
-            bool isBusinessDay(const QuantLib::Date&) const;
-          private:
-            QuantLib::JointCalendarRule rule_;
-            std::vector<QuantLib::Calendar> calendars_;
-        };
-      public:
-        LargeJointCalendar(const std::vector<QuantLib::Calendar>&,
-                      QuantLib::JointCalendarRule = QuantLib::JoinHolidays);
+    \test the correctness of the returned results is tested by
+          reproducing the calculations.
+*/
+class LargeJointCalendar : public QuantLib::Calendar {
+private:
+    class Impl : public Calendar::Impl {
+    public:
+        Impl(const std::vector<QuantLib::Calendar>& calendar, QuantLib::JointCalendarRule rule);
+        std::string name() const;
+        bool isWeekend(QuantLib::Weekday) const;
+        bool isBusinessDay(const QuantLib::Date&) const;
+
+    private:
+        QuantLib::JointCalendarRule rule_;
+        std::vector<QuantLib::Calendar> calendars_;
     };
 
-}
+public:
+    explicit LargeJointCalendar(const std::vector<QuantLib::Calendar>&,
+                                QuantLib::JointCalendarRule = QuantLib::JoinHolidays);
+};
 
+} // namespace QuantExt
 
 #endif

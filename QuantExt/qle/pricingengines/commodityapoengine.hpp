@@ -13,8 +13,8 @@
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/instruments/commodityapo.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 
 namespace QuantExt {
 
@@ -25,13 +25,14 @@ namespace QuantExt {
 class CommodityAveragePriceOptionBaseEngine : public CommodityAveragePriceOption::engine {
 public:
     CommodityAveragePriceOptionBaseEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, Real beta = 0.0);
+                                          const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
+                                          Real beta = 0.0);
 
 protected:
-    /*! Calculate accrued portion of the average commodity price if any. There will be an accrued portion of the 
+    /*! Calculate accrued portion of the average commodity price if any. There will be an accrued portion of the
         average price if any of the <em>Pricing Dates</em> are on or before the valuation date.
-        
-        The return value contains the accrued average price and the number of <em>Pricing Dates</em> that were on or 
+
+        The return value contains the accrued average price and the number of <em>Pricing Dates</em> that were on or
         before the valution date. If there has been no accrual, the return value is (0.0, 0).
     */
     std::pair<QuantLib::Real, QuantLib::Size> calculateAccrued() const;
@@ -39,8 +40,8 @@ protected:
     //! Return the correlation between two future expiry dates \p ed_1 and \p ed_2
     QuantLib::Real rho(const QuantLib::Date& ed_1, const QuantLib::Date& ed_2) const;
 
-    /*! In certain cases, the APO value is not model dependent. This method returns \c true if the APO value is model 
-        dependent. If the APO value is not model dependent, this method returns \c false and populates the results 
+    /*! In certain cases, the APO value is not model dependent. This method returns \c true if the APO value is model
+        dependent. If the APO value is not model dependent, this method returns \c false and populates the results
         with the model independent value.
     */
     bool isModelDependent(const std::pair<QuantLib::Real, QuantLib::Size>& accrued) const;
@@ -58,9 +59,10 @@ protected:
 class CommodityAveragePriceOptionAnalyticalEngine : public CommodityAveragePriceOptionBaseEngine {
 public:
     CommodityAveragePriceOptionAnalyticalEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol, QuantLib::Real beta = 0.0)
+                                                const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
+                                                QuantLib::Real beta = 0.0)
         : CommodityAveragePriceOptionBaseEngine(discountCurve, vol, beta) {}
-    
+
     void calculate() const;
 };
 
@@ -70,15 +72,12 @@ public:
 */
 class CommodityAveragePriceOptionMonteCarloEngine : public CommodityAveragePriceOptionBaseEngine {
 public:
-    CommodityAveragePriceOptionMonteCarloEngine(
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
-        QuantLib::Size samples,
-        QuantLib::Real beta = 0.0,
-        const QuantLib::Size seed = 42)
-        : CommodityAveragePriceOptionBaseEngine(discountCurve, vol, beta),
-          samples_(samples), seed_(seed) {}
-    
+    CommodityAveragePriceOptionMonteCarloEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                                const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol,
+                                                QuantLib::Size samples, QuantLib::Real beta = 0.0,
+                                                const QuantLib::Size seed = 42)
+        : CommodityAveragePriceOptionBaseEngine(discountCurve, vol, beta), samples_(samples), seed_(seed) {}
+
     void calculate() const;
 
 private:
@@ -88,18 +87,19 @@ private:
     //! Calculations when underlying swap references a commodity spot price
     void calculateFuture(const std::pair<QuantLib::Real, QuantLib::Size>& accrued) const;
 
-    /*! Prepare data for APO calculation. The \p outVolatilities parameter will be populated with separate future 
-        contract volatilities taking into account the \p strike level. The number of elements of \p outVolatilities 
-        gives the number, N, of future contracts involved in the non-accrued portion of the APO. The matrix 
-        \p outSqrtCorr is populated with the square root of the correlation matrix between the future contracts. 
-        The \p outPrices vector will be populated with the current future price values. The \p futureIndex is 
+    /*! Prepare data for APO calculation. The \p outVolatilities parameter will be populated with separate future
+        contract volatilities taking into account the \p strike level. The number of elements of \p outVolatilities
+        gives the number, N, of future contracts involved in the non-accrued portion of the APO. The matrix
+        \p outSqrtCorr is populated with the square root of the correlation matrix between the future contracts.
+        The \p outPrices vector will be populated with the current future price values. The \p futureIndex is
         populated with the index of the future to be used on each timestep in the simulation.
     */
     void setupFuture(std::vector<QuantLib::Real>& outVolatilities, QuantLib::Matrix& outSqrtCorr,
-        std::vector<QuantLib::Real>& outPrices, std::vector<QuantLib::Size>& futureIndex, QuantLib::Real strike) const;
+                     std::vector<QuantLib::Real>& outPrices, std::vector<QuantLib::Size>& futureIndex,
+                     QuantLib::Real strike) const;
 
-    /*! Return the \f$n\f$ timesteps from today, \f$t_0\f$, up to \f$t_n\f$ where \f$n > 0\f$. Note that each 
-        \f$t_i\f$ corresponds to a pricing date \f$d_i\f$ that is after today. The method returns the vector of time 
+    /*! Return the \f$n\f$ timesteps from today, \f$t_0\f$, up to \f$t_n\f$ where \f$n > 0\f$. Note that each
+        \f$t_i\f$ corresponds to a pricing date \f$d_i\f$ that is after today. The method returns the vector of time
         deltas \f$t_i - t_{i-1}\f$ for \f$i=1,\ldots,n\f$ and populates the vector \p outDates with the dates
         \f$d_0, d_1,...,d_n\f$. Note that the size of \p outDates is one larger than the size of the return vector.
     */
@@ -109,6 +109,6 @@ private:
     QuantLib::Size seed_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

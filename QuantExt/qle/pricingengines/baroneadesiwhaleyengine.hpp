@@ -55,23 +55,19 @@ namespace QuantExt {
     \test the correctness of the returned value is tested by
             reproducing results available in literature.
 */
-class BaroneAdesiWhaleyApproximationEngine
-    : public QuantLib::VanillaOption::engine {
+class BaroneAdesiWhaleyApproximationEngine : public QuantLib::VanillaOption::engine {
 public:
-    BaroneAdesiWhaleyApproximationEngine(
-        const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>&);
-    static QuantLib::Real criticalPrice(
-        const boost::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
-        QuantLib::DiscountFactor riskFreeDiscount,
-        QuantLib::DiscountFactor dividendDiscount,
-        QuantLib::Real variance,
-        QuantLib::Real tolerance = 1e-6);
+    BaroneAdesiWhaleyApproximationEngine(const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>&);
+    static QuantLib::Real criticalPrice(const boost::shared_ptr<QuantLib::StrikedTypePayoff>& payoff,
+                                        QuantLib::DiscountFactor riskFreeDiscount,
+                                        QuantLib::DiscountFactor dividendDiscount, QuantLib::Real variance,
+                                        QuantLib::Real tolerance = 1e-6);
     void calculate() const;
+
 private:
     boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process_;
 };
 
-}
-
+} // namespace QuantExt
 
 #endif

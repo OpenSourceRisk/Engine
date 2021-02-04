@@ -37,7 +37,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conventions) {
+void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::Conventions>& conventions) {
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
     cpu_timer timer;
@@ -55,12 +55,12 @@ void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conven
             TLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
             count++;
         } catch (const std::exception& e) {
-            DLOG("Error during adding fixing for " << f.name << ": " << e.what());
+            WLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
     }
     timer.stop();
-    LOG("Added " << count << " of " << fixings.size() << " fixings in " <<
-        timer.format(default_places, "%w") << " seconds");
+    LOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.format(default_places, "%w")
+                 << " seconds");
 }
 
 void applyDividends(const vector<Fixing>& dividends) {
@@ -85,8 +85,8 @@ void applyDividends(const vector<Fixing>& dividends) {
         }
     }
     timer.stop();
-    DLOG("Added " << count << " of " << dividends.size() << " dividends in " <<
-        timer.format(default_places, "%w") << " seconds");
+    DLOG("Added " << count << " of " << dividends.size() << " dividends in " << timer.format(default_places, "%w")
+                  << " seconds");
 }
 
 } // namespace data

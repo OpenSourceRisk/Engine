@@ -26,8 +26,9 @@ Rate EquityCouponPricer::swapletRate() const {
     Real start = coupon_->initialPrice();
     Real end = equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
 
-    // fx rates at start and end
-    Real fxStart = fxIndex_ ? fxIndex_->fixing(coupon_->fixingStartDate()) : 1.0;
+    // fx rates at start and end, at start we only convert if the initial price is not already in target ccy
+    Real fxStart =
+        fxIndex_ && !coupon_->initialPriceIsInTargetCcy() ? fxIndex_->fixing(coupon_->fixingStartDate()) : 1.0;
     Real fxEnd = fxIndex_ ? fxIndex_->fixing(coupon_->fixingEndDate()) : 1.0;
 
     Real dividends = 0.0;
@@ -47,7 +48,11 @@ Rate EquityCouponPricer::swapletRate() const {
         dividends += equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
     }
 
-    return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
+    if (start == 0) {
+        return (end + dividends * dividendFactor_) * fxEnd;
+    } else {
+        return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
+    }
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {

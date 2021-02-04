@@ -24,8 +24,8 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
+#include <qle/termstructures/fxblackvolsurface.hpp>
 #include <string.h>
 
 using namespace QuantLib;
@@ -47,12 +47,12 @@ public:
 
     Handle<Quote> fxPairLookup(const string& fxPair) const override { return getHandle<Quote>(fxPair, fxSpots_); };
 
-    private:
-        // this is a reference
+private:
+    // this is a reference
     const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots_;
 };
 
-//look-u[ fx from triangulation object
+// look-u[ fx from triangulation object
 class FXLookupTriangulation : public ore::data::FXLookup {
 public:
     FXLookupTriangulation(const ore::data::FXTriangulation& fxSpots) : fxSpots_(fxSpots) {}
@@ -61,7 +61,7 @@ public:
         // parse ID to get pair
         QL_REQUIRE(fxPair.size() == 10, "FX Pair should be of the form: FX/CCY/CCY");
         QL_REQUIRE(fxPair.substr(0, 3) == "FX/", "FX Pair should be of the form: FX/CCY/CCY");
-        return fxSpots_.getQuote(fxPair.substr(3, 3) + fxPair.substr(7, 3));  
+        return fxSpots_.getQuote(fxPair.substr(3, 3) + fxPair.substr(7, 3));
     };
 
 private:
@@ -75,75 +75,95 @@ namespace data {
 
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                        const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
-                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) { 
+                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) {
     init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, conventions);
 }
 
 // second ctor
-FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, 
-                       const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots, 
-                       const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) { 
-    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, conventions);    
+FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                       const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
+                       const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                       const Conventions& conventions) {
+    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, conventions);
 }
-    
+
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) {
+                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                      const Conventions& conventions) {
     vector<Period> expiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
     vector<Period> unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
     std::sort(expiries.begin(), expiries.end());
-    
-    vector<string> deltas = config->deltas();
-    vector<Real> putDeltas;
-    vector<Real> callDeltas;
+
+    vector<std::pair<Real, string>> putDeltas, callDeltas;
+    bool hasATM = false;
+
+    for (auto const& delta : config->deltas()) {
+        if (delta == "ATM")
+            hasATM = true;
+        else if (!delta.empty() && delta.back() == 'P')
+            putDeltas.push_back(std::make_pair(-1 * parseReal(delta.substr(0, delta.size() - 1)) / 100, delta));
+        else if (!delta.empty() && delta.back() == 'C')
+            callDeltas.push_back(std::make_pair(parseReal(delta.substr(0, delta.size() - 1)) / 100, delta));
+        else {
+            QL_FAIL("invalid delta '" << delta << "', expected 10P, 40C, ATM, ...");
+        }
+    }
+
+    // sort puts 10P, 15P, 20P, ... and calls 45C, 40C, 35C, ... (notice put deltas have a negative sign)
+    auto comp = [](const std::pair<Real, string>& x, const std::pair<Real, string>& y) { return x.first > y.first; };
+    std::sort(putDeltas.begin(), putDeltas.end(), comp);
+    std::sort(callDeltas.begin(), callDeltas.end(), comp);
+
     vector<Date> dates;
     Matrix blackVolMatrix(expiries.size(), config->deltas().size());
 
     vector<string> tokens;
     boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
     string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
-    bool hasATM = false;
+
+    // build quote names
+    std::vector<std::string> deltaNames;
+    for (auto const& d : putDeltas) {
+        deltaNames.push_back(d.second);
+    }
+    if (hasATM) {
+        deltaNames.push_back("ATM");
+    }
+    for (auto const& d : callDeltas) {
+        deltaNames.push_back(d.second);
+    }
+
     for (Size i = 0; i < expiries.size(); i++) {
         Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
         string e = config->expiries()[idx];
         dates.push_back(asof + expiries[i]);
-        Size j = 0;
-       
-        for (auto d : deltas) {
-            string qs = base + e + "/" + d;
+        for (Size j = 0; j < deltaNames.size(); ++j) {
+            string qs = base + e + "/" + deltaNames[j];
             boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
             boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
             QL_REQUIRE(q, "quote not found, " << qs);
             blackVolMatrix[i][j] = q->quote()->value();
-            j++;
-            if (i == 0) {
-                vector<string> tokens2;
-                boost::split(tokens2, qs, boost::is_any_of("/"));
-                string delta = tokens2.back();
-                if( delta == "ATM")
-                    hasATM = true;
-                if (delta.back() == 'P') 
-                    putDeltas.push_back(-1 * parseReal(delta.substr(0, delta.size()-1))/100);
-                if (delta.back() == 'C') 
-                    callDeltas.push_back(parseReal(delta.substr(0, delta.size()-1))/100);
-            }
         }
     }
 
-    std::string conventionsID = config->conventionsID(); 
-    DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral; 
-    DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot; 
+    std::string conventionsID = config->conventionsID();
+    DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+    DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot;
+    Period switchTenor = 2 * Years;
+    DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+    DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Fwd;
 
-    if (conventionsID != "") { 
-        boost::shared_ptr<Convention> conv = conventions.get(conventionsID); 
-        auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conv); 
-        QL_REQUIRE(fxOptConv, "unable to cast convention (" << conventionsID << ") into FxOptionConvention"); 
-        atmType = fxOptConv->atmType(); 
+    if (conventionsID != "") {
+        boost::shared_ptr<Convention> conv = conventions.get(conventionsID);
+        auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conv);
+        QL_REQUIRE(fxOptConv, "unable to cast convention (" << conventionsID << ") into FxOptionConvention");
+        atmType = fxOptConv->atmType();
         deltaType = fxOptConv->deltaType();
-
-        QL_REQUIRE(atmType == DeltaVolQuote::AtmType::AtmDeltaNeutral, "only AtmDeltaNeutral ATM vol quotes are currently supported");
-        QL_REQUIRE(deltaType == DeltaVolQuote::DeltaType::Spot, "only spot Delta vol quotes are currently supported");
-    } 
+        longTermAtmType = fxOptConv->longTermAtmType();
+        longTermDeltaType = fxOptConv->longTermDeltaType();
+        switchTenor = fxOptConv->switchTenor();
+    }
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
@@ -151,25 +171,32 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     auto fxSpot = fxSpots.fxPairLookup(config->fxSpotID());
     auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
     auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
-    vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::BlackVolatilitySurfaceDelta(
-                asof, dates, putDeltas, callDeltas, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS));
+    std::vector<Real> putDeltasNum, callDeltasNum;
+    std::transform(putDeltas.begin(), putDeltas.end(), std::back_inserter(putDeltasNum),
+                   [](const std::pair<Real, string>& x) { return x.first; });
+    std::transform(callDeltas.begin(), callDeltas.end(), std::back_inserter(callDeltasNum),
+                   [](const std::pair<Real, string>& x) { return x.first; });
+    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
+        asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS, deltaType,
+        atmType, boost::none, switchTenor, longTermDeltaType, longTermAtmType);
 
     vol_->enableExtrapolation();
 }
 
 void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) {
-    
+                                           boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                           const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                           const Conventions& conventions) {
+
     bool isATM = config->dimension() == FXVolatilityCurveConfig::Dimension::ATM;
-    Natural smileDelta = 0; 
-    std::string deltaRr; 
-    std::string deltaBf; 
-    if (!isATM) { 
-        smileDelta = config->smileDelta(); 
-        deltaRr = to_string(smileDelta) + "RR"; 
-        deltaBf = to_string(smileDelta) + "BF"; 
-    } 
+    Natural smileDelta = 0;
+    std::string deltaRr;
+    std::string deltaBf;
+    if (!isATM) {
+        smileDelta = config->smileDelta();
+        deltaRr = to_string(smileDelta) + "RR";
+        deltaBf = to_string(smileDelta) + "BF";
+    }
     // We loop over all market data, looking for quotes that match the configuration
     // every time we find a matching expiry we remove it from the list
     // we replicate this for all 3 types of quotes were applicable.
@@ -236,7 +263,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
                       return a->expiry() < b->expiry();
                   });
     }
-    
+
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
@@ -265,34 +292,39 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         if (isATM) {
             // ATM
             // Set forceMonotoneVariance to false - allowing decreasing variance
-            vol_ =
-                boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
+            vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
         } else {
             // Smile
             auto fxSpot = fxSpots.fxPairLookup(config->fxSpotID());
             auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
             auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
-            
-            std::string conventionsID = config->conventionsID(); 
-            DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral; 
-            DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot; 
 
-            if (conventionsID != "") { 
-                boost::shared_ptr<Convention> conv = conventions.get(conventionsID); 
-                auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conv); 
-                QL_REQUIRE(fxOptConv, "unable to cast convention (" << conventionsID << ") into FxOptionConvention"); 
-                atmType = fxOptConv->atmType(); 
-                deltaType = fxOptConv->deltaType(); 
-            }  
+            std::string conventionsID = config->conventionsID();
+            DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+            DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot;
+            Period switchTenor = 2 * Years;
+            DeltaVolQuote::AtmType longTermAtmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+            DeltaVolQuote::DeltaType longTermDeltaType = DeltaVolQuote::DeltaType::Fwd;
 
-            bool vvFirstApprox = false;  // default to VannaVolga second approximation
+            if (conventionsID != "") {
+                boost::shared_ptr<Convention> conv = conventions.get(conventionsID);
+                auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conv);
+                QL_REQUIRE(fxOptConv, "unable to cast convention (" << conventionsID << ") into FxOptionConvention");
+                atmType = fxOptConv->atmType();
+                deltaType = fxOptConv->deltaType();
+                longTermAtmType = fxOptConv->longTermAtmType();
+                longTermDeltaType = fxOptConv->longTermDeltaType();
+                switchTenor = fxOptConv->switchTenor();
+            }
+
+            bool vvFirstApprox = false; // default to VannaVolga second approximation
             if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::VannaVolga1) {
                 vvFirstApprox = true;
             }
 
-            vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::FxBlackVannaVolgaVolatilitySurface(
-                asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false, vvFirstApprox, 
-                atmType, deltaType, smileDelta / 100.0));
+            vol_ = boost::make_shared<QuantExt::FxBlackVannaVolgaVolatilitySurface>(
+                asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false, vvFirstApprox, atmType,
+                deltaType, smileDelta / 100.0, switchTenor, longTermAtmType, longTermDeltaType);
         }
     }
     vol_->enableExtrapolation();
@@ -305,7 +337,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
-                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga || 
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta,
                    "Unknown FX curve building dimension");
 

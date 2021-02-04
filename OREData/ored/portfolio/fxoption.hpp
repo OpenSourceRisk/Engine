@@ -39,9 +39,12 @@ public:
     FxOption() : VanillaOptionTrade(AssetClass::FX) { tradeType_ = "FxOption"; }
     //! Constructor
     FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
-             double soldAmount)
-        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount, boughtAmount)
-          { tradeType_ = "FxOption"; }
+             double soldAmount, const std::string& fxIndex = "")
+        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount,
+                             boughtAmount),
+          fxIndex_(fxIndex) {
+        tradeType_ = "FxOption";
+    }
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -52,6 +55,7 @@ public:
     double boughtAmount() const { return quantity_; }
     const string& soldCurrency() const { return currency_; }
     double soldAmount() const { return strike_ * quantity_; }
+    const std::string& fxIndex() const { return fxIndex_; }
     //@}
 
     //! \name Serialisation
@@ -59,6 +63,10 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+private:
+    //! If the option has automatic exercise, need an FX index for settlement.
+    std::string fxIndex_;
 };
 } // namespace data
 } // namespace ore

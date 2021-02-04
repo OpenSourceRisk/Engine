@@ -18,10 +18,12 @@
 
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
+#include <ql/currencies/all.hpp>
 #include <ql/currency.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 
 using namespace QuantLib;
@@ -49,7 +51,7 @@ static CcyTestData currencyData[] = {
     { CLFCurrency(), "Unidad de Fomento (funds code)", "CLF", 990 },
     { UYUCurrency(), "Uruguayan peso", "UYU", 858 },
     // Asian currencies
-    { KZTCurrency(), "Kazakhstani tenge", "KZT", 398 },
+    { KZTCurrency(), "Kazakstanti Tenge", "KZT", 398 }, // note the typo in the QuantLib KZT
     { QARCurrency(), "Qatari riyal", "QAR", 634 },
     { BHDCurrency(), "Bahraini dinar", "BHD", 48 },
     { OMRCurrency(), "Omani rial", "OMR", 512 },
@@ -59,6 +61,11 @@ static CcyTestData currencyData[] = {
     { XAGCurrency(), "Troy Ounce of Silver", "XAG", 961 },
     { XPDCurrency(), "Troy Ounce of Palladium", "XPD", 964 },
     { XPTCurrency(), "Troy Ounce of Platinum", "XPT", 962 },
+    { AOACurrency(), "Angolan kwanza", "AOA", 973 },
+    { ETBCurrency(), "Ethiopian birr", "ETB", 230 },
+    { XOFCurrency(), "West African CFA franc", "XOF", 952 },
+    // European currencies
+    { GELCurrency(), "Georgian lari", "GEL", 981 }
 };
 } // namespace
 

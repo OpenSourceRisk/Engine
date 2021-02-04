@@ -42,24 +42,23 @@
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/export.hpp>
-#include <boost/serialization/serialization.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
-using std::string;
-using QuantLib::Real;
-using QuantLib::Size;
 using QuantLib::Date;
-using QuantLib::Period;
-using QuantLib::Quote;
-using QuantLib::SimpleQuote;
-using QuantLib::Handle;
 using QuantLib::DayCounter;
-using QuantLib::Natural;
+using QuantLib::Handle;
 using QuantLib::Month;
 using QuantLib::Months;
+using QuantLib::Natural;
+using QuantLib::Period;
+using QuantLib::Quote;
+using QuantLib::Real;
+using QuantLib::SimpleQuote;
+using QuantLib::Size;
+using std::string;
 
 //! Base market data class
 /*!
@@ -124,6 +123,7 @@ public:
     enum class QuoteType {
         BASIS_SPREAD,
         CREDIT_SPREAD,
+        CONV_CREDIT_SPREAD,
         YIELD_SPREAD,
         HAZARD_RATE,
         RATE,
@@ -144,6 +144,11 @@ public:
     //! Default destructor
     virtual ~MarketDatum() {}
 
+    //! Make a copy of the market datum
+    virtual boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<MarketDatum>(quote_->value(), asofDate_, name_, quoteType_, instrumentType_);
+    }
+
     //! \name Inspectors
     //@{
     const string& name() const { return name_; }
@@ -162,21 +167,7 @@ protected:
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        Real value;
-        // save / load the value of the quote, do not try to serialize the quote as such
-        if (Archive::is_saving::value) {
-            value = quote_->value();
-            ar& value;
-        } else {
-            ar& value;
-            quote_ = Handle<Quote>(boost::make_shared<SimpleQuote>(value));
-        }
-        ar& asofDate_;
-        ar& name_;
-        ar& instrumentType_;
-        ar& quoteType_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type);
@@ -195,27 +186,31 @@ public:
     MoneyMarketQuote() {}
     //! Constructor
     MoneyMarketQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
-                     Period term)
+                     Period term, const std::string& indexName = "")
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::MM), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term) {}
+          term_(term), indexName_(indexName) {}
+    
+    //! Make a copy of the datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<MoneyMarketQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_, indexName_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
     const Period& fwdStart() const { return fwdStart_; }
     const Period& term() const { return term_; }
+    //! Empty if the index name is not provided.
+    const std::string& indexName() const { return indexName_; }
     //@}
 private:
     string ccy_;
     Period fwdStart_;
     Period term_;
+    std::string indexName_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& fwdStart_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! FRA market data class
@@ -236,6 +231,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FRA), ccy_(ccy), fwdStart_(fwdStart),
           term_(term) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FRAQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -248,12 +248,7 @@ private:
     Period term_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& fwdStart_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! IMM FRA market data class
@@ -275,6 +270,11 @@ public:
     ImmFraQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Size imm1, Size imm2)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IMM_FRA), ccy_(ccy), imm1_(imm1), imm2_(imm2) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ImmFraQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, imm1_, imm2_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -287,12 +287,7 @@ private:
     Size imm2_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& imm1_;
-        ar& imm2_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Swap market data class
@@ -309,9 +304,14 @@ public:
     SwapQuote() {}
     //! Constructor
     SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
-              Period term, Period tenor)
+              Period term, Period tenor, const std::string& indexName = "")
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term), tenor_(tenor) {}
+          term_(term), tenor_(tenor), indexName_(indexName) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SwapQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, fwdStart_, term_, tenor_);
+    }
 
     //! \name Inspectors
     //@{
@@ -319,21 +319,17 @@ public:
     const Period& fwdStart() const { return fwdStart_; }
     const Period& term() const { return term_; }
     const Period& tenor() const { return tenor_; }
+    const std::string& indeName() const { return indexName_; }
     //@}
 private:
     string ccy_;
     Period fwdStart_;
     Period term_;
     Period tenor_;
+    std::string indexName_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& fwdStart_;
-        ar& term_;
-        ar& tenor_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Zero market data class
@@ -361,6 +357,12 @@ public:
         QL_REQUIRE(date_ != Date() || tenor != Period(), "ZeroQuote: either date or period is required");
         tenorBased_ = (date_ == Date());
     }
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ZeroQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, date_, dayCounter_, tenor_);
+    }
+
     //! Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -377,14 +379,7 @@ private:
     bool tenorBased_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& date_;
-        ar& dayCounter_;
-        ar& tenor_;
-        ar& tenorBased_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Discount market data class
@@ -401,7 +396,11 @@ public:
     //! Constructor
     DiscountQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Date date)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::DISCOUNT), ccy_(ccy), date_(date) {}
-
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<DiscountQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, date_);
+    }
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -412,11 +411,7 @@ private:
     Date date_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& date_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Money Market Future data class
@@ -437,6 +432,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::MM_FUTURE), ccy_(ccy), expiry_(expiry),
           contract_(contract), tenor_(tenor) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<MMFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -454,13 +454,7 @@ private:
     Period tenor_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& expiry_;
-        ar& contract_;
-        ar& tenor_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Overnight index future data class
@@ -480,6 +474,11 @@ public:
                   string contract = "", Period tenor = 3 * Months)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::OI_FUTURE), ccy_(ccy), expiry_(expiry),
           contract_(contract), tenor_(tenor) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<OIFutureQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, contract_, tenor_);
+    }
 
     //! \name Inspectors
     //@{
@@ -498,15 +497,8 @@ private:
     Period tenor_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& expiry_;
-        ar& contract_;
-        ar& tenor_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
-
 
 //! Basis Swap data class
 /*!
@@ -532,6 +524,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BASIS_SWAP), flatTerm_(flatTerm), term_(term),
           ccy_(ccy), maturity_(maturity) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BasisSwapQuote>(quote_->value(), asofDate_, name_, quoteType_, flatTerm_, term_, ccy_, maturity_);
+    }
+
     //! \name Inspectors
     //@{
     const Period& flatTerm() const { return flatTerm_; }
@@ -546,13 +543,7 @@ private:
     Period maturity_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& flatTerm_;
-        ar& term_;
-        ar& ccy_;
-        ar& maturity_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! BMA Swap data class
@@ -579,6 +570,11 @@ public:
                  Period maturity = 3 * Months)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BMA_SWAP), term_(term), ccy_(ccy),
           maturity_(maturity) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BMASwapQuote>(quote_->value(), asofDate_, name_, quoteType_, term_, ccy_, maturity_);
+    }
 
     //! \name Inspectors
     //@{
@@ -592,12 +588,7 @@ private:
     Period maturity_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& term_;
-        ar& ccy_;
-        ar& maturity_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Cross Currency Basis Swap data class
@@ -625,6 +616,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CC_BASIS_SWAP), flatCcy_(flatCcy),
           flatTerm_(flatTerm), ccy_(ccy), term_(term), maturity_(maturity) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CrossCcyBasisSwapQuote>(quote_->value(), asofDate_, name_, quoteType_, flatCcy_, flatTerm_, ccy_, term_, maturity_);
+    }
+
     //! \name Inspectors
     //@{
     const string& flatCcy() const { return flatCcy_; }
@@ -642,14 +638,7 @@ private:
     Period maturity_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& flatCcy_;
-        ar& flatTerm_;
-        ar& ccy_;
-        ar& term_;
-        ar& maturity_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Cross Currency Fix Float Swap quote holder
@@ -663,11 +652,16 @@ public:
     CrossCcyFixFloatSwapQuote() {}
     //! Constructor
     CrossCcyFixFloatSwapQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
-                              QuoteType quoteType, const string& floatCurrency,
-                              const QuantLib::Period& floatTenor, const string& fixedCurrency,
-                              const QuantLib::Period& fixedTenor, const QuantLib::Period& maturity)
+                              QuoteType quoteType, const string& floatCurrency, const QuantLib::Period& floatTenor,
+                              const string& fixedCurrency, const QuantLib::Period& fixedTenor,
+                              const QuantLib::Period& maturity)
         : MarketDatum(value, asof, name, quoteType, InstrumentType::CC_FIX_FLOAT_SWAP), floatCurrency_(floatCurrency),
           floatTenor_(floatTenor), fixedCurrency_(fixedCurrency), fixedTenor_(fixedTenor), maturity_(maturity) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CrossCcyFixFloatSwapQuote>(quote_->value(), asofDate_, name_, quoteType_, floatCurrency_, floatTenor_, fixedCurrency_, fixedTenor_, maturity_);
+    }
 
     //! \name Inspectors
     //@{
@@ -686,32 +680,32 @@ private:
     QuantLib::Period maturity_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& floatCurrency_;
-        ar& floatTenor_;
-        ar& fixedCurrency_;
-        ar& fixedTenor_;
-        ar& maturity_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
-//! CDS Spread data class
-/*!
-  This class holds single market points of type
-  - CREDIT_SPREAD PRICE
-
-  \ingroup marketdata
+/*! CDS Spread data class
+    This class holds single market points of type
+    - CREDIT_SPREAD
+    - CONV_CREDIT_SPREAD
+    - PRICE
+    \ingroup marketdata
 */
 class CdsQuote : public MarketDatum {
 public:
-    CdsQuote() {}
-     //! Constructor
-    CdsQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
-             const string& underlyingName, const string& seniority,
-             const string& ccy, Period term, const string& docClause = "")
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS),
-          underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
+    CdsQuote() : runningSpread_(Null<Real>()) {}
+
+    //! Constructor
+    CdsQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& underlyingName,
+             const string& seniority, const string& ccy, Period term, const string& docClause = "",
+             Real runningSpread = Null<Real>())
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS), underlyingName_(underlyingName),
+          seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause), runningSpread_(runningSpread) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CdsQuote>(quote_->value(), asofDate_, name_, quoteType_, underlyingName_,
+            seniority_, ccy_, term_, docClause_, runningSpread_);
+    }
 
     //! \name Inspectors
     //@{
@@ -720,22 +714,20 @@ public:
     const string& ccy() const { return ccy_; }
     const string& underlyingName() const { return underlyingName_; }
     const string& docClause() const { return docClause_; }
+    Real runningSpread() const { return runningSpread_; }
     //@}
+
 private:
     string underlyingName_;
     string seniority_;
     string ccy_;
     Period term_;
     string docClause_;
+    Real runningSpread_;
+
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& underlyingName_;
-        ar& seniority_;
-        ar& ccy_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Hazard rate data class
@@ -754,6 +746,11 @@ public:
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::HAZARD_RATE),
           underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), term_(term), docClause_(docClause) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<HazardRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, term_, docClause_);
+    }
+
     //! \name Inspectors
     //@{
     const Period& term() const { return term_; }
@@ -770,14 +767,7 @@ private:
     string docClause_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& underlyingName_;
-        ar& seniority_;
-        ar& ccy_;
-        ar& term_;
-        ar& docClause_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Recovery rate data class
@@ -794,6 +784,11 @@ public:
                       const string& seniority, const string& ccy, const string& docClause = "")
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::RECOVERY_RATE),
           underlyingName_(underlyingName), seniority_(seniority), ccy_(ccy), docClause_(docClause) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<RecoveryRateQuote>(quote_->value(), asofDate_, name_, underlyingName_, seniority_, ccy_, docClause_);
+    }
 
     //! \name Inspectors
     //@{
@@ -809,13 +804,7 @@ private:
     string docClause_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& underlyingName_;
-        ar& seniority_;
-        ar& ccy_;
-        ar& docClause_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Swaption data class
@@ -840,6 +829,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SWAPTION), ccy_(ccy), expiry_(expiry),
           term_(term), dimension_(dimension), strike_(strike) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SwaptionQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, term_, dimension_, strike_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -856,14 +850,7 @@ private:
     Real strike_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& expiry_;
-        ar& term_;
-        ar& dimension_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Shift data class (for SLN swaption volatilities)
@@ -885,6 +872,11 @@ public:
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "quote type must be SHIFT for shift data");
     }
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SwaptionShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_);
+    }
+
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
@@ -895,11 +887,7 @@ private:
     Period term_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Bond option data class
@@ -922,6 +910,12 @@ public:
                     Period term)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_OPTION), qualifier_(qualifier),
           expiry_(expiry), term_(term) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BondOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, qualifier_, expiry_, term_);
+    }
+
     //! \name Inspectors
     //@{
     const string& qualifier() const { return qualifier_; }
@@ -934,12 +928,7 @@ private:
     Period term_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& qualifier_;
-        ar& expiry_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Shift data class (for SLN bond option volatilities)
@@ -963,6 +952,12 @@ public:
           term_(term) {
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "quote type must be SHIFT for shift data");
     }
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BondOptionShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, qualifier_, term_);
+    }
+
     //! \name Inspectors
     //@{
     const string& qualifier() const { return qualifier_; }
@@ -973,11 +968,7 @@ private:
     Period term_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& qualifier_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Cap/Floor data class
@@ -1002,6 +993,11 @@ public:
                   Period underlying, bool atm, bool relative, Real strike = 0.0)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CAPFLOOR), ccy_(ccy), term_(term),
           underlying_(underlying), atm_(atm), relative_(relative), strike_(strike) {}
+    
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_, underlying_, atm_, relative_, strike_);
+    }
 
     //! \name Inspectors
     //@{
@@ -1021,15 +1017,7 @@ private:
     Real strike_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& term_;
-        ar& underlying_;
-        ar& atm_;
-        ar& relative_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Shift data class (for SLN cap/floor volatilities)
@@ -1046,6 +1034,11 @@ public:
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "Quote type must be SHIFT for shift data");
     }
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CapFloorShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, indexTenor_);
+    }
+
     const string& ccy() const { return ccy_; }
     const Period& indexTenor() const { return indexTenor_; }
 
@@ -1054,11 +1047,7 @@ private:
     Period indexTenor_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& ccy_;
-        ar& indexTenor_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Foreign exchange rate data class
@@ -1082,6 +1071,11 @@ public:
     FXSpotQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string unitCcy, string ccy)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_SPOT), unitCcy_(unitCcy), ccy_(ccy) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FXSpotQuote>(quote_->value(), asofDate_, name_, quoteType_, unitCcy_, ccy_);
+    }
+
     //! \name Inspectors
     //@{
     const string& unitCcy() const { return unitCcy_; }
@@ -1092,11 +1086,7 @@ private:
     string ccy_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& unitCcy_;
-        ar& ccy_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Foreign exchange rate data class
@@ -1122,6 +1112,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_FWD), unitCcy_(unitCcy), ccy_(ccy),
           term_(term), conversionFactor_(conversionFactor) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FXForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, unitCcy_, ccy_, term_, conversionFactor_);
+    }
+
     //! \name Inspectors
     //@{
     const string& unitCcy() const { return unitCcy_; }
@@ -1136,13 +1131,7 @@ private:
     Real conversionFactor_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& unitCcy_;
-        ar& ccy_;
-        ar& term_;
-        ar& conversionFactor_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! FX Option data class
@@ -1153,8 +1142,8 @@ private:
   - unit currency
   - currency
   - expiry
-  - "strike" (25 delta butterfly "25BF", 25 delta risk reversal "25RR", atm straddle ATM, or individual delta put/call quotes)
-  we do not yet support ATMF.
+  - "strike" (25 delta butterfly "25BF", 25 delta risk reversal "25RR", atm straddle ATM, or individual delta put/call
+  quotes) we do not yet support ATMF.
 
   \ingroup marketdata
 */
@@ -1168,8 +1157,14 @@ public:
           expiry_(expiry), strike_(strike) {
 
         Strike s = parseStrike(strike);
-        QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut 
-                || s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR, "Unsupported FXOptionQuote strike (" << strike << ")");
+        QL_REQUIRE(s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut ||
+                       s.type == Strike::Type::ATM || s.type == Strike::Type::BF || s.type == Strike::Type::RR,
+                   "Unsupported FXOptionQuote strike (" << strike << ")");
+    }
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<FXOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, unitCcy_, ccy_, expiry_, strike_);
     }
 
     //! \name Inspectors
@@ -1186,13 +1181,7 @@ private:
     string strike_; // TODO: either: ATM, 25RR, 25BF. Should be an enum?
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& unitCcy_;
-        ar& ccy_;
-        ar& expiry_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! ZC Inflation swap data class
@@ -1209,6 +1198,12 @@ public:
     ZcInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ZC_INFLATIONSWAP), index_(index),
           term_(term) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ZcInflationSwapQuote>(quote_->value(), asofDate_, name_, index_, term_);
+    }
+
     string index() { return index_; }
     Period term() { return term_; }
 
@@ -1217,11 +1212,7 @@ private:
     Period term_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& index_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Inflation Cap Floor data class
@@ -1240,6 +1231,12 @@ public:
                            Period term, bool isCap, const string& strike, InstrumentType instrumentType)
         : MarketDatum(value, asofDate, name, quoteType, instrumentType), index_(index), term_(term), isCap_(isCap),
           strike_(strike) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<InflationCapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, index_, term_, isCap_, strike_, instrumentType_);
+    }
+
     string index() { return index_; }
     Period term() { return term_; }
     bool isCap() { return isCap_; }
@@ -1252,13 +1249,7 @@ private:
     string strike_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& index_;
-        ar& term_;
-        ar& isCap_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! ZC Cap Floor data class
@@ -1278,12 +1269,15 @@ public:
         : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
                                  InstrumentType::ZC_INFLATIONCAPFLOOR) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<ZcInflationCapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, index(), term(), isCap(), strike());
+    }
+
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<InflationCapFloorQuote>(*this);
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! YoY Inflation swap data class
@@ -1300,6 +1294,12 @@ public:
     YoYInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YY_INFLATIONSWAP), index_(index),
           term_(term) {}
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<YoYInflationSwapQuote>(quote_->value(), asofDate_, name_, index_, term_);
+    }
+
     string index() { return index_; }
     Period term() { return term_; }
 
@@ -1308,11 +1308,7 @@ private:
     Period term_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& index_;
-        ar& term_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! YY Cap Floor data class
@@ -1332,12 +1328,15 @@ public:
         : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
                                  InstrumentType::YY_INFLATIONCAPFLOOR) {}
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<YyInflationCapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, index(), term(), isCap(), strike());
+    }
 private:
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<InflationCapFloorQuote>(*this);
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Inflation seasonality data class
@@ -1366,12 +1365,7 @@ private:
     string month_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& index_;
-        ar& type_;
-        ar& month_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Equity/Index spot price data class
@@ -1391,6 +1385,12 @@ public:
     EquitySpotQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_SPOT), eqName_(equityName), ccy_(ccy) {}
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquitySpotQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_);
+    }
+
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
@@ -1401,11 +1401,7 @@ private:
     string ccy_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& eqName_;
-        ar& ccy_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Equity forward data class
@@ -1430,6 +1426,12 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
           expiry_(expiryDate) {}
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquityForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_, expiry_);
+    }
+
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
@@ -1442,12 +1444,7 @@ private:
     Date expiry_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& eqName_;
-        ar& ccy_;
-        ar& expiry_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Equity/Index Dividend yield data class
@@ -1472,6 +1469,11 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName),
           ccy_(ccy), tenor_(tenorDate) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquityDividendYieldQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_, tenor_);
+    }
+
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
@@ -1484,12 +1486,7 @@ private:
     Date tenor_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& eqName_;
-        ar& ccy_;
-        ar& tenor_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Equity/Index Option data class
@@ -1500,7 +1497,12 @@ Specific data comprise
 - Equity/Index name
 - currency
 - expiry
-- strike - can be "ATMF" or an actual strike
+- strike - supported are:
+           - absolute strike, e.g. 1234.5
+           - ATM/AtmSpot         (or as an alias ATM)
+           - ATM/AtmFwd          (or as an alias ATMF)
+           - MNY/[Spot/Fwd]/1.2
+- C (call), P (put) flag, this is optional and defaults to C
 
 \ingroup marketdata
 */
@@ -1509,31 +1511,31 @@ public:
     EquityOptionQuote() {}
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-                      string expiry, string strike, bool isCall = true);
+                      string expiry, const boost::shared_ptr<BaseStrike>& strike, bool isCall = true);
+
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<EquityOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, eqName_, ccy_, expiry_, strike_, isCall_);
+    }
 
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
-    const string& strike() const { return strike_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     bool isCall() { return isCall_; }
     //@}
 private:
     string eqName_;
     string ccy_;
     string expiry_;
-    string strike_;
+    boost::shared_ptr<BaseStrike> strike_;
     bool isCall_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& eqName_;
-        ar& ccy_;
-        ar& expiry_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Bond spread data class
@@ -1549,6 +1551,11 @@ public:
     SecuritySpreadQuote(Real value, Date asofDate, const string& name, const string& securityID)
         : MarketDatum(value, asofDate, name, QuoteType::YIELD_SPREAD, InstrumentType::BOND), securityID_(securityID) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<SecuritySpreadQuote>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
     //! \name Inspectors
     //@{
     const string& securityID() const { return securityID_; }
@@ -1557,10 +1564,7 @@ private:
     string securityID_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& securityID_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Base correlation data class
@@ -1578,6 +1582,12 @@ public:
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
           term_(term), detachmentPoint_(detachmentPoint) {}
 
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BaseCorrelationQuote>(quote_->value(), asofDate_, name_, quoteType_, cdsIndexName_, term_, detachmentPoint_);
+    }
+
     //! \name Inspectors
     //@{
     const string& cdsIndexName() const { return cdsIndexName_; }
@@ -1590,12 +1600,7 @@ private:
     Real detachmentPoint_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& cdsIndexName_;
-        ar& term_;
-        ar& detachmentPoint_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! CDS Index Option data class
@@ -1606,24 +1611,26 @@ class IndexCDSOptionQuote : public MarketDatum {
 public:
     //! Default constructor
     IndexCDSOptionQuote() {}
-    
+
     //! Detailed constructor
     /*! \param value     The volatility value
         \param asof      The quote date
         \param name      The quote name
         \param indexName The name of the CDS index
         \param expiry    Expiry object defining the quote's expiry
-        \param indexTerm The term of the underlying CDS index e.g. 3Y, 5Y, 7Y, 10Y etc. If not given, defaults to 
+        \param indexTerm The term of the underlying CDS index e.g. 3Y, 5Y, 7Y, 10Y etc. If not given, defaults to
                          an empty string. Assumed here that the term is encoded in \c indexName.
         \param strike    Strike object defining the quote's strike. If not given, assumed that quote is ATM.
     */
-    IndexCDSOptionQuote(QuantLib::Real value,
-        const QuantLib::Date& asof,
-        const std::string& name,
-        const std::string& indexName,
-        const boost::shared_ptr<Expiry>& expiry,
-        const std::string& indexTerm = "",
-        const boost::shared_ptr<BaseStrike>& strike = nullptr);
+    IndexCDSOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
+                        const std::string& indexName, const boost::shared_ptr<Expiry>& expiry,
+                        const std::string& indexTerm = "", const boost::shared_ptr<BaseStrike>& strike = nullptr);
+
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<IndexCDSOptionQuote>(quote_->value(), asofDate_, name_, indexName_, expiry_, indexTerm_, strike_);
+    }
 
     //! \name Inspectors
     //@{
@@ -1641,13 +1648,7 @@ private:
 
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& indexName_;
-        ar& expiry_;
-        ar& indexTerm_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Commodity spot quote class
@@ -1665,6 +1666,11 @@ public:
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity spot quote must be of type 'PRICE'");
     }
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CommoditySpotQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_);
+    }
+
     //! \name Inspectors
     //@{
     const std::string& commodityName() const { return commodityName_; }
@@ -1676,11 +1682,7 @@ private:
     std::string quoteCurrency_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& commodityName_;
-        ar& quoteCurrency_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Commodity forward quote class
@@ -1692,8 +1694,8 @@ public:
     CommodityForwardQuote() {}
     //! Date based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
-        QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-        const QuantLib::Date& expiryDate)
+                          QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
+                          const QuantLib::Date& expiryDate)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
           quoteCurrency_(quoteCurrency), expiryDate_(expiryDate), tenorBased_(false) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
@@ -1701,31 +1703,40 @@ public:
 
     //! Tenor based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
-        QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-        const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none)
+                          QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
+                          const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
           quoteCurrency_(quoteCurrency), tenor_(tenor), startTenor_(startTenor), tenorBased_(true) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
+    }
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        if (tenorBased_) {
+            return boost::make_shared<CommodityForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_, tenor_, startTenor_);
+        } else {
+            return boost::make_shared<CommodityForwardQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_, expiryDate_);
+        }
     }
 
     //! \name Inspectors
     //@{
     const std::string& commodityName() const { return commodityName_; }
     const std::string& quoteCurrency() const { return quoteCurrency_; }
-    
+
     //! The commodity forward's expiry if the quote is date based
     const QuantLib::Date& expiryDate() const { return expiryDate_; }
-    
+
     //! The commodity forward's tenor if the quote is tenor based
     const QuantLib::Period& tenor() const { return tenor_; }
-    
-    /*! The period between the as of date and the date from which the forward tenor is applied. This is generally the 
+
+    /*! The period between the as of date and the date from which the forward tenor is applied. This is generally the
         spot tenor which is indicated by \c boost::none but there are special cases:
         - overnight forward: \c startTenor will be <code>0 * Days</code> and \c tenor will be <code>1 * Days</code>
         - tom-next forward: \c startTenor will be <code>1 * Days</code> and \c tenor will be <code>1 * Days</code>
     */
     const boost::optional<QuantLib::Period>& startTenor() const { return startTenor_; }
-    
+
     //! Returns \c true if the forward is tenor based and \c false if forward is date based
     bool tenorBased() const { return tenorBased_; }
     //@}
@@ -1739,15 +1750,7 @@ private:
     bool tenorBased_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& commodityName_;
-        ar& quoteCurrency_;
-        ar& expiryDate_;
-        ar& tenor_;
-        ar& startTenor_;
-        ar& tenorBased_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Commodity option data class
@@ -1767,14 +1770,14 @@ public:
         \param expiry        Expiry object defining the quote's expiry
         \param strike        Strike object defining the quote's strike
     */
-    CommodityOptionQuote(QuantLib::Real value,
-        const QuantLib::Date& asof,
-        const std::string& name,
-        QuoteType quoteType,
-        const std::string& commodityName,
-        const std::string& quoteCurrency,
-        const boost::shared_ptr<Expiry>& expiry,
-        const boost::shared_ptr<BaseStrike>& strike);
+    CommodityOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
+                         const std::string& commodityName, const std::string& quoteCurrency,
+                         const boost::shared_ptr<Expiry>& expiry, const boost::shared_ptr<BaseStrike>& strike);
+
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CommodityOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_, expiry_, strike_);
+    }
 
     //! \name Inspectors
     //@{
@@ -1791,13 +1794,7 @@ private:
     boost::shared_ptr<BaseStrike> strike_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& commodityName_;
-        ar& quoteCurrency_;
-        ar& expiry_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Spread data class
@@ -1821,6 +1818,11 @@ public:
                      const std::string& index1, const std::string& index2, const std::string& expiry,
                      const std::string& strike);
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CorrelationQuote>(quote_->value(), asofDate_, name_, quoteType_, index1_, index2_, expiry_, strike_);
+    }
+
     //! \name Inspectors
     //@{
     const std::string& index1() const { return index1_; }
@@ -1836,13 +1838,7 @@ private:
     std::string strike_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& index1_;
-        ar& index2_;
-        ar& expiry_;
-        ar& strike_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! CPR data class
@@ -1858,6 +1854,11 @@ public:
     CPRQuote(Real value, Date asofDate, const string& name, const string& securityId)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::CPR), securityID_(securityId) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<CPRQuote>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
     //! \name Inspectors
     //@{
     const string& securityID() const { return securityID_; }
@@ -1866,10 +1867,7 @@ private:
     string securityID_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& securityID_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 //! Bond Price Quote
@@ -1885,6 +1883,11 @@ public:
     BondPriceQuote(Real value, Date asofDate, const string& name, const string& securityId)
         : MarketDatum(value, asofDate, name, QuoteType::PRICE, InstrumentType::BOND), securityID_(securityId) {}
 
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() {
+        return boost::make_shared<BondPriceQuote>(quote_->value(), asofDate_, name_, securityID_);
+    }
+
     //! \name Inspectors
     //@{
     const string& securityID() const { return securityID_; }
@@ -1893,11 +1896,52 @@ private:
     string securityID_;
     //! Serialization
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive& ar, const unsigned int version) {
-        ar& boost::serialization::base_object<MarketDatum>(*this);
-        ar& securityID_;
-    }
+    template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 } // namespace data
 } // namespace ore
+
+BOOST_CLASS_EXPORT_KEY(ore::data::MoneyMarketQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::FRAQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::ImmFraQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::SwapQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::ZeroQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::DiscountQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::MMFutureQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::OIFutureQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BasisSwapQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BMASwapQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CrossCcyBasisSwapQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CrossCcyFixFloatSwapQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CdsQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::HazardRateQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::RecoveryRateQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::SwaptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::SwaptionShiftQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondOptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondOptionShiftQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CapFloorQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CapFloorShiftQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::FXSpotQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::FXForwardQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::FXOptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::ZcInflationSwapQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::InflationCapFloorQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::ZcInflationCapFloorQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::YoYInflationSwapQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::YyInflationCapFloorQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::SeasonalityQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::EquitySpotQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::EquityForwardQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::EquityDividendYieldQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::EquityOptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::SecuritySpreadQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BaseCorrelationQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::IndexCDSOptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CommoditySpotQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CommodityForwardQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CommodityOptionQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CorrelationQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::CPRQuote);
+BOOST_CLASS_EXPORT_KEY(ore::data::BondPriceQuote);

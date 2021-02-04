@@ -29,11 +29,11 @@
 
 namespace ore {
 namespace data {
-using std::vector;
-using std::string;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
+using ore::data::XMLSerializable;
 using ore::data::XMLUtils;
+using std::string;
+using std::vector;
 
 //! Pricing engine description
 /*! \ingroup tradedata
@@ -53,7 +53,7 @@ public:
         return engineParams_.at(productName);
     }
     const std::map<std::string, std::string>& globalParameters() const { return globalParams_; }
-    
+
     //! Return all products
     vector<string> products() const;
     //@}

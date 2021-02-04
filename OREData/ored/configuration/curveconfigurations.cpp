@@ -61,10 +61,11 @@ void parseNode(XMLNode* node, const char* parentName, const char* childName, map
 
 // utility function to add a set of nodes from a given map of curve configs
 template <class T>
-void addMinimalCurves(const char* nodeName, const map<string, boost::shared_ptr<T>>& m, map<string, boost::shared_ptr<T>>& n,
-                    CurveSpec::CurveType curveType, const map<CurveSpec::CurveType, set<string>> configIds) {
+void addMinimalCurves(const char* nodeName, const map<string, boost::shared_ptr<T>>& m,
+                      map<string, boost::shared_ptr<T>>& n, CurveSpec::CurveType curveType,
+                      const map<CurveSpec::CurveType, set<string>> configIds) {
     for (auto it : m) {
-        if ((configIds.count(curveType) && configIds.at(curveType).count(it.second->curveID()))) {
+        if ((configIds.count(curveType) && configIds.at(curveType).count(it.first))) {
             const string& id = it.second->curveID();
             n[id] = it.second;
         }
@@ -89,7 +90,9 @@ void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& con
     }
 }
 
-boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const set<string>& configurations) const {
+boost::shared_ptr<CurveConfigurations>
+CurveConfigurations::minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                                        const set<string>& configurations) const {
 
     boost::shared_ptr<CurveConfigurations> minimum = boost::make_shared<CurveConfigurations>();
     // If tmparams is not null, organise its specs in to a map [CurveType, set of CurveConfigID]
@@ -116,22 +119,39 @@ boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(c
 
     // follow order in xsd
     addMinimalCurves("FXSpots", fxSpotConfigs_, minimum->fxSpotConfigs_, CurveSpec::CurveType::FX, curveConfigIds);
-    addMinimalCurves("FXVolatilities", fxVolCurveConfigs_, minimum->fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility, curveConfigIds);
-    addMinimalCurves("SwaptionVolatilities", swaptionVolCurveConfigs_, minimum->swaptionVolCurveConfigs_,CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
-    addMinimalCurves("YieldVolatilities", yieldVolCurveConfigs_, minimum->yieldVolCurveConfigs_, CurveSpec::CurveType::YieldVolatility, curveConfigIds);
-    addMinimalCurves("CapFloorVolatilities", capFloorVolCurveConfigs_, minimum->capFloorVolCurveConfigs_,CurveSpec::CurveType::CapFloorVolatility, curveConfigIds);
-    addMinimalCurves("CDSVolatilities", cdsVolCurveConfigs_, minimum->cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility, curveConfigIds);
-    addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_, CurveSpec::CurveType::Default, curveConfigIds);
-    addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
-    addMinimalCurves("InflationCurves", inflationCurveConfigs_, minimum->inflationCurveConfigs_, CurveSpec::CurveType::Inflation, curveConfigIds);
-    addMinimalCurves("InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_, minimum->inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility, curveConfigIds);
-    addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity, curveConfigIds);
-    addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
-    addMinimalCurves("Securities", securityConfigs_, minimum->securityConfigs_, CurveSpec::CurveType::Security, curveConfigIds);
-    addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
-    addMinimalCurves("CommodityCurves", commodityCurveConfigs_, minimum->commodityCurveConfigs_, CurveSpec::CurveType::Commodity, curveConfigIds);
-    addMinimalCurves("CommodityVolatilities", commodityVolatilityConfigs_, minimum->commodityVolatilityConfigs_, CurveSpec::CurveType::CommodityVolatility,curveConfigIds);
-    addMinimalCurves("Correlations", correlationCurveConfigs_, minimum->correlationCurveConfigs_, CurveSpec::CurveType::Correlation, curveConfigIds);
+    addMinimalCurves("FXVolatilities", fxVolCurveConfigs_, minimum->fxVolCurveConfigs_,
+                     CurveSpec::CurveType::FXVolatility, curveConfigIds);
+    addMinimalCurves("SwaptionVolatilities", swaptionVolCurveConfigs_, minimum->swaptionVolCurveConfigs_,
+                     CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
+    addMinimalCurves("YieldVolatilities", yieldVolCurveConfigs_, minimum->yieldVolCurveConfigs_,
+                     CurveSpec::CurveType::YieldVolatility, curveConfigIds);
+    addMinimalCurves("CapFloorVolatilities", capFloorVolCurveConfigs_, minimum->capFloorVolCurveConfigs_,
+                     CurveSpec::CurveType::CapFloorVolatility, curveConfigIds);
+    addMinimalCurves("CDSVolatilities", cdsVolCurveConfigs_, minimum->cdsVolCurveConfigs_,
+                     CurveSpec::CurveType::CDSVolatility, curveConfigIds);
+    addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_,
+                     CurveSpec::CurveType::Default, curveConfigIds);
+    addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield,
+                     curveConfigIds);
+    addMinimalCurves("InflationCurves", inflationCurveConfigs_, minimum->inflationCurveConfigs_,
+                     CurveSpec::CurveType::Inflation, curveConfigIds);
+    addMinimalCurves("InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_,
+                     minimum->inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility,
+                     curveConfigIds);
+    addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity,
+                     curveConfigIds);
+    addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_,
+                     CurveSpec::CurveType::EquityVolatility, curveConfigIds);
+    addMinimalCurves("Securities", securityConfigs_, minimum->securityConfigs_, CurveSpec::CurveType::Security,
+                     curveConfigIds);
+    addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_,
+                     CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
+    addMinimalCurves("CommodityCurves", commodityCurveConfigs_, minimum->commodityCurveConfigs_,
+                     CurveSpec::CurveType::Commodity, curveConfigIds);
+    addMinimalCurves("CommodityVolatilities", commodityVolatilityConfigs_, minimum->commodityVolatilityConfigs_,
+                     CurveSpec::CurveType::CommodityVolatility, curveConfigIds);
+    addMinimalCurves("Correlations", correlationCurveConfigs_, minimum->correlationCurveConfigs_,
+                     CurveSpec::CurveType::Correlation, curveConfigIds);
 
     return minimum;
 }
@@ -140,12 +160,12 @@ std::set<string> CurveConfigurations::quotes(const boost::shared_ptr<TodaysMarke
                                              const set<string>& configurations) const {
 
     std::set<string> quotes = minimalCurveConfig(todaysMarketParams, configurations)->quotes();
- 
+
     // FX spot is special in that we generally do not enter a curve configuration for it. Above, we ran over the
     // curve configurations asking each for its quotes. We may end up missing FX spot quotes that are specified in a
     // TodaysMarketParameters but do not have a CurveConfig. If we have a TodaysMarketParameters instance we can add
     // them here directly using it.
-   
+
     for (const auto& config : configurations) {
         for (const auto& strSpec : todaysMarketParams->curveSpecs(config)) {
             auto spec = parseCurveSpec(strSpec);
@@ -187,8 +207,8 @@ std::set<string> CurveConfigurations::quotes() const {
 }
 
 std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
-                                             const set<string>& configurations) const {
-                                             
+                                                  const set<string>& configurations) const {
+
     set<string> conventions = minimalCurveConfig(todaysMarketParams, configurations)->conventions();
     // Checking for any swapIndices
 
@@ -198,10 +218,9 @@ std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<Todays
         for (auto m : mapping)
             conventions.insert(m.first);
     }
-    
+
     return conventions;
 }
-
 
 std::set<string> CurveConfigurations::conventions() const {
     set<string> conventions;
@@ -228,8 +247,6 @@ std::set<string> CurveConfigurations::conventions() const {
             conventions.insert(c.second->conventions());
     }
 
-    
-
     return conventions;
 }
 
@@ -240,6 +257,61 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
         curves.insert(yc.first);
 
     return curves;
+}
+
+namespace {
+template <typename T>
+void addRequiredCurveIds(const std::string& curveId, const std::map<std::string, boost::shared_ptr<T>>& configs,
+                         std::map<CurveSpec::CurveType, std::set<string>>& result) {
+    auto c = configs.find(curveId);
+    if (c != configs.end()) {
+        auto r = c->second->requiredCurveIds();
+        result.insert(r.begin(), r.end());
+    }
+}
+} // namespace
+
+std::map<CurveSpec::CurveType, std::set<string>>
+CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const std::string& curveId) const {
+    std::map<CurveSpec::CurveType, std::set<string>> result;
+    if (type == CurveSpec::CurveType::Yield)
+        addRequiredCurveIds(curveId, yieldCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::FXVolatility)
+        addRequiredCurveIds(curveId, fxVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::SwaptionVolatility)
+        addRequiredCurveIds(curveId, swaptionVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::YieldVolatility)
+        addRequiredCurveIds(curveId, yieldVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CapFloorVolatility)
+        addRequiredCurveIds(curveId, capFloorVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Default)
+        addRequiredCurveIds(curveId, defaultCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CDSVolatility)
+        addRequiredCurveIds(curveId, cdsVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::BaseCorrelation)
+        addRequiredCurveIds(curveId, baseCorrelationCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Inflation)
+        addRequiredCurveIds(curveId, inflationCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::InflationCapFloorVolatility)
+        addRequiredCurveIds(curveId, inflationCapFloorVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Equity)
+        addRequiredCurveIds(curveId, equityCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::EquityVolatility)
+        addRequiredCurveIds(curveId, equityVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Security)
+        addRequiredCurveIds(curveId, securityConfigs_, result);
+    else if (type == CurveSpec::CurveType::FX)
+        addRequiredCurveIds(curveId, fxSpotConfigs_, result);
+    else if (type == CurveSpec::CurveType::Commodity)
+        addRequiredCurveIds(curveId, commodityCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CommodityVolatility)
+        addRequiredCurveIds(curveId, commodityVolatilityConfigs_, result);
+    else if (type == CurveSpec::CurveType::Correlation)
+        addRequiredCurveIds(curveId, correlationCurveConfigs_, result);
+    else {
+        QL_FAIL("CurveConfigurations::requiredCurveIds(): unhandled curve spec type");
+    }
+    return result;
 }
 
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }

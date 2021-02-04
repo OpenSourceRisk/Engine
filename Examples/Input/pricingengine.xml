@@ -155,6 +155,12 @@
     <Engine>MidPointCdsEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CreditDefaultSwapOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackCdsOptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
   <!-- CMS Linear TRS Model -->
   <Product type="CMS">
     <Model>LinearTSR</Model>
