@@ -12,7 +12,7 @@ using std::vector;
 namespace QuantExt {
 
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pricingDate, const Date& paymentDate,
-                                                   const ext::shared_ptr<CommoditySpotIndex>& index, Real spread,
+                                                   const ext::shared_ptr<CommodityIndex>& index, Real spread,
                                                    Real gearing, bool useFuturePrice,
                                                    boost::optional<QuantLib::Month> contractMonth,
                                                    boost::optional<QuantLib::Year> contractYear,
@@ -24,7 +24,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pr
 }
 
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(
-    Real quantity, const Date& startDate, const Date& endDate, const ext::shared_ptr<CommoditySpotIndex>& index,
+    Real quantity, const Date& startDate, const Date& endDate, const ext::shared_ptr<CommodityIndex>& index,
     Natural paymentLag, const Calendar& paymentCalendar, BusinessDayConvention paymentConvention, Natural pricingLag,
     const Calendar& pricingLagCalendar, Real spread, Real gearing, bool payInAdvance, bool isInArrears,
     bool useFuturePrice, bool useFutureExpiryDate, Natural futureMonthOffset,

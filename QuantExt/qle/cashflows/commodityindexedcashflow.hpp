@@ -25,7 +25,7 @@ class CommodityIndexedCashFlow : public CashFlow, public Observer {
 public:
     //! Constructor taking an explicit \p pricingDate and \p paymentDate
     CommodityIndexedCashFlow(QuantLib::Real quantity, const QuantLib::Date& pricingDate,
-                             const QuantLib::Date& paymentDate, const ext::shared_ptr<CommoditySpotIndex>& index,
+                             const QuantLib::Date& paymentDate, const ext::shared_ptr<CommodityIndex>& index,
                              QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0, bool useFuturePrice = false,
                              boost::optional<QuantLib::Month> contractMonth = boost::none,
                              boost::optional<QuantLib::Year> contractYear = boost::none,
@@ -35,7 +35,7 @@ public:
         are derived from the start date and end date using the conventions.
     */
     CommodityIndexedCashFlow(QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
-                             const ext::shared_ptr<CommoditySpotIndex>& index, QuantLib::Natural paymentLag,
+                             const ext::shared_ptr<CommodityIndex>& index, QuantLib::Natural paymentLag,
                              const QuantLib::Calendar& paymentCalendar,
                              QuantLib::BusinessDayConvention paymentConvention, QuantLib::Natural pricingLag,
                              const QuantLib::Calendar& pricingLagCalendar, QuantLib::Real spread = 0.0,

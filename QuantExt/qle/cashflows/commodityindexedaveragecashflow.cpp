@@ -23,10 +23,10 @@ namespace QuantExt {
 
 CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     Real quantity, const Date& startDate, const Date& endDate, const Date& paymentDate,
-    const ext::shared_ptr<CommoditySpotIndex>& spotIndex, const Calendar& pricingCalendar, QuantLib::Real spread,
+    const ext::shared_ptr<CommodityIndex>& index, const Calendar& pricingCalendar, QuantLib::Real spread,
     QuantLib::Real gearing, bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate)
-    : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDate), spotIndex_(spotIndex),
+    : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDate), index_(index),
       pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice),
       deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate) {
@@ -35,13 +35,13 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
 
 CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     Real quantity, const Date& startDate, const Date& endDate, Natural paymentLag, Calendar paymentCalendar,
-    BusinessDayConvention paymentConvention, const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+    BusinessDayConvention paymentConvention, const ext::shared_ptr<CommodityIndex>& index,
     const Calendar& pricingCalendar, QuantLib::Real spread, QuantLib::Real gearing, bool payInAdvance,
     bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     const QuantLib::Date& paymentDateOverride)
     : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDateOverride),
-      spotIndex_(spotIndex), pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing),
+      index_(index), pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing),
       useFuturePrice_(useFuturePrice), deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset),
       includeEndDate_(includeEndDate), excludeStartDate_(excludeStartDate) {
 
@@ -138,7 +138,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
 }
 
 CommodityIndexedAverageLeg::CommodityIndexedAverageLeg(const Schedule& schedule,
-                                                       const ext::shared_ptr<CommoditySpotIndex>& index)
+                                                       const ext::shared_ptr<CommodityIndex>& index)
     : schedule_(schedule), index_(index), paymentLag_(0), paymentCalendar_(NullCalendar()),
       paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), payInAdvance_(false), useFuturePrice_(false),
       deliveryDateRoll_(0), futureMonthOffset_(0), payAtMaturity_(false), includeEndDate_(true),

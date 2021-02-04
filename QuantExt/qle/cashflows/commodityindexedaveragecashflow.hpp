@@ -32,7 +32,7 @@ public:
     //! Constructor taking an explicit \p paymentDate
     CommodityIndexedAverageCashFlow(QuantLib::Real quantity, const QuantLib::Date& startDate,
                                     const QuantLib::Date& endDate, const QuantLib::Date& paymentDate,
-                                    const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+                                    const ext::shared_ptr<CommodityIndex>& index,
                                     const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(),
                                     QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0,
                                     bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
@@ -44,7 +44,7 @@ public:
     CommodityIndexedAverageCashFlow(
         QuantLib::Real quantity, const QuantLib::Date& startDate, const QuantLib::Date& endDate,
         QuantLib::Natural paymentLag, QuantLib::Calendar paymentCalendar,
-        QuantLib::BusinessDayConvention paymentConvention, const ext::shared_ptr<CommoditySpotIndex>& spotIndex,
+        QuantLib::BusinessDayConvention paymentConvention, const ext::shared_ptr<CommodityIndex>& index,
         const QuantLib::Calendar& pricingCalendar = QuantLib::Calendar(), QuantLib::Real spread = 0.0,
         QuantLib::Real gearing = 1.0, bool payInAdvance = false, bool useFuturePrice = false,
         QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,

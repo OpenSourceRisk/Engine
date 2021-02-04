@@ -58,7 +58,7 @@ public:
     CommodityBasisPriceCurve(const QuantLib::Date& referenceDate,
                              const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
                              const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                             const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+                             const boost::shared_ptr<CommodityIndex>& index,
                              const QuantLib::Handle<PriceTermStructure>& basePts,
                              const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
                              QuantLib::Size monthOffset = 0, const Interpolator& interpolator = Interpolator());
@@ -137,7 +137,7 @@ private:
 template <class Interpolator>
 CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+    const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& index,
     const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis, QuantLib::Size monthOffset, const Interpolator& interpolator)
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
@@ -318,7 +318,7 @@ template <class Interpolator>
 boost::shared_ptr<CommodityIndexedCashFlow>
 CommodityBasisPriceCurve<Interpolator>::makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end) const {
 
-    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, spotIndex_, 0, QuantLib::NullCalendar(),
+    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, index_, 0, QuantLib::NullCalendar(),
                                                         QuantLib::Unadjusted, 0, QuantLib::NullCalendar(), 0.0, 1.0,
                                                         false, true, true, true, 0, baseFec_);
 }
