@@ -63,7 +63,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("ForecastDiscountFactor", double(), 6)
         .addColumn("DividendDiscountFactor", double(), 6)
         .addColumn("Volatility", double(), 6) // Vanilla Options
-        .addColumn("ForwardPrice(Equity)", double(), 6);
+        .addColumn("ForwardPrice", double(), 6);
 
     for (auto trade : portfolio->trades()) {
         try {
@@ -125,10 +125,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                     const std::string& ccyPair = fxoTrn->boughtCurrency() + fxoTrn->soldCurrency();
                     blackVol = market->fxVol(ccyPair)->blackVol(maturity, fxoTrn->strike());
                 } else if (trade->tradeType() == "CommodityOption") {
-                    //boost::shared_ptr<ore::data::CommodityOption> comoTrn =
-                    //    boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
-                    // const std::string& assetName = comoTrn->asset();
-                    // blackVol = market->commodityVolatility(assetName)->blackVol(maturity, comoTrn->strike());
+                    boost::shared_ptr<ore::data::CommodityOption> comoTrn =
+                        boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
+                    const std::string& assetName = comoTrn->asset();
+                    blackVol =
+                        market->commodityVolatility(assetName, configuration)->blackVol(maturity, comoTrn->strike());
+                    fwdPrice = market->commodityPriceCurve(assetName, configuration)->price(maturity);
                 }
                 report.add(forDisc);
                 report.add(divDisc);
@@ -370,19 +372,22 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> discountCurves = marketConfig.mapping(MarketObject::DiscountCurve, configID);
     map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
     map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
-    map<string, string> zeroInflationIndices, defaultCurves, EquityCurves;
+    map<string, string> zeroInflationIndices, defaultCurves, EquityCurves, CommodityCurves;
     if (marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
         zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
         defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::EquityCurve))
         EquityCurves = marketConfig.mapping(MarketObject::EquityCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::CommodityCurve))
+        CommodityCurves = marketConfig.mapping(MarketObject::CommodityCurve, configID);
 
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
     vector<Handle<DefaultProbabilityTermStructure>> probabilityCurves;
     vector<std::tuple<Handle<YieldTermStructure>, Handle<YieldTermStructure>>> equityCurves;
+    vector<Handle<PriceTermStructure>> commodityCurves;
 
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
@@ -465,6 +470,19 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
             }
         }
     }
+    for (auto it : CommodityCurves) {
+        DLOG("commodity curve - " << it.first);
+        try {
+            commodityCurves.push_back(market->commodityPriceCurve(it.first, configID));
+            report.addColumn(it.first + " price curve", double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
 
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
@@ -477,6 +495,8 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
             report.add(prC->survivalProbability(date));
         for (auto eqC : equityCurves)
             report.add(std::get<0>(eqC)->discount(date) / std::get<1>(eqC)->discount(date));
+        for (auto comC : commodityCurves)
+            report.add(comC->price(date));
     }
     report.end();
 }
