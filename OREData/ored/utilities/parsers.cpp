@@ -1211,7 +1211,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         std::regex pattern("\n");
         std::ostringstream tmp;
         tmp << std::setprecision(8) << r;
-        oss << std::fixed << std::regex_replace(tmp.str(), pattern, "");
+        oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
 
     } else {
         ALOG("Unsupported Boost::Any type");
