@@ -20,6 +20,7 @@
 
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
+
 namespace QuantExt {
 
 DiscountingFxForwardEngine::DiscountingFxForwardEngine(
@@ -35,7 +36,6 @@ DiscountingFxForwardEngine::DiscountingFxForwardEngine(
 }
 
 void DiscountingFxForwardEngine::calculate() const {
-
     Date npvDate = npvDate_;
     if (npvDate == Null<Date>()) {
         npvDate = currency1Discountcurve_->referenceDate();
@@ -77,6 +77,9 @@ void DiscountingFxForwardEngine::calculate() const {
 
     results_.value = 0.0;
     results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1 / tmpNominal2); // strike rate
+    results_.additionalResults["fairForwardRate"] = tmpNominal1 / tmpNominal2;
+    results_.additionalResults["ccy1"] = ccy1_.code();
+    results_.additionalResults["ccy2"] = ccy2_.code();
 
     if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
@@ -100,6 +103,12 @@ void DiscountingFxForwardEngine::calculate() const {
         }
 
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
+        results_.additionalResults["fairForwardRate"] = fxfwd;
+        results_.additionalResults["fxSpot"] = spotFX_->value();
+        results_.additionalResults["ccy1NearDiscountFactor"] = disc1near;
+        results_.additionalResults["ccy2NearDiscountFactor"] = disc2near;
+        results_.additionalResults["ccy1FarDiscountFactor"] = disc1far;
+        results_.additionalResults["ccy2FarDiscountFactor"] = disc2far;
 
         // set notional
         if (arguments_.isPhysicallySettled) {
