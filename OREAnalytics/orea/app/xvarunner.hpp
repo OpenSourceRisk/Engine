@@ -28,6 +28,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <orea/engine/valuationengine.hpp>
 
 #include <boost/optional.hpp>
 
@@ -68,8 +69,8 @@ public:
     // optional step 2: buffer simulation paths, this is required, if a currency filter is used
     void bufferSimulationPaths();
 
-    // step 3: build sim market, optionally on filtered currencies
-    void buildSimMarket(const boost::shared_ptr<ore::data::Market>& market,
+    // build sim market, optionally on filtered currencies
+    virtual void buildSimMarket(const boost::shared_ptr<ore::data::Market>& market,
                         const boost::optional<std::set<std::string>>& currencyFilter = boost::none,
                         const bool continueOnErr = true);
 
@@ -118,7 +119,7 @@ protected:
         const boost::optional<std::set<std::string>>& currencyFilter, const boost::shared_ptr<Market>& market,
         const boost::shared_ptr<ScenarioSimMarketParameters>& projectedSsmData,
         const boost::shared_ptr<ScenarioFactory>& scenarioFactory, const bool continueOnErr) const;
-
+    
     QuantLib::Date asof_;
     std::string baseCurrency_;
     boost::shared_ptr<ore::data::Portfolio> portfolio_;

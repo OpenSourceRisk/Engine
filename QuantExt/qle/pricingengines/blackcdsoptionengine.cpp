@@ -120,8 +120,8 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
                                          CdsOption::results& results, const Real strike,
                                          const CdsOption::StrikeType strikeType) const {
 
-    Date maturityDate = swap.coupons().front()->date();
-    QL_REQUIRE(maturityDate > exerciseDate, "Underlying CDS should start after option maturity");
+    Date maturityDate = swap.coupons().back()->date();
+    QL_REQUIRE(maturityDate > exerciseDate, "Underlying CDS maturity should be after the option expiry.");
 
     Rate fairSpread = swap.fairSpread();
     Rate couponSpread = swap.runningSpread();

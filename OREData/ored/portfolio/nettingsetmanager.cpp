@@ -65,7 +65,6 @@ void NettingSetManager::fromXML(XMLNode* node) {
 
 XMLNode* NettingSetManager::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("NettingSetDefinitions");
-    doc.appendNode(node);
     map<string, const boost::shared_ptr<NettingSetDefinition>>::iterator it;
     for (it = data_.begin(); it != data_.end(); ++it)
         XMLUtils::appendNode(node, it->second->toXML(doc));
