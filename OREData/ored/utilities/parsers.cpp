@@ -610,7 +610,7 @@ DayCounter parseDayCounter(const string& s) {
     }
 }
 
-Currency parseCurrency(const string& s) {
+Currency parseCurrency(const string& s, const Currency& currency) {
     static map<string, Currency> m = {
         {"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, 
         {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, 
@@ -635,6 +635,10 @@ Currency parseCurrency(const string& s) {
         {"XOF", XOFCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
         {"ZMW", ZMWCurrency()}};
 
+    // add the passed currency, that was constructed elsewhere, to the static map
+    if (currency != Currency() && m.find(s) == m.end())
+        m[s] = currency;
+    
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;

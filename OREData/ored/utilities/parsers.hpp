@@ -47,6 +47,7 @@
 
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/currencies/configurablecurrency.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -123,7 +124,7 @@ QuantLib::DayCounter parseDayCounter(const string& s);
 /*!
   \ingroup utilities
  */
-QuantLib::Currency parseCurrency(const string& s);
+  QuantLib::Currency parseCurrency(const string& s, const Currency& currency = Currency());
 
 //! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
 /*!
@@ -317,6 +318,17 @@ template <class T> bool tryParse(const std::string& str, T& obj, std::function<T
     DLOG("tryParse: attempting to parse " << str);
     try {
         obj = parser(str);
+    } catch (...) {
+        TLOG("String " << str << " could not be parsed");
+        return false;
+    }
+    return true;
+}
+
+inline bool tryParseCurrency(const std::string& str, Currency& obj, std::function<Currency(std::string, const Currency&)> parser) {
+    DLOG("tryParse: attempting to parse " << str);
+    try {
+      obj = parser(str, Currency());
     } catch (...) {
         TLOG("String " << str << " could not be parsed");
         return false;
