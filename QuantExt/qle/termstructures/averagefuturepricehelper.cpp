@@ -37,9 +37,10 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(const Handle<Quote>& price,
     const boost::shared_ptr<FutureExpiryCalculator>& calc,
     const Calendar& calendar,
     Natural deliveryDateRoll,
-    Natural futureMonthOffset)
+    Natural futureMonthOffset,
+    bool useBusinessDays)
     : PriceHelper(price) {
-    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset);
+    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays);
 }
 
 AverageFuturePriceHelper::AverageFuturePriceHelper(Real price,
@@ -49,14 +50,16 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(Real price,
     const boost::shared_ptr<FutureExpiryCalculator>& calc,
     const Calendar& calendar,
     Natural deliveryDateRoll,
-    Natural futureMonthOffset)
+    Natural futureMonthOffset,
+    bool useBusinessDays)
     : PriceHelper(price) {
-    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset);
+    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays);
 }
 
 void AverageFuturePriceHelper::init(const boost::shared_ptr<CommodityIndex>& index,
     const Date& start, const Date& end, const boost::shared_ptr<FutureExpiryCalculator>& calc,
-    const Calendar& calendar, Natural deliveryDateRoll, Natural futureMonthOffset) {
+    const Calendar& calendar, Natural deliveryDateRoll, Natural futureMonthOffset,
+    bool useBusinessDays) {
 
     // Make a copy of the commodity index linked to this price helper's price term structure handle, 
     // termStructureHandle_.
@@ -70,7 +73,7 @@ void AverageFuturePriceHelper::init(const boost::shared_ptr<CommodityIndex>& ind
 
     // Create the averaging cashflow referencing the commodity index.
     averageCashflow_ = boost::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
-        calendar, 0.0, 1.0, true, deliveryDateRoll, futureMonthOffset, calc, true, false);
+        calendar, 0.0, 1.0, true, deliveryDateRoll, futureMonthOffset, calc, true, false, useBusinessDays);
 
     // Get the date index pairs involved in the averaging. The earliest date is the expiry date of the future contract 
     // referenced in the first element and the latest date is the expiry date of the future contract referenced in 

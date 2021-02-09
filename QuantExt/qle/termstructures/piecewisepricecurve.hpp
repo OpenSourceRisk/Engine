@@ -53,23 +53,23 @@ struct PriceTraits {
     static QuantLib::Real guess(QuantLib::Size i, const C* c, bool validData, QuantLib::Size j) {
         // Take the market value from the helper. Here, we rely on the all the helpers being alive and sorted.
         // We will check this in the PiecewisePriceCurve constructor.
-        return c->instruments_[i]->quote()->value();
+        return c->instrument(i-1)->quote()->value();
     }
 
     //! Minimum value after a given iteration.
     template <class C>
     static QuantLib::Real minValueAfter(QuantLib::Size i, const C* c, bool validData, QuantLib::Size j) {
         // Bounds around the guess. Can widen these and try again within the bootstrap.
-        Real guess = guess(i, c, validData, j);
-        return guess < 0.0 ? guess * 5.0 / 4.0 : guess * 3.0 / 4.0;
+        Real g = guess(i, c, validData, j);
+        return g < 0.0 ? g * 5.0 / 4.0 : g * 3.0 / 4.0;
     }
 
     //! Maximum value after a given iteration.
     template <class C>
     static QuantLib::Real maxValueAfter(QuantLib::Size i, const C* c, bool validData, QuantLib::Size j) {
         // Bounds around the guess. Can widen these and try again within the bootstrap.
-        Real guess = guess(i, c, validData, j);
-        return guess < 0.0 ? guess * 3.0 / 4.0 : guess * 5.0 / 4.0;
+        Real g = guess(i, c, validData, j);
+        return g < 0.0 ? g * 3.0 / 4.0 : g * 5.0 / 4.0;
     }
 
     //! Root finding update
@@ -106,14 +106,13 @@ public:
     typedef QuantLib::BootstrapHelper<PriceTermStructure> helper;
     typedef PriceTraits traits_type;
     typedef Interpolator interpolator_type;
-    
+
     //! \name Constructors
     //@{
     PiecewisePriceCurve(const QuantLib::Date& referenceDate,
         const std::vector<boost::shared_ptr<helper> >& instruments,
         const QuantLib::DayCounter& dayCounter,
         const QuantLib::Currency& currency,
-        QuantLib::Real accuracy = 1.0e-12,
         const Interpolator& i = Interpolator(),
         const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
     //@}
@@ -136,6 +135,9 @@ public:
     const std::vector<QuantLib::Real>& prices() const;
     //@}
 
+    //! Return the i-th instrument
+    const boost::shared_ptr<helper>& instrument(QuantLib::Size i) const;
+
 private:
     //! \name LazyObject interface
     //@{
@@ -151,7 +153,7 @@ private:
     Real accuracy_;
 
     friend class Bootstrap<this_curve>;
-    friend class BootstrapError<this_curve> ;
+    friend class BootstrapError<this_curve>;
     friend class PenaltyFunction<this_curve>;
     Bootstrap<this_curve> bootstrap_;
 };
@@ -162,18 +164,17 @@ PiecewisePriceCurve<Interpolator, Bootstrap>::PiecewisePriceCurve(
     const std::vector<boost::shared_ptr<helper> >& instruments,
     const QuantLib::DayCounter& dayCounter,
     const QuantLib::Currency& currency,
-    QuantLib::Real accuracy,
     const Interpolator& i,
     const Bootstrap<this_curve>& bootstrap)
-    : base_curve(referenceDate, std::vector<QuantLib::Date>(), std::vector<QuantLib::Handle<QuantLib::Quote> >(),
-        dayCounter, currency, i), instruments_(instruments), accuracy_(accuracy), bootstrap_(bootstrap) {
-    
+    : base_curve(referenceDate, dayCounter, currency, i), instruments_(instruments),
+      accuracy_(1e-12), bootstrap_(bootstrap) {
+
     // Ensure that the instruments are sorted and that they are all alive i.e. pillar > reference date.
     // Need this because of the way that we have set up PriceTraits.
     std::sort(instruments_.begin(), instruments_.end(), QuantLib::detail::BootstrapHelperSorter());
-    
+
     auto it = std::find_if(instruments_.begin(), instruments_.end(), 
-        &referenceDate](const boost::shared_ptr<helper>& inst) { return inst->pillarDate() > ts_->referenceDate(); });
+        [&referenceDate](const boost::shared_ptr<helper>& inst) { return inst->pillarDate() > referenceDate; });
     QL_REQUIRE(it != instruments_.end(), "PiecewisePriceCurve: all instruments are expired.");
     if (it != instruments_.begin()) {
         instruments_.erase(instruments_.begin(), it);
@@ -216,6 +217,14 @@ template <class Interpolator, template <class> class Bootstrap>
 const std::vector<QuantLib::Real>& PiecewisePriceCurve<Interpolator, Bootstrap>::prices() const {
     calculate();
     return base_curve::prices();
+}
+
+template <class Interpolator, template <class> class Bootstrap>
+const boost::shared_ptr<QuantLib::BootstrapHelper<PriceTermStructure> >& 
+PiecewisePriceCurve<Interpolator, Bootstrap>::instrument(QuantLib::Size i) const {
+    QL_REQUIRE(i < instruments_.size(), "Index (" << i << ") greater than the number of instruments (" <<
+        instruments_.size() << ").");
+    return instruments_[i];
 }
 
 template <class Interpolator, template <class> class Bootstrap>

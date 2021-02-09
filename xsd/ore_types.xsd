@@ -347,6 +347,7 @@
       <xs:enumeration value="ExponentialSplines"/>
       <xs:enumeration value="NelsonSiegel"/>
       <xs:enumeration value="Svensson"/>
+      <xs:enumeration value="BackwardFlat"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -709,6 +710,21 @@
       <xs:enumeration value="None"/>
       <xs:enumeration value="OnPublicationDate"/>
       <xs:enumeration value="AfterPublicationDate"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="averagingDataType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PreviousMonth"/>
+      <xs:enumeration value="ExpiryToExpiry"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="priceSegmentTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Future"/>
+      <xs:enumeration value="AveragingFuture"/>
+      <xs:enumeration value="AveragingSpot"/>
     </xs:restriction>
   </xs:simpleType>
 

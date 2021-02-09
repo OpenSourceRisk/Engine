@@ -32,6 +32,7 @@
 #include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 namespace ore {
@@ -1281,6 +1282,61 @@ public:
     };
     //@}
 
+    /*! Struct to hold averaging information when \c isAveraging_ is \c true. It is generally needed when the 
+        in the CommodityFutureConvention when referenced in piecewise price curve construction.
+    */
+    class AveragingData : public XMLSerializable {
+    public:
+        //! Indicate location of calculation period relative to the future expiry date.
+        enum class CalculationPeriod { PreviousMonth, ExpiryToExpiry };
+
+        //! \name Constructors
+        //@{
+        //! Default constructor
+        AveragingData();
+        //! Detailed constructor
+        AveragingData(const std::string& index, const std::string& period, const std::string& pricingCalendar,
+            bool useBusinessDays, const std::string& conventionsId = "", QuantLib::Natural deliveryRollDays = 0,
+            QuantLib::Natural futureMonthOffset = 0);
+        //@}
+
+        //! \name Inspectors
+        //@{
+        boost::shared_ptr<QuantExt::CommodityIndex> index() const;
+        CalculationPeriod period() const;
+        const QuantLib::Calendar& pricingCalendar() const;
+        bool useBusinessDays() const;
+        const std::string& conventionsId() const;
+        QuantLib::Natural deliveryRollDays() const;
+        QuantLib::Natural futureMonthOffset() const;
+        //@}
+
+        //! Returns \c true if the data has not been populated.
+        bool empty() const;
+
+        //! Serialisation
+        //@{
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) override;
+        //@}
+
+    private:
+        std::string strIndex_;
+        std::string strPeriod_;
+        std::string strPricingCalendar_;
+        bool useBusinessDays_;
+        std::string conventionsId_;
+        QuantLib::Natural deliveryRollDays_;
+        QuantLib::Natural futureMonthOffset_;
+
+        boost::shared_ptr<QuantExt::CommodityIndex> index_;
+        CalculationPeriod period_;
+        QuantLib::Calendar pricingCalendar_;
+
+        //! Populate members
+        void build();
+    };
+
     //! \name Constructors
     //@{
     //! Default constructor
@@ -1298,7 +1354,8 @@ public:
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
-                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+                              const AveragingData& averagingData = AveragingData());
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1312,7 +1369,8 @@ public:
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
-                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+                              const AveragingData& averagingData = AveragingData());
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1326,7 +1384,8 @@ public:
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
-                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+                              const AveragingData& averagingData = AveragingData());
     //@}
 
     //! \name Inspectors
@@ -1356,6 +1415,7 @@ public:
     const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings() const {
         return optionContinuationMappings_;
     }
+    const AveragingData& averagingData() const { return averagingData_; }
     //@}
 
     //! Serialisation
@@ -1403,6 +1463,10 @@ private:
     std::string strOptionBdc_;
     std::map<QuantLib::Natural, QuantLib::Natural> futureContinuationMappings_;
     std::map<QuantLib::Natural, QuantLib::Natural> optionContinuationMappings_;
+    AveragingData averagingData_;
+
+    //! Populate and check frequency.
+    void populateFrequency();
 };
 
 //! Container for storing FX Option conventions

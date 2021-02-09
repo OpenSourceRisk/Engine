@@ -33,22 +33,24 @@ AverageSpotPriceHelper::AverageSpotPriceHelper(const Handle<Quote>& price,
     const boost::shared_ptr<CommoditySpotIndex>& index,
     const Date& start,
     const Date& end,
-    const Calendar& calendar)
+    const Calendar& calendar,
+    bool useBusinessDays)
     : PriceHelper(price) {
-    init(index, start, end, calendar);
+    init(index, start, end, calendar, useBusinessDays);
 }
 
 AverageSpotPriceHelper::AverageSpotPriceHelper(Real price,
     const boost::shared_ptr<CommoditySpotIndex>& index,
     const Date& start,
     const Date& end,
-    const Calendar& calendar)
+    const Calendar& calendar,
+    bool useBusinessDays)
     : PriceHelper(price) {
-    init(index, start, end, calendar);
+    init(index, start, end, calendar, useBusinessDays);
 }
 
 void AverageSpotPriceHelper::init(const boost::shared_ptr<CommoditySpotIndex>& index,
-    const Date& start, const Date& end, const Calendar& calendar) {
+    const Date& start, const Date& end, const Calendar& calendar, bool useBusinessDays) {
 
     // Make a copy of the commodity spot index linked to this price helper's price term structure handle, 
     // termStructureHandle_.
@@ -63,7 +65,7 @@ void AverageSpotPriceHelper::init(const boost::shared_ptr<CommoditySpotIndex>& i
     // Create the averaging cashflow referencing the commodity spot index. Need to specify all the defaults 
     // here just to amend the final default parameter i.e. set excludeStartDate to false.
     averageCashflow_ = boost::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
-        calendar, 0.0, 1.0, false, 0, 0, nullptr, true, false);
+        calendar, 0.0, 1.0, false, 0, 0, nullptr, true, false, useBusinessDays);
 
     // Get the date index pairs involved in the averaging. The earliest date is the date of the first element 
     // and the latest date is the date of the last element.

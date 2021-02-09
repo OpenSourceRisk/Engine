@@ -25,6 +25,7 @@
 
 #include <ored/utilities/log.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/commoditycurveconfig.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
@@ -384,6 +385,18 @@ std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
     
 //! Enum to string used in ScenarioGeneratorData's toXML
 std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetStateProcess::discretization type);
+
+//! Convert text to CommodityFutureConvention::AveragingData::CalculationPeriod
+CommodityFutureConvention::AveragingData::CalculationPeriod parseAveragingDataPeriod(const std::string& s);
+
+//! Write CommodityFutureConvention::AveragingData::CalculationPeriod to stream
+std::ostream& operator<<(std::ostream& os, CommodityFutureConvention::AveragingData::CalculationPeriod cp);
+
+//! Convert text to PriceSegment::Type
+PriceSegment::Type parsePriceSegmentType(const std::string& s);
+
+//! Write PriceSegment::Type to stream
+std::ostream& operator<<(std::ostream& os, PriceSegment::Type pst);
 
 } // namespace data
 } // namespace ore

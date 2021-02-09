@@ -539,6 +539,21 @@
       <xs:element type="xs:nonNegativeInteger" name="MonthOffset" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:complexType name="priceSegmentType">
+    <xs:all>
+      <xs:element type="priceSegmentTypeType" name="Type" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="priceSegmentsType">
+    <xs:sequence>
+      <xs:element type="priceSegmentType" name="PriceSegment" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="simCommodityCurve">
     <xs:sequence>
@@ -564,14 +579,17 @@
                 <xs:enumeration value="LinearFlat"/>
                 <xs:enumeration value="LogLinearFlat"/>
                 <xs:enumeration value="CubicFlat"/>
+                <xs:enumeration value="BackwardFlat"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:element type="commodityBasisConfig" name="BasisConfiguration"/>
+        <xs:element type="priceSegmentsType" name="PriceSegments"/>
       </xs:choice>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

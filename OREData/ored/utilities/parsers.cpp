@@ -1328,5 +1328,53 @@ std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::di
     }
 }
 
+using ADCP = CommodityFutureConvention::AveragingData::CalculationPeriod;
+ADCP parseAveragingDataPeriod(const string& s) {
+    if (s == "PreviousMonth") {
+        return ADCP::PreviousMonth;
+    } else if (s == "ExpiryToExpiry") {
+        return ADCP::ExpiryToExpiry;
+    } else {
+        QL_FAIL("AveragingData::CalculationPeriod '" << s << "' not known, expect " <<
+            "'PreviousMonth' or 'ExpiryToExpiry'");
+    }
+}
+
+ostream& operator<<(ostream& os, ADCP cp) {
+    if (cp == ADCP::PreviousMonth) {
+        return os << "PreviousMonth";
+    } else if (cp == ADCP::ExpiryToExpiry) {
+        return os << "ExpiryToExpiry";
+    } else {
+        QL_FAIL("Unknown AveragingData::CalculationPeriod.");
+    }
+}
+
+using PST = PriceSegment::Type;
+PriceSegment::Type parsePriceSegmentType(const string& s) {
+    if (s == "Future") {
+        return PST::Future;
+    } else if (s == "AveragingFuture") {
+        return PST::AveragingFuture;
+    } else if (s == "AveragingSpot") {
+        return PST::AveragingSpot;
+    } else {
+        QL_FAIL("PriceSegment::Type '" << s << "' not known, expect " <<
+            "'Future', 'AveragingFuture' or 'AveragingSpot'");
+    }
+}
+
+ostream& operator<<(ostream& os, PriceSegment::Type pst) {
+    if (pst == PST::Future) {
+        return os << "Future";
+    } else if (pst == PST::AveragingFuture) {
+        return os << "AveragingFuture";
+    } else if (pst == PST::AveragingSpot) {
+        return os << "AveragingSpot";
+    } else {
+        QL_FAIL("Unknown PriceSegment::Type.");
+    }
+}
+
 } // namespace data
 } // namespace ore

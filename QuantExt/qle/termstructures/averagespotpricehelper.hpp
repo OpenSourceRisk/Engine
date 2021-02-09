@@ -38,35 +38,41 @@ class AverageSpotPriceHelper : public PriceHelper {
 public:
     //! \name Constructors
     //@{
-    /*! \param price    The average price quote.
-        \param index    The commodity spot index.
-        \param start    The start date of the averaging period. The averaging period includes the
-                        start date if it is a pricing date according to the \p calendar.
-        \param end      The end date of the averaging period. The averaging period includes the 
-                        end date if it is a pricing date according to the \p calendar.
-        \param calendar The calendar used to determine pricing dates in the averaging period. If not provided, 
-                        the \p index calendar is used.
+    /*! \param price           The average price quote.
+        \param index           The commodity spot index.
+        \param start           The start date of the averaging period. The averaging period includes the
+                               start date if it is a pricing date according to the \p calendar.
+        \param end             The end date of the averaging period. The averaging period includes the 
+                               end date if it is a pricing date according to the \p calendar.
+        \param calendar        The calendar used to determine pricing dates in the averaging period. If not provided, 
+                               the \p index calendar is used.
+        \param useBusinessDays If set to \c false, the averaging happens on the complement of the pricing calendar
+                               dates in the period.
     */
     AverageSpotPriceHelper(const QuantLib::Handle<QuantLib::Quote>& price,
         const boost::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
-        const QuantLib::Calendar& calendar = QuantLib::Calendar());
+        const QuantLib::Calendar& calendar = QuantLib::Calendar(),
+        bool useBusinessDays = true);
 
-    /*! \param price    The average price.
-        \param index    The commodity spot index.
-        \param start    The start date of the averaging period. The averaging period includes the
-                        start date if it is a pricing date according to the \p calendar.
-        \param end      The end date of the averaging period. The averaging period includes the
-                        end date if it is a pricing date according to the \p calendar.
-        \param calendar The calendar used to determine pricing dates in the averaging period. If not provided, 
-                        the \p index calendar is used.
+    /*! \param price           The average price.
+        \param index           The commodity spot index.
+        \param start           The start date of the averaging period. The averaging period includes the
+                               start date if it is a pricing date according to the \p calendar.
+        \param end             The end date of the averaging period. The averaging period includes the
+                               end date if it is a pricing date according to the \p calendar.
+        \param calendar        The calendar used to determine pricing dates in the averaging period. If not provided, 
+                               the \p index calendar is used.
+        \param useBusinessDays If set to \c false, the averaging happens on the complement of the pricing calendar
+                               dates in the period.
     */
     AverageSpotPriceHelper(QuantLib::Real price,
         const boost::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
-        const QuantLib::Calendar& calendar = QuantLib::Calendar());
+        const QuantLib::Calendar& calendar = QuantLib::Calendar(),
+        bool useBusinessDays = true);
     //@}
 
     //! \name PriceHelper interface
@@ -90,7 +96,8 @@ private:
     void init(const boost::shared_ptr<CommoditySpotIndex>& index,
         const QuantLib::Date& start,
         const QuantLib::Date& end,
-        const QuantLib::Calendar& calendar);
+        const QuantLib::Calendar& calendar,
+        bool useBusinessDays);
 
     boost::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
     QuantLib::RelinkableHandle<PriceTermStructure> termStructureHandle_;

@@ -38,7 +38,8 @@ public:
                                     bool useFuturePrice = false, QuantLib::Natural deliveryDateRoll = 0,
                                     QuantLib::Natural futureMonthOffset = 0,
                                     const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
-                                    bool includeEndDate = true, bool excludeStartDate = true);
+                                    bool includeEndDate = true, bool excludeStartDate = true,
+                                    bool useBusinessDays = true);
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
     CommodityIndexedAverageCashFlow(
@@ -49,7 +50,8 @@ public:
         QuantLib::Real gearing = 1.0, bool payInAdvance = false, bool useFuturePrice = false,
         QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,
         const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr, bool includeEndDate = true,
-        bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date());
+        bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(),
+        bool useBusinessDays = true);
 
     //! \name Inspectors
     //@{
@@ -62,6 +64,7 @@ public:
     bool useFuturePrice() const { return useFuturePrice_; }
     QuantLib::Natural deliveryDateRoll() const { return deliveryDateRoll_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
+    bool useBusinessDays() const { return useBusinessDays_; }
 
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
         For a given key date, the map value holds the commodity index used to give the price on that date. If the
@@ -108,6 +111,7 @@ private:
     bool includeEndDate_;
     bool excludeStartDate_;
     std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex> > indices_;
+    bool useBusinessDays_;
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc);
@@ -140,6 +144,7 @@ public:
     CommodityIndexedAverageLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
     CommodityIndexedAverageLeg& quantityPerDay(bool flag = false);
     CommodityIndexedAverageLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
+    CommodityIndexedAverageLeg& useBusinessDays(bool flag = true);
 
     operator Leg() const;
 
@@ -164,6 +169,7 @@ private:
     std::vector<QuantLib::Date> pricingDates_;
     bool quantityPerDay_;
     std::vector<QuantLib::Date> paymentDates_;
+    bool useBusinessDays_;
 };
 
 } // namespace QuantExt

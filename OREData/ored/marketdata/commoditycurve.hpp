@@ -42,7 +42,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CommodityCurve() : regexQuotes_(false) {}
+    CommodityCurve();
 
     //! Detailed constructor
     CommodityCurve(const QuantLib::Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
@@ -105,12 +105,23 @@ private:
                               const Conventions& conventions,
                               const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts, const Loader& loader);
 
+    //! Build commodity piecewise price curve
+    void buildPiecewiseCurve(const QuantLib::Date& asof, const CommodityCurveConfig& config,
+        const Conventions& conventions, const Loader& loader);
+
     //! Get the configured quotes
     std::vector<boost::shared_ptr<CommodityForwardQuote>>
-    getQuotes(const QuantLib::Date& asof, const CommodityCurveConfig& config, const Loader& loader);
+    getQuotes(const QuantLib::Date& asof, const std::string& configId, const std::vector<std::string>& quotes,
+        const Loader& loader);
 
     //! Method for populating the price curve
     template <template <class> class CurveType, typename... Args> void populateCurve(Args... args);
+
+    //! Add the instruments relating to a \p priceSegment to \p instruments.
+    using Helper = QuantLib::BootstrapHelper<QuantExt::PriceTermStructure>;
+    void addInstruments(const QuantLib::Date& asof, const Loader& loader, const std::string& configId,
+        const PriceSegment& priceSegment, const Conventions& conventions,
+        std::map<QuantLib::Date, boost::shared_ptr<Helper>>& instruments);
 };
 
 template <template <class> class CurveType, typename... Args> void CommodityCurve::populateCurve(Args... args) {

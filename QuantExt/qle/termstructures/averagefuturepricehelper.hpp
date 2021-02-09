@@ -52,6 +52,8 @@ public:
         \param deliveryDateRoll  The number of pricing days before the prompt future expiry date on which to roll to 
                                  using the next future contract in the averaging.
         \param futureMonthOffset Use a positive integer to select a non-prompt future contract in the averaging.
+        \param useBusinessDays   If set to \c false, the averaging happens on the complement of the pricing calendar
+                                 dates in the period. This is useful for some electricity futures.
     */
     AverageFuturePriceHelper(const QuantLib::Handle<QuantLib::Quote>& price,
         const boost::shared_ptr<CommodityIndex>& index,
@@ -60,7 +62,8 @@ public:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
         QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0);
+        QuantLib::Natural futureMonthOffset = 0,
+        bool useBusinessDays = true);
 
     /*! \param price             The average price.
         \param index             The commodity index. Used to convey the commodity's name and calendar. The underlying 
@@ -75,6 +78,8 @@ public:
         \param deliveryDateRoll  The number of pricing days before the prompt future expiry date on which to roll to 
                                  using the next future contract in the averaging.
         \param futureMonthOffset Use a positive integer to select a non-prompt future contract in the averaging.
+        \param useBusinessDays   If set to \c false, the averaging happens on the complement of the pricing calendar
+                                 dates in the period. This is useful for some electricity futures.
     */
     AverageFuturePriceHelper(QuantLib::Real price,
         const boost::shared_ptr<CommodityIndex>& index,
@@ -83,7 +88,8 @@ public:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
         QuantLib::Natural deliveryDateRoll = 0,
-        QuantLib::Natural futureMonthOffset = 0);
+        QuantLib::Natural futureMonthOffset = 0,
+        bool useBusinessDays = true);
     //@}
 
     //! \name PriceHelper interface
@@ -110,7 +116,8 @@ private:
         const ext::shared_ptr<FutureExpiryCalculator>& calc,
         const QuantLib::Calendar& calendar,
         QuantLib::Natural deliveryDateRoll,
-        QuantLib::Natural futureMonthOffset);
+        QuantLib::Natural futureMonthOffset,
+        bool useBusinessDays);
 
     boost::shared_ptr<CommodityIndexedAverageCashFlow> averageCashflow_;
     QuantLib::RelinkableHandle<PriceTermStructure> termStructureHandle_;
