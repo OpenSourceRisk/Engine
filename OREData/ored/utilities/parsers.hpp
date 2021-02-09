@@ -305,6 +305,12 @@ QuantLib::DeltaVolQuote::AtmType parseAtmType(const std::string& s);
 */
 QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s);
 
+//! Convert text to QuantLib::Rounding
+/*!
+\ingroup utilities
+*/
+QuantLib::Rounding::Type parseRoundingType(const std::string& s);
+  
 /*! Attempt to parse string \p str to \p obj of type \c T using \p parser
     \param[in]  str    The string we wish to parse.
     \param[out] obj    The resulting object if the parsing was successful.
