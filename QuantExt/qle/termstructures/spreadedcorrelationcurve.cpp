@@ -28,8 +28,7 @@ SpreadedCorrelationCurve::SpreadedCorrelationCurve(const Handle<CorrelationTermS
                                                    const std::vector<Handle<Quote>>& corrSpreads,
                                                    const bool useAtmReferenceCorrsOnly)
     : CorrelationTermStructure(referenceCorrelation->dayCounter()), referenceCorrelation_(referenceCorrelation),
-      times_(times), corrSpreads_(corrSpreads), useAtmReferenceCorrsOnly_(useAtmReferenceCorrsOnly),
-      data_(times.size()) {
+      times_(times), corrSpreads_(corrSpreads), useAtmReferenceCorrsOnly_(useAtmReferenceCorrsOnly) {
     QL_REQUIRE(!times_.empty(), "SpreadedCorrelationCurve: times are empty");
     QL_REQUIRE(times_.size() == corrSpreads_.size(),
                "SpreadedCorrelationCurve: size of times and quote vectors do not match");
@@ -37,6 +36,7 @@ SpreadedCorrelationCurve::SpreadedCorrelationCurve(const Handle<CorrelationTermS
         times_.push_back(times_.back() + 1.0);
         corrSpreads_.push_back(corrSpreads_.back());
     }
+    data_.resize(times_.size(), 1.0);
     for (auto const& q : corrSpreads_)
         registerWith(q);
     interpolation_ = boost::make_shared<FlatExtrapolation>(
