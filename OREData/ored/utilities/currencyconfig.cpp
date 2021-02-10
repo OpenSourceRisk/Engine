@@ -27,11 +27,11 @@ namespace data {
 
 CurrencyConfig::CurrencyConfig() {}
 
-void CurrencyConfig::fromXML(XMLNode* node) {
+void CurrencyConfig::fromXML(XMLNode* baseNode) {
     currencies_.clear();
-    XMLUtils::checkNode(node, "CurrencyConfig");
+    XMLUtils::checkNode(baseNode, "CurrencyConfig");
 
-    for (auto node : XMLUtils::getChildrenNodes(node, "Currency")) {
+    for (auto node : XMLUtils::getChildrenNodes(baseNode, "Currency")) {
         string name = XMLUtils::getChildValue(node, "Name", false);
         string isoCode = XMLUtils::getChildValue(node, "ISOCode", false);
         Integer numericCode = parseInteger(XMLUtils::getChildValue(node, "NumericCode", false));
