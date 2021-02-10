@@ -20,7 +20,7 @@
       <xs:element type="xs:string" name="FractionSymbol"/>
       <xs:element type="xs:integer" name="FractionsPerUnit"/>
       <xs:element type="xs:string" name="RoundingType"/>
-      <xs:element type="xs:integer" name="RoundingsPrecision"/>
+      <xs:element type="xs:integer" name="RoundingPrecision"/>
       <xs:element type="xs:string" name="Format"/>
     </xs:all>
   </xs:complexType>
