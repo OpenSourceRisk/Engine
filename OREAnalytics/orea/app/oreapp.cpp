@@ -368,7 +368,7 @@ void OREApp::readSetup() {
         CurrencyConfig currencyConfig;
         string currencyConfigFile = inputPath_ + "/" + params_->get("setup", "currencyConfiguration");
         LOG("Load currency configurations from file " << currencyConfigFile);
-	Examples of currencies that are not hard coded in QuantLib/QuantExt so far
+	// Examples of currencies that are not hard coded in QuantLib/QuantExt so far
 	vector<string> ccyList = { "PGK", "SOS" };
 	for (auto c: ccyList) {
 	    try {
