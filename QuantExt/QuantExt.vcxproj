@@ -540,6 +540,7 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
+    <ClInclude Include="qle\currencies\configurablecurrency.hpp" />
     <ClInclude Include="qle\indexes\behicp.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\bondindex.hpp" />
@@ -878,6 +879,7 @@
     <ClCompile Include="qle\currencies\asia.cpp" />
     <ClCompile Include="qle\currencies\europe.cpp" />
     <ClCompile Include="qle\currencies\metals.cpp" />
+    <ClCompile Include="qle\currencies\configurablecurrency.cpp" />
     <ClCompile Include="qle\indexes\bondindex.cpp" />
     <ClCompile Include="qle\indexes\commodityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
