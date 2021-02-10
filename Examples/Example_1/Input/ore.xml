@@ -17,6 +17,7 @@
     <Parameter name="observationModel">None</Parameter>
     <Parameter name="continueOnError">false</Parameter>
     <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+    <Parameter name="currencyConfiguration">currencies.xml</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">libor</Parameter>

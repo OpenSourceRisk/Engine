@@ -368,7 +368,25 @@ void OREApp::readSetup() {
         CurrencyConfig currencyConfig;
         string currencyConfigFile = inputPath_ + "/" + params_->get("setup", "currencyConfiguration");
         LOG("Load currency configurations from file " << currencyConfigFile);
-        currencyConfig.fromFile(currencyConfigFile);
+	Examples of currencies that are not hard coded in QuantLib/QuantExt so far
+	vector<string> ccyList = { "PGK", "SOS" };
+	for (auto c: ccyList) {
+	    try {
+	        parseCurrency(c);
+		   DLOG("parsing " << c << " succeeded");
+	    } catch(...) {
+	        DLOG("parsing " << c << " failed");
+	    }
+	}
+	currencyConfig.fromFile(currencyConfigFile);
+	for (auto c: ccyList) {
+	    try {
+	        parseCurrency(c);
+		   DLOG("parsing " << c << " succeeded");
+	    } catch(...) {
+	        DLOG("parsing " << c << " failed");
+	    }
+	}
     }
 
     writeInitialReports_ = true;
