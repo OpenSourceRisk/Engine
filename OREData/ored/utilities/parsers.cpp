@@ -60,8 +60,10 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/actual364.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/currencies/currencycomparator.hpp>
 
 #include <boost/lexical_cast.hpp>
+#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -1214,7 +1216,11 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        std::regex pattern("\n");
+        std::ostringstream tmp;
+        tmp << std::setprecision(8) << r;
+        oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
+
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
