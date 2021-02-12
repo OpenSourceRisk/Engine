@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -22,6 +22,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvolatilitysurfacemoneyness.hpp>
 
 using namespace boost::unit_test_framework;
@@ -50,7 +51,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurfaceMoneynessForward) {
     vector<Time> expiryTimes = { 1.0, 2.0 };
     vector<Real> moneynessLevels = { 0.9, 1.1 };
     vector<vector<Handle<Quote> > > blackVolMatrix(moneynessLevels.size(), vector<Handle<Quote> >(expiryTimes.size()));
-    
+
     blackVolMatrix[0][0] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.35));
     blackVolMatrix[0][1] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.30));
     blackVolMatrix[1][0] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.40));
@@ -84,8 +85,21 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurfaceMoneynessForward) {
     BOOST_CHECK_CLOSE(vol, 0.35, 1e-12);
 
     // ... and check the same middle point although by its variance value
-    vol = surface.blackVariance(T, strike);
-    BOOST_CHECK_CLOSE(vol, 0.35 * 0.35 * T, 1e-12);
+    Real var = surface.blackVariance(T, strike);
+    BOOST_CHECK_CLOSE(var, 0.35 * 0.35 * T, 1e-12);
+
+    // ... and before time 1.0, at t = 0.5 (Mny 0.9)
+    T = 0.5;
+    strike = 0.9 * spot->value() * forTS->discount(T) / domTS->discount(T);
+    vol = surface.blackVol(T, strike);
+    BOOST_CHECK_CLOSE(vol, 0.35 * 0.5, 1e-12);
+
+    // ... and, lastly, after time 2.0, at t = 2.5 with Mny 0.9
+    // (note the flat extrapolation)
+    T = 2.5;
+    strike = 0.9 * spot->value() * forTS->discount(T) / domTS->discount(T);
+    vol = surface.blackVol(2.5, strike);
+    BOOST_CHECK_CLOSE(vol, 0.30, 1e-12);
 }
 
 BOOST_AUTO_TEST_CASE(testVolatilitySurfaceMoneynessSpot) {
@@ -136,8 +150,67 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurfaceMoneynessSpot) {
     BOOST_CHECK_CLOSE(vol, 0.35, 1e-12);
 
     // ... and check the same middle point although by its variance value
-    vol = surface.blackVariance(T, strike);
-    BOOST_CHECK_CLOSE(vol, 0.35 * 0.35 * T, 1e-12);
+    Real var = surface.blackVariance(T, strike);
+    BOOST_CHECK_CLOSE(var, 0.35 * 0.35 * T, 1e-12);
+
+    // ... and before time 1.0, at t = 0.5 (Mny 0.9)
+    T = 0.5;
+    strike = 0.9 * spot->value();
+    vol = surface.blackVol(T, strike);
+    BOOST_CHECK_CLOSE(vol, 0.35 * 0.5, 1e-12);
+
+    // ... and, lastly, after time 2.0, at t = 2.5 with Mny 0.9
+    // (note the flat extrapolation)
+    T = 2.5;
+    strike = 0.9 * spot->value();
+    vol = surface.blackVol(2.5, strike);
+    BOOST_CHECK_CLOSE(vol, 0.30, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(testVolatilitySurfaceMoneynessSpotConstistency) {
+    BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceSurfaceMoneynessSpot and "
+                       << "QuantExt::BlackVolatilitySurfaceMoneynessSpot for consistency");
+
+    // We setup a simple surface, illustrated below by implied (yearly) volatility inputs:
+    // Moneyness\Times: 1.0 2.0
+    // 0.9:   0.35   0.30
+    // 1.1:   0.40   0.35
+    // Then we ask it for vol at different tenors and strikes (moneyness levels)
+
+    Calendar cal = NullCalendar();
+    Handle<Quote> spot = Handle<Quote>(boost::make_shared<SimpleQuote>(100));
+    vector<Time> expiryTimes = { 1.0, 2.0 };
+    vector<Real> moneynessLevels = { 0.9, 1.1 };
+    vector<vector<Handle<Quote> > > blackVolMatrix(moneynessLevels.size(), vector<Handle<Quote> >(expiryTimes.size()));
+
+    blackVolMatrix[0][0] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.35));
+    blackVolMatrix[0][1] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.30));
+    blackVolMatrix[1][0] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.40));
+    blackVolMatrix[1][1] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.35));
+
+    DayCounter dc = ActualActual();
+
+    // Create the volatility surface with a spot moneyness dimension
+    QuantExt::BlackVolatilitySurfaceMoneynessSpot volSurface(cal, spot, expiryTimes, moneynessLevels, blackVolMatrix,
+                                                             dc, false, true);
+    // Create the equivalent variance surface with a spot moneyness dimension
+    QuantExt::BlackVarianceSurfaceMoneynessSpot varSurface(cal, spot, expiryTimes, moneynessLevels, blackVolMatrix, dc,
+                                                           false, true);
+
+    // Check original pillars for correctness
+    for (Size i = 0; i < moneynessLevels.size(); ++i) {
+        for (Size j = 0; j < expiryTimes.size(); ++j) {
+            Time T = expiryTimes[j];
+            Real strike = moneynessLevels[i] * spot->value();
+            Volatility vol1 = volSurface.blackVol(T, strike);
+            Volatility vol2 = varSurface.blackVol(T, strike);
+            BOOST_CHECK_CLOSE(vol1, vol2, 1e-12);
+
+            Real var1 = volSurface.blackVariance(T, strike);
+            Real var2 = varSurface.blackVariance(T, strike);
+            BOOST_CHECK_CLOSE(var1, var2, 1e-12);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

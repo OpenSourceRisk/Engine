@@ -1,6 +1,6 @@
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -97,15 +97,6 @@ void BlackVolatilitySurfaceMoneyness::init() {
     notifyObservers();
 }
 
-Real BlackVolatilitySurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const {
-    calculate();
-
-    if (t == 0.0)
-        return 0.0;
-
-    return blackVarianceMoneyness(t, moneyness(t, strike));
-}
-
 Volatility BlackVolatilitySurfaceMoneyness::blackVolImpl(Time t, Real strike) const {
     calculate();
 
@@ -117,9 +108,7 @@ Volatility BlackVolatilitySurfaceMoneyness::blackVolImpl(Time t, Real strike) co
 
 Real BlackVolatilitySurfaceMoneyness::blackVarianceMoneyness(Time t, Real m) const {
     Real vol = 0.0;
-    if (t < *(times_.begin() + 1)) {
-        vol = volatilitySurface_(*(times_.begin() + 1), m, true);
-    } else if (t <= times_.back()) {
+    if (t <= times_.back()) {
         vol = volatilitySurface_(t, m, true);
     } else { // I.e. if t > times_.back(), extrapolate from back()
         vol = volatilitySurface_(times_.back(), m, true);

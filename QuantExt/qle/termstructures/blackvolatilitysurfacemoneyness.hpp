@@ -1,6 +1,6 @@
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
- Copyright (C) 2020 Fredrik Gerdin Börjesson
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -101,7 +101,6 @@ private:
     void init();
 
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
-    virtual Real blackVarianceImpl(Time t, Real strike) const;
     virtual Volatility blackVolImpl(Time t, Real strike) const;
     std::vector<std::vector<Handle<Quote> > > quotes_;
     mutable Matrix volatilities_;

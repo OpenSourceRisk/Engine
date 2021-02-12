@@ -24,6 +24,18 @@
                         <Property Name="DisplayName" Value="testVolatilitySurfaceMoneynessForward" />
                       </Rule>
                     </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="QuantExtTestSuite/BlackVolatilitySurfaceMoneyness/testVolatilitySurfaceMoneynessSpotExtrapConstistency" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="testVolatilitySurfaceMoneynessSpotExtrapConstistency" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="QuantExtTestSuite/BlackVolatilitySurfaceMoneyness/testVolatilitySurfaceMoneynessSpotConstistency" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="testVolatilitySurfaceMoneynessSpotConstistency" />
+                      </Rule>
+                    </Rule>
                   </Rule>
                 </Rule>
               </Rule>
