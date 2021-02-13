@@ -72,7 +72,11 @@ public:
         //! Index of the netting set ENE storage in the internal exposure cube
 	const Size nettingSetEneIndex = 1,
 	//! Index of the counterparty survivalprobability storage
-	const Size cptySpIndex = 0);
+	const Size cptySpIndex = 0,
+    //! Flag to indicate flipped xva calculation
+    const bool flipViewXVA = false,
+    //! Postfixes for flipView borrowing and lending curves for fva
+    const string& flipViewBorrowingCurvePostfix = "_BORROW", const string& flipViewLendingCurvePostfix = "_LEND");
 
     virtual const Real calculateCvaIncrement(const string& tid, const string& cid,
                                              const Date& d0, const Date& d1, const Real& rr);

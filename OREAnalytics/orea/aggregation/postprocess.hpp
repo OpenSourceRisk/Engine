@@ -128,10 +128,10 @@ public:
         const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
-	//! CVA spread sensitvitiy grid
-	vector<Period> cvaSpreadSensiGrid = { 6*Months, 1*Years, 3*Years, 5*Years, 10*Years },
-	//! CVA spread sensitivity shift size
-	Real cvaSpreadSensiShiftSize = 0.0001,
+	    //! CVA spread sensitvitiy grid
+	    vector<Period> cvaSpreadSensiGrid = { 6*Months, 1*Years, 3*Years, 5*Years, 10*Years },
+	    //! CVA spread sensitivity shift size
+	    Real cvaSpreadSensiShiftSize = 0.0001,
         //! own capital discounting rate for discounting expected capital for KVA
         Real kvaCapitalDiscountRate = 0.10,
         //! alpha to adjust EEPE to give EAD for risk capital
@@ -149,7 +149,10 @@ public:
         //! Their KVA CVA Risk Weight,
         Real kvaTheirCvaRiskWeight = 0.05,
         //! Input Counterparty Cube
-        const boost::shared_ptr<NPVCube>& cptyCube_ = nullptr);
+        const boost::shared_ptr<NPVCube>& cptyCube_ = nullptr,
+        //! Postfixes for flipView borrowing and lending curves for fva
+        const string& flipViewBorrowingCurvePostfix = "_BORROW", 
+        const string& flipViewLendingCurvePostfix = "_LEND");
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
         dimCalculator_ = dimCalculator;
@@ -321,6 +324,7 @@ protected:
     string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
+
     boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
     boost::shared_ptr<ExposureCalculator> exposureCalculator_;
     boost::shared_ptr<NettedExposureCalculator> nettedExposureCalculator_;

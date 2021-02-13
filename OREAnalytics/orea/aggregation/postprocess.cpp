@@ -62,7 +62,8 @@ PostProcess::PostProcess(
     const boost::shared_ptr<CubeInterpretation>& cubeInterpretation, bool fullInitialCollateralisation,
     vector<Period> cvaSensiGrid, Real cvaSensiShiftSize,
     Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor,
-    Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight, const boost::shared_ptr<NPVCube>& cptyCube)
+    Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight, const boost::shared_ptr<NPVCube>& cptyCube,
+    const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), configuration_(configuration),
       cube_(cube), cptyCube_(cptyCube), scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -153,8 +154,8 @@ PostProcess::PostProcess(
     exposureCalculator_ =
         boost::make_shared<ExposureCalculator>(
             portfolio, cube_, cubeInterpretation_,
-            market_, analytics_["exerciseNextBreak"], baseCurrency_,
-            configuration_, quantile_, calcType_, analytics_["dynamicCredit"]
+            market_, analytics_["exerciseNextBreak"], baseCurrency_, configuration_,
+            quantile_, calcType_, analytics_["dynamicCredit"], analytics_["flipViewXVA"]
         );
     exposureCalculator_->build();
 
@@ -175,13 +176,13 @@ PostProcess::PostProcess(
         boost::make_shared<NettedExposureCalculator>(
             portfolio_, market_, cube_, baseCurrency, configuration_, quantile_,
             calcType_, analytics_["dynamicCredit"], nettingSetManager_,
-	    exposureCalculator_->nettingSetDefaultValue(),
-	    exposureCalculator_->nettingSetCloseOutValue(),
+	        exposureCalculator_->nettingSetDefaultValue(),
+	        exposureCalculator_->nettingSetCloseOutValue(),
             scenarioData_, cubeInterpretation_, analytics_["dim"],
             dimCalculator_, fullInitialCollateralisation_,
             allocationMethod == ExposureAllocator::AllocationMethod::Marginal, marginalAllocationLimit,
-            exposureCalculator_->exposureCube(),
-            ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE
+            exposureCalculator_->exposureCube(), ExposureCalculator::allocatedEPE, ExposureCalculator::allocatedENE,
+            analytics_["flipViewXVA"]
         );
     nettedExposureCalculator_->build();
 
@@ -198,8 +199,8 @@ PostProcess::PostProcess(
             ExposureCalculator::ExposureIndex::EPE,
             ExposureCalculator::ExposureIndex::ENE,
             NettedExposureCalculator::ExposureIndex::EPE,
-            NettedExposureCalculator::ExposureIndex::ENE,
-            0);
+            NettedExposureCalculator::ExposureIndex::ENE, 0, analytics_["flipViewXVA"], 
+            flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix);
     } else {
         cvaCalculator_ = boost::make_shared<StaticCreditXvaCalculator>(
             portfolio_, market_, configuration_,baseCurrency_, dvaName_,
@@ -209,7 +210,8 @@ PostProcess::PostProcess(
             ExposureCalculator::ExposureIndex::EPE,
             ExposureCalculator::ExposureIndex::ENE,
             NettedExposureCalculator::ExposureIndex::EPE,
-            NettedExposureCalculator::ExposureIndex::ENE);
+            NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], 
+            flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix);
     }
     cvaCalculator_->build();
 
@@ -264,7 +266,7 @@ PostProcess::PostProcess(
             ExposureCalculator::ExposureIndex::allocatedEPE,
             ExposureCalculator::ExposureIndex::allocatedENE,
             NettedExposureCalculator::ExposureIndex::EPE,
-            NettedExposureCalculator::ExposureIndex::ENE);
+            NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"]);
     } else {
         allocatedCvaCalculator_ = boost::make_shared<StaticCreditXvaCalculator>(
             portfolio_, market_, configuration_,baseCurrency_, dvaName_,
@@ -274,7 +276,7 @@ PostProcess::PostProcess(
             ExposureCalculator::ExposureIndex::allocatedEPE,
             ExposureCalculator::ExposureIndex::allocatedENE,
             NettedExposureCalculator::ExposureIndex::EPE,
-            NettedExposureCalculator::ExposureIndex::ENE);
+            NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"]);
     }
     allocatedCvaCalculator_->build();
 
@@ -327,7 +329,12 @@ void PostProcess::updateNettingSetKVA() {
 
     // Loop over all netting sets
     for (auto nettingSetId : nettingSetIds()) {
-        string cid = nettedExposureCalculator_->counterparty(nettingSetId);
+        string cid;
+        if (analytics_["flipViewXVA"]) {
+            cid = dvaName_;
+        } else {
+            cid = nettedExposureCalculator_->counterparty(nettingSetId);
+        }
         LOG("KVA for netting set " << nettingSetId);
 
         // Main input are the EPE and ENE profiles, previously computed
@@ -342,9 +349,13 @@ void PostProcess::updateNettingSetKVA() {
         Real PD1 = std::max(cvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
         Real LGD1 = (1 - cvaRR);
 
+        // FIXME: if flipViewXVA is sufficient, then all code for their KVA-CCR could be discarded here...
         Handle<DefaultProbabilityTermStructure> dvaDts;
         Real dvaRR = 0.0;
         Real PD2 = 0;
+        if (analytics_["flipViewXVA"]) {
+            dvaName_ = nettedExposureCalculator_->counterparty(nettingSetId);
+        }
         if (dvaName_ != "") {
             dvaDts = market_->defaultCurve(dvaName_, configuration_);
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
@@ -515,33 +526,39 @@ void PostProcess::updateNettingSetCvaSensitivity() {
 
     for (auto n : netEPE_) {
         string nettingSetId = n.first;
-        vector<Real> epe = netEPE_[nettingSetId];	
-        string cid = nettedExposureCalculator_->counterparty(nettingSetId);
-        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid);
+        vector<Real> epe = netEPE_[nettingSetId];
+        string cid;
+        Handle<DefaultProbabilityTermStructure> cvaDts;
+        Real cvaRR;
+        if (analytics_["flipViewXVA"]) {
+            cid = dvaName_;
+        } else {
+            cid = nettedExposureCalculator_->counterparty(nettingSetId);
+        }
+        cvaDts = market_->defaultCurve(cid);
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+        cvaRR = market_->recoveryRate(cid, configuration_)->value();
 
-	bool cvaSensi = analytics_["cvaSensi"];
-	LOG("CVA Sensitivity: " << cvaSensi);
-	if (cvaSensi) {
-	    boost::shared_ptr<CVASpreadSensitivityCalculator> cvaSensiCalculator = boost::make_shared<CVASpreadSensitivityCalculator>(
-	         nettingSetId, market_->asofDate(), epe, cube_->dates(), cvaDts, cvaRR, discountCurve, cvaSpreadSensiGrid_, cvaSpreadSensiShiftSize_);
+	    bool cvaSensi = analytics_["cvaSensi"];
+	    LOG("CVA Sensitivity: " << cvaSensi);
+	    if (cvaSensi) {
+	        boost::shared_ptr<CVASpreadSensitivityCalculator> cvaSensiCalculator = boost::make_shared<CVASpreadSensitivityCalculator>(
+	             nettingSetId, market_->asofDate(), epe, cube_->dates(), cvaDts, cvaRR, discountCurve, cvaSpreadSensiGrid_, cvaSpreadSensiShiftSize_);
 
-	    for (Size i = 0; i < cvaSensiCalculator->shiftTimes().size(); ++i) {
-	        DLOG("CVA Sensi Calculator: t=" << cvaSensiCalculator->shiftTimes()[i]
-		     << " h=" << cvaSensiCalculator->hazardRateSensitivities()[i] 
-		     << " s=" << cvaSensiCalculator->cdsSpreadSensitivities()[i]); 
+	        for (Size i = 0; i < cvaSensiCalculator->shiftTimes().size(); ++i) {
+	            DLOG("CVA Sensi Calculator: t=" << cvaSensiCalculator->shiftTimes()[i]
+		         << " h=" << cvaSensiCalculator->hazardRateSensitivities()[i] 
+		         << " s=" << cvaSensiCalculator->cdsSpreadSensitivities()[i]); 
+	        }
+
+	        netCvaHazardRateSensi_[nettingSetId] = cvaSensiCalculator->hazardRateSensitivities();
+	        netCvaSpreadSensi_[nettingSetId] = cvaSensiCalculator->cdsSpreadSensitivities();
+	        cvaSpreadSensiTimes_ = cvaSensiCalculator->shiftTimes();
+	    } else {
+	        cvaSpreadSensiTimes_ = vector<Real>();
+	        netCvaHazardRateSensi_[nettingSetId] = vector<Real>();
+	        netCvaSpreadSensi_[nettingSetId] = vector<Real>();
 	    }
-
-	    netCvaHazardRateSensi_[nettingSetId] = cvaSensiCalculator->hazardRateSensitivities();
-	    netCvaSpreadSensi_[nettingSetId] = cvaSensiCalculator->cdsSpreadSensitivities();
-	    cvaSpreadSensiTimes_ = cvaSensiCalculator->shiftTimes();
-	    
-	} else {
-	    cvaSpreadSensiTimes_ = vector<Real>();
-	    netCvaHazardRateSensi_[nettingSetId] = vector<Real>();
-	    netCvaSpreadSensi_[nettingSetId] = vector<Real>();
-	}
     }
 
     LOG("Update netting set CVA sensitivities done");

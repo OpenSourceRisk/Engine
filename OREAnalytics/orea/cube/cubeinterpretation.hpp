@@ -80,10 +80,14 @@ public:
 class RegularCubeInterpretation : public CubeInterpretation {
 public:
     //! ctor (default)
-    RegularCubeInterpretation() : npvIdx_(0), mporFlowsIdx_(1) {}
+    RegularCubeInterpretation() : npvIdx_(0), mporFlowsIdx_(1), flipViewXVA_(false) {}
 
     //! ctor
-    RegularCubeInterpretation(Size npvIdx, Size mporFlowsIdx = 1) : npvIdx_(npvIdx), mporFlowsIdx_(mporFlowsIdx) {}
+    RegularCubeInterpretation(Size npvIdx, Size mporFlowsIdx = 1)
+        : npvIdx_(npvIdx), mporFlowsIdx_(mporFlowsIdx), flipViewXVA_(false) {}
+
+    //! ctor
+    RegularCubeInterpretation(bool flipViewXVA) : npvIdx_(0), mporFlowsIdx_(1), flipViewXVA_(flipViewXVA) {}
 
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
                          Size depth) const;
@@ -108,6 +112,7 @@ public:
 
 private:
     Size npvIdx_, mporFlowsIdx_;
+    bool flipViewXVA_;
 };
 
 //! A concrete implementation for MPOR-style simulation grid and storage style
@@ -117,13 +122,17 @@ class MporGridCubeInterpretation : public CubeInterpretation {
 public:
     //! ctor (default)
     MporGridCubeInterpretation(const boost::shared_ptr<DateGrid>& dateGrid)
-        : defaultDateNpvIdx_(0), closeOutDateNpvIdx_(1), mporFlowsIdx_(2), dateGrid_(dateGrid) {}
+        : defaultDateNpvIdx_(0), closeOutDateNpvIdx_(1), mporFlowsIdx_(2), dateGrid_(dateGrid), flipViewXVA_(false) {}
 
     //! ctor
     MporGridCubeInterpretation(const boost::shared_ptr<DateGrid>& dateGrid, Size defaultDateNpvIdx,
                                Size closeOutDateNpvIdx, Size mporFlowsIdx = 2)
         : defaultDateNpvIdx_(defaultDateNpvIdx), closeOutDateNpvIdx_(closeOutDateNpvIdx), mporFlowsIdx_(mporFlowsIdx),
-          dateGrid_(dateGrid) {}
+          dateGrid_(dateGrid), flipViewXVA_(false) {}
+
+    //! ctor
+    MporGridCubeInterpretation(const boost::shared_ptr<DateGrid>& dateGrid, bool flipViewXVA)
+        : dateGrid_(dateGrid), flipViewXVA_(flipViewXVA) {}
 
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
                          Size depth) const;
@@ -149,6 +158,7 @@ public:
 private:
     Size defaultDateNpvIdx_, closeOutDateNpvIdx_, mporFlowsIdx_;
     boost::shared_ptr<DateGrid> dateGrid_;
+    bool flipViewXVA_;
 };
 } // namespace analytics
 } // namespace ore
