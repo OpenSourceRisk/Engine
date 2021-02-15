@@ -34,6 +34,7 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
+#include <qle/termstructures/blackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityoptionsurfacestripper.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
@@ -700,18 +701,33 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
             QL_REQUIRE(!yts_.empty(), "Expected yield term structure to be populated for a forward moneyness surface.");
             Handle<YieldTermStructure> divyts = Handle<YieldTermStructure>(eqInd_->equityDividendCurve());
             divyts->enableExtrapolation();
-
-            DLOG("Creating BlackVarianceSurfaceMoneynessForward object.");
-            vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
-                calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, divyts, yts_, stickyStrike,
-                flatExtrapolation);
+            
+            if (vmsc.interpolationVariable() == VolatilityMoneynessSurfaceConfig::InterpolationVariable::Variance) {
+                DLOG("Creating BlackVarianceSurfaceMoneynessForward object.");
+                vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessForward>(
+                    calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, divyts, yts_, stickyStrike,
+                    flatExtrapolation);
+            } else if (vmsc.interpolationVariable() ==
+                       VolatilityMoneynessSurfaceConfig::InterpolationVariable::Volatility) {
+                DLOG("Creating BlackVolatilitySurfaceMoneynessForward object.");
+                vol_ = boost::make_shared<BlackVolatilitySurfaceMoneynessForward>(
+                    calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, divyts, yts_, stickyStrike,
+                    flatExtrapolation);
+            }
         } else {
-            DLOG("Creating BlackVarianceSurfaceMoneynessSpot object.");
-            vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
-                calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, stickyStrike, flatExtrapolation);
+            if (vmsc.interpolationVariable() == VolatilityMoneynessSurfaceConfig::InterpolationVariable::Variance) {
+                DLOG("Creating BlackVarianceSurfaceMoneynessSpot object.");
+                vol_ = boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
+                    calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, stickyStrike, flatExtrapolation);
+            } else if (vmsc.interpolationVariable() ==
+                       VolatilityMoneynessSurfaceConfig::InterpolationVariable::Volatility) {
+                DLOG("Creating BlackVolatilitySurfaceMoneynessSpot object.");
+                vol_ = boost::make_shared<BlackVolatilitySurfaceMoneynessSpot>(
+                    calendar_, spot, expiryTimes, moneynessLevels, vols, dayCounter_, stickyStrike, flatExtrapolation);
+            }
         }
 
-        DLOG("Setting BlackVarianceSurfaceMoneyness extrapolation to " << to_string(vmsc.extrapolation()));
+        DLOG("Setting BlackVarianceSurfaceMoneyness/BlackVolatilitySurfaceMoneyness extrapolation to " << to_string(vmsc.extrapolation()));
         vol_->enableExtrapolation(vmsc.extrapolation());
 
         LOG("EquityVolCurve: finished building 2-D volatility moneyness strike surface.");

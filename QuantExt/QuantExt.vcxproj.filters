@@ -888,6 +888,9 @@
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolatilitysurfacemoneyness.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\math\logquadraticinterpolation.hpp">
       <Filter>math</Filter>
     </ClInclude>
@@ -1542,6 +1545,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolatilitysurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="test\quadraticinterpolation.cpp">
       <Filter>time</Filter>

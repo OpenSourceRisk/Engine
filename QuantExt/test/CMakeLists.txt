@@ -5,6 +5,7 @@ analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
+blackvolatilitysurfacemoneyness.cpp
 blackvolsurfacedelta.cpp
 bonds.cpp
 capfloortermvolcurve.cpp

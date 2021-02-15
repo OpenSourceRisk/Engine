@@ -39,7 +39,8 @@ QLE_TESTS = \
 	cpicapfloor.cpp 
 	correlationtermstructure.cpp \
 	cpicapfloor.cpp \
-	strippedoptionletadapter.cpp
+	strippedoptionletadapter.cpp \
+	blackvolatilitysurfacemoneyness.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

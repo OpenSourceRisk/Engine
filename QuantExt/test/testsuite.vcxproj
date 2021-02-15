@@ -653,6 +653,7 @@
     <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="blackvariancesurfacesparse.cpp" />
     <ClCompile Include="blackvariancesurfacestddevs.cpp" />
+    <ClCompile Include="blackvolatilitysurfacemoneyness.cpp" />
     <ClCompile Include="blackvolsurfacedelta.cpp" />
     <ClCompile Include="bonds.cpp" />
     <ClCompile Include="capfloortermvolcurve.cpp" />
