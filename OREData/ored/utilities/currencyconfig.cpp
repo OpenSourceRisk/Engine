@@ -34,6 +34,7 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
     for (auto node : XMLUtils::getChildrenNodes(baseNode, "Currency")) {
         string name = XMLUtils::getChildValue(node, "Name", false);
         string isoCode = XMLUtils::getChildValue(node, "ISOCode", false);
+	DLOG("Loading external currency configuration for " << isoCode);
         Integer numericCode = parseInteger(XMLUtils::getChildValue(node, "NumericCode", false));
         string symbol = XMLUtils::getChildValue(node, "Symbol", false);
         string fractionSymbol = XMLUtils::getChildValue(node, "Symbol", false);

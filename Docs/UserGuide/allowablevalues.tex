@@ -10,13 +10,32 @@
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
-    \lstinline!Currency! & \emph{AED, AOA, ARS, ATS, AUD, BEF, BGN, BHD,
-      BRL, CAD, CHF, CLF, CLP, CNH, CNY, COP, COU, CZK, DEM, DKK, EGP,
-      ESP, ETB, EUR, FIM, FRF, GBP, GEL, GHS, GRD, HKD, HRK, HUF, IDR, 
-      IEP, ILS, INR, ISK, ITL, JOD, JPY, KES, KRW, KWD, KZT, LKR, LUF, MAD, 
-      MUR, MXN, MXV, MYR, NGN, NLG, NOK, NZD, OMR, PEN, PHP, PKR, PLN, 
-      PTE, QAR, RON, RSD, RUB, SAR, SEK, SGD, THB, TND, TRY, TWD, UAH, 
-      UGX, USD, UYU, VND, XOF, ZAR, ZMW, XAG, XAU, XPD, XPT},  
+    \lstinline!Currency! &
+%      \emph{AED, AOA, ARS, ATS, AUD, BEF, BGN, BHD,
+%      BRL, CAD, CHF, CLF, CLP, CNH, CNY, COP, COU, CZK, DEM, DKK, EGP,
+%      ESP, ETB, EUR, FIM, FRF, GBP, GEL, GHS, GRD, HKD, HRK, HUF, IDR, 
+%      IEP, ILS, INR, ISK, ITL, JOD, JPY, KES, KRW, KWD, KZT, LKR, LUF, MAD, 
+%      MUR, MXN, MXV, MYR, NGN, NLG, NOK, NZD, OMR, PEN, PHP, PKR, PLN, 
+%      PTE, QAR, RON, RSD, RUB, SAR, SEK, SGD, THB, TND, TRY, TWD, UAH, 
+%      UGX, USD, UYU, VND, XOF, ZAR, ZMW, XAG, XAU, XPD, XPT},
+      \emph{
+        AED,AFN,ALL,AMD,ANG,AOA,ARS,AUD,AWG,AZN,
+        BAM,BBD,BDT,BGN,BHD,BIF,BMD,BND,BOB,BOV,
+        BRL,BSD,BTN,BWP,BYN,BZD,CAD,CDF,CHE,CHF,
+        CHW,CLF,CLP,CNY,COP,COU,CRC,CUC,CUP,CVE,
+        CZK,DJF,DKK,DOP,DZD,EGP,ERN,ETB,EUR,FJD,
+        FKP,GBP,GEL,GHS,GIP,GMD,GNF,GTQ,GYD,HKD,
+        HNL,HRK,HTG,HUF,IDR,ILS,INR,IQD,IRR,ISK,
+        JMD,JOD,JPY,KES,KGS,KHR,KMF,KPW,KRW,KWD,
+        KYD,KZT,LAK,LBP,LKR,LRD,LSL,LYD,MAD,MDL,
+        MGA,MKD,MMK,MNT,MOP,MRU,MUR,MVR,MWK,MXN,
+        MXV,MYR,MZN,NAD,NGN,NIO,NOK,NPR,NZD,OMR,
+        PAB,PEN,PGK,PHP,PKR,PLN,PYG,QAR,RON,RSD,
+        RUB,RWF,SAR,SBD,SCR,SDG,SEK,SGD,SHP,SLL,
+        SOS,SRD,SSP,STN,SVC,SYP,SZL,THB,TJS,TMT,
+        TND,TOP,TRY,TTD,TWD,TZS,UAH,UGX,USD,USN,
+        UYI,UYU,UYW,UZS,VES,VND,VUV,WST,XAF,XAG,
+        XAU,XCD,XOF,XPD,XPF,XPT,XSU,XUA,YER},
     Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
 	\lstinline!Minor Currencies! & \emph{GBp, GBX, ILa, ILX, ZAc, ZAC, ZAX},  
     Note: Minor Currency codes only supported for Equity products.  \\ \hline
