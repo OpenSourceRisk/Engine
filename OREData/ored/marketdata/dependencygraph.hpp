@@ -74,6 +74,11 @@ template <typename Vertex> struct DfsVisitor : public boost::default_dfs_visitor
 
 } // namespace
 
+
+//! Helper function to get the two tokens in a correlation name Index2:Index1
+std::vector<std::string> getCorrelationTokens(const std::string& name);
+
+
 class DependencyGraph {
 
 public:

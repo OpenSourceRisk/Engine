@@ -63,26 +63,6 @@ using QuantExt::PriceTermStructureAdapter;
 namespace ore {
 namespace data {
 
-namespace{
-
-//! Helper function to get the two tokens in a correlation name Index2:Index1
-std::vector<std::string> getCorrelationTokens(const std::string& name) {
-    // Look for & first as it avoids collisions with : which can be used in an index name
-    // if it is not there we fall back on the old behaviour
-    string delim;
-    if (name.find('&') != std::string::npos)
-        delim = "&";
-    else
-        delim = "/:";
-    vector<string> tokens;
-    boost::split(tokens, name, boost::is_any_of(delim));
-    QL_REQUIRE(tokens.size() == 2,
-               "invalid correlation name '" << name << "', expected Index2:Index1 or Index2/Index1 or Index2&Index1");
-    return tokens;
-}
-
-} //namespace
-
 TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarketParameters>& params,
                            const boost::shared_ptr<Loader>& loader,
                            const boost::shared_ptr<CurveConfigurations>& curveConfigs,
