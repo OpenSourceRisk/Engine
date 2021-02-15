@@ -62,6 +62,7 @@
 #include <qle/time/yearcounter.hpp>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/type_index.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -1150,10 +1151,14 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         resultType = "int";
         int r = boost::any_cast<int>(anyType);
         oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(Size)) {
+        resultType = "size";
+        int r = boost::any_cast<Size>(anyType);
+        oss << std::fixed << std::setprecision(8) << r;
     } else if (anyType.type() == typeid(double)) {
         resultType = "double";
         double r = boost::any_cast<double>(anyType);
-        oss << std::fixed << std::setprecision(8) << r; 
+        oss << std::fixed << std::setprecision(8) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
         std::string r = boost::any_cast<std::string>(anyType);
