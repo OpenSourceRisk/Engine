@@ -20,6 +20,7 @@
 #include <boost/algorithm/string.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/termstructures/averagefuturepricehelper.hpp>
 #include <qle/termstructures/averagespotpricehelper.hpp>
@@ -310,9 +311,8 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
                "Convention " << config.baseConventionsId() << " not of expected type CommodityFutureConvention");
     auto baseFec = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
-    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a
-    // commodity future index during curve construction in QuantExt.
-    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
+    // Construct the commodity index.
+    auto index = parseCommodityIndex(baseConvention->id(), conventions, false, basePts);
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
@@ -580,7 +580,8 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
             }
 
             // Build the instrument.
-            auto afph = boost::make_shared<AverageFuturePriceHelper>(quote->quote(), ad.index(), start, end, uFec,
+            auto index = parseCommodityIndex(ad.commodityName(), conventions, false);
+            auto afph = boost::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
                 ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays());
 
             // Only add to instruments if an instrument with the same pillar date is not there already.

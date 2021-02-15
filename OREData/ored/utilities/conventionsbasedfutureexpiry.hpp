@@ -44,9 +44,22 @@ public:
     QuantLib::Date priorExpiry(bool includeExpiry = true, const QuantLib::Date& referenceDate = QuantLib::Date(),
                                bool forOption = false) override;
 
-    //! Provide implementation for the base class method
-    QuantLib::Date expiryDate(QuantLib::Month contractMonth, QuantLib::Year contractYear, QuantLib::Natural monthOffset,
-                              bool forOption = false) override;
+    /*! Provide implementation for the base class method.
+ 
+        \warning This method throws an exception for commodities that have a frequency that is less than monthly as 
+                 it does not make sense in these cases.
+    */
+    QuantLib::Date expiryDate(QuantLib::Month contractMonth, QuantLib::Year contractYear,
+                              QuantLib::Natural monthOffset, bool forOption = false) override;
+
+    //! \name Inspectors
+    //@{
+    //! Return the commodity future convention.
+    const CommodityFutureConvention& commodityFutureConvention() const;
+
+    //! Return the maximum iterations parameter.
+    QuantLib::Size maxIterations() const;
+    //@}
 
 private:
     CommodityFutureConvention convention_;

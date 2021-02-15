@@ -28,7 +28,7 @@ using std::vector;
 namespace QuantExt {
 
 ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>& moneynessLevels,
-                                   const boost::shared_ptr<CommoditySpotIndex>& index,
+                                   const boost::shared_ptr<CommodityIndex>& index,
                                    const Handle<PriceTermStructure>& pts, const Handle<YieldTermStructure>& yts,
                                    const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
                                    const Handle<BlackVolTermStructure>& baseVts,

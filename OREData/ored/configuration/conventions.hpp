@@ -1295,14 +1295,14 @@ public:
         //! Default constructor
         AveragingData();
         //! Detailed constructor
-        AveragingData(const std::string& index, const std::string& period, const std::string& pricingCalendar,
+        AveragingData(const std::string& commodityName, const std::string& period, const std::string& pricingCalendar,
             bool useBusinessDays, const std::string& conventionsId = "", QuantLib::Natural deliveryRollDays = 0,
             QuantLib::Natural futureMonthOffset = 0);
         //@}
 
         //! \name Inspectors
         //@{
-        boost::shared_ptr<QuantExt::CommodityIndex> index() const;
+        const std::string& commodityName() const;
         CalculationPeriod period() const;
         const QuantLib::Calendar& pricingCalendar() const;
         bool useBusinessDays() const;
@@ -1321,7 +1321,7 @@ public:
         //@}
 
     private:
-        std::string strIndex_;
+        std::string commodityName_;
         std::string strPeriod_;
         std::string strPricingCalendar_;
         bool useBusinessDays_;
@@ -1329,7 +1329,6 @@ public:
         QuantLib::Natural deliveryRollDays_;
         QuantLib::Natural futureMonthOffset_;
 
-        boost::shared_ptr<QuantExt::CommodityIndex> index_;
         CalculationPeriod period_;
         QuantLib::Calendar pricingCalendar_;
 

@@ -115,6 +115,9 @@ private:
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc);
+
+    // Check if date \p d is a pricing date
+    bool isPricingDate(const QuantLib::Date& d) const;
 };
 
 //! Helper class building a sequence of commodity indexed average cashflows

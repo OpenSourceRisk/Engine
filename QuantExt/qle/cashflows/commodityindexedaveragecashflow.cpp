@@ -117,39 +117,62 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
                                     << io::iso_date(pdEnd) << ", must be greater than start date, "
                                     << io::iso_date(pdStart) << ", for a valid coupon.");
 
-    // Populate first expiry date and roll date if averaging a future settlement price
-    Date expiry;
-    Date roll;
-    if (useFuturePrice_) {
-        expiry = calc->nextExpiry(deliveryDateRoll_ == 0, pdStart, futureMonthOffset_);
-        roll = deliveryDateRoll_ == 0
-                   ? expiry
-                   : pricingCalendar_.advance(expiry, -static_cast<Integer>(deliveryDateRoll_), Days);
-        QL_REQUIRE(expiry >= pdStart, "Expected the future's expiry date ("
-                                          << io::iso_date(expiry) << ") to be on or after the first pricing date ("
-                                          << io::iso_date(pdStart) << ") in the averaging period");
-    }
+    // Populate the indices_ map with the correct values.
+    if (!useFuturePrice_) {
 
-    for (; pdStart <= pdEnd; pdStart++) {
-
-        if ((useBusinessDays_ && pricingCalendar_.isHoliday(pdStart)) ||
-            (!useBusinessDays_ && pricingCalendar_.isBusinessDay(pdStart)))
-            continue;
-
-        if (useFuturePrice_) {
-            // On the first date after the roll date, use the next future contract and update the roll date
-            if (pdStart > roll) {
-                expiry = calc->nextExpiry(false, expiry);
-                roll = deliveryDateRoll_ == 0
-                           ? expiry
-                           : pricingCalendar_.advance(expiry, -static_cast<Integer>(deliveryDateRoll_), Days);
-            }
-            indices_[pdStart] = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
-        } else {
+        // If not using future prices, just observe spot on every pricing date.
+        for (; pdStart <= pdEnd; pdStart++) {
+            if (!isPricingDate(pdStart))
+                continue;
             indices_[pdStart] = index_;
         }
-        registerWith(indices_[pdStart]);
+
+    } else {
+
+        // If using future prices, first fill indices assuming delivery date roll is 0.
+        for (; pdStart <= pdEnd; pdStart++) {
+            if (!isPricingDate(pdStart))
+                continue;
+            auto expiry = calc->nextExpiry(true, pdStart, futureMonthOffset_);
+            indices_[pdStart] = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
+        }
+
+        // Update indices_ where necessary if delivery date roll is greater than 0.
+        if (deliveryDateRoll_ > 0) {
+
+            Date expiry;
+            Date prevExpiry;
+            Date rollDate;
+
+            for (auto& kv : indices_) {
+
+                // If expiry is different from previous expiry, update the roll date.
+                expiry = kv.second->expiryDate();
+                if (expiry != prevExpiry) {
+                    rollDate = pricingCalendar_.advance(expiry,
+                        -static_cast<Integer>(deliveryDateRoll_), Days);
+                }
+                prevExpiry = expiry;
+
+                // If the pricing date is after the roll date, we use the next expiry.
+                if (kv.first > rollDate) {
+                    expiry = calc->nextExpiry(false, expiry);
+                    kv.second = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
+                }
+
+            }
+        }
     }
+
+    // Register with each of the indices.
+    for (auto& kv : indices_) {
+        registerWith(kv.second);
+    }
+}
+
+bool CommodityIndexedAverageCashFlow::isPricingDate(const QuantLib::Date& d) const {
+    return ((useBusinessDays_ && pricingCalendar_.isBusinessDay(d)) ||
+        (!useBusinessDays_ && pricingCalendar_.isHoliday(d)));
 }
 
 CommodityIndexedAverageLeg::CommodityIndexedAverageLeg(const Schedule& schedule,

@@ -325,7 +325,7 @@
   
   <xs:complexType name="averagingDataType">
     <xs:all>
-      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CommodityName" minOccurs="1" maxOccurs="1"/>
       <xs:element type="averagingDataPeriodType" name="Period" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="PricingCalendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>

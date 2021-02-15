@@ -1254,17 +1254,17 @@ CommodityFutureConvention::AveragingData::AveragingData()
     : useBusinessDays_(true), deliveryRollDays_(0), futureMonthOffset_(0),
       period_(CalculationPeriod::ExpiryToExpiry) {}
 
-CommodityFutureConvention::AveragingData::AveragingData(const string& index, const string& period,
+CommodityFutureConvention::AveragingData::AveragingData(const string& commodityName, const string& period,
     const string& pricingCalendar, bool useBusinessDays, const string& conventionsId,
     Natural deliveryRollDays, Natural futureMonthOffset)
-    : strIndex_(index), strPeriod_(period), strPricingCalendar_(pricingCalendar), useBusinessDays_(useBusinessDays),
-      conventionsId_(conventionsId), deliveryRollDays_(deliveryRollDays), futureMonthOffset_(futureMonthOffset),
-      period_(CalculationPeriod::ExpiryToExpiry) {
+    : commodityName_(commodityName), strPeriod_(period), strPricingCalendar_(pricingCalendar),
+      useBusinessDays_(useBusinessDays), conventionsId_(conventionsId), deliveryRollDays_(deliveryRollDays),
+      futureMonthOffset_(futureMonthOffset), period_(CalculationPeriod::ExpiryToExpiry) {
     build();
 }
 
-boost::shared_ptr<QuantExt::CommodityIndex> CommodityFutureConvention::AveragingData::index() const {
-    return index_;
+const string& CommodityFutureConvention::AveragingData::commodityName() const {
+    return commodityName_;
 }
 
 CommodityFutureConvention::AveragingData::CalculationPeriod CommodityFutureConvention::AveragingData::period() const {
@@ -1292,13 +1292,13 @@ QuantLib::Natural CommodityFutureConvention::AveragingData::futureMonthOffset() 
 }
 
 bool CommodityFutureConvention::AveragingData::empty() const {
-    return index_ == nullptr;
+    return commodityName_.empty();
 }
 
 void CommodityFutureConvention::AveragingData::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "AveragingData");
-    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    commodityName_ = XMLUtils::getChildValue(node, "CommodityName", true);
     strPeriod_ = XMLUtils::getChildValue(node, "Period", true);
     strPricingCalendar_ = XMLUtils::getChildValue(node, "PricingCalendar", true);
     useBusinessDays_ = true;
@@ -1323,7 +1323,7 @@ void CommodityFutureConvention::AveragingData::fromXML(XMLNode* node) {
 XMLNode* CommodityFutureConvention::AveragingData::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("AveragingData");
-    XMLUtils::addChild(doc, node, "Index", strIndex_);
+    XMLUtils::addChild(doc, node, "CommodityName", commodityName_);
     XMLUtils::addChild(doc, node, "Period", strPeriod_);
     XMLUtils::addChild(doc, node, "PricingCalendar", strPricingCalendar_);
     XMLUtils::addChild(doc, node, "UseBusinessDays", useBusinessDays_);
@@ -1338,7 +1338,6 @@ XMLNode* CommodityFutureConvention::AveragingData::toXML(XMLDocument& doc) {
 }
 
 void CommodityFutureConvention::AveragingData::build() {
-    index_ = parseCommodityIndex("COMM-" + strIndex_);
     period_ = parseAveragingDataPeriod(strPeriod_);
     pricingCalendar_ = parseCalendar(strPricingCalendar_);
 }
