@@ -615,7 +615,8 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         }
 
         LOG("EquityVolCurve: added " << quotesAdded << " quotes in building moneyness strike surface.");
-        
+        QL_REQUIRE(quotesAdded > 0, "EquityVolCurve requires 1 or more quotes for surface creation.");
+
         // Check the data gathered.
         if (!expWc) {
             // If expiries were configured explicitly, the number of configured quotes should equal the

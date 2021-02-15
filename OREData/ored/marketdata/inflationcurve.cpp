@@ -17,6 +17,7 @@
 */
 
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <qle/indexes/inflationindexwrapper.hpp>
@@ -169,8 +170,13 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
+                if (seasonality != nullptr) { // Add seasonality first if given
+                    curve_->setSeasonality(seasonality);
+                }
+                auto tmp_index = parseZeroInflationIndex(spec.index(), false);
+
                 zc_to_yoy_conversion_index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                    index->clone(Handle<ZeroInflationTermStructure>(
+                    tmp_index->clone(Handle<ZeroInflationTermStructure>(
                         boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_))),
                     interpolatedIndex_);
             }
@@ -227,7 +233,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }
-        if (seasonality != nullptr) {
+        if (!derive_yoy_from_zc && seasonality != nullptr) { // If not already set in the case of derive_yoy_from_zc == true
             curve_->setSeasonality(seasonality);
         }
         curve_->enableExtrapolation(config->extrapolate());

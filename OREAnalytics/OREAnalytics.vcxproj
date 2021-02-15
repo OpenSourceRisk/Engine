@@ -230,6 +230,18 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">OREAnalytics-mt</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OREAnalytics-x64-mt</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Program Files\boost_1_73_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\boost_1_73_0\stage\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Program Files\boost_1_73_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\boost_1_73_0\stage\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>C:\Program Files\boost_1_73_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\boost_1_73_0\stage\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
