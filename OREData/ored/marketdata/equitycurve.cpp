@@ -290,12 +290,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                             callPremiums.push_back(calls[i]->quote()->value());
                             putPremiums.push_back(puts[j]->quote()->value());
 
-                            // TODO: Should this always be AbsoluteStrike? 
                             boost::shared_ptr<ore::data::AbsoluteStrike> callStrike =
                                 boost::dynamic_pointer_cast<ore::data::AbsoluteStrike>(calls[i]->strike());
                             callStrikes.push_back(callStrike->strike());
                             boost::shared_ptr<ore::data::AbsoluteStrike> putStrike =
-                                boost::dynamic_pointer_cast<ore::data::AbsoluteStrike>(calls[i]->strike());
+                                boost::dynamic_pointer_cast<ore::data::AbsoluteStrike>(puts[j]->strike());
                             putStrikes.push_back(putStrike->strike());
                         }
                     }
