@@ -423,7 +423,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
         QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F",
-                   "excepted C or F for Cap or Floor at position 5 in " << datumName);
+                   "expected C or F for Cap or Floor at position 5 in " << datumName);
         bool isCap = tokens[4] == "C";
         string strike = tokens[5];
         return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
@@ -435,7 +435,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
         QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F",
-                   "excepted C or F for Cap or Floor at position 5 in " << datumName);
+                   "expected C or F for Cap or Floor at position 5 in " << datumName);
         bool isCap = tokens[4] == "C";
         string strike = tokens[5];
         return boost::make_shared<YyInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
@@ -477,7 +477,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::EQUITY_OPTION: {
-        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8, "6 to 8 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
+                   "6 to 8 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL || quoteType == MarketDatum::QuoteType::PRICE,
                    "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
@@ -485,17 +486,24 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         string expiryString = tokens[4];
         string& strStrike = tokens[5];
         bool isCall = true;
-        if (tokens.size() == 7) {
+
+        if (strStrike == "ATMF") { // Is ATM forward quote
+            strStrike = "ATM/AtmFwd"; // We force it for parseBaseStrike() to use AtmStrike
+        } else if (strStrike == "ATM" && tokens.size() == 7) { // Should be ATM forward quote, needs 7th token
+            QL_REQUIRE(tokens[6] == "AtmFwd",
+                       "Expected ATM type AtmFwd at position 7, given ATM at position 6, in " << datumName);
+            strStrike = "ATM/AtmFwd";
+        } else if (tokens.size() == 7) { // Should be absolute strike
             QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P",
                        "expected C or P for Call or Put at position 7 in " << datumName);
             isCall = tokens[6] == "C";
-        } else if (tokens.size() == 8) { // Currently only MoneynessSurface supported, not Delta
-            // Expects the following form:
-            // EQUITY_OPTION/RATE_LNVOL/<EQUITY_NAME>/<CCY>/<EXPIRY>/<STRIKE>
-            // where strike is either absolute, DEL (TODO?), ATM (TODO?), or <MNY/Spot|Fwd/MoneynessLevel>
-            QL_REQUIRE(tokens[5] == "MNY", "Expected MNY at position 6 in " << datumName << 
-                ". Only moneyness surfaces supported yet, not delta surfaces. See equityvolcurve.hpp.");
+        } else if (tokens.size() == 8) { // Else, if 8, should be moneyness strike
+            QL_REQUIRE(tokens[5] == "MNY",
+                       "Expected MNY at position 6 in "
+                           << datumName << ". Only strike and moneyness surfaces supported yet, not delta surfaces.");
             strStrike = boost::algorithm::join(boost::make_iterator_range(tokens.begin() + 5, tokens.begin() + 8), "/");
+        } else {
+            QL_FAIL("unknown equity option quote string. Use ATM/AtmFwd, MNY/Spot|Fwd, or absolute strike 123/C|P")
         }
         boost::shared_ptr<BaseStrike> strike = parseBaseStrike(strStrike);
 

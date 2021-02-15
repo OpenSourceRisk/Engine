@@ -1522,7 +1522,7 @@ Specific data comprise
 - Equity/Index name
 - currency
 - expiry
-- strike - can be "ATMF" or an actual strike
+- strike - can be "ATMF" (or, equivalently, "ATM/AtmFwd"), "MNY/Spot|Fwd/MONEYNESS_VALUE", or an absolute strike
 
 \ingroup marketdata
 */

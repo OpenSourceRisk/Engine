@@ -110,8 +110,11 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
             } else {
                 Size i = 0;
                 for (auto ex : expiries) {
-                    quotes[i] = (quoteStem + ex + "/ATMF");
+                    // TODO: /ATMF or /ATM/AtmFwd? How to preserve backward compatibility with updated strike handling?
+                    quotes[i] = (quoteStem + ex + "/ATM/AtmFwd");
                     i++;
+                    WLOG("Using deprecated configuration of ATM curve. Quotes may not be read if denoting ATM forward "
+                         << "quotes by /ATMF. Consider using /ATM/AtmFwd instead.");
                 }
             }
             volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation);
