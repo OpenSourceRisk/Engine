@@ -81,8 +81,10 @@ public:
 	    const Size nettingSetEneIndex = 2,
         //! Flag to indicate flipped xva calculation
         const bool flipViewXVA = false,
-        //! Postfixes for flipView borrowing and lending curves for fva
-        const string& flipViewBorrowingCurvePostfix = "_BORROW", const string& flipViewLendingCurvePostfix = "_LEND");
+        //! Postfix for flipView borrowing curve for fva
+        const string& flipViewBorrowingCurvePostfix = "_BORROW",
+	//! Postfix for flipView lending curve for fva
+	const string& flipViewLendingCurvePostfix = "_LEND");
 
     virtual ~ValueAdjustmentCalculator() {}
 

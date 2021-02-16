@@ -150,8 +150,9 @@ public:
         Real kvaTheirCvaRiskWeight = 0.05,
         //! Input Counterparty Cube
         const boost::shared_ptr<NPVCube>& cptyCube_ = nullptr,
-        //! Postfixes for flipView borrowing and lending curves for fva
+        //! Postfix for flipView borrowing curve for fva
         const string& flipViewBorrowingCurvePostfix = "_BORROW", 
+        //! Postfix for flipView lending curve for fva
         const string& flipViewLendingCurvePostfix = "_LEND");
 
     void setDimCalculator(boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator) {
