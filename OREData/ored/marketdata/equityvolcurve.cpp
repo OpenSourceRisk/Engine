@@ -334,23 +334,20 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
 
                 if (q->eqName() == vc.curveID() && q->ccy() == vc.ccy()) {
+                    // This surface is for absolute strikes only.
+                    auto strike = boost::dynamic_pointer_cast<AbsoluteStrike>(q->strike());
+                    if (!strike)
+                        continue;
+
                     if (!expiriesWc) {
                         auto j = std::find(vssc.expiries().begin(), vssc.expiries().end(), q->expiry());
                         expiryRelevant = j != vssc.expiries().end();
                     }
                     if (!strikesWc) {
                         // Parse the list of absolute strikes
-
-                        boost::shared_ptr<ore::data::AbsoluteStrike> absStrike =
-                            boost::dynamic_pointer_cast<ore::data::AbsoluteStrike>(q->strike());
                         auto i = std::find_if(configuredStrikes.begin(), configuredStrikes.end(),
-                                              [&absStrike](Real s) { return close(s, absStrike->strike()); });
+                                              [&strike](Real s) { return close(s, strike->strike()); });
                         strikeRelevant = i != configuredStrikes.end();
-                    } else {
-                        // todo - for now we will ignore ATMF quotes in case of strike wild card. ----
-                        boost::shared_ptr<ore::data::AtmStrike> atm =
-                            boost::dynamic_pointer_cast<ore::data::AtmStrike>(q->strike());
-                        strikeRelevant = !atm; // Effectively: quote strike != "ATMF";
                     }
                     quoteRelevant = strikeRelevant && expiryRelevant;
 
@@ -363,15 +360,13 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                         QL_REQUIRE(tmpDate > asof,
                                    "Option quote for a past date (" << ore::data::to_string(tmpDate) << ")");
 
-                        boost::shared_ptr<ore::data::AbsoluteStrike> absStrike =
-                            boost::dynamic_pointer_cast<ore::data::AbsoluteStrike>(q->strike());
                         if (q->isCall()) {
-                            callStrikes.push_back(absStrike->strike());
+                            callStrikes.push_back(strike->strike());
                             callData.push_back(q->quote()->value());
                             callExpiries.push_back(tmpDate);
                             callQuotesAdded++;
                         } else {
-                            putStrikes.push_back(absStrike->strike());
+                            putStrikes.push_back(strike->strike());
                             putData.push_back(q->quote()->value());
                             putExpiries.push_back(tmpDate);
                             putQuotesAdded++;

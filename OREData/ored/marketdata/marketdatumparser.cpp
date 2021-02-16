@@ -487,23 +487,27 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         string& strStrike = tokens[5];
         bool isCall = true;
 
-        if (strStrike == "ATMF") { // Is ATM forward quote
-            strStrike = "ATM/AtmFwd"; // We force it for parseBaseStrike() to use AtmStrike
+        double temp = 0;
+        if (tryParseReal(strStrike, temp)) { // Should be absolute strike
+            // Check if Call/Put is specified
+            if (tokens.size() == 7) {
+                QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P",
+                           "expected C or P for Call or Put at position 7 in " << datumName);
+                isCall = tokens[6] == "C";
+            }
+        } else if (strStrike == "ATMF") {                      // Is ATM forward quote
+            strStrike = "ATM/AtmFwd";                          // We force it for parseBaseStrike() to use AtmStrike
         } else if (strStrike == "ATM" && tokens.size() == 7) { // Should be ATM forward quote, needs 7th token
             QL_REQUIRE(tokens[6] == "AtmFwd",
                        "Expected ATM type AtmFwd at position 7, given ATM at position 6, in " << datumName);
             strStrike = "ATM/AtmFwd";
-        } else if (tokens.size() == 7) { // Should be absolute strike
-            QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P",
-                       "expected C or P for Call or Put at position 7 in " << datumName);
-            isCall = tokens[6] == "C";
         } else if (tokens.size() == 8) { // Else, if 8, should be moneyness strike
             QL_REQUIRE(tokens[5] == "MNY",
                        "Expected MNY at position 6 in "
-                           << datumName << ". Only strike and moneyness surfaces supported yet, not delta surfaces.");
+                           << datumName << " for moneyness surface. MNY/Spot|Fwd");
             strStrike = boost::algorithm::join(boost::make_iterator_range(tokens.begin() + 5, tokens.begin() + 8), "/");
         } else {
-            QL_FAIL("unknown equity option quote string. Use ATM/AtmFwd, MNY/Spot|Fwd, or absolute strike 123/C|P")
+            QL_FAIL("unknown equity option quote string. Use ATM/AtmFwd, MNY/Spot|Fwd, or absolute strike 123[/C|P]");
         }
         boost::shared_ptr<BaseStrike> strike = parseBaseStrike(strStrike);
 
