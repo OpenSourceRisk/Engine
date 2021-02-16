@@ -54,7 +54,7 @@
 
   <xs:simpleType name="currencyCode">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="AED"/>
+    <xs:enumeration value="AED"/>
       <xs:enumeration value="AFN"/>
       <xs:enumeration value="ALL"/>
       <xs:enumeration value="AMD"/>
@@ -87,6 +87,8 @@
       <xs:enumeration value="CHW"/>
       <xs:enumeration value="CLF"/>
       <xs:enumeration value="CLP"/>
+      <xs:enumeration value="CNH"/>
+      <xs:enumeration value="CNT"/>
       <xs:enumeration value="CNY"/>
       <xs:enumeration value="COP"/>
       <xs:enumeration value="COU"/>
@@ -107,6 +109,7 @@
       <xs:enumeration value="FKP"/>
       <xs:enumeration value="GBP"/>
       <xs:enumeration value="GEL"/>
+      <xs:enumeration value="GGP"/>
       <xs:enumeration value="GHS"/>
       <xs:enumeration value="GIP"/>
       <xs:enumeration value="GMD"/>
@@ -120,16 +123,19 @@
       <xs:enumeration value="HUF"/>
       <xs:enumeration value="IDR"/>
       <xs:enumeration value="ILS"/>
+      <xs:enumeration value="IMP"/>
       <xs:enumeration value="INR"/>
       <xs:enumeration value="IQD"/>
       <xs:enumeration value="IRR"/>
       <xs:enumeration value="ISK"/>
+      <xs:enumeration value="JEP"/>
       <xs:enumeration value="JMD"/>
       <xs:enumeration value="JOD"/>
       <xs:enumeration value="JPY"/>
       <xs:enumeration value="KES"/>
       <xs:enumeration value="KGS"/>
       <xs:enumeration value="KHR"/>
+      <xs:enumeration value="KID"/>
       <xs:enumeration value="KMF"/>
       <xs:enumeration value="KPW"/>
       <xs:enumeration value="KRW"/>

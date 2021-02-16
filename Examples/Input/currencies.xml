@@ -363,6 +363,28 @@
     <Format></Format>
   </Currency>
   <Currency>
+    <Name>Offshore Chinese Yuan traded in Hong Kong (Non-ISO)</Name>
+    <ISOCode>CNH</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format></Format>
+  </Currency>
+  <Currency>
+    <Name>Offshore Chinese Yuan traded in Taiwan (Non-ISO)</Name>
+    <ISOCode>CNT</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format></Format>
+  </Currency>
+  <Currency>
     <Name>Chinese yuan</Name>
     <ISOCode>CNY</ISOCode>
     <NumericCode>156</NumericCode>
@@ -583,6 +605,17 @@
     <Format></Format>
   </Currency>
   <Currency>
+    <Name>Guernsey Pound (Non-ISO)</Name>
+    <ISOCode>GGP</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format></Format>
+  </Currency>
+  <Currency>
     <Name>Ghanaian cedi</Name>
     <ISOCode>GHS</ISOCode>
     <NumericCode>936</NumericCode>
@@ -726,6 +759,17 @@
     <Format></Format>
   </Currency>
   <Currency>
+    <Name>Isle of Man Pound (Non-ISO)</Name>
+    <ISOCode>IMP</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format></Format>
+  </Currency>
+  <Currency>
     <Name>Indian rupee</Name>
     <ISOCode>INR</ISOCode>
     <NumericCode>356</NumericCode>
@@ -767,6 +811,17 @@
     <FractionsPerUnit>1</FractionsPerUnit>
     <RoundingType>Closest</RoundingType>
     <RoundingPrecision>0</RoundingPrecision>
+    <Format></Format>
+  </Currency>
+  <Currency>
+    <Name>Jersey Pound (Non-ISO)</Name>
+    <ISOCode>JEP</ISOCode>
+    <NumericCode>0</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
     <Format></Format>
   </Currency>
   <Currency>
@@ -828,6 +883,17 @@
     <Name>Cambodian riel</Name>
     <ISOCode>KHR</ISOCode>
     <NumericCode>116</NumericCode>
+    <Symbol></Symbol>
+    <FractionSymbol></FractionSymbol>
+    <FractionsPerUnit>100</FractionsPerUnit>
+    <RoundingType>Closest</RoundingType>
+    <RoundingPrecision>2</RoundingPrecision>
+    <Format></Format>
+  </Currency>
+  <Currency>
+    <Name>Kiribati dollar (Non-ISO)</Name>
+    <ISOCode>KID</ISOCode>
+    <NumericCode>0</NumericCode>
     <Symbol></Symbol>
     <FractionSymbol></FractionSymbol>
     <FractionsPerUnit>100</FractionsPerUnit>
