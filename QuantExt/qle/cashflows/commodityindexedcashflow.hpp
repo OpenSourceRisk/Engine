@@ -56,6 +56,7 @@ public:
     bool useFuturePrice() const { return useFuturePrice_; }
     bool useFutureExpiryDate() const { return useFutureExpiryDate_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
+    QuantLib::Real periodQuantity() const { return periodQuantity_; }
     //@}
 
     //! \name Event interface
