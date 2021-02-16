@@ -18,7 +18,7 @@
 
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <boost/safe_numerics/safe_integer.hpp>
+#include <limits>
 
 using std::string;
 using std::vector;
@@ -292,13 +292,9 @@ void CommodityCurveConfig::processSegments(std::vector<PriceSegment> priceSegmen
     }
 
     // Very unlikely but check that the priorities entered will not cause an overflow of short int.
-    try {
-        using namespace boost::safe_numerics;
-        safe<unsigned short> test = largestPriority + priceSegments.size();
-    } catch (const std::exception&) {
-        QL_FAIL("Largest price segment priority (" << largestPriority << ") and number of segments without a " <<
-            "priority (" << priceSegments.size() << ") combine to give a value too large for unsigned short.");
-    }
+    QL_REQUIRE(priceSegments.size() <= std::numeric_limits<unsigned short>::max() - largestPriority,
+        "Largest price segment priority (" << largestPriority << ") and number of segments without a " <<
+        "priority (" << priceSegments.size() << ") combine to give a value too large for unsigned short.");
 
     // Now add the price segments without a priority to the end of the map.
     for (const auto& ps : priceSegments) {
