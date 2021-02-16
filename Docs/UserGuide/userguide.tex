@@ -4819,7 +4819,7 @@ VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and 
 \item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of
   the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} for option tenors <= 2Y and {\tt
     AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y  if the conventions ID is omitted or left blank
-\item Expiries: Option expiries in period form
+\item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt ATM} or {\tt Delta} curves.
 \item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\
 Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol_configuration}
 \item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
