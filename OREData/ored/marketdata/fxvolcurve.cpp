@@ -104,12 +104,6 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vector<Period> expiries;
     vector<Period> unsortedExp;
     
-    if (!isRegex) {
-        expiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
-        unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
-        std::sort(expiries.begin(), expiries.end());
-    }
-
     vector<std::pair<Real, string>> putDeltas, callDeltas;
     bool hasATM = false;
 
@@ -196,19 +190,22 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 }
                 boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
                 if (!q) {
-                    std::cout << "missing quote for " << e << " " << deltaNames[j] <<std::endl;
+                    DLOG("missing " << qs << ", expiry " << e << " will be excluded");
                     break;
                 }
                 tmpMatrix[i][j] = q->quote()->value();
                 // if we have found all the quotes then this is a valid expiry
                 if (j == deltaNames.size() - 1) {
-                    std::cout<<"add all expiry " << e << std::endl;
                     dates.push_back(asof + expiries[i]);
                     validExpiryIdx.push_back(i);
                 }
             }
         }
 
+        QL_REQUIRE(validExpiryIdx.size() > 0, "no valid FxVol expiries found");
+        DLOG("found " << validExpiryIdx.size() << " valid expiries:");
+        for (auto& e : validExpiryIdx)
+            DLOG(expiries[e]);
         // we build a matrix with just the valid expiries
         blackVolMatrix = Matrix(validExpiryIdx.size(), config->deltas().size());
         for (Size i = 0; i < validExpiryIdx.size(); i++) {
@@ -218,6 +215,10 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         }
 
     } else {
+        expiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        std::sort(expiries.begin(), expiries.end());
+        
         blackVolMatrix = Matrix(expiries.size(), config->deltas().size());
         for (Size i = 0; i < expiries.size(); i++) {
             Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
