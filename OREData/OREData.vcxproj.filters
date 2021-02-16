@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="configuration">
@@ -133,6 +133,9 @@
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\utilities\currencycheck.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\currencyconfig.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\utilities\flowanalysis.hpp">
@@ -684,6 +687,9 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\currencycheck.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\currencyconfig.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\flowanalysis.cpp">

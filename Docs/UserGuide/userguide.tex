@@ -2474,6 +2474,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+  <Parameter name="currencyConfiguration">../../Input/currencies.xml</Parameter>
   <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
@@ -2504,7 +2505,15 @@ e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconf
   conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the marketDataFile and the fixingDataFile are
 explained in the sections below.
 
-\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
+\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and
+business days to be added to specified calendars.
+
+\medskip The optional parameter {\tt currencyConfiguration} points to a configuration file that contains additional currencies
+to be added to ORE's setup, see {\tt Examples/Input/currencies.xml} for a full list of ISO currencies and a few unofficial currency
+codes that can thus be made available in ORE. Note that the external configuration does not override any currencies that are
+hard-coded in the QuantLib/QuantExt libraries, only currencies not present already are added from the external configuration file.
+
+\medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:

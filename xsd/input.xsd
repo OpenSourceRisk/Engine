@@ -12,5 +12,6 @@
   <xs:include schemaLocation="stress.xsd"/>
   <xs:include schemaLocation="ore.xsd"/>
   <xs:include schemaLocation="calendaradjustment.xsd"/>
+  <xs:include schemaLocation="currencyconfig.xsd"/>
 
 </xs:schema>
