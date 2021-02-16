@@ -502,7 +502,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="qle\termstructures\blackvolatilitysurfacemoneyness.hpp" />
-    <ClInclude Include="indexes\ibor\dkkcita.hpp">
+    <ClInclude Include="indexes\ibor\dkkcita.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
     <ClInclude Include="qle\calendars\belgium.hpp" />
