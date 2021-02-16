@@ -13,6 +13,7 @@
 #include <ql/cashflow.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/time/schedule.hpp>
+#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 
@@ -39,7 +40,10 @@ public:
                                     QuantLib::Natural futureMonthOffset = 0,
                                     const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr,
                                     bool includeEndDate = true, bool excludeStartDate = true,
-                                    bool useBusinessDays = true);
+                                    bool useBusinessDays = true,
+                                    CommodityQuantityFrequency quantityFrequency =
+                                        CommodityQuantityFrequency::PerCalculationPeriod,
+                                    QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
     CommodityIndexedAverageCashFlow(
@@ -51,7 +55,9 @@ public:
         QuantLib::Natural deliveryDateRoll = 0, QuantLib::Natural futureMonthOffset = 0,
         const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr, bool includeEndDate = true,
         bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(),
-        bool useBusinessDays = true);
+        bool useBusinessDays = true, CommodityQuantityFrequency quantityFrequency =
+        CommodityQuantityFrequency::PerCalculationPeriod, QuantLib::Natural hoursPerDay =
+        QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
     //@{
@@ -65,6 +71,8 @@ public:
     QuantLib::Natural deliveryDateRoll() const { return deliveryDateRoll_; }
     QuantLib::Natural futureMonthOffset() const { return futureMonthOffset_; }
     bool useBusinessDays() const { return useBusinessDays_; }
+    CommodityQuantityFrequency quantityFrequency() const { return quantityFrequency_; }
+    QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
 
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
         For a given key date, the map value holds the commodity index used to give the price on that date. If the
@@ -74,6 +82,11 @@ public:
         future contract \em index relevant for that pricing date.
     */
     const std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex> >& indices() const { return indices_; }
+
+    /*! Quantity for the full calculation period i.e. the effective quantity after taking into account the 
+        quantity frequency setting.
+    */
+    QuantLib::Real periodQuantity() const { return periodQuantity_; }
     //@}
 
     //! \name Event interface
@@ -112,12 +125,15 @@ private:
     bool excludeStartDate_;
     std::map<QuantLib::Date, ext::shared_ptr<CommodityIndex> > indices_;
     bool useBusinessDays_;
+    CommodityQuantityFrequency quantityFrequency_;
+    QuantLib::Natural hoursPerDay_;
+    QuantLib::Real periodQuantity_;
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc);
 
-    // Check if date \p d is a pricing date
-    bool isPricingDate(const QuantLib::Date& d) const;
+    //! Set the period quantity based on the quantity and quantity frequency parameter
+    void updateQuantity();
 };
 
 //! Helper class building a sequence of commodity indexed average cashflows
@@ -144,10 +160,10 @@ public:
     CommodityIndexedAverageLeg& payAtMaturity(bool flag = false);
     CommodityIndexedAverageLeg& includeEndDate(bool flag = true);
     CommodityIndexedAverageLeg& excludeStartDate(bool flag = true);
-    CommodityIndexedAverageLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
-    CommodityIndexedAverageLeg& quantityPerDay(bool flag = false);
     CommodityIndexedAverageLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
     CommodityIndexedAverageLeg& useBusinessDays(bool flag = true);
+    CommodityIndexedAverageLeg& withQuantityFrequency(CommodityQuantityFrequency quantityFrequency);
+    CommodityIndexedAverageLeg& withHoursPerDay(QuantLib::Natural hoursPerDay);
 
     operator Leg() const;
 
@@ -169,10 +185,10 @@ private:
     bool payAtMaturity_;
     bool includeEndDate_;
     bool excludeStartDate_;
-    std::vector<QuantLib::Date> pricingDates_;
-    bool quantityPerDay_;
     std::vector<QuantLib::Date> paymentDates_;
     bool useBusinessDays_;
+    CommodityQuantityFrequency quantityFrequency_;
+    QuantLib::Natural hoursPerDay_;
 };
 
 } // namespace QuantExt

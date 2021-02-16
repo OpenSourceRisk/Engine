@@ -18,7 +18,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pr
                                                    boost::optional<QuantLib::Year> contractYear,
                                                    const ext::shared_ptr<FutureExpiryCalculator>& calc)
     : quantity_(quantity), pricingDate_(pricingDate), paymentDate_(paymentDate), index_(index), spread_(spread),
-      gearing_(gearing), useFuturePrice_(useFuturePrice), futureMonthOffset_(0) {
+      gearing_(gearing), useFuturePrice_(useFuturePrice), futureMonthOffset_(0), periodQuantity_(quantity) {
 
     init(calc, contractMonth, contractYear);
 }
@@ -32,7 +32,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     const QuantLib::Date& pricingDateOverride)
     : quantity_(quantity), pricingDate_(pricingDateOverride), paymentDate_(paymentDateOverride), index_(index),
       spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice), useFutureExpiryDate_(useFutureExpiryDate),
-      futureMonthOffset_(futureMonthOffset) {
+      futureMonthOffset_(futureMonthOffset), periodQuantity_(quantity) {
 
     // Derive the pricing date if an explicit override has not been provided
     if (pricingDate_ == Date()) {
@@ -62,7 +62,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
 }
 
 Real CommodityIndexedCashFlow::amount() const {
-    return quantity_ * gearing_ * (index_->fixing(pricingDate_) + spread_);
+    return periodQuantity_ * gearing_ * (index_->fixing(pricingDate_) + spread_);
 }
 
 void CommodityIndexedCashFlow::accept(AcyclicVisitor& v) {
@@ -73,6 +73,10 @@ void CommodityIndexedCashFlow::accept(AcyclicVisitor& v) {
 }
 
 void CommodityIndexedCashFlow::update() { notifyObservers(); }
+
+void CommodityIndexedCashFlow::setPeriodQuantity(Real periodQuantity) {
+    periodQuantity_ = periodQuantity;
+}
 
 void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
                                     boost::optional<Month> contractMonth, boost::optional<Year> contractYear) {
@@ -108,7 +112,7 @@ CommodityIndexedLeg::CommodityIndexedLeg(const Schedule& schedule, const ext::sh
     : schedule_(schedule), index_(index), paymentLag_(0), paymentCalendar_(NullCalendar()),
       paymentConvention_(Unadjusted), pricingLag_(0), pricingLagCalendar_(NullCalendar()), payInAdvance_(false),
       inArrears_(true), useFuturePrice_(false), useFutureExpiryDate_(true), futureMonthOffset_(0),
-      payAtMaturity_(false), quantityPerDay_(false) {}
+      payAtMaturity_(false) {}
 
 CommodityIndexedLeg& CommodityIndexedLeg::withQuantities(Real quantity) {
     quantities_ = vector<Real>(1, quantity);
@@ -206,11 +210,6 @@ CommodityIndexedLeg& CommodityIndexedLeg::withPricingDates(const vector<Date>& p
     return *this;
 }
 
-CommodityIndexedLeg& CommodityIndexedLeg::quantityPerDay(bool flag) {
-    quantityPerDay_ = flag;
-    return *this;
-}
-
 CommodityIndexedLeg& CommodityIndexedLeg::withPaymentDates(const vector<Date>& paymentDates) {
     paymentDates_ = paymentDates;
     return *this;
@@ -258,11 +257,6 @@ CommodityIndexedLeg::operator Leg() const {
         Real spread = detail::get(spreads_, i, 0.0);
         Real gearing = detail::get(gearings_, i, 1.0);
         Date pricingDate = detail::get(pricingDates_, i, Date());
-
-        if (quantityPerDay_) {
-            Natural factor = end - start;
-            quantity = quantity * (i == 0 ? factor + 1 : factor);
-        }
 
         // If explicit payment dates provided, use them.
         if (!paymentDates_.empty()) {

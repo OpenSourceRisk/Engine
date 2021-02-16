@@ -67,6 +67,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 using boost::algorithm::to_lower_copy;
+using boost::iequals;
 
 namespace ore {
 namespace data {
@@ -1373,6 +1374,35 @@ ostream& operator<<(ostream& os, PriceSegment::Type pst) {
         return os << "AveragingSpot";
     } else {
         QL_FAIL("Unknown PriceSegment::Type.");
+    }
+}
+
+using CQF = CommodityQuantityFrequency;
+CommodityQuantityFrequency parseCommodityQuantityFrequency(const string& s) {
+    if (iequals(s, "PerCalculationPeriod")) {
+        return CQF::PerCalculationPeriod;
+    } else if (iequals(s, "PerCalendarDay")) {
+        return CQF::PerCalendarDay;
+    } else if (iequals(s, "PerPricingDay")) {
+        return CQF::PerPricingDay;
+    } else if (iequals(s, "PerHour")) {
+        return CQF::PerHour;
+    } else {
+        QL_FAIL("Could not parse " << s << " to CommodityQuantityFrequency");
+    }
+}
+
+ostream& operator<<(ostream& os, CommodityQuantityFrequency cqf) {
+    if (cqf == CQF::PerCalculationPeriod) {
+        return os << "PerCalculationPeriod";
+    } else if (cqf == CQF::PerCalendarDay) {
+        return os << "PerCalendarDay";
+    } else if (cqf == CQF::PerPricingDay) {
+        return os << "PerPricingDay";
+    } else if (cqf == CQF::PerHour) {
+        return os << "PerHour";
+    } else {
+        QL_FAIL("Do not recognise CommodityQuantityFrequency " << static_cast<int>(cqf));
     }
 }
 

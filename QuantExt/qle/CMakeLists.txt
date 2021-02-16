@@ -23,6 +23,7 @@ cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/blackovernightindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
+cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
 cashflows/couponpricer.cpp
@@ -256,6 +257,7 @@ cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/blackovernightindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
+cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
 cashflows/couponpricer.hpp

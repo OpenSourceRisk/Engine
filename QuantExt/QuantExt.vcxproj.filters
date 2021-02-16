@@ -1047,6 +1047,9 @@
     <ClInclude Include="qle\models\annuitymapping.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\commoditycashflow.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1797,6 +1800,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\annuitymapping.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\commoditycashflow.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

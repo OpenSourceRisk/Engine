@@ -1354,7 +1354,8 @@ public:
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
-                              const AveragingData& averagingData = AveragingData());
+                              const AveragingData& averagingData = AveragingData(),
+                              QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1369,7 +1370,8 @@ public:
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
-                              const AveragingData& averagingData = AveragingData());
+                              const AveragingData& averagingData = AveragingData(),
+                              QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1384,7 +1386,8 @@ public:
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
-                              const AveragingData& averagingData = AveragingData());
+                              const AveragingData& averagingData = AveragingData(),
+                              QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
     //@}
 
     //! \name Inspectors
@@ -1415,6 +1418,7 @@ public:
         return optionContinuationMappings_;
     }
     const AveragingData& averagingData() const { return averagingData_; }
+    QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
     //@}
 
     //! Serialisation
@@ -1463,6 +1467,7 @@ private:
     std::map<QuantLib::Natural, QuantLib::Natural> futureContinuationMappings_;
     std::map<QuantLib::Natural, QuantLib::Natural> optionContinuationMappings_;
     AveragingData averagingData_;
+    QuantLib::Natural hoursPerDay_;
 
     //! Populate and check frequency.
     void populateFrequency();

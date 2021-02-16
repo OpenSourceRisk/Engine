@@ -78,6 +78,9 @@ public:
     void update();
     //@}
 
+    //! Allow the full calculation period quantity to be updated.
+    void setPeriodQuantity(QuantLib::Real periodQuantity);
+
 private:
     QuantLib::Real quantity_;
     QuantLib::Date pricingDate_;
@@ -88,6 +91,7 @@ private:
     bool useFuturePrice_;
     bool useFutureExpiryDate_;
     QuantLib::Natural futureMonthOffset_;
+    QuantLib::Real periodQuantity_;
 
     //! Shared initialisation
     void init(const ext::shared_ptr<FutureExpiryCalculator>& calc, boost::optional<QuantLib::Month> contractMonth,
@@ -118,7 +122,6 @@ public:
     CommodityIndexedLeg& withFutureExpiryCalculator(const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
     CommodityIndexedLeg& payAtMaturity(bool flag = false);
     CommodityIndexedLeg& withPricingDates(const std::vector<QuantLib::Date>& pricingDates);
-    CommodityIndexedLeg& quantityPerDay(bool flag = false);
     CommodityIndexedLeg& withPaymentDates(const std::vector<QuantLib::Date>& paymentDates);
 
     operator Leg() const;
@@ -142,7 +145,6 @@ private:
     ext::shared_ptr<FutureExpiryCalculator> calc_;
     bool payAtMaturity_;
     std::vector<QuantLib::Date> pricingDates_;
-    bool quantityPerDay_;
     std::vector<QuantLib::Date> paymentDates_;
 };
 

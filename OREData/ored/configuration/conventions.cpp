@@ -1358,7 +1358,8 @@ CommodityFutureConvention::CommodityFutureConvention()
       isAveraging_(false),
       optionExpiryMonthLag_(0),
       optionExpiryDay_(Null<Natural>()),
-      optionBdc_(Preceding) {}
+      optionBdc_(Preceding),
+      hoursPerDay_(Null<Natural>()) {}
 
 CommodityFutureConvention::CommodityFutureConvention(const string& id, const DayOfMonth& dayOfMonth,
                                                      const string& contractFrequency, const string& calendar,
@@ -1367,12 +1368,13 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
                                                      const vector<string>& prohibitedExpiries,
-                                                     QuantLib::Natural optionExpiryMonthLag,
-                                                     QuantLib::Natural optionExpiryDay,
-                                                     const std::string& optionBdc,
+                                                     Natural optionExpiryMonthLag,
+                                                     Natural optionExpiryDay,
+                                                     const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
                                                      const map<Natural, Natural>& optionContinuationMappings,
-                                                     const AveragingData& averagingData)
+                                                     const AveragingData& averagingData,
+                                                     Natural hoursPerDay)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
       strDayOfMonth_(dayOfMonth.dayOfMonth_), strContractFrequency_(contractFrequency), strCalendar_(calendar),
       strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth),
@@ -1380,7 +1382,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       strOptionExpiryOffset_(optionExpiryOffset), strProhibitedExpiries_(prohibitedExpiries),
       optionExpiryMonthLag_(optionExpiryMonthLag), optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
-      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData) {
+      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
+      hoursPerDay_(hoursPerDay) {
     build();
 }
 
@@ -1391,12 +1394,13 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
                                                      const vector<string>& prohibitedExpiries,
-                                                     QuantLib::Natural optionExpiryMonthLag,
-                                                     QuantLib::Natural optionExpiryDay,
-                                                     const std::string& optionBdc,
+                                                     Natural optionExpiryMonthLag,
+                                                     Natural optionExpiryDay,
+                                                     const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
                                                      const map<Natural, Natural>& optionContinuationMappings,
-                                                     const AveragingData& averagingData)
+                                                     const AveragingData& averagingData,
+                                                     Natural hoursPerDay)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
       strContractFrequency_(contractFrequency), strCalendar_(calendar), strExpiryCalendar_(expiryCalendar),
       expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
@@ -1404,7 +1408,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       strProhibitedExpiries_(prohibitedExpiries), optionExpiryMonthLag_(optionExpiryMonthLag),
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
-      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData) {
+      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
+      hoursPerDay_(hoursPerDay) {
     build();
 }
 
@@ -1415,12 +1420,13 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
                                                      const vector<string>& prohibitedExpiries,
-                                                     QuantLib::Natural optionExpiryMonthLag,
-                                                     QuantLib::Natural optionExpiryDay,
-                                                     const std::string& optionBdc,
+                                                     Natural optionExpiryMonthLag,
+                                                     Natural optionExpiryDay,
+                                                     const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
                                                      const map<Natural, Natural>& optionContinuationMappings,
-                                                     const AveragingData& averagingData)
+                                                     const AveragingData& averagingData,
+                                                     Natural hoursPerDay)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
       strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -1429,7 +1435,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       strProhibitedExpiries_(prohibitedExpiries), optionExpiryMonthLag_(optionExpiryMonthLag),
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
-      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData) {
+      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
+      hoursPerDay_(hoursPerDay) {
     build();
 }
 
@@ -1520,6 +1527,11 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         }
     }
 
+    hoursPerDay_ = Null<Natural>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "HoursPerDay")) {
+        hoursPerDay_ = parseInteger(XMLUtils::getNodeValue(n));
+    }
+
     build();
 }
 
@@ -1598,6 +1610,9 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     if (!averagingData_.empty()) {
         XMLUtils::appendNode(node, averagingData_.toXML(doc));
     }
+
+    if (hoursPerDay_ != Null<Natural>())
+        XMLUtils::addChild(doc, node, "HoursPerDay", static_cast<int>(hoursPerDay_));
 
     return node;
 }

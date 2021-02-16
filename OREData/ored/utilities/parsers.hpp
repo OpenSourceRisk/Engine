@@ -46,6 +46,7 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 
@@ -397,6 +398,12 @@ PriceSegment::Type parsePriceSegmentType(const std::string& s);
 
 //! Write PriceSegment::Type to stream
 std::ostream& operator<<(std::ostream& os, PriceSegment::Type pst);
+
+//! Convert text to QuantExt::CommodityQuantityFrequency
+QuantExt::CommodityQuantityFrequency parseCommodityQuantityFrequency(const std::string& s);
+
+//! Write QuantExt::CommodityQuantityFrequency to stream
+std::ostream& operator<<(std::ostream& os, QuantExt::CommodityQuantityFrequency cqf);
 
 } // namespace data
 } // namespace ore
