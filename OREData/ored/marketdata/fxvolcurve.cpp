@@ -27,6 +27,7 @@
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <string.h>
+#include <regex>
 
 using namespace QuantLib;
 using namespace std;
@@ -91,9 +92,23 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                                       boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
                                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                       const Conventions& conventions) {
-    vector<Period> expiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
-    vector<Period> unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
-    std::sort(expiries.begin(), expiries.end());
+    bool isRegex = false;
+    for (Size i = 0; i < config->expiries().size(); i++) {
+        if ((isRegex = config->expiries()[i].find("*") != string::npos)) {
+            QL_REQUIRE(i == 0 && config->expiries().size() == 1,
+                       "Wild card config, " << config->curveID() << ", should have exactly one regex provided.");
+            break;
+        }
+    }
+
+    vector<Period> expiries;
+    vector<Period> unsortedExp;
+    
+    if (!isRegex) {
+        expiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        std::sort(expiries.begin(), expiries.end());
+    }
 
     vector<std::pair<Real, string>> putDeltas, callDeltas;
     bool hasATM = false;
@@ -116,7 +131,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     std::sort(callDeltas.begin(), callDeltas.end(), comp);
 
     vector<Date> dates;
-    Matrix blackVolMatrix(expiries.size(), config->deltas().size());
+    Matrix blackVolMatrix;
 
     vector<string> tokens;
     boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
@@ -134,16 +149,87 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         deltaNames.push_back(d.second);
     }
 
-    for (Size i = 0; i < expiries.size(); i++) {
-        Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
-        string e = config->expiries()[idx];
-        dates.push_back(asof + expiries[i]);
-        for (Size j = 0; j < deltaNames.size(); ++j) {
-            string qs = base + e + "/" + deltaNames[j];
-            boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
-            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
-            QL_REQUIRE(q, "quote not found, " << qs);
-            blackVolMatrix[i][j] = q->quote()->value();
+    if (isRegex) {
+        regex regexp(boost::replace_all_copy(config->expiries()[0], "*", ".*"));
+
+        // we save relevant delta quotes to avoid looping twice
+        std::vector<boost::shared_ptr<MarketDatum>> data;
+        std::vector<std::string> expiriesStr;
+        // get list of possible expiries
+        for (auto& md : loader.loadQuotes(asof)) {
+            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
+                boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+                Strike s = parseStrike(q->strike());
+                if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy() && 
+                    (s.type == Strike::Type::DeltaCall || s.type == Strike::Type::DeltaPut || s.type == Strike::Type::ATM)) {
+                    vector<string> tokens;
+                    boost::split(tokens, md->name(), boost::is_any_of("/"));
+                    QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+                    if (regex_match(tokens[4], regexp)) {
+                        data.push_back(md);
+                        auto it = std::find(expiries.begin(), expiries.end(), q->expiry());
+                        if (it == expiries.end()) {
+                            expiries.push_back(q->expiry());
+                            expiriesStr.push_back(tokens[4]);
+                        }
+                    }
+                }
+            }
+        }
+        unsortedExp = expiries;
+        std::sort(expiries.begin(), expiries.end());
+        
+        // we try to find all necessary quotes for each expiry 
+        vector<Size> validExpiryIdx;
+        Matrix tmpMatrix(expiries.size(), config->deltas().size());
+        for (Size i = 0; i < expiries.size(); i++) {
+            Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
+            string e = expiriesStr[idx];
+            for (Size j = 0; j < deltaNames.size(); ++j) {
+                string qs = base + e + "/" + deltaNames[j];
+                boost::shared_ptr<MarketDatum> md;
+                for (auto& m : data) {
+                    if (m->name() == qs) {
+                        md = m;
+                        break;
+                    }
+                }
+                boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+                if (!q) {
+                    std::cout << "missing quote for " << e << " " << deltaNames[j] <<std::endl;
+                    break;
+                }
+                tmpMatrix[i][j] = q->quote()->value();
+                // if we have found all the quotes then this is a valid expiry
+                if (j == deltaNames.size() - 1) {
+                    std::cout<<"add all expiry " << e << std::endl;
+                    dates.push_back(asof + expiries[i]);
+                    validExpiryIdx.push_back(i);
+                }
+            }
+        }
+
+        // we build a matrix with just the valid expiries
+        blackVolMatrix = Matrix(validExpiryIdx.size(), config->deltas().size());
+        for (Size i = 0; i < validExpiryIdx.size(); i++) {
+            for (Size j = 0; j < deltaNames.size(); ++j) {
+                blackVolMatrix[i][j] = tmpMatrix[ validExpiryIdx[i]][j];
+            }
+        }
+
+    } else {
+        blackVolMatrix = Matrix(expiries.size(), config->deltas().size());
+        for (Size i = 0; i < expiries.size(); i++) {
+            Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries[i]) - unsortedExp.begin();
+            string e = config->expiries()[idx];
+            dates.push_back(asof + expiries[i]);
+            for (Size j = 0; j < deltaNames.size(); ++j) {
+                string qs = base + e + "/" + deltaNames[j];
+                boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
+                boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+                QL_REQUIRE(q, "quote not found, " << qs);
+                blackVolMatrix[i][j] = q->quote()->value();
+            }
         }
     }
 
@@ -202,8 +288,29 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     // we replicate this for all 3 types of quotes were applicable.
     Size n = isATM ? 1 : 3; // [0] = ATM, [1] = RR, [2] = BF
     vector<vector<boost::shared_ptr<FXOptionQuote>>> quotes(n);
-    vector<Period> cExpiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
-    vector<vector<Period>> expiries(n, cExpiries);
+
+    bool isRegex = false;
+    for (Size i = 0; i < config->expiries().size(); i++) {
+        if ((isRegex = config->expiries()[i].find("*") != string::npos)) {
+            QL_REQUIRE(isATM, "wildcards only supported for ATM or Delta FxVol Curves");
+            QL_REQUIRE(i == 0 && config->expiries().size() == 1,
+                       "Wild card config, " << config->curveID() << ", should have exactly one regex provided.");
+            break;
+        }
+    }
+
+    vector<Period> cExpiries;
+    vector<vector<Period>> expiries;
+    // Create the regular expression
+    regex regexp;
+    if (!isRegex) {
+        cExpiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        expiries = vector<vector<Period>>(n, cExpiries);
+    } else {
+        string regexstr = config->expiries()[0];
+        regexstr = boost::replace_all_copy(regexstr, "*", ".*");
+        regexp = regex(regexstr);
+    }
 
     // Load the relevant quotes
     for (auto& md : loader.loadQuotes(asof)) {
@@ -224,18 +331,27 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
 
                 // silently skip unknown strike strings
                 if ((isATM && idx == 0) || (!isATM && idx <= 2)) {
-                    auto it = std::find(expiries[idx].begin(), expiries[idx].end(), q->expiry());
-                    if (it != expiries[idx].end()) {
-                        // we have a hit
-                        quotes[idx].push_back(q);
-                        // remove it from the list
-                        expiries[idx].erase(it);
-                    }
+                    if (isRegex) {
+                        vector<string> tokens;
+                        boost::split(tokens, md->name(), boost::is_any_of("/"));
+                        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+                        if (regex_match(tokens[4], regexp)) {
+                            quotes[idx].push_back(q);
+                        }
+                    } else {
+                        auto it = std::find(expiries[idx].begin(), expiries[idx].end(), q->expiry());
+                        if (it != expiries[idx].end()) {
+                            // we have a hit
+                            quotes[idx].push_back(q);
+                            // remove it from the list
+                            expiries[idx].erase(it);
+                        }
 
-                    // check if we are done
-                    // for ATM we just check expiries[0], otherwise we check all 3
-                    if (expiries[0].empty() && (isATM || (expiries[1].empty() && expiries[2].empty())))
-                        break;
+                        // check if we are done
+                        // for ATM we just check expiries[0], otherwise we check all 3
+                        if (expiries[0].empty() && (isATM || (expiries[1].empty() && expiries[2].empty())))
+                            break;
+                    }
                 }
             }
         }
@@ -244,8 +360,11 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     // Check ATM first
     // Check that we have all the expiries we need
     LOG("FXVolCurve: read " << quotes[0].size() << " ATM vols");
-    QL_REQUIRE(expiries[0].size() == 0,
-               "No ATM quote found for spec " << spec << " with expiry " << expiries[0].front());
+    if (!isRegex) {
+        QL_REQUIRE(expiries[0].size() == 0,
+                   "No ATM quote found for spec " << spec << " with expiry " << expiries[0].front());
+    }
+    
     QL_REQUIRE(quotes[0].size() > 0, "No ATM quotes found for spec " << spec);
     // No check the rest
     if (!isATM) {
