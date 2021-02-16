@@ -49,6 +49,7 @@
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/currencies/configurablecurrency.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -125,7 +126,7 @@ QuantLib::DayCounter parseDayCounter(const string& s);
 /*!
   \ingroup utilities
  */
-QuantLib::Currency parseCurrency(const string& s);
+QuantLib::Currency parseCurrency(const string& s, const Currency& currency = QuantLib::Currency());
 
 //! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
 /*!
@@ -306,6 +307,12 @@ QuantLib::DeltaVolQuote::AtmType parseAtmType(const std::string& s);
 */
 QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s);
 
+//! Convert text to QuantLib::Rounding
+/*!
+\ingroup utilities
+*/
+QuantLib::Rounding::Type parseRoundingType(const std::string& s);
+  
 /*! Attempt to parse string \p str to \p obj of type \c T using \p parser
     \param[in]  str    The string we wish to parse.
     \param[out] obj    The resulting object if the parsing was successful.
@@ -319,6 +326,17 @@ template <class T> bool tryParse(const std::string& str, T& obj, std::function<T
     DLOG("tryParse: attempting to parse " << str);
     try {
         obj = parser(str);
+    } catch (...) {
+        TLOG("String " << str << " could not be parsed");
+        return false;
+    }
+    return true;
+}
+
+inline bool tryParseCurrency(const std::string& str, Currency& obj) {
+    DLOG("tryParse: attempting to parse currency from " << str);
+    try {
+      obj = parseCurrency(str, Currency());
     } catch (...) {
         TLOG("String " << str << " could not be parsed");
         return false;

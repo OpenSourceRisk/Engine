@@ -32,6 +32,7 @@
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
+#include <ored/utilities/currencyconfig.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
@@ -362,6 +363,12 @@ void OREApp::readSetup() {
         string calendarAdjustmentFile = inputPath_ + "/" + params_->get("setup", "calendarAdjustment");
         LOG("Load calendarAdjustment from file" << calendarAdjustmentFile);
         calendarAdjustments.fromFile(calendarAdjustmentFile);
+    }
+    if (params_->has("setup", "currencyConfiguration") && params_->get("setup", "currencyConfiguration") != "") {
+        CurrencyConfig currencyConfig;
+        string currencyConfigFile = inputPath_ + "/" + params_->get("setup", "currencyConfiguration");
+        LOG("Load currency configurations from file " << currencyConfigFile);
+	currencyConfig.fromFile(currencyConfigFile);
     }
 
     writeInitialReports_ = true;

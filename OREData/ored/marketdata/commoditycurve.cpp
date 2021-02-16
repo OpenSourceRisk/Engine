@@ -76,7 +76,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         if (config->type() == CommodityCurveConfig::Type::Direct) {
 
             // Populate the raw price curve data
-            map<Date, Real> data;
+            map<Date, Handle<Quote>> data;
             populateData(data, asof, config, loader, conventions);
 
             // Create the commodity price curve
@@ -123,7 +123,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
     }
 }
 
-void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
+void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& asof,
                                   const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader,
                                   const Conventions& conventions) {
 
@@ -156,8 +156,9 @@ void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
     // Commodity spot quote if provided by the configuration
     Date spotDate = cal.advance(asof, spotTenor);
     if (!config->commoditySpotQuoteId().empty()) {
-        commoditySpot_ = loader.get(config->commoditySpotQuoteId(), asof)->quote()->value();
-        data[spotDate] = commoditySpot_;
+        auto spot = loader.get(config->commoditySpotQuoteId(), asof)->quote();
+        commoditySpot_ = spot->value();
+        data[spotDate] = spot;
     } else {
         QL_REQUIRE(outright, "If the commodity forward quotes are not outright,"
                                  << " a commodity spot quote needs to be configured");
@@ -216,7 +217,7 @@ void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
     }
 }
 
-void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, map<Date, Real>& data, bool outright,
+void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, map<Date, Handle<Quote>>& data, bool outright,
                          Real pointsFactor) {
 
     if (expiry < asof)
@@ -229,15 +230,15 @@ void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, map<D
         value = commoditySpot_ + value / pointsFactor;
     }
 
-    data[expiry] = value;
+    data[expiry] = Handle<Quote>(boost::make_shared<SimpleQuote>(value));
 }
 
-void CommodityCurve::buildCurve(const Date& asof, const map<Date, Real>& data,
+void CommodityCurve::buildCurve(const Date& asof, const map<Date, Handle<Quote>>& data,
                                 const boost::shared_ptr<CommodityCurveConfig>& config) {
 
     vector<Date> curveDates;
     curveDates.reserve(data.size());
-    vector<Real> curvePrices;
+    vector<Handle<Quote>> curvePrices;
     curvePrices.reserve(data.size());
     for (auto const& datum : data) {
         curveDates.push_back(datum.first);

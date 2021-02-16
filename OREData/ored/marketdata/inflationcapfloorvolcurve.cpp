@@ -445,7 +445,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
             DLOG("CPIVolSurfaces built for spec " << spec.name());
         } catch (std::exception& e) {
-            ALOG("Building CPIVolSurfaces failed for spec " << spec.name() << ": " << e.what());
+            QL_FAIL("Building CPIVolSurfaces failed for spec " << spec.name() << ": " << e.what());
         }
     }
     if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY) {

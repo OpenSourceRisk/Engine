@@ -642,6 +642,9 @@
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\currencies\configurablecurrency.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
     <ClInclude Include="qle\currencies\metals.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
@@ -1509,6 +1512,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\currencies\configurablecurrency.cpp">
+      <Filter>currencies</Filter>
     </ClCompile>
     <ClCompile Include="qle\currencies\metals.cpp">
       <Filter>currencies</Filter>
