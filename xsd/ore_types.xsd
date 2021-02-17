@@ -805,7 +805,7 @@
     </xs:restriction>
   </xs:simpleType>
   
-  <xs:simpleType name="averagingDataType">
+  <xs:simpleType name="averagingDataPeriodType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="PreviousMonth"/>
       <xs:enumeration value="ExpiryToExpiry"/>

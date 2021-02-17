@@ -515,6 +515,18 @@
       <xs:element type="simCommodityCurve" name="CommodityCurve" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
+  
+  <xs:simpleType name="commodityInterpolationType">
+    <xs:restriction base="interpolationMethodType">
+      <xs:enumeration value="Linear"/>
+      <xs:enumeration value="LogLinear"/>
+      <xs:enumeration value="Cubic"/>
+      <xs:enumeration value="LinearFlat"/>
+      <xs:enumeration value="LogLinearFlat"/>
+      <xs:enumeration value="CubicFlat"/>
+      <xs:enumeration value="BackwardFlat"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="commodityBasisConfig">
     <xs:all>
@@ -523,18 +535,7 @@
       <xs:element type="quoteType" name="BasisQuotes"/>
       <xs:element type="xs:string" name="BasisConventions"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">
-        <xs:simpleType>
-          <xs:restriction base="interpolationMethodType">
-            <xs:enumeration value="Linear"/>
-            <xs:enumeration value="LogLinear"/>
-            <xs:enumeration value="Cubic"/>
-            <xs:enumeration value="LinearFlat"/>
-            <xs:enumeration value="LogLinearFlat"/>
-            <xs:enumeration value="CubicFlat"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
+      <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AddBasis" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="MonthOffset" minOccurs="0" maxOccurs="1"/>
     </xs:all>
@@ -570,23 +571,15 @@
           <xs:element type="xs:string" name="SpotQuote" minOccurs="0" maxOccurs="1"/>
           <xs:element type="quoteType" name="Quotes"/>
           <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
-          <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">
-            <xs:simpleType>
-              <xs:restriction base="interpolationMethodType">
-                <xs:enumeration value="Linear"/>
-                <xs:enumeration value="LogLinear"/>
-                <xs:enumeration value="Cubic"/>
-                <xs:enumeration value="LinearFlat"/>
-                <xs:enumeration value="LogLinearFlat"/>
-                <xs:enumeration value="CubicFlat"/>
-                <xs:enumeration value="BackwardFlat"/>
-              </xs:restriction>
-            </xs:simpleType>
-          </xs:element>
+          <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:element type="commodityBasisConfig" name="BasisConfiguration"/>
-        <xs:element type="priceSegmentsType" name="PriceSegments"/>
+        <xs:sequence>
+          <xs:element type="priceSegmentsType" name="PriceSegments"/>
+          <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
       </xs:choice>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
