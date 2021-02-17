@@ -185,37 +185,37 @@ PiecewisePriceCurve<Interpolator, Bootstrap>::PiecewisePriceCurve(
 
 template <class Interpolator, template <class> class Bootstrap>
 QuantLib::Date PiecewisePriceCurve<Interpolator, Bootstrap>::maxDate() const {
-    calculate();
+    this->calculate();
     return base_curve::maxDate();
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 QuantLib::Time PiecewisePriceCurve<Interpolator, Bootstrap>::maxTime() const {
-    calculate();
+    this->calculate();
     return base_curve::maxTime();
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 QuantLib::Time PiecewisePriceCurve<Interpolator, Bootstrap>::minTime() const {
-    calculate();
+    this->calculate();
     return base_curve::minTime();
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 std::vector<QuantLib::Date> PiecewisePriceCurve<Interpolator, Bootstrap>::pillarDates() const {
-    calculate();
+    this->calculate();
     return base_curve::pillarDates();
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 const std::vector<QuantLib::Time>& PiecewisePriceCurve<Interpolator, Bootstrap>::times() const {
-    calculate();
+    this->calculate();
     return base_curve::times();
 }
 
 template <class Interpolator, template <class> class Bootstrap>
 const std::vector<QuantLib::Real>& PiecewisePriceCurve<Interpolator, Bootstrap>::prices() const {
-    calculate();
+    this->calculate();
     return base_curve::prices();
 }
 
@@ -235,7 +235,7 @@ void PiecewisePriceCurve<Interpolator, Bootstrap>::performCalculations() const {
 
 template <class Interpolator, template <class> class Bootstrap>
 QuantLib::Real PiecewisePriceCurve<Interpolator, Bootstrap>::priceImpl(QuantLib::Time t) const {
-    calculate();
+    this->calculate();
     return base_curve::priceImpl(t);
 }
 

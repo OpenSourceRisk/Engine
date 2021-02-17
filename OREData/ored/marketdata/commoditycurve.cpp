@@ -53,6 +53,18 @@ using std::map;
 using std::regex;
 using std::string;
 
+// Explicit template instantiation to avoid "error C2079: ... uses undefined class ..."
+// Explained in the answer to the SO question here: 
+// https://stackoverflow.com/a/57666066/1771882
+// Needs to be in global namespace also i.e. not under ore::data
+// https://stackoverflow.com/a/25594741/1771882
+template class PiecewisePriceCurve<QuantLib::Linear, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantLib::LogLinear, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantLib::Cubic, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
+
 namespace ore {
 namespace data {
 
@@ -367,16 +379,6 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
 // Allow for more readable code in method below.
 template<class I> using Crv = PiecewisePriceCurve<I, QuantExt::IterativeBootstrap>;
 template<class C> using BS = QuantExt::IterativeBootstrap<C>;
-
-// Explicit template instantiation to avoid "error C2079: ... uses undefined class ..."
-// Explained in the answer to the SO question here: 
-// https://stackoverflow.com/a/57666066/1771882
-template class PiecewisePriceCurve<Linear, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantLib::LogLinear, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantLib::Cubic, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
 
 void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveConfig& config,
     const Conventions& conventions, const Loader& loader) {

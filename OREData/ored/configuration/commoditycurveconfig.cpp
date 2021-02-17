@@ -292,7 +292,7 @@ void CommodityCurveConfig::processSegments(std::vector<PriceSegment> priceSegmen
     }
 
     // Very unlikely but check that the priorities entered will not cause an overflow of short int.
-    QL_REQUIRE(priceSegments.size() <= std::numeric_limits<unsigned short>::max() - largestPriority,
+    QL_REQUIRE(priceSegments.size() <= static_cast<unsigned short>(std::numeric_limits<unsigned short>::max() - largestPriority),
         "Largest price segment priority (" << largestPriority << ") and number of segments without a " <<
         "priority (" << priceSegments.size() << ") combine to give a value too large for unsigned short.");
 
