@@ -64,6 +64,7 @@ template class PiecewisePriceCurve<QuantLib::Cubic, QuantExt::IterativeBootstrap
 template class PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::IterativeBootstrap>;
 template class PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
 template class PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
 
 namespace ore {
 namespace data {
@@ -439,6 +440,10 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
         BS<Crv<QuantExt::CubicFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
         commodityPriceCurve_ = boost::make_shared<Crv<QuantExt::CubicFlat>>(asof, instruments,
             dayCounter_, ccy, QuantExt::CubicFlat(), bs);
+    } else if (interpolationMethod_ == "BackwardFlat") {
+        BS<Crv<BackwardFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<BackwardFlat>>(asof, instruments,
+            dayCounter_, ccy, BackwardFlat(), bs);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }
