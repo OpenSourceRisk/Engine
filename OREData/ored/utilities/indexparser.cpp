@@ -612,10 +612,10 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
             expiry = feCalc.nextExpiry();
         }
 
-        bool keepDays = convention->contractFrequency() == Daily;
+        bool keepDays = convention && convention->contractFrequency() == Daily;
 
         Calendar cdr = cal;
-        if (cdr == NullCalendar()) {
+        if (convention && cdr == NullCalendar()) {
             cdr = convention->calendar();
         }
 
