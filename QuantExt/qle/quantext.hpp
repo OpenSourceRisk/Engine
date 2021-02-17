@@ -28,6 +28,7 @@
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
 #include <qle/cashflows/couponpricer.hpp>
@@ -53,6 +54,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/configurablecurrency.cpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
@@ -240,7 +242,9 @@
 #include <qle/quotes/exceptionquote.hpp>
 #include <qle/quotes/logquote.hpp>
 #include <qle/termstructures/aposurface.hpp>
+#include <qle/termstructures/averagefuturepricehelper.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
+#include <qle/termstructures/averagespotpricehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
@@ -277,6 +281,7 @@
 #include <qle/termstructures/equityoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
+#include <qle/termstructures/futurepricehelper.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
@@ -304,6 +309,7 @@
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
+#include <qle/termstructures/piecewisepricecurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
