@@ -61,6 +61,7 @@
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/compoequityindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
