@@ -81,16 +81,16 @@ private:
     QuantLib::DayCounter dayCounter_;
 
     //! Populate \p data with dates and prices from the loader
-    void populateData(std::map<QuantLib::Date, QuantLib::Real>& data, const QuantLib::Date& asof,
+    void populateData(std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& data, const QuantLib::Date& asof,
                       const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader,
                       const Conventions& conventions);
 
     //! Add node to price curve \p data with check for duplicate expiry dates
     void add(const QuantLib::Date& asof, const QuantLib::Date& expiry, QuantLib::Real value,
-             std::map<QuantLib::Date, QuantLib::Real>& data, bool outright, QuantLib::Real pointsFactor = 1.0);
+             std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& data, bool outright, QuantLib::Real pointsFactor = 1.0);
 
     //! Build price curve using the curve \p data
-    void buildCurve(const QuantLib::Date& asof, const std::map<QuantLib::Date, QuantLib::Real>& data,
+    void buildCurve(const QuantLib::Date& asof, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote>>& data,
                     const boost::shared_ptr<CommodityCurveConfig>& config);
 
     //! Build cross currency commodity price curve

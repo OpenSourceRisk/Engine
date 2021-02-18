@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<PricingEngines>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+</PricingEngines>

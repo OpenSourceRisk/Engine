@@ -2657,7 +2657,7 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
             } catch (...) {
             }
             QL_REQUIRE(index != nullptr, "ScenarioSimMarket::update() index " << i << " not found in sim market");
-            asd_->set(index->fixing(d), AggregationScenarioDataType::IndexFixing, i);
+            asd_->set(index->fixing(index->fixingCalendar().adjust(d)), AggregationScenarioDataType::IndexFixing, i);
         }
 
         for (auto c : parameters_->additionalScenarioDataCcys()) {

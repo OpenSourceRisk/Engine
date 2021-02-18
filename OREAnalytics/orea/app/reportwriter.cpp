@@ -31,6 +31,8 @@
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/currencies/currencycomparator.hpp>
+#include <boost/lexical_cast.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -40,6 +42,10 @@ using std::vector;
 
 namespace ore {
 namespace analytics {
+
+typedef std::map<Currency, Matrix, CurrencyComparator> result_type_matrix;
+typedef std::map<Currency, std::vector<Real>, CurrencyComparator> result_type_vector;
+typedef std::map<Currency, Real, CurrencyComparator> result_type_scalar;
 
 void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCurrency,
                             boost::shared_ptr<Market> market, const std::string& configuration,
@@ -801,6 +807,22 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
     LOG("Sensitivity report finished");
 }
 
+template <class T>
+void addMapResults(boost::any resultMap, const std::string&  tradeId, const std::string& resultName, Report& report) {
+    T map = boost::any_cast<T>(resultMap);
+    for (auto it : map) {
+        std::string name = resultName + "_" + it.first.code();
+        boost::any tmp = it.second;
+        auto p = parseBoostAny(tmp);
+        report.next()
+            .add(tradeId)
+            .add(name)
+            .add(p.first)
+            .add(p.second);
+
+    }
+}
+
 void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Market> market, const std::string& baseCurrency) {
     
     LOG("Writing AdditionalResults report");
@@ -825,7 +847,6 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 .add(p.first)
                 .add(p.second);
         }
-
         // if the 'notionalTwo' has been provided convert it to base currency
         if (additionalData.count("notionalTwo") != 0 && additionalData.count("notionalTwoCurrency") != 0) {
             notional2 = trade->additionalDatum<Real>("notionalTwo");
@@ -878,7 +899,6 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 
             // Get the additional results for the current instrument.
             auto additionalResults = instrument->additionalResults();
-
             // Add the multiplier if there are additional results.
             // Check on 'inst_multiplier' already existing is probably unnecessary.
             if (!additionalResults.empty() && additionalResults.count("inst_multiplier") == 0) {
@@ -887,12 +907,21 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
 
             // Write current instrument's additional results.
             for (const auto& kv : additionalResults) {
-                auto p = parseBoostAny(kv.second);
-                report.next()
-                    .add(tradeId)
-                    .add(kv.first)
-                    .add(p.first)
-                    .add(p.second);
+                // some results are stored as maps. We loop over these so that there is one result per line
+                if (kv.second.type() == typeid(result_type_matrix)) {
+                    addMapResults<result_type_matrix>(kv.second, tradeId, kv.first, report);
+                } else if (kv.second.type() == typeid(result_type_vector)) {
+                    addMapResults<result_type_vector>(kv.second, tradeId, kv.first, report);
+                } else if (kv.second.type() == typeid(result_type_scalar)) {
+                    addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
+                } else {
+                    auto p = parseBoostAny(kv.second);
+                    report.next()
+                        .add(tradeId)
+                        .add(kv.first)
+                        .add(p.first)
+                        .add(p.second);
+                }
             }
         }
 

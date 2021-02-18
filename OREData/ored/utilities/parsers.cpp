@@ -60,9 +60,10 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/actual364.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/currencies/currencycomparator.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/type_index.hpp>
+#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -611,7 +612,8 @@ DayCounter parseDayCounter(const string& s) {
     }
 }
 
-Currency parseCurrency(const string& s) {
+Currency parseCurrency(const string& s, const Currency& currency) {
+    DLOG("parseCurrency called");
     static map<string, Currency> m = {
         {"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, 
         {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, 
@@ -640,7 +642,14 @@ Currency parseCurrency(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Currency \"" << s << "\" not recognized");
+	if (!currency.empty()) {
+	    LOG("Adding external currency " << currency.code() << " to the parser map");
+	    m[s] = currency;
+	    return currency;
+	}
+	else {
+	    QL_FAIL("Currency \"" << s << "\" not recognized");
+	}
     }
 }
 
@@ -1211,7 +1220,11 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        std::regex pattern("\n");
+        std::ostringstream tmp;
+        tmp << std::setprecision(8) << r;
+        oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
+
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
@@ -1275,6 +1288,24 @@ InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const
     }
 }
 
+QuantLib::Rounding::Type parseRoundingType(const std::string& s) {
+    static map<string, QuantLib::Rounding::Type> m = {
+        {"Up", QuantLib::Rounding::Type::Up},
+        {"Down", QuantLib::Rounding::Type::Down},
+        {"Closest", QuantLib::Rounding::Type::Closest},
+        {"Floor", QuantLib::Rounding::Type::Floor},
+        {"Ceiling", QuantLib::Rounding::Type::Ceiling}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Rounding type \"" << s << "\" not recognized");
+    }
+}
+
+  
 ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
     using IPR = InflationSwapConvention::PublicationRoll;
     if (pr == IPR::None) {
@@ -1330,6 +1361,22 @@ std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::di
         return out << "Euler";
     default:
         return out << "?";
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, Rounding::Type t) {
+  static map<Rounding::Type, string> m = {
+        {Rounding::Type::Up, "Up"},
+        {Rounding::Type::Down, "Down"},
+        {Rounding::Type::Closest, "Closest"},
+        {Rounding::Type::Floor, "Floor"},
+        {Rounding::Type::Ceiling, "Ceiling"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown Rounding::Type - check implementation of operator<< "
+                "for this enum");
     }
 }
 
