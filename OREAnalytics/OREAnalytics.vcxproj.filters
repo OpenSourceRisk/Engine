@@ -209,6 +209,7 @@
     <ClInclude Include="orea\engine\cptycalculator.hpp">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="orea\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
