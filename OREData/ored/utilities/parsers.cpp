@@ -614,7 +614,6 @@ DayCounter parseDayCounter(const string& s) {
 }
 
 Currency parseCurrency(const string& s, const Currency& currency) {
-    DLOG("parseCurrency called");
     static map<string, Currency> m = {
         {"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, 
         {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, 
