@@ -18,6 +18,7 @@
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <ql/errors.hpp>
@@ -53,7 +54,14 @@ void parseNode(XMLNode* node, const char* parentName, const char* childName, map
                 m[id] = curveConfig;
                 DLOG("Added curve config with ID = " << id);
             } catch (std::exception& ex) {
-                ALOG("Exception parsing curve config: " << ex.what());
+                string id = string(parentName) + ": (unknown curve id)";
+                try {
+                    // try to get the curve id for which an error was thrown
+                    id = string(parentName) + ": " + XMLUtils::getChildValue(child, "CurveId", true);
+                } catch (...) {
+                }
+                ALOG(StructuredCurveErrorMessage(id, "Invalid curve configuration",
+                                                 string("Exception parsing curve config: ") + ex.what()));
             }
         }
     }
