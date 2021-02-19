@@ -99,6 +99,7 @@
     <ClInclude Include="orea\scenario\stressscenariogenerator.hpp" />
     <ClInclude Include="orea\simulation\fixingmanager.hpp" />
     <ClInclude Include="orea\simulation\simmarket.hpp" />
+    <ClInclude Include="orea\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp" />
