@@ -81,13 +81,12 @@ Date ConventionsBasedFutureExpiry::priorExpiry(bool includeExpiry, const Date& r
     return expiry;
 }
 
-Date ConventionsBasedFutureExpiry::expiryDate(Month contractMonth, Year contractYear, Natural monthOffset,
-                                              bool forOption) {
-
-    QL_REQUIRE(convention_.contractFrequency() != Daily && convention_.contractFrequency() != Weekly,
-        "Calculation of expiry dates for frequencies less than a month not supported.");
-
-    return expiry(contractMonth, contractYear, monthOffset, forOption);
+Date ConventionsBasedFutureExpiry::expiryDate(const Date& contractDate, Natural monthOffset, bool forOption) {
+    if (convention_.contractFrequency() == Daily) {
+        return nextExpiry(contractDate, forOption);
+    } else {
+        return expiry(contractDate.month(), contractDate.year(), monthOffset, forOption);
+    }
 }
 
 Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear, QuantLib::Natural monthOffset,
@@ -179,7 +178,11 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
 
     // If contract frequency is daily, next expiry is simply the next valid date on expiry calendar.
     if (convention_.contractFrequency() == Daily) {
-        return convention_.expiryCalendar().adjust(referenceDate, Following);
+        Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
+        while (convention_.prohibitedExpiries().count(expiry) > 0) {
+            expiry = convention_.expiryCalendar().advance(expiry, -1, Days);
+        }
+        return expiry;
     }
 
     // Get a contract expiry before today and increment until expiryDate is >= today

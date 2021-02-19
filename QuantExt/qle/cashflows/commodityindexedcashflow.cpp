@@ -14,13 +14,12 @@ namespace QuantExt {
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(Real quantity, const Date& pricingDate, const Date& paymentDate,
                                                    const ext::shared_ptr<CommodityIndex>& index, Real spread,
                                                    Real gearing, bool useFuturePrice,
-                                                   boost::optional<QuantLib::Month> contractMonth,
-                                                   boost::optional<QuantLib::Year> contractYear,
+                                                   const Date& contractDate,
                                                    const ext::shared_ptr<FutureExpiryCalculator>& calc)
     : quantity_(quantity), pricingDate_(pricingDate), paymentDate_(paymentDate), index_(index), spread_(spread),
       gearing_(gearing), useFuturePrice_(useFuturePrice), futureMonthOffset_(0), periodQuantity_(quantity) {
 
-    init(calc, contractMonth, contractYear);
+    init(calc, contractDate);
 }
 
 CommodityIndexedCashFlow::CommodityIndexedCashFlow(
@@ -44,7 +43,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
             // We need to use the expiry date of the future contract
             QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future "
                                  << "expiry calculator when using first future");
-            pricingDate_ = calc->expiryDate(pricingDate_.month(), pricingDate_.year(), futureMonthOffset_);
+            pricingDate_ = calc->expiryDate(pricingDate_, futureMonthOffset_);
         }
     }
 
@@ -58,7 +57,7 @@ CommodityIndexedCashFlow::CommodityIndexedCashFlow(
     // and pass them here in any case to init
     Date ref = isInArrears ? endDate : startDate;
 
-    init(calc, ref.month(), ref.year());
+    init(calc, ref);
 }
 
 Real CommodityIndexedCashFlow::amount() const {
@@ -78,8 +77,7 @@ void CommodityIndexedCashFlow::setPeriodQuantity(Real periodQuantity) {
     periodQuantity_ = periodQuantity;
 }
 
-void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
-                                    boost::optional<Month> contractMonth, boost::optional<Year> contractYear) {
+void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator>& calc, const Date& contractDate) {
 
     QL_REQUIRE(paymentDate_ >= pricingDate_, "Expected that the payment date ("
                                                  << io::iso_date(paymentDate_)
@@ -94,14 +92,11 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
     if (useFuturePrice_) {
         QL_REQUIRE(calc, "CommodityIndexedCashFlow needs a valid future expiry calculator when using "
                              << "the future settlement price as reference price");
-        QL_REQUIRE(contractMonth, "Need a valid contract month if referencing a future settlement price");
-        QL_REQUIRE(contractYear, "Need a valid contract year if referencing a future settlement price");
-        Date expiry = calc->expiryDate(*contractMonth, *contractYear, futureMonthOffset_);
-        QL_REQUIRE(expiry >= pricingDate_,
-                   "Expected that the expiry date ("
-                       << io::iso_date(expiry) << ") for commodity " << index_->underlyingName() << " future "
-                       << *contractYear << "-" << *contractMonth << " with month offset of " << futureMonthOffset_
-                       << " would be on or after the pricing date (" << io::iso_date(pricingDate_) << ")");
+        Date expiry = calc->expiryDate(contractDate, futureMonthOffset_);
+        QL_REQUIRE(expiry >= pricingDate_, "Expected that the expiry date (" << io::iso_date(expiry) <<
+            ") for commodity " << index_->underlyingName() << " future  with contract date of " <<
+            io::iso_date(contractDate) << " and with month offset of " << futureMonthOffset_ <<
+            " would be on or after the pricing date (" << io::iso_date(pricingDate_) << ")");
         index_ = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
     }
 

@@ -45,12 +45,9 @@ public:
                                bool forOption = false) override;
 
     /*! Provide implementation for the base class method.
- 
-        \warning This method throws an exception for commodities that have a frequency that is less than monthly as 
-                 it does not make sense in these cases.
     */
-    QuantLib::Date expiryDate(QuantLib::Month contractMonth, QuantLib::Year contractYear,
-                              QuantLib::Natural monthOffset, bool forOption = false) override;
+    QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset = 0,
+        bool forOption = false) override;
 
     //! \name Inspectors
     //@{

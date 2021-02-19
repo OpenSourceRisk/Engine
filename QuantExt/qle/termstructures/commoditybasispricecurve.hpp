@@ -125,7 +125,7 @@ private:
     */
     std::map<QuantLib::Size, QuantLib::Size> legIndexMap_;
 
-    //! Get the contract month and year from an expiry
+    //! Get the contract date from an expiry date
     QuantLib::Date getContractDate(const QuantLib::Date& expiry,
                                    const boost::shared_ptr<FutureExpiryCalculator>& fec) const;
 
@@ -290,7 +290,7 @@ CommodityBasisPriceCurve<Interpolator>::getContractDate(const QuantLib::Date& ex
 
     // Try the expiry date's month and year
     Date result(1, expiry.month(), expiry.year());
-    Date calcExpiry = fec->expiryDate(result.month(), result.year(), 0);
+    Date calcExpiry = fec->expiryDate(result, 0);
     if (calcExpiry == expiry) {
         return result;
     }
@@ -303,7 +303,7 @@ CommodityBasisPriceCurve<Interpolator>::getContractDate(const QuantLib::Date& ex
     Size maxIncrement = 12;
     while (calcExpiry < expiry && maxIncrement > 0) {
         result += 1 * Months;
-        calcExpiry = fec->expiryDate(result.month(), result.year(), 0);
+        calcExpiry = fec->expiryDate(result, 0);
         maxIncrement--;
     }
 

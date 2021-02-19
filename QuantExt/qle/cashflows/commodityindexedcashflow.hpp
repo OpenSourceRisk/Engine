@@ -27,8 +27,7 @@ public:
     CommodityIndexedCashFlow(QuantLib::Real quantity, const QuantLib::Date& pricingDate,
                              const QuantLib::Date& paymentDate, const ext::shared_ptr<CommodityIndex>& index,
                              QuantLib::Real spread = 0.0, QuantLib::Real gearing = 1.0, bool useFuturePrice = false,
-                             boost::optional<QuantLib::Month> contractMonth = boost::none,
-                             boost::optional<QuantLib::Year> contractYear = boost::none,
+                             const Date& contractDate = Date(),
                              const ext::shared_ptr<FutureExpiryCalculator>& calc = nullptr);
 
     /*! Constructor taking a period \p startDate, \p endDate and some conventions. The pricing date and payment date
@@ -95,8 +94,8 @@ private:
     QuantLib::Real periodQuantity_;
 
     //! Shared initialisation
-    void init(const ext::shared_ptr<FutureExpiryCalculator>& calc, boost::optional<QuantLib::Month> contractMonth,
-              boost::optional<QuantLib::Year> contractYear);
+    void init(const ext::shared_ptr<FutureExpiryCalculator>& calc,
+        const QuantLib::Date& contractDate = QuantLib::Date());
 };
 
 //! Helper class building a sequence of commodity indexed cashflows
