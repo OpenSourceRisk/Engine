@@ -44,6 +44,9 @@
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
+#include <typeindex>
+#include <typeinfo>
+
 namespace ore {
 namespace data {
 using ore::data::XMLNode;
@@ -205,6 +208,17 @@ private:
     std::map<std::string, boost::shared_ptr<CommodityCurveConfig>> commodityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CommodityVolatilityConfig>> commodityVolatilityConfigs_;
     std::map<std::string, boost::shared_ptr<CorrelationCurveConfig>> correlationCurveConfigs_;
+
+    // utility function for parsing a node of name "parentName" and storing the result in the map
+    template <class T>
+    void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m);
+
+    // utility function for getting a value from the map storing the configs, throwing if it is not present
+    template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) const;
+
+    // stores errors (parentName, msg) during parsing for keys (T, curveId), T = YieldCurveConfig etc.
+    std::map<std::pair<std::type_index, std::string>, std::pair<std::string, std::string>> parseErrors_;
 };
+
 } // namespace data
 } // namespace ore
