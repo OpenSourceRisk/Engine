@@ -31,42 +31,6 @@ namespace data {
 // check if map has an entry for the given id
 template <class T> bool has(const string& id, const map<string, boost::shared_ptr<T>>& m) { return m.count(id) == 1; }
 
-// utility function for getting a value from a map, throwing if it is not present
-template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) {
-    auto it = m.find(id);
-    QL_REQUIRE(it != m.end(), "no curve id for " << id);
-    return it->second;
-}
-
-// utility function for parsing a node of name "parentName" and decoding all
-// child elements, storing the resulting config in the map
-template <class T>
-void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m) {
-
-    XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
-    if (parentNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
-             child = XMLUtils::getNextSibling(child, childName)) {
-            boost::shared_ptr<T> curveConfig(new T());
-            try {
-                curveConfig->fromXML(child);
-                const string& id = curveConfig->curveID();
-                m[id] = curveConfig;
-                DLOG("Added curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                string id = string(parentName) + ": (unknown curve id)";
-                try {
-                    // try to get the curve id for which an error was thrown
-                    id = string(parentName) + ": " + XMLUtils::getChildValue(child, "CurveId", true);
-                } catch (...) {
-                }
-                ALOG(StructuredCurveErrorMessage(id, "Invalid curve configuration",
-                                                 string("Exception parsing curve config: ") + ex.what()));
-            }
-        }
-    }
-}
-
 // utility function to add a set of nodes from a given map of curve configs
 template <class T>
 void addMinimalCurves(const char* nodeName, const map<string, boost::shared_ptr<T>>& m,
@@ -95,6 +59,51 @@ void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& con
     // For each config in configs, add its quotes to the set
     for (auto m : configs) {
         quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
+    }
+}
+
+template <class T>
+void CurveConfigurations::parseNode(XMLNode* node, const char* parentName, const char* childName,
+                                    map<string, boost::shared_ptr<T>>& m) {
+
+    XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
+    if (parentNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
+             child = XMLUtils::getNextSibling(child, childName)) {
+            boost::shared_ptr<T> curveConfig(new T());
+            try {
+                curveConfig->fromXML(child);
+                const string& id = curveConfig->curveID();
+                m[id] = curveConfig;
+                DLOG("Added curve config with ID = " << id);
+            } catch (std::exception& ex) {
+                string id = "(unknown curve id)";
+                try {
+                    // try to get the curve id for which an error was thrown
+                    id = XMLUtils::getChildValue(child, "CurveId", true);
+                    // if we got it, store the error, so that get() can include that information in its error message
+                    parseErrors_[std::make_pair(std::type_index(typeid(T)), id)] =
+                        std::make_pair(string(parentName), ex.what());
+                } catch (...) {
+                }
+                ALOG("Exception parsing curve config under node '" << parentName << "' for curve id '" << id
+                                                                   << "': " << ex.what());
+            }
+        }
+    }
+}
+
+template <class T>
+const boost::shared_ptr<T>& CurveConfigurations::get(const string& id, const map<string, boost::shared_ptr<T>>& m) const {
+    auto it = m.find(id);
+    if (it != m.end())
+        return it->second;
+    auto err = parseErrors_.find(std::make_pair(std::type_index(typeid(T)), id));
+    if (err != parseErrors_.end()) {
+        QL_FAIL("no curve id for '" << id << "' under node '" << err->second.first
+                                    << "' due to parser error: " << err->second.second);
+    } else {
+        QL_FAIL("no curve id for '" << id << "', is the id present in the curve configuration?");
     }
 }
 
