@@ -330,7 +330,8 @@ void FixingDateGetter::visit(IborCoupon& c) {
         // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
         // It is this adjusted date that we want to record here.
         // Enforce fixing to be added even if coupon pays on settlement.
-        requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date(), true);
+        requiredFixings_.addFixingDate(bma->adjustedFixingDate(c.fixingDate()), oreIndexName(c.index()->name()),
+                                       c.date(), true);
     } else {
         // otherwise fall through to FloatingRateCoupon handling
         visit(static_cast<FloatingRateCoupon&>(c));

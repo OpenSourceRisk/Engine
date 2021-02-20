@@ -41,7 +41,19 @@ bool checkCurrency(const string& s) {
         "XBD", "XCD", "XDR", "XOF", "XPD", "XPF", "XPT", "XSU", "XTS", "XUA", "XXX", "YER", "ZAR", "ZMW", "ZWL",
         "GBp", "GBX", "ILa", "ILX", "ZAc", "ZAC", "ZAX" };
     auto it = std::find(codes.begin(), codes.end(), s);
-    return it != codes.end();
+    //return it != codes.end();
+    if (it != codes.end())
+        return true;
+    else {
+        try {
+	    // It might be an "external" currency if the following passes
+	    parseCurrency(s);
+	    return true;
+	}
+	catch(...) {
+	    return false;
+	}
+    }
 }
 
 bool checkMinorCurrency(const string& s) {
