@@ -107,10 +107,9 @@ private:
 
     // input parameters
 
-    // only populated in ctor taking pointers
     const boost::shared_ptr<TodaysMarketParameters> params_;
     const boost::shared_ptr<Loader> loader_;
-    const boost::shared_ptr<CurveConfigurations> curveConfigs_;
+    const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
     const boost::shared_ptr<Conventions> conventions_;
 
     const bool continueOnError_;
