@@ -259,24 +259,20 @@ PostProcess::PostProcess(
      */
     if (analytics_["dynamicCredit"]) {
         allocatedCvaCalculator_ = boost::make_shared<DynamicCreditXvaCalculator>(
-            portfolio_, market_, configuration_,baseCurrency_, dvaName_,
-            fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
-            dimCalculator, exposureCalculator_->exposureCube(),
-            nettedExposureCalculator_->exposureCube(), cptyCube_,
-            ExposureCalculator::ExposureIndex::allocatedEPE,
-            ExposureCalculator::ExposureIndex::allocatedENE,
-            NettedExposureCalculator::ExposureIndex::EPE,
-            NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"]);
+            portfolio_, market_, configuration_, baseCurrency_, dvaName_, fvaBorrowingCurve_, fvaLendingCurve_,
+            analytics_["dim"], dimCalculator, exposureCalculator_->exposureCube(),
+            nettedExposureCalculator_->exposureCube(), cptyCube_, ExposureCalculator::ExposureIndex::allocatedEPE,
+            ExposureCalculator::ExposureIndex::allocatedENE, NettedExposureCalculator::ExposureIndex::EPE,
+            NettedExposureCalculator::ExposureIndex::ENE, 0, analytics_["flipViewXVA"], flipViewBorrowingCurvePostfix,
+            flipViewLendingCurvePostfix);
     } else {
         allocatedCvaCalculator_ = boost::make_shared<StaticCreditXvaCalculator>(
-            portfolio_, market_, configuration_,baseCurrency_, dvaName_,
-            fvaBorrowingCurve_, fvaLendingCurve_, analytics_["dim"],
-            dimCalculator, exposureCalculator_->exposureCube(),
-            nettedExposureCalculator_->exposureCube(),
-            ExposureCalculator::ExposureIndex::allocatedEPE,
-            ExposureCalculator::ExposureIndex::allocatedENE,
-            NettedExposureCalculator::ExposureIndex::EPE,
-            NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"]);
+            portfolio_, market_, configuration_, baseCurrency_, dvaName_, fvaBorrowingCurve_, fvaLendingCurve_,
+            analytics_["dim"], dimCalculator, exposureCalculator_->exposureCube(),
+            nettedExposureCalculator_->exposureCube(), ExposureCalculator::ExposureIndex::allocatedEPE,
+            ExposureCalculator::ExposureIndex::allocatedENE, NettedExposureCalculator::ExposureIndex::EPE,
+            NettedExposureCalculator::ExposureIndex::ENE, analytics_["flipViewXVA"], flipViewBorrowingCurvePostfix,
+            flipViewLendingCurvePostfix);
     }
     allocatedCvaCalculator_->build();
 
