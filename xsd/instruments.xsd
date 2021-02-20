@@ -622,6 +622,7 @@
       <xs:enumeration value="ZeroCouponFixed"/>
       <xs:enumeration value="CommodityFixed"/>
       <xs:enumeration value="CommodityFloating"/>
+      <xs:enumeration value="EquityMargin"/>
       <xs:enumeration value="DurationAdjustedCMS"/>
     </xs:restriction>
   </xs:simpleType>
