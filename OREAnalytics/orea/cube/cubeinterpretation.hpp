@@ -132,7 +132,8 @@ public:
 
     //! ctor
     MporGridCubeInterpretation(const boost::shared_ptr<DateGrid>& dateGrid, bool flipViewXVA)
-        : dateGrid_(dateGrid), flipViewXVA_(flipViewXVA) {}
+        : defaultDateNpvIdx_(0), closeOutDateNpvIdx_(1), mporFlowsIdx_(2), dateGrid_(dateGrid),
+          flipViewXVA_(flipViewXVA) {}
 
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
                          Size depth) const;
