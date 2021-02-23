@@ -588,6 +588,9 @@
     <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\dependencygraph.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1045,6 +1048,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\builders\durationadjustedcms.cpp">
       <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\dependencygraph.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
