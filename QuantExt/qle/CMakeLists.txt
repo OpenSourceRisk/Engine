@@ -471,6 +471,7 @@ termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackmonotonevarvoltermstructure.hpp
+termstructures/blacktriangulationatmvol.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp

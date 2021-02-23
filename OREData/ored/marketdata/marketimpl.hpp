@@ -242,6 +242,10 @@ protected:
 
     // set of term structure pointers for refresh (per configuration)
     map<string, std::set<boost::shared_ptr<TermStructure>>> refreshTs_;
+
+    Handle<BlackVolTermStructure> getFxVol(const string& ccypair, const string& configuration) const;
+    Handle<BlackVolTermStructure> triangulateFxVol(const string& ccypair, const string& configuration) const;
+
 };
 
 } // namespace data
