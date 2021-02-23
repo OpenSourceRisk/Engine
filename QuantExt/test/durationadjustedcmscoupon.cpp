@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalValues) {
 
     auto index = boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardCurve, discountCurve);
 
-    Date fixingDate = index->fixingCalendar().advance(startDate, -fixingDays * Days, Preceding);
+    Date fixingDate = index->fixingCalendar().advance(startDate, -(fixingDays * Days), Preceding);
     Real fixingValue = 0.01;
     index->addFixing(fixingDate, fixingValue);
 
