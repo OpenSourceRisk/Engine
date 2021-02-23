@@ -30,6 +30,7 @@ fixings.cpp
 fxoption.cpp
 fxswap.cpp
 fxtriangulation.cpp
+fxvolcurve.cpp
 indices.cpp
 inflationcapfloor.cpp
 inflationcurve.cpp
