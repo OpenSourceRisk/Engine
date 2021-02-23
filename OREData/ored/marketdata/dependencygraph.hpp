@@ -87,7 +87,7 @@ public:
         //! Description of the market composition
         const boost::shared_ptr<TodaysMarketParameters>& params,
         //! Description of curve compositions
-        const boost::shared_ptr<CurveConfigurations>& curveConfigs,
+        const boost::shared_ptr<const CurveConfigurations>& curveConfigs,
         //! Repository of market conventions
         const boost::shared_ptr<Conventions>& conventions
     ) : params_(params), curveConfigs_(curveConfigs), conventions_(conventions) {};
@@ -128,7 +128,7 @@ private:
     const Conventions& conventions_;
     */
     const boost::shared_ptr<TodaysMarketParameters> params_;
-    const boost::shared_ptr<CurveConfigurations> curveConfigs_;
+    const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
     const boost::shared_ptr<Conventions> conventions_;
 
 };
