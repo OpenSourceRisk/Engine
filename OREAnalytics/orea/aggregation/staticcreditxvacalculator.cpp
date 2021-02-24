@@ -39,12 +39,14 @@ StaticCreditXvaCalculator::StaticCreditXvaCalculator(
     const boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator,
     const boost::shared_ptr<NPVCube> tradeExposureCube,
     const boost::shared_ptr<NPVCube> nettingSetExposureCube,
-    const Size tradeEpeIndex, const Size tradeEneIndex,
-    const Size nettingSetEpeIndex, const Size nettingSetEneIndex)
+    const Size tradeEpeIndex, const Size tradeEneIndex, 
+    const Size nettingSetEpeIndex, const Size nettingSetEneIndex,
+    const bool flipViewXVA, const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
     : ValueAdjustmentCalculator(portfolio, market, configuration, baseCurrency, dvaName,
                                 fvaBorrowingCurve, fvaLendingCurve, applyDynamicInitialMargin,
-                                dimCalculator, tradeExposureCube, nettingSetExposureCube,
-                                tradeEpeIndex, tradeEneIndex, nettingSetEpeIndex, nettingSetEneIndex) {
+                                dimCalculator, tradeExposureCube, nettingSetExposureCube, tradeEpeIndex, tradeEneIndex, 
+                                nettingSetEpeIndex, nettingSetEneIndex, 
+                                flipViewXVA, flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix) {
     for (Size i = 0; i < dates().size(); i++) {
         dateIndexMap_.emplace(dates()[i], i);
     }

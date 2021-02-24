@@ -43,7 +43,8 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
     const boost::shared_ptr<NPVCube> tradeExposureCube,
     const boost::shared_ptr<NPVCube> nettingSetExposureCube,
     const Size tradeEpeIndex, const Size tradeEneIndex,
-    const Size nettingSetEpeIndex, const Size nettingSetEneIndex)
+    const Size nettingSetEpeIndex, const Size nettingSetEneIndex, 
+    const bool flipViewXVA, const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
     : portfolio_(portfolio), market_(market), configuration_(configuration),
       baseCurrency_(baseCurrency), dvaName_(dvaName),
       fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
@@ -51,8 +52,9 @@ ValueAdjustmentCalculator::ValueAdjustmentCalculator(
       dimCalculator_(dimCalculator),
       tradeExposureCube_(tradeExposureCube),
       nettingSetExposureCube_(nettingSetExposureCube),
-      tradeEpeIndex_(tradeEpeIndex), tradeEneIndex_(tradeEneIndex),
-      nettingSetEpeIndex_(nettingSetEpeIndex), nettingSetEneIndex_(nettingSetEneIndex) {
+      tradeEpeIndex_(tradeEpeIndex), tradeEneIndex_(tradeEneIndex), nettingSetEpeIndex_(nettingSetEpeIndex),
+      nettingSetEneIndex_(nettingSetEneIndex), flipViewXVA_(flipViewXVA),
+      flipViewBorrowingCurvePostfix_(flipViewBorrowingCurvePostfix), flipViewLendingCurvePostfix_(flipViewLendingCurvePostfix) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
@@ -273,20 +275,28 @@ void ValueAdjustmentCalculator::build() {
     Handle<YieldTermStructure> borrowingCurve, lendingCurve, oisCurve;
     if (baseCurrency_ != "")
         oisCurve = market_->discountCurve(baseCurrency_, configuration_);
-    if (fvaBorrowingCurve_ != "")
-        borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
-    if (fvaLendingCurve_ != "")
-        lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
-
-    if (!borrowingCurve.empty() || !lendingCurve.empty()) {
-        QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
-    }
 
     // Trade XVA
     for (Size i = 0; i < portfolio_->trades().size(); ++i) {
         string tid = portfolio_->trades()[i]->id();
-        LOG("Update XVA for trade " << tid);
-        string cid = portfolio_->trades()[i]->envelope().counterparty();
+        LOG("Update XVA for trade " << tid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
+        string cid; 
+        if (flipViewXVA_) {
+            cid = dvaName_;
+            dvaName_ = portfolio_->trades()[i]->envelope().counterparty();
+            fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
+            fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+        } else {
+            cid = portfolio_->trades()[i]->envelope().counterparty();
+        }
+        if (fvaBorrowingCurve_ != "")
+            borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
+        if (fvaLendingCurve_ != "")
+            lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
+
+        if (!borrowingCurve.empty() || !lendingCurve.empty()) {
+            QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
+        }
         string nid = portfolio_->trades()[i]->envelope().nettingSetId();
         Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
         Real dvaRR = 0.0;
@@ -348,12 +358,28 @@ void ValueAdjustmentCalculator::build() {
     // Netting Set XVA
     for (const auto& pair : nettingSetCpty_) {
         string nid = pair.first;
-        LOG("Update XVA for netting set " << nid);
-        string cid = pair.second;
+        LOG("Update XVA for netting set " << nid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
+        string cid;
+        if (flipViewXVA_) {
+            cid = dvaName_;
+            dvaName_ = pair.second;
+            fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
+            fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
+        } else {
+            cid = pair.second;
+        }
         Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
         Real dvaRR = 0.0;
         if (dvaName_ != "") {
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+        }
+        if (fvaBorrowingCurve_ != "")
+            borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
+        if (fvaLendingCurve_ != "")
+            lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
+
+        if (!borrowingCurve.empty() || !lendingCurve.empty()) {
+            QL_REQUIRE(baseCurrency_ != "", "baseCurrency required for FVA calculation");
         }
 
         nettingSetCva_[nid] = 0.0;
