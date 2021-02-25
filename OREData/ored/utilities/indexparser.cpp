@@ -688,7 +688,7 @@ boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Con
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseCommodityIndex(s, *conventions);
+            ret_idx = conventions ? parseCommodityIndex(s, *conventions) : parseCommodityIndex(s);
         } catch (...) {
         }
     }
