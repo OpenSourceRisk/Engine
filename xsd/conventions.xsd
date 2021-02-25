@@ -322,11 +322,23 @@
       <xs:element type="continuationMappingType" name="ContinuationMapping" minOccurs="1" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
+  
+  <xs:complexType name="averagingDataType">
+    <xs:all>
+      <xs:element type="xs:string" name="CommodityName" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="averagingDataPeriodType" name="Period" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PricingCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="UseBusinessDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="DeliveryRollDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="FutureMonthOffset" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
 
   <xs:complexType name="commodityFutureType">
     <xs:all>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
-      <xs:element name="AnchorDay" minOccurs="1" maxOccurs="1">
+      <xs:element name="AnchorDay" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:choice>
             <xs:element type="nthWeekdayType" name="NthWeekday"/>
@@ -351,6 +363,8 @@
       <xs:element type="businessDayConvention" name="OptionBusinessDayConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="continuationMappingsType" name="FutureContinuationMappings" minOccurs="0" maxOccurs="1"/>
       <xs:element type="continuationMappingsType" name="OptionContinuationMappings" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="averagingDataType" name="AveragingData" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="HoursPerDay" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
