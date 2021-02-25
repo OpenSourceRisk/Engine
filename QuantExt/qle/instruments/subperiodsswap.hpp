@@ -143,19 +143,17 @@ public:
 private:
     Period swapTenor_;
     boost::shared_ptr<IborIndex> index_;
+    Rate fixedRate_;
+    Period floatPayTenor_;
+    Period forwardStart_;
 
     Date effectiveDate_;
     Real nominal_;
     bool isPayer_;
-
-    Rate fixedRate_;
-    Period fixedTenor_;
-    Period forwardStart_;
-    Period floatPayTenor_;
-
     Natural settlementDays_;
-    Calendar fixedCalendar_;
 
+    Period fixedTenor_;
+    Calendar fixedCalendar_;
     BusinessDayConvention fixedConvention_;
     DateGeneration::Rule fixedRule_;
     DayCounter fixedDayCount_, floatDayCounter_;
