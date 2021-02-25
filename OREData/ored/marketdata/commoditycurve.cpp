@@ -58,13 +58,13 @@ using std::string;
 // https://stackoverflow.com/a/57666066/1771882
 // Needs to be in global namespace also i.e. not under ore::data
 // https://stackoverflow.com/a/25594741/1771882
-template class PiecewisePriceCurve<QuantLib::Linear, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantLib::LogLinear, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantLib::Cubic, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
-template class PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::Linear, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::LogLinear, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::Cubic, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
 
 namespace ore {
 namespace data {
