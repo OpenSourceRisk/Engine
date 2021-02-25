@@ -54,7 +54,7 @@ public:
         const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
         //! Market data object to access e.g. discounting and funcing curves
         const boost::shared_ptr<Market>& market,
-	//! Flag to indicate exposure termination at the next break date
+	    //! Flag to indicate exposure termination at the next break date
         const bool exerciseNextBreak,
         //! Expression currency for all results
         const string& baseCurrency,
@@ -64,8 +64,10 @@ public:
         const Real quantile,
         //! Collateral calculation type to be used, see class %CollateralExposureHelper
         const CollateralExposureHelper::CalculationType calcType,
-	//! Flag to indicate exposure evaluation with dynamic credit
-        const bool multiPath
+	    //! Flag to indicate exposure evaluation with dynamic credit
+        const bool multiPath,
+        //! Flag to indicate flipped xva calculation
+        const bool flipViewXVA
     );
 
     virtual ~ExposureCalculator() {}
@@ -145,6 +147,7 @@ protected:
     map<string, Real> epe_b_;
     map<string, Real> eepe_b_;
     vector<Real> getMeanExposure(const string& tid, ExposureIndex index);
+    bool flipViewXVA_;
 };
 
 } // namespace analytics

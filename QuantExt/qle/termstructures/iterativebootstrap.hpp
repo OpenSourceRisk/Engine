@@ -125,9 +125,9 @@ template <class Curve>
 IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real accuracy, QuantLib::Real globalAccuracy, bool dontThrow,
                                               QuantLib::Size maxAttempts, QuantLib::Real maxFactor,
                                               QuantLib::Real minFactor, QuantLib::Size dontThrowSteps)
-    : ts_(0), initialized_(false), validCurve_(false), loopRequired_(Interpolator::global), accuracy_(accuracy),
-      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), maxAttempts_(maxAttempts), maxFactor_(maxFactor),
-      minFactor_(minFactor), dontThrowSteps_(dontThrowSteps) {}
+    : ts_(0), n_(0), initialized_(false), validCurve_(false), loopRequired_(Interpolator::global),
+      firstAliveHelper_(0), alive_(0), accuracy_(accuracy), globalAccuracy_(globalAccuracy), dontThrow_(dontThrow),
+      maxAttempts_(maxAttempts), maxFactor_(maxFactor), minFactor_(minFactor), dontThrowSteps_(dontThrowSteps) {}
 
 template <class Curve> void IterativeBootstrap<Curve>::setup(Curve* ts) {
     ts_ = ts;

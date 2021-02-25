@@ -35,7 +35,7 @@ Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& re
     Date today = referenceDate == Date() ? Settings::instance().evaluationDate() : referenceDate;
 
     // Get the next expiry date relative to referenceDate
-    Date expiryDate = nextExpiry(referenceDate, forOption);
+    Date expiryDate = nextExpiry(today, forOption);
 
     // If expiry date equals today and we have asked not to include expiry, return next contract's expiry
     if (expiryDate == today && !includeExpiry && offset == 0) {
@@ -81,9 +81,12 @@ Date ConventionsBasedFutureExpiry::priorExpiry(bool includeExpiry, const Date& r
     return expiry;
 }
 
-Date ConventionsBasedFutureExpiry::expiryDate(Month contractMonth, Year contractYear, Natural monthOffset,
-                                              bool forOption) {
-    return expiry(contractMonth, contractYear, monthOffset, forOption);
+Date ConventionsBasedFutureExpiry::expiryDate(const Date& contractDate, Natural monthOffset, bool forOption) {
+    if (convention_.contractFrequency() == Daily) {
+        return nextExpiry(contractDate, forOption);
+    } else {
+        return expiry(contractDate.month(), contractDate.year(), monthOffset, forOption);
+    }
 }
 
 Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear, QuantLib::Natural monthOffset,
@@ -173,6 +176,15 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
 
 Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool forOption) const {
 
+    // If contract frequency is daily, next expiry is simply the next valid date on expiry calendar.
+    if (convention_.contractFrequency() == Daily) {
+        Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
+        while (convention_.prohibitedExpiries().count(expiry) > 0) {
+            expiry = convention_.expiryCalendar().advance(expiry, -1, Days);
+        }
+        return expiry;
+    }
+
     // Get a contract expiry before today and increment until expiryDate is >= today
     Date guideDate(15, convention_.oneContractMonth(), referenceDate.year() - 1);
     Date expiryDate = expiry(convention_.oneContractMonth(), referenceDate.year() - 1, 0, forOption);
@@ -183,6 +195,14 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     }
 
     return expiryDate;
+}
+
+const CommodityFutureConvention& ConventionsBasedFutureExpiry::commodityFutureConvention() const {
+    return convention_;
+}
+
+Size ConventionsBasedFutureExpiry::maxIterations() const {
+    return maxIterations_;
 }
 
 } // namespace data

@@ -41,7 +41,7 @@ class ApoFutureSurface : public QuantLib::LazyObject, public QuantLib::BlackVola
 
 public:
     ApoFutureSurface(const QuantLib::Date& referenceDate, const std::vector<QuantLib::Real>& moneynessLevels,
-                     const boost::shared_ptr<CommoditySpotIndex>& index,
+                     const boost::shared_ptr<CommodityIndex>& index,
                      const QuantLib::Handle<PriceTermStructure>& pts,
                      const QuantLib::Handle<QuantLib::YieldTermStructure>& yts,
                      const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
@@ -87,7 +87,7 @@ protected:
     //@}
 
 private:
-    boost::shared_ptr<CommoditySpotIndex> index_;
+    boost::shared_ptr<CommodityIndex> index_;
     boost::shared_ptr<FutureExpiryCalculator> baseExpCalc_;
 
     //! The APO schedule dates.

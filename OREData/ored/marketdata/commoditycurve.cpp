@@ -20,14 +20,24 @@
 #include <boost/algorithm/string.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
-#include <ql/time/date.hpp>
+#include <qle/termstructures/averagefuturepricehelper.hpp>
+#include <qle/termstructures/averagespotpricehelper.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/crosscurrencypricetermstructure.hpp>
+#include <qle/termstructures/futurepricehelper.hpp>
+#include <qle/termstructures/iterativebootstrap.hpp>
+#include <qle/termstructures/piecewisepricecurve.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/date.hpp>
 #include <regex>
 
+using QuantExt::AverageFuturePriceHelper;
+using QuantExt::AverageSpotPriceHelper;
+using QuantExt::FutureExpiryCalculator;
+using QuantExt::FuturePriceHelper;
 using QuantExt::CommodityAverageBasisPriceCurve;
 using QuantExt::CommodityBasisPriceCurve;
 using QuantExt::CommoditySpotIndex;
@@ -37,12 +47,30 @@ using QuantExt::InterpolatedPriceCurve;
 using QuantExt::LinearFlat;
 using QuantExt::LogLinearFlat;
 using QuantExt::PriceTermStructure;
+using QuantExt::PiecewisePriceCurve;
+using QuantLib::BootstrapHelper;
 using std::map;
 using std::regex;
 using std::string;
 
+// Explicit template instantiation to avoid "error C2079: ... uses undefined class ..."
+// Explained in the answer to the SO question here: 
+// https://stackoverflow.com/a/57666066/1771882
+// Needs to be in global namespace also i.e. not under ore::data
+// https://stackoverflow.com/a/25594741/1771882
+template class PiecewisePriceCurve<QuantLib::Linear, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantLib::LogLinear, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantLib::Cubic, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
+template class PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
+
 namespace ore {
 namespace data {
+
+CommodityCurve::CommodityCurve()
+    : commoditySpot_(Null<Real>()), onValue_(Null<Real>()), tnValue_(Null<Real>()), regexQuotes_(false) {}
 
 CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
                                const CurveConfigurations& curveConfigs, const Conventions& conventions,
@@ -80,6 +108,11 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
             auto pts = Handle<PriceTermStructure>(itCc->second->commodityPriceCurve());
 
             buildBasisPriceCurve(asof, *config, conventions, pts, loader);
+
+        } else if (config->type() == CommodityCurveConfig::Type::Piecewise) {
+
+            // We have a piecewise commodity configuration
+            buildPiecewiseCurve(asof, *config, conventions, loader);
 
         } else {
 
@@ -145,7 +178,7 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
     }
 
     // Add the forward quotes to the curve data
-    for (auto& q : getQuotes(asof, *config, loader)) {
+    for (auto& q : getQuotes(asof, config->curveID(), config->fwdQuotes(), loader)) {
 
         // We add ON and TN quotes after this loop if they are given and not outright quotes
         TLOG("Commodity Forward Price found for quote: " << q->name());
@@ -292,15 +325,14 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
                "Convention " << config.baseConventionsId() << " not of expected type CommodityFutureConvention");
     auto baseFec = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
-    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a
-    // commodity future index during curve construction in QuantExt.
-    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
+    // Construct the commodity index.
+    auto index = parseCommodityIndex(baseConvention->id(), conventions, false, basePts);
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
     // match our own calculated expiry date based on the basis conventions.
     map<Date, Handle<Quote>> basisData;
-    for (auto& q : getQuotes(asof, config, loader)) {
+    for (auto& q : getQuotes(asof, config.curveID(), config.fwdQuotes(), loader)) {
 
         if (q->tenorBased()) {
             TLOG("Skipping tenor based quote, " << q->name() << ".");
@@ -345,20 +377,95 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
     LOG("CommodityCurve: finished building commodity basis curve.");
 }
 
+// Allow for more readable code in method below.
+template<class I> using Crv = PiecewisePriceCurve<I, QuantExt::IterativeBootstrap>;
+template<class C> using BS = QuantExt::IterativeBootstrap<C>;
+
+void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveConfig& config,
+    const Conventions& conventions, const Loader& loader) {
+
+    LOG("CommodityCurve: start building commodity piecewise curve.");
+
+    // We store the instruments in a map. The key is the instrument's pillar date. The segments are ordered in 
+    // priority so if we encounter the same pillar date later, we ignore it with a debug log.
+    map<Date, boost::shared_ptr<Helper>> mpInstruments;
+    const auto& priceSegments = config.priceSegments();
+    QL_REQUIRE(!priceSegments.empty(), "CommodityCurve: need at least one price segment to build piecewise curve.");
+    for (const auto& kv : priceSegments) {
+        addInstruments(asof, loader, config.curveID(), kv.second, conventions, mpInstruments);
+    }
+
+    // Populate the vector of helpers.
+    vector<boost::shared_ptr<Helper>> instruments;
+    instruments.reserve(mpInstruments.size());
+    for (const auto& kv : mpInstruments) {
+        instruments.push_back(kv.second);
+    }
+
+    // Use bootstrap configuration if provided.
+    BootstrapConfig bc;
+    if (config.bootstrapConfig()) {
+        bc = *config.bootstrapConfig();
+    }
+    Real acc = bc.accuracy();
+    Real globalAcc = bc.globalAccuracy();
+    bool noThrow = bc.dontThrow();
+    Size maxAttempts = bc.maxAttempts();
+    Real maxF = bc.maxFactor();
+    Real minF = bc.minFactor();
+    Size noThrowSteps = bc.dontThrowSteps();
+
+    // Create curve based on interpolation method provided.
+    Currency ccy = parseCurrency(config.currency());
+    if (interpolationMethod_ == "Linear") {
+        BS<Crv<Linear>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<Linear>>(asof, instruments, dayCounter_, ccy, Linear(), bs);
+    } else if (interpolationMethod_ == "LogLinear") {
+        BS<Crv<QuantLib::LogLinear>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantLib::LogLinear>>(asof, instruments,
+            dayCounter_, ccy, QuantLib::LogLinear(), bs);
+    } else if (interpolationMethod_ == "Cubic") {
+        BS<Crv<QuantLib::Cubic>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantLib::Cubic>>(asof, instruments,
+            dayCounter_, ccy, QuantLib::Cubic(), bs);
+    } else if (interpolationMethod_ == "LinearFlat") {
+        BS<Crv<QuantExt::LinearFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantExt::LinearFlat>>(asof, instruments,
+            dayCounter_, ccy, QuantExt::LinearFlat(), bs);
+    } else if (interpolationMethod_ == "LogLinearFlat") {
+        BS<Crv<QuantExt::LogLinearFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantExt::LogLinearFlat>>(asof, instruments,
+            dayCounter_, ccy, QuantExt::LogLinearFlat(), bs);
+    } else if (interpolationMethod_ == "CubicFlat") {
+        BS<Crv<QuantExt::CubicFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantExt::CubicFlat>>(asof, instruments,
+            dayCounter_, ccy, QuantExt::CubicFlat(), bs);
+    } else if (interpolationMethod_ == "BackwardFlat") {
+        BS<Crv<BackwardFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<BackwardFlat>>(asof, instruments,
+            dayCounter_, ccy, BackwardFlat(), bs);
+    } else {
+        QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
+    }
+
+    LOG("CommodityCurve: finished building commodity piecewise curve.");
+}
+
 vector<boost::shared_ptr<CommodityForwardQuote>>
-CommodityCurve::getQuotes(const Date& asof, const CommodityCurveConfig& config, const Loader& loader) {
+CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector<string>& quotes,
+    const Loader& loader) {
 
     LOG("CommodityCurve: start getting configured commodity quotes.");
 
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
     regexQuotes_ = false;
-    for (Size i = 0; i < config.fwdQuotes().size(); i++) {
-        if ((regexQuotes_ = config.fwdQuotes()[i].find("*") != string::npos)) {
-            QL_REQUIRE(i == 0 && config.fwdQuotes().size() == 1,
-                       "Wild card config, " << config.curveID() << ", should have exactly one quote.");
-            DLOG("Regular expression, '" << config.fwdQuotes()[0] << "', specified for forward quotes"
-                                         << " for commodity curve " << config.curveID());
+    for (Size i = 0; i < quotes.size(); i++) {
+        if ((regexQuotes_ = quotes[i].find("*") != string::npos)) {
+            QL_REQUIRE(i == 0 && quotes.size() == 1,
+                       "Wild card config, " << configId << ", should have exactly one quote.");
+            DLOG("Regular expression, '" << quotes[0] << "', specified for forward quotes"
+                                         << " for commodity curve " << configId);
             break;
         }
     }
@@ -366,7 +473,7 @@ CommodityCurve::getQuotes(const Date& asof, const CommodityCurveConfig& config, 
     // If we find a regex in forward quotes, check there is only one and initialise the regex
     regex reg;
     if (regexQuotes_)
-        reg = regex(boost::replace_all_copy(config.fwdQuotes()[0], "*", ".*"));
+        reg = regex(boost::replace_all_copy(quotes[0], "*", ".*"));
 
     // Add the relevant forward quotes to the result vector
     vector<boost::shared_ptr<CommodityForwardQuote>> result;
@@ -381,8 +488,8 @@ CommodityCurve::getQuotes(const Date& asof, const CommodityCurveConfig& config, 
             // Check if the quote is requested by the config and if it isn't continue to the next quote
             if (!regexQuotes_) {
                 vector<string>::const_iterator it =
-                    find(config.fwdQuotes().begin(), config.fwdQuotes().end(), q->name());
-                if (it == config.fwdQuotes().end())
+                    find(quotes.begin(), quotes.end(), q->name());
+                if (it == quotes.end())
                     continue;
             } else {
                 if (!regex_match(q->name(), reg))
@@ -398,6 +505,109 @@ CommodityCurve::getQuotes(const Date& asof, const CommodityCurveConfig& config, 
     LOG("CommodityCurve: finished getting configured commodity quotes.");
 
     return result;
+}
+
+void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, const string& configId,
+    const PriceSegment& priceSegment, const Conventions& conventions,
+    map<Date, boost::shared_ptr<Helper>>& instruments) {
+
+    // Get the relevant quotes
+    auto quotes = getQuotes(asof, configId, priceSegment.quotes(), loader);
+
+    // Add an instrument for each relevant quote.
+    for (const auto& quote : quotes) {
+
+        if (quote->tenorBased()) {
+            TLOG("Skipping tenor based quote, " << quote->name() << ".");
+            continue;
+        }
+
+        const Date& expiry = quote->expiryDate();
+        if (expiry < asof) {
+            TLOG("Skipping quote, " << quote->name() << ", because its expiry date, " << io::iso_date(expiry)
+                << ", is before the market date " << io::iso_date(asof));
+            continue;
+        }
+
+        using PST = PriceSegment::Type;
+        using AD = CommodityFutureConvention::AveragingData;
+        using ADCP = AD::CalculationPeriod;
+
+        PST type = priceSegment.type();
+        switch (type) {
+        case PST::Future:
+            if (instruments.count(expiry) == 0) {
+                instruments[expiry] = boost::make_shared<FuturePriceHelper>(quote->quote(), expiry);
+            } else {
+                TLOG("Skipping quote, " << quote->name() << ", because its expiry date, " <<
+                    io::iso_date(expiry) << ", is already in the instrument set.");
+            }
+            break;
+
+        // An averaging future referencing an underlying future or spot. Setup is similar.
+        case PST::AveragingFuture:
+        case PST::AveragingSpot: {
+
+            // Get the associated averaging commodity future convention.
+            auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                conventions.get(priceSegment.conventionsId()));
+            QL_REQUIRE(convention, "Convention " << priceSegment.conventionsId() <<
+                " not of expected type CommodityFutureConvention.");
+
+            const AD& ad = convention->averagingData();
+            QL_REQUIRE(!ad.empty(), "CommodityCurve: convention " << convention->id() <<
+                " should have non-empty averaging data for piecewise price curve construction.");
+
+            // Determine the calculation period.
+            Date start;
+            Date end;
+            if (ad.period() == ADCP::ExpiryToExpiry) {
+
+                auto fec = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
+                end = fec->nextExpiry(true, expiry);
+                if (end != expiry) {
+                    WLOG("Calculated expiry date, " << io::iso_date(end) << ", does not equal quote's expiry date "
+                        << io::iso_date(expiry) << ". Proceed with quote's expiry.");
+                }
+                start = fec->priorExpiry(true, end) + 1;
+
+            } else if (ad.period() == ADCP::PreviousMonth) {
+
+                end = Date::endOfMonth(expiry - 1 * Months);
+                start = Date(1, end.month(), end.year());
+            }
+
+            // If referencing a future, we need conventions for the underlying future that is being averaged.
+            boost::shared_ptr<FutureExpiryCalculator> uFec;
+            if (type == PST::AveragingFuture) {
+                auto uConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                    conventions.get(ad.conventionsId()));
+                QL_REQUIRE(uConvention, "Convention " << priceSegment.conventionsId() <<
+                    " not of expected type CommodityFutureConvention.");
+                uFec = boost::make_shared<ConventionsBasedFutureExpiry>(*uConvention);
+            }
+
+            // Build the instrument.
+            auto index = parseCommodityIndex(ad.commodityName(), conventions, false);
+            auto afph = boost::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
+                ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays());
+
+            // Only add to instruments if an instrument with the same pillar date is not there already.
+            Date pillar = afph->pillarDate();
+            if (instruments.count(pillar) == 0) {
+                instruments[pillar] = afph;
+            } else {
+                TLOG("Skipping quote, " << quote->name() << ", because an instrument with its pillar date, " <<
+                    io::iso_date(pillar) << ", is already in the instrument set.");
+            }
+            break;
+        }
+
+        default:
+            QL_FAIL("CommodityCurve: unrecognised price segment type.");
+            break;
+        }
+    }
 }
 
 } // namespace data

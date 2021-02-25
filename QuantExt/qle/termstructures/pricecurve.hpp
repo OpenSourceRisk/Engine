@@ -79,11 +79,6 @@ public:
     void update();
     //@}
 
-    //! \name LazyObject interface
-    //@{
-    void performCalculations() const;
-    //@}
-
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const;
@@ -104,16 +99,27 @@ public:
     //@}
 
 protected:
+    //! Used by PiecewisePriceCurve
+    InterpolatedPriceCurve(const QuantLib::Date& referenceDate,
+        const QuantLib::DayCounter& dc, const QuantLib::Currency& currency,
+        const Interpolator& interpolator = Interpolator());
+
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const;
+    //@}
+
     //! \name PriceTermStructure implementation
     //@{
     QuantLib::Real priceImpl(QuantLib::Time t) const;
     //@}
 
+    mutable std::vector<QuantLib::Date> dates_;
+
 private:
     const QuantLib::Currency currency_;
     std::vector<QuantLib::Handle<QuantLib::Quote> > quotes_;
     std::vector<QuantLib::Period> tenors_;
-    mutable std::vector<QuantLib::Date> dates_;
 
     void initialise();
     void populateDatesFromTenors() const;
@@ -130,7 +136,7 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const std::vector<Q
     : PriceTermStructure(0, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
                                                                std::vector<QuantLib::Time>(tenors.size()), prices,
                                                                interpolator),
-      currency_(currency), tenors_(tenors), dates_(tenors.size()) {
+      dates_(tenors.size()), currency_(currency), tenors_(tenors) {
 
     QL_REQUIRE(boost::algorithm::is_sorted(tenors_.begin(), tenors_.end()), "Tenors must be sorted");
     populateDatesFromTenors();
@@ -145,7 +151,7 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
                                                                std::vector<QuantLib::Time>(tenors.size()),
                                                                std::vector<QuantLib::Real>(quotes.size()),
                                                                interpolator),
-      currency_(currency), quotes_(quotes), tenors_(tenors), dates_(tenors.size()) {
+      dates_(tenors.size()), currency_(currency), quotes_(quotes), tenors_(tenors) {
 
     QL_REQUIRE(boost::algorithm::is_sorted(tenors_.begin(), tenors_.end()), "Tenors must be sorted");
     populateDatesFromTenors();
@@ -167,7 +173,7 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const QuantLib::Dat
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), dc), QuantLib::InterpolatedCurve<Interpolator>(
                                                                            std::vector<QuantLib::Time>(dates.size()),
                                                                            prices, interpolator),
-      currency_(currency), dates_(dates) {
+      dates_(dates), currency_(currency) {
 
     convertDatesToTimes();
     initialise();
@@ -182,7 +188,7 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
                                                                            std::vector<QuantLib::Time>(dates.size()),
                                                                            std::vector<QuantLib::Real>(quotes.size()),
                                                                            interpolator),
-      currency_(currency), quotes_(quotes), dates_(dates) {
+      dates_(dates), currency_(currency), quotes_(quotes) {
 
     convertDatesToTimes();
     initialise();
@@ -192,6 +198,13 @@ InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
         registerWith(quotes[i]);
     }
 }
+
+template <class Interpolator>
+InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(
+    const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dc,
+    const QuantLib::Currency& currency, const Interpolator& interpolator)
+    : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), dc),
+      QuantLib::InterpolatedCurve<Interpolator>(interpolator), currency_(currency) {}
 
 template <class Interpolator> void InterpolatedPriceCurve<Interpolator>::update() {
 

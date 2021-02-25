@@ -857,6 +857,7 @@ The meanings of the various elements in this node are as follows:
 \end{itemize}
 
 \subsubsection{Commodity Future Conventions}
+\label{sec:commodity_future_conventions}
 A node with name \lstinline!CommodityFuture! is used to store conventions for commodity future contracts and options on them. These conventions are used in commodity derivative trades and commodity curve construction to calculate contract expiry dates. The structure of this node is shown in Listing \ref{lst:commodity_future_conventions}.
 
 \begin{listing}[h!]
@@ -899,6 +900,10 @@ A node with name \lstinline!CommodityFuture! is used to store conventions for co
     </ContinuationMapping>
     ...
   </OptionContinuationMappings>
+  <AveragingData>
+    ...
+  </AveragingData>
+  <HoursPerDay>...</HoursPerDay>
 </CommodityFuture>
 \end{minted}
 \caption{Commodity future conventions}
@@ -908,12 +913,12 @@ A node with name \lstinline!CommodityFuture! is used to store conventions for co
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
 \item \lstinline!Id!: The identifier for the commodity future convention. The identifier here should match the \lstinline!Name! that would be provided for the commodity in the trade XML as described in Table \ref{tab:commodity_data}.
-\item \lstinline!AnchorDay!: This node is used to give a date in the future contract month to use as a base date for calculating the expiry date. It can contain a \lstinline!DayOfMonth! node, a \lstinline!CalendarDaysBefore! node or an \lstinline!NthWeekday! node:
-\begin{itemize}
-\item The \lstinline!DayOfMonth! This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month. A value of 31 will guarantee that the last day in the month is used a base date.
-\item The \lstinline!CalendarDaysBefore! This node can contain any non-negative integer. The contract expiry date is this number of calendar days before the first calendar day of the contract month.
-\item The \lstinline!NthWeekday! This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
-\end{itemize}
+\item \lstinline!AnchorDay! [Optional]: This node is not applicable for daily future contracts and hence is optional. It is necessary for future contracts with a monthly cycle or greater. This node is used to give a date in the future contract month to use as a base date for calculating the expiry date. It can contain a \lstinline!DayOfMonth! node, a \lstinline!CalendarDaysBefore! node or an \lstinline!NthWeekday! node:
+    \begin{itemize}
+    \item The \lstinline!DayOfMonth! This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month. A value of 31 will guarantee that the last day in the month is used a base date.
+    \item The \lstinline!CalendarDaysBefore! This node can contain any non-negative integer. The contract expiry date is this number of calendar days before the first calendar day of the contract month.
+    \item The \lstinline!NthWeekday! This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
+    \end{itemize}
 \item \lstinline!ContractFrequency!: This node indicates the frequency of the commodity future contracts. The value here is usually \lstinline!Monthly! or \lstinline!Quarterly!.
 \item \lstinline!Calendar!: The business day trading calendar(s) applicable for the commodity future contract.
 \item \lstinline!ExpiryCalendar! [Optional]: The business day expiry calendar(s) applicable for the commodity future contract. This calendar is used when deriving expiry dates. If omitted, this defaults to the trading day calendar specified in the \lstinline!Calendar! node.
@@ -930,6 +935,8 @@ The meanings of the various elements in this node are as follows:
 \item \lstinline!OptionBusinessDayConvention! [Optional]: The business day convention used to adjust the option expiry date to a good business day if \lstinline!OptionExpiryDay! is used.
 \item \lstinline!FutureContinuationMappings! [Optional]: When building future curves, we may use market data that has a continuation expiry, i.e. \lstinline!c1!, \lstinline!c2!, etc. , as opposed to an explicit expiry date or tenor. In some cases, the continuation expiries coming from the market data provider may skip serial months and therefore we use the mapping here to map from the market data provider index to the relevant serial month.
 \item \lstinline!OptionContinuationMappings! [Optional]: When building option volatility structures, we may use market data that has a continuation expiry, i.e. \lstinline!c1!, \lstinline!c2!, etc. , as opposed to an explicit expiry date or tenor. In some cases, the continuation expiries coming from the market data provider may skip serial months and therefore we use the mapping here to map from the market data provider index to the relevant serial month. For example, for the Crude Palm Oil contract \lstinline!XKLS:FCPO!, the option expiry months are serial up to the 9th month and then alternate months. So, we would add a mapping from 10 to 11, 11 to 13 and so on so that the correct option expiry is arrived at when reading the market data quotes and constructing the option volatility structure.
+\item \lstinline!AveragingData! [Optional]: This node is needed for future contracts that are used in a piecewise commodity curve \lstinline!PriceSegment! and whose underlying is the average of other future prices or spot prices over a given period. An example is the ICE PMI power contract with contract specifications outlined \href{https://www.theice.com/products/6590369/PJM-Western-Hub-Real-Time-Peak-1-MW-Fixed-Price-Future}{here}. It is described in detail below.
+\item \lstinline!HoursPerDay! [Optional]: For power derivatives, quantities are sometimes given as a quantity per hour. To deduce the quantity for the day which is multiplied by that day's future price, one needs to know the number of hours in the day associated with the future price. For example ICE PDQ is the daily PJM Western Hub Real Time Peak future contract. The price each day for this contract is the average of the locational marginal prices (LMPs) for all hours ending 08:00 to 23:00 Eastern Pacific Time. In other words, there are 16 hours in the day that feed in to the average yielding this settlement price. For this contract, \lstinline!HoursPerDay! would be \lstinline!16!. This field is only needed if a trade XML references this commodity contract, has \lstinline!CommodityQuantityFrequency! set to \lstinline!PerHour! and has no \lstinline!HoursPerDay! value set directly in the XML.
 \end{itemize}
 
 \begin{listing}[h!]
@@ -962,6 +969,38 @@ An example \lstinline!CommodityFuture! node for the NYMEX WTI future contract, s
 \end{minted}
 \caption{NYMEX WTI \textnormal{\lstinline!CommodityFuture!} node}
 \label{lst:ex_wti_comm_future_convention}
+\end{listing}
+
+The \lstinline!AveragingData! node referenced above has the structure shown in Listing \ref{lst:ave_data_comm_future_convention}. The meaning of each of the fields is as follows:
+
+\begin{itemize}
+\item \lstinline!CommodityName!: The name of the commodity being averaged.
+\item \lstinline!Conventions!: The identifier for the conventions associated with the commodity being averaged.
+\item \lstinline!Period!: This indicates the averaging period relative to the future expiry date. The allowable values are:
+    \begin{itemize}
+    \item \lstinline!PreviousMonth!: The calendar month prior to the month in which the (top level) future contract's expiry date falls is used as the averaging period.
+    \item \lstinline!ExpiryToExpiry!: Given a (top level) future contract's expiry date, the averaging period is from and excluding the previous expiry date to and including the expiry date.
+    \end{itemize}
+\item \lstinline!PricingCalendar!: The pricing calendar(s) used to determine the pricing dates in the averaging period.
+\item \lstinline!UseBusinessDays! [Optional]: A boolean flag that defaults to \lstinline!true! if omitted. When set to \lstinline!true!, the pricing dates in the averaging period are the set of \lstinline!PricingCalendar! good business days. When set to \lstinline!false!, the pricing dates in the averaging period are the complement of the set of \lstinline!PricingCalendar! good business days. This may be useful in certain situations. For example, the contract ICE PW2 with specifications \href{https://www.theice.com/products/71090520/PJM-Western-Hub-Real-Time-Peak-2x16-Fixed-Price-Future}{here} averages the PJM Western Hub locational marginal prices over each day in the averaging period that is a Saturday, Sunday or NERC holiday. So, in this case, \lstinline!UseBusinessDays! would be \lstinline!false! and \lstinline!PricingCalendar! would be \lstinline!US-NERC!.
+\item \lstinline!DeliveryRollDays! [Optional]: This node allows any non-negative integer value. When averaging a commodity future contract price over the averaging period, the averaging period may include an underlying future contract expiry date. This node's value indicates when we should begin using the next future contract's price in the averaging. If the value is zero, we should include the future contract prices up to and including the contract expiry. If the value is one, we should include the contract prices up to and including the day that is one business day before the contract expiry and then switch to using the next future contract's price thereafter. Similarly for other non-negative integer values. If this node is omitted, it is set to zero.
+\item \lstinline!FutureMonthOffset! [Optional]: This node allows any non-negative integer value. If this node is omitted, it is set to zero. This node indicates which future contract is being referenced on each \textit{Pricing Date} in the averaging period by acting as an offset from the next available expiry date. If \lstinline!FutureMonthOffset! is zero, the settlement price of the next available monthly contract that has not expired with respect to the \textit{Pricing Date} is used as the price on that \textit{Pricing Date}. If \lstinline!FutureMonthOffset! is one, the settlement price of the second available monthly contract that has not expired with respect to the \textit{Pricing Date} is used as the price on that \textit{Pricing Date}. Similarly for other positive values of \lstinline!FutureMonthOffset!.
+\end{itemize}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<AveragingData>
+  <CommodityName>...</CommodityName>
+  <Conventions>...</Conventions>
+  <Period>...</Period>
+  <PricingCalendar>...</PricingCalendar>
+  <UseBusinessDays>...</UseBusinessDays>
+  <DeliveryRollDays>...</DeliveryRollDays>
+  <FutureMonthOffset>...</FutureMonthOffset>
+</AveragingData>
+\end{minted}
+\caption{\lstinline!AveragingData! node structure}
+\label{lst:ave_data_comm_future_convention}
 \end{listing}
 
 \subsubsection{Credit Default Swap Conventions}
