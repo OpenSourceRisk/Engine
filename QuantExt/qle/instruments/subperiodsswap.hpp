@@ -118,7 +118,7 @@ inline Rate SubPeriodsSwap::floatLegNPV() const { return legNPV(1); }
 
 class MakeSubPeriodsSwap {
 public:
-    MakeSubPeriodsSwap(const Period& swapTenor, const boost::shared_ptr<IborIndex>& bmaIndex,
+    MakeSubPeriodsSwap(const Period& swapTenor, const boost::shared_ptr<IborIndex>& index,
         Rate fixedRate, const Period& floatPayTenor, const Period& forwardStart = 0 * Days);
 
     operator SubPeriodsSwap() const;
