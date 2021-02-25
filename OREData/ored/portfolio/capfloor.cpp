@@ -226,16 +226,14 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Date startDate;
         Schedule schedule = makeSchedule(legData_.schedule());
 
+        const string& start = cpiData->startDate();
         if (schedule.size() < 2) {
-            QL_REQUIRE(!cpiData->startDate().empty(),
-                       "makeCPILeg(): if only one schedule date is given, a StartDate must be given in addition");
-            startDate = parseDate(cpiData->startDate());
-        } else {
-            QL_REQUIRE(cpiData->startDate().empty() || parseDate(cpiData->startDate()) == schedule.dates().front(),
-                       "makeCPILeg(): first schedule date ("
-                           << schedule.dates().front() << ") must be identical to start date ("
-                           << parseDate(cpiData->startDate())
-                           << "), the start date can be omitted for schedules containing more than one date");
+            QL_REQUIRE(!start.empty(), "Only one schedule date, a 'StartDate' must be given.");
+            startDate = parseDate(start);
+        } else if (!start.empty()) {
+            DLOG("Schedule with more than 2 dates was provided. The first schedule date " <<
+                io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " <<
+                start << " is not used.");
             startDate = schedule.dates().front();
         }
 
