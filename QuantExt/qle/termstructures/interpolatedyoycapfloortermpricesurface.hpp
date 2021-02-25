@@ -110,7 +110,7 @@ protected:
 namespace detail {
 struct CloseEnoughComparator {
     explicit CloseEnoughComparator(const Real v) : v_(v) {}
-    bool operator()(const Real w) const { return close_enough(v_, w); }
+    bool operator()(const Real w) const { return QuantLib::close_enough(v_, w); }
     Real v_;
 };
 } // namespace detail
