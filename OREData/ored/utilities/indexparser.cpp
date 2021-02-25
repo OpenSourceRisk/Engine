@@ -26,6 +26,7 @@
 #include <boost/regex.hpp>
 #include <map>
 #include <ored/configuration/conventions.hpp>
+#include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -578,45 +579,76 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& name) {
 
 }
 
-boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, const Calendar& cal,
-                                                                const Handle<PriceTermStructure>& ts) {
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, bool hasPrefix,
+                                                                const Calendar& cal,
+                                                                const Handle<PriceTermStructure>& ts,
+                                                                const Conventions& conventions) {
 
-    // Make sure the prefix is correct
-    string prefix = name.substr(0, 5);
-    QL_REQUIRE(prefix == "COMM-", "A commodity index string must start with 'COMM-' but got " << prefix);
+    // Whether we check for "COMM-" prefix depends on hasPrefix.
+    string commName = name;
+    if (hasPrefix) {
+        // Make sure the prefix is correct
+        string prefix = name.substr(0, 5);
+        QL_REQUIRE(prefix == "COMM-", "A commodity index string must start with 'COMM-' but got " << prefix);
+        commName = name.substr(5);
+    }
 
     // Now take the remainder of the string
     // for spot indices, this should just be the commodity name (possibly containing hyphens)
     // for future indices, this is of the form NAME-YYYY-MM or NAME-YYYY-MM-DD where NAME is the commodity name
     // (possibly containing hyphens) and YYYY-MM(-DD) is the expiry date of the futures contract
     Date expiry;
-    string nameWoPrefix = name.substr(5);
-    string commName = nameWoPrefix;
 
     // Check for form NAME-YYYY-MM-DD
-    if (nameWoPrefix.size() > 10) {
-        string test = nameWoPrefix.substr(nameWoPrefix.size() - 10);
+    if (commName.size() > 10) {
+        string test = commName.substr(commName.size() - 10);
         if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}-\\d{2}"))) {
             expiry = parseDate(test);
-            commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+            commName = commName.substr(0, commName.size() - test.size() - 1);
         }
     }
 
     // Check for form NAME-YYYY-MM if NAME-YYYY-MM-DD failed
-    if (expiry == Date() && nameWoPrefix.size() > 7) {
-        string test = nameWoPrefix.substr(nameWoPrefix.size() - 7);
+    if (expiry == Date() && commName.size() > 7) {
+        string test = commName.substr(commName.size() - 7);
         if (boost::regex_match(test, boost::regex("\\d{4}-\\d{2}"))) {
             expiry = parseDate(test + "-01");
-            commName = nameWoPrefix.substr(0, nameWoPrefix.size() - test.size() - 1);
+            commName = commName.substr(0, commName.size() - test.size() - 1);
         }
     }
 
+    // Do we have a commodity future convention for the commodity.
+    boost::shared_ptr<CommodityFutureConvention> convention;
+    if (conventions.has(commName)) {
+        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commName));
+    }
+
     // Create and return the required future index
-    if (expiry != Date()) {
-        return boost::make_shared<CommodityFuturesIndex>(commName, expiry, cal, ts);
+    if (expiry != Date() || convention) {
+
+        // If expiry is empty, just use any valid expiry.
+        if (expiry == Date()) {
+            ConventionsBasedFutureExpiry feCalc(*convention);
+            expiry = feCalc.nextExpiry();
+        }
+
+        bool keepDays = convention && convention->contractFrequency() == Daily;
+
+        Calendar cdr = cal;
+        if (convention && cdr == NullCalendar()) {
+            cdr = convention->calendar();
+        }
+
+        return boost::make_shared<CommodityFuturesIndex>(commName, expiry, cdr, keepDays, ts);
+
     } else {
         return boost::make_shared<CommoditySpotIndex>(commName, cal, ts);
     }
+}
+
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name,
+    const Conventions& conventions, bool hasPrefix, const Handle<PriceTermStructure>& ts) {
+    return parseCommodityIndex(name, hasPrefix, NullCalendar(), ts, conventions);
 }
 
 boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Conventions>& conventions) {
@@ -676,7 +708,7 @@ boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Con
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseCommodityIndex(s);
+            ret_idx = parseCommodityIndex(s, *conventions);
         } catch (...) {
         }
     }

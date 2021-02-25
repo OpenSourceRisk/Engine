@@ -1254,6 +1254,98 @@ XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+CommodityFutureConvention::AveragingData::AveragingData()
+    : useBusinessDays_(true), deliveryRollDays_(0), futureMonthOffset_(0),
+      period_(CalculationPeriod::ExpiryToExpiry) {}
+
+CommodityFutureConvention::AveragingData::AveragingData(const string& commodityName, const string& period,
+    const string& pricingCalendar, bool useBusinessDays, const string& conventionsId,
+    Natural deliveryRollDays, Natural futureMonthOffset)
+    : commodityName_(commodityName), strPeriod_(period), strPricingCalendar_(pricingCalendar),
+      useBusinessDays_(useBusinessDays), conventionsId_(conventionsId), deliveryRollDays_(deliveryRollDays),
+      futureMonthOffset_(futureMonthOffset), period_(CalculationPeriod::ExpiryToExpiry) {
+    build();
+}
+
+const string& CommodityFutureConvention::AveragingData::commodityName() const {
+    return commodityName_;
+}
+
+CommodityFutureConvention::AveragingData::CalculationPeriod CommodityFutureConvention::AveragingData::period() const {
+    return period_;
+}
+
+const QuantLib::Calendar& CommodityFutureConvention::AveragingData::pricingCalendar() const {
+    return pricingCalendar_;
+}
+
+bool CommodityFutureConvention::AveragingData::useBusinessDays() const {
+    return useBusinessDays_;
+}
+
+const string& CommodityFutureConvention::AveragingData::conventionsId() const {
+    return conventionsId_;
+}
+
+QuantLib::Natural CommodityFutureConvention::AveragingData::deliveryRollDays() const {
+    return deliveryRollDays_;
+}
+
+QuantLib::Natural CommodityFutureConvention::AveragingData::futureMonthOffset() const {
+    return futureMonthOffset_;
+}
+
+bool CommodityFutureConvention::AveragingData::empty() const {
+    return commodityName_.empty();
+}
+
+void CommodityFutureConvention::AveragingData::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "AveragingData");
+    commodityName_ = XMLUtils::getChildValue(node, "CommodityName", true);
+    strPeriod_ = XMLUtils::getChildValue(node, "Period", true);
+    strPricingCalendar_ = XMLUtils::getChildValue(node, "PricingCalendar", true);
+    useBusinessDays_ = true;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "UseBusinessDays")) {
+        useBusinessDays_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+    conventionsId_ = XMLUtils::getChildValue(node, "Conventions", false);
+
+    deliveryRollDays_ = 0;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "DeliveryRollDays")) {
+        deliveryRollDays_ = parseInteger(XMLUtils::getNodeValue(n));
+    }
+
+    futureMonthOffset_ = 0;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "FutureMonthOffset")) {
+        futureMonthOffset_ = parseInteger(XMLUtils::getNodeValue(n));
+    }
+
+    build();
+}
+
+XMLNode* CommodityFutureConvention::AveragingData::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("AveragingData");
+    XMLUtils::addChild(doc, node, "CommodityName", commodityName_);
+    XMLUtils::addChild(doc, node, "Period", strPeriod_);
+    XMLUtils::addChild(doc, node, "PricingCalendar", strPricingCalendar_);
+    XMLUtils::addChild(doc, node, "UseBusinessDays", useBusinessDays_);
+    if (!conventionsId_.empty())
+        XMLUtils::addChild(doc, node, "Conventions", conventionsId_);
+    if (deliveryRollDays_ != 0)
+        XMLUtils::addChild(doc, node, "DeliveryRollDays", static_cast<int>(deliveryRollDays_));
+    if (futureMonthOffset_ != 0)
+        XMLUtils::addChild(doc, node, "FutureMonthOffset", static_cast<int>(futureMonthOffset_));
+
+    return node;
+}
+
+void CommodityFutureConvention::AveragingData::build() {
+    period_ = parseAveragingDataPeriod(strPeriod_);
+    pricingCalendar_ = parseCalendar(strPricingCalendar_);
+}
+
 CommodityFutureConvention::CommodityFutureConvention()
     : anchorType_(AnchorType::DayOfMonth),
       dayOfMonth_(1),
@@ -1270,7 +1362,8 @@ CommodityFutureConvention::CommodityFutureConvention()
       isAveraging_(false),
       optionExpiryMonthLag_(0),
       optionExpiryDay_(Null<Natural>()),
-      optionBdc_(Preceding) {}
+      optionBdc_(Preceding),
+      hoursPerDay_(Null<Natural>()) {}
 
 CommodityFutureConvention::CommodityFutureConvention(const string& id, const DayOfMonth& dayOfMonth,
                                                      const string& contractFrequency, const string& calendar,
@@ -1279,11 +1372,13 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
                                                      const vector<string>& prohibitedExpiries,
-                                                     QuantLib::Natural optionExpiryMonthLag,
-                                                     QuantLib::Natural optionExpiryDay,
-                                                     const std::string& optionBdc,
+                                                     Natural optionExpiryMonthLag,
+                                                     Natural optionExpiryDay,
+                                                     const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
-                                                     const map<Natural, Natural>& optionContinuationMappings)
+                                                     const map<Natural, Natural>& optionContinuationMappings,
+                                                     const AveragingData& averagingData,
+                                                     Natural hoursPerDay)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
       strDayOfMonth_(dayOfMonth.dayOfMonth_), strContractFrequency_(contractFrequency), strCalendar_(calendar),
       strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth),
@@ -1291,7 +1386,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       strOptionExpiryOffset_(optionExpiryOffset), strProhibitedExpiries_(prohibitedExpiries),
       optionExpiryMonthLag_(optionExpiryMonthLag), optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
-      optionContinuationMappings_(optionContinuationMappings) {
+      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
+      hoursPerDay_(hoursPerDay) {
     build();
 }
 
@@ -1302,11 +1398,13 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
                                                      const vector<string>& prohibitedExpiries,
-                                                     QuantLib::Natural optionExpiryMonthLag,
-                                                     QuantLib::Natural optionExpiryDay,
-                                                     const std::string& optionBdc,
+                                                     Natural optionExpiryMonthLag,
+                                                     Natural optionExpiryDay,
+                                                     const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
-                                                     const map<Natural, Natural>& optionContinuationMappings)
+                                                     const map<Natural, Natural>& optionContinuationMappings,
+                                                     const AveragingData& averagingData,
+                                                     Natural hoursPerDay)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
       strContractFrequency_(contractFrequency), strCalendar_(calendar), strExpiryCalendar_(expiryCalendar),
       expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
@@ -1314,7 +1412,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       strProhibitedExpiries_(prohibitedExpiries), optionExpiryMonthLag_(optionExpiryMonthLag),
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
-      optionContinuationMappings_(optionContinuationMappings) {
+      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
+      hoursPerDay_(hoursPerDay) {
     build();
 }
 
@@ -1325,11 +1424,13 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
                                                      const vector<string>& prohibitedExpiries,
-                                                     QuantLib::Natural optionExpiryMonthLag,
-                                                     QuantLib::Natural optionExpiryDay,
-                                                     const std::string& optionBdc,
+                                                     Natural optionExpiryMonthLag,
+                                                     Natural optionExpiryDay,
+                                                     const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
-                                                     const map<Natural, Natural>& optionContinuationMappings)
+                                                     const map<Natural, Natural>& optionContinuationMappings,
+                                                     const AveragingData& averagingData,
+                                                     Natural hoursPerDay)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
       strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -1338,7 +1439,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       strProhibitedExpiries_(prohibitedExpiries), optionExpiryMonthLag_(optionExpiryMonthLag),
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
-      optionContinuationMappings_(optionContinuationMappings) {
+      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
+      hoursPerDay_(hoursPerDay) {
     build();
 }
 
@@ -1348,24 +1450,29 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     type_ = Type::CommodityFuture;
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
-    // Variables related to the anchor day in a given month
-    XMLNode* anchorNode = XMLUtils::getChildNode(node, "AnchorDay");
-    QL_REQUIRE(anchorNode, "Expected an AnchorDay node in the FutureExpiry convention");
-    if (XMLNode* nthNode = XMLUtils::getChildNode(anchorNode, "NthWeekday")) {
-        anchorType_ = AnchorType::NthWeekday;
-        strNth_ = XMLUtils::getChildValue(nthNode, "Nth", true);
-        strWeekday_ = XMLUtils::getChildValue(nthNode, "Weekday", true);
-    } else if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "DayOfMonth")) {
-        anchorType_ = AnchorType::DayOfMonth;
-        strDayOfMonth_ = XMLUtils::getNodeValue(tmp);
-    } else if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "CalendarDaysBefore")) {
-        anchorType_ = AnchorType::CalendarDaysBefore;
-        strCalendarDaysBefore_ = XMLUtils::getNodeValue(tmp);
-    } else {
-        QL_FAIL("Failed to parse AnchorDay node");
+    // Parse contract frequency first. If it is Daily, we do not need the AnchorDay node.
+    strContractFrequency_ = XMLUtils::getChildValue(node, "ContractFrequency", true);
+    populateFrequency();
+
+    // Variables related to the anchor day in a given month. Not needed if daily.
+    if (contractFrequency_ != Daily) {
+        XMLNode* anchorNode = XMLUtils::getChildNode(node, "AnchorDay");
+        QL_REQUIRE(anchorNode, "Expected an AnchorDay node in the FutureExpiry convention");
+        if (XMLNode* nthNode = XMLUtils::getChildNode(anchorNode, "NthWeekday")) {
+            anchorType_ = AnchorType::NthWeekday;
+            strNth_ = XMLUtils::getChildValue(nthNode, "Nth", true);
+            strWeekday_ = XMLUtils::getChildValue(nthNode, "Weekday", true);
+        } else if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "DayOfMonth")) {
+            anchorType_ = AnchorType::DayOfMonth;
+            strDayOfMonth_ = XMLUtils::getNodeValue(tmp);
+        } else if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "CalendarDaysBefore")) {
+            anchorType_ = AnchorType::CalendarDaysBefore;
+            strCalendarDaysBefore_ = XMLUtils::getNodeValue(tmp);
+        } else {
+            QL_FAIL("Failed to parse AnchorDay node");
+        }
     }
 
-    strContractFrequency_ = XMLUtils::getChildValue(node, "ContractFrequency", true);
     strCalendar_ = XMLUtils::getChildValue(node, "Calendar", true);
     strExpiryCalendar_ = XMLUtils::getChildValue(node, "ExpiryCalendar", false);
 
@@ -1418,6 +1525,17 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         optionContinuationMappings_[parseInteger(kv.first)] = parseInteger(kv.second);
     }
 
+    if (isAveraging_) {
+        if (XMLNode* n = XMLUtils::getChildNode(node, "AveragingData")) {
+            averagingData_.fromXML(n);
+        }
+    }
+
+    hoursPerDay_ = Null<Natural>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "HoursPerDay")) {
+        hoursPerDay_ = parseInteger(XMLUtils::getNodeValue(n));
+    }
+
     build();
 }
 
@@ -1426,18 +1544,20 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("CommodityFuture");
     XMLUtils::addChild(doc, node, "Id", id_);
 
-    XMLNode* anchorNode = doc.allocNode("AnchorDay");
-    if (anchorType_ == AnchorType::DayOfMonth) {
-        XMLUtils::addChild(doc, anchorNode, "DayOfMonth", strDayOfMonth_);
-    } else if (anchorType_ == AnchorType::NthWeekday) {
-        XMLNode* nthNode = doc.allocNode("NthWeekday");
-        XMLUtils::addChild(doc, nthNode, "Nth", strNth_);
-        XMLUtils::addChild(doc, nthNode, "Weekday", strWeekday_);
-        XMLUtils::appendNode(anchorNode, nthNode);
-    } else {
-        XMLUtils::addChild(doc, anchorNode, "CalendarDaysBefore", strCalendarDaysBefore_);
+    if (contractFrequency_ != Daily) {
+        XMLNode* anchorNode = doc.allocNode("AnchorDay");
+        if (anchorType_ == AnchorType::DayOfMonth) {
+            XMLUtils::addChild(doc, anchorNode, "DayOfMonth", strDayOfMonth_);
+        } else if (anchorType_ == AnchorType::NthWeekday) {
+            XMLNode* nthNode = doc.allocNode("NthWeekday");
+            XMLUtils::addChild(doc, nthNode, "Nth", strNth_);
+            XMLUtils::addChild(doc, nthNode, "Weekday", strWeekday_);
+            XMLUtils::appendNode(anchorNode, nthNode);
+        } else {
+            XMLUtils::addChild(doc, anchorNode, "CalendarDaysBefore", strCalendarDaysBefore_);
+        }
+        XMLUtils::appendNode(node, anchorNode);
     }
-    XMLUtils::appendNode(node, anchorNode);
 
     XMLUtils::addChild(doc, node, "ContractFrequency", strContractFrequency_);
     XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
@@ -1491,24 +1611,30 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
             "ContinuationMapping", "From", "To", tmp);
     }
 
+    if (!averagingData_.empty()) {
+        XMLUtils::appendNode(node, averagingData_.toXML(doc));
+    }
+
+    if (hoursPerDay_ != Null<Natural>())
+        XMLUtils::addChild(doc, node, "HoursPerDay", static_cast<int>(hoursPerDay_));
+
     return node;
 }
 
 void CommodityFutureConvention::build() {
 
-    if (anchorType_ == AnchorType::DayOfMonth) {
-        dayOfMonth_ = lexical_cast<Natural>(strDayOfMonth_);
-    } else if (anchorType_ == AnchorType::CalendarDaysBefore) {
-        calendarDaysBefore_ = lexical_cast<Natural>(strCalendarDaysBefore_);
-    } else {
-        nth_ = lexical_cast<Natural>(strNth_);
-        weekday_ = parseWeekday(strWeekday_);
-    }
+    populateFrequency();
 
-    // Only allow quaterly and monthly contract frequencies for now.
-    contractFrequency_ = parseFrequency(strContractFrequency_);
-    QL_REQUIRE(contractFrequency_ == Quarterly || contractFrequency_ == Monthly,
-               "Contract frequency should be quarterly or monthly but got " << contractFrequency_);
+    if (contractFrequency_ != Daily) {
+        if (anchorType_ == AnchorType::DayOfMonth) {
+            dayOfMonth_ = lexical_cast<Natural>(strDayOfMonth_);
+        } else if (anchorType_ == AnchorType::CalendarDaysBefore) {
+            calendarDaysBefore_ = lexical_cast<Natural>(strCalendarDaysBefore_);
+        } else {
+            nth_ = lexical_cast<Natural>(strNth_);
+            weekday_ = parseWeekday(strWeekday_);
+        }
+    }
 
     calendar_ = parseCalendar(strCalendar_);
     expiryCalendar_ = strExpiryCalendar_.empty() ? calendar_ : parseCalendar(strExpiryCalendar_);
@@ -1526,6 +1652,12 @@ void CommodityFutureConvention::build() {
     // Check the continuation mappings
     checkContinuationMappings(futureContinuationMappings_, "future");
     checkContinuationMappings(optionContinuationMappings_, "option");
+}
+
+void CommodityFutureConvention::populateFrequency() {
+    contractFrequency_ = parseFrequency(strContractFrequency_);
+    QL_REQUIRE(contractFrequency_ == Quarterly || contractFrequency_ == Monthly || contractFrequency_ == Daily,
+        "Contract frequency should be quarterly, monthly or daily but got " << contractFrequency_);
 }
 
 FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType,

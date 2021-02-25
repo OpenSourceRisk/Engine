@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file interpolatedcpivolatilitysurface.hpp
+/*! \file qle/termstructures/interpolatedcpivolatilitysurface.hpp
     \brief zero inflation volatility structure interpolated on a expiry/strike matrix of quotes
  */
 

@@ -287,11 +287,11 @@ public:
 
     //! \name Inspectors
     //@{
-    const string index() const { return index_; }
-    const string startDate() const { return startDate_; }
+    const string& index() const { return index_; }
+    const string& startDate() const { return startDate_; }
     double baseCPI() const { return baseCPI_; }
-    const string observationLag() const { return observationLag_; }
-    const string interpolation() const { return interpolation_; }
+    const string& observationLag() const { return observationLag_; }
+    const string& interpolation() const { return interpolation_; }
     const std::vector<double>& rates() const { return rates_; }
     const std::vector<string>& rateDates() const { return rateDates_; }
     bool subtractInflationNominal() const { return subtractInflationNominal_; }
