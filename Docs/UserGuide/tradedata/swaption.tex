@@ -127,7 +127,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
   Fees can either be given as an absolute amount or relative to the current notional of the period immediately following
   the exercise date using the \verb+type+ attribute together with specifiers \verb+Absolute+ resp. \verb+Percentage+. If
-  not given, the type defaults to \verb+Absolute+.
+  not given, the type defaults to \verb+Absolute+. \verb+Percentage+ fees are expressed in decimal form, e.g. 0.05 is a fee of 5\% of notional.
 
   If a fee is given as a positive number the option holder has to pay a corresponding amount if they exercise the
   option. If the fee is negative on the other hand, the option holder receives an amount on the option exercise.

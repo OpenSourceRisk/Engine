@@ -642,6 +642,9 @@
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\currencies\configurablecurrency.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
     <ClInclude Include="qle\currencies\metals.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
@@ -879,6 +882,21 @@
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\futurepricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewisepricecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -1031,6 +1049,9 @@
     </ClInclude>
     <ClInclude Include="qle\models\annuitymapping.hpp">
       <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\commoditycashflow.hpp">
+      <Filter>cashflows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1492,6 +1513,9 @@
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\currencies\configurablecurrency.cpp">
+      <Filter>currencies</Filter>
+    </ClCompile>
     <ClCompile Include="qle\currencies\metals.cpp">
       <Filter>currencies</Filter>
     </ClCompile>
@@ -1666,6 +1690,15 @@
     <ClCompile Include="qle\time\actual364.cpp">
       <Filter>time</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\futurepricehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averagefuturepricehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1773,6 +1806,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\annuitymapping.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\commoditycashflow.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

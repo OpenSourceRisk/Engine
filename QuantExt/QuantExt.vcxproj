@@ -504,6 +504,7 @@
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\brlcdicouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\commoditycashflow.hpp" />
     <ClInclude Include="qle\cashflows\commodityindexedaveragecashflow.hpp" />
     <ClInclude Include="qle\cashflows\commodityindexedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\couponpricer.hpp" />
@@ -532,6 +533,7 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
+    <ClInclude Include="qle\currencies\configurablecurrency.hpp" />
     <ClInclude Include="qle\indexes\behicp.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\bondindex.hpp" />
@@ -713,7 +715,9 @@
     <ClInclude Include="qle\quotes\logquote.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
     <ClInclude Include="qle\termstructures\aposurface.hpp" />
+    <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp" />
@@ -740,6 +744,7 @@
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
+    <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp" />
@@ -755,6 +760,7 @@
     <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\optionpricesurface.hpp" />
+    <ClInclude Include="qle\termstructures\piecewisepricecurve.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
@@ -843,6 +849,7 @@
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\brlcdicouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\commoditycashflow.cpp" />
     <ClCompile Include="qle\cashflows\commodityindexedaveragecashflow.cpp" />
     <ClCompile Include="qle\cashflows\commodityindexedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\couponpricer.cpp" />
@@ -870,6 +877,7 @@
     <ClCompile Include="qle\currencies\asia.cpp" />
     <ClCompile Include="qle\currencies\europe.cpp" />
     <ClCompile Include="qle\currencies\metals.cpp" />
+    <ClCompile Include="qle\currencies\configurablecurrency.cpp" />
     <ClCompile Include="qle\indexes\bondindex.cpp" />
     <ClCompile Include="qle\indexes\commodityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
@@ -982,7 +990,9 @@
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />
     <ClCompile Include="qle\termstructures\aposurface.cpp" />
+    <ClCompile Include="qle\termstructures\averagefuturepricehelper.cpp" />
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
@@ -1010,6 +1020,7 @@
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
+    <ClCompile Include="qle\termstructures\futurepricehelper.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />

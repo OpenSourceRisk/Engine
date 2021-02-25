@@ -162,7 +162,7 @@ bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsI
     }
 
     Currency ccy;
-    if (!tryParse<Currency>(tokens[2], ccy, &parseCurrency)) {
+    if (!tryParseCurrency(tokens[2], ccy)) {
         return false;
     }
 

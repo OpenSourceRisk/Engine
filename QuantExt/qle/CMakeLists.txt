@@ -23,6 +23,7 @@ cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/blackovernightindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
+cashflows/commoditycashflow.cpp
 cashflows/commodityindexedaveragecashflow.cpp
 cashflows/commodityindexedcashflow.cpp
 cashflows/couponpricer.cpp
@@ -47,6 +48,7 @@ cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
+currencies/configurablecurrency.cpp
 currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
@@ -161,7 +163,9 @@ processes/crossassetstateprocess.cpp
 processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
+termstructures/averagefuturepricehelper.cpp
 termstructures/averageoisratehelper.cpp
+termstructures/averagespotpricehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
@@ -189,6 +193,7 @@ termstructures/equityblackvolsurfaceproxy.cpp
 termstructures/equityforwardcurvestripper.cpp
 termstructures/equityoptionsurfacestripper.cpp
 termstructures/flatcorrelation.cpp
+termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
@@ -253,6 +258,7 @@ cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/blackovernightindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
+cashflows/commoditycashflow.hpp
 cashflows/commodityindexedaveragecashflow.hpp
 cashflows/commodityindexedcashflow.hpp
 cashflows/couponpricer.hpp
@@ -278,6 +284,7 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
+currencies/configurablecurrency.cpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
@@ -465,7 +472,9 @@ processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/aposurface.hpp
+termstructures/averagefuturepricehelper.hpp
 termstructures/averageoisratehelper.hpp
+termstructures/averagespotpricehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackmonotonevarvoltermstructure.hpp
@@ -502,6 +511,7 @@ termstructures/equityforwardcurvestripper.hpp
 termstructures/equityoptionsurfacestripper.hpp
 termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
+termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
@@ -529,6 +539,7 @@ termstructures/optionpricesurface.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
+termstructures/piecewisepricecurve.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp

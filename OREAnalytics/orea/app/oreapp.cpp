@@ -32,6 +32,7 @@
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
+#include <ored/utilities/currencyconfig.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
@@ -336,6 +337,17 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
 
     bool storeFlows = params_->has("simulation", "storeFlows") && parseBool(params_->get("simulation", "storeFlows"));
 
+    analytics["flipViewXVA"] = false;
+    if (params_->has("xva", "flipViewXVA")) {
+        analytics["flipViewXVA"] = parseBool(params_->get("xva", "flipViewXVA"));
+    }
+    string flipViewBorrowingCurvePostfix = "_BORROW";
+    string flipViewLendingCurvePostfix = "_LEND";
+    if (analytics["flipViewXVA"]) {
+        flipViewBorrowingCurvePostfix = params_->get("xva", "flipViewBorrowingCurvePostfix");
+        flipViewLendingCurvePostfix = params_->get("xva", "flipViewLendingCurvePostfix");
+    }
+
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
         asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, conventions_, marketParameters,
         simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(), referenceData,
@@ -362,6 +374,12 @@ void OREApp::readSetup() {
         string calendarAdjustmentFile = inputPath_ + "/" + params_->get("setup", "calendarAdjustment");
         LOG("Load calendarAdjustment from file" << calendarAdjustmentFile);
         calendarAdjustments.fromFile(calendarAdjustmentFile);
+    }
+    if (params_->has("setup", "currencyConfiguration") && params_->get("setup", "currencyConfiguration") != "") {
+        CurrencyConfig currencyConfig;
+        string currencyConfigFile = inputPath_ + "/" + params_->get("setup", "currencyConfiguration");
+        LOG("Load currency configurations from file " << currencyConfigFile);
+	currencyConfig.fromFile(currencyConfigFile);
     }
 
     writeInitialReports_ = true;
@@ -845,10 +863,15 @@ void OREApp::buildNPVCube() {
         calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof_, grid_, cubeDepth_ - 1));
     }
 
+    bool flipViewXVA = false;
+    if (params_->has("xva", "flipViewXVA")) {
+        flipViewXVA = parseBool(params_->get("xva", "flipViewXVA"));
+    }
+
     if (useCloseOutLag_)
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_);
+        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(grid_, flipViewXVA);
     else
-        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
+        cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(flipViewXVA);
 
     vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators;
 
@@ -1152,14 +1175,18 @@ void OREApp::runPostProcessor() {
     if (params_->has("xva", "fullInitialCollateralisation")) {
         fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
     }
+    analytics["flipViewXVA"] = false;
+    if (params_->has("xva", "flipViewXVA")) {
+        analytics["flipViewXVA"] = parseBool(params_->get("xva", "flipViewXVA"));
+    }
 
     // FIXME: Needs the "simulation" section in ore.xml with consistent simulation.xml
     if (!cubeInterpreter_) {
         boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
         if (sgd->withCloseOutLag())
-            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid());
+            cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(sgd->getGrid(), analytics["flipViewXVA"]);
         else
-            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
+            cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>(analytics["flipViewXVA"]);
     }
 
     if (!dimCalculator_ && (analytics["mva"] || analytics["dim"])) {
@@ -1176,12 +1203,20 @@ void OREApp::runPostProcessor() {
     if (params_->has("xva", "cvaSensiShiftSize"))
         cvaSensiShiftSize = parseReal(params_->get("xva", "cvaSensiShiftSize"));
 
+    string flipViewBorrowingCurvePostfix = "_BORROW";
+    string flipViewLendingCurvePostfix = "_LEND";
+    if (analytics["flipViewXVA"]) {
+        flipViewBorrowingCurvePostfix = params_->get("xva", "flipViewBorrowingCurvePostfix");
+        flipViewLendingCurvePostfix = params_->get("xva", "flipViewLendingCurvePostfix");
+    }
+
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimCalculator_, cubeInterpreter_, fullInitialCollateralisation, cvaSensiGrid,
         cvaSensiShiftSize, kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor,
-	kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, cptyCube_);
+        kvaTheirPdFloor, kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, cptyCube_, flipViewBorrowingCurvePostfix,
+        flipViewLendingCurvePostfix);
 }
 
 void OREApp::writeXVAReports() {
@@ -1225,14 +1260,18 @@ void OREApp::writeXVAReports() {
     CSVFileReport xvaReport(XvaFile);
     getReportWriter()->writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);
 
-    string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
-    CubeWriter cw1(outputPath_ + "/" + rawCubeOutputFile);
     map<string, string> nettingSetMap = portfolio_->nettingSetMap();
-    cw1.write(postProcess_->cube(), nettingSetMap);
+    string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
+    if (rawCubeOutputFile != "") {
+        CubeWriter cw1(outputPath_ + "/" + rawCubeOutputFile);
+        cw1.write(postProcess_->cube(), nettingSetMap);
+    }
     
     string netCubeOutputFile = params_->get("xva", "netCubeOutputFile");
-    CubeWriter cw2(outputPath_ + "/" + netCubeOutputFile);
-    cw2.write(postProcess_->netCube(), nettingSetMap);
+    if (netCubeOutputFile != "") {
+        CubeWriter cw2(outputPath_ + "/" + netCubeOutputFile);
+        cw2.write(postProcess_->netCube(), nettingSetMap);
+    }
 
     LOG("XVA reports written");
     MEM_LOG;

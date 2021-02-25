@@ -69,6 +69,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 using boost::algorithm::to_lower_copy;
+using boost::iequals;
 
 namespace ore {
 namespace data {
@@ -612,7 +613,7 @@ DayCounter parseDayCounter(const string& s) {
     }
 }
 
-Currency parseCurrency(const string& s) {
+Currency parseCurrency(const string& s, const Currency& currency) {
     static map<string, Currency> m = {
         {"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, 
         {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, 
@@ -641,7 +642,14 @@ Currency parseCurrency(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Currency \"" << s << "\" not recognized");
+	if (!currency.empty()) {
+	    LOG("Adding external currency " << currency.code() << " to the parser map");
+	    m[s] = currency;
+	    return currency;
+	}
+	else {
+	    QL_FAIL("Currency \"" << s << "\" not recognized");
+	}
     }
 }
 
@@ -1276,6 +1284,24 @@ InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const
     }
 }
 
+QuantLib::Rounding::Type parseRoundingType(const std::string& s) {
+    static map<string, QuantLib::Rounding::Type> m = {
+        {"Up", QuantLib::Rounding::Type::Up},
+        {"Down", QuantLib::Rounding::Type::Down},
+        {"Closest", QuantLib::Rounding::Type::Closest},
+        {"Floor", QuantLib::Rounding::Type::Floor},
+        {"Ceiling", QuantLib::Rounding::Type::Ceiling}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Rounding type \"" << s << "\" not recognized");
+    }
+}
+
+  
 ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
     using IPR = InflationSwapConvention::PublicationRoll;
     if (pr == IPR::None) {
@@ -1331,6 +1357,100 @@ std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::di
         return out << "Euler";
     default:
         return out << "?";
+    }
+}
+
+using ADCP = CommodityFutureConvention::AveragingData::CalculationPeriod;
+ADCP parseAveragingDataPeriod(const string& s) {
+    if (s == "PreviousMonth") {
+        return ADCP::PreviousMonth;
+    } else if (s == "ExpiryToExpiry") {
+        return ADCP::ExpiryToExpiry;
+    } else {
+        QL_FAIL("AveragingData::CalculationPeriod '" << s << "' not known, expect " <<
+            "'PreviousMonth' or 'ExpiryToExpiry'");
+    }
+}
+
+ostream& operator<<(ostream& os, ADCP cp) {
+    if (cp == ADCP::PreviousMonth) {
+        return os << "PreviousMonth";
+    } else if (cp == ADCP::ExpiryToExpiry) {
+        return os << "ExpiryToExpiry";
+    } else {
+        QL_FAIL("Unknown AveragingData::CalculationPeriod.");
+    }
+}
+
+using PST = PriceSegment::Type;
+PriceSegment::Type parsePriceSegmentType(const string& s) {
+    if (s == "Future") {
+        return PST::Future;
+    } else if (s == "AveragingFuture") {
+        return PST::AveragingFuture;
+    } else if (s == "AveragingSpot") {
+        return PST::AveragingSpot;
+    } else {
+        QL_FAIL("PriceSegment::Type '" << s << "' not known, expect " <<
+            "'Future', 'AveragingFuture' or 'AveragingSpot'");
+    }
+}
+
+ostream& operator<<(ostream& os, PriceSegment::Type pst) {
+    if (pst == PST::Future) {
+        return os << "Future";
+    } else if (pst == PST::AveragingFuture) {
+        return os << "AveragingFuture";
+    } else if (pst == PST::AveragingSpot) {
+        return os << "AveragingSpot";
+    } else {
+        QL_FAIL("Unknown PriceSegment::Type.");
+    }
+}
+
+using CQF = CommodityQuantityFrequency;
+CommodityQuantityFrequency parseCommodityQuantityFrequency(const string& s) {
+    if (iequals(s, "PerCalculationPeriod")) {
+        return CQF::PerCalculationPeriod;
+    } else if (iequals(s, "PerCalendarDay")) {
+        return CQF::PerCalendarDay;
+    } else if (iequals(s, "PerPricingDay")) {
+        return CQF::PerPricingDay;
+    } else if (iequals(s, "PerHour")) {
+        return CQF::PerHour;
+    } else {
+        QL_FAIL("Could not parse " << s << " to CommodityQuantityFrequency");
+    }
+}
+
+ostream& operator<<(ostream& os, CommodityQuantityFrequency cqf) {
+    if (cqf == CQF::PerCalculationPeriod) {
+        return os << "PerCalculationPeriod";
+    } else if (cqf == CQF::PerCalendarDay) {
+        return os << "PerCalendarDay";
+    } else if (cqf == CQF::PerPricingDay) {
+        return os << "PerPricingDay";
+    } else if (cqf == CQF::PerHour) {
+        return os << "PerHour";
+    } else {
+        QL_FAIL("Do not recognise CommodityQuantityFrequency " << static_cast<int>(cqf));
+    }
+}
+
+ostream& operator<<(ostream& os, Rounding::Type t) {
+  static map<Rounding::Type, string> m = {
+        {Rounding::Type::Up, "Up"},
+        {Rounding::Type::Down, "Down"},
+        {Rounding::Type::Closest, "Closest"},
+        {Rounding::Type::Floor, "Floor"},
+        {Rounding::Type::Ceiling, "Ceiling"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown Rounding::Type - check implementation of operator<< "
+                "for this enum");
+
     }
 }
 
