@@ -104,8 +104,8 @@ MakeSubPeriodsSwap::MakeSubPeriodsSwap(const Period& swapTenor, const boost::sha
     const Period& floatPayTenor, const Period& forwardStart)
     : swapTenor_(swapTenor), index_(index), fixedRate_(fixedRate), floatPayTenor_(floatPayTenor), forwardStart_(forwardStart), 
     nominal_(1.0), isPayer_(true), settlementDays_(index->fixingDays()), fixedCalendar_(index->fixingCalendar()), 
-    fixedConvention_(ModifiedFollowing), fixedRule_(DateGeneration::Backward), 
-    subCouponsType_(SubPeriodsCoupon::Compounding), floatDayCounter_(index->dayCounter()) {}
+    fixedConvention_(ModifiedFollowing), fixedRule_(DateGeneration::Backward), floatDayCounter_(index->dayCounter()),
+    subCouponsType_(SubPeriodsCoupon::Compounding)  {}
 
 MakeSubPeriodsSwap::operator SubPeriodsSwap() const {
     boost::shared_ptr<SubPeriodsSwap> swap = *this;
