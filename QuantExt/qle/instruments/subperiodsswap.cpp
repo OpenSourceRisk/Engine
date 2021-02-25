@@ -18,6 +18,7 @@
 
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/time/schedule.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
 #include <ql/currencies/america.hpp>
@@ -230,6 +231,17 @@ MakeSubPeriodsSwap& MakeSubPeriodsSwap::withFixedLegDayCount(const DayCounter& d
 
 MakeSubPeriodsSwap& MakeSubPeriodsSwap::withSubCouponsType(const SubPeriodsCoupon::Type& st) {
     subCouponsType_ = st;
+    return *this;
+}
+
+MakeSubPeriodsSwap& MakeSubPeriodsSwap::withDiscountingTermStructure(const Handle<YieldTermStructure>& d) {
+    bool includeSettlementDateFlows = false;
+    engine_ = boost::shared_ptr<PricingEngine>(new DiscountingSwapEngine(d, includeSettlementDateFlows));
+    return *this;
+}
+
+MakeSubPeriodsSwap& MakeSubPeriodsSwap::withPricingEngine(const boost::shared_ptr<PricingEngine>& engine) {
+    engine_ = engine;
     return *this;
 }
 } // namespace QuantExt
