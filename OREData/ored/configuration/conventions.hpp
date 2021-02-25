@@ -429,6 +429,7 @@ public:
     virtual void build();
 
 private:
+    string localId_;
     string strFixingCalendar_;
     string strDayCounter_;
     Size settlementDays_;
