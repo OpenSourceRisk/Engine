@@ -20,13 +20,14 @@
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 
 #include <ql/quotes/compositequote.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 namespace QuantExt {
 
 CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source,
                                    const boost::shared_ptr<FxIndex>& fxIndex)
-    : EquityIndex(source->familyName() + "_compo_" + fxIndex->targetCurrency().code(), source->fixingCalendar(),
-                  fxIndex->targetCurrency(),
+    : EquityIndex(source->familyName() + "_compo_" + fxIndex->targetCurrency().code(),
+                  JointCalendar(source->fixingCalendar(), fxIndex->fixingCalendar()), fxIndex->targetCurrency(),
                   Handle<Quote>(boost::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
                       source->equitySpot(), fxIndex->fxQuote(),
                       [&fxIndex](Real x, Real y) { return fxIndex->inverseIndex() ? x / y : x * y; })),
@@ -52,7 +53,7 @@ void CompoEquityIndex::performCalculations() const {
     dividendFixings_ = TimeSeries<Real>();
     auto const& ts = source_->dividendFixings();
     for (auto const& d : ts) {
-        dividendFixings_[d.first] = d.second * fxIndex_->fixing(d.first);
+        dividendFixings_[d.first] = d.second * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.first, Preceding));
     }
 }
 
