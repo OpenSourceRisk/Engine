@@ -4650,15 +4650,15 @@ A sample {\tt calendaradjustment.xml} file can be found in the global example in
 \caption{Calendar Adjustment}\label{lst:calendar_adjustment}
 \end{longlisting}
 
-If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!Japan_amended! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
+If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!CUSTOM\_Japan! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
 
-If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be added to the \lstinline!calendar! type in the file \textit{ore\_types.xsd}.
+If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be prefixed with `CUSTOM\_'.
 
 \begin{longlisting}
 \hrule\medskip
 \begin{minted}[fontsize=\scriptsize]{xml}
 <CalendarAdjustments>
-  <Calendar name="Japan\_amended">
+  <Calendar name="CUSTOM\_Japan">
     <BaseCalendar>Japan</BaseCalendar>
     <AdditionalHolidays>
       <Date>2020-04-06</Date>
