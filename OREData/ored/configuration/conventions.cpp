@@ -339,7 +339,7 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
 IborIndexConvention::IborIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
                                          const Size settlementDays, const string& businessDayConvention,
                                          const bool endOfMonth)
-    : Convention(id, Type::IborIndex), strFixingCalendar_(fixingCalendar), strDayCounter_(dayCounter),
+    : Convention(id, Type::IborIndex), localId_(id), strFixingCalendar_(fixingCalendar), strDayCounter_(dayCounter),
       settlementDays_(settlementDays), strBusinessDayConvention_(businessDayConvention), endOfMonth_(endOfMonth) {
     build();
 }
@@ -347,7 +347,7 @@ IborIndexConvention::IborIndexConvention(const string& id, const string& fixingC
 void IborIndexConvention::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "IborIndex");
     type_ = Type::IborIndex;
-    id_ = XMLUtils::getChildValue(node, "Id", true);
+    localId_ = XMLUtils::getChildValue(node, "Id", true);
     strFixingCalendar_ = XMLUtils::getChildValue(node, "FixingCalendar", true);
     strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
     settlementDays_ = XMLUtils::getChildValueAsInt(node, "SettlementDays", true);
@@ -358,7 +358,7 @@ void IborIndexConvention::fromXML(XMLNode* node) {
 
 XMLNode* IborIndexConvention::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("IborIndex");
-    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "Id", localId_);
     XMLUtils::addChild(doc, node, "FixingCalendar", strFixingCalendar_);
     XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
     XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settlementDays_));
@@ -370,9 +370,13 @@ XMLNode* IborIndexConvention::toXML(XMLDocument& doc) {
 void IborIndexConvention::build() {
     // just a check really that the id is consistent with the ibor index name rules
     vector<string> tokens;
-    split(tokens, id_, boost::is_any_of("-"));
+    split(tokens, localId_, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
-               "Two or three tokens required in IborIndexConvention " << id_ << ": CCY-INDEX or CCY-INDEX-TERM");
+               "Two or three tokens required in IborIndexConvention " << localId_ << ": CCY-INDEX or CCY-INDEX-TERM");
+
+    // set the Id - this converts the local id term from "7D" to "1W", "28D" to "1M" etc, so if can be picked
+    // up by searches
+    id_ = tokens[0] + "-" + tokens[1] + "-" + to_string(parsePeriod(tokens[2]));
 }
 
 OvernightIndexConvention::OvernightIndexConvention(const string& id, const string& fixingCalendar,

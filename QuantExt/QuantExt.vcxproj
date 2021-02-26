@@ -554,6 +554,7 @@
     <ClInclude Include="qle\indexes\ibor\clpcamara.hpp" />
     <ClInclude Include="qle\indexes\ibor\cnhhibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\cnhshibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\cnyrepofix.hpp" />
     <ClInclude Include="qle\indexes\ibor\copibr.hpp" />
     <ClInclude Include="qle\indexes\ibor\corra.hpp" />
     <ClInclude Include="qle\indexes\ibor\czkpribor.hpp" />
