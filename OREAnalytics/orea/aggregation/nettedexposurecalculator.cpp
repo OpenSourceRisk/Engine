@@ -44,7 +44,8 @@ NettedExposureCalculator::NettedExposureCalculator(
     const Real marginalAllocationLimit,
     const boost::shared_ptr<NPVCube>& tradeExposureCube,
     const Size allocatedEpeIndex,
-    const Size allocatedEneIndex)
+    const Size allocatedEneIndex, 
+    const bool flipViewXVA)
     : portfolio_(portfolio), market_(market), cube_(cube),
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
@@ -56,8 +57,8 @@ NettedExposureCalculator::NettedExposureCalculator(
       fullInitialCollateralisation_(fullInitialCollateralisation),
       marginalAllocation_(marginalAllocation),
       marginalAllocationLimit_(marginalAllocationLimit),
-      tradeExposureCube_(tradeExposureCube),
-      allocatedEpeIndex_(allocatedEpeIndex), allocatedEneIndex_(allocatedEneIndex) {
+      tradeExposureCube_(tradeExposureCube), allocatedEpeIndex_(allocatedEpeIndex),
+      allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA) {
 
     vector<string> nettingSetIds;
     for(auto nettingSet : nettingSetDefaultValue)
@@ -100,7 +101,12 @@ void NettedExposureCalculator::build() {
 	else {
 	    QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique withint the netting set");
 	}
-        Real npv = cube_->getT0(i);
+        Real npv;
+        if (flipViewXVA_) {
+            npv = -cube_->getT0(i);
+        } else {
+            npv = cube_->getT0(i);
+        }
 
         if (nettingSetValueToday.find(nettingSetId) == nettingSetValueToday.end()) {
             nettingSetValueToday[nettingSetId] = 0.0;
@@ -426,14 +432,14 @@ vector<Real> NettedExposureCalculator::getMeanExposure(const string& tid, Exposu
     exp[0] = exposureCube_->getT0(tid, index);
     for (Size i = 0; i < cube_->dates().size(); i++) {
         if (multiPath_) {
-	    for (Size k = 0; k < exposureCube_->samples(); k++) {
-	        exp[i + 1] += exposureCube_->get(tid, cube_->dates()[i], k, index);
+	        for (Size k = 0; k < exposureCube_->samples(); k++) {
+	            exp[i + 1] += exposureCube_->get(tid, cube_->dates()[i], k, index);
+	        }
+	        exp[i + 1] /= exposureCube_->samples();
 	    }
-	    exp[i + 1] /= exposureCube_->samples();
-	}
-	else {
-	    exp[i + 1] = exposureCube_->get(tid, cube_->dates()[i], 0, index);
-	}
+	    else {
+	        exp[i + 1] = exposureCube_->get(tid, cube_->dates()[i], 0, index);
+	    }
     }
     return exp;
 }

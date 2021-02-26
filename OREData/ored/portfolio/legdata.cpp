@@ -1150,16 +1150,14 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
     // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
     // start date is expected; if both the separate start date and a schedule with more than one date is given
+    const string& start = cpiLegData->startDate();
     if (schedule.size() < 2) {
-        QL_REQUIRE(!cpiLegData->startDate().empty(),
-                   "makeCPILeg(): if only one schedule date is given, a StartDate must be given in addition");
-        cpiLeg.withStartDate(parseDate(cpiLegData->startDate()));
-    } else {
-        QL_REQUIRE(cpiLegData->startDate().empty() || parseDate(cpiLegData->startDate()) == schedule.dates().front(),
-                   "makeCPILeg(): first schedule date ("
-                       << schedule.dates().front() << ") must be identical to start date ("
-                       << parseDate(cpiLegData->startDate())
-                       << "), the start date can be omitted for schedules containing more than one date");
+        QL_REQUIRE(!start.empty(), "makeCPILeg(): only one schedule date, a 'StartDate' must be given.");
+        cpiLeg.withStartDate(parseDate(start));
+    } else if (!start.empty()) {
+        DLOG("Schedule with more than 2 dates was provided. The first schedule date " <<
+            io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " <<
+            start << " is not used.");
     }
 
     bool couponCap = cpiLegData->caps().size() > 0;
@@ -1786,7 +1784,7 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
-                    parseCommodityIndex(indexing.index(), tmp->fixingCalendar(),
+                    parseCommodityIndex(indexing.index(), true, tmp->fixingCalendar(),
                                         engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying

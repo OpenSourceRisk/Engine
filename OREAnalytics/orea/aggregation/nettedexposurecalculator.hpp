@@ -38,7 +38,7 @@ using namespace std;
 
 //! XVA Calculator base class
 /*!
-  Derived classes implement a constructor with the relavant additional input data
+  Derived classes implement a constructor with the relevant additional input data
   and a build function that performs the XVA calculations for all netting sets and
   along all paths.
 */
@@ -62,7 +62,8 @@ public:
         const Real marginalAllocationLimit,
         const boost::shared_ptr<NPVCube>& tradeExposureCube,
         const Size allocatedEpeIndex,
-        const Size allocatedEneIndex);
+        const Size allocatedEneIndex,
+        const bool flipViewXVA);
 
     virtual ~NettedExposureCalculator() {}
     const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
@@ -115,6 +116,7 @@ protected:
     boost::shared_ptr<NPVCube> tradeExposureCube_;
     const Size allocatedEpeIndex_;
     const Size allocatedEneIndex_;
+    const bool flipViewXVA_;
 
     // Output
     boost::shared_ptr<NPVCube> nettedCube_;

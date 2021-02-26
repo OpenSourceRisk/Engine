@@ -42,12 +42,13 @@ DynamicCreditXvaCalculator::DynamicCreditXvaCalculator(
     const boost::shared_ptr<NPVCube> nettingSetExposureCube,
     const boost::shared_ptr<NPVCube>& cptyCube,
     const Size tradeEpeIndex, const Size tradeEneIndex,
-    const Size nettingSetEpeIndex, const Size nettingSetEneIndex,
-    const Size cptySpIndex)
+    const Size nettingSetEpeIndex, const Size nettingSetEneIndex, const Size cptySpIndex,
+    const bool flipViewXVA, const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
     : ValueAdjustmentCalculator(portfolio, market, configuration, baseCurrency, dvaName,
                                 fvaBorrowingCurve, fvaLendingCurve, applyDynamicInitialMargin,
-                                dimCalculator, tradeExposureCube, nettingSetExposureCube,
-                                tradeEpeIndex, tradeEneIndex, nettingSetEpeIndex, nettingSetEneIndex),
+                                dimCalculator, tradeExposureCube, nettingSetExposureCube, tradeEpeIndex, tradeEneIndex, 
+                                nettingSetEpeIndex, nettingSetEneIndex, 
+                                flipViewXVA, flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix),
       cptyCube_(cptyCube), cptySpIndex_(cptySpIndex) {
     // check consistency of input
 

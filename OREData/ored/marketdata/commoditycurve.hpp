@@ -29,6 +29,7 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <qle/math/flatextrapolation.hpp>
@@ -42,7 +43,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CommodityCurve() : regexQuotes_(false) {}
+    CommodityCurve();
 
     //! Detailed constructor
     CommodityCurve(const QuantLib::Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
@@ -105,12 +106,23 @@ private:
                               const Conventions& conventions,
                               const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts, const Loader& loader);
 
+    //! Build commodity piecewise price curve
+    void buildPiecewiseCurve(const QuantLib::Date& asof, const CommodityCurveConfig& config,
+        const Conventions& conventions, const Loader& loader);
+
     //! Get the configured quotes
     std::vector<boost::shared_ptr<CommodityForwardQuote>>
-    getQuotes(const QuantLib::Date& asof, const CommodityCurveConfig& config, const Loader& loader);
+    getQuotes(const QuantLib::Date& asof, const std::string& configId, const std::vector<std::string>& quotes,
+        const Loader& loader);
 
     //! Method for populating the price curve
     template <template <class> class CurveType, typename... Args> void populateCurve(Args... args);
+
+    //! Add the instruments relating to a \p priceSegment to \p instruments.
+    using Helper = QuantLib::BootstrapHelper<QuantExt::PriceTermStructure>;
+    void addInstruments(const QuantLib::Date& asof, const Loader& loader, const std::string& configId,
+        const PriceSegment& priceSegment, const Conventions& conventions,
+        std::map<QuantLib::Date, boost::shared_ptr<Helper>>& instruments);
 };
 
 template <template <class> class CurveType, typename... Args> void CommodityCurve::populateCurve(Args... args) {
@@ -127,6 +139,8 @@ template <template <class> class CurveType, typename... Args> void CommodityCurv
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::LogLinearFlat>>(args...);
     } else if (interpolationMethod_ == "CubicFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::CubicFlat>>(args...);
+    } else if (interpolationMethod_ == "BackwardFlat") {
+        commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::BackwardFlat>>(args...);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }
