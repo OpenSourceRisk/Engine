@@ -1174,7 +1174,10 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     } else if (anyType.type() == typeid(Date)) {
         resultType = "date";
         oss << io::iso_date(boost::any_cast<Date>(anyType));
-    } else if (anyType.type() == typeid(std::vector<double>)) {
+    } else if (anyType.type() == typeid(bool)) {
+        resultType = "bool";
+        oss << std::boolalpha << boost::any_cast<bool>(anyType);
+    } else if(anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
         std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
         if (r.size() == 0) {
