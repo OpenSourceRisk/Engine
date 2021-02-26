@@ -23,7 +23,6 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <qle/termstructures/blacktriangulationatmvol.hpp>
 
 using namespace std;
 using std::make_pair;
@@ -141,13 +140,12 @@ Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configurat
     return it->second.getQuote(ccypair); // will throw if not found
 }
 
-Handle<BlackVolTermStructure> MarketImpl::getFxVol(const string& ccypair, const string& configuration) const {
-    DLOG("get fxVol " << ccypair);
+Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const string& configuration) const {
+    require(MarketObject::FXVol, ccypair, configuration);
     auto it = fxVols_.find(make_pair(configuration, ccypair));
     if (it != fxVols_.end())
         return it->second;
     else {
-        Handle<BlackVolTermStructure> h;
         // check for reverse EURUSD or USDEUR and add to the map
         QL_REQUIRE(ccypair.length() == 6, "invalid ccy pair length");
         std::string ccypairInverted = ccypair.substr(3, 3) + ccypair.substr(0, 3);
@@ -159,93 +157,14 @@ Handle<BlackVolTermStructure> MarketImpl::getFxVol(const string& ccypair, const 
             // we have found a surface for the inverted pair.
             // so we can invert the surface and store that under the original pair.
             fxVols_[make_pair(configuration, ccypair)] = h;
+            return h;
         } else {
-            // try again with default configuration
-            if (configuration != Market::defaultConfiguration)
-                h = getFxVol(ccypair, Market::defaultConfiguration);
-        }
-        return h;
-    }
-}
-
-Handle<BlackVolTermStructure> MarketImpl::triangulateFxVol(const string& ccypair, const string& configuration) const {
-    require(MarketObject::FXVol, ccypair, configuration);
-    // we see if a triangulated curve can be built
-    DLOG("attempting to build triangulated fx vol curve for " << ccypair);
-    auto forCode = ccypair.substr(0, 3);
-    auto domCode = ccypair.substr(3);
-
-    
-    // we want both foreign and domestic surfaces vs. the same baseCcy
-    Handle<BlackVolTermStructure> forBaseVol;
-    Handle<BlackVolTermStructure> domBaseVol;
-    string baseCcy;
-    for (const auto& kv : fxVols_) {
-        string keyForeign = kv.first.second.substr(0, 3);
-        string keyDomestic = kv.first.second.substr(3);
-        DLOG("check " << keyForeign << " " << keyDomestic);
-        if (domCode == keyForeign) {
-            DLOG("1: matches " << domCode);
-            auto tmp = getFxVol(forCode + keyDomestic, configuration);
-            if (!tmp.empty()) {
-                DLOG("found matching curve");
-                baseCcy = keyDomestic;
-                forBaseVol = tmp;
-                domBaseVol = getFxVol(domCode + keyDomestic, configuration);
-            }
-        }
-
-        if (forCode == keyForeign) {
-            DLOG("2: matches " << forCode);
-            auto tmp = getFxVol(domCode + keyDomestic, configuration);
-            if (!tmp.empty()) {
-                DLOG("found matching curve");
-                baseCcy = keyDomestic;
-                domBaseVol = tmp;
-                forBaseVol = getFxVol(domCode + keyDomestic, configuration);
-            }
+            if (configuration == Market::defaultConfiguration)
+                QL_FAIL("did not find fx vol object " << ccypair);
+            else
+                return fxVol(ccypair, Market::defaultConfiguration);
         }
     }
-    QL_REQUIRE(!forBaseVol.empty(), "foreign fxVol surface is empty");
-    QL_REQUIRE(!domBaseVol.empty(), "domestic fxVol surface is empty");
-    DLOG("here");
-    //we get both surfaces vs baseCcy
-    string fxIndexTag = "GENERIC";
-    string forIndex = "FX-" + fxIndexTag + "-" + forCode + "-" + baseCcy;
-    string domIndex = "FX-" + fxIndexTag + "-" + domCode + "-" + baseCcy;
-
-    DLOG("here1");
-    Handle<QuantExt::CorrelationTermStructure> rho = correlationCurve(forIndex, domIndex, configuration);
-    QL_REQUIRE(!rho.empty(), "no correlation found for fx indices " << forIndex << " " << domIndex);
-    // build and return triangulation
-    Handle<BlackVolTermStructure> h;
-    h = Handle<BlackVolTermStructure>(
-        boost::make_shared<QuantExt::BlackTriangulationATMVolTermStructure>(forBaseVol, domBaseVol, rho));
-    DLOG("here3");
-
-
-    DLOG("returning triangulated vol surface for " << ccypair << ".");
-    fxVols_[make_pair(configuration, ccypair)] = h;
-    return h;
-}
-
-Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const string& configuration) const {
-    require(MarketObject::FXVol, ccypair, configuration);
-    
-    DLOG("get FX vol for " << ccypair);
-    // look for ccyPair or ccyPairInverted
-    Handle<BlackVolTermStructure> h = getFxVol(ccypair, configuration);
-
-    // try to triangulate fxVol
-    if (h.empty()) {
-        DLOG("no curve found try triangulation"); 
-        h = triangulateFxVol(ccypair, Market::defaultConfiguration);
-
-        if (h.empty())
-            QL_FAIL("could not find fxVol " << ccypair);
-    } 
-
-    return h;
 }
 
 Handle<DefaultProbabilityTermStructure> MarketImpl::defaultCurve(const string& key, const string& configuration) const {
