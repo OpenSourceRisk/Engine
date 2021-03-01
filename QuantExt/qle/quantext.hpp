@@ -80,6 +80,7 @@
 #include <qle/indexes/ibor/clpcamara.hpp>
 #include <qle/indexes/ibor/cnhhibor.hpp>
 #include <qle/indexes/ibor/cnhshibor.hpp>
+#include <qle/indexes/ibor/cnyrepofix.hpp>
 #include <qle/indexes/ibor/copibr.hpp>
 #include <qle/indexes/ibor/corra.hpp>
 #include <qle/indexes/ibor/czkpribor.hpp>
