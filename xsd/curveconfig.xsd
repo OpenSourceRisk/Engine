@@ -128,14 +128,12 @@
       <xs:element type="xs:string" name="Deltas" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SmileDelta" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Expiries" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Expiries"/>
       <xs:element type="xs:string" name="FXSpotID" minOccurs="0" />
       <xs:element type="xs:string" name="FXForeignCurveID" minOccurs="0" />
       <xs:element type="xs:string" name="FXDomesticCurveID" minOccurs="0" />  
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="BaseVolatility1" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

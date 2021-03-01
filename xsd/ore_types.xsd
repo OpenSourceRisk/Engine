@@ -464,7 +464,6 @@
   <xs:simpleType name="dimensionType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="ATM"/>
-      <xs:enumeration value="ATMTriangulated"/>
       <xs:enumeration value="Smile"/>
       <xs:enumeration value="Constant"/>
     </xs:restriction>
