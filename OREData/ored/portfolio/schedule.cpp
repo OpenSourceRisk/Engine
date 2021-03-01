@@ -19,6 +19,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <set>
 
 using namespace QuantLib;
 
@@ -111,10 +112,14 @@ Schedule makeSchedule(const ScheduleDates& data) {
     bool endOfMonth = false;
     if (data.endOfMonth() != "")
         endOfMonth = parseBool(data.endOfMonth());
-    vector<Date> scheduleDates(data.dates().size());
-    for (Size i = 0; i < data.dates().size(); i++)
-        scheduleDates[i] = calendar.adjust(parseDate(data.dates()[i]), convention);
-    return Schedule(scheduleDates, calendar, convention, boost::none, tenor, boost::none, endOfMonth);
+
+    // Ensure that Schedule ctor is passed a vector of unique ordered dates.
+    std::set<Date> uniqueDates;
+    for (const string& d : data.dates())
+        uniqueDates.insert(calendar.adjust(parseDate(d), convention));
+
+    return Schedule(vector<Date>(uniqueDates.begin(), uniqueDates.end()), calendar, convention,
+        boost::none, tenor, boost::none, endOfMonth);
 }
 
 Schedule makeSchedule(const ScheduleRules& data) {

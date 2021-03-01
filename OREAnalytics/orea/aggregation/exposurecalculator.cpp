@@ -33,14 +33,14 @@ ExposureCalculator::ExposureCalculator(
     const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
     const boost::shared_ptr<Market>& market,
     bool exerciseNextBreak, const string& baseCurrency, const string& configuration,
-    const Real quantile, const CollateralExposureHelper::CalculationType calcType,
-    const bool multiPath)
+    const Real quantile, const CollateralExposureHelper::CalculationType calcType, const bool multiPath,
+    const bool flipViewXVA)
     : portfolio_(portfolio), cube_(cube), cubeInterpretation_(cubeInterpretation),
        market_(market), exerciseNextBreak_(exerciseNextBreak),
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
       multiPath_(multiPath), dates_(cube->dates()),
-      today_(market_->asofDate()), dc_(ActualActual()) {
+      today_(market_->asofDate()), dc_(ActualActual()), flipViewXVA_(flipViewXVA) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 
@@ -69,7 +69,7 @@ ExposureCalculator::ExposureCalculator(
 }
 
 void ExposureCalculator::build() {
-    LOG("Compute trade exposure profiles");
+    LOG("Compute trade exposure profiles, " << (flipViewXVA_ ? "inverted (flipViewXVA = Y)" : "regular (flipViewXVA = N)"));
     
     for (Size i = 0; i < portfolio_->size(); ++i) {
         string tradeId = portfolio_->trades()[i]->id();
@@ -108,7 +108,12 @@ void ExposureCalculator::build() {
         }
 
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
-        Real npv0 = cube_->getT0(i);
+        Real npv0;
+        if (flipViewXVA_) {
+            npv0 = -cube_->getT0(i);
+        } else {
+            npv0 = cube_->getT0(i);
+        }
         vector<Real> epe(dates_.size() + 1, 0.0);
         vector<Real> ene(dates_.size() + 1, 0.0);
         vector<Real> ee_b(dates_.size() + 1, 0.0);

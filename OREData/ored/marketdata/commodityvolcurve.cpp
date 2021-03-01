@@ -23,6 +23,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -1082,9 +1083,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Get the beta parameter to use for valuing the APOs in the surface
     Real beta = vapo.beta();
 
-    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a
-    // commodity future index during curve construction in QuantExt.
-    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
+    // Construct the commodity index.
+    auto index = parseCommodityIndex(baseConvention->id(), conventions, false, basePts);
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to

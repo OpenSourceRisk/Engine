@@ -25,7 +25,11 @@ namespace analytics {
 
 Real RegularCubeInterpretation::getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                                 Size sampleIdx, Size depth) const {
-    return cube->get(tradeIdx, dateIdx, sampleIdx, depth);
+    if (flipViewXVA_) {
+        return -cube->get(tradeIdx, dateIdx, sampleIdx, depth);
+    } else {
+        return cube->get(tradeIdx, dateIdx, sampleIdx, depth);
+    }
 }
 
 Real RegularCubeInterpretation::getDefaultNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
@@ -75,7 +79,11 @@ Size RegularCubeInterpretation::getMporCalendarDays(const boost::shared_ptr<NPVC
 Real MporGridCubeInterpretation::getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,
                                                  Size sampleIdx, Size depth) const {
     // it is assumed here that the user knows how to interpret the depth
-    return cube->get(tradeIdx, dateIdx, sampleIdx, depth);
+    if (flipViewXVA_) {
+        return -cube->get(tradeIdx, dateIdx, sampleIdx, depth);
+    } else {
+        return cube->get(tradeIdx, dateIdx, sampleIdx, depth);
+    }
 }
 
 Real MporGridCubeInterpretation::getDefaultNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx,

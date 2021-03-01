@@ -58,7 +58,7 @@ public:
     CommodityBasisPriceCurve(const QuantLib::Date& referenceDate,
                              const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
                              const boost::shared_ptr<FutureExpiryCalculator>& basisFec,
-                             const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+                             const boost::shared_ptr<CommodityIndex>& index,
                              const QuantLib::Handle<PriceTermStructure>& basePts,
                              const boost::shared_ptr<FutureExpiryCalculator>& baseFec, bool addBasis = true,
                              QuantLib::Size monthOffset = 0, const Interpolator& interpolator = Interpolator());
@@ -102,7 +102,7 @@ protected:
 private:
     std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> > basisData_;
     boost::shared_ptr<FutureExpiryCalculator> basisFec_;
-    boost::shared_ptr<CommoditySpotIndex> spotIndex_;
+    boost::shared_ptr<CommodityIndex> index_;
     QuantLib::Handle<PriceTermStructure> basePts_;
     boost::shared_ptr<FutureExpiryCalculator> baseFec_;
     bool addBasis_;
@@ -125,7 +125,7 @@ private:
     */
     std::map<QuantLib::Size, QuantLib::Size> legIndexMap_;
 
-    //! Get the contract month and year from an expiry
+    //! Get the contract date from an expiry date
     QuantLib::Date getContractDate(const QuantLib::Date& expiry,
                                    const boost::shared_ptr<FutureExpiryCalculator>& fec) const;
 
@@ -137,12 +137,12 @@ private:
 template <class Interpolator>
 CommodityBasisPriceCurve<Interpolator>::CommodityBasisPriceCurve(
     const QuantLib::Date& referenceDate, const std::map<QuantLib::Date, QuantLib::Handle<QuantLib::Quote> >& basisData,
-    const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommoditySpotIndex>& spotIndex,
+    const boost::shared_ptr<FutureExpiryCalculator>& basisFec, const boost::shared_ptr<CommodityIndex>& index,
     const QuantLib::Handle<PriceTermStructure>& basePts, const boost::shared_ptr<FutureExpiryCalculator>& baseFec,
     bool addBasis, QuantLib::Size monthOffset, const Interpolator& interpolator)
     : PriceTermStructure(referenceDate, QuantLib::NullCalendar(), basePts->dayCounter()),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), basisData_(basisData), basisFec_(basisFec),
-      spotIndex_(spotIndex), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset) {
+      index_(index), basePts_(basePts), baseFec_(baseFec), addBasis_(addBasis), monthOffset_(monthOffset) {
 
     using QuantLib::Date;
     using QuantLib::Schedule;
@@ -290,7 +290,7 @@ CommodityBasisPriceCurve<Interpolator>::getContractDate(const QuantLib::Date& ex
 
     // Try the expiry date's month and year
     Date result(1, expiry.month(), expiry.year());
-    Date calcExpiry = fec->expiryDate(result.month(), result.year(), 0);
+    Date calcExpiry = fec->expiryDate(result, 0);
     if (calcExpiry == expiry) {
         return result;
     }
@@ -303,7 +303,7 @@ CommodityBasisPriceCurve<Interpolator>::getContractDate(const QuantLib::Date& ex
     Size maxIncrement = 12;
     while (calcExpiry < expiry && maxIncrement > 0) {
         result += 1 * Months;
-        calcExpiry = fec->expiryDate(result.month(), result.year(), 0);
+        calcExpiry = fec->expiryDate(result, 0);
         maxIncrement--;
     }
 
@@ -318,7 +318,7 @@ template <class Interpolator>
 boost::shared_ptr<CommodityIndexedCashFlow>
 CommodityBasisPriceCurve<Interpolator>::makeCashflow(const QuantLib::Date& start, const QuantLib::Date& end) const {
 
-    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, spotIndex_, 0, QuantLib::NullCalendar(),
+    return boost::make_shared<CommodityIndexedCashFlow>(1.0, start, end, index_, 0, QuantLib::NullCalendar(),
                                                         QuantLib::Unadjusted, 0, QuantLib::NullCalendar(), 0.0, 1.0,
                                                         false, true, true, true, 0, baseFec_);
 }

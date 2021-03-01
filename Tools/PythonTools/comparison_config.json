@@ -559,7 +559,9 @@
             ],
             "optional_names": [
               "PresentValue",
-              "DiscountFactor"
+              "DiscountFactor",
+			  "Coupon",
+			  "fixingValue"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-8

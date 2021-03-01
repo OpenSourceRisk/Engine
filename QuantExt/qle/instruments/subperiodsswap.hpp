@@ -115,6 +115,53 @@ inline const Leg& SubPeriodsSwap::floatLeg() const { return legs_[1]; }
 inline Rate SubPeriodsSwap::floatLegBPS() const { return legBPS(1); }
 
 inline Rate SubPeriodsSwap::floatLegNPV() const { return legNPV(1); }
+
+class MakeSubPeriodsSwap {
+public:
+    MakeSubPeriodsSwap(const Period& swapTenor, const boost::shared_ptr<IborIndex>& index,
+        Rate fixedRate, const Period& floatPayTenor, const Period& forwardStart = 0 * Days);
+
+    operator SubPeriodsSwap() const;
+    operator boost::shared_ptr<SubPeriodsSwap>() const;
+
+    MakeSubPeriodsSwap& withEffectiveDate(const Date&);
+    MakeSubPeriodsSwap& withNominal(Real n);
+    MakeSubPeriodsSwap& withIsPayer(bool p);
+    MakeSubPeriodsSwap& withSettlementDays(Natural settlementDays);
+
+    MakeSubPeriodsSwap& withFixedLegTenor(const Period& t);
+    MakeSubPeriodsSwap& withFixedLegCalendar(const Calendar& cal);
+    MakeSubPeriodsSwap& withFixedLegConvention(BusinessDayConvention bdc);
+    MakeSubPeriodsSwap& withFixedLegRule(DateGeneration::Rule r);
+    MakeSubPeriodsSwap& withFixedLegDayCount(const DayCounter& dc);
+
+    MakeSubPeriodsSwap& withSubCouponsType(const SubPeriodsCoupon::Type& st);
+
+    MakeSubPeriodsSwap& withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve);
+    MakeSubPeriodsSwap& withPricingEngine(const boost::shared_ptr<PricingEngine>& engine);
+
+private:
+    Period swapTenor_;
+    boost::shared_ptr<IborIndex> index_;
+    Rate fixedRate_;
+    Period floatPayTenor_;
+    Period forwardStart_;
+
+    Date effectiveDate_;
+    Real nominal_;
+    bool isPayer_;
+    Natural settlementDays_;
+
+    Period fixedTenor_;
+    Calendar fixedCalendar_;
+    BusinessDayConvention fixedConvention_;
+    DateGeneration::Rule fixedRule_;
+    DayCounter fixedDayCount_, floatDayCounter_;
+
+    SubPeriodsCoupon::Type subCouponsType_;
+
+    boost::shared_ptr<PricingEngine> engine_;
+};
 } // namespace QuantExt
 
 #endif

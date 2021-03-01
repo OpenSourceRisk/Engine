@@ -66,7 +66,7 @@ void EquityOption::setCcyStrike() {
     if (!strikeCurrency_.empty()) {
         QL_REQUIRE(parseCurrencyWithMinors(strikeCurrency_) == ccy,
             "Stike currency " << strikeCurrency_ << " does not match option currency " << currency_ << " for trade " << id());
-        strike_ = convertMinorToMajorCurrency(strikeCurrency_, strike_);
+        strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
     } else {
         DLOG("No StrikeCurrency provided, using Option currency " << localCurrency_);
         strike_ = convertMinorToMajorCurrency(localCurrency_, localStrike_);
