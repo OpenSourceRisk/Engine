@@ -27,6 +27,7 @@
 #include <qle/indexes/ibor/chfsaron.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
 #include <qle/indexes/ibor/clpcamara.hpp>
+#include <qle/indexes/ibor/cnyrepofix.hpp>
 #include <qle/indexes/ibor/copibr.hpp>
 #include <qle/indexes/ibor/corra.hpp>
 #include <qle/indexes/ibor/czkpribor.hpp>
@@ -118,6 +119,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() },
         { Ester(), "Ester", TARGET().name(), EURCurrency().name() },
         { Sofr(), "SOFR", UnitedStates(UnitedStates::GovernmentBond).name(), USDCurrency().name() },
+        { CNYRepoFix(pd), "CNY-REPOFIX", China(China::IB).name(), CNYCurrency().name() }
     };
 
     Size size = sizeof(data) / sizeof(data[0]);

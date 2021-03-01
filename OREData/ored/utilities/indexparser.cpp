@@ -53,6 +53,7 @@
 #include <qle/indexes/ibor/clpcamara.hpp>
 #include <qle/indexes/ibor/cnhhibor.hpp>
 #include <qle/indexes/ibor/cnhshibor.hpp>
+#include <qle/indexes/ibor/cnyrepofix.hpp>
 #include <qle/indexes/ibor/copibr.hpp>
 #include <qle/indexes/ibor/corra.hpp>
 #include <qle/indexes/ibor/czkpribor.hpp>
@@ -149,6 +150,24 @@ public:
     }
 
     string family() const override { return KRWCd(3 * Months).familyName(); }
+};
+
+// CNY REPOFIX
+// If tenor equates to 7 Days, i.e. tenor is 1W or 7D, ensure that the index is created
+// with a tenor of 1W under the hood. Similarly for 14 days, i.e. 2W.
+template <> class IborIndexParserWithPeriod<CNYRepoFix> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        if (p.units() == Days && p.length() == 7) {
+            return boost::make_shared<CNYRepoFix>(1 * Weeks, h);
+        } else if (p.units() == Days && p.length() == 14) {
+            return boost::make_shared<CNYRepoFix>(2 * Weeks, h);
+        } else {
+            return boost::make_shared<CNYRepoFix>(p, h);
+        }
+    }
+
+    string family() const override { return CNYRepoFix(1 * Weeks).familyName(); }
 };
 
 // Helper function to check that index name to index object is a one-to-one mapping
@@ -314,7 +333,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"THB-THBFIX", boost::make_shared<IborIndexParserWithPeriod<THBFIX>>()},
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
         {"RON-ROBOR", boost::make_shared<IborIndexParserWithPeriod<Robor>>()},
-        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
+        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
+        {"CNY-REPOFIX", boost::make_shared<IborIndexParserWithPeriod<CNYRepoFix>>()}};
 
     // Check (once) that we have a one-to-one mapping
     static bool checked = false;
@@ -688,7 +708,7 @@ boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Con
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseCommodityIndex(s, *conventions);
+            ret_idx = conventions ? parseCommodityIndex(s, *conventions) : parseCommodityIndex(s);
         } catch (...) {
         }
     }

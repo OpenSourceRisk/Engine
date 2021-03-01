@@ -309,6 +309,7 @@ indexes/ibor/chftois.hpp
 indexes/ibor/clpcamara.hpp
 indexes/ibor/cnhhibor.hpp
 indexes/ibor/cnhshibor.hpp
+indexes/ibor/cnyrepofix.hpp
 indexes/ibor/copibr.hpp
 indexes/ibor/corra.hpp
 indexes/ibor/czkpribor.hpp
