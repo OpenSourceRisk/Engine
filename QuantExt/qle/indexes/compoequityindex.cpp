@@ -30,14 +30,15 @@ CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source,
                   JointCalendar(source->fixingCalendar(), fxIndex->fixingCalendar()), fxIndex->targetCurrency(),
                   Handle<Quote>(boost::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
                       source->equitySpot(), fxIndex->fxQuote(),
-                      [&fxIndex](Real x, Real y) { return fxIndex->inverseIndex() ? x / y : x * y; })),
+                      fxIndex->inverseIndex() ? std::function<Real(Real, Real)>([](Real x, Real y) { return x / y; })
+                                              : std::function<Real(Real, Real)>([](Real x, Real y) { return x * y; }))),
                   fxIndex->inverseIndex()
                       ? Handle<YieldTermStructure>(boost::make_shared<DiscountRatioModifiedCurve>(
                             source->equityForecastCurve(), fxIndex->sourceCurve(), fxIndex->targetCurve()))
                       : Handle<YieldTermStructure>(boost::make_shared<DiscountRatioModifiedCurve>(
                             source->equityForecastCurve(), fxIndex->targetCurve(), fxIndex->sourceCurve())),
                   source->equityDividendCurve()),
-      fxIndex_(fxIndex) {
+      source_(source), fxIndex_(fxIndex) {
     LazyObject::registerWith(source_);
     LazyObject::registerWith(fxIndex_);
 }
