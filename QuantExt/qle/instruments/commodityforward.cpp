@@ -44,6 +44,8 @@ CommodityForward::CommodityForward(const boost::shared_ptr<CommodityIndex>& inde
             ") for a cash settled commodity forward should be on or after the maturity date (" <<
             io::iso_date(maturityDate_) << ").");
     }
+
+    registerWith(index_);
 }
 
 bool CommodityForward::isExpired() const {
