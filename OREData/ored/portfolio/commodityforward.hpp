@@ -37,10 +37,12 @@ public:
     //@{
     //! Default constructor
     CommodityForward();
+
     //! Detailed constructor
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
                      const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
-                     QuantLib::Real strike);
+                     QuantLib::Real strike, const boost::optional<bool>& isFuturePrice = boost::none,
+                     const QuantLib::Date& futureExpiryDate = QuantLib::Date());
     //@}
 
     //! \name Inspectors
@@ -51,6 +53,8 @@ public:
     QuantLib::Real quantity() { return quantity_; }
     std::string maturityDate() { return maturityDate_; }
     QuantLib::Real strike() { return strike_; }
+    const boost::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
+    const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
     //@}
 
     //! \name Trade interface
@@ -76,6 +80,17 @@ private:
     QuantLib::Real quantity_;
     std::string maturityDate_;
     QuantLib::Real strike_;
+
+    /*! Indicates if the forward underlying is a commodity future settlement price, \c true, or a spot price \c false.
+        If not explicitly set, it is assumed to be \c false.
+    */
+    boost::optional<bool> isFuturePrice_;
+
+    /*! An explicit expiry date for the underlying future contract. This can be used if the trade references a
+        future contract settlement price and the forward's maturity date does not match the future contract expiry 
+        date.
+    */
+    QuantLib::Date futureExpiryDate_;
 };
 } // namespace data
 } // namespace ore

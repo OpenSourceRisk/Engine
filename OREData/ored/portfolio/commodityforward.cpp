@@ -24,28 +24,50 @@
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/to_string.hpp>
 
+using QuantExt::CommodityFuturesIndex;
+using QuantExt::CommodityIndex;
+using QuantExt::CommoditySpotIndex;
+using QuantExt::PriceTermStructure;
 using namespace QuantLib;
 using namespace std;
 
 namespace ore {
 namespace data {
 
-CommodityForward::CommodityForward() : Trade("CommodityForward") {}
+CommodityForward::CommodityForward() : Trade("CommodityForward"), quantity_(0.0), strike_(0.0) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
-                                   const string& currency, Real quantity, const string& maturityDate, Real strike)
+                                   const string& currency, Real quantity, const string& maturityDate, Real strike,
+                                   const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
-      quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
+      quantity_(quantity), maturityDate_(maturityDate), strike_(strike), isFuturePrice_(isFuturePrice),
+      futureExpiryDate_(futureExpiryDate) {}
 
 void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    // Get the price curve for the commodity.
+    const boost::shared_ptr<Market>& market = engineFactory->market();
+    Handle<PriceTermStructure> priceCurve = market->commodityPriceCurve(commodityName_,
+        engineFactory->configuration(MarketContext::pricing));
+
+    // Create the underlying for the forward
+    boost::shared_ptr<CommodityIndex> index;
+    maturity_ = parseDate(maturityDate_);
+    if (isFuturePrice_ || *isFuturePrice_) {
+        Date expiryDate = futureExpiryDate_ == Date() ? maturity_ : futureExpiryDate_;
+        index = boost::make_shared<CommodityFuturesIndex>(commodityName_, expiryDate,
+            NullCalendar(), true, priceCurve);
+    } else {
+        index = boost::make_shared<CommoditySpotIndex>(commodityName_, NullCalendar(), priceCurve);
+    }
 
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);
     Position::Type position = parsePositionType(position_);
-    Date maturity = parseDate(maturityDate_);
     boost::shared_ptr<Instrument> commodityForward = boost::make_shared<QuantExt::CommodityForward>(
-        commodityName_, currency, position, quantity_, maturity, strike_);
+        index, currency, position, quantity_, maturity_, strike_);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -57,7 +79,6 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // set up other Trade details
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);
     npvCurrency_ = currency_;
-    maturity_ = maturity;
 
     // notional_ = strike_ * quantity_;
     notional_ = Null<Real>(); // is handled by override of notional()
@@ -92,6 +113,14 @@ void CommodityForward::fromXML(XMLNode* node) {
     quantity_ = XMLUtils::getChildValueAsDouble(commodityDataNode, "Quantity", true);
     maturityDate_ = XMLUtils::getChildValue(commodityDataNode, "Maturity", true);
     strike_ = XMLUtils::getChildValueAsDouble(commodityDataNode, "Strike", true);
+
+    isFuturePrice_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "IsFuturePrice"))
+        isFuturePrice_ = parseBool(XMLUtils::getNodeValue(n));
+
+    futureExpiryDate_ = Date();
+    if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "FutureExpiryDate"))
+        futureExpiryDate_ = parseDate(XMLUtils::getNodeValue(n));
 }
 
 XMLNode* CommodityForward::toXML(XMLDocument& doc) {
@@ -106,6 +135,12 @@ XMLNode* CommodityForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, commodityDataNode, "Currency", currency_);
     XMLUtils::addChild(doc, commodityDataNode, "Strike", strike_);
     XMLUtils::addChild(doc, commodityDataNode, "Quantity", quantity_);
+
+    if (isFuturePrice_)
+        XMLUtils::addChild(doc, commodityDataNode, "IsFuturePrice", *isFuturePrice_);
+
+    if (futureExpiryDate_ != Date())
+        XMLUtils::addChild(doc, commodityDataNode, "FutureExpiryDate", to_string(futureExpiryDate_));
 
     return node;
 }
