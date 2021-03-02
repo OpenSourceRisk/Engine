@@ -42,7 +42,9 @@ public:
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
                      const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
                      QuantLib::Real strike, const boost::optional<bool>& isFuturePrice = boost::none,
-                     const QuantLib::Date& futureExpiryDate = QuantLib::Date());
+                     const QuantLib::Date& futureExpiryDate = QuantLib::Date(),
+                     const boost::optional<bool>& physicallySettled = true,
+                     const Date& paymentDate = Date());
     //@}
 
     //! \name Inspectors
@@ -55,6 +57,8 @@ public:
     QuantLib::Real strike() { return strike_; }
     const boost::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
     const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
+    const boost::optional<bool>& physicallySettled() const { return physicallySettled_; }
+    const QuantLib::Date& paymentDate() const { return paymentDate_; }
     //@}
 
     //! \name Trade interface
@@ -91,6 +95,9 @@ private:
         date.
     */
     QuantLib::Date futureExpiryDate_;
+
+    boost::optional<bool> physicallySettled_;
+    QuantLib::Date paymentDate_;
 };
 } // namespace data
 } // namespace ore
