@@ -1,0 +1,93 @@
+/*
+ Copyright (C) 2019 Quaternion Risk Management Ltd
+ All rights reserved.
+*/
+
+/*! \file blacktriangulationatmvol.hpp
+    \brief Black volatility surface that implies an ATM vol based on triangulation
+    \ingroup termstructures
+ */
+#pragma once
+
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
+
+namespace QuantExt {
+using namespace QuantLib;
+
+//! Black volatility surface that implies an ATM vol based on triangulation
+/*! This class is used when one wants to proxy a volatility like XAU/EUR using
+ *  XAU/USD, EUR/USD and a correlation. It uses the cosing rule.
+ *  The correlation can be implied from a vol (if you had XAU/EUR) or historically estimated.
+ *  This class is just ATM, otherwise there is a degree of freedom in selecting strikes.
+ *
+ *  One application of this is SIMM sensis, where the vol for XAU/EUR must be broken down
+ *  into XAU/USD and EUR/USD.
+ *
+ *  Other methods for building a full sufrace exist, but to keep things simple we just do ATM
+ *
+ *  \ingroup termstructures
+ */
+class BlackTriangulationATMVolTermStructure : public BlackVolatilityTermStructure {
+public:
+    //! Constructor takes two BlackVolTermStructure and a correlation
+    /*! Attributes like referenceDate, settlementDays, Calendar, etc are taken from vol1
+     */
+    BlackTriangulationATMVolTermStructure(const Handle<BlackVolTermStructure>& vol1,
+                                          const Handle<BlackVolTermStructure>& vol2,
+                                          const Handle<CorrelationTermStructure>& rho)
+        : BlackVolatilityTermStructure(vol1->businessDayConvention(), vol1->dayCounter()), vol1_(vol1), vol2_(vol2),
+          rho_(rho) {
+        registerWith(vol1_);
+        registerWith(vol2_);
+        registerWith(rho_);
+    }
+    //! \name TermStructure interface
+    //@{
+    const Date& referenceDate() const { return vol1_->referenceDate(); }
+    Date maxDate() const { return std::min(vol1_->maxDate(), vol2_->maxDate()); }
+    Natural settlementDays() const { return vol1_->settlementDays(); }
+    Calendar calendar() const { return vol1_->calendar(); }
+    //! \name Observer interface
+    //@{
+    void update() { notifyObservers(); }
+    //@}
+    //! \name VolatilityTermStructure interface
+    //@{
+    Real minStrike() const { return 0; }
+    Real maxStrike() const { return QL_MAX_REAL; }
+    //@}
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+protected:
+    virtual Volatility blackVolImpl(Time t, Real) const {
+        // get ATM vols and correlation
+        Volatility v1 = vol1_->blackVol(t, Null<Real>());
+        Volatility v2 = vol2_->blackVol(t, Null<Real>());
+        Real c = rho_->correlation(t);
+
+        // get vol^2
+        Volatility volSquared = v1 * v1 + v2 * v2 - 2.0 * c * v1 * v2;
+        if (volSquared <= 0)
+            return 0;
+        return std::sqrt(volSquared);
+    }
+
+private:
+    Handle<BlackVolTermStructure> vol1_;
+    Handle<BlackVolTermStructure> vol2_;
+    Handle<CorrelationTermStructure> rho_;
+};
+
+// inline definitions
+inline void BlackTriangulationATMVolTermStructure::accept(AcyclicVisitor& v) {
+    Visitor<BlackTriangulationATMVolTermStructure>* v1 =
+        dynamic_cast<Visitor<BlackTriangulationATMVolTermStructure>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        BlackVolatilityTermStructure::accept(v);
+}
+} // namespace QuantExt
