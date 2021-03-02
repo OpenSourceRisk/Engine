@@ -34,6 +34,11 @@ CommodityForward::CommodityForward(const boost::shared_ptr<CommodityIndex>& inde
     QL_REQUIRE(quantity_ > 0, "Commodity forward quantity should be positive: " << quantity);
     QL_REQUIRE(strike_ > 0, "Commodity forward strike should be positive: " << strike);
 
+    if (physicallySettled_) {
+        QL_REQUIRE(paymentDate_ == Date(), "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
+            ") should not be provided for physically settled commodity forwards.");
+    }
+
     if (!physicallySettled_ && paymentDate_ != Date()) {
         QL_REQUIRE(paymentDate_ >= maturityDate_, "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
             ") for a cash settled commodity forward should be on or after the maturity date (" <<
