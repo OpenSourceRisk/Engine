@@ -47,7 +47,8 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) cons
 
 Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const {
 
-    QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
+    QL_REQUIRE(isValidFixingDate(fixingDate),
+               "Fixing date " << fixingDate << " is not valid for equity index '" << name_ << "'");
 
     Date today = Settings::instance().evaluationDate();
 
@@ -60,7 +61,7 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool
         // must have been fixed
         // do not catch exceptions
         result = pastFixing(fixingDate);
-        QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
+        QL_REQUIRE(result != Null<Real>(), "Missing equity index fixing " << name() << " fixing for " << fixingDate);
     } else {
         try {
             // might have been fixed
