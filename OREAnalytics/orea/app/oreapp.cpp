@@ -597,7 +597,7 @@ void OREApp::writeInitialReports() {
     /************
      * Curve dump
      */
-    out_ << endl << setw(tab_) << left << "Curve Report... " << flush;
+    out_ << setw(tab_) << left << "Curve Report... " << flush;
     if (params_->hasGroup("curves") && params_->get("curves", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("curves", "outputFileName");
         CSVFileReport curvesReport(fileName);
