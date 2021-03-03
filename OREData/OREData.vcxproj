@@ -70,6 +70,7 @@
     <ClInclude Include="ored\marketdata\curvespec.hpp" />
     <ClInclude Include="ored\marketdata\curvespecparser.hpp" />
     <ClInclude Include="ored\marketdata\defaultcurve.hpp" />
+    <ClInclude Include="ored\marketdata\dependencygraph.hpp" />
     <ClInclude Include="ored\marketdata\equitycurve.hpp" />
     <ClInclude Include="ored\marketdata\equityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\expiry.hpp" />
@@ -254,6 +255,7 @@
     <ClCompile Include="ored\marketdata\curvespec.cpp" />
     <ClCompile Include="ored\marketdata\curvespecparser.cpp" />
     <ClCompile Include="ored\marketdata\defaultcurve.cpp" />
+    <ClCompile Include="ored\marketdata\dependencygraph.cpp" />
     <ClCompile Include="ored\marketdata\equitycurve.cpp" />
     <ClCompile Include="ored\marketdata\equityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\expiry.cpp" />

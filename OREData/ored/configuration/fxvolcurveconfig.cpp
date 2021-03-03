@@ -42,6 +42,14 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
     populateRequiredCurveIds();
 }
 
+FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
+                            const string& baseVolatility1, const string& baseVolatility2, const string& fxIndexTag) : 
+                            CurveConfig(curveID, curveDescription), dimension_(dimension), baseVolatility1_(baseVolatility1),
+                            baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag){
+    populateRequiredCurveIds();
+}
+
+
 const vector<string>& FXVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         vector<string> tokens;
@@ -80,61 +88,73 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         dc = "A365";
     dayCounter_ = parseDayCounter(dc);
 
-    if (dim == "ATM") {
-        dimension_ = Dimension::ATM;
-    } else if (dim == "Smile") {
+    
+    if (dim == "ATMTriangulated") {
+        dimension_ = Dimension::ATMTriangulated;
+        baseVolatility1_ =  XMLUtils::getChildValue(node, "BaseVolatility1", true);
+        baseVolatility2_ =  XMLUtils::getChildValue(node, "BaseVolatility2", true);
+        
+        string fxIndexTag = XMLUtils::getChildValue(node, "FXIndexTag");
+        if (fxIndexTag == "")
+            fxIndexTag = "GENERIC";
+        fxIndexTag_ = fxIndexTag;
+    } else {
+        if (dim == "ATM") {
+            dimension_ = Dimension::ATM;
+        } else if (dim == "Smile") {
 
-        conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
-        string smileType = XMLUtils::getChildValue(node, "SmileType");
-        if (smileType == "" || smileType == "VannaVolga") {
-            dimension_ = Dimension::SmileVannaVolga;
+            conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
+            string smileType = XMLUtils::getChildValue(node, "SmileType");
+            if (smileType == "" || smileType == "VannaVolga") {
+                dimension_ = Dimension::SmileVannaVolga;
 
-            // only read smile interpolation method if dimension is smile.
-            if (smileInterp == "") {
-                smileInterpolation_ = SmileInterpolation::VannaVolga2; // default to VannaVolga 2nd approximation
-            } else if (smileInterp == "VannaVolga1") {
-                smileInterpolation_ = SmileInterpolation::VannaVolga1;
-            } else if (smileInterp == "VannaVolga2") {
-                smileInterpolation_ = SmileInterpolation::VannaVolga2;
-            } else {
-                QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
-            }
+                // only read smile interpolation method if dimension is smile.
+                if (smileInterp == "") {
+                    smileInterpolation_ = SmileInterpolation::VannaVolga2; // default to VannaVolga 2nd approximation
+                } else if (smileInterp == "VannaVolga1") {
+                    smileInterpolation_ = SmileInterpolation::VannaVolga1;
+                } else if (smileInterp == "VannaVolga2") {
+                    smileInterpolation_ = SmileInterpolation::VannaVolga2;
+                } else {
+                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                }
 
-            string sDelta = XMLUtils::getChildValue(node, "SmileDelta");
-            if (sDelta == "")
-                sDelta = "25";
-            smileDelta_ = parseInteger(sDelta);
-        } else if (smileType == "Delta") {
-            dimension_ = Dimension::SmileDelta;
-            // only read smile interpolation method if dimension is smile.
-            if (smileInterp == "" || smileInterp == "Linear") {
-                smileInterpolation_ = SmileInterpolation::Linear;
-            } else if (smileInterp == "Cubic") {
-                smileInterpolation_ = SmileInterpolation::Cubic;
-            } else {
-                QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
-            }
-            deltas_ = XMLUtils::getChildrenValuesAsStrings(node, "Deltas", true);
+                string sDelta = XMLUtils::getChildValue(node, "SmileDelta");
+                if (sDelta == "")
+                    sDelta = "25";
+                smileDelta_ = parseInteger(sDelta);
+            } else if (smileType == "Delta") {
+                dimension_ = Dimension::SmileDelta;
+                // only read smile interpolation method if dimension is smile.
+                if (smileInterp == "" || smileInterp == "Linear") {
+                    smileInterpolation_ = SmileInterpolation::Linear;
+                } else if (smileInterp == "Cubic") {
+                    smileInterpolation_ = SmileInterpolation::Cubic;
+                } else {
+                    QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
+                }
+                deltas_ = XMLUtils::getChildrenValuesAsStrings(node, "Deltas", true);
 
-            // check that these are valid deltas
-            for (auto d : deltas_) {
-                QL_REQUIRE(d == "ATM" || d.back() == 'P' || d.back() == 'C',
-                           "this is not a valid value for delta, " << d);
-                if (d != "ATM") {
-                    parseReal(d.substr(0, d.size() - 1));
+                // check that these are valid deltas
+                for (auto d : deltas_) {
+                    QL_REQUIRE(d == "ATM" || d.back() == 'P' || d.back() == 'C',
+                               "this is not a valid value for delta, " << d);
+                    if (d != "ATM") {
+                        parseReal(d.substr(0, d.size() - 1));
+                    }
                 }
             }
+        } else {
+            QL_FAIL("Dimension " << dim << " not supported yet");
         }
-    } else {
-        QL_FAIL("Dimension " << dim << " not supported yet");
-    }
-    expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
-    fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
+        expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
 
-    if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
-        fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", true);
-        fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", true);
+        if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
+            fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", true);
+            fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", true);
+        }
     }
+    fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
 
     populateRequiredCurveIds();
 }
@@ -146,6 +166,14 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
+    } else if (dimension_ == Dimension::ATMTriangulated) {
+        XMLUtils::addChild(doc, node, "Dimension", "ATMTriangulated");
+        XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);
+        XMLUtils::addChild(doc, node, "FXIndexTag", fxIndexTag_);
+        XMLUtils::addChild(doc, node, "BaseVolatility1", baseVolatility1_);
+        XMLUtils::addChild(doc, node, "BaseVolatility2", baseVolatility2_);
+
+        return node;
     } else if (dimension_ == Dimension::SmileVannaVolga) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
         XMLUtils::addChild(doc, node, "SmileType", "VannaVolga");
@@ -188,7 +216,6 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
 }
 
 void FXVolatilityCurveConfig::populateRequiredCurveIds() {
-
     if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
         std::vector<string> domTokens, forTokens;
         split(domTokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
@@ -209,6 +236,57 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
         } else {
             QL_FAIL("Cannot determine the required foreign yield curve for fx vol curve " << curveID_);
         }
+    }
+
+    if (dimension_ == Dimension::ATMTriangulated) {
+        requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility1_);
+        requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility2_);
+        
+        
+        vector<string> tokens;
+        boost::split(tokens, fxSpotID_, boost::is_any_of("/"));
+        QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << fxSpotID_);
+        auto forTarget = tokens[1];
+        auto domTarget = tokens[2]; 
+        
+    
+        // we need to include inverse ccy pairs as well
+        QL_REQUIRE(baseVolatility1_.size() == 6, "invalid ccy pair length");
+        QL_REQUIRE(baseVolatility2_.size() == 6, "invalid ccy pair length");
+        auto forBase1 = baseVolatility1_.substr(0, 3);
+        auto domBase1 = baseVolatility1_.substr(3);
+        auto forBase2 = baseVolatility2_.substr(0, 3);
+        auto domBase2 = baseVolatility2_.substr(3);
+
+        requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(domBase1 + forBase1);
+        requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(domBase2 + forBase2);
+        
+        // we need to establish the common currency between the two pairs to include the correlations
+        std::string baseCcy = "";
+        if (forBase1 == forBase2 || forBase1 == domBase2) {
+            baseCcy = forBase1;
+        } else {
+            QL_REQUIRE(domBase1 == forBase2 || domBase1 == domBase2, "no common currency found for baseVolatilities");
+            baseCcy = domBase1;
+        }
+       
+        // straight pair
+        std::string forIndex = "FX-" + fxIndexTag_ + "-" + forTarget + "-" + baseCcy;
+        std::string domIndex = "FX-" + fxIndexTag_ + "-" + domTarget + "-" + baseCcy;
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndex + "&" + domIndex);
+        // inverse pair
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndex + "&" + forIndex);
+        // inverse fx index1
+        std::string forIndexInverse = "FX-" + fxIndexTag_ + "-" + baseCcy + "-" + forTarget;
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndexInverse + "&" + domIndex);
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndex + "&" + forIndexInverse);
+        // inverse fx index2
+        std::string domIndexInverse = "FX-" + fxIndexTag_ + "-" + baseCcy + "-" + domTarget;
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndex + "&" + domIndexInverse);
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndexInverse + "&" + forIndex);
+        // both fx indices inverted
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(forIndexInverse + "&" + domIndexInverse);
+        requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(domIndexInverse + "&" + forIndexInverse);
     }
 }
 } // namespace data

@@ -4766,7 +4766,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 
 \subsubsection{FX Volatility Structures}
 
-Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility structure configurations.
+Listing \ref{lst:fxoptionvol_configuration} shows three examples of FX volatility structure configurations.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4775,7 +4775,7 @@ Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility 
   <FXVolatility>
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
-    <!-- ATM, Smile -->
+    <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>ATM</Dimension> 
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
@@ -4786,7 +4786,7 @@ Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility 
   <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <!-- ATM, Smile -->
+    <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>Smile</Dimension> 
     <!-- VannaVolga, Delta -->
     <SmileType>Delta</SmileType> 
@@ -4798,6 +4798,16 @@ Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility 
     <FXSpotID>FX/USD/JPY</FXSpotID>
     <FXForeignCurveID>Yield/JPY/JPY1D</FXForeignCurveID>
     <FXDomesticCurveID>Yield/USD/USD1D</FXDomesticCurveID>
+  </FXVolatility>
+
+  <FXVolatility>
+    <CurveId>EURJPY</CurveId>
+    <CurveDescription />
+    <!-- ATM, Smile, ATMTriangulated -->
+    <Dimension>ATMTriangulated</Dimension> 
+    <FXSpotID>FX/EUR/JPY</FXSpotID>
+    <BaseVolatility1>EURUSD</BaseVolatility1>
+    <BaseVolatility2>USDJPY</BaseVolatility2>
   </FXVolatility>
 
   <FXVolatility>
@@ -4814,8 +4824,8 @@ The meaning of each of the elements in Listing \ref{lst:fxoptionvol_configuratio
 \begin{itemize}
 \item CurveId: Unique identifier of the FX volatility structure
 \item CurveDescription: A description of the volatility structure, may be left blank.
-\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. \\ 
-Allowable values: {\tt ATM, Smile}
+\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. An `ATMTriangulated' value denotes a curve triangulated from two other surfaces.\\ 
+Allowable values: {\tt ATM, Smile, ATMTriangulated}
 \item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
 Allowable values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006) and {\tt Delta}, with default value {\tt VannaVolga} if left blank.
 \item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
@@ -4836,6 +4846,9 @@ Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol
 \item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
 \item DayCounter: The term structure's day counter used in date to time conversions
 \item Calendar: The term structure's calendar used in option tenor to date conversions
+\item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+\item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}

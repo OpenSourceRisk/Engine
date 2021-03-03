@@ -29,6 +29,7 @@ marketdata/csvloader.cpp
 marketdata/curvespec.cpp
 marketdata/curvespecparser.cpp
 marketdata/defaultcurve.cpp
+marketdata/dependencygraph.cpp
 marketdata/equitycurve.cpp
 marketdata/equityvolcurve.cpp
 marketdata/expiry.cpp
@@ -191,6 +192,7 @@ marketdata/csvloader.hpp
 marketdata/curvespec.hpp
 marketdata/curvespecparser.hpp
 marketdata/defaultcurve.hpp
+marketdata/dependencygraph.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
 marketdata/expiry.hpp
