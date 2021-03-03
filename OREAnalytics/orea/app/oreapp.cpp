@@ -105,9 +105,7 @@ int OREApp::run() {
         /*********
          * Build Markets
          */
-        out_ << setw(tab_) << left << "Market... " << flush;
         buildMarket();
-        out_ << "OK" << endl;
 
         /************************
          *Build Pricing Engine Factory
@@ -126,9 +124,7 @@ int OREApp::run() {
         /******************************
          * Write initial reports
          */
-        out_ << setw(tab_) << left << "Write Reports... " << flush;
         writeInitialReports();
-        out_ << "OK" << endl;
 
         /**************************
          * Write base scenario file
@@ -1312,7 +1308,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     if (curveConfigXML != "")
         curveConfigs_->fromXMLString(curveConfigXML);
     else if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
-        out_ << endl << setw(tab_) << left << "Curve configuration... " << flush;
+        out_ << setw(tab_) << left << "Curve configuration... " << flush;
         string inputPath = params_->get("setup", "inputPath");
         string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file");
@@ -1363,8 +1359,10 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     }
 
     // build market
+    out_ << setw(tab_) << left << "Market... " << flush;
     market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_, conventions_,
                                                continueOnError_, true, lazyMarketBuilding_, referenceData_);
+    out_ << "OK" << endl;
 
     LOG("Today's market built");
     MEM_LOG;
