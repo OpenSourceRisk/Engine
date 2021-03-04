@@ -25,27 +25,49 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CommodityForward::CommodityForward(const string& name, const Currency& currency, Position::Type position, Real quantity,
-                                   const Date& maturityDate, Real strike)
-    : name_(name), currency_(currency), position_(position), quantity_(quantity), maturityDate_(maturityDate),
-      strike_(strike) {
+CommodityForward::CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const Currency& currency,
+    Position::Type position, Real quantity, const Date& maturityDate, Real strike, bool physicallySettled,
+    const Date& paymentDate)
+    : index_(index), currency_(currency), position_(position), quantity_(quantity), maturityDate_(maturityDate),
+      strike_(strike), physicallySettled_(physicallySettled), paymentDate_(paymentDate) {
 
     QL_REQUIRE(quantity_ > 0, "Commodity forward quantity should be positive: " << quantity);
     QL_REQUIRE(strike_ > 0, "Commodity forward strike should be positive: " << strike);
+
+    if (physicallySettled_) {
+        QL_REQUIRE(paymentDate_ == Date(), "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
+            ") should not be provided for physically settled commodity forwards.");
+    }
+
+    if (!physicallySettled_ && paymentDate_ != Date()) {
+        QL_REQUIRE(paymentDate_ >= maturityDate_, "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
+            ") for a cash settled commodity forward should be on or after the maturity date (" <<
+            io::iso_date(maturityDate_) << ").");
+    }
+
+    registerWith(index_);
 }
 
-bool CommodityForward::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }
+bool CommodityForward::isExpired() const {
+    if (physicallySettled_ || paymentDate_ == Date()) {
+        return detail::simple_event(maturityDate_).hasOccurred();
+    } else {
+        return detail::simple_event(paymentDate_).hasOccurred();
+    }
+}
 
 void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
     CommodityForward::arguments* arguments = dynamic_cast<CommodityForward::arguments*>(args);
     QL_REQUIRE(arguments != 0, "wrong argument type in CommodityForward");
 
-    arguments->name = name_;
+    arguments->index = index_;
     arguments->currency = currency_;
     arguments->position = position_;
     arguments->quantity = quantity_;
     arguments->maturityDate = maturityDate_;
     arguments->strike = strike_;
+    arguments->physicallySettled = physicallySettled_;
+    arguments->paymentDate = paymentDate_;
 }
 
 void CommodityForward::arguments::validate() const {

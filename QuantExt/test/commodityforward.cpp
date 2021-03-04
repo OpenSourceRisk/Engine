@@ -20,6 +20,7 @@
 #include <boost/test/unit_test.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/settings.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 
 #include <qle/instruments/commodityforward.hpp>
 
@@ -32,7 +33,7 @@ namespace {
 class CommonData {
 public:
     // Variables
-    string name;
+    boost::shared_ptr<CommodityIndex> index;
     USDCurrency currency;
     Position::Type position;
     Real quantity;
@@ -43,9 +44,8 @@ public:
     SavedSettings backup;
 
     // Default constructor
-    CommonData()
-        : name("GOLD_USD"), currency(USDCurrency()), position(Position::Long), quantity(100), maturity(19, Feb, 2019),
-          strike(50.0) {}
+    CommonData() : index(boost::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar())),
+        currency(USDCurrency()), position(Position::Long), quantity(100), maturity(19, Feb, 2019), strike(50.0) {}
 };
 } // namespace
 
@@ -59,9 +59,9 @@ BOOST_AUTO_TEST_CASE(testConstructor) {
 
     CommonData td;
 
-    CommodityForward forward(td.name, td.currency, td.position, td.quantity, td.maturity, td.strike);
+    CommodityForward forward(td.index, td.currency, td.position, td.quantity, td.maturity, td.strike);
 
-    BOOST_CHECK_EQUAL(forward.name(), td.name);
+    BOOST_CHECK_EQUAL(forward.index()->name(), td.index->name());
     BOOST_CHECK_EQUAL(forward.currency(), td.currency);
     BOOST_CHECK_EQUAL(forward.position(), td.position);
     BOOST_CHECK_EQUAL(forward.quantity(), td.quantity);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(testIsExpired) {
 
     CommonData td;
 
-    CommodityForward forward(td.name, td.currency, td.position, td.quantity, td.maturity, td.strike);
+    CommodityForward forward(td.index, td.currency, td.position, td.quantity, td.maturity, td.strike);
 
     Settings::instance().evaluationDate() = td.maturity - 1 * Days;
     Settings::instance().includeReferenceDateEvents() = true;
@@ -88,13 +88,65 @@ BOOST_AUTO_TEST_CASE(testIsExpired) {
     BOOST_CHECK_EQUAL(forward.isExpired(), true);
 }
 
+BOOST_AUTO_TEST_CASE(testIsExpiredCashSettledMaturityEqualsPayment) {
+
+    BOOST_TEST_MESSAGE("Testing commodity forward expiry logic for cash-settled forward" <<
+        " with payment equal to maturity");
+
+    CommonData td;
+
+    CommodityForward forward(td.index, td.currency, td.position, td.quantity, td.maturity, td.strike, false);
+
+    Settings::instance().evaluationDate() = td.maturity - 1 * Days;
+    Settings::instance().includeReferenceDateEvents() = true;
+    BOOST_CHECK_EQUAL(forward.isExpired(), false);
+
+    Settings::instance().evaluationDate() = td.maturity;
+    BOOST_CHECK_EQUAL(forward.isExpired(), false);
+
+    Settings::instance().includeReferenceDateEvents() = false;
+    BOOST_CHECK_EQUAL(forward.isExpired(), true);
+}
+
+BOOST_AUTO_TEST_CASE(testIsExpiredCashSettledPaymentGtMaturity) {
+
+    BOOST_TEST_MESSAGE("Testing commodity forward expiry logic for cash-settled forward" <<
+        " with payment date strictly greater than maturity date.");
+
+    CommonData td;
+
+    Date payment(21, Feb, 2019);
+    CommodityForward forward(td.index, td.currency, td.position, td.quantity, td.maturity, td.strike,
+        false, payment);
+
+    // Check not expired right up to payment date when includeReferenceDateEvents is true.
+    Settings::instance().includeReferenceDateEvents() = true;
+    Date tmpDate = td.maturity - 1 * Days;
+    while (tmpDate <= payment) {
+        Settings::instance().evaluationDate() = tmpDate;
+        BOOST_CHECK_EQUAL(forward.isExpired(), false);
+        tmpDate++;
+    }
+
+    // Is expired if we set includeReferenceDateEvents to false.
+    Settings::instance().includeReferenceDateEvents() = false;
+    BOOST_CHECK_EQUAL(forward.isExpired(), true);
+
+    // Is expired always when valuation date is greater than payment.
+    Settings::instance().evaluationDate() = payment + 1 * Days;
+    BOOST_CHECK_EQUAL(forward.isExpired(), true);
+    Settings::instance().includeReferenceDateEvents() = true;
+    BOOST_CHECK_EQUAL(forward.isExpired(), true);
+
+}
+
 BOOST_AUTO_TEST_CASE(testNegativeQuantityThrows) {
 
     BOOST_TEST_MESSAGE("Test that using a negative quantity in the constructor causes an exception");
 
     CommonData td;
 
-    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, td.position, -10.0, td.maturity, td.strike),
+    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, -10.0, td.maturity, td.strike),
                       QuantLib::Error);
 }
 
@@ -104,8 +156,28 @@ BOOST_AUTO_TEST_CASE(testNegativeStrikeThrows) {
 
     CommonData td;
 
-    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, td.position, td.quantity, td.maturity, -50.0),
+    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, td.quantity, td.maturity, -50.0),
                       QuantLib::Error);
+}
+
+BOOST_AUTO_TEST_CASE(testPaymentDateLtMaturityCashSettledThrows) {
+
+    BOOST_TEST_MESSAGE("Test that using a payment date less than maturity for cash settled causes an exception");
+
+    CommonData td;
+
+    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, td.quantity, td.maturity, -50.0,
+        false, td.maturity - 1 * Days), QuantLib::Error);
+}
+
+BOOST_AUTO_TEST_CASE(testNonNullPaymentDatePhysicallySettledThrows) {
+
+    BOOST_TEST_MESSAGE("Test that using a payment date for physically settled causes an exception");
+
+    CommonData td;
+
+    BOOST_CHECK_THROW(CommodityForward(td.index, td.currency, td.position, td.quantity, td.maturity, -50.0,
+        true, td.maturity + 2 * Days), QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

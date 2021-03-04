@@ -43,7 +43,8 @@ public:
                                     bool useBusinessDays = true,
                                     CommodityQuantityFrequency quantityFrequency =
                                         CommodityQuantityFrequency::PerCalculationPeriod,
-                                    QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
+                                    QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
+                                    QuantLib::Natural dailyExpiryOffset = QuantLib::Null<QuantLib::Natural>());
 
     //! Constructor that deduces payment date from \p endDate using payment conventions
     CommodityIndexedAverageCashFlow(
@@ -57,6 +58,7 @@ public:
         bool excludeStartDate = true, const QuantLib::Date& paymentDateOverride = Date(),
         bool useBusinessDays = true, CommodityQuantityFrequency quantityFrequency =
         CommodityQuantityFrequency::PerCalculationPeriod, QuantLib::Natural hoursPerDay =
+        QuantLib::Null<QuantLib::Natural>(), QuantLib::Natural dailyExpiryOffset =
         QuantLib::Null<QuantLib::Natural>());
 
     //! \name Inspectors
@@ -73,6 +75,7 @@ public:
     bool useBusinessDays() const { return useBusinessDays_; }
     CommodityQuantityFrequency quantityFrequency() const { return quantityFrequency_; }
     QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
+    QuantLib::Natural dailyExpiryOffset() const { return dailyExpiryOffset_; }
 
     /*! Return the index used to get the price for each pricing date in the period. The map keys are the pricing dates.
         For a given key date, the map value holds the commodity index used to give the price on that date. If the
@@ -127,6 +130,7 @@ private:
     bool useBusinessDays_;
     CommodityQuantityFrequency quantityFrequency_;
     QuantLib::Natural hoursPerDay_;
+    QuantLib::Natural dailyExpiryOffset_;
     QuantLib::Real periodQuantity_;
 
     //! Shared initialisation
@@ -164,6 +168,7 @@ public:
     CommodityIndexedAverageLeg& useBusinessDays(bool flag = true);
     CommodityIndexedAverageLeg& withQuantityFrequency(CommodityQuantityFrequency quantityFrequency);
     CommodityIndexedAverageLeg& withHoursPerDay(QuantLib::Natural hoursPerDay);
+    CommodityIndexedAverageLeg& withDailyExpiryOffset(QuantLib::Natural dailyExpiryOffset);
 
     operator Leg() const;
 
@@ -189,6 +194,7 @@ private:
     bool useBusinessDays_;
     CommodityQuantityFrequency quantityFrequency_;
     QuantLib::Natural hoursPerDay_;
+    QuantLib::Natural dailyExpiryOffset_;
 };
 
 } // namespace QuantExt

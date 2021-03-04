@@ -569,7 +569,7 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
                     WLOG("Calculated expiry date, " << io::iso_date(end) << ", does not equal quote's expiry date "
                         << io::iso_date(expiry) << ". Proceed with quote's expiry.");
                 }
-                start = fec->priorExpiry(true, end) + 1;
+                start = fec->priorExpiry(false, end) + 1;
 
             } else if (ad.period() == ADCP::PreviousMonth) {
 
@@ -585,12 +585,19 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
                 QL_REQUIRE(uConvention, "Convention " << priceSegment.conventionsId() <<
                     " not of expected type CommodityFutureConvention.");
                 uFec = boost::make_shared<ConventionsBasedFutureExpiry>(*uConvention);
+
+                if (ad.dailyExpiryOffset() != Null<Natural>() && ad.dailyExpiryOffset() > 0) {
+                    QL_REQUIRE(uConvention->contractFrequency() == Daily, "CommodityCurve: the averaging data has" <<
+                        " a positive DailyExpiryOffset (" << ad.dailyExpiryOffset() << ") but the underlying future" <<
+                        " contract frequency is not daily (" << uConvention->contractFrequency() << ").");
+                }
             }
 
             // Build the instrument.
             auto index = parseCommodityIndex(ad.commodityName(), conventions, false);
             auto afph = boost::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
-                ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays());
+                ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays(),
+                ad.dailyExpiryOffset());
 
             // Only add to instruments if an instrument with the same pillar date is not there already.
             Date pillar = afph->pillarDate();

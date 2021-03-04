@@ -38,9 +38,10 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(const Handle<Quote>& price,
     const Calendar& calendar,
     Natural deliveryDateRoll,
     Natural futureMonthOffset,
-    bool useBusinessDays)
+    bool useBusinessDays,
+    Natural dailyExpiryOffset)
     : PriceHelper(price) {
-    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays);
+    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays, dailyExpiryOffset);
 }
 
 AverageFuturePriceHelper::AverageFuturePriceHelper(Real price,
@@ -51,15 +52,16 @@ AverageFuturePriceHelper::AverageFuturePriceHelper(Real price,
     const Calendar& calendar,
     Natural deliveryDateRoll,
     Natural futureMonthOffset,
-    bool useBusinessDays)
+    bool useBusinessDays,
+    Natural dailyExpiryOffset)
     : PriceHelper(price) {
-    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays);
+    init(index, start, end, calc, calendar, deliveryDateRoll, futureMonthOffset, useBusinessDays, dailyExpiryOffset);
 }
 
 void AverageFuturePriceHelper::init(const boost::shared_ptr<CommodityIndex>& index,
     const Date& start, const Date& end, const boost::shared_ptr<FutureExpiryCalculator>& calc,
     const Calendar& calendar, Natural deliveryDateRoll, Natural futureMonthOffset,
-    bool useBusinessDays) {
+    bool useBusinessDays, Natural dailyExpiryOffset) {
 
     // Make a copy of the commodity index linked to this price helper's price term structure handle, 
     // termStructureHandle_.
@@ -73,7 +75,8 @@ void AverageFuturePriceHelper::init(const boost::shared_ptr<CommodityIndex>& ind
 
     // Create the averaging cashflow referencing the commodity index.
     averageCashflow_ = boost::make_shared<CommodityIndexedAverageCashFlow>(1.0, start, end, end, indexClone,
-        calendar, 0.0, 1.0, true, deliveryDateRoll, futureMonthOffset, calc, true, false, useBusinessDays);
+        calendar, 0.0, 1.0, true, deliveryDateRoll, futureMonthOffset, calc, true, false, useBusinessDays,
+        CommodityQuantityFrequency::PerCalculationPeriod, Null<Natural>(), dailyExpiryOffset);
 
     // Get the date index pairs involved in the averaging. The earliest date is the expiry date of the future contract 
     // referenced in the first element and the latest date is the expiry date of the future contract referenced in 
