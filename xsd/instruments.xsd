@@ -790,7 +790,7 @@
       <xs:element type="bool" name="IsFuturePrice" minOccurs="0"/>
       <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
       <xs:element type="xs:string" name="FutureExpiryOffset" minOccurs="0"/>
-      <xs:element type="calendar" name="FutureExpiryOffsetCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="FutureExpiryOffsetCalendar" minOccurs="0"/>
       <xs:element type="bool" name="PhysicallySettled" minOccurs="0"/>
       <xs:element type="date" name="PaymentDate" minOccurs="0"/>
     </xs:all>
