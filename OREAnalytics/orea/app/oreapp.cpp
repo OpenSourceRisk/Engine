@@ -913,7 +913,8 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
 
-        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, *conventions_, getFixingManager(),
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, *conventions_,
+                                                           boost::make_shared<FixingManager>(asof_),
                                                            params_->get("markets", "simulation"), *curveConfigs_,
                                                            *marketParameters_, continueOnError_, false, true, false);
         string groupName = "simulation";
