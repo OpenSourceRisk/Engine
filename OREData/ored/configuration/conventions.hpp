@@ -1298,7 +1298,8 @@ public:
         //! Detailed constructor
         AveragingData(const std::string& commodityName, const std::string& period, const std::string& pricingCalendar,
             bool useBusinessDays, const std::string& conventionsId = "", QuantLib::Natural deliveryRollDays = 0,
-            QuantLib::Natural futureMonthOffset = 0);
+            QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural dailyExpiryOffset =
+            QuantLib::Null<QuantLib::Natural>());
         //@}
 
         //! \name Inspectors
@@ -1310,6 +1311,7 @@ public:
         const std::string& conventionsId() const;
         QuantLib::Natural deliveryRollDays() const;
         QuantLib::Natural futureMonthOffset() const;
+        QuantLib::Natural dailyExpiryOffset() const;
         //@}
 
         //! Returns \c true if the data has not been populated.
@@ -1329,6 +1331,7 @@ public:
         std::string conventionsId_;
         QuantLib::Natural deliveryRollDays_;
         QuantLib::Natural futureMonthOffset_;
+        QuantLib::Natural dailyExpiryOffset_;
 
         CalculationPeriod period_;
         QuantLib::Calendar pricingCalendar_;
