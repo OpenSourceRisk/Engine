@@ -287,22 +287,27 @@ void LgmBuilder::performCalculations() const {
         parametrization_->scaling() = 1.0;
 
         if (data_->calibrationType() != CalibrationType::None) {
-            if (data_->calibrateA() && !data_->calibrateH()) {
-                if (data_->aParamType() == ParamType::Piecewise &&
-                    data_->calibrationType() == CalibrationType::Bootstrap) {
-                    DLOG("call calibrateVolatilitiesIterative for alpha calibration");
-                    model_->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
+            try {
+                if (data_->calibrateA() && !data_->calibrateH()) {
+                    if (data_->aParamType() == ParamType::Piecewise &&
+                        data_->calibrationType() == CalibrationType::Bootstrap) {
+                        DLOG("call calibrateVolatilitiesIterative for alpha calibration");
+                        model_->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
+                    } else {
+                        DLOG("call calibrateGlobal for alpha calibration");
+                        model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+                    }
                 } else {
-                    DLOG("call calibrateGlobal for alpha calibration");
-                    model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+                    if (!data_->calibrateA() && !data_->calibrateH()) {
+                        DLOG("skip LGM calibration (both calibrate volatility and reversion are false)");
+                    } else {
+                        DLOG("call calibrateGlobal");
+                        model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+                    }
                 }
-            } else {
-                if (!data_->calibrateA() && !data_->calibrateH()) {
-                    DLOG("skip LGM calibration (both calibrate volatility and reversion are false)");
-                } else {
-                    DLOG("call calibrateGlobal");
-                    model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
-                }
+            } catch (const std::exception& e) {
+                // just log a warning, we check below if we meet the bootstrap tolerance and handle the result there
+                WLOG(StructuredModelErrorMessage("Error during LGM calibration: ", e.what()));
             }
             LgmCalibrationInfo calibrationInfo;
             TLOG("LGM " << data_->ccy() << " calibration errors:");
