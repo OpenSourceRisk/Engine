@@ -38,13 +38,25 @@ public:
     //! Default constructor
     CommodityForward();
 
-    //! Detailed constructor
+    //! Detailed constructor with explicit future expiry date.
+    CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
+        const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+        QuantLib::Real strike);
+
+    //! Detailed constructor with explicit future expiry date.
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
                      const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
-                     QuantLib::Real strike, const boost::optional<bool>& isFuturePrice = boost::none,
-                     const QuantLib::Date& futureExpiryDate = QuantLib::Date(),
+                     QuantLib::Real strike, const QuantLib::Date& futureExpiryDate,
                      const boost::optional<bool>& physicallySettled = true,
                      const Date& paymentDate = Date());
+
+    //! Detailed constructor with explicit future expiry offset and calendar.
+    CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
+        const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+        QuantLib::Real strike, const QuantLib::Period& futureExpiryOffset,
+        const QuantLib::Calendar& offsetCalendar,
+        const boost::optional<bool>& physicallySettled = true,
+        const Date& paymentDate = Date());
     //@}
 
     //! \name Inspectors
@@ -57,6 +69,8 @@ public:
     QuantLib::Real strike() { return strike_; }
     const boost::optional<bool>& isFuturePrice() const { return isFuturePrice_; }
     const QuantLib::Date& futureExpiryDate() const { return futureExpiryDate_; }
+    const QuantLib::Period& futureExpiryOffset() const { return futureExpiryOffset_; }
+    const QuantLib::Calendar& offsetCalendar() const { return offsetCalendar_; }
     const boost::optional<bool>& physicallySettled() const { return physicallySettled_; }
     const QuantLib::Date& paymentDate() const { return paymentDate_; }
     //@}
@@ -95,6 +109,10 @@ private:
         date.
     */
     QuantLib::Date futureExpiryDate_;
+
+    //! Future expiry offset and calendar
+    QuantLib::Period futureExpiryOffset_;
+    QuantLib::Calendar offsetCalendar_;
 
     boost::optional<bool> physicallySettled_;
     QuantLib::Date paymentDate_;
