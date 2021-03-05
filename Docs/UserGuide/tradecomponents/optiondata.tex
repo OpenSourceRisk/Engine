@@ -192,9 +192,11 @@ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item AutomaticExercise [Optional]: Currently, this field is only used for vanilla European cash settled FX, equity and commodity options. It is a boolean flag indicating if \textit{Automatic Exercise} is applicable for the option trade. A value of \lstinline!true! indicates that \textit{Automatic Exercise} is applicable and a value of \lstinline!false! indicates that it is not.
+\item AutomaticExercise [Optional]: Used if the option expiry date is on the current date or in the past, and the payment date is in the future  - so that there still is an outstanding cashflow if the option was in the money on the expiry date. In this case, if AutomaticExercise is applied, the FX / Commodity / Equity fixing on the expiry date is used to automatically determine the payoff and thus whether the option was exercised or not.\\
+\medskip
+Currently, this field is only used for vanilla European cash settled FX, equity and commodity options. It is a boolean flag indicating if Automatic Exercise is applicable for the option trade. A value of \emph{true} indicates that Automatic Exercise is applicable and a value of \emph{false} indicates that it is not.
 
-Allowable values: A boolean value given in Table \ref{tab:boolean_allowable}. If not provided, the default value is \lstinline!false!.
+Allowable values: A boolean value given in Table \ref{tab:boolean_allowable}. If not provided, the default value is \emph{false}.
 
 \item ExerciseData [Optional]: Currently, this node is only used for vanilla European cash settled FX, equity and commodity options where \textit{Automatic Exercise} is not applicable. It has the structure shown in Listing \ref{lst:option_data} i.e.\ a child \lstinline!Date! and \lstinline!Price! node. It is used to supply the price at which an option was exercised and the date of exercise. For a European option, the supplied date clearly has to match the single option \lstinline!ExerciseDate!. It is needed where the cash settlement date is after the \lstinline!ExerciseDate!. If this node is not supplied, and the \lstinline!ExerciseDate! is in the past relative to the valuation date, the option is assumed to have expired unexercised.
 
