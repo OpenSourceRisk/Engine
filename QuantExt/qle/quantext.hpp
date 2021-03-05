@@ -54,7 +54,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
-#include <qle/currencies/configurablecurrency.cpp>
+#include <qle/currencies/configurablecurrency.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
@@ -63,6 +63,7 @@
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/compoequityindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>

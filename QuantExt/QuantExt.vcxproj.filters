@@ -1056,6 +1056,9 @@
     <ClInclude Include="qle\cashflows\commoditycashflow.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\compoequityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1812,6 +1815,9 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\commoditycashflow.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\compoequityindex.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

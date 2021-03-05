@@ -28,6 +28,7 @@
 #include <ql/currency.hpp>
 #include <ql/instrument.hpp>
 #include <ql/position.hpp>
+#include <qle/indexes/commodityindex.hpp>
 
 namespace QuantExt {
 
@@ -42,15 +43,23 @@ public:
 
     //! \name Constructors
     //@{
-    /*! \param name         The commodity name.
-        \param currency     The currency of the commodity trade.
-        \param position     Long (Short) for buying (selling) commodity forward
-        \param quantity     Number of commodity units being exchanged
-        \param maturityDate Maturity date of forward
-        \param strike       The agreed forward price
+    /*! Constructs a cash settled or physically settled commodity forward instrument.
+        
+        \param index             The underlying commodity index.
+        \param currency          The currency of the commodity trade.
+        \param position          Long (Short) for buying (selling) commodity forward
+        \param quantity          Number of underlying commodity units referenced
+        \param maturityDate      Maturity date of forward. For a cash settled forward, this is the date on which the 
+                                 underlying price is observed.
+        \param strike            The agreed forward price
+        \param physicallySettled Set to \c true if the forward is physically settled and \c false if the forward is 
+                                 cash settled. If omitted, physical settlement is assumed.
+        \param paymentDate       If the forward is cash settled, provide a date on or after the \p maturityDate for 
+                                 the cash settlement payment. If omitted, it is assumed equal to \p maturityDate.
     */
-    CommodityForward(const std::string& name, const QuantLib::Currency& currency, QuantLib::Position::Type position,
-                     QuantLib::Real quantity, const QuantLib::Date& maturityDate, QuantLib::Real strike);
+    CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
+        QuantLib::Position::Type position, QuantLib::Real quantity, const QuantLib::Date& maturityDate,
+        QuantLib::Real strike, bool physicallySettled = true, const Date& paymentDate = Date());
     //@}
 
     //! \name Instrument interface
@@ -61,32 +70,38 @@ public:
 
     //! \name Inspectors
     //@{
-    const std::string& name() const { return name_; }
+    const boost::shared_ptr<CommodityIndex>& index() const { return index_; }
     const QuantLib::Currency& currency() const { return currency_; }
     QuantLib::Position::Type position() const { return position_; }
     QuantLib::Real quantity() const { return quantity_; }
     const QuantLib::Date& maturityDate() const { return maturityDate_; }
     QuantLib::Real strike() const { return strike_; }
+    bool physicallySettled() const { return physicallySettled_; }
+    const QuantLib::Date& paymentDate() const { return paymentDate_; }
     //@}
 
 private:
-    std::string name_;
+    boost::shared_ptr<CommodityIndex> index_;
     QuantLib::Currency currency_;
     QuantLib::Position::Type position_;
     QuantLib::Real quantity_;
     QuantLib::Date maturityDate_;
     QuantLib::Real strike_;
+    bool physicallySettled_;
+    QuantLib::Date paymentDate_;
 };
 
 //! \ingroup instruments
 class CommodityForward::arguments : public virtual QuantLib::PricingEngine::arguments {
 public:
-    std::string name;
+    boost::shared_ptr<CommodityIndex> index;
     QuantLib::Currency currency;
     QuantLib::Position::Type position;
     QuantLib::Real quantity;
     QuantLib::Date maturityDate;
     QuantLib::Real strike;
+    bool physicallySettled;
+    QuantLib::Date paymentDate;
     void validate() const;
 };
 

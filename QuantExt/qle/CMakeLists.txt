@@ -53,6 +53,7 @@ currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commodityindex.cpp
+indexes/compoequityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/boebaserate.cpp
@@ -284,7 +285,7 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
-currencies/configurablecurrency.cpp
+currencies/configurablecurrency.hpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
@@ -293,6 +294,7 @@ indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
 indexes/commodityindex.hpp
+indexes/compoequityindex.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp

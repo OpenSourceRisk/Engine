@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/indexes/eqfxindexbase.hpp
-    \brief A common base class for the FX and Equity Indices. Provides a forecast fixing method for time 
+    \brief A common base class for the FX and Equity Indices. Provides a forecast fixing method for time
     so the indices can be used in termstructures that use time lookup.
     \ingroup indexes
 */
@@ -25,28 +25,28 @@
 #ifndef quantext_eqfxindexbase_hpp
 #define quantext_eqfxindexbase_hpp
 
+#include <ql/currency.hpp>
 #include <ql/handle.hpp>
 #include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
-#include <ql/currency.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-    //! Equity Index
-    /*! \ingroup indexes */
+//! Equity Index
+/*! \ingroup indexes */
 class EqFxIndexBase : public Index, public Observer {
 public:
     /*! spot quote is interpreted as of today */
     virtual ~EqFxIndexBase() {}
 
     //! returns the fixing at the given date
-      /*! the date passed as arguments must be the actual calendar
-          date of the fixing; no settlement days must be used.
-      */
+    /*! the date passed as arguments must be the actual calendar
+        date of the fixing; no settlement days must be used.
+    */
     virtual Real forecastFixing(const Time& fixingTime) const = 0;
 };
 
-} // namesace QuantExt
+} // namespace QuantExt
 #endif
