@@ -192,6 +192,13 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
 
             DLOG("addAnalyticFxSensitivities: trade id " << trade->id() << " is an FX option so include.");
 
+            // Skip this option if it has matured.
+            if (QuantLib::detail::simple_event(fxo->maturity()).hasOccurred()) {
+                DLOG("addAnalyticFxSensitivities: skipping FX option with id " << trade->id() <<
+                    " as it has matured. Maturity is " << io::iso_date(fxo->maturity()) << ".");
+                continue;
+            }
+
             Size tradeIdx = sensiCube_->tradeIdx().at(trade->id());
 
             const auto& domCcy = fxo->soldCurrency();
