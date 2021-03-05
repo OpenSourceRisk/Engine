@@ -161,7 +161,14 @@ private:
     // TODO: Review this i.e. could it be done better / using less memory
     std::map<std::string, QuantLib::Size> tradeIdx_;
     std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
+
+    // Suppress warnings from Boost concept_check.hpp (VS 16.9.0, Boost 1.72.0).
+    // warning C4834: discarding return value of function with 'nodiscard' attribute
+#pragma warning( push )
+#pragma warning( disable : 4834 )
     boost::bimap<RiskFactorKey, FactorData> upFactors_;
+#pragma warning( pop )
+
     std::map<RiskFactorKey, FactorData> downFactors_;
     // map of crossPair to tuple of (data of first \p RiskFactorKey, data of second \p RiskFactorKey, index of
     // crossFactor)
