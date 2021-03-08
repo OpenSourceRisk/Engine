@@ -31,6 +31,8 @@
 #include <ql/math/comparison.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/stochasticprocess.hpp>
+#include <ql/math/integrals/integral.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -43,13 +45,18 @@ using namespace QuantLib;
 class LinearGaussMarkovModel : public LinkableCalibratedModel {
 
 public:
-    LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
+    LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
+			   const boost::shared_ptr<Integrator>& integrator = boost::make_shared<SimpsonIntegral>(1.0E-8, 100));
 
     const boost::shared_ptr<StochasticProcess1D> stateProcess() const;
     const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
 
     Real numeraire(const Time t, const Real x,
                    const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+
+    /*! Bank account measure numeraire B(t) as a function of de-drifted LGM state variable x and auxiliary state variable y */
+    Real bankAccountNumeraire(const Time t, const Real x, const Real y,
+			      const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
     Real discountBond(const Time t, const Time T, const Real x,
                       Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
@@ -102,7 +109,22 @@ public:
     const LgmCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
 
 private:
+    /*! Bank account measure variance V(t) = 0.5 * (H^2(t) zeta(t) - 2 H(t) zeta_1(t) + zeta_2(t)) */
+    Real bankAccountVariance(Real t) const;
+    /*! Integrand of zeta_n(t) = \int_0^t alpha^2(u) H^n(u) du */
+    class ZetaN {
+    public:
+        ZetaN(const boost::shared_ptr<IrLgm1fParametrization>& parametrization, Size n)
+	  : parametrization_(parametrization), n_(n) {}
+        Real operator()(Real t) {
+	  return std::pow(parametrization_->alpha(t), 2.0) * std::pow(parametrization_->H(t), 1.0 * n_);
+	}
+    private:
+        boost::shared_ptr<IrLgm1fParametrization> parametrization_;
+        Size n_;
+    };
     boost::shared_ptr<IrLgm1fParametrization> parametrization_;
+    boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<StochasticProcess1D> stateProcess_;
     LgmCalibrationInfo calibrationInfo_;
 };
@@ -134,6 +156,24 @@ inline Real LinearGaussMarkovModel::numeraire(const Time t, const Real x,
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
+inline Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, const Real y,
+							 const Handle<YieldTermStructure> discountCurve) const {
+    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::bankAccountNumeraire");
+    Real Ht = parametrization_->H(t);
+    Real Vt = bankAccountVariance(t);
+    return std::exp(Ht * x - y + Vt) /
+           (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
+}
+
+inline Real LinearGaussMarkovModel::bankAccountVariance(Real t) const {
+    // TODO: Cache this rather than recalculate each time
+    Real Ht = parametrization_->H(t);
+    Real zeta0 = parametrization_->zeta(t);
+    Real zeta1 = (*integrator_)(ZetaN(parametrization_, 1), 0.0, t);
+    Real zeta2 = (*integrator_)(ZetaN(parametrization_, 2), 0.0, t);
+    return 0.5 * (Ht * Ht * zeta0 - 2.0 * Ht * zeta1 + zeta2); 
+}
+  
 inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, const Real x,
                                                  const Handle<YieldTermStructure> discountCurve) const {
     if (QuantLib::close_enough(t, T))

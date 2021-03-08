@@ -54,15 +54,17 @@ std::ostream& operator<<(std::ostream& out, const AssetType& type) {
 }
 
 CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations,
-                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging)
-    : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging) {
+                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging,
+				 Measure::Type measure)
+  : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure) {
     initialize();
 }
 
 CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel> >& currencyModels,
                                  const std::vector<boost::shared_ptr<FxBsParametrization> >& fxParametrizations,
-                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging)
-    : LinkableCalibratedModel(), lgm_(currencyModels), rho_(correlation), salvaging_(salvaging) {
+                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging,
+				 Measure::Type measure)
+  : LinkableCalibratedModel(), lgm_(currencyModels), rho_(correlation), salvaging_(salvaging), measure_(measure) {
     for (Size i = 0; i < currencyModels.size(); ++i) {
         p_.push_back(currencyModels[i]->parametrization());
     }
@@ -462,11 +464,27 @@ void CrossAssetModel::initializeParametrizations() {
         }
     }
 
+    if (measure_ == Measure::BA) {
+
+        QL_REQUIRE(components_[INF] == 0, "CAM in BA measure does not support INF components yet");
+	QL_REQUIRE(components_[EQ] == 0, "CAM in BA measure does not support EQ components yet");
+	QL_REQUIRE(components_[CR] == 0, "CAM in BA measure does not support CR components yet");
+
+        // AUX variable for BA measure simulations
+
+        components_[AUX] = 1;
+	updateIndices(AUX, i, cIdxTmp, pIdxTmp, aIdxTmp);
+	cIdxTmp += 1;
+	pIdxTmp += 1;
+
+    }
+
     // Summary statistics
 
     totalDimension_ = pIdxTmp;
     totalNumberOfBrownians_ = cIdxTmp;
 
+    
 } // initParametrizations
 
 void CrossAssetModel::initializeCorrelation() {

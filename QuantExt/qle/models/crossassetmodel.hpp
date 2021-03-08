@@ -48,16 +48,22 @@ using namespace QuantLib;
 namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
-enum AssetType { IR, FX, INF, CR, EQ };
-static constexpr Size crossAssetModelAssetTypes = 5;
+enum AssetType { AUX, IR, FX, INF, CR, EQ };
+static constexpr Size crossAssetModelAssetTypes = 6;
 
 std::ostream& operator<<(std::ostream& out, const AssetType& type);
 
 /*! the model types supported by the CrossAssetModel or derived classes;
   a model type may applicable to several asset types (like BS for FX, EQ) */
 enum ModelType { LGM1F, BS, DK, CIRPP, JY };
+
 } // namespace CrossAssetModelTypes
 
+//! Choice of measure
+struct Measure {
+  enum Type { LGM, BA };
+};
+  
 using namespace CrossAssetModelTypes;
 
 //! Cross Asset Model
@@ -65,6 +71,7 @@ using namespace CrossAssetModelTypes;
  */
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
+
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
         - FX  (for all pairs domestic-ccy defined by the IR models)
@@ -77,13 +84,15 @@ public:
     */
     CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations,
                     const Matrix& correlation = Matrix(),
-                    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+                    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+		    Measure::Type measure = Measure::LGM);
 
     /*! IR-FX model based constructor */
     CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel> >& currencyModels,
                     const std::vector<boost::shared_ptr<FxBsParametrization> >& fxParametrizations,
                     const Matrix& correlation = Matrix(),
-                    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+                    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+		    Measure::Type measure = Measure::LGM);
 
     /*! returns the state process with a given discretization */
     const boost::shared_ptr<StochasticProcess>
@@ -142,8 +151,13 @@ public:
 
     const boost::shared_ptr<IrLgm1fParametrization> irlgm1f(const Size ccy) const;
 
+    /*! LGM measure numeraire */
     Real numeraire(const Size ccy, const Time t, const Real x,
                    Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+
+    /*! Bank account measure numeraire B(t) as a function of de-drifted LGM state variable x and auxiliary state variable y */
+    Real bankAccountNumeraire(const Size ccy, const Time t, const Real x, const Real y,
+			      Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
     Real discountBond(const Size ccy, const Time t, const Time T, const Real x,
                       Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
@@ -425,6 +439,7 @@ protected:
     std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
     Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
+    Measure::Type measure_;
     mutable boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<CrossAssetStateProcess> stateProcessExact_, stateProcessEuler_;
 
@@ -542,6 +557,11 @@ inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const 
 inline Real CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,
                                        Handle<YieldTermStructure> discountCurve) const {
     return lgm(ccy)->numeraire(t, x, discountCurve);
+}
+
+inline Real CrossAssetModel::bankAccountNumeraire(const Size ccy, const Time t, const Real x, const Real y,
+						  Handle<YieldTermStructure> discountCurve) const {
+    return lgm(ccy)->bankAccountNumeraire(t, x, y, discountCurve);
 }
 
 inline Real CrossAssetModel::discountBond(const Size ccy, const Time t, const Time T, const Real x,

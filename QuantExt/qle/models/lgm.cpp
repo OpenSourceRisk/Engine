@@ -16,18 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/experimental/math/piecewiseintegral.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 
 namespace QuantExt {
 
-LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization)
+LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
+                                               const boost::shared_ptr<Integrator>& integrator)
     : parametrization_(parametrization) {
     stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization_);
     arguments_.resize(2);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
     registerWith(parametrization_->termStructure());
+
+    std::vector<Time> allTimes;
+    for (Size i = 0; i < 2; ++i)
+        allTimes.insert(allTimes.end(), parametrization_->parameterTimes(i).begin(),
+                        parametrization_->parameterTimes(i).end());
+
+    integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
 } // namespace QuantExt
