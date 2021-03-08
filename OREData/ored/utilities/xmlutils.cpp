@@ -276,14 +276,14 @@ string XMLUtils::getChildValue(XMLNode* node, const string& name, bool mandatory
     return child ? getNodeValue(child) : "";
 }
 
-Real XMLUtils::getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory) {
+Real XMLUtils::getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory, double defaultValue) {
     string s = getChildValue(node, name, mandatory);
-    return s == "" ? 0.0 : parseReal(s);
+    return s == "" ? defaultValue : parseReal(s);
 }
 
-int XMLUtils::getChildValueAsInt(XMLNode* node, const string& name, bool mandatory) {
+int XMLUtils::getChildValueAsInt(XMLNode* node, const string& name, bool mandatory, int defaultValue) {
     string s = getChildValue(node, name, mandatory);
-    return s == "" ? 0 : parseInteger(s);
+    return s == "" ? defaultValue : parseInteger(s);
 }
 
 bool XMLUtils::getChildValueAsBool(XMLNode* node, const string& name, bool mandatory, bool defaultValue) {
@@ -291,9 +291,9 @@ bool XMLUtils::getChildValueAsBool(XMLNode* node, const string& name, bool manda
     return s == "" ? defaultValue : parseBool(s);
 }
 
-Period XMLUtils::getChildValueAsPeriod(XMLNode* node, const string& name, bool mandatory) {
+Period XMLUtils::getChildValueAsPeriod(XMLNode* node, const string& name, bool mandatory, const Period& defaultValue) {
     string s = getChildValue(node, name, mandatory);
-    return s == "" ? 0 * Days : parsePeriod(s);
+    return s == "" ? defaultValue : parsePeriod(s);
 }
 
 vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names, const string& name, bool mandatory) {
