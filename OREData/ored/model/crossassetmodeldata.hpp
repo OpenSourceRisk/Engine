@@ -125,9 +125,11 @@ public:
         //! Correlation map
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
-        Real tolerance = 1e-4)
+        Real tolerance = 1e-4,
+	//! Choice of probability measure
+	const std::string& measure = "LGM")
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(std::vector<boost::shared_ptr<EqBsData>>()),
-          bootstrapTolerance_(tolerance) {
+          bootstrapTolerance_(tolerance), measure_(measure) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -146,9 +148,11 @@ public:
         //! Correlation map
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
-        Real tolerance = 1e-4)
+        Real tolerance = 1e-4,
+	//! Choice of probability measure
+	const std::string& measure = "LGM")
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs),
-          bootstrapTolerance_(tolerance) {
+          bootstrapTolerance_(tolerance), measure_(measure) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -173,10 +177,12 @@ public:
         //! Correlation map
         const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& c,
         //! Bootstrap tolerance used in model calibration
-        Real tolerance = 1e-4)
+        Real tolerance = 1e-4,
+	//! Choice of probability measure
+	const std::string& measure = "LGM")
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
           crLgmConfigs_(crLgmConfigs), crCirConfigs_(crCirConfigs),
-          bootstrapTolerance_(tolerance) {
+	    bootstrapTolerance_(tolerance), measure_(measure) {
         correlations_ = boost::make_shared<InstantaneousCorrelations>(c);
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
@@ -207,6 +213,7 @@ public:
     const vector<boost::shared_ptr<CrLgmData>>& crLgmConfigs() const { return crLgmConfigs_; }
     const vector<boost::shared_ptr<CrCirData>>& crCirConfigs() const { return crCirConfigs_; }
     Real bootstrapTolerance() const { return bootstrapTolerance_; }
+    const std::string& measure() const { return measure_; }
     //@}
 
     //! \name Setters
@@ -225,6 +232,7 @@ public:
     void setCorrelations(const std::map<CorrelationKey, QuantLib::Handle<QuantLib::Quote>>& corrs) { correlations_ = boost::make_shared<InstantaneousCorrelations>(corrs); }
     void setCorrelations(const boost::shared_ptr<InstantaneousCorrelations>& corrs) { correlations_ = corrs; }
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
+    std::string& measure() { return measure_; }
     //@}
 
     //! \name Serialisation
@@ -272,6 +280,7 @@ private:
     vector<boost::shared_ptr<CrCirData>> crCirConfigs_;
     boost::shared_ptr<InstantaneousCorrelations> correlations_;
     Real bootstrapTolerance_;
+    std::string measure_;
 };
 } // namespace data
 } // namespace ore

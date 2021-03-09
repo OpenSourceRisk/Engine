@@ -355,7 +355,18 @@ void CrossAssetModelBuilder::buildModel() const {
      * Build the cross asset model
      */
 
-    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix));
+    Measure::Type measure;
+    if (config_->measure() == "BA")
+        measure = Measure::BA;
+    else if (config_->measure() == "LGM")
+        measure = Measure::LGM;
+    else {
+        QL_FAIL("Measure " << config_->measure() << " not recognised");
+    }
+    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None;
+    
+    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix,
+								salvaging, measure));
 
     /*************************
      * Calibrate IR components

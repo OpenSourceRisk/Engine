@@ -239,6 +239,10 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
     LOG("CrossAssetModelData: bootstrap tolerance = " << bootstrapTolerance_);
 
+    std::string measureString = XMLUtils::getChildValue(modelNode, "Measure", false);
+    if (measureString != "")
+        measure_ = measureString;
+    
     // Configure IR model components
 
     std::map<std::string, boost::shared_ptr<IrLgmData>> irDataMap;
@@ -595,6 +599,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, crossAssetModelNode, "InflationIndices", "InflationIndex", infindices_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "CreditNames", "CreditName", creditNames_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
+    XMLUtils::addChild(doc, crossAssetModelNode, "Measure", measure_);
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
     for (Size irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
