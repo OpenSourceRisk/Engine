@@ -18,6 +18,8 @@
 
 #include <qle/instruments/cashflowresults.hpp>
 
+#include <ql/cashflows/floatingratecoupon.hpp>
+
 namespace QuantExt {
 
 using namespace QuantLib;
@@ -31,6 +33,43 @@ std::ostream& operator<<(std::ostream& out, const CashFlowResults& t) {
     if (t.payDate != Null<Date>())
         out << " @ " << QuantLib::io::iso_date(t.payDate);
     return out;
+}
+
+CashFlowResults standardCashFlowResults(const boost::shared_ptr<CashFlow>& c, const Real multiplier,
+                                        const std::string& type, const Size legNo, const Currency& currency,
+                                        const Handle<YieldTermStructure>& discountCurve) {
+
+    Date today = Settings::instance().evaluationDate();
+
+    CashFlowResults cfResults;
+
+    cfResults.amount = c->amount() * multiplier;
+    cfResults.payDate = c->date();
+
+    if (!currency.empty())
+        cfResults.currency = currency.code();
+
+    cfResults.legNumber = legNo;
+    cfResults.type = type;
+
+    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+        cfResults.rate = cpn->rate();
+        cfResults.accrualStartDate = cpn->accrualStartDate();
+        cfResults.accrualEndDate = cpn->accrualEndDate();
+        cfResults.accruedAmount = cpn->accruedAmount(today);
+        cfResults.notional = cpn->nominal();
+    }
+
+    if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
+        cfResults.fixingDate = cpn->fixingDate();
+    }
+
+    if (!discountCurve.empty()) {
+        cfResults.discountFactor = discountCurve->discount(c->date());
+        cfResults.presentValue = cfResults.amount * cfResults.discountFactor;
+    }
+
+    return cfResults;
 }
 
 } // namespace QuantExt
