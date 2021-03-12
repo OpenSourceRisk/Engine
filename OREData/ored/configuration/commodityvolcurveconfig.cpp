@@ -19,6 +19,7 @@
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 using namespace QuantLib;
@@ -27,7 +28,8 @@ using std::string;
 namespace ore {
 namespace data {
 
-CommodityVolatilityConfig::CommodityVolatilityConfig() {}
+CommodityVolatilityConfig::CommodityVolatilityConfig()
+    : optionExpiryRollDays_(0) {}
 
 CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, const string& curveDescription,
                                                      const std::string& currency,
@@ -35,10 +37,12 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, cons
                                                      const string& dayCounter, const string& calendar,
                                                      const std::string& futureConventionsId,
                                                      QuantLib::Natural optionExpiryRollDays,
-                                                     const std::string& priceCurveId, const std::string& yieldCurveId)
+                                                     const std::string& priceCurveId, const std::string& yieldCurveId,
+                                                     const std::string& quoteSuffix)
     : CurveConfig(curveId, curveDescription), currency_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
-      optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId) {
+      optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId),
+      quoteSuffix_(quoteSuffix) {
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -71,6 +75,8 @@ Natural CommodityVolatilityConfig::optionExpiryRollDays() const { return optionE
 const string& CommodityVolatilityConfig::priceCurveId() const { return priceCurveId_; }
 
 const string& CommodityVolatilityConfig::yieldCurveId() const { return yieldCurveId_; }
+
+const string& CommodityVolatilityConfig::quoteSuffix() const { return quoteSuffix_; }
 
 void CommodityVolatilityConfig::fromXML(XMLNode* node) {
 
@@ -116,6 +122,8 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     priceCurveId_ = XMLUtils::getChildValue(node, "PriceCurveId", false);
     yieldCurveId_ = XMLUtils::getChildValue(node, "YieldCurveId", false);
 
+    quoteSuffix_ = XMLUtils::getChildValue(node, "QuoteSuffix", false);
+
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -140,6 +148,8 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "PriceCurveId", priceCurveId_);
     if (!yieldCurveId_.empty())
         XMLUtils::addChild(doc, node, "YieldCurveId", yieldCurveId_);
+    if (!quoteSuffix_.empty())
+        XMLUtils::addChild(doc, node, "QuoteSuffix", quoteSuffix_);
 
     return node;
 }
@@ -154,9 +164,13 @@ void CommodityVolatilityConfig::populateQuotes() {
     } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
         // Clear the quotes_ if necessary and populate with surface quotes
         quotes_.clear();
-        string stem = "COMMODITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + currency_ + "/";
+        string quoteType = to_string(volatilityConfig()->quoteType());
+        string stem = "COMMODITY_OPTION/" + quoteType + "/" + curveID_ + "/" + currency_ + "/";
         for (const pair<string, string>& p : vc->quotes()) {
-            quotes_.push_back(stem + p.first + "/" + p.second);
+            string q = stem + p.first + "/" + p.second;
+            if (!quoteSuffix_.empty())
+                q += "/" + quoteSuffix_;
+            quotes_.push_back(q);
         }
     } else {
         QL_FAIL("CommodityVolatilityConfig expected a constant, curve or surface");

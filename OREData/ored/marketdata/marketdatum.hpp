@@ -1770,7 +1770,7 @@ public:
         \param quoteCurrency The quote currency
         \param expiry        Expiry object defining the quote's expiry
         \param strike        Strike object defining the quote's strike
-        \param optionType    The option type
+        \param optionType    The option type.
     */
     CommodityOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
                          const std::string& commodityName, const std::string& quoteCurrency,

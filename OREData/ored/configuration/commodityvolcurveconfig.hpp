@@ -43,7 +43,8 @@ public:
                               const std::string& currency, const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
                               const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
                               const std::string& futureConventionsId = "", QuantLib::Natural optionExpiryRollDays = 0,
-                              const std::string& priceCurveId = "", const std::string& yieldCurveId = "");
+                              const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
+                              const std::string& quoteSuffix = "");
 
     //! \name Inspectors
     //@{
@@ -55,6 +56,7 @@ public:
     QuantLib::Natural optionExpiryRollDays() const;
     const std::string& priceCurveId() const;
     const std::string& yieldCurveId() const;
+    const std::string& quoteSuffix() const;
     //@}
 
     //! \name Serialisation
@@ -74,6 +76,7 @@ private:
     QuantLib::Natural optionExpiryRollDays_;
     std::string priceCurveId_;
     std::string yieldCurveId_;
+    std::string quoteSuffix_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

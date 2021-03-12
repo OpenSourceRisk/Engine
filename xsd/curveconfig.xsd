@@ -609,6 +609,13 @@
       <xs:element type="non-negative-decimal" name="Beta" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:simpleType name="commVolQuoteSuffix">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="P"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="commodityVolatility">
     <xs:sequence>
@@ -629,6 +636,7 @@
       <xs:element type="xs:string" name="OptionExpiryRollDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PriceCurveId" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="YieldCurveId" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="commVolQuoteSuffix" name="QuoteSuffix" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
