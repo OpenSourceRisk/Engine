@@ -176,7 +176,7 @@ configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
-configuration/onedimsolverconfig.cpp
+configuration/onedimsolverconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
