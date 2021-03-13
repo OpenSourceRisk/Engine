@@ -63,7 +63,7 @@ ostream& operator<<(ostream& os, const ExpiryStrike& es) {
 // Comparator so that ExpiryStrike may be used as a map key.
 struct ExpiryStrikeComp {
     bool operator() (const ExpiryStrike& lhs, const ExpiryStrike& rhs) const {
-        return (lhs.expiry < rhs.expiry) || (!(lhs.expiry < rhs.expiry) && 
+        return (lhs.expiry < rhs.expiry) || (!(rhs.expiry < lhs.expiry) && 
             !close(lhs.strike, rhs.strike) && (lhs.strike < rhs.strike));
     }
 };
