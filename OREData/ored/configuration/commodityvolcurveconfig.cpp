@@ -38,11 +38,13 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, cons
                                                      const std::string& futureConventionsId,
                                                      QuantLib::Natural optionExpiryRollDays,
                                                      const std::string& priceCurveId, const std::string& yieldCurveId,
-                                                     const std::string& quoteSuffix)
+                                                     const std::string& quoteSuffix,
+                                                     const OneDimSolverConfig& solverConfig,
+                                                     const boost::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveId, curveDescription), currency_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
       optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId),
-      quoteSuffix_(quoteSuffix) {
+      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -77,6 +79,23 @@ const string& CommodityVolatilityConfig::priceCurveId() const { return priceCurv
 const string& CommodityVolatilityConfig::yieldCurveId() const { return yieldCurveId_; }
 
 const string& CommodityVolatilityConfig::quoteSuffix() const { return quoteSuffix_; }
+
+const boost::optional<bool>& CommodityVolatilityConfig::preferOutOfTheMoney() const {
+    return preferOutOfTheMoney_;
+}
+
+OneDimSolverConfig CommodityVolatilityConfig::solverConfig() const {
+    return solverConfig_.empty() ? defaultSolverConfig() : solverConfig_;
+}
+
+OneDimSolverConfig CommodityVolatilityConfig::defaultSolverConfig() {
+
+    // Some "reasonable" defaults for commodity volatility searches.
+    // Max eval of 100. Initial guess of 35%. Search between 1 bp and 200%.
+    static OneDimSolverConfig res(100, 0.35, 0.0001, std::make_pair(0.0001, 2.0));
+
+    return res;
+}
 
 void CommodityVolatilityConfig::fromXML(XMLNode* node) {
 
@@ -124,6 +143,16 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
 
     quoteSuffix_ = XMLUtils::getChildValue(node, "QuoteSuffix", false);
 
+    solverConfig_ = OneDimSolverConfig();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "OneDimSolverConfig")) {
+        solverConfig_.fromXML(n);
+    }
+
+    preferOutOfTheMoney_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
+        preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -150,6 +179,10 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "YieldCurveId", yieldCurveId_);
     if (!quoteSuffix_.empty())
         XMLUtils::addChild(doc, node, "QuoteSuffix", quoteSuffix_);
+    if (!solverConfig_.empty())
+        XMLUtils::appendNode(node, solverConfig_.toXML(doc));
+    if (preferOutOfTheMoney_)
+        XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
 
     return node;
 }

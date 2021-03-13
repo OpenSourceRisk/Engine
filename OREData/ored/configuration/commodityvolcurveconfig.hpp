@@ -25,6 +25,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
 
 namespace ore {
@@ -44,7 +45,9 @@ public:
                               const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
                               const std::string& futureConventionsId = "", QuantLib::Natural optionExpiryRollDays = 0,
                               const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
-                              const std::string& quoteSuffix = "");
+                              const std::string& quoteSuffix = "",
+                              const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
+                              const boost::optional<bool>& preferOutOfTheMoney = boost::none);
 
     //! \name Inspectors
     //@{
@@ -57,6 +60,8 @@ public:
     const std::string& priceCurveId() const;
     const std::string& yieldCurveId() const;
     const std::string& quoteSuffix() const;
+    OneDimSolverConfig solverConfig() const;
+    const boost::optional<bool>& preferOutOfTheMoney() const;
     //@}
 
     //! \name Serialisation
@@ -77,9 +82,14 @@ private:
     std::string priceCurveId_;
     std::string yieldCurveId_;
     std::string quoteSuffix_;
+    OneDimSolverConfig solverConfig_;
+    boost::optional<bool> preferOutOfTheMoney_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();
+
+    // Return a default solver configuration. Used by solverConfig() if solverConfig_ is empty.
+    static OneDimSolverConfig defaultSolverConfig();
 };
 
 } // namespace data
