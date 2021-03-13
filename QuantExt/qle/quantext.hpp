@@ -54,7 +54,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
-#include <qle/currencies/configurablecurrency.cpp>
+#include <qle/currencies/configurablecurrency.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
@@ -277,9 +277,9 @@
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
+#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
-#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>
