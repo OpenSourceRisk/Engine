@@ -24,6 +24,7 @@
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
 
 using std::function;
 using std::map;
@@ -202,7 +203,9 @@ void OptionSurfaceStripper::performCalculations() const {
             } else {
                 volExpiries.push_back(expiry);
                 volStrikes.push_back(kv.first);
-                volData.push_back(callVolSurface->blackVol(expiry, kv.first));
+                Real v = kv.second == Option::Call ? callVolSurface->blackVol(expiry, kv.first) :
+                    putVolSurface->blackVol(expiry, kv.first);
+                volData.push_back(v);
             }
         }
     }
@@ -335,6 +338,49 @@ boost::shared_ptr<GeneralizedBlackScholesProcess> EquityOptionSurfaceStripper::p
 
 Real EquityOptionSurfaceStripper::forward(const Date& date) const {
     return equityIndex_->forecastFixing(date);
+}
+
+CommodityOptionSurfaceStripper::CommodityOptionSurfaceStripper(
+    const Handle<PriceTermStructure>& priceCurve,
+    const Handle<YieldTermStructure>& discountCurve,
+    const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
+    const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
+    const Calendar& calendar,
+    const DayCounter& dayCounter,
+    Exercise::Type type,
+    bool lowerStrikeConstExtrap,
+    bool upperStrikeConstExtrap,
+    bool timeFlatExtrapolation,
+    bool preferOutOfTheMoney,
+    Solver1DOptions solverOptions)
+    : OptionSurfaceStripper(callSurface, putSurface, calendar, dayCounter, type, lowerStrikeConstExtrap,
+        upperStrikeConstExtrap, timeFlatExtrapolation, preferOutOfTheMoney, solverOptions),
+        priceCurve_(priceCurve), discountCurve_(discountCurve) {
+    registerWith(priceCurve_);
+    registerWith(discountCurve_);
+}
+
+boost::shared_ptr<GeneralizedBlackScholesProcess> CommodityOptionSurfaceStripper::process(
+    const boost::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const {
+
+    QL_REQUIRE(!priceCurve_.empty(), "CommodityOptionSurfaceStripper: price curve is empty");
+    QL_REQUIRE(!discountCurve_.empty(), "CommodityOptionSurfaceStripper: discount curve is empty");
+
+    // Volatility term structure for the process
+    Handle<BlackVolTermStructure> vts(boost::make_shared<BlackConstantVol>(
+        callSurface_->referenceDate(), calendar_, Handle<Quote>(volatilityQuote), dayCounter_));
+
+    // Generate "spot" and "yield" curve for the process.
+    Handle<Quote> spot(boost::make_shared<DerivedPriceQuote>(priceCurve_));
+    Handle<YieldTermStructure> yield(boost::make_shared<PriceTermStructureAdapter>(*priceCurve_, *discountCurve_));
+    yield->enableExtrapolation();
+
+    return boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(spot, yield, discountCurve_, vts);
+}
+
+Real CommodityOptionSurfaceStripper::forward(const Date& date) const {
+    QL_REQUIRE(!priceCurve_.empty(), "CommodityOptionSurfaceStripper: price curve is empty");
+    return priceCurve_->price(date);
 }
 
 }

@@ -27,6 +27,7 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/math/solvers1d/brent.hpp>
@@ -172,6 +173,37 @@ protected:
 
 private:
     QuantLib::Handle<QuantExt::EquityIndex> equityIndex_;
+};
+
+class CommodityOptionSurfaceStripper : public OptionSurfaceStripper {
+
+public:
+    CommodityOptionSurfaceStripper(
+        const QuantLib::Handle<QuantExt::PriceTermStructure>& priceCurve,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+        const boost::shared_ptr<OptionInterpolatorBase>& callSurface,
+        const boost::shared_ptr<OptionInterpolatorBase>& putSurface,
+        const QuantLib::Calendar& calendar,
+        const QuantLib::DayCounter& dayCounter,
+        QuantLib::Exercise::Type type = QuantLib::Exercise::European,
+        bool lowerStrikeConstExtrap = true,
+        bool upperStrikeConstExtrap = true,
+        bool timeFlatExtrapolation = false,
+        bool preferOutOfTheMoney = false,
+        Solver1DOptions solverOptions = {});
+
+protected:
+    //! \name OptionSurfaceStripper interface
+    //@{
+    boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process(
+        const boost::shared_ptr<QuantLib::SimpleQuote>& volatilityQuote) const override;
+
+    QuantLib::Real forward(const QuantLib::Date& date) const override;
+    //@}
+
+private:
+    QuantLib::Handle<QuantExt::PriceTermStructure> priceCurve_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
 };
 
 }

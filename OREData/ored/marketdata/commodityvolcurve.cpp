@@ -40,6 +40,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
+#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <regex>
 
@@ -116,6 +117,38 @@ struct CallPutData {
     map<ExpiryStrike, CallPutDatum, ExpiryStrikeComp> data;
 };
 
+// Return the relevant surface using the data
+boost::shared_ptr<OptionPriceSurface> optPriceSurface(const CallPutData& cpData,
+    const Date& asof, const DayCounter& dc, bool forCall) {
+
+    DLOG("Creating " << (forCall ? "Call" : "Put") << " option price surface.");
+
+    const auto& priceData = cpData.data;
+    auto n = priceData.size();
+
+    vector<Date> expiries; expiries.reserve(n);
+    vector<Real> strikes; strikes.reserve(n);
+    vector<Real> prices; prices.reserve(n);
+
+    for (const auto& kv : cpData.data) {
+
+        if ((forCall && kv.second.call != Null<Real>()) || (!forCall && kv.second.put != Null<Real>())) {
+
+            expiries.push_back(kv.first.expiry);
+            strikes.push_back(kv.first.strike);
+            prices.push_back(forCall ? kv.second.call : kv.second.put);
+
+            TLOG("Using option datum (" << (forCall ? "Call" : "Put") << "," << io::iso_date(expiries.back()) <<
+                "," << fixed << setprecision(9) << strikes.back() << "," << prices.back() << ")");
+        }
+    }
+
+    // This is not enough but OptionPriceSurface should throw if data is not sufficient.
+    QL_REQUIRE(!prices.empty(), "Need at least one point for " << (forCall ? "Call" : "Put") <<
+        " commodity option price surface.");
+
+    return boost::make_shared<OptionPriceSurface>(asof, expiries, strikes, prices, dc);
+}
 
 }
 
@@ -547,7 +580,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     // Determine which option type to pick at each expiry and strike.
     bool preferOutOfTheMoney = !vc.preferOutOfTheMoney() ? true : *vc.preferOutOfTheMoney();
-    TLOG("Prefer out of the money set to: " << preferOutOfTheMoney << ".");
+    TLOG("Prefer out of the money set to: " << ore::data::to_string(preferOutOfTheMoney) << ".");
 
     // Build the surface depending on the quote type.
     if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
@@ -598,7 +631,25 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
             vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
 
     } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
-        QL_FAIL("CommodityVolCurve: price based surface not implemented yet.");
+
+        QL_REQUIRE(!pts_.empty(), "CommodityVolCurve: require non-empty price term structure" <<
+            " to strip volatilities from prices.");
+        QL_REQUIRE(!yts_.empty(), "CommodityVolCurve: require non-empty yield term structure" <<
+            " to strip volatilities from prices.");
+
+        // Create the 1D solver options used in the price stripping.
+        Solver1DOptions solverOptions = vc.solverConfig();
+
+        // Need to create the call and put option price surfaces.
+        auto cSurface = optPriceSurface(cpData, asof, dayCounter_, true);
+        auto pSurface = optPriceSurface(cpData, asof, dayCounter_, false);
+
+        DLOG("CommodityVolCurve: stripping volatility surface from the option premium surfaces.");
+        auto coss = boost::make_shared<CommodityOptionSurfaceStripper>(pts_, yts_, cSurface, pSurface, calendar_,
+            dayCounter_, vssc.exerciseType(), flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap,
+            preferOutOfTheMoney, solverOptions);
+        volatility_ = coss->volSurface();
+
     } else {
         QL_FAIL("CommodityVolCurve: invalid quote type " << vssc.quoteType() << " provided.");
     }
@@ -614,6 +665,9 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
                                                 const vector<Real>& configuredStrikes) {
 
     LOG("CommodityVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
+
+    QL_REQUIRE(vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for 2-D volatility strike surface with explicit strikes and expiries.");
 
     // Map to hold the rows of the commodity volatility matrix. The keys are the expiry dates and the values are the
     // vectors of volatilities, one for each configured strike.
