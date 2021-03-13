@@ -279,7 +279,7 @@
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
-#include <qle/termstructures/equityoptionsurfacestripper.hpp>
+#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>

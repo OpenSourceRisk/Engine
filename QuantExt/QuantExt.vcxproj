@@ -743,7 +743,7 @@
     <ClInclude Include="qle\termstructures\dynamiccpivolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
-    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp" />
+    <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
@@ -1019,7 +1019,7 @@
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
-    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp" />
+    <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
     <ClCompile Include="qle\termstructures\futurepricehelper.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />

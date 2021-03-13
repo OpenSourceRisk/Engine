@@ -834,7 +834,7 @@
     <ClInclude Include="qle\cashflows\indexedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp">
+    <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\cpicoupon.hpp">
@@ -1648,7 +1648,7 @@
     <ClCompile Include="qle\cashflows\indexedcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
+    <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\cpicoupon.cpp">
