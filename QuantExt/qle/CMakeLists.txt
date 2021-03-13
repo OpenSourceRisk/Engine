@@ -284,7 +284,7 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
-currencies/configurablecurrency.cpp
+currencies/configurablecurrency.hpp
 currencies/currencycomparator.hpp
 currencies/europe.hpp
 currencies/metals.hpp
