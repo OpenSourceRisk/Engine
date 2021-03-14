@@ -650,6 +650,34 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
             preferOutOfTheMoney, solverOptions);
         volatility_ = coss->volSurface();
 
+        // If data level logging, output the stripped volatilities.
+        if (Log::instance().filter(ORE_DATA)) {
+            volatility_->enableExtrapolation(vssc.extrapolation());
+            TLOG("CommodityVolCurve: stripped volatilities:");
+            TLOG("expiry,strike,forward_price,call_price,put_price,discount,volatility");
+            for (const auto& kv : cpData.data) {
+                const Date& expiry = kv.first.expiry;
+                const Real& strike = kv.first.strike;
+                Real fwd = pts_->price(expiry);
+                string cPrice;
+                if (kv.second.call != Null<Real>()) {
+                    stringstream ss;
+                    ss << fixed << setprecision(6) << kv.second.call;
+                    cPrice = ss.str();
+                }
+                string pPrice;
+                if (kv.second.put != Null<Real>()) {
+                    stringstream ss;
+                    ss << fixed << setprecision(6) << kv.second.put;
+                    pPrice = ss.str();
+                }
+                Real discount = yts_->discount(expiry);
+                Real vol = volatility_->blackVol(expiry, strike);
+                TLOG(io::iso_date(expiry) << "," << fixed << setprecision(6) << strike << "," <<
+                    fwd << "," << cPrice << "," << pPrice << "," << discount << "," << vol);
+            }
+        }
+
     } else {
         QL_FAIL("CommodityVolCurve: invalid quote type " << vssc.quoteType() << " provided.");
     }
