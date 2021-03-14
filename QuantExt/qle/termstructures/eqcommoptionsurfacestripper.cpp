@@ -255,8 +255,7 @@ Real OptionSurfaceStripper::implyVol(Date expiry, Real strike, Option::Type type
     try {
         PriceError f(option, volQuote, targetPrice);
         vol = solver_(f);
-    } catch (...) {
-        vol = 0.0;
+    } catch (const Error&) {
     }
 
     return vol;
