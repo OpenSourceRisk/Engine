@@ -337,13 +337,49 @@ void CrossAssetModelBuilder::buildModel() const {
 
     QL_REQUIRE(fxParametrizations.size() == irParametrizations.size() - 1, "mismatch in IR/FX parametrization sizes");
 
+    Measure::Type measure = Measure::LGM;
+    if (config_->measure() == "BA") {
+        measure = Measure::BA;
+	LOG("Setting measure to BA");
+    }
+    else if (config_->measure() == "LGM") {
+        measure = Measure::LGM;
+	LOG("Setting measure to BA");
+    }
+    else if (config_->measure() == "") {
+        WLOG("Defaulting to LGM measure");
+    }
+    else {
+        QL_FAIL("Measure " << config_->measure() << " not recognized");
+    }
+
+    // Tag on the parametrization and process info for the auxiliary state variable in the bank account measure
+    if (measure == Measure::BA) {
+        parametrizations.push_back(irParametrizations[0]); // FIXME: Is index 0 safe to reference the domestic IR parameters?
+        processInfo[CT::AUX].emplace_back(config_->domesticCurrency(), 1);
+    }
+    
     /******************************
      * Build the correlation matrix
      */
     DLOG("CrossAssetModelBuilder: adding correlations.");
     CorrelationMatrixBuilder cmb;
+
+    // Perfect instantaneous correlation of auxiliary variable and domestic LGM state variable in the bank account measure
+    CorrelationFactor domesticFactorIR = { CrossAssetModelTypes::IR, config_->domesticCurrency(), 0};
+    CorrelationFactor domesticFactorAUX = { CrossAssetModelTypes::AUX, config_->domesticCurrency(), 0 };
+    if (measure == Measure::BA)
+        cmb.addCorrelation(domesticFactorAUX, domesticFactorIR, 1.0);
+
     for (auto it = config_->correlations().begin(); it != config_->correlations().end(); it++) {
         cmb.addCorrelation(it->first.first, it->first.second, it->second);
+	if (measure == Measure::BA) {
+	    // Copy correlation(domesticIR, other) to correlation(domesticAUX, other) 
+	    if (it->first.first == domesticFactorIR)
+	        cmb.addCorrelation(domesticFactorAUX, it->first.second, it->second);
+	    if (it->first.second == domesticFactorIR)
+	        cmb.addCorrelation(it->first.first, domesticFactorAUX, it->second);
+	}
     }
 
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
@@ -355,14 +391,6 @@ void CrossAssetModelBuilder::buildModel() const {
      * Build the cross asset model
      */
 
-    Measure::Type measure;
-    if (config_->measure() == "BA")
-        measure = Measure::BA;
-    else if (config_->measure() == "LGM")
-        measure = Measure::LGM;
-    else {
-        QL_FAIL("Measure " << config_->measure() << " not recognised");
-    }
     SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None;
     
     model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix,

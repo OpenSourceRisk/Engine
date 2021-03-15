@@ -46,6 +46,8 @@ std::ostream& operator<<(std::ostream& out, const AssetType& type) {
         return out << "CR";
     case EQ:
         return out << "EQ";
+    case AUX:
+        return out << "AUX";
     default:
         QL_FAIL("Did not recognise cross asset model type " << static_cast<int>(type) << ".");
     }
@@ -544,12 +546,12 @@ void CrossAssetModel::finalizeArguments() {
 
 void CrossAssetModel::checkModelConsistency() const {
     QL_REQUIRE(components(IR) > 0, "at least one IR component must be given");
-    QL_REQUIRE(components(IR) + components(FX) + components(INF) + components(CR) + components(EQ) == p_.size(),
+    QL_REQUIRE(components(IR) + components(FX) + components(INF) + components(CR) + components(EQ) + components(AUX) == p_.size(),
                "the parametrizations must be given in the following order: ir, "
                "fx, inf, cr, eq, found "
                    << components(IR) << " ir, " << components(FX) << " bs, " << components(INF) << " inf, "
-                   << components(CR) << " cr, " << components(EQ) << " eq parametrizations, but there are " << p_.size()
-                   << " parametrizations given in total");
+	           << components(CR) << " cr, " << components(EQ) << " eq, " << components(AUX) << " aux parametrizations, "
+	           << "but there are " << p_.size() << " parametrizations given in total");
 }
 
 void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(

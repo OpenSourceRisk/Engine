@@ -199,6 +199,18 @@ void CrossAssetModelData::validate() {
     for (Size i = 0; i < fxConfigs_.size(); ++i)
         QL_REQUIRE(fxConfigs_[i]->foreignCcy() == irConfigs_[i + 1]->ccy(),
                    "currency mismatch betwee IR and FX config vectors");
+
+    if (measure_ == "BA") {
+        // ensure that the domestic LGM has shift = 0 and scaling = 1
+        for (Size i = 0; i < irConfigs_.size(); ++i)
+	    if (irConfigs_[i]->ccy() == domesticCurrency_) {
+	        QL_REQUIRE(close_enough(irConfigs_[i]->scaling(), 1.0),
+			   "scaling for the domestic LGM must be 1 for BA measure simulations");
+		QL_REQUIRE(close_enough(irConfigs_[i]->shiftHorizon(), 0.0),
+			   "shift horizon for the domestic LGM must be 0 for BA measure simulations");
+	    }
+    }
+	  
 }
 
 std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {

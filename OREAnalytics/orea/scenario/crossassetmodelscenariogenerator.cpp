@@ -21,7 +21,7 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/indexes/inflationindexobserver.hpp>
-
+#include <iostream>
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -278,8 +278,35 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         // Set numeraire, numeraire currency and the (deterministic) domestic discount
         // Asset index 0 in sample.value[0][i+1] refers to the domestic currency process.
         Real z0 = sample.value[0][i + 1]; // domestic LGM factor, second index = 0 holds initial values
-        scenarios[i]->setNumeraire(model_->numeraire(0, t, z0));
-
+	if (model_->measure() == Measure::LGM) {
+	    scenarios[i]->setNumeraire(model_->numeraire(0, t, z0));
+	    Array states(6);
+	    states[0] = z0;
+	    states[1] = 0.0;
+	    states[2] = model_->lgm(0)->discountBond(0, t, 0);
+	    states[3] = model_->lgm(0)->zetan(t, 0);
+	    states[4] = model_->lgm(0)->zetan(t, 1);
+	    states[5] = model_->lgm(0)->zetan(t, 2);
+	    scenarios[i]->setStates(states);
+	}
+	else if (model_->measure() == Measure::BA) {
+	    // last state variable is the auxiliary state variable for the bank account measure dynamics
+	    Real y0 = sample.value[model_->pIdx(AUX, 0)][i + 1];
+	    scenarios[i]->setNumeraire(model_->bankAccountNumeraire(0, t, z0, y0));
+	    Array states(6);
+	    states[0] = z0;
+	    states[1] = y0;
+	    // std::cout << "y[" << i << "] = " << y0 << std::endl;
+	    states[2] = model_->lgm(0)->discountBond(0, t, 0);
+	    states[3] = model_->lgm(0)->zetan(t, 0);
+	    states[4] = model_->lgm(0)->zetan(t, 1);
+	    states[5] = model_->lgm(0)->zetan(t, 2);
+	    scenarios[i]->setStates(states);
+	}
+	else {
+	    QL_FAIL("Measure not covered");
+	}
+	
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {
             // LGM factor value, second index = 0 holds initial values

@@ -30,12 +30,14 @@
 #include <ored/utilities/serializationdate.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
+#include <ql/math/array.hpp>
 
 namespace ore {
 namespace analytics {
 using QuantLib::Date;
 using QuantLib::Real;
 using QuantLib::Size;
+using QuantLib::Array;
 using std::string;
 
 //! Data types stored in the scenario class
@@ -157,6 +159,8 @@ public:
     //! clones a scenario and returns a pointer to the new object
     virtual boost::shared_ptr<Scenario> clone() const = 0;
 
+    virtual Array getStates() const { return Array(); }
+    virtual void setStates(Array s) {}
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}

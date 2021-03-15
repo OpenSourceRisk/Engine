@@ -23,6 +23,7 @@
 #include <ql/processes/eulerdiscretization.hpp>
 
 #include <boost/make_shared.hpp>
+#include <iostream>
 
 namespace QuantExt {
 
@@ -124,6 +125,7 @@ void CrossAssetStateProcess::updateSqrtCorrelation() const {
             corr[i][j] = corr[j][i] = model_->correlation()(brownianIndices[i], brownianIndices[j]);
         }
     }
+
     sqrtCorrelation_ = pseudoSqrt(corr, salvaging_);
 }
 
@@ -154,7 +156,7 @@ Disposable<Array> CrossAssetStateProcess::initialValues() const {
             res[model_->pIdx(INF, i, 1)] = std::log(model_->infjy(i)->index()->fxSpotToday()->value());
         }
     }
-    /* infdk, crlgm1f processes have initial value 0 */
+    /* infdk, crlgm1f, aux processes have initial value 0 */
     return res;
 }
 
@@ -168,23 +170,36 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Real zeta0 = model_->irlgm1f(0)->zeta(t);
     boost::unordered_map<double, Array>::const_iterator i = cache_m_.find(t);
     if (i == cache_m_.end()) {
-        /* z0 has drift 0 */
-        for (Size i = 1; i < n; ++i) {
-            Real Hi = model_->irlgm1f(i)->H(t);
+        /* z0 has drift 0 in the LGM measure but non-zero drift in the bank account measure, so start loop at i = 0 */       
+        for (Size i = 0; i < n; ++i) {
+	    Real Hi = model_->irlgm1f(i)->H(t);
             Real alphai = model_->irlgm1f(i)->alpha(t);
-            Real sigmai = model_->fxbs(i - 1)->sigma(t);
-            // ir-ir
-            Real rhozz0i = model_->correlation(IR, 0, IR, i);
-            // ir-fx
-            Real rhozx0i = model_->correlation(IR, 0, FX, i - 1);
-            Real rhozxii = model_->correlation(IR, i, FX, i - 1);
-            // ir drifts
-            res[model_->pIdx(IR, i, 0)] =
-                -Hi * alphai * alphai + H0 * alpha0 * alphai * rhozz0i - sigmai * alphai * rhozxii;
-            // log spot fx drifts (z0, zi independent parts)
-            res[model_->pIdx(FX, i - 1, 0)] =
-                H0 * alpha0 * sigmai * rhozx0i + model_->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous) -
-                model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) - 0.5 * sigmai * sigmai;
+ 	    if (i == 0 && model_->measure() == Measure::BA) {
+	        // ADD z0 drift in the BA measure
+	        res[model_->pIdx(IR, i, 0)] = -Hi * alphai * alphai;
+		// the auxiliary state variable is drift-free
+		res[model_->pIdx(AUX, i, 0)] = 0.0;
+	    }
+	    if (i > 0) {
+	        Real sigmai = model_->fxbs(i - 1)->sigma(t);
+		// ir-ir
+		Real rhozz0i = model_->correlation(IR, 0, IR, i);
+		// ir-fx
+		Real rhozx0i = model_->correlation(IR, 0, FX, i - 1);
+		Real rhozxii = model_->correlation(IR, i, FX, i - 1);
+	        // ir drifts
+	        res[model_->pIdx(IR, i, 0)] =
+		    -Hi * alphai * alphai + H0 * alpha0 * alphai * rhozz0i - sigmai * alphai * rhozxii;
+		// log spot fx drifts (z0, zi independent parts)
+		res[model_->pIdx(FX, i - 1, 0)] =
+		    H0 * alpha0 * sigmai * rhozx0i + model_->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous) -
+		    model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) - 0.5 * sigmai * sigmai;
+		if (model_->measure() == Measure::BA) {
+		    // REMOVE the LGM measure drift contributions above
+		    res[model_->pIdx(IR, i, 0)] -= H0 * alpha0 * alphai * rhozz0i;
+		    res[model_->pIdx(FX, i - 1, 0)] -= H0 * alpha0 * sigmai * rhozx0i;
+		}
+	    }
         }
         /* log equity spot drifts (the cache-able parts) */
         for (Size k = 0; k < n_eq; ++k) {
@@ -407,6 +422,14 @@ Disposable<Array> CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Ar
         Real sigmai = model_->eqbs(i)->sigma(t);
         setValue(res, sigmai, model_, EQ, i, 0);
     }
+
+    if (model_->measure() == Measure::BA) {
+        // aux-aux
+        Real H0 = model_->irlgm1f(0)->H(t);
+        Real alpha0 = model_->irlgm1f(0)->alpha(t);
+        setValue(res, alpha0 * H0, model_, AUX, 0, 0);
+    }
+    
     return res;
 }
 
@@ -576,11 +599,26 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
     Size d = model_->components(INF);
     Size c = model_->components(CR);
     Size e = model_->components(EQ);
+
+    if (model_->measure() == Measure::BA) {
+        // aux-aux
+        setValue(res, aux_aux_covariance(model_, t0, dt), model_, AUX, 0, AUX, 0, 0, 0);
+	// Size i = model_->pIdx(AUX, 0, 0);
+	// std::cout << t0 << " " << dt << " " << i << " " << model_->dimension() << " " << res[i][i] << std::endl;
+	// aux-ir
+	for (Size j = 0; j < n; ++j) {
+	    setValue(res, aux_ir_covariance(model_, j, t0, dt), model_, AUX, 0, IR, j, 0, 0);
+	}
+	// aux-fx
+	for (Size j = 0; j < m; ++j) {
+	    setValue(res, aux_fx_covariance(model_, j, t0, dt), model_, AUX, 0, FX, j, 0, 0);
+	}
+    }
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
             setValue(res, ir_ir_covariance(model_, i, j, t0, dt), model_, IR, i, IR, j, 0, 0);
-        }
+	}
     }
     // ir-fx
     for (Size i = 0; i < n; ++i) {

@@ -54,7 +54,7 @@ public:
     Real numeraire(const Time t, const Real x,
                    const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! Bank account measure numeraire B(t) as a function of de-drifted LGM state variable x and auxiliary state variable y */
+    /*! Bank account measure numeraire B(t) as a function of LGM state variable x (with drift) and auxiliary state variable y */
     Real bankAccountNumeraire(const Time t, const Real x, const Real y,
 			      const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
@@ -108,9 +108,9 @@ public:
     /*! get info on how the model was calibrated */
     const LgmCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
 
+    Real zetan(Real t, Size n) const;
+
 private:
-    /*! Bank account measure variance V(t) = 0.5 * (H^2(t) zeta(t) - 2 H(t) zeta_1(t) + zeta_2(t)) */
-    Real bankAccountVariance(Real t) const;
     /*! Integrand of zeta_n(t) = \int_0^t alpha^2(u) H^n(u) du */
     class ZetaN {
     public:
@@ -154,24 +154,6 @@ inline Real LinearGaussMarkovModel::numeraire(const Time t, const Real x,
     Real Ht = parametrization_->H(t);
     return std::exp(Ht * x + 0.5 * Ht * Ht * parametrization_->zeta(t)) /
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
-}
-
-inline Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, const Real y,
-							 const Handle<YieldTermStructure> discountCurve) const {
-    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::bankAccountNumeraire");
-    Real Ht = parametrization_->H(t);
-    Real Vt = bankAccountVariance(t);
-    return std::exp(Ht * x - y + Vt) /
-           (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
-}
-
-inline Real LinearGaussMarkovModel::bankAccountVariance(Real t) const {
-    // TODO: Cache this rather than recalculate each time
-    Real Ht = parametrization_->H(t);
-    Real zeta0 = parametrization_->zeta(t);
-    Real zeta1 = (*integrator_)(ZetaN(parametrization_, 1), 0.0, t);
-    Real zeta2 = (*integrator_)(ZetaN(parametrization_, 2), 0.0, t);
-    return 0.5 * (Ht * Ht * zeta0 - 2.0 * Ht * zeta1 + zeta2); 
 }
   
 inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, const Real x,

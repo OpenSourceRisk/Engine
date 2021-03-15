@@ -2623,6 +2623,7 @@ void ScenarioSimMarket::updateScenario(const Date& d) {
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
     QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
     numeraire_ = scenario->getNumeraire();
+    states_ = scenario->getStates();
     label_ = scenario->label();
     applyScenario(scenario);
 }

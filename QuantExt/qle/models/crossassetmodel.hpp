@@ -48,7 +48,7 @@ using namespace QuantLib;
 namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
-enum AssetType { AUX, IR, FX, INF, CR, EQ };
+enum AssetType { IR, FX, INF, CR, EQ, AUX };
 static constexpr Size crossAssetModelAssetTypes = 6;
 
 std::ostream& operator<<(std::ostream& out, const AssetType& type);
@@ -119,6 +119,9 @@ public:
     /*! model type of a component */
     ModelType modelType(const AssetType t, const Size i) const;
 
+    /*! Choice of probability measure */
+    Measure::Type measure() const { return measure_; }
+
     /*! return index for currency (0 = domestic, 1 = first
       foreign currency and so on) */
     Size ccyIndex(const Currency& ccy) const;
@@ -155,7 +158,7 @@ public:
     Real numeraire(const Size ccy, const Time t, const Real x,
                    Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! Bank account measure numeraire B(t) as a function of de-drifted LGM state variable x and auxiliary state variable y */
+    /*! Bank account measure numeraire B(t) as a function of drifted LGM state variable x and drift-free auxiliary state variable y */
     Real bankAccountNumeraire(const Size ccy, const Time t, const Real x, const Real y,
 			      Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
@@ -365,7 +368,7 @@ public:
                                              const std::vector<Real>& weights = std::vector<Real>());
 
     /* ... add more calibration procedures here ... */
-
+   
 protected:
     /* ctor to be used in extensions, initialize is not called */
     CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations, const Matrix& correlation,
@@ -474,6 +477,7 @@ protected:
         appendToFixedParameterVector(INF, t, param, index, i, res);
         appendToFixedParameterVector(CR, t, param, index, i, res);
         appendToFixedParameterVector(EQ, t, param, index, i, res);
+        appendToFixedParameterVector(AUX, t, param, index, i, res);
         return res;
     }
 };

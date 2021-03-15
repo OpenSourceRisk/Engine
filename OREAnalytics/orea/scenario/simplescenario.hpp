@@ -73,6 +73,8 @@ public:
     //! get data map
     const std::map<RiskFactorKey, Real> data() const { return data_; }
 
+    Array getStates() const override { return states_; }
+    void setStates(Array s) override { states_ = s; }
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {
@@ -85,6 +87,7 @@ private:
     }
     Date asof_;
     Real numeraire_;
+    Array states_;
     std::map<RiskFactorKey, Real> data_;
     std::vector<RiskFactorKey> keys_;
     std::string label_;

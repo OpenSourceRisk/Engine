@@ -363,6 +363,47 @@ Cov \left[\Delta ln[s_i], \Delta ln[s_j] \right] &=&
 */
 Real eq_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 
+/*! AUX-AUX Covariance
+
+  This function evaluates the covariance term for the domestic auxiliary state variable in the bank account measure
+
+      \f{eqnarray*}{
+      \mathrm{Cov}[\Delta y_0, \Delta y_0] &=& \int_s^t (\alpha^z_0)^2 \,(H^z_0)^2\,du
+      \f}
+
+      on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
+*/
+Real aux_aux_covariance(const CrossAssetModel* model, const Time t0, const Time dt);
+
+/*! AUX-IR Covariance
+
+  This function evaluates the covariance term for the domestic auxiliary state variable in the bank account measure
+  with any other LGM state variable
+
+      \f{eqnarray*}{
+      \mathrm{Cov}[\Delta y_0, \Delta z_b] &=& \rho^{zz}_{0b} \int_s^t H^z_0\,\alpha^z_0\,\alpha^z_b\,du
+      \f}
+
+      on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
+*/
+Real aux_ir_covariance(const CrossAssetModel* model, const Size j, const Time t0, const Time dt);
+
+/*! AUX-FX Covariance
+
+  This function evaluates the covariance term
+
+  \f{eqnarray}{
+      \mathrm{Cov} [\Delta y_0, \Delta \ln x_b]) &=& \int_s^t \left(H^z_0(t)-H^z_0\right)
+  (\alpha^z_0)^2\,H^z_0\,du \nonumber\\
+      &&- \rho^{zz}_{0b}\int_s^t \alpha^z_0\,H^z_0 \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{0b}\int_s^t \alpha^z_0\,H^z_0 \, \sigma^x_b \,du.
+      \f}
+
+      on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
+
+*/
+Real aux_fx_covariance(const CrossAssetModel* model, const Size j, const Time t0, const Time dt);
+  
 /*! IR H component */
 struct Hz {
     Hz(const Size i) : i_(i) {}

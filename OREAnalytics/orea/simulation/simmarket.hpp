@@ -82,9 +82,11 @@ public:
     //! Get the fixing manager
     virtual const boost::shared_ptr<FixingManager>& fixingManager() const = 0;
 
+    Array states() { return states_; }
 protected:
     Real numeraire_;
     std::string label_;
+    Array states_;
 };
 } // namespace analytics
 } // namespace ore

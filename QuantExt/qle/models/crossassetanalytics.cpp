@@ -28,10 +28,15 @@ namespace CrossAssetAnalytics {
 
 Real ir_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, const Real dt) {
     Real res = 0.0;
-    if (i > 0) {
-        res += -integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt) -
-               integral(x, P(az(i), sx(i - 1), rzx(i, i - 1)), t0, t0 + dt) +
-               integral(x, P(Hz(0), az(0), az(i), rzz(0, i)), t0, t0 + dt);
+    if (i == 0) {
+        if (x->measure() == Measure::BA) 
+	    res -= integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt);
+    }
+    else {
+        res -= integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt);
+	res -= integral(x, P(az(i), sx(i - 1), rzx(i, i - 1)), t0, t0 + dt);
+	if (x->measure() != Measure::BA)
+	    res += integral(x, P(Hz(0), az(0), az(i), rzz(0, i)), t0, t0 + dt);
     }
     return res;
 }
@@ -108,6 +113,7 @@ pair<Real, Real> inf_jy_expectation_2(const CrossAssetModel* x, Size i, Time t0,
 }
 
 Real fx_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, const Real dt) {
+    bool bam = (x->measure() == Measure::BA);
     Real H0_a = Hz(0).eval(x, t0);
     Real Hi_a = Hz(i + 1).eval(x, t0);
     Real H0_b = Hz(0).eval(x, t0 + dt);
@@ -124,13 +130,17 @@ Real fx_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, con
         0.5 * (H0_b * H0_b * zeta0_b - H0_a * H0_a * zeta0_a - integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt));
     res -= 0.5 * (Hi_b * Hi_b * zetai_b - Hi_a * Hi_a * zetai_a -
                   integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t0 + dt));
-    res += integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t0 + dt);
+    res += (bam ? 0.0 : integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t0 + dt));
     res -= Hi_b * (-integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), t0, t0 + dt) +
-                   integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt) -
+                   (bam ? 0.0 : integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt)) -
                    integral(x, P(az(i + 1), sx(i), rzx(i + 1, i)), t0, t0 + dt));
     res += -integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t0 + dt) +
-           integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt) -
+           (bam ? 0.0 : integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt)) -
            integral(x, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), t0, t0 + dt);
+    if (bam) {
+        res -= H0_b * integral(x, P(Hz(0), az(0), az(0)), t0, t0 + dt);
+        res += integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt);
+    } 
     return res;
 }
 
@@ -605,6 +615,25 @@ Real eq_eq_covariance(const CrossAssetModel* x, const Size k, const Size l, cons
     res -= Hi_b * integral(x, P(Hz(j), rzz(i, j), az(i), az(j)), t0, t0 + dt);
     res -= Hj_b * integral(x, P(Hz(i), rzz(i, j), az(i), az(j)), t0, t0 + dt);
     res += integral(x, P(Hz(i), Hz(j), rzz(i, j), az(i), az(j)), t0, t0 + dt);
+    return res;
+}
+  
+Real aux_aux_covariance(const CrossAssetModel* x, const Time t0, const Time dt) {
+    Real res = integral(x, P(az(0), az(0), Hz(0), Hz(0)), t0, t0 + dt);
+    return res;
+}
+
+Real aux_ir_covariance(const CrossAssetModel* x, const Size j, const Time t0, const Time dt) {
+    Real res = integral(x, P(az(0), Hz(0), az(j), rzz(0, j)), t0, t0 + dt);
+    return res;
+}
+
+Real aux_fx_covariance(const CrossAssetModel* x, const Size j, const Time t0, const Time dt) {
+  Real res = Hz(0).eval(x, t0 + dt) * integral(x, P(az(0), az(0), Hz(0)), t0, t0 + dt) -
+               integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt) -
+               Hz(j + 1).eval(x, t0 + dt) * integral(x, P(az(j + 1), az(0), Hz(0), rzz(j + 1, 0)), t0, t0 + dt) +
+               integral(x, P(Hz(j + 1), az(j + 1), az(0), Hz(0), rzz(j + 1, 0)), t0, t0 + dt) +
+               integral(x, P(az(0), Hz(0), sx(j), rzx(0, j)), t0, t0 + dt);
     return res;
 }
 

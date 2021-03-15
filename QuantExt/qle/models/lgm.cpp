@@ -19,6 +19,7 @@
 #include <ql/experimental/math/piecewiseintegral.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
+#include <iostream>
 
 namespace QuantExt {
 
@@ -39,4 +40,19 @@ LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fPa
     integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
+Real LinearGaussMarkovModel::zetan(Real t, Size n) const {
+    return (*integrator_)(ZetaN(parametrization_, n), 0.0, t);
+}
+  
+Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, const Real y,
+							 const Handle<YieldTermStructure> discountCurve) const {
+    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::bankAccountNumeraire");
+    Real Ht = parametrization_->H(t);
+    Real zeta0 = parametrization_->zeta(t);
+    Real zeta2 = zetan(t, 2);
+    Real Vt = 0.5 * (Ht * Ht * zeta0 + zeta2); 
+    return std::exp(Ht * x - y + Vt) /
+           (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
+}  
+  
 } // namespace QuantExt
