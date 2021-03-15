@@ -24,6 +24,9 @@
 
 #pragma once
 
+#include <ql/cashflow.hpp>
+#include <ql/currency.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <ql/utilities/null.hpp>
@@ -44,9 +47,17 @@ struct CashFlowResults {
     QuantLib::Date fixingDate;
     QuantLib::Real fixingValue = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real notional = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real discountFactor = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real presentValue = QuantLib::Null<QuantLib::Real>();
 };
 
-std::ostream& operator<<(std::ostream& out,
-                         const CashFlowResults& t);
+std::ostream& operator<<(std::ostream& out, const CashFlowResults& t);
+
+CashFlowResults standardCashFlowResults(const boost::shared_ptr<QuantLib::CashFlow>& c,
+                                        const QuantLib::Real multiplier = 1.0, const std::string& type = "Unspecified",
+                                        const QuantLib::Size legNo = 0,
+                                        const QuantLib::Currency& currency = QuantLib::Currency(),
+                                        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
+                                            QuantLib::Handle<QuantLib::YieldTermStructure>());
 
 } // namespace QuantExt

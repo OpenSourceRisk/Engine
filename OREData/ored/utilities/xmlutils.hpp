@@ -181,10 +181,11 @@ public:
 
     // If mandatory == true, we throw if the node is not present, otherwise we return a default vale.
     static string getChildValue(XMLNode* node, const string& name, bool mandatory = false);
-    static Real getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory = false);
-    static int getChildValueAsInt(XMLNode* node, const string& name, bool mandatory = false);
+    static Real getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory = false, double defaultValue = 0.0);
+    static int getChildValueAsInt(XMLNode* node, const string& name, bool mandatory = false, int defaultValue = 0);
     static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false, bool defaultValue = true);
-    static Period getChildValueAsPeriod(XMLNode* node, const string& name, bool mandatory = false);
+    static Period getChildValueAsPeriod(XMLNode* node, const string& name, bool mandatory = false,
+                                        const QuantLib::Period& defaultValue = 0 * QuantLib::Days);
     static vector<string> getChildrenValues(XMLNode* node, const string& names, const string& name,
                                             bool mandatory = false);
     static vector<string>

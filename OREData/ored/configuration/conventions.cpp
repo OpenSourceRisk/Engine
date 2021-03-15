@@ -376,7 +376,7 @@ void IborIndexConvention::build() {
 
     // set the Id - this converts the local id term from "7D" to "1W", "28D" to "1M" etc, so if can be picked
     // up by searches
-    id_ = tokens[0] + "-" + tokens[1] + "-" + to_string(parsePeriod(tokens[2]));
+    id_ = (tokens.size() == 3) ? (tokens[0] + "-" + tokens[1] + "-" + to_string(parsePeriod(tokens[2]))) : localId_;
 }
 
 OvernightIndexConvention::OvernightIndexConvention(const string& id, const string& fixingCalendar,
