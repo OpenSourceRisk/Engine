@@ -233,7 +233,7 @@ std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const 
             if (!fixingDates.empty())
                 result[indexName].insert(fixingDates.begin(), fixingDates.end());
             // Add the previous year's date(s) also if any.
-            for (const auto d : fixingDates) {
+            for (const auto& d : fixingDates) {
                 result[indexName].insert(d - 1 * Years);
             }
         }
