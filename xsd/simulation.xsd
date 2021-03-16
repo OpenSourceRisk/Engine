@@ -107,6 +107,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
+      <xs:element type="measureType" name="Measure" maxOccurs="1" />
       <xs:element name="InterestRateModels" maxOccurs="1" >
         <xs:complexType>
           <xs:sequence>
@@ -462,6 +463,13 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Hagan"/>
       <xs:enumeration value="HullWhite"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="measureType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="LGM"/>
+      <xs:enumeration value="BA"/>
     </xs:restriction>
   </xs:simpleType>
 

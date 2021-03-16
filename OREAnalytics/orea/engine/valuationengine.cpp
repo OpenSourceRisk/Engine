@@ -237,16 +237,17 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 	    if (i == dates.size() - 1) {
 	        ein += 1.0 / simMarket_->numeraire();
 		Array states = simMarket_->states();
-	        QL_REQUIRE(states.size() == 6, "unexpected size of states vector");
-		ez += states[0];
-		ezz += states[0] * states[0];
-		ey += states[1];
-		eyy += states[1] * states[1];
-		eyz += states[0]*states[1];
-		disc += states[2];
-		zeta0 += states[3];
-		zeta1 += states[4];
-		zeta2 += states[5];
+	        if (states.size() == 6) {
+		    ez += states[0];
+		    ezz += states[0] * states[0];
+		    ey += states[1];
+		    eyy += states[1] * states[1];
+		    eyz += states[0]*states[1];
+		    disc += states[2];
+		    zeta0 += states[3];
+		    zeta1 += states[4];
+		    zeta2 += states[5];
+		}
 	    }	    
 	}
 
