@@ -477,7 +477,8 @@ protected:
         appendToFixedParameterVector(INF, t, param, index, i, res);
         appendToFixedParameterVector(CR, t, param, index, i, res);
         appendToFixedParameterVector(EQ, t, param, index, i, res);
-        appendToFixedParameterVector(AUX, t, param, index, i, res);
+	if (measure_ == Measure::BA)
+	    appendToFixedParameterVector(AUX, t, param, index, i, res);
         return res;
     }
 };

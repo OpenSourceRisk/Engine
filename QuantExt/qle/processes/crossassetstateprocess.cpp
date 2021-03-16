@@ -555,8 +555,10 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const 
     Size e = model_->components(EQ);
     Array res(model_->dimension(), 0.0);
 
-    // zero AUX state drift, i.e. conditional expectation equal to the previous level as for z_i
-    res[model_->pIdx(AUX, 0, 0)] += x0[model_->pIdx(AUX, 0, 0)];
+    if (model_->measure() == Measure::BA) {
+        // zero AUX state drift, i.e. conditional expectation equal to the previous level as for z_i
+        res[model_->pIdx(AUX, 0, 0)] += x0[model_->pIdx(AUX, 0, 0)];
+    }
 
     for (Size i = 0; i < n; ++i) {
         res[model_->pIdx(IR, i, 0)] += ir_expectation_2(model_, i, x0[model_->pIdx(IR, i, 0)]);
