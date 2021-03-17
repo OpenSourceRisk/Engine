@@ -78,7 +78,7 @@ Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdapt
     const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint)
     : Lgm1fParametrization<TS>(currency, termStructure, name),
       PiecewiseConstantHelper3(sigmaTimes, kappaTimes, sigmaConstraint, kappaConstraint),
-      PiecewiseConstantHelper2(kappaTimes, kappaConstraint) {
+      PiecewiseConstantHelper2(PiecewiseConstantHelper3::t2_, PiecewiseConstantHelper3::y2_) {
     initialize(sigma, kappa);
 }
 
@@ -90,7 +90,7 @@ Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdapt
     const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint)
     : Lgm1fParametrization<TS>(currency, termStructure, name),
       PiecewiseConstantHelper3(sigmaDates, kappaDates, termStructure, sigmaConstraint, kappaConstraint),
-      PiecewiseConstantHelper2(kappaDates, termStructure, kappaConstraint) {
+      PiecewiseConstantHelper2(PiecewiseConstantHelper3::t2_,PiecewiseConstantHelper3::y2_) {
     initialize(sigma, kappa);
 }
 
@@ -109,9 +109,6 @@ void Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::initialize(const Array& sigma, 
     }
     for (Size i = 0; i < PiecewiseConstantHelper3::y2_->size(); ++i) {
         PiecewiseConstantHelper3::y2_->setParam(i, inverse(1, kappa[i]));
-    }
-    for (Size i = 0; i < PiecewiseConstantHelper2::y_->size(); ++i) {
-        PiecewiseConstantHelper2::y_->setParam(i, inverse(1, kappa[i]));
     }
     update();
 }
