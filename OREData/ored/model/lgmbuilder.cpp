@@ -192,8 +192,8 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
                    "LgmBuilder: empty reversion time grid expected for constant parameter type");
         QL_REQUIRE(data_->hValues().size() == 1,
                    "LgmBuidler: initial reversion values shouuld have size 1 for constant parameter type");
-    } else if (data_->hParamType() == ParamType::Piecewise && data_->calibrationType() == CalibrationType::Bootstrap) {
-        if (data_->calibrateH()) {
+    } else if (data_->hParamType() == ParamType::Piecewise) {
+        if (data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             if (data_->hTimes().size() > 0) {
                 DLOG("overriding h time grid with swaption underlying maturities, set all initial values to first "
                      "given value");
@@ -298,20 +298,17 @@ void LgmBuilder::performCalculations() const {
     LgmCalibrationInfo calibrationInfo;
     error_ = QL_MAX_REAL;
     try {
-        if (data_->calibrateA() && !data_->calibrateH() && data_->aParamType() == ParamType::Piecewise &&
-            data_->calibrationType() == CalibrationType::Bootstrap) {
+        if (data_->calibrateA() && !data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateVolatilitiesIterative for volatility calibration (bootstrap)");
             model_->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
-        } else if (data_->calibrateH() && !data_->calibrateA() && data_->hParamType() == ParamType::Piecewise &&
+        } else if (data_->calibrateH() && !data_->calibrateA() &&
                    data_->calibrationType() == CalibrationType::Bootstrap) {
             DLOG("call calibrateReversionsIterative for reversion calibration (bootstrap)");
             model_->calibrateVolatilitiesIterative(swaptionBasket_, *optimizationMethod_, endCriteria_);
         } else {
             QL_REQUIRE(data_->calibrationType() != CalibrationType::Bootstrap,
-                       "LgmBuidler: Calibration type Bootstrap requires that either volatilities or reversions (but "
-                       "not both) are calibrated, and the calibrated parameter has type piecewise (even if only one "
-                       "value is given, i.e. the time grid is empty). Either choose BestFit or fix the configuration "
-                       "to be able to use Bootstrap");
+                       "LgmBuidler: Calibration type Bootstrap can be used with volatilities and reversions calibrated "
+                       "simultaneously. Either choose BestFit oder fix one of these parameters.");
             if (data_->calibrateA() && !data_->calibrateH()) {
                 DLOG("call calibrateVolatilities for (global) volatility calibration")
                 model_->calibrateVolatilities(swaptionBasket_, *optimizationMethod_, endCriteria_);
@@ -376,8 +373,6 @@ void LgmBuilder::performCalculations() const {
         }
     }
     model_->setCalibrationInfo(calibrationInfo);
-
-    std::cout << "calibrated model parameter 0: " << parametrization_->parameterValues(0) << std::endl;
 
     DLOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
 
