@@ -131,7 +131,7 @@
 %\date{7 December 2017}
 %\date{28 May 2019}
 %\date{19 June 2020}
-\date{30 October 2020}
+\date{17 March 2021}
 \maketitle
 
 \newpage
@@ -3802,6 +3802,7 @@ exceptions, but add to the run time of ORE.
     <Currency>JPY</Currency>
   </Currencies>
   <BootstrapTolerance>0.0001</BootstrapTolerance>
+  <Measure>LGM</Measure><!-- Choices: LGM, BA -->
   <!-- ... -->
 </CrossAssetModel>
 \end{minted}
@@ -3812,6 +3813,8 @@ exceptions, but add to the run time of ORE.
 Bootstrap tolerance is a global parameter that applies to the calibration of all model components. If the calibration
 error of any component exceeds this tolerance, this will trigger an exception at runtime, early in the ORE process.
 
+The Measure tag allows switching between the LGM and the Bank Account (BA) measure for the risk-neutral market simulations using the Cross Asset Model. Note that within LGM one can shift the horizon (see ParameterTransformation below) to effectively switch to a T-Forward measure. 
+ 
 \medskip
 
 Each interest rate model is specified by a block as follows
