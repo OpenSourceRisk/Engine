@@ -158,9 +158,6 @@ public:
 
     //! clones a scenario and returns a pointer to the new object
     virtual boost::shared_ptr<Scenario> clone() const = 0;
-
-    virtual Array getStates() const { return Array(); }
-    virtual void setStates(Array s) {}
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}

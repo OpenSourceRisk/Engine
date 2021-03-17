@@ -141,8 +141,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     cpu_timer timer;
     cpu_timer loopTimer;
 
-    Real ein = 0.0, ez = 0.0, ezz = 0.0, ey = 0.0, eyz = 0.0, eyy = 0.0, disc = 0.0, zeta0 = 0.0, zeta1 = 0.0, zeta2 = 0.0;
-    
     // We call Cube::samples() each time her to allow for dynamic stopping times
     // e.g. MC convergence tests
     for (Size sample = 0; sample < outputCube->samples(); ++sample) {
@@ -233,22 +231,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 timer.stop();
                 pricingTime += timer.elapsed().wall * 1e-9;
             }
-
-	    if (i == dates.size() - 1) {
-	        ein += 1.0 / simMarket_->numeraire();
-		Array states = simMarket_->states();
-	        if (states.size() == 6) {
-		    ez += states[0];
-		    ezz += states[0] * states[0];
-		    ey += states[1];
-		    eyy += states[1] * states[1];
-		    eyz += states[0]*states[1];
-		    disc += states[2];
-		    zeta0 += states[3];
-		    zeta1 += states[4];
-		    zeta2 += states[5];
-		}
-	    }	    
 	}
 
         timer.start();
@@ -264,27 +246,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                            << "update " << updateTime << " sec "
                                            << "fixing " << fixingTime);
 
-    ein /= outputCube->samples();
-    ez /= outputCube->samples();
-    ezz /= outputCube->samples();
-    ey /= outputCube->samples();
-    eyy /= outputCube->samples();
-    eyz /= outputCube->samples();
-    disc /= outputCube->samples();
-    zeta0 /= outputCube->samples();
-    zeta1 /= outputCube->samples();
-    zeta2 /= outputCube->samples();
-    Real cyz = eyz - ey * ez;
-    ezz -= ez*ez;
-    eyy -= ey*ey;
-    LOG("ValuationEngine E[1/N]           = " << setprecision(6) << ein << " " << disc);
-    LOG("ValuationEngine E[z]             = " << setprecision(6) << ez << " " << zeta1);
-    LOG("ValuationEngine E[z*z] - E^2[z]  = " << setprecision(6) << ezz << " " << zeta0);
-    LOG("ValuationEngine E[y]             = " << setprecision(6) << ey);
-    LOG("ValuationEngine E[y*y] - E^2[y]  = " << setprecision(6) << eyy << " " << zeta2);
-    LOG("ValuationEngine E[y*z]-E[y]*E[z] = " << setprecision(6) << cyz << " " << zeta1);
-    LOG("ValuationEngine E[z] + E[y*z]-E[y]*E[z] = " << setprecision(6) << ez + cyz);
-    
     // for trades with errors set all output cube values to zero
 
     for (Size i = 0; i < trades.size(); ++i) {
