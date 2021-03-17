@@ -25,8 +25,8 @@
 #define quantext_lgm_model_hpp
 
 #include <qle/models/irlgm1fparametrization.hpp>
-#include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/lgmcalibrationinfo.hpp>
+#include <qle/models/linkablecalibratedmodel.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
@@ -62,17 +62,29 @@ public:
 
     /*! calibrate volatilities to a sequence of ir options with
         expiry times equal to step times in the parametrization */
-    void calibrateVolatilitiesIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    void calibrateVolatilitiesIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& constraint = Constraint(),
                                         const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate reversion to a sequence of ir options with
         maturities equal to step times in the parametrization */
-    void calibrateReversionsIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    void calibrateReversionsIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                       OptimizationMethod& method, const EndCriteria& endCriteria,
                                       const Constraint& constraint = Constraint(),
                                       const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate volatilities globally */
+    void calibrateVolatilities(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
+                               OptimizationMethod& method, const EndCriteria& endCriteria,
+                               const Constraint& constraint = Constraint(),
+                               const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate volatilities globally */
+    void calibrateReversions(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
+                             OptimizationMethod& method, const EndCriteria& endCriteria,
+                             const Constraint& constraint = Constraint(),
+                             const std::vector<Real>& weights = std::vector<Real>());
 
     /*! observer and linked calibrated model interface */
     void update();
@@ -80,7 +92,7 @@ public:
 
     /*! calibration constraints, these can be used directly, or
         through the customized calibrate methods above */
-    Disposable<std::vector<bool> > MoveVolatility(const Size i) {
+    Disposable<std::vector<bool>> MoveVolatility(const Size i) {
         QL_REQUIRE(i < parametrization_->parameter(0)->size(),
                    "volatility index (" << i << ") out of range 0..." << parametrization_->parameter(0)->size() - 1);
         std::vector<bool> res(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
@@ -88,7 +100,7 @@ public:
         return res;
     }
 
-    Disposable<std::vector<bool> > MoveReversion(const Size i) {
+    Disposable<std::vector<bool>> MoveReversion(const Size i) {
         QL_REQUIRE(i < parametrization_->parameter(1)->size(),
                    "reversion index (" << i << ") out of range 0..." << parametrization_->parameter(1)->size() - 1);
         std::vector<bool> res(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
@@ -175,21 +187,41 @@ inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const 
 }
 
 inline void LinearGaussMarkovModel::calibrateVolatilitiesIterative(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveVolatility(i));
     }
 }
 
 inline void LinearGaussMarkovModel::calibrateReversionsIterative(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveReversion(i));
     }
+}
+
+inline void
+LinearGaussMarkovModel::calibrateVolatilities(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
+                                              OptimizationMethod& method, const EndCriteria& endCriteria,
+                                              const Constraint& constraint, const std::vector<Real>& weights) {
+    std::vector<bool> moveVols(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
+    for (Size i = 0; i < parametrization_->parameter(0)->size(); ++i)
+        moveVols[i] = false;
+    calibrate(helpers, method, endCriteria, constraint, weights, moveVols);
+}
+
+inline void
+LinearGaussMarkovModel::calibrateReversions(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
+                                            OptimizationMethod& method, const EndCriteria& endCriteria,
+                                            const Constraint& constraint, const std::vector<Real>& weights) {
+    std::vector<bool> moveRevs(parametrization_->parameter(0)->size() + parametrization_->parameter(1)->size(), true);
+    for (Size i = 0; i < parametrization_->parameter(1)->size(); ++i)
+        moveRevs[parametrization_->parameter(0)->size() + i] = false;
+    calibrate(helpers, method, endCriteria, constraint, weights, moveRevs);
 }
 
 } // namespace QuantExt
