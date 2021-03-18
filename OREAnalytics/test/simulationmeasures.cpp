@@ -191,17 +191,11 @@ BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 BOOST_AUTO_TEST_SUITE(SimulationMeasuresTest)
 
 void test_measure(std::string measureName, Real shiftHorizon, std::string discName) {
-    Measure::Type measure;
-    if (measureName == "LGM" || measureName == "FWD") {
-        measure = Measure::LGM;
-    } else if (measureName == "FWD") {
-        measure = Measure::LGM;
-    } else if (measureName == "BA") {
-        measure = Measure::BA;
-        QL_REQUIRE(close_enough(shiftHorizon, 0.0), "Shift horizon must be zero");
-    } else {
-        QL_FAIL("Measure " << measureName << " not recognized");
-    }
+
+    BOOST_TEST_MESSAGE("Testing market simulation, measure " << measureName << ", horizon " << shiftHorizon
+                                                             << ", discretization " << discName);
+
+    TestData d(measureName, shiftHorizon);
 
     CrossAssetStateProcess::discretization discretization;
     if (discName == "exact")
@@ -211,11 +205,6 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     else {
         QL_FAIL("discretization " << discName << " not recognized");
     }
-
-    BOOST_TEST_MESSAGE("Testing market simulation, measure " << measureName << ", horizon " << shiftHorizon
-                                                             << ", discretization " << discName);
-
-    TestData d(measureName, shiftHorizon);
 
     // Simulation date grid
     Date today = d.referenceDate;
