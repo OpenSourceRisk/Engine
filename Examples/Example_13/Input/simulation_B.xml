@@ -58,16 +58,16 @@
         <Volatility>
           <Calibrate>Y</Calibrate>
           <VolatilityType>HullWhite</VolatilityType>
-          <ParamType>Constant</ParamType>
+          <ParamType>Piecewise</ParamType>
           <TimeGrid/>
           <InitialValue>0.01</InitialValue>
         </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
           <ReversionType>HullWhite</ReversionType>
-          <ParamType>Piecewise</ParamType>
+          <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.00</InitialValue>
+          <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
