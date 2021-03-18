@@ -9,28 +9,28 @@ from ore_examples_helper import OreExample
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 # LGM
-#oreex.print_headline("Run ORE simulation in the LGM measure")
-#oreex.run("Input/ore_lgm.xml")
-#oreex.save_output_to_subdir(
-#    "measure_lgm",
-#    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
-#)
+oreex.print_headline("Run ORE simulation in the LGM measure")
+oreex.run("Input/ore_lgm.xml")
+oreex.save_output_to_subdir(
+    "measure_lgm",
+    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+)
 
 # FWD
-#oreex.print_headline("Run ORE simulation in the FWD measure")
-#oreex.run("Input/ore_fwd.xml")
-#oreex.save_output_to_subdir(
-#    "measure_fwd",
-#    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
-#)
+oreex.print_headline("Run ORE simulation in the FWD measure")
+oreex.run("Input/ore_fwd.xml")
+oreex.save_output_to_subdir(
+    "measure_fwd",
+    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+)
 
 # BA
-#oreex.print_headline("Run ORE simulation in the BA measure")
-#oreex.run("Input/ore_ba.xml")
-#oreex.save_output_to_subdir(
-#    "measure_ba",
-#    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
-#)
+oreex.print_headline("Run ORE simulation in the BA measure")
+oreex.run("Input/ore_ba.xml")
+oreex.save_output_to_subdir(
+    "measure_ba",
+    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+)
 
 oreex.print_headline("Plot results")
 
