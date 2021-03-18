@@ -306,7 +306,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     // Log an ALERT if some currencies in simmarket are excluded from the list
     for (auto sim_fx : simMarketData_->fxCcyPairs()) {
         if (sensitivityData_->fxShiftData().find(sim_fx) == sensitivityData_->fxShiftData().end()) {
-            ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
+            WLOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
         }
     }
     for (auto sensi_fx : sensitivityData_->fxShiftData()) {
@@ -350,7 +350,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
     // Log an ALERT if some equities in simmarket are excluded from the sensitivities list
     for (auto sim_equity : simMarketData_->equityNames()) {
         if (sensitivityData_->equityShiftData().find(sim_equity) == sensitivityData_->equityShiftData().end()) {
-            ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
+            WLOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
     for (auto e : sensitivityData_->equityShiftData()) {
@@ -408,7 +408,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
     for (auto sim_ccy : simMarketData_->ccys()) {
         if (sensitivityData_->discountCurveShiftData().find(sim_ccy) ==
             sensitivityData_->discountCurveShiftData().end()) {
-            ALOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
+            WLOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -497,7 +497,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
     for (auto sim_idx : simMarketData_->indices()) {
         if (sensitivityData_->indexCurveShiftData().find(sim_idx) == sensitivityData_->indexCurveShiftData().end()) {
-            DLOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+            WLOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -585,7 +585,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim_yc : simMarketData_->yieldCurveNames()) {
         if (sensitivityData_->yieldCurveShiftData().find(sim_yc) == sensitivityData_->yieldCurveShiftData().end()) {
-            ALOG("Yield Curve " << sim_yc << " in simmarket is not included in sensitivities analysis");
+            WLOG("Yield Curve " << sim_yc << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -671,7 +671,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim : simMarketData_->equityNames()) {
         if (sensitivityData_->dividendYieldShiftData().find(sim) == sensitivityData_->dividendYieldShiftData().end()) {
-            ALOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
+            WLOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
         }
     }
 
@@ -756,7 +756,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     // Log an ALERT if some FX vol pairs in simmarket are excluded from the list
     for (auto sim_fx : simMarketData_->fxVolCcyPairs()) {
         if (sensitivityData_->fxVolShiftData().find(sim_fx) == sensitivityData_->fxVolShiftData().end()) {
-            ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
+            WLOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -854,7 +854,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
     // Log an ALERT if an Equity in simmarket are excluded from the simulation list
     for (auto sim_equity : simMarketData_->equityVolNames()) {
         if (sensitivityData_->equityVolShiftData().find(sim_equity) == sensitivityData_->equityVolShiftData().end()) {
-            ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
+            WLOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1125,7 +1125,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_ccy : simMarketData_->swapVolCcys()) {
         if (sensitivityData_->swaptionVolShiftData().find(sim_ccy) == sensitivityData_->swaptionVolShiftData().end()) {
-            ALOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
+            WLOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
     generateGenericYieldVolScenarios(up, RFType::SwaptionVolatility);
@@ -1138,7 +1138,7 @@ void SensitivityScenarioGenerator::generateYieldVolScenarios(bool up) {
     // Log an ALERT if some bond securityId in simmarket are excluded from the list
     for (auto sim_securityId : simMarketData_->yieldVolNames()) {
         if (sensitivityData_->yieldVolShiftData().find(sim_securityId) == sensitivityData_->yieldVolShiftData().end()) {
-            ALOG("Bond securityId " << sim_securityId << " in simmarket is not included in sensitivities analysis");
+            WLOG("Bond securityId " << sim_securityId << " in simmarket is not included in sensitivities analysis");
         }
     }
     generateGenericYieldVolScenarios(up, RFType::YieldVolatility);
@@ -1151,7 +1151,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     // Log an ALERT if some cap currencies in simmarket are excluded from the list
     for (auto sim_cap : simMarketData_->capFloorVolCcys()) {
         if (sensitivityData_->capFloorVolShiftData().find(sim_cap) == sensitivityData_->capFloorVolShiftData().end()) {
-            ALOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
+            WLOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1260,7 +1260,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
     // Log an ALERT if some names in simmarket are excluded from the list
     for (auto sim_name : simMarketData_->defaultNames()) {
         if (sensitivityData_->creditCurveShiftData().find(sim_name) == sensitivityData_->creditCurveShiftData().end()) {
-            ALOG("Credit Name " << sim_name << " in simmarket is not included in sensitivities analysis");
+            WLOG("Credit Name " << sim_name << " in simmarket is not included in sensitivities analysis");
         }
     }
     Size n_ten;
@@ -1353,7 +1353,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_name : simMarketData_->cdsVolNames()) {
         if (sensitivityData_->cdsVolShiftData().find(sim_name) == sensitivityData_->cdsVolShiftData().end()) {
-            ALOG("CDS name " << sim_name << " in simmarket is not included in sensitivities analysis");
+            WLOG("CDS name " << sim_name << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1434,7 +1434,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
     for (auto sim_idx : simMarketData_->zeroInflationIndices()) {
         if (sensitivityData_->zeroInflationCurveShiftData().find(sim_idx) ==
             sensitivityData_->zeroInflationCurveShiftData().end()) {
-            ALOG("Zero Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+            WLOG("Zero Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1518,7 +1518,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
     for (auto sim_idx : simMarketData_->yoyInflationIndices()) {
         if (sensitivityData_->yoyInflationCurveShiftData().find(sim_idx) ==
             sensitivityData_->yoyInflationCurveShiftData().end()) {
-            ALOG("YoY Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+            WLOG("YoY Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1601,7 +1601,7 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
     for (auto sim_yoy : simMarketData_->yoyInflationCapFloorVolNames()) {
         if (sensitivityData_->yoyInflationCapFloorVolShiftData().find(sim_yoy) ==
             sensitivityData_->yoyInflationCapFloorVolShiftData().end()) {
-            ALOG("Inflation index " << sim_yoy << " in simmarket is not included in sensitivities analysis");
+            WLOG("Inflation index " << sim_yoy << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1696,7 +1696,7 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
     for (auto sim_zci : simMarketData_->zeroInflationCapFloorVolNames()) {
         if (sensitivityData_->zeroInflationCapFloorVolShiftData().find(sim_zci) ==
             sensitivityData_->zeroInflationCapFloorVolShiftData().end()) {
-            ALOG("Inflation index " << sim_zci << " in simmarket is not included in sensitivities analysis");
+            WLOG("Inflation index " << sim_zci << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1793,7 +1793,7 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
     for (auto name : simMarketData_->baseCorrelationNames()) {
         if (sensitivityData_->baseCorrelationShiftData().find(name) ==
             sensitivityData_->baseCorrelationShiftData().end()) {
-            ALOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
+            WLOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -2069,7 +2069,7 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
     Date asof = baseScenario_->asof();
     for (auto sim_cap : simMarketData_->correlationPairs()) {
         if (sensitivityData_->correlationShiftData().find(sim_cap) == sensitivityData_->correlationShiftData().end()) {
-            ALOG("Correlation " << sim_cap << " in simmarket is not included in sensitivities analysis");
+            WLOG("Correlation " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -2176,7 +2176,7 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
     // Log an ALERT if some equities in simmarket are excluded from the sensitivities list
     for (auto sim_security : simMarketData_->securities()) {
         if (sensitivityData_->securityShiftData().find(sim_security) == sensitivityData_->securityShiftData().end()) {
-            ALOG("Security " << sim_security << " in simmarket is not included in sensitivities analysis");
+            WLOG("Security " << sim_security << " in simmarket is not included in sensitivities analysis");
         }
     }
     for (auto s : sensitivityData_->securityShiftData()) {
