@@ -36,7 +36,7 @@ public:
         registerWith(multiplier);
         enableExtrapolation(source->allowsExtrapolation());
     }
-    Date maxDate() const override { source_->maxDate(); }
+    Date maxDate() const override { return source_->maxDate(); }
     const Date& referenceDate() const override { return source_->referenceDate(); }
 
 protected:
