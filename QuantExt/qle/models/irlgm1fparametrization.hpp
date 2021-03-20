@@ -72,7 +72,7 @@ protected:
 
 private:
     const Handle<TS> termStructure_;
-    mutable Real zetan_cached_ = Null<Real>();
+    mutable std::map<std::pair<Size, Real>, Real> zetan_cached_;
 };
 
 // implementation
@@ -112,20 +112,23 @@ template <class TS> inline Real& Lgm1fParametrization<TS>::scaling() { return sc
 template <class TS>
 inline Real Lgm1fParametrization<TS>::zetan(const Size n, const Time t,
                                             const boost::shared_ptr<Integrator>& integrator) {
-    if (zetan_cached_ == Null<Real>()) {
+    auto z = zetan_cached_.find(std::make_pair(n, t));
+    if (z == zetan_cached_.end()) {
         std::vector<Real> times;
         for (Size i = 0; i < numberOfParameters(); ++i)
             times.insert(times.end(), parameterTimes(i).begin(), parameterTimes(i).end());
         PiecewiseIntegral pwint(integrator, times, true);
-        zetan_cached_ =
-            pwint([this, n](Real s) { return std::pow(this->alpha(s), 2) * std::pow(this->H(s), n); }, 0.0, t);
+        Real v = pwint([this, n](Real s) { return std::pow(this->alpha(s), 2) * std::pow(this->H(s), n); }, 0.0, t);
+        zetan_cached_[std::make_pair(n, t)] = v;
+        return v;
+    } else {
+        return z->second;
     }
-    return zetan_cached_;
 }
 
 template <class TS> inline void Lgm1fParametrization<TS>::update() const {
     Parametrization::update();
-    zetan_cached_ = Null<Real>();
+    zetan_cached_.clear();
 }
 
 // typedef

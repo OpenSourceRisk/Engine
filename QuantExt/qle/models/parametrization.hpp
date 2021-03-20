@@ -46,7 +46,7 @@ public:
     virtual const Array& parameterTimes(const Size) const;
 
     /*! the number of parameters in this parametrization */
-    virtual Size numberOfParameters() const = 0;
+    virtual Size numberOfParameters() const { return 0; }
 
     /*! these are the actual (real) parameter values in contrast
         to the raw values which are stored in Parameter::params_
