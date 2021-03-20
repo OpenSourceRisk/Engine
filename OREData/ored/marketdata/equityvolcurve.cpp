@@ -640,7 +640,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     vector<Date> expiryDates(surfaceData.size());
     vector<Time> expiryTimes(surfaceData.size());
     vector<vector<Handle<Quote>>> vols(moneynessLevels.size());
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates[row.index()] = row.value().first;
         expiryTimes[row.index()] = dayCounter_.yearFraction(asof, row.value().first);
         for (Size i = 0; i < row.value().second.size(); i++) {

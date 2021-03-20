@@ -278,7 +278,15 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         // Set numeraire, numeraire currency and the (deterministic) domestic discount
         // Asset index 0 in sample.value[0][i+1] refers to the domestic currency process.
         Real z0 = sample.value[0][i + 1]; // domestic LGM factor, second index = 0 holds initial values
-        scenarios[i]->setNumeraire(model_->numeraire(0, t, z0));
+        if (model_->measure() == Measure::LGM) {
+            scenarios[i]->setNumeraire(model_->numeraire(0, t, z0));
+        } else if (model_->measure() == Measure::BA) {
+            // last state variable is the auxiliary state variable for the bank account measure dynamics
+            Real y0 = sample.value[model_->pIdx(AUX, 0)][i + 1];
+            scenarios[i]->setNumeraire(model_->bankAccountNumeraire(0, t, z0, y0));
+        } else {
+            QL_FAIL("Measure not covered");
+        }
 
         // Discount curves
         for (Size j = 0; j < n_ccy_; j++) {
