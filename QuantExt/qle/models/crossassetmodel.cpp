@@ -53,20 +53,18 @@ std::ostream& operator<<(std::ostream& out, const AssetType& type) {
     }
 }
 
-}
+} // namespace CrossAssetModelTypes
 
-CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations,
-                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging,
-				 Measure::Type measure)
-  : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure) {
+CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations,
+                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging, Measure::Type measure)
+    : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure) {
     initialize();
 }
 
-CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel> >& currencyModels,
-                                 const std::vector<boost::shared_ptr<FxBsParametrization> >& fxParametrizations,
-                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging,
-				 Measure::Type measure)
-  : LinkableCalibratedModel(), lgm_(currencyModels), rho_(correlation), salvaging_(salvaging), measure_(measure) {
+CrossAssetModel::CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel>>& currencyModels,
+                                 const std::vector<boost::shared_ptr<FxBsParametrization>>& fxParametrizations,
+                                 const Matrix& correlation, SalvagingAlgorithm::Type salvaging, Measure::Type measure)
+    : LinkableCalibratedModel(), lgm_(currencyModels), rho_(correlation), salvaging_(salvaging), measure_(measure) {
     for (Size i = 0; i < currencyModels.size(); ++i) {
         p_.push_back(currencyModels[i]->parametrization());
     }
@@ -425,8 +423,7 @@ void CrossAssetModel::initializeParametrizations() {
 
         if (getComponentType(i).second == CIRPP) {
             auto tmp = boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]);
-            QL_REQUIRE(tmp,
-                       "CrossAssetModelPlus::initializeParametrizations(): expected CrCirppParametrization");
+            QL_REQUIRE(tmp, "CrossAssetModelPlus::initializeParametrizations(): expected CrCirppParametrization");
             crcirppModel_.push_back(boost::make_shared<CrCirpp>(tmp));
         } else
             crcirppModel_.push_back(boost::shared_ptr<CrCirpp>());
@@ -469,16 +466,15 @@ void CrossAssetModel::initializeParametrizations() {
     if (measure_ == Measure::BA) {
 
         QL_REQUIRE(components_[INF] == 0, "CAM in BA measure does not support INF components yet");
-	QL_REQUIRE(components_[EQ] == 0, "CAM in BA measure does not support EQ components yet");
-	QL_REQUIRE(components_[CR] == 0, "CAM in BA measure does not support CR components yet");
+        QL_REQUIRE(components_[EQ] == 0, "CAM in BA measure does not support EQ components yet");
+        QL_REQUIRE(components_[CR] == 0, "CAM in BA measure does not support CR components yet");
 
         // AUX variable for BA measure simulations
 
         components_[AUX] = 1;
-	updateIndices(AUX, i, cIdxTmp, pIdxTmp, aIdxTmp);
-	cIdxTmp += 1;
-	pIdxTmp += 1;
-
+        updateIndices(AUX, i, cIdxTmp, pIdxTmp, aIdxTmp);
+        cIdxTmp += 1;
+        pIdxTmp += 1;
     }
 
     // Summary statistics
@@ -486,7 +482,6 @@ void CrossAssetModel::initializeParametrizations() {
     totalDimension_ = pIdxTmp;
     totalNumberOfBrownians_ = cIdxTmp;
 
-    
 } // initParametrizations
 
 void CrossAssetModel::initializeCorrelation() {
@@ -546,30 +541,32 @@ void CrossAssetModel::finalizeArguments() {
 
 void CrossAssetModel::checkModelConsistency() const {
     QL_REQUIRE(components(IR) > 0, "at least one IR component must be given");
-    QL_REQUIRE(components(IR) + components(FX) + components(INF) + components(CR) + components(EQ) + components(AUX) == p_.size(),
+    QL_REQUIRE(components(IR) + components(FX) + components(INF) + components(CR) + components(EQ) + components(AUX) ==
+                   p_.size(),
                "the parametrizations must be given in the following order: ir, "
                "fx, inf, cr, eq, found "
                    << components(IR) << " ir, " << components(FX) << " bs, " << components(INF) << " inf, "
-	           << components(CR) << " cr, " << components(EQ) << " eq, " << components(AUX) << " aux parametrizations, "
-	           << "but there are " << p_.size() << " parametrizations given in total");
+                   << components(CR) << " cr, " << components(EQ) << " eq, " << components(AUX)
+                   << " aux parametrizations, "
+                   << "but there are " << p_.size() << " parametrizations given in total");
 }
 
 void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(
-    const Size ccy, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
+    const Size ccy, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     lgm(ccy)->calibrateVolatilitiesIterative(helpers, method, endCriteria, constraint, weights);
     update();
 }
 
 void CrossAssetModel::calibrateIrLgm1fReversionsIterative(
-    const Size ccy, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
+    const Size ccy, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     lgm(ccy)->calibrateReversionsIterative(helpers, method, endCriteria, constraint, weights);
     update();
 }
 
 void CrossAssetModel::calibrateIrLgm1fGlobal(const Size ccy,
-                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                              OptimizationMethod& method, const EndCriteria& endCriteria,
                                              const Constraint& constraint, const std::vector<Real>& weights) {
     lgm(ccy)->calibrate(helpers, method, endCriteria, constraint, weights);
@@ -577,19 +574,19 @@ void CrossAssetModel::calibrateIrLgm1fGlobal(const Size ccy,
 }
 
 void CrossAssetModel::calibrateBsVolatilitiesIterative(
-    const AssetType& assetType, const Size idx, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    const AssetType& assetType, const Size idx, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
     OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
     const std::vector<Real>& weights) {
     QL_REQUIRE(assetType == FX || assetType == EQ, "Unsupported AssetType for BS calibration");
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(assetType, 0, idx, i));
     }
     update();
 }
 
 void CrossAssetModel::calibrateBsVolatilitiesGlobal(
-    const AssetType& assetType, const Size aIdx, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    const AssetType& assetType, const Size aIdx, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
     OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
     const std::vector<Real>& weights) {
     QL_REQUIRE(assetType == FX || assetType == EQ, "Unsupported AssetType for BS calibration");
@@ -598,50 +595,43 @@ void CrossAssetModel::calibrateBsVolatilitiesGlobal(
 }
 
 void CrossAssetModel::calibrateInfDkVolatilitiesIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
-    const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, i));
     }
     update();
 }
 
 void CrossAssetModel::calibrateInfDkReversionsIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
-    const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, i));
     }
     update();
 }
 
 void CrossAssetModel::calibrateInfDkVolatilitiesGlobal(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
-    const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, Null<Size>()));
     update();
 }
 
 void CrossAssetModel::calibrateInfDkReversionsGlobal(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
-    const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, Null<Size>()));
     update();
 }
 
-void CrossAssetModel::calibrateInfJyGlobal(Size index,
-    const vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-    OptimizationMethod& method,
-    const EndCriteria& endCriteria,
-    const map<Size, bool>& toCalibrate,
-    const Constraint& constraint,
-    const vector<Real>& weights) {
+void CrossAssetModel::calibrateInfJyGlobal(Size index, const vector<boost::shared_ptr<CalibrationHelper>>& helpers,
+                                           OptimizationMethod& method, const EndCriteria& endCriteria,
+                                           const map<Size, bool>& toCalibrate, const Constraint& constraint,
+                                           const vector<Real>& weights) {
 
     // Initialise the parameters to move first to get the size.
     vector<bool> fixedParams = MoveParameter(INF, 0, index, Null<Size>());
@@ -651,8 +641,8 @@ void CrossAssetModel::calibrateInfJyGlobal(Size index,
     for (const auto& kv : toCalibrate) {
         if (kv.second) {
             vector<bool> tmp = MoveParameter(INF, kv.first, index, Null<Size>());
-            std::transform(fixedParams.begin(), fixedParams.end(), tmp.begin(),
-                fixedParams.begin(), std::logical_and<bool>());
+            std::transform(fixedParams.begin(), fixedParams.end(), tmp.begin(), fixedParams.begin(),
+                           std::logical_and<bool>());
         }
     }
 
@@ -662,16 +652,13 @@ void CrossAssetModel::calibrateInfJyGlobal(Size index,
     update();
 }
 
-void CrossAssetModel::calibrateInfJyIterative(Size mIdx,
-    Size pIdx,
-    const vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-    OptimizationMethod& method,
-    const EndCriteria& endCriteria,
-    const Constraint& constraint,
-    const vector<Real>& weights) {
+void CrossAssetModel::calibrateInfJyIterative(Size mIdx, Size pIdx,
+                                              const vector<boost::shared_ptr<CalibrationHelper>>& helpers,
+                                              OptimizationMethod& method, const EndCriteria& endCriteria,
+                                              const Constraint& constraint, const vector<Real>& weights) {
 
     for (Size i = 0; i < helpers.size(); ++i) {
-        vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        vector<boost::shared_ptr<CalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, pIdx, mIdx, i));
     }
 
@@ -679,22 +666,20 @@ void CrossAssetModel::calibrateInfJyIterative(Size mIdx,
 }
 
 void CrossAssetModel::calibrateCrLgm1fVolatilitiesIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
-    const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(CR, 0, index, i));
     }
     update();
 }
 
 void CrossAssetModel::calibrateCrLgm1fReversionsIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
-    const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper>> h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(CR, 1, index, i));
     }
     update();
@@ -702,8 +687,8 @@ void CrossAssetModel::calibrateCrLgm1fReversionsIterative(
 
 std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const Time T) {
     Size ccy = ccyIndex(infdk(i)->currency());
-    cache_key k = { i, ccy, t, T };
-    boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_infdkI_.find(k);
+    cache_key k = {i, ccy, t, T};
+    boost::unordered_map<cache_key, std::pair<Real, Real>>::const_iterator it = cache_infdkI_.find(k);
     Real V0, V_tilde;
 
     if (it == cache_infdkI_.end()) {
@@ -764,8 +749,8 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
     QL_REQUIRE(ccy < components(IR), "ccy index (" << ccy << ") must be in 0..." << (components(IR) - 1));
     QL_REQUIRE(t < T || close_enough(t, T), "crlgm1fS: t (" << t << ") <= T (" << T << ") required");
     QL_REQUIRE(modelType(CR, i) == LGM1F, "model at " << i << " is not CR-LGM1F");
-    cache_key k = { i, ccy, t, T };
-    boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_crlgm1fS_.find(k);
+    cache_key k = {i, ccy, t, T};
+    boost::unordered_map<cache_key, std::pair<Real, Real>>::const_iterator it = cache_crlgm1fS_.find(k);
     Real V0, V_tilde;
     Real Hlt = Hl(i).eval(this, t);
     Real HlT = Hl(i).eval(this, T);
@@ -804,8 +789,8 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
     return std::make_pair(St, Stilde_t_T);
 }
 
-std::pair<Real, Real> CrossAssetModel::crcirppS(const Size i, const Time t, const Time T,
-                                                const Real y, const Real s) const {
+std::pair<Real, Real> CrossAssetModel::crcirppS(const Size i, const Time t, const Time T, const Real y,
+                                                const Real s) const {
     QL_REQUIRE(modelType(CR, i) == CIRPP, "model at " << i << " is not CR-CIR")
     if (close_enough(t, T))
         return std::make_pair(s, 1.0);
@@ -861,9 +846,8 @@ Real CrossAssetModel::crV(const Size i, const Size ccy, const Time t, const Time
                (HlT * integral(this, P(sx(ccy - 1), al(i)), t, T) - integral(this, P(sx(ccy - 1), Hl(i), al(i)), t, T));
 }
 
-Handle<ZeroInflationTermStructure> inflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index) {
-    
+Handle<ZeroInflationTermStructure> inflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, Size index) {
+
     if (model->modelType(INF, index) == DK) {
         return model->infdk(index)->termStructure();
     } else if (model->modelType(INF, index) == JY) {

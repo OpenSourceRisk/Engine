@@ -39,7 +39,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/lexical_cast.hpp>
 
-
 namespace {
 
 using ore::data::CorrelationFactor;
@@ -63,7 +62,7 @@ CorrelationFactor fromNode(ore::data::XMLNode* node, bool firstFactor) {
     return factor;
 }
 
-}
+} // namespace
 
 namespace ore {
 namespace data {
@@ -81,8 +80,7 @@ void InstantaneousCorrelations::fromXML(XMLNode* node) {
             Real corr = parseReal(XMLUtils::getNodeValue(nodes[i]));
             cmb.addCorrelation(factor_1, factor_2, corr);
         }
-    }
-    else {
+    } else {
         QL_FAIL("No InstantaneousCorrelations found in model configuration XML");
     }
 
@@ -90,7 +88,7 @@ void InstantaneousCorrelations::fromXML(XMLNode* node) {
 }
 
 XMLNode* InstantaneousCorrelations::toXML(XMLDocument& doc) {
-    
+
     XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
 
     for (auto it = correlations_.begin(); it != correlations_.end(); it++) {
@@ -100,7 +98,7 @@ XMLNode* InstantaneousCorrelations::toXML(XMLDocument& doc) {
 
         CorrelationFactor f_1 = it->first.first;
         XMLUtils::addAttribute(doc, node, "factor1", to_string(f_1.type) + ":" + f_1.name);
-        if(f_1.index != Null<Size>())
+        if (f_1.index != Null<Size>())
             XMLUtils::addAttribute(doc, node, "index1", to_string(f_1.index));
 
         CorrelationFactor f_2 = it->first.second;
@@ -116,7 +114,7 @@ bool InstantaneousCorrelations::operator==(const InstantaneousCorrelations& rhs)
     // compare correlations by value (not the handle links)
     map<CorrelationKey, Handle<Quote>>::const_iterator corr1, corr2;
     for (corr1 = correlations_.begin(), corr2 = rhs.correlations_.begin();
-        corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
+         corr1 != correlations_.end() && corr2 != rhs.correlations_.end(); ++corr1, ++corr2) {
         if (corr1->first != corr2->first || !close_enough(corr1->second->value(), corr2->second->value()))
             return false;
     }
@@ -126,9 +124,7 @@ bool InstantaneousCorrelations::operator==(const InstantaneousCorrelations& rhs)
     return true;
 }
 
-bool InstantaneousCorrelations::operator!=(const InstantaneousCorrelations& rhs) {
-    return !(*this == rhs);
-}
+bool InstantaneousCorrelations::operator!=(const InstantaneousCorrelations& rhs) { return !(*this == rhs); }
 
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
@@ -161,7 +157,7 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         }
     }
 
-    // Not checking inflation model data for equality. The equality operators were only written to support 
+    // Not checking inflation model data for equality. The equality operators were only written to support
     // unit testing toXML and fromXML. Questionable if it should be done this way.
 
     for (Size i = 0; i < crLgmConfigs_.size(); i++) {
@@ -203,14 +199,13 @@ void CrossAssetModelData::validate() {
     if (measure_ == "BA") {
         // ensure that the domestic LGM has shift = 0 and scaling = 1
         for (Size i = 0; i < irConfigs_.size(); ++i)
-	    if (irConfigs_[i]->ccy() == domesticCurrency_) {
-	        QL_REQUIRE(close_enough(irConfigs_[i]->scaling(), 1.0),
-			   "scaling for the domestic LGM must be 1 for BA measure simulations");
-		QL_REQUIRE(close_enough(irConfigs_[i]->shiftHorizon(), 0.0),
-			   "shift horizon for the domestic LGM must be 0 for BA measure simulations");
-	    }
+            if (irConfigs_[i]->ccy() == domesticCurrency_) {
+                QL_REQUIRE(close_enough(irConfigs_[i]->scaling(), 1.0),
+                           "scaling for the domestic LGM must be 1 for BA measure simulations");
+                QL_REQUIRE(close_enough(irConfigs_[i]->shiftHorizon(), 0.0),
+                           "shift horizon for the domestic LGM must be 0 for BA measure simulations");
+            }
     }
-	  
 }
 
 std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
@@ -251,10 +246,9 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
     LOG("CrossAssetModelData: bootstrap tolerance = " << bootstrapTolerance_);
 
-    std::string measureString = XMLUtils::getChildValue(modelNode, "Measure", false);
-    if (measureString != "")
-        measure_ = measureString;
-    
+    measure_ = XMLUtils::getChildValue(modelNode, "Measure", false);
+    LOG("CrossAssetModelData: measure = '" << measure_ << "'");
+
     // Configure IR model components
 
     std::map<std::string, boost::shared_ptr<IrLgmData>> irDataMap;
@@ -345,9 +339,9 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     // Read the inflation model data.
     if (XMLNode* n = XMLUtils::getChildNode(modelNode, "InflationIndexModels")) {
-        
+
         map<string, boost::shared_ptr<InflationModelData>> mp;
-        
+
         // Loop over nodes and pick out any with name: LGM, DodgsonKainth or JarrowYildirim.
         for (XMLNode* cn = XMLUtils::getChildNode(n); cn; cn = XMLUtils::getNextSibling(cn)) {
 
@@ -359,8 +353,8 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
             } else if (nodeName == "JarrowYildirim") {
                 imData = boost::make_shared<InfJyData>();
             } else {
-                WLOG("Did not recognise InflationIndexModels node with name " << nodeName <<
-                    " as a valid inflation index model so skipping it.");
+                WLOG("Did not recognise InflationIndexModels node with name "
+                     << nodeName << " as a valid inflation index model so skipping it.");
                 continue;
             }
 
@@ -370,7 +364,7 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
             LOG("CrossAssetModelData: inflation index model data built with key " << indexName);
         }
-        
+
         // Align the inflation model data with the infindices_ read in above and handle defaults
         buildInfConfigs(mp);
 
@@ -528,26 +522,26 @@ void CrossAssetModelData::buildEqConfigs(std::map<std::string, boost::shared_ptr
 }
 
 void CrossAssetModelData::buildInfConfigs(const map<string, boost::shared_ptr<InflationModelData>>& mp) {
-    
-    // Append inflation model data to the infConfigs_ vector in the order of the inflation indices in the infindices_ 
+
+    // Append inflation model data to the infConfigs_ vector in the order of the inflation indices in the infindices_
     // vector.
 
-    // If for any of the inflation indices in the infindices_ vector, there is no inflation model data in mp then the 
-    // default inflation model data is used. The default inflation model data should be in mp under the key name 
+    // If for any of the inflation indices in the infindices_ vector, there is no inflation model data in mp then the
+    // default inflation model data is used. The default inflation model data should be in mp under the key name
     // "default". If it is not provided either, an exception is thrown.
 
     for (const string& indexName : infindices_) {
-        
+
         auto it = mp.find(indexName);
         if (it != mp.end()) {
             infConfigs_.push_back(it->second);
         } else {
-            
+
             LOG("Inflation index model data missing for index " << indexName << " so attempt to use default");
 
             auto itDefault = mp.find("default");
-            QL_REQUIRE(itDefault != mp.end(), "Inflation index model data missing for index " <<
-                indexName << " and for default.");
+            QL_REQUIRE(itDefault != mp.end(),
+                       "Inflation index model data missing for index " << indexName << " and for default.");
 
             // Make a copy of the model data and add to vector.
             boost::shared_ptr<InflationModelData> imData = itDefault->second;
@@ -579,11 +573,9 @@ void CrossAssetModelData::buildCrConfigs(std::map<std::string, boost::shared_ptr
         if (crLgmDataMap.find(name) != crLgmDataMap.end()) {
             QL_REQUIRE(crCirDataMap.find(name) == crCirDataMap.end(), "");
             crLgmConfigs_.push_back(crLgmDataMap[name]);
-        }
-        else if (crCirDataMap.find(name) != crCirDataMap.end()) {
+        } else if (crCirDataMap.find(name) != crCirDataMap.end()) {
             crCirConfigs_.push_back(crCirDataMap[name]);
-        }
-        else { // copy from LGM default, CIR default is not used
+        } else { // copy from LGM default, CIR default is not used
             LOG("CR configuration missing for name " << name << ", using default");
             if (crLgmDataMap.find("default") == crLgmDataMap.end()) {
                 ALOG("Both default CR LGM and " << name << " CR configuration missing");

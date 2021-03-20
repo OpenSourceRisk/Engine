@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/crcirbuilder.hpp>
 #include <ored/model/crlgmbuilder.hpp>
+#include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/model/eqbsbuilder.hpp>
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/inflation/infdkbuilder.hpp>
@@ -33,8 +33,6 @@
 
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
-#include <qle/models/yoycapfloorhelper.hpp>
-#include <qle/models/yoyswaphelper.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
@@ -42,6 +40,8 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/yoycapfloorhelper.hpp>
+#include <qle/models/yoyswaphelper.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticjycpicapfloorengine.hpp>
@@ -58,14 +58,14 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/lexical_cast.hpp>
 
-using QuantExt::JyYoYInflationCouponPricer;
 using QuantExt::AnalyticJyCpiCapFloorEngine;
 using QuantExt::AnalyticJyYoYCapFloorEngine;
 using QuantExt::CpiCapFloorHelper;
-using QuantExt::YoYCapFloorHelper;
-using QuantExt::YoYSwapHelper;
 using QuantExt::InfDkParametrization;
 using QuantExt::IrLgm1fParametrization;
+using QuantExt::JyYoYInflationCouponPricer;
+using QuantExt::YoYCapFloorHelper;
+using QuantExt::YoYSwapHelper;
 using QuantLib::DiscountingSwapEngine;
 using std::vector;
 
@@ -77,12 +77,12 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationLgmCalibration, const std::string& configurationFxCalibration,
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
-    const DayCounter& dayCounter, const bool dontCalibrate,
-    const bool continueOnError, const std::string& referenceCalibrationGrid)
+    const DayCounter& dayCounter, const bool dontCalibrate, const bool continueOnError,
+    const std::string& referenceCalibrationGrid)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
-      configurationInfCalibration_(configurationInfCalibration), configurationCrCalibration_(configurationCrCalibration),
-      configurationFinalModel_(configurationFinalModel),
+      configurationInfCalibration_(configurationInfCalibration),
+      configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
       dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
       referenceCalibrationGrid_(referenceCalibrationGrid),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
@@ -184,7 +184,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     subBuilders_.clear();
 
-    // Store information on the number of factors for each process. This is used when requesting a correlation matrix 
+    // Store information on the number of factors for each process. This is used when requesting a correlation matrix
     // from the CorrelationMatrixBuilder below.
     using ProcessInfo = CorrelationMatrixBuilder::ProcessInfo;
     namespace CT = QuantExt::CrossAssetModelTypes;
@@ -300,7 +300,8 @@ void CrossAssetModelBuilder::buildModel() const {
         LOG("CR LGM Parametrization " << i);
         boost::shared_ptr<CrLgmData> cr = config_->crLgmConfigs()[i];
         string crName = cr->name();
-        boost::shared_ptr<CrLgmBuilder> builder = boost::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
+        boost::shared_ptr<CrLgmBuilder> builder =
+            boost::make_shared<CrLgmBuilder>(market_, cr, configurationCrCalibration_);
         boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization = builder->parametrization();
         crLgmParametrizations.push_back(parametrization);
         crNames.push_back(crName);
@@ -314,7 +315,8 @@ void CrossAssetModelBuilder::buildModel() const {
         LOG("CR CIR Parametrization " << i);
         boost::shared_ptr<CrCirData> cr = config_->crCirConfigs()[i];
         string crName = cr->name();
-        boost::shared_ptr<CrCirBuilder> builder = boost::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
+        boost::shared_ptr<CrCirBuilder> builder =
+            boost::make_shared<CrCirBuilder>(market_, cr, configurationCrCalibration_);
         boost::shared_ptr<QuantExt::CrCirppParametrization> parametrization = builder->parametrization();
         crCirParametrizations.push_back(parametrization);
         crNames.push_back(crName);
@@ -340,46 +342,45 @@ void CrossAssetModelBuilder::buildModel() const {
     Measure::Type measure = Measure::LGM;
     if (config_->measure() == "BA") {
         measure = Measure::BA;
-	LOG("Setting measure to BA");
-    }
-    else if (config_->measure() == "LGM") {
+        DLOG("Setting measure to BA");
+    } else if (config_->measure() == "LGM") {
         measure = Measure::LGM;
-	LOG("Setting measure to BA");
-    }
-    else if (config_->measure() == "") {
-        WLOG("Defaulting to LGM measure");
-    }
-    else {
+        DLOG("Setting measure to BA");
+    } else if (config_->measure() == "") {
+        DLOG("Defaulting to LGM measure");
+    } else {
         QL_FAIL("Measure " << config_->measure() << " not recognized");
     }
 
     // Tag on the parametrization and process info for the auxiliary state variable in the bank account measure
     if (measure == Measure::BA) {
-        parametrizations.push_back(irParametrizations[0]); // FIXME: Is index 0 safe to reference the domestic IR parameters?
+        parametrizations.push_back(
+            irParametrizations[0]); // FIXME: Is index 0 safe to reference the domestic IR parameters?
         processInfo[CT::AUX].emplace_back(config_->domesticCurrency(), 1);
     }
-    
+
     /******************************
      * Build the correlation matrix
      */
     DLOG("CrossAssetModelBuilder: adding correlations.");
     CorrelationMatrixBuilder cmb;
 
-    // Perfect instantaneous correlation of auxiliary variable and domestic LGM state variable in the bank account measure
-    CorrelationFactor domesticFactorIR = { CrossAssetModelTypes::IR, config_->domesticCurrency(), 0};
-    CorrelationFactor domesticFactorAUX = { CrossAssetModelTypes::AUX, config_->domesticCurrency(), 0 };
+    // Perfect instantaneous correlation of auxiliary variable and domestic LGM state variable in the bank account
+    // measure
+    CorrelationFactor domesticFactorIR = {CrossAssetModelTypes::IR, config_->domesticCurrency(), 0};
+    CorrelationFactor domesticFactorAUX = {CrossAssetModelTypes::AUX, config_->domesticCurrency(), 0};
     if (measure == Measure::BA)
         cmb.addCorrelation(domesticFactorAUX, domesticFactorIR, 1.0);
 
     for (auto it = config_->correlations().begin(); it != config_->correlations().end(); it++) {
         cmb.addCorrelation(it->first.first, it->first.second, it->second);
-	if (measure == Measure::BA) {
-	    // Copy correlation(domesticIR, other) to correlation(domesticAUX, other) 
-	    if (it->first.first == domesticFactorIR)
-	        cmb.addCorrelation(domesticFactorAUX, it->first.second, it->second);
-	    if (it->first.second == domesticFactorIR)
-	        cmb.addCorrelation(it->first.first, domesticFactorAUX, it->second);
-	}
+        if (measure == Measure::BA) {
+            // Copy correlation(domesticIR, other) to correlation(domesticAUX, other)
+            if (it->first.first == domesticFactorIR)
+                cmb.addCorrelation(domesticFactorAUX, it->first.second, it->second);
+            if (it->first.second == domesticFactorIR)
+                cmb.addCorrelation(it->first.first, domesticFactorAUX, it->second);
+        }
     }
 
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
@@ -392,9 +393,8 @@ void CrossAssetModelBuilder::buildModel() const {
      */
 
     SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None;
-    
-    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix,
-								salvaging, measure));
+
+    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging, measure));
 
     /*************************
      * Calibrate IR components
@@ -594,19 +594,19 @@ void CrossAssetModelBuilder::forceRecalculate() {
 }
 
 void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size modelIdx,
-    const vector<boost::shared_ptr<BlackCalibrationHelper>>& cb,
-    const boost::shared_ptr<InfDkParametrization>& inflationParam) const {
+                                                const vector<boost::shared_ptr<BlackCalibrationHelper>>& cb,
+                                                const boost::shared_ptr<InfDkParametrization>& inflationParam) const {
 
     LOG("Calibrate DK inflation model for inflation index " << data.index());
-    
+
     if ((!data.volatility().calibrate() && !data.reversion().calibrate()) ||
         (data.calibrationType() == CalibrationType::None)) {
         LOG("Calibration of DK inflation model for inflation index " << data.index() << " not requested.");
         return;
     }
 
-    Handle<ZeroInflationIndex> zInfIndex = market_->zeroInflationIndex(
-        model_->infdk(modelIdx)->name(), configurationInfCalibration_);
+    Handle<ZeroInflationIndex> zInfIndex =
+        market_->zeroInflationIndex(model_->infdk(modelIdx)->name(), configurationInfCalibration_);
     Real baseCPI = zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
     auto engine = boost::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(*model_, modelIdx, baseCPI);
     for (Size j = 0; j < cb.size(); j++)
@@ -643,8 +643,8 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
             }
         } else {
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
-                std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
-                std::to_string(config_->bootstrapTolerance());
+                                      std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
+                                      std::to_string(config_->bootstrapTolerance());
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
             WLOGGERSTREAM << "Calibration details:";
             WLOGGERSTREAM << getCalibrationDetails(cb, inflationParam);
@@ -653,12 +653,11 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
                 QL_FAIL(exceptionMessage);
         }
     }
-
 }
 
-void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
-    Size modelIdx, const boost::shared_ptr<InfJyBuilder>& jyBuilder,
-    const boost::shared_ptr<InfJyParameterization>& inflationParam) const {
+void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size modelIdx,
+                                                const boost::shared_ptr<InfJyBuilder>& jyBuilder,
+                                                const boost::shared_ptr<InfJyParameterization>& inflationParam) const {
 
     LOG("Calibrate JY inflation model for inflation index " << data.index());
 
@@ -685,7 +684,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
         return;
 
     // Single basket of helpers is useful in various places below.
-    vector<boost::shared_ptr<CalibrationHelper> > allHelpers = rrBasket;
+    vector<boost::shared_ptr<CalibrationHelper>> allHelpers = rrBasket;
     allHelpers.insert(allHelpers.end(), idxBasket.begin(), idxBasket.end());
 
     // Calibration configuration.
@@ -708,43 +707,45 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
     } else {
 
         // Calibration type is now Bootstrap, there are multiple options.
-        QL_REQUIRE(data.calibrationType() == CalibrationType::Bootstrap, "JY inflation calibration expected a " <<
-            "calibration type of None, BestFit or Bootstrap.");
-        QL_REQUIRE(!(rrRev.calibrate() && rrVol.calibrate()), "Calibrating both the " <<
-            "real rate reversion and real rate volatility using Bootstrap is not supported.");
+        QL_REQUIRE(data.calibrationType() == CalibrationType::Bootstrap,
+                   "JY inflation calibration expected a "
+                       << "calibration type of None, BestFit or Bootstrap.");
+        QL_REQUIRE(!(rrRev.calibrate() && rrVol.calibrate()),
+                   "Calibrating both the "
+                       << "real rate reversion and real rate volatility using Bootstrap is not supported.");
 
         if ((!rrVol.calibrate() && !rrRev.calibrate()) && idxVol.calibrate()) {
 
             // Bootstrap the inflation index volatility only.
             DLOG("Bootstrap calibration of JY index volatility for index " << data.index() << ".");
-            QL_REQUIRE(idxVol.type() == ParamType::Piecewise, "Index volatility parameter should be Piecewise for " <<
-                "a Bootstrap calibration.");
+            QL_REQUIRE(idxVol.type() == ParamType::Piecewise, "Index volatility parameter should be Piecewise for "
+                                                                  << "a Bootstrap calibration.");
             model_->calibrateInfJyIterative(modelIdx, 2, idxBasket, *optimizationMethod_, endCriteria_);
 
         } else if (rrVol.calibrate() && !idxVol.calibrate()) {
 
             // Bootstrap the real rate volatility only
             DLOG("Bootstrap calibration of JY real rate volatility for index " << data.index() << ".");
-            QL_REQUIRE(rrVol.type() == ParamType::Piecewise, "Real rate volatility parameter should be " <<
-                "Piecewise for a Bootstrap calibration.");
+            QL_REQUIRE(rrVol.type() == ParamType::Piecewise, "Real rate volatility parameter should be "
+                                                                 << "Piecewise for a Bootstrap calibration.");
             model_->calibrateInfJyIterative(modelIdx, 0, rrBasket, *optimizationMethod_, endCriteria_);
 
         } else if (rrRev.calibrate() && !idxVol.calibrate()) {
 
             // Bootstrap the real rate reversion only
             DLOG("Bootstrap calibration of JY real rate reversion for index " << data.index() << ".");
-            QL_REQUIRE(rrRev.type() == ParamType::Piecewise, "Real rate reversion parameter should be " <<
-                "Piecewise for a Bootstrap calibration.");
+            QL_REQUIRE(rrRev.type() == ParamType::Piecewise, "Real rate reversion parameter should be "
+                                                                 << "Piecewise for a Bootstrap calibration.");
             model_->calibrateInfJyIterative(modelIdx, 1, rrBasket, *optimizationMethod_, endCriteria_);
 
         } else if ((rrVol.calibrate() && idxVol.calibrate()) || (rrRev.calibrate() && idxVol.calibrate())) {
 
             if (rrVol.calibrate()) {
-                DLOG("Bootstrap calibration of JY real rate volatility and index volatility for index " <<
-                    data.index() << ".");
+                DLOG("Bootstrap calibration of JY real rate volatility and index volatility for index " << data.index()
+                                                                                                        << ".");
             } else {
-                DLOG("Bootstrap calibration of JY real rate reversion and index volatility for index " <<
-                    data.index() << ".");
+                DLOG("Bootstrap calibration of JY real rate reversion and index volatility for index " << data.index()
+                                                                                                       << ".");
             }
 
             // Bootstrap the real rate volatility and the index volatility
@@ -759,16 +760,15 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
                 inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
             }
 
-            DLOG("Bootstrap calibration of JY model stopped with number of iterations " << numIts <<
-                " and rmse equal to " << std::scientific << std::setprecision(6) <<
-                inflationCalibrationErrors_[modelIdx] << ".");
+            DLOG("Bootstrap calibration of JY model stopped with number of iterations "
+                 << numIts << " and rmse equal to " << std::scientific << std::setprecision(6)
+                 << inflationCalibrationErrors_[modelIdx] << ".");
 
         } else {
-            QL_FAIL("JY inflation bootstrap calibration does not support the combination of real rate volatility = " <<
-                std::boolalpha << rrVol.calibrate() << ", real rate reversion = " << rrRev.calibrate() << " and " <<
-                "index volatility = " << idxVol.calibrate() << ".");
+            QL_FAIL("JY inflation bootstrap calibration does not support the combination of real rate volatility = "
+                    << std::boolalpha << rrVol.calibrate() << ", real rate reversion = " << rrRev.calibrate() << " and "
+                    << "index volatility = " << idxVol.calibrate() << ".");
         }
-
     }
 
     // Log the calibration details.
@@ -784,8 +784,8 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
             }
         } else {
             std::stringstream ss;
-            ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific <<
-                inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
+            ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
+               << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
             string exceptionMessage = ss.str();
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage));
             WLOGGERSTREAM << "Calibration details:";
@@ -799,12 +799,12 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data,
     LOG("Finished calibrating JY inflation model for inflation index " << data.index());
 }
 
-void CrossAssetModelBuilder::setJyPricingEngine(Size modelIdx,
-    const vector<boost::shared_ptr<CalibrationHelper>>& calibrationBasket) const {
+void CrossAssetModelBuilder::setJyPricingEngine(
+    Size modelIdx, const vector<boost::shared_ptr<CalibrationHelper>>& calibrationBasket) const {
 
     DLOG("Start setting pricing engines on JY calibration instruments.");
 
-    // JY supports three types of calibration helpers. Generally, all of the calibration instruments in a basket will 
+    // JY supports three types of calibration helpers. Generally, all of the calibration instruments in a basket will
     // be of the same type but we support all three here.
     boost::shared_ptr<PricingEngine> cpiCapFloorEngine;
     boost::shared_ptr<PricingEngine> yoyCapFloorEngine;
@@ -830,11 +830,11 @@ void CrossAssetModelBuilder::setJyPricingEngine(Size modelIdx,
         }
 
         if (boost::shared_ptr<YoYSwapHelper> h = boost::dynamic_pointer_cast<YoYSwapHelper>(ci)) {
-            // Here we need to attach the coupon pricer to all the YoY coupons and then the generic discounting swap 
+            // Here we need to attach the coupon pricer to all the YoY coupons and then the generic discounting swap
             // engine to the helper.
             if (!yoyCouponPricer) {
                 yoyCouponPricer = boost::make_shared<JyYoYInflationCouponPricer>(*model_, modelIdx);
-                
+
                 Size irIdx = model_->ccyIndex(model_->infjy(modelIdx)->currency());
                 auto yts = model_->irlgm1f(irIdx)->termStructure();
                 yoySwapEngine = boost::make_shared<DiscountingSwapEngine>(yts);
@@ -845,17 +845,15 @@ void CrossAssetModelBuilder::setJyPricingEngine(Size modelIdx,
                 if (auto yoyCoupon = boost::dynamic_pointer_cast<YoYInflationCoupon>(cf))
                     yoyCoupon->setPricer(yoyCouponPricer);
             }
-            
+
             h->setPricingEngine(yoySwapEngine);
             continue;
         }
 
         QL_FAIL("Only CPI cap floors, YoY cap floors and YoY swaps are supported for JY calibration.");
-
     }
 
     DLOG("Finished setting pricing engines on JY calibration instruments.");
-
 }
 
 } // namespace data

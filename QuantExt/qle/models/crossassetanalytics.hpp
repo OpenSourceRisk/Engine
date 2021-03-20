@@ -74,15 +74,16 @@ Real ir_expectation_2(const CrossAssetModel* model, const Size i, const Real zi_
 /*! State independent portion of the JY inflation drift. The first element of the pair relates to the real rate
     process and the second element of the pair relates to the inflation index process.
 */
-std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_1(const CrossAssetModel* model,
-    QuantLib::Size i, QuantLib::Time t0, QuantLib::Real dt);
+std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_1(const CrossAssetModel* model, QuantLib::Size i,
+                                                               QuantLib::Time t0, QuantLib::Real dt);
 
 /*! State dependent portion of the JY inflation drift. The first element of the pair relates to the real rate
     process and the second element of the pair relates to the inflation index process.
 */
 std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_2(const CrossAssetModel* model, QuantLib::Size i,
-    QuantLib::Time t0, const std::pair<QuantLib::Real, QuantLib::Real>& state_0,
-    QuantLib::Real zi_i_0, QuantLib::Real dt);
+                                                               QuantLib::Time t0,
+                                                               const std::pair<QuantLib::Real, QuantLib::Real>& state_0,
+                                                               QuantLib::Real zi_i_0, QuantLib::Real dt);
 
 /*! FX state expectation
 
@@ -403,7 +404,7 @@ Real aux_ir_covariance(const CrossAssetModel* model, const Size j, const Time t0
 
 */
 Real aux_fx_covariance(const CrossAssetModel* model, const Size j, const Time t0, const Time dt);
-  
+
 /*! IR H component */
 struct Hz {
     Hz(const Size i) : i_(i) {}
@@ -442,7 +443,7 @@ struct vx {
 //! INF H component. May relate to real rate portion of JY model or z component of DK model.
 struct Hy {
     Hy(QuantLib::Size i) : i_(i) {}
-    
+
     QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real t) const {
         if (x->modelType(INF, i_) == CrossAssetModelTypes::DK)
             return x->infdk(i_)->H(t);
@@ -451,14 +452,14 @@ struct Hy {
         else
             QL_FAIL("Expected inflation model to be JY or DK");
     }
-    
+
     QuantLib::Size i_;
 };
 
 //! INF alpha component. May relate to real rate portion of JY model or z component of DK model.
 struct ay {
     ay(QuantLib::Size i) : i_(i) {}
-    
+
     QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real t) const {
         if (x->modelType(INF, i_) == CrossAssetModelTypes::DK)
             return x->infdk(i_)->alpha(t);
@@ -497,21 +498,21 @@ struct sy {
         else
             QL_FAIL("Inflation index sigma only valid for JY model.");
     }
-    
+
     QuantLib::Size i_;
 };
 
 //! JY INF index variance component
 struct vy {
     vy(QuantLib::Size i) : i_(i) {}
-    
+
     QuantLib::Real eval(const CrossAssetModel* x, const QuantLib::Real t) const {
         if (x->modelType(INF, i_) == CrossAssetModelTypes::JY)
             return x->infjy(i_)->index()->variance(t);
         else
             QL_FAIL("Inflation index variance only valid for JY model.");
     }
-    
+
     QuantLib::Size i_;
 };
 
@@ -572,10 +573,10 @@ struct rxx {
 };
 
 /*! INF-INF correlation component.
-    
-    The possible inflation models are DK and JY. The i-th and j-th inflation models are not necessarily of the same 
-    type. The offset is needed here in particular for the JY model where a value of 0 indicates the Brownian motion 
-    associated with the real rate component and a value of 1 indicates the Brownian motion associated with the CPI 
+
+    The possible inflation models are DK and JY. The i-th and j-th inflation models are not necessarily of the same
+    type. The offset is needed here in particular for the JY model where a value of 0 indicates the Brownian motion
+    associated with the real rate component and a value of 1 indicates the Brownian motion associated with the CPI
     index component.
 */
 struct ryy {
@@ -596,10 +597,8 @@ struct ryy {
 struct rzy {
     rzy(const Size i, const Size j, QuantLib::Size jOffset = 0) : i_(i), j_(j), jOffset_(jOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(IR, i_, INF, j_, 0, jOffset_);
-    }
-    
+    Real eval(const CrossAssetModel* x, const Real) const { return x->correlation(IR, i_, INF, j_, 0, jOffset_); }
+
     const Size i_, j_;
     QuantLib::Size jOffset_;
 };
@@ -608,9 +607,7 @@ struct rzy {
 struct rxy {
     rxy(const Size i, const Size j, QuantLib::Size jOffset = 0) : i_(i), j_(j), jOffset_(jOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(FX, i_, INF, j_, 0, jOffset_);
-    }
+    Real eval(const CrossAssetModel* x, const Real) const { return x->correlation(FX, i_, INF, j_, 0, jOffset_); }
 
     const Size i_, j_;
     QuantLib::Size jOffset_;
@@ -641,9 +638,7 @@ struct rxl {
 struct ryl {
     ryl(const Size i, const Size j, QuantLib::Size iOffset = 0) : i_(i), j_(j), iOffset_(iOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(INF, i_, CR, j_, iOffset_, 0);
-    }
+    Real eval(const CrossAssetModel* x, const Real) const { return x->correlation(INF, i_, CR, j_, iOffset_, 0); }
 
     const Size i_, j_;
     QuantLib::Size iOffset_;
@@ -674,10 +669,8 @@ struct rxs {
 struct rys {
     rys(const Size i, const Size j, QuantLib::Size iOffset = 0) : i_(i), j_(j), iOffset_(iOffset) {}
 
-    Real eval(const CrossAssetModel* x, const Real) const {
-        return x->correlation(INF, i_, EQ, j_, iOffset_, 0);
-    }
-    
+    Real eval(const CrossAssetModel* x, const Real) const { return x->correlation(INF, i_, EQ, j_, iOffset_, 0); }
+
     const Size i_, j_;
     QuantLib::Size iOffset_;
 };

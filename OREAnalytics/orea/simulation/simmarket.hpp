@@ -85,7 +85,6 @@ public:
 protected:
     Real numeraire_;
     std::string label_;
-    Array states_;
 };
 } // namespace analytics
 } // namespace ore

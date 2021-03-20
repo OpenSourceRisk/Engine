@@ -23,7 +23,6 @@
 #include <ql/processes/eulerdiscretization.hpp>
 
 #include <boost/make_shared.hpp>
-#include <iostream>
 
 namespace QuantExt {
 
@@ -95,11 +94,11 @@ void CrossAssetStateProcess::updateSqrtCorrelation() const {
         AssetType assetType = AssetType(t);
         for (Size i = 0; i < model_->components(assetType); ++i) {
 
-            // 3 possibilities for number of state variables vs. the number of Brownian motions for the i-th component 
+            // 3 possibilities for number of state variables vs. the number of Brownian motions for the i-th component
             // within the current asset type.
-            // 1) They are equal. Make the assumption that there is a 1-1 correspondence. This is essentially what has 
+            // 1) They are equal. Make the assumption that there is a 1-1 correspondence. This is essentially what has
             //    been happening until now outside of DK model i.e. always 1 state var and 1 Brownian motion.
-            // 2) number of state vars > number of Brownian motions. Happens with DK model. Think the code below will 
+            // 2) number of state vars > number of Brownian motions. Happens with DK model. Think the code below will
             //    only work when number of Brownian motions equals 1. Not changing it as not sure what was intended.
             // 3) number of state vars < number of Brownian motions. Not covered below.
             auto brownians = model_->brownians(assetType, i);
@@ -117,7 +116,6 @@ void CrossAssetStateProcess::updateSqrtCorrelation() const {
                     ++brownianIndex;
                 }
             }
-            
         }
     }
     for (Size i = 0; i < corr.rows(); ++i) {
@@ -149,7 +147,7 @@ Disposable<Array> CrossAssetStateProcess::initialValues() const {
         res[model_->pIdx(CR, i, 0)] = r[0]; // y0
         res[model_->pIdx(CR, i, 1)] = r[1]; // S(0,0) = 1
     }
-    
+
     for (Size i = 0; i < model_->components(INF); ++i) {
         // Second component of JY model is the inflation index process.
         if (model_->modelType(INF, i) == JY) {
@@ -170,36 +168,37 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Real zeta0 = model_->irlgm1f(0)->zeta(t);
     boost::unordered_map<double, Array>::const_iterator i = cache_m_.find(t);
     if (i == cache_m_.end()) {
-        /* z0 has drift 0 in the LGM measure but non-zero drift in the bank account measure, so start loop at i = 0 */       
+        /* z0 has drift 0 in the LGM measure but non-zero drift in the bank account measure, so start loop at i = 0 */
         for (Size i = 0; i < n; ++i) {
-	    Real Hi = model_->irlgm1f(i)->H(t);
+            Real Hi = model_->irlgm1f(i)->H(t);
             Real alphai = model_->irlgm1f(i)->alpha(t);
- 	    if (i == 0 && model_->measure() == Measure::BA) {
-	        // ADD z0 drift in the BA measure
-	        res[model_->pIdx(IR, i, 0)] = -Hi * alphai * alphai;
-		// the auxiliary state variable is drift-free
-		res[model_->pIdx(AUX, i, 0)] = 0.0;
-	    }
-	    if (i > 0) {
-	        Real sigmai = model_->fxbs(i - 1)->sigma(t);
-		// ir-ir
-		Real rhozz0i = model_->correlation(IR, 0, IR, i);
-		// ir-fx
-		Real rhozx0i = model_->correlation(IR, 0, FX, i - 1);
-		Real rhozxii = model_->correlation(IR, i, FX, i - 1);
-	        // ir drifts
-	        res[model_->pIdx(IR, i, 0)] =
-		    -Hi * alphai * alphai + H0 * alpha0 * alphai * rhozz0i - sigmai * alphai * rhozxii;
-		// log spot fx drifts (z0, zi independent parts)
-		res[model_->pIdx(FX, i - 1, 0)] =
-		    H0 * alpha0 * sigmai * rhozx0i + model_->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous) -
-		    model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) - 0.5 * sigmai * sigmai;
-		if (model_->measure() == Measure::BA) {
-		    // REMOVE the LGM measure drift contributions above
-		    res[model_->pIdx(IR, i, 0)] -= H0 * alpha0 * alphai * rhozz0i;
-		    res[model_->pIdx(FX, i - 1, 0)] -= H0 * alpha0 * sigmai * rhozx0i;
-		}
-	    }
+            if (i == 0 && model_->measure() == Measure::BA) {
+                // ADD z0 drift in the BA measure
+                res[model_->pIdx(IR, i, 0)] = -Hi * alphai * alphai;
+                // the auxiliary state variable is drift-free
+                res[model_->pIdx(AUX, i, 0)] = 0.0;
+            }
+            if (i > 0) {
+                Real sigmai = model_->fxbs(i - 1)->sigma(t);
+                // ir-ir
+                Real rhozz0i = model_->correlation(IR, 0, IR, i);
+                // ir-fx
+                Real rhozx0i = model_->correlation(IR, 0, FX, i - 1);
+                Real rhozxii = model_->correlation(IR, i, FX, i - 1);
+                // ir drifts
+                res[model_->pIdx(IR, i, 0)] =
+                    -Hi * alphai * alphai + H0 * alpha0 * alphai * rhozz0i - sigmai * alphai * rhozxii;
+                // log spot fx drifts (z0, zi independent parts)
+                res[model_->pIdx(FX, i - 1, 0)] = H0 * alpha0 * sigmai * rhozx0i +
+                                                  model_->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous) -
+                                                  model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) -
+                                                  0.5 * sigmai * sigmai;
+                if (model_->measure() == Measure::BA) {
+                    // REMOVE the LGM measure drift contributions above
+                    res[model_->pIdx(IR, i, 0)] -= H0 * alpha0 * alphai * rhozz0i;
+                    res[model_->pIdx(FX, i - 1, 0)] -= H0 * alpha0 * sigmai * rhozx0i;
+                }
+            }
         }
         /* log equity spot drifts (the cache-able parts) */
         for (Size k = 0; k < n_eq; ++k) {
@@ -228,12 +227,12 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
 
         // State independent pieces of JY inflation model, if there is a CAM JY component.
         for (Size j = 0; j < model_->components(INF); ++j) {
-            
+
             if (model_->modelType(INF, j) == JY) {
-                
+
                 auto p = model_->infjy(j);
                 Size i_j = model_->ccyIndex(p->currency());
-                
+
                 // JY inflation parameter values.
                 Real H_y_j = p->realRate()->H(t);
                 Real Hp_y_j = p->realRate()->Hprime(t);
@@ -250,11 +249,10 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 Real rho_zy_0j = model_->correlation(IR, 0, INF, j, 0, 0);
                 Real rho_yc_ij = model_->correlation(INF, j, INF, j, 0, 1);
                 Real rho_zc_0j = model_->correlation(IR, 0, INF, j, 0, 1);
-                
+
                 // JY real rate drift. It is state independent
-                auto rrDrift = -alpha_y_j * alpha_y_j * H_y_j
-                    + rho_zy_0j * alpha0 * alpha_y_j * H_y_j
-                    - rho_yc_ij * alpha_y_j * sigma_c_j;
+                auto rrDrift = -alpha_y_j * alpha_y_j * H_y_j + rho_zy_0j * alpha0 * alpha_y_j * H_y_j -
+                               rho_yc_ij * alpha_y_j * sigma_c_j;
 
                 if (i_j > 0) {
                     Real sigma_x_i_j = model_->fxbs(i_j - 1)->sigma(t);
@@ -265,8 +263,8 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 res[model_->pIdx(INF, j, 0)] = rrDrift;
 
                 // JY log inflation index drift (state independent piece).
-                auto indexDrift = rho_zc_0j * alpha0 * sigma_c_j * H0 - 0.5 * sigma_c_j * sigma_c_j
-                    + zeta_i_j * Hp_i_j * H_i_j - zeta_y_j * Hp_y_j * H_y_j;
+                auto indexDrift = rho_zc_0j * alpha0 * sigma_c_j * H0 - 0.5 * sigma_c_j * sigma_c_j +
+                                  zeta_i_j * Hp_i_j * H_i_j - zeta_y_j * Hp_y_j * H_y_j;
 
                 // Add on the f_n(0, t) - f_r(0, t) piece using the initial zero inflation term structure.
                 // Use the same dt below that is used in yield forward rate calculations.
@@ -326,8 +324,7 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
             // Inflation nominal currency parameter values
             Real Hp_i_j = model_->irlgm1f(i_j)->Hprime(t);
 
-            res[model_->pIdx(INF, j, 1)] += x[model_->pIdx(IR, i_j, 0)] * Hp_i_j
-                - x[model_->pIdx(INF, j, 0)] * Hp_y_j;
+            res[model_->pIdx(INF, j, 1)] += x[model_->pIdx(IR, i_j, 0)] * Hp_i_j - x[model_->pIdx(INF, j, 0)] * Hp_y_j;
         }
     }
 
@@ -429,7 +426,7 @@ Disposable<Array> CrossAssetStateProcess::marginalDiffusionImpl(Time t, const Ar
         Real alpha0 = model_->irlgm1f(0)->alpha(t);
         setValue(res, alpha0 * H0, model_, AUX, 0, 0);
     }
-    
+
     return res;
 }
 
@@ -440,11 +437,12 @@ Disposable<Array> CrossAssetStateProcess::evolve(Time t0, const Array& x0, Time 
         const Array dz = sqrtCorrelation_ * dw;
         const Array df = marginalDiffusion(t0, x0);
         res = apply(expectation(t0, x0, dt), df * dz * std::sqrt(dt));
-        
+
         // CR CIRPP components
         if (cirppCount_ > 0) {
             for (Size i = 0; i < model_->components(CR); ++i) {
-                if (!crCirpp_[i]) continue; // ignore non-cir cr model
+                if (!crCirpp_[i])
+                    continue; // ignore non-cir cr model
                 Size idx1 = model_->pIdx(CR, i, 0);
                 Size idx2 = model_->pIdx(CR, i, 1);
                 Array x0Tmp(2), dwTmp(2);
@@ -475,7 +473,7 @@ CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAsse
 Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess& p, Time t0,
                                                                      const Array& x0, Time dt) const {
     Array res;
-    cache_key k = { t0, dt };
+    cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Array>::const_iterator i = cache_m_.find(k);
     if (i == cache_m_.end()) {
         res = driftImpl1(p, t0, x0, dt);
@@ -492,7 +490,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(const Stoch
 
 Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(const StochasticProcess& p, Time t0,
                                                                           const Array& x0, Time dt) const {
-    cache_key k = { t0, dt };
+    cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_d_.find(k);
     if (i == cache_d_.end()) {
         Matrix res = pseudoSqrt(covariance(p, t0, x0, dt), salvaging_);
@@ -508,7 +506,7 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(const 
 
 Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(const StochasticProcess& p, Time t0,
                                                                            const Array& x0, Time dt) const {
-    cache_key k = { t0, dt };
+    cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_v_.find(k);
     if (i == cache_v_.end()) {
         Matrix res = covarianceImpl(p, t0, x0, dt);
@@ -540,7 +538,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(const 
     // If inflation is JY, need to take account of the drift.
     for (Size i = 0; i < model_->components(INF); ++i) {
         if (model_->modelType(INF, i) == JY) {
-            std::tie(res[model_->pIdx(INF, i, 0)], res[model_->pIdx(INF, i, 1)]) = 
+            std::tie(res[model_->pIdx(INF, i, 0)], res[model_->pIdx(INF, i, 1)]) =
                 inf_jy_expectation_1(model_, i, t0, dt);
         }
     }
@@ -609,20 +607,20 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
     if (model_->measure() == Measure::BA) {
         // aux-aux
         setValue(res, aux_aux_covariance(model_, t0, dt), model_, AUX, 0, AUX, 0, 0, 0);
-	// aux-ir
-	for (Size j = 0; j < n; ++j) {
-	    setValue(res, aux_ir_covariance(model_, j, t0, dt), model_, AUX, 0, IR, j, 0, 0);
-	}
-	// aux-fx
-	for (Size j = 0; j < m; ++j) {
-	    setValue(res, aux_fx_covariance(model_, j, t0, dt), model_, AUX, 0, FX, j, 0, 0);
-	}
+        // aux-ir
+        for (Size j = 0; j < n; ++j) {
+            setValue(res, aux_ir_covariance(model_, j, t0, dt), model_, AUX, 0, IR, j, 0, 0);
+        }
+        // aux-fx
+        for (Size j = 0; j < m; ++j) {
+            setValue(res, aux_fx_covariance(model_, j, t0, dt), model_, AUX, 0, FX, j, 0, 0);
+        }
     }
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
             setValue(res, ir_ir_covariance(model_, i, j, t0, dt), model_, IR, i, IR, j, 0, 0);
-	}
+        }
     }
     // ir-fx
     for (Size i = 0; i < n; ++i) {
