@@ -48,6 +48,9 @@ public:
     virtual Real hullWhiteSigma(const Time t) const;
     const Handle<TS> termStructure() const;
 
+    /*! \int_0^t alpha^2(u) H^n(u) du */
+    Real zetan(const Size n, const Time t, const boost::shared_ptr<Integrator>& integrator);
+
     /*! allows to apply a shift to H (model invariance 1) */
     Real& shift();
 
@@ -57,11 +60,16 @@ public:
       while all other methods return scaled (and shifted) values */
     Real& scaling();
 
+    Size numberOfParameters() const { return 2; }
+
+    void update() const;
+
 protected:
     Real shift_, scaling_;
 
 private:
     const Handle<TS> termStructure_;
+    Real zeta_cached_ = Null<Real>();
 };
 
 // implementation
@@ -97,6 +105,23 @@ template <class TS> inline const Handle<TS> Lgm1fParametrization<TS>::termStruct
 template <class TS> inline Real& Lgm1fParametrization<TS>::shift() { return shift_; }
 
 template <class TS> inline Real& Lgm1fParametrization<TS>::scaling() { return scaling_; }
+
+template <class TS> inline Real zetan(const Size n, const Time t, const boost::shared_ptr<Integrator>& integrator) {
+    if (zetan_cached_ == Null<Real>()) {
+        std::vector<Real> times;
+        for (Size i = 0; i < numberOfParameters(); ++i)
+            times.insert(times.end(), parameterTimes(i).begin(), parameterTimes(i).end());
+        PiecewiseIntegral pwint(integrator, times, true);
+        zetan_cached_ =
+            pwint([&this, n](Real s) { return std::pow(this->alpha(s), 2.0) * std::pow(this->H(s), n) }, 0.0, t);
+    }
+    return zetan_cached_;
+}
+
+template <class TS> inline void update() const {
+    Parametrization::update();
+    zetan_cached_ = Null<Real>();
+}
 
 // typedef
 

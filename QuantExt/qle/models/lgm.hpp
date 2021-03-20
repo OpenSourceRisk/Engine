@@ -113,19 +113,6 @@ public:
     Real zetan(Real t, Size n) const;
 
 private:
-    /*! Integrand of zeta_n(t) = \int_0^t alpha^2(u) H^n(u) du */
-    class ZetaN {
-    public:
-        ZetaN(const boost::shared_ptr<IrLgm1fParametrization>& parametrization, Size n)
-            : parametrization_(parametrization), n_(n) {}
-        Real operator()(Real t) {
-            return std::pow(parametrization_->alpha(t), 2.0) * std::pow(parametrization_->H(t), 1.0 * n_);
-        }
-
-    private:
-        boost::shared_ptr<IrLgm1fParametrization> parametrization_;
-        Size n_;
-    };
     boost::shared_ptr<IrLgm1fParametrization> parametrization_;
     boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<StochasticProcess1D> stateProcess_;

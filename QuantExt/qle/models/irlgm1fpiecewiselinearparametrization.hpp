@@ -152,6 +152,7 @@ template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::Hprime2
 }
 
 template <class TS> inline void Lgm1fPiecewiseLinearParametrization<TS>::update() const {
+    Lgm1fParametrization::update();
     helper1().update();
     helper2().update();
 }

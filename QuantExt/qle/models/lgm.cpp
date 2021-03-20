@@ -47,7 +47,7 @@ Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, co
     QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::bankAccountNumeraire");
     Real Ht = parametrization_->H(t);
     Real zeta0 = parametrization_->zeta(t);
-    Real zeta2 = zetan(t, 2);
+    Real zeta2 = parametrization_->zetan(2, t, integrator_);
     Real Vt = 0.5 * (Ht * Ht * zeta0 + zeta2);
     return std::exp(Ht * x - y + Vt) /
            (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));

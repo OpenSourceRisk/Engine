@@ -145,6 +145,7 @@ template <class TS> inline Real Lgm1fPiecewiseConstantParametrization<TS>::Hprim
 }
 
 template <class TS> inline void Lgm1fPiecewiseConstantParametrization<TS>::update() const {
+    Lgm1fParametrization::update();
     PiecewiseConstantHelper1::update();
     PiecewiseConstantHelper2::update();
 }

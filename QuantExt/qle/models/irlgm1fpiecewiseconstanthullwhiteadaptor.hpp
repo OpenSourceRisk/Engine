@@ -155,6 +155,7 @@ template <class TS> inline Real Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::hull
 }
 
 template <class TS> inline void Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::update() const {
+    Lgm1fParametrization::update();
     PiecewiseConstantHelper3::update();
     PiecewiseConstantHelper2::update();
 }
