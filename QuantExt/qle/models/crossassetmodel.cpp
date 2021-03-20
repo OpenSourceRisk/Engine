@@ -251,23 +251,7 @@ std::pair<AssetType, ModelType> CrossAssetModel::getComponentType(const Size i) 
     QL_FAIL("parametrization " << i << " has unknown type");
 }
 
-Size CrossAssetModel::getNumberOfParameters(const Size i) const {
-    if (boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]))
-        return 2;
-    if (boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]))
-        return 1;
-    if (boost::dynamic_pointer_cast<InfDkParametrization>(p_[i]))
-        return 2;
-    if (boost::dynamic_pointer_cast<InfJyParameterization>(p_[i]))
-        return 3;
-    if (boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[i]))
-        return 2;
-    if (boost::dynamic_pointer_cast<CrCirppParametrization>(p_[i]))
-        return 4;
-    if (boost::dynamic_pointer_cast<EqBsParametrization>(p_[i]))
-        return 1;
-    QL_FAIL("parametrization " << i << " has unknown type");
-}
+Size CrossAssetModel::getNumberOfParameters(const Size i) const { return p_[i]->numberOfParameters(); }
 
 Size CrossAssetModel::getNumberOfBrownians(const Size i) const {
     if (boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]))

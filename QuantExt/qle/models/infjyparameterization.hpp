@@ -52,6 +52,8 @@ public:
     boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex() const;
     //@}
 
+    Size numberOfParameters() const { return 3; }
+
 protected:
     //! \name Parametrization interface
     //@{
