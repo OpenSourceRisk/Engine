@@ -24,9 +24,12 @@
 #ifndef quantext_irlgm1f_parametrization_hpp
 #define quantext_irlgm1f_parametrization_hpp
 
-#include <ql/handle.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/models/parametrization.hpp>
+
+#include <ql/experimental/math/piecewiseintegral.hpp>
+#include <ql/handle.hpp>
+#include <ql/math/integrals/integral.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -69,7 +72,7 @@ protected:
 
 private:
     const Handle<TS> termStructure_;
-    Real zeta_cached_ = Null<Real>();
+    mutable Real zetan_cached_ = Null<Real>();
 };
 
 // implementation
@@ -106,19 +109,21 @@ template <class TS> inline Real& Lgm1fParametrization<TS>::shift() { return shif
 
 template <class TS> inline Real& Lgm1fParametrization<TS>::scaling() { return scaling_; }
 
-template <class TS> inline Real zetan(const Size n, const Time t, const boost::shared_ptr<Integrator>& integrator) {
+template <class TS>
+inline Real Lgm1fParametrization<TS>::zetan(const Size n, const Time t,
+                                            const boost::shared_ptr<Integrator>& integrator) {
     if (zetan_cached_ == Null<Real>()) {
         std::vector<Real> times;
         for (Size i = 0; i < numberOfParameters(); ++i)
             times.insert(times.end(), parameterTimes(i).begin(), parameterTimes(i).end());
         PiecewiseIntegral pwint(integrator, times, true);
         zetan_cached_ =
-            pwint([&this, n](Real s) { return std::pow(this->alpha(s), 2.0) * std::pow(this->H(s), n) }, 0.0, t);
+            pwint([this, n](Real s) { return std::pow(this->alpha(s), 2) * std::pow(this->H(s), n); }, 0.0, t);
     }
     return zetan_cached_;
 }
 
-template <class TS> inline void update() const {
+template <class TS> inline void Lgm1fParametrization<TS>::update() const {
     Parametrization::update();
     zetan_cached_ = Null<Real>();
 }

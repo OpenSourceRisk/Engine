@@ -110,8 +110,6 @@ public:
     /*! get info on how the model was calibrated */
     const LgmCalibrationInfo& getCalibrationInfo() const { return calibrationInfo_; }
 
-    Real zetan(Real t, Size n) const;
-
 private:
     boost::shared_ptr<IrLgm1fParametrization> parametrization_;
     boost::shared_ptr<Integrator> integrator_;

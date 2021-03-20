@@ -38,15 +38,15 @@ class Lgm1fPiecewiseConstantHullWhiteAdaptor : public Lgm1fParametrization<TS>,
                                                private PiecewiseConstantHelper3,
                                                private PiecewiseConstantHelper2 {
 public:
-    Lgm1fPiecewiseConstantHullWhiteAdaptor(const Currency& currency, const Handle<TS>& termStructure,
-                                           const Array& sigmaTimes, const Array& sigma, const Array& kappaTimes,
-                                           const Array& kappa, const std::string& name = std::string(),
+    Lgm1fPiecewiseConstantHullWhiteAdaptor(
+        const Currency& currency, const Handle<TS>& termStructure, const Array& sigmaTimes, const Array& sigma,
+        const Array& kappaTimes, const Array& kappa, const std::string& name = std::string(),
         const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>(),
         const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint = boost::make_shared<QuantLib::NoConstraint>());
-    Lgm1fPiecewiseConstantHullWhiteAdaptor(const Currency& currency, const Handle<TS>& termStructure,
-                                           const std::vector<Date>& sigmaDates, const Array& sigma,
-                                           const std::vector<Date>& kappaDates, const Array& kappa,
-                                           const std::string& name = std::string(),
+    Lgm1fPiecewiseConstantHullWhiteAdaptor(
+        const Currency& currency, const Handle<TS>& termStructure, const std::vector<Date>& sigmaDates,
+        const Array& sigma, const std::vector<Date>& kappaDates, const Array& kappa,
+        const std::string& name = std::string(),
         const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>(),
         const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint = boost::make_shared<QuantLib::NoConstraint>());
     Real zeta(const Time t) const;
@@ -155,7 +155,7 @@ template <class TS> inline Real Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::hull
 }
 
 template <class TS> inline void Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::update() const {
-    Lgm1fParametrization::update();
+    Lgm1fParametrization<TS>::update();
     PiecewiseConstantHelper3::update();
     PiecewiseConstantHelper2::update();
 }

@@ -40,8 +40,6 @@ LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fPa
     integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
-Real LinearGaussMarkovModel::zetan(Real t, Size n) const { return (*integrator_)(ZetaN(parametrization_, n), 0.0, t); }
-
 Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, const Real y,
                                                   const Handle<YieldTermStructure> discountCurve) const {
     QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::bankAccountNumeraire");
