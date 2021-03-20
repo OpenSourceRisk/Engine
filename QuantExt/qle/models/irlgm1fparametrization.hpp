@@ -51,7 +51,7 @@ public:
     virtual Real hullWhiteSigma(const Time t) const;
     const Handle<TS> termStructure() const;
 
-    /*! \int_0^t alpha^2(u) H^n(u) du */
+    /*! \f[ \int_0^t alpha^2(u) H^n(u) du \f]*/
     Real zetan(const Size n, const Time t, const boost::shared_ptr<Integrator>& integrator);
 
     /*! allows to apply a shift to H (model invariance 1) */
