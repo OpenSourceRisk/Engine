@@ -66,7 +66,6 @@ public:
 
     vector<string> discountCurveNames() const { return paramsLookup(RiskFactorKey::KeyType::DiscountCurve); }
 
-    const string& yieldCurveDayCounter(const string& key) const;
     vector<string> yieldCurveNames() const { return paramsLookup(RiskFactorKey::KeyType::YieldCurve); }
     const map<string, string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
     const vector<Period>& yieldCurveTenors(const string& key) const;
@@ -76,7 +75,6 @@ public:
     const string& interpolation() const { return interpolation_; }
     bool extrapolate() const { return extrapolate_; }
     const map<string, vector<Period>>& yieldCurveTenors() const { return yieldCurveTenors_; }
-    const map<string, string>& yieldCurveDayCounters() const { return yieldCurveDayCounters_; }
 
     bool simulateFxSpots() const { return paramsSimulate(RiskFactorKey::KeyType::FXSpot); }
     vector<string> fxCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXSpot); }
@@ -87,7 +85,6 @@ public:
     const vector<Period>& swapVolTerms(const string& key) const;
     const vector<Period>& swapVolExpiries(const string& key) const;
     vector<string> swapVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::SwaptionVolatility); }
-    const string& swapVolDayCounter(const string& key) const;
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
     const vector<Real>& swapVolStrikeSpreads(const string& key) const;
 
@@ -95,12 +92,10 @@ public:
     const vector<Period>& yieldVolTerms() const { return yieldVolTerms_; }
     const vector<Period>& yieldVolExpiries() const { return yieldVolExpiries_; }
     vector<string> yieldVolNames() const { return paramsLookup(RiskFactorKey::KeyType::YieldVolatility); }
-    const string& yieldVolDayCounter(const string& key) const;
     const string& yieldVolDecarayMode() const { return yieldVolDecayMode_; }
 
     bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility); }
     vector<string> capFloorVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
-    const string& capFloorVolDayCounter(const string& key) const;
     const vector<Period>& capFloorVolExpiries(const string& key) const;
     bool hasCapFloorVolExpiries(const string& key) const { return capFloorVolExpiries_.count(key) > 0; }
     const vector<QuantLib::Rate>& capFloorVolStrikes(const std::string& key) const;
@@ -122,7 +117,6 @@ public:
     vector<string> yoyInflationCapFloorVolNames() const {
         return paramsLookup(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility);
     }
-    const string& yoyInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& yoyInflationCapFloorVolExpiries(const string& key) const;
     bool hasYoYInflationCapFloorVolExpiries(const string& key) const {
         return yoyInflationCapFloorVolExpiries_.count(key) > 0;
@@ -136,7 +130,6 @@ public:
     vector<string> zeroInflationCapFloorVolNames() const {
         return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility);
     }
-    const string& zeroInflationCapFloorVolDayCounter(const string& key) const;
     const vector<Period>& zeroInflationCapFloorVolExpiries(const string& key) const;
     bool hasZeroInflationCapFloorVolExpiries(const string& key) const {
         return zeroInflationCapFloorVolExpiries_.count(key) > 0;
@@ -147,14 +140,12 @@ public:
     bool simulateSurvivalProbabilities() const { return paramsSimulate(RiskFactorKey::KeyType::SurvivalProbability); }
     bool simulateRecoveryRates() const { return paramsSimulate(RiskFactorKey::KeyType::RecoveryRate); }
     vector<string> defaultNames() const { return paramsLookup(RiskFactorKey::KeyType::SurvivalProbability); }
-    const string& defaultCurveDayCounter(const string& key) const;
     const string& defaultCurveCalendar(const string& key) const;
     const vector<Period>& defaultTenors(const string& key) const;
     bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
 
     bool simulateCdsVols() const { return paramsSimulate(RiskFactorKey::KeyType::CDSVolatility); }
     const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
-    const string& cdsVolDayCounter(const string& key) const;
     vector<string> cdsVolNames() const { return paramsLookup(RiskFactorKey::KeyType::CDSVolatility); }
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
 
@@ -172,7 +163,6 @@ public:
     bool useMoneyness(const std::string& ccypair) const;
     bool useMoneyness() const;
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
-    const string& fxVolDayCounter(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     vector<string> fxVolCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility); }
     const vector<Real>& fxVolMoneyness(const string& ccypair) const;
@@ -185,7 +175,6 @@ public:
     bool equityUseMoneyness(const string& key) const;
     bool equityVolIsSurface(const string& key) const;
     const vector<Period>& equityVolExpiries(const string& key) const;
-    const string& equityVolDayCounter(const string& key) const;
     const string& equityVolDecayMode() const { return equityVolDecayMode_; }
     vector<string> equityVolNames() const { return paramsLookup(RiskFactorKey::KeyType::EquityVolatility); }
     const vector<Real>& equityVolMoneyness(const string& key) const;
@@ -201,14 +190,11 @@ public:
     const vector<Period>& baseCorrelationTerms() const { return baseCorrelationTerms_; }
     const vector<Real>& baseCorrelationDetachmentPoints() const { return baseCorrelationDetachmentPoints_; }
     vector<string> baseCorrelationNames() const { return paramsLookup(RiskFactorKey::KeyType::BaseCorrelation); }
-    const string& baseCorrelationDayCounter(const string& key) const;
 
     vector<string> cpiIndices() const { return paramsLookup(RiskFactorKey::KeyType::CPIIndex); }
     vector<string> zeroInflationIndices() const { return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCurve); }
-    const string& zeroInflationDayCounter(const string& key) const;
     const vector<Period>& zeroInflationTenors(const string& key) const;
     bool hasZeroInflationTenors(const string& key) const { return zeroInflationTenors_.count(key) > 0; }
-    const string& yoyInflationDayCounter(const string& key) const;
     vector<string> yoyInflationIndices() const { return paramsLookup(RiskFactorKey::KeyType::YoYInflationCurve); }
     const vector<Period>& yoyInflationTenors(const string& key) const;
     bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
@@ -218,7 +204,6 @@ public:
     std::vector<std::string> commodityNames() const;
     const std::vector<QuantLib::Period>& commodityCurveTenors(const std::string& commodityName) const;
     bool hasCommodityCurveTenors(const std::string& commodityName) const;
-    const std::string& commodityCurveDayCounter(const std::string& commodityName) const;
 
     // Commodity volatility data getters
     bool commodityVolSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::CommodityVolatility); }
@@ -228,13 +213,11 @@ public:
     }
     const std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) const;
     const std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) const;
-    const std::string& commodityVolDayCounter(const std::string& commodityName) const;
 
     bool simulateCorrelations() const { return paramsSimulate(RiskFactorKey::KeyType::Correlation); }
     bool correlationIsSurface() const { return correlationIsSurface_; }
     const vector<Period>& correlationExpiries() const { return correlationExpiries_; }
     vector<std::string> correlationPairs() const { return paramsLookup(RiskFactorKey::KeyType::Correlation); }
-    const string& correlationDayCounter(const string& index1, const string& index2) const;
     const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
 
     // Get the parameters
@@ -250,7 +233,6 @@ public:
     void setDiscountCurveNames(vector<string> names);
     void setYieldCurveNames(vector<string> names);
     map<string, string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
-    void setYieldCurveDayCounters(const string& key, const string& p);
     void setYieldCurveTenors(const string& key, const vector<Period>& p);
     void setIndices(vector<string> names);
     map<string, string>& swapIndices() { return swapIndices_; }
@@ -268,14 +250,12 @@ public:
     void setSwapVolExpiries(const string& key, const vector<Period>& p);
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& swapVolDecayMode() { return swapVolDecayMode_; }
-    void setSwapVolDayCounters(const string& key, const string& p);
 
     void setSimulateYieldVols(bool simulate);
     vector<Period>& yieldVolTerms() { return yieldVolTerms_; }
     void setYieldVolNames(vector<string> names);
     vector<Period>& yieldVolExpiries() { return yieldVolExpiries_; }
     string& yieldVolDecayMode() { return yieldVolDecayMode_; }
-    void setYieldVolDayCounters(const string& key, const string& p);
 
     void setSimulateCapFloorVols(bool simulate);
     void setCapFloorVolCcys(vector<string> names);
@@ -283,7 +263,6 @@ public:
     void setCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     void setCapFloorVolIsAtm(const std::string& key, bool isAtm);
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
-    void setCapFloorVolDayCounters(const string& key, const string& p);
     void setCapFloorVolAdjustOptionletPillars(bool capFloorVolAdjustOptionletPillars) {
         capFloorVolAdjustOptionletPillars_ = capFloorVolAdjustOptionletPillars;
     }
@@ -296,27 +275,23 @@ public:
     void setYoYInflationCapFloorVolExpiries(const string& key, const vector<Period>& p);
     void setYoYInflationCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& yoyInflationCapFloorVolDecayMode() { return yoyInflationCapFloorVolDecayMode_; }
-    void setYoYInflationCapFloorVolDayCounters(const string& key, const string& p);
 
     void setSimulateZeroInflationCapFloorVols(bool simulate);
     void setZeroInflationCapFloorNames(vector<string> names);
     void setZeroInflationCapFloorVolExpiries(const string& key, const vector<Period>& p);
     void setZeroInflationCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& zeroInflationCapFloorVolDecayMode() { return zeroInflationCapFloorVolDecayMode_; }
-    void setZeroInflationCapFloorVolDayCounters(const string& key, const string& p);
 
     void setSimulateSurvivalProbabilities(bool simulate);
     void setSimulateRecoveryRates(bool simulate);
     void setDefaultNames(vector<string> names);
     void setDefaultTenors(const string& key, const vector<Period>& p);
-    void setDefaultCurveDayCounters(const string& key, const string& p);
     void setDefaultCurveCalendars(const string& key, const string& p);
 
     void setSimulateCdsVols(bool simulate);
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
     void setCdsVolNames(vector<string> names);
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
-    void setCdsVolDayCounters(const string& key, const string& p);
 
     void setEquityNames(vector<string> names);
     void setEquityDividendCurves(vector<string> names);
@@ -337,7 +312,6 @@ public:
     void setFxVolMoneyness(const vector<Real>& moneyness);
     void setFxVolStdDevs(const string& ccypair, const vector<Real>& stdDevs);
     void setFxVolStdDevs(const vector<Real>& stdDevs);
-    void setFxVolDayCounters(const string& key, const string& p);
 
     void setSimulateEquityVols(bool simulate);
     void setSimulateEquityVolATMOnly(bool simulateATMOnly) { equityVolSimulateATMOnly_ = simulateATMOnly; }
@@ -347,7 +321,6 @@ public:
     void setEquityVolNames(vector<string> names);
     void setEquityVolMoneyness(const string&name, const vector<Real>& moneyness);
     void setEquityVolStandardDevs(const string&name, const vector<Real>& standardDevs);
-    void setEquityVolDayCounters(const string& key, const string& p);
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
@@ -365,22 +338,18 @@ public:
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
     vector<Real>& baseCorrelationDetachmentPoints() { return baseCorrelationDetachmentPoints_; }
     void setBaseCorrelationNames(vector<string> names);
-    void setBaseCorrelationDayCounters(const string& key, const string& p);
 
     void setCpiIndices(vector<string> names);
     void setZeroInflationIndices(vector<string> names);
     void setZeroInflationTenors(const string& key, const vector<Period>& p);
-    void setZeroInflationDayCounters(const string& key, const string& p);
     void setYoyInflationIndices(vector<string> names);
     void setYoyInflationTenors(const string& key, const vector<Period>& p);
-    void setYoyInflationDayCounters(const string& key, const string& p);
 
     // Commodity price curve data setters
     void setCommodityCurveSimulate(bool simulate);
     void setCommodityNames(vector<string> names);
     void setCommodityCurves(vector<string> names);
     void setCommodityCurveTenors(const std::string& commodityName, const std::vector<QuantLib::Period>& p);
-    void setCommodityCurveDayCounter(const std::string& commodityName, const std::string& d);
 
     // Commodity volatility data setters
     void setCommodityVolSimulate(bool simulate);
@@ -392,7 +361,6 @@ public:
     std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) {
         return commodityVolMoneyness_[commodityName];
     }
-    void setCommodityVolDayCounter(const std::string& commodityName, const std::string& d);
 
     void setSimulateCorrelations(bool simulate);
     bool& correlationIsSurface() { return correlationIsSurface_; }
@@ -420,7 +388,6 @@ private:
     void reset();
 
     string baseCcy_;
-    map<string, string> yieldCurveDayCounters_;
     vector<string> ccys_; // may or may not include baseCcy;
     map<string, string> yieldCurveCurrencies_;
     map<string, vector<Period>> yieldCurveTenors_;
@@ -431,17 +398,14 @@ private:
     map<string, bool> swapVolIsCube_;
     bool swapVolSimulateATMOnly_;
     map<string, vector<Period>> swapVolTerms_;
-    map<string, string> swapVolDayCounters_;
     map<string, vector<Period>> swapVolExpiries_;
     map<string, vector<Real>> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
 
     vector<Period> yieldVolTerms_;
-    map<string, string> yieldVolDayCounters_;
     vector<Period> yieldVolExpiries_;
     string yieldVolDecayMode_;
 
-    map<string, string> capFloorVolDayCounters_;
     map<string, vector<Period>> capFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> capFloorVolStrikes_;
     map<std::string, bool> capFloorVolIsAtm_;
@@ -449,22 +413,18 @@ private:
     bool capFloorVolAdjustOptionletPillars_;
     bool capFloorVolUseCapAtm_;
 
-    map<string, string> yoyInflationCapFloorVolDayCounters_;
     map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> yoyInflationCapFloorVolStrikes_;
     string yoyInflationCapFloorVolDecayMode_;
 
-    map<string, string> zeroInflationCapFloorVolDayCounters_;
     map<string, vector<Period>> zeroInflationCapFloorVolExpiries_;
     map<std::string, std::vector<QuantLib::Rate>> zeroInflationCapFloorVolStrikes_;
     string zeroInflationCapFloorVolDecayMode_;
 
-    map<string, string> defaultCurveDayCounters_;
     map<string, string> defaultCurveCalendars_;
     map<string, vector<Period>> defaultTenors_;
 
     vector<Period> cdsVolExpiries_;
-    map<string, string> cdsVolDayCounters_;
     string cdsVolDecayMode_;
 
     map<string, vector<Period>> equityDividendTenors_;
@@ -474,7 +434,6 @@ private:
     map<std::string, bool> useMoneyness_;
     map<std::string, bool> fxVolIsSurface_;
     vector<Period> fxVolExpiries_;
-    map<string, string> fxVolDayCounters_;
     string fxVolDecayMode_;
     map<string, vector<Real>> fxMoneyness_;
     map<string, vector<Real>> fxStandardDevs_;
@@ -482,7 +441,6 @@ private:
     bool equityVolSimulateATMOnly_;
     map<string, bool> equityVolIsSurface_;
     map<string, vector<Period>> equityVolExpiries_;
-    map<string, string> equityVolDayCounters_;
     string equityVolDecayMode_;
     map<string, vector<Real>> equityMoneyness_;
     map<string, vector<Real>> equityStandardDevs_;
@@ -494,26 +452,20 @@ private:
     vector<string> cprs_;
 
     vector<Period> baseCorrelationTerms_;
-    map<string, string> baseCorrelationDayCounters_;
     vector<Real> baseCorrelationDetachmentPoints_;
 
-    map<string, string> zeroInflationDayCounters_;
     map<string, vector<Period>> zeroInflationTenors_;
-    map<string, string> yoyInflationDayCounters_;
     map<string, vector<Period>> yoyInflationTenors_;
 
     // Commodity price curve data
     std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
-    std::map<std::string, std::string> commodityCurveDayCounters_;
 
     // Commodity volatility data
     std::string commodityVolDecayMode_;
     std::map<std::string, std::vector<QuantLib::Period>> commodityVolExpiries_;
     std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;
-    std::map<std::string, std::string> commodityVolDayCounters_;
 
     bool correlationIsSurface_;
-    map<pair<string, string>, string> correlationDayCounters_;
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
 

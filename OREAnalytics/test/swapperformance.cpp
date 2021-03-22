@@ -282,7 +282,6 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setYieldCurveTenors("",
                                     {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
     parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
-    parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
@@ -292,12 +291,10 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->swapVolCcys() = ccys;
     parameters->swapVolDecayMode() = "ForwardVariance";
-    parameters->setSwapVolDayCounters("", "ACT/ACT");
 
     parameters->setFxVolExpiries(
         vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
     parameters->setFxVolDecayMode(string("ConstantVariance"));
-    parameters->setFxVolDayCounters("", "ACT/ACT");
     parameters->setSimulateFXVols(false);
 
     parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
@@ -305,7 +302,6 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
 
     parameters->setEquityVolExpiries("", {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
     parameters->setEquityVolDecayMode("ConstantVariance");
-    parameters->setEquityVolDayCounters("", "ACT/ACT");
     parameters->setSimulateEquityVols(false);
 
     // Config
