@@ -1,0 +1,15 @@
+<Conventions>
+  <CommodityFuture>
+    <Id>ice_wti_midland_basis</Id>
+    <AnchorDay>
+      <DayOfMonth>31</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>ICE_FuturesUS</Calendar>
+    <ExpiryCalendar>ICE_FuturesUS</ExpiryCalendar>
+    <OffsetDays>-1</OffsetDays>
+    <BusinessDayConvention>Following</BusinessDayConvention>
+    <AdjustBeforeOffset>false</AdjustBeforeOffset>
+    <IsAveraging>true</IsAveraging>
+  </CommodityFuture>
+</Conventions>
