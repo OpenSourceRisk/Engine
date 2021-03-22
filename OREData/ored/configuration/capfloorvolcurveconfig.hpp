@@ -31,6 +31,7 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 
 namespace ore {
 namespace data {
@@ -69,18 +70,20 @@ public:
     //! \name Inspectors
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
+    const MarketDatum::QuoteType& quoteType() const;
     bool extrapolate() const { return extrapolate_; }
     bool flatExtrapolation() const { return flatExtrapolation_; }
     bool includeAtm() const { return includeAtm_; }
     const std::vector<std::string>& tenors() const { return tenors_; }
     const std::vector<std::string>& strikes() const { return strikes_; }
+    bool optionalQuotes() const { return optionalQuotes_; }
     const QuantLib::DayCounter& dayCounter() const { return dayCounter_; }
     const QuantLib::Natural& settleDays() const { return settleDays_; }
     const QuantLib::Calendar& calendar() const { return calendar_; }
     const QuantLib::BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const std::string& iborIndex() const { return iborIndex_; }
     const std::string& discountCurve() const { return discountCurve_; }
-    QuantExt::CapFloorTermVolSurface::InterpolationMethod interpolationMethod() const;
+    QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod interpolationMethod() const;
     const std::string& interpolateOn() const { return interpolateOn_; }
     const std::string& timeInterpolation() const { return timeInterpolation_; }
     const std::string& strikeInterpolation() const { return strikeInterpolation_; }
@@ -99,6 +102,7 @@ private:
     bool includeAtm_;
     std::vector<std::string> tenors_;
     std::vector<std::string> strikes_;
+    bool optionalQuotes_;
     QuantLib::DayCounter dayCounter_;
     QuantLib::Natural settleDays_;
     QuantLib::Calendar calendar_;
@@ -137,9 +141,6 @@ private:
     //! Validate the configuration
     void validate() const;
 };
-
-//! Imply market datum quote type from CapFloorVolatilityCurveConfig::VolatilityType
-std::string quoteType(CapFloorVolatilityCurveConfig::VolatilityType type);
 
 //! Imply QuantLib::VolatilityType from CapFloorVolatilityCurveConfig::VolatilityType
 QuantLib::VolatilityType volatilityType(CapFloorVolatilityCurveConfig::VolatilityType type);

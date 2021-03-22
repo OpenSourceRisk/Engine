@@ -728,6 +728,7 @@
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
+    <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />

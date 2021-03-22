@@ -17,11 +17,14 @@
 */
 
 #include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
+#include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
@@ -30,6 +33,7 @@
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
+#include <qle/interpolators/optioninterpolator2d.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -42,7 +46,7 @@ using namespace std;
 
 typedef ore::data::CapFloorVolatilityCurveConfig::VolatilityType CfgVolType;
 typedef ore::data::CapFloorVolatilityCurveConfig::Type CfgType;
-typedef QuantExt::CapFloorTermVolSurface::InterpolationMethod CftvsInterp;
+typedef QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod CftvsInterp;
 
 namespace ore {
 namespace data {
@@ -556,24 +560,58 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     };
     map<pair<Period, Rate>, Real, decltype(comp)> volQuotes(comp);
 
-    // Load the relevant quotes
-    for (const string& quoteId : config.quotes()) {
+    bool optionalQuotes = config.optionalQuotes();
+    bool quoteRelevant = false;
+    bool tenorRelevant = true;
+    bool strikeRelevant = true;
+    Size quoteCounter = 0;
 
-        boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
+    vector<Real> qtStrikes;
+    vector<Real> qtData;
+    vector<Period> qtTenors;
 
-        // If it is a non-ATM cap floor quote, store it and fail if there are duplicates
-        if (boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md)) {
-            if (!cfq->atm()) {
+    for (auto& md : loader.loadQuotes(asof)) {
+
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CAPFLOOR && 
+            md->quoteType() == config.quoteType()) {
+
+            boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
+            if (cfq->ccy() == config.curveID() && !cfq->atm()) {
+                auto j = std::find(config.tenors().begin(), config.tenors().end(), to_string(cfq->term()));
+                tenorRelevant = j != config.tenors().end();
+                
+                Real strike = cfq->strike();
+                auto i = std::find_if(config.strikes().begin(), config.strikes().end(), 
+                    [&strike](const std::string& x){
+                        return close_enough(parseReal(x), strike);
+                    });
+                strikeRelevant = i != config.strikes().end();
+                
+                quoteRelevant = strikeRelevant && tenorRelevant;
+            }
+            if (quoteRelevant) {
+                // if we have optional quotes we just make vectors of all quotes and let the sparse surface
+                // handle them
+                quoteCounter++;
+                if (optionalQuotes) {
+                    qtStrikes.push_back(cfq->strike());
+                    qtTenors.push_back(cfq->term());
+                    qtData.push_back(cfq->quote()->value());
+                } 
                 auto key = make_pair(cfq->term(), cfq->strike());
                 auto r = volQuotes.insert(make_pair(key, cfq->quote()->value()));
                 QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << " for tenor "
-                                                                            << key.first << " and strike "
-                                                                            << key.second);
+                    << key.first << " and strike "
+                    << key.second);                
             }
         }
     }
 
-    // Organise the values in to a square matrix
+    Size totalQuotes = config.tenors().size() * config.strikes().size();
+    if (quoteCounter < totalQuotes) {
+        WLOG("Found only " << quoteCounter << " out of " << totalQuotes << " quotes for CapFloor surface " << config.curveID());
+    }
+
     vector<Period> tenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
     vector<Rate> strikes = parseVectorOfValues<Real>(config.strikes(), &parseReal);
     Matrix vols(tenors.size(), strikes.size());
@@ -581,17 +619,32 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
         for (Size j = 0; j < strikes.size(); j++) {
             auto key = make_pair(tenors[i], strikes[j]);
             auto it = volQuotes.find(key);
-            QL_REQUIRE(it != volQuotes.end(), "Quote with tenor " << key.first << " and strike " << key.second
-                                                                  << " not loaded for cap floor config "
-                                                                  << config.curveID());
-            vols[i][j] = it->second;
+            if (!optionalQuotes) {
+                QL_REQUIRE(it != volQuotes.end(), "Quote with tenor " << key.first << " and strike " << key.second
+                    << " not loaded for cap floor config "
+                    << config.curveID());
+                // Organise the values in to a square matrix
+                vols[i][j] = it->second;
+            } else {
+                if (it == volQuotes.end()) {
+                    DLOG("Could not find quote with tenor " << key.first << " and strike " << key.second <<
+                        " for cap floor config " << config.curveID());
+                }
+            }
         }
     }
 
-    // Return for the cap floor term volatility surface
-    return boost::make_shared<QuantExt::CapFloorTermVolSurface>(config.settleDays(), config.calendar(),
-                                                                config.businessDayConvention(), tenors, strikes, vols,
-                                                                config.dayCounter(), config.interpolationMethod());
+    DLOG("Found " << quoteCounter << " quotes for capfloor surface " << config.curveID());
+    if (optionalQuotes) {
+        QL_REQUIRE(quoteCounter > 0, "No Quotes provided for CapFloor surface " << config.curveID());
+        return boost::make_shared<QuantExt::CapFloorTermVolSurfaceSparse<Linear, Linear>>(config.settleDays(), config.calendar(),
+            config.businessDayConvention(), config.dayCounter(), qtTenors, qtStrikes, qtData);
+    } else {
+        // Return for the cap floor term volatility surface
+        return boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(config.settleDays(), config.calendar(),
+            config.businessDayConvention(), tenors, strikes, vols,
+            config.dayCounter(), config.interpolationMethod());
+    }        
 }
 
 boost::shared_ptr<QuantExt::CapFloorTermVolCurve>
