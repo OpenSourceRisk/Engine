@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/types.hpp>
 
 #include <vector>
@@ -33,20 +34,74 @@ using namespace QuantLib;
 
 class CarrMadanMarginalProbability {
 public:
-    CarrMadanMarginalProbability(const std::vector<Real>& strikes, const std::vector<Real>& callPrices);
-    const std::vector<Real>& strikes() const;
+    /*! The moneyness is defined as K / F, K = strike, F = forward at the relevant time.
+        A moneyness 0 and corresponding call price will be added, if not contained in the given vector.
+        The given callPrices should be non-discounted call prices. */
+    CarrMadanMarginalProbability(const std::vector<Real>& moneyness, const Real spot, const Real forward,
+                                 const std::vector<Real>& callPrices);
+
+    const std::vector<Real>& moneyness() const;
+    Real spot() const;
+    Real forward() const;
     const std::vector<Real>& callPrices() const;
+
     bool arbitrageFree() const;
-    const std::vector<bool> violationsType1() const;
-    const std::vector<bool> violationsType2() const;
-    const std::vector<Real> density() const;
+    // length = number of strikes - 1
+    const std::vector<bool>& violationsType1() const;
+    // length = number of strikes - 2
+    const std::vector<bool>& violationsType2() const;
+    // length = number of strikes -1, last strike returned by strikes() is not covered
+    const std::vector<Real>& density() const;
+    const std::vector<Real>& strikes() const;
 
 private:
-    std::vector<Real> strikes_, callPrices_;
+    std::vector<Real> moneyness_;
+    Real spot_, forward_;
+    std::vector<Real> callPrices_;
+
+    std::vector<Real> strikes_;
     std::vector<bool> violationsType1_, violationsType2_;
     std::vector<Real> q_;
 };
 
+class CarrMadanSurface {
+public:
+    /*! The times and moneyness should be strictly increasing, a zero time and moneyness together
+        with corresponding call prices are added, if not present. The outer vectors for call prices
+        and the calendarAbritrage() result represent times, the inner strikes. */
+    CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneynes, const Real spot,
+                     const Handle<YieldTermStructure>& r, const Handle<YieldTermStructure>& q,
+                     const std::vector<std::vector<Real>>& callPrices);
+    const std::vector<Real>& times() const;
+    const std::vector<Real>& moneyness() const;
+    Real spot() const;
+    const Handle<YieldTermStructure>& r() const;
+    const Handle<YieldTermStructure>& q() const;
+    const std::vector<std::vector<Real>>& callPrices() const;
+
+    bool arbitrageFree() const;
+
+    /* time slices for positive times (i.e. not for time zero) */
+    const std::vector<CarrMadanMarginalProbability>& timeSlices() const;
+
+    /* outer vector = times, length = number of result of times() minus 1
+       inner vector = strikes, length = number of strikes */
+    const std::vector<std::vector<bool>>& calendarArbitrage() const;
+
+private:
+    Real forward(const Real t) const;
+
+    std::vector<Real> times_, moneyness_;
+    Real spot_;
+    Handle<YieldTermStructure> r_, q_;
+    std::vector<std::vector<Real>> callPrices_;
+
+    std::vector<CarrMadanMarginalProbability> timeSlices_;
+    bool surfaceIsArbitrageFree_;
+    std::vector<std::vector<bool>> calendarArbitrage_;
+};
+
 std::string arbitrageViolationsAsString(const CarrMadanMarginalProbability& cm);
+std::string arbitrageViolationsAsString(const CarrMadanSurface& cm);
 
 } // namespace QuantExt
