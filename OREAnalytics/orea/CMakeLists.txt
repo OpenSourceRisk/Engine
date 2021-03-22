@@ -48,8 +48,6 @@ scenario/sensitivityscenariodata.cpp
 scenario/sensitivityscenariogenerator.cpp
 scenario/shiftscenariogenerator.cpp
 scenario/simplescenario.cpp
-scenario/spreadscenario.cpp
-scenario/spreadscenariofactory.cpp
 scenario/stressscenariodata.cpp
 scenario/stressscenariogenerator.cpp
 simulation/fixingmanager.cpp
@@ -116,8 +114,6 @@ scenario/sensitivityscenariogenerator.hpp
 scenario/shiftscenariogenerator.hpp
 scenario/simplescenario.hpp
 scenario/simplescenariofactory.hpp
-scenario/spreadscenario.hpp
-scenario/spreadscenariofactory.hpp
 scenario/stressscenariodata.hpp
 scenario/stressscenariogenerator.hpp
 simulation/fixingmanager.hpp

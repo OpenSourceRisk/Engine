@@ -233,7 +233,7 @@ std::map<std::string, std::set<Date>> RequiredFixings::fixingDatesIndices(const 
             if (!fixingDates.empty())
                 result[indexName].insert(fixingDates.begin(), fixingDates.end());
             // Add the previous year's date(s) also if any.
-            for (const auto d : fixingDates) {
+            for (const auto& d : fixingDates) {
                 result[indexName].insert(d - 1 * Years);
             }
         }
@@ -330,7 +330,8 @@ void FixingDateGetter::visit(IborCoupon& c) {
         // and adjust these dates to the last valid BMA fixing date in the BMAIndexWrapper.
         // It is this adjusted date that we want to record here.
         // Enforce fixing to be added even if coupon pays on settlement.
-        requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date(), true);
+        requiredFixings_.addFixingDate(bma->adjustedFixingDate(c.fixingDate()), oreIndexName(c.index()->name()),
+                                       c.date(), true);
     } else {
         // otherwise fall through to FloatingRateCoupon handling
         visit(static_cast<FloatingRateCoupon&>(c));
@@ -435,19 +436,21 @@ void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<Fixi
     }
 }
 
-void amendInflationFixingDates(map<string, set<Date>>& fixings) {
+void amendInflationFixingDates(map<string, set<Date>>& fixings, const boost::shared_ptr<Conventions>& conventions) {
     // Loop over indices and amend any that are of type InflationIndex
     for (auto& kv : fixings) {
-        if (isInflationIndex(kv.first)) {
+        auto p = isInflationIndex(kv.first, conventions);
+        if (p.first) {
             // We have an inflation index
             set<Date> newDates;
+            Frequency f = p.second->frequency();
             for (const Date& d : kv.second) {
-                if (d.dayOfMonth() == 1) {
-                    // If the fixing date is 1st, push it to last day of month
-                    Date newDate = Date::endOfMonth(d);
-                    newDates.insert(newDate);
+                auto period = inflationPeriod(d, f);
+                if (d == period.first) {
+                    // If the fixing date is the start of the inflation period, move it to the end.
+                    newDates.insert(period.second);
                 } else {
-                    // If the fixing date is not 1st, leave it as it is
+                    // If the fixing date is not the start of the inflation period, leave it as it is.
                     newDates.insert(d);
                 }
             }

@@ -26,8 +26,8 @@ Allowable values:  See \lstinline!Inflation CPI Index! in Table \ref{tab:cpiinde
 Allowable values:  Any positive real number.
 
 \item StartDate [Optional]: The start date needs to be provided in case the schedule comprises only a single date. If
-  the schedule has at least two dates and a start date is given at the same time, the first schedule date must be
-  identical to the start date.
+  the schedule has at least two dates and a start date is given at the same time, the first schedule date is taken as 
+  the start date and the supplied \lstinline!StartDate! is ignored.
   
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}. 
 
@@ -62,7 +62,9 @@ corresponds to the first coupon, the second cap value corresponds to the
 second coupon, etc. If the number of coupons exceeds the number of cap
 values, the cap will be kept at at the value of last entered spread for the
 remaining coupons. The number of entered cap values cannot exceed the
-number of coupons.
+number of coupons. Notice that the caps defined under this node only apply to the cpi coupons,
+but not a final notional flow (if present). A cap for the final notional flow can be defined
+under the FinalFlowCap node.
 
 Allowable values: Each child element can take any real number. The cap is
 expressed in decimal form, e.g. 0.03 is a cap of 3\%.
@@ -71,10 +73,22 @@ expressed in decimal form, e.g. 0.03 is a cap of 3\%.
   \lstinline!Floor! indicating that the inflation indexed payment is
   floored; the floor is applied to the inflation index and expressed as
   an inflation rate. The mode of specification is analogous to caps, see
-  above.
+  above. Notice that the floors defined under this node only apply to the cpi coupons,
+  but not a final notional flow (if present). A floor for the final notional flow can be defined
+  under the FinalFlowFloor node.
 
 Allowable values: Each child element can take any real number. The floor is
 expressed in decimal form, e.g. 0.01 is a cap of 1\%.
+
+\item FinalFlowCap [Optional]: The cap to be applied to the final notional flow of the cpi leg. If not given, no cap
+  is applied.
+
+Allowable values: A real number.
+
+\item FinalFlowFloor [Optional]: The floor to be applied to the final notional flow of the cpi leg. If not given, no floor
+  is applied.
+
+Allowable values: A real number.
 
 \item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
@@ -131,6 +145,8 @@ Whether the leg cotains a final redemption flow at all or not depends on the
           <Floors>
             <Floor>0.0</Floor>
           <Floors>
+          <FinalFlowCap>0.03</FinalFlowCap>
+          <FinalFlowFloor>0.0</FinalFlowFloor>
           <NakedOption>false</NakedOption>          
         </CPILegData>
       </LegData>

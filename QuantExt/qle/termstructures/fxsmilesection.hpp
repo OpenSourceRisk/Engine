@@ -39,8 +39,8 @@ public:
 
     virtual Volatility volatility(Real strike) const = 0;
 
-    DiscountFactor domesticDiscount() const { return exp(-rd_ * t_); }
-    DiscountFactor foreignDiscount() const { return exp(-rf_ * t_); }
+    DiscountFactor domesticDiscount() const { return std::exp(-rd_ * t_); }
+    DiscountFactor foreignDiscount() const { return std::exp(-rf_ * t_); }
 
 protected:
     Real spot_;

@@ -57,6 +57,26 @@ def create_df(file, col_types=None):
                 else:
                     logger.warning('Expected simm json file %s to contain the field simmReport.', file)
                     return None
+        if filename == 'npv.json':
+            with open(file, 'r') as json_file:
+                npv_json = json.load(json_file)
+                if 'npv' in npv_json:
+
+                    logger.debug('Creating DataFrame from npv json file %s.', file)
+                    npv_df = pd.DataFrame(npv_json['npv'])
+
+                    # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
+                    # response is an empty string. This empty string is then in the portfolio column in the DataFrame
+                    # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
+                    # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
+                    # portfolio column so that everything works downstream.
+                    npv_df['nettingSetId'].replace('', np.nan, inplace=True)
+
+                    return npv_df
+
+                else:
+                    logger.warning('Expected npv json file %s to contain the field npv.', file)
+                    return None
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
         return None

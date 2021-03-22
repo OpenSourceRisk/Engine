@@ -104,17 +104,18 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
 
 boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
 
-    Conventions conventions;
-    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+    auto conventions = boost::make_shared<Conventions>();
+    conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
 
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
+    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
 
-    TodaysMarketParameters todaysMarketParameters;
-    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
+    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
     string fixingsFile = inputDir + "/fixings_" + to_string(io::iso_date(asof)) + ".txt";
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/market.txt")), TEST_INPUT_FILE(fixingsFile), false);
+    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+                                                TEST_INPUT_FILE(fixingsFile), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
 }
@@ -165,39 +166,44 @@ BOOST_DATA_TEST_CASE(testCommodityInterpolations, bdata::make(curveConfigFiles),
     }
 }
 
-// Basis test cases for data test below.
-struct BasisTestCase {
+// clang-format off
+
+// Test case struct for data test below.
+struct CommodityCurveTestCase {
     Date asof;
     string name;
     string curveName;
 };
 
-// List of basis test case directories for the data test case below.
-vector<BasisTestCase> basisTestCases = {{Date(30, Sep, 2019), "wti_midland_cm", "NYMEX:FF"},
-                                        {Date(30, Sep, 2019), "wti_midland_tm", "NYMEX:WTT"},
-                                        {Date(30, Sep, 2019), "wti_midland_cm_base_ave", "NYMEX:FF"},
-                                        {Date(30, Sep, 2019), "houston_ship_channel", "ICE:HXS"},
-                                        {Date(23, Jan, 2020), "wti_midland_cm", "NYMEX:FF"},
-                                        {Date(23, Jan, 2020), "wti_midland_tm", "NYMEX:WTT"},
-                                        {Date(23, Jan, 2020), "wti_midland_cm_base_ave", "NYMEX:FF"},
-                                        {Date(23, Jan, 2020), "houston_ship_channel", "ICE:HXS"}};
+// List of commodity test cases for the data test case below.
+vector<CommodityCurveTestCase> commodityCurveTestCases = {
+    {Date(30, Sep, 2019), "basis/wti_midland_cm", "NYMEX:FF"},
+    {Date(30, Sep, 2019), "basis/wti_midland_tm", "NYMEX:WTT"},
+    {Date(30, Sep, 2019), "basis/wti_midland_cm_base_ave", "NYMEX:FF"},
+    {Date(30, Sep, 2019), "basis/houston_ship_channel", "ICE:HXS"},
+    {Date(23, Jan, 2020), "basis/wti_midland_cm", "NYMEX:FF"},
+    {Date(23, Jan, 2020), "basis/wti_midland_tm", "NYMEX:WTT"},
+    {Date(23, Jan, 2020), "basis/wti_midland_cm_base_ave", "NYMEX:FF"},
+    {Date(23, Jan, 2020), "basis/houston_ship_channel", "ICE:HXS"},
+    {Date(27, Apr, 2020), "power/pjm_wh_rt_peak_linear_flat", "ICE:PDQ"},
+    {Date(27, Apr, 2020), "power/pjm_wh_rt_peak_backward_flat", "ICE:PDQ"},
+    {Date(27, Apr, 2020), "power/pjm_wh_rt_peak_linear_flat_switch_priority", "ICE:PDQ"}
+};
 
 // Needed for BOOST_DATA_TEST_CASE below as it writes out the case.
-ostream& operator<<(ostream& os, BasisTestCase testCase) {
+ostream& operator<<(ostream& os, CommodityCurveTestCase testCase) {
     return os << "[" << io::iso_date(testCase.asof) << "," << testCase.name << "," << testCase.curveName << "]";
 }
 
-BOOST_DATA_TEST_CASE(testCommodityBasisCurve, bdata::make(basisTestCases), basisTestCase) {
+BOOST_DATA_TEST_CASE(testCommodityCurveBuilding, bdata::make(commodityCurveTestCases), testCase) {
 
-    BOOST_TEST_MESSAGE("Testing commodity basis curve building " << basisTestCase << "...");
+    BOOST_TEST_MESSAGE("Testing commodity curve building " << testCase << "...");
 
-    Settings::instance().evaluationDate() = basisTestCase.asof;
-    string dir = "basis/" + basisTestCase.name;
-
+    Settings::instance().evaluationDate() = testCase.asof;
     boost::shared_ptr<TodaysMarket> tm;
-    BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(basisTestCase.asof, dir));
+    BOOST_REQUIRE_NO_THROW(tm = createTodaysMarket(testCase.asof, testCase.name));
 
-    auto pts = tm->commodityPriceCurve(basisTestCase.curveName);
+    auto pts = tm->commodityPriceCurve(testCase.curveName);
 
     for (const Date& d : pts->pillarDates()) {
         BOOST_TEST_MESSAGE(io::iso_date(d) << "," << fixed << setprecision(12) << pts->price(d));
@@ -208,7 +214,7 @@ BOOST_DATA_TEST_CASE(testCommodityBasisCurve, bdata::make(basisTestCases), basis
 
     // Read in the expected pillar results for the given date.
     vector<Date> expPillarDates;
-    string filename = dir + "/expected_" + to_string(io::iso_date(basisTestCase.asof)) + ".csv";
+    string filename = testCase.name + "/expected_" + to_string(io::iso_date(testCase.asof)) + ".csv";
     CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
     BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 2);
 
@@ -225,8 +231,8 @@ BOOST_DATA_TEST_CASE(testCommodityBasisCurve, bdata::make(basisTestCases), basis
     }
 
     vector<Date> calcPillarDates = pts->pillarDates();
-    BOOST_CHECK_EQUAL_COLLECTIONS(expPillarDates.begin(), expPillarDates.end(), calcPillarDates.begin(),
-                                  calcPillarDates.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(expPillarDates.begin(), expPillarDates.end(),
+        calcPillarDates.begin(), calcPillarDates.end());
 
     // Set up has flat extrapolation. Check it here.
     Real lastPrice = pts->price(calcPillarDates.back());
@@ -234,6 +240,8 @@ BOOST_DATA_TEST_CASE(testCommodityBasisCurve, bdata::make(basisTestCases), basis
     Real extrapPrice = pts->price(extrapDate);
     BOOST_CHECK_SMALL(lastPrice - extrapPrice, tol);
 }
+
+// clang-format on
 
 BOOST_AUTO_TEST_SUITE_END()
 

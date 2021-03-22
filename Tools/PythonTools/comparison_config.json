@@ -510,6 +510,21 @@
           }
         ]
       },
+      ".*npv.*.json": {
+        "keys": [
+          "tradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "npv",
+              "npvBase"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       ".*additional_results.*.csv": {
         "keys": [
           "TradeId",
@@ -544,10 +559,12 @@
             ],
             "optional_names": [
               "PresentValue",
-              "DiscountFactor"
+              "DiscountFactor",
+			  "Coupon",
+			  "fixingValue"
             ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-8
           }
         ]
       },

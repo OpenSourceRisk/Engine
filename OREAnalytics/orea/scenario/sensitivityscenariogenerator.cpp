@@ -17,7 +17,6 @@
 */
 
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/scenario/spreadscenario.hpp>
 
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -44,9 +43,10 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const boost::shared_ptr<Scenario>& baseScenario,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, const bool overrideTenors,
-    const bool continueOnError)
+    const bool continueOnError, const boost::shared_ptr<Scenario>& baseScenarioAbsolute)
     : ShiftScenarioGenerator(baseScenario, simMarketData), sensitivityData_(sensitivityData),
-      sensiScenarioFactory_(sensiScenarioFactory), overrideTenors_(overrideTenors), continueOnError_(continueOnError) {
+      sensiScenarioFactory_(sensiScenarioFactory), overrideTenors_(overrideTenors), continueOnError_(continueOnError),
+      baseScenarioAbsolute_(baseScenarioAbsolute == nullptr ? baseScenario : baseScenarioAbsolute) {
 
     QL_REQUIRE(sensitivityData_, "SensitivityScenarioGenerator: sensitivityData is null");
 
@@ -129,7 +129,8 @@ void SensitivityScenarioGenerator::generateScenarios() {
 
     if (simMarketData_->simulateZeroInflationCapFloorVols()) {
         generateZeroInflationCapFloorVolScenarios(true);
-        if (sensitivityData_->computeGamma() || sensitivityData_->twoSidedDelta(RFType::ZeroInflationCapFloorVolatility))
+        if (sensitivityData_->computeGamma() ||
+            sensitivityData_->twoSidedDelta(RFType::ZeroInflationCapFloorVolatility))
             generateZeroInflationCapFloorVolScenarios(false);
     }
 
@@ -205,69 +206,8 @@ void SensitivityScenarioGenerator::generateScenarios() {
             generateCorrelationScenarios(false);
     }
 
-    // add simultaneous up-moves in two risk factors for cross gamma calculation
-
-    // store base scenario values
-    vector<RiskFactorKey> keys = baseScenario_->keys();
-    vector<Real> baseValues;
-    for (auto k : keys) {
-        baseValues.push_back(baseScenario_->get(k));
-    }
-
-    Size index = scenarios_.size();
-    for (Size i = 0; i < index; ++i) {
-        ScenarioDescription iDesc = scenarioDescriptions_[i];
-        if (iDesc.type() != ScenarioDescription::Type::Up)
-            continue;
-        string iKeyName = iDesc.keyName1();
-
-        // Check Filters for i
-        bool match = (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
-                              findFactor(iKeyName)) != sensitivityData_->crossGammaFilter().end());
-
-        if (!match)
-            continue;
-
-        boost::shared_ptr<Scenario> iScenario = scenarios_[i];
-        vector<Real> iValues;
-        for (auto k : keys)
-            iValues.push_back(iScenario->get(k));
-
-        for (Size j = i + 1; j < index; ++j) {
-            ScenarioDescription jDesc = scenarioDescriptions_[j];
-            if (jDesc.type() != ScenarioDescription::Type::Up)
-                continue;
-            // filter desired cross shift combinations
-            match = (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
-                             findPair(iKeyName, jDesc.keyName1())) != sensitivityData_->crossGammaFilter().end());
-
-            if (!match)
-                continue;
-
-            boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory_->buildScenario(asof);
-            boost::shared_ptr<Scenario> jScenario = scenarios_[j];
-            for (Size k = 0; k < keys.size(); k++) {
-                Real iValue = iValues[k];
-                Real jValue = jScenario->get(keys[k]);
-                Real baseValue = baseValues[k];
-                if (!close_enough(iValue, baseValue) || !close_enough(jValue, baseValue)) {
-                    Real newVal = iValue + jValue - baseValue;
-                    crossScenario->add(keys[k], newVal);
-                }
-            }
-
-            scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
-
-            // Give the scenario a label
-            crossScenario->label(to_string(scenarioDescriptions_.back()));
-
-            scenarios_.push_back(crossScenario);
-
-            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
-        }
-    }
-
     // fill keyToFactor and factorToKey maps from scenario descriptions
+
     DLOG("Fill maps linking factors with RiskFactorKeys");
     keyToFactor_.clear();
     factorToKey_.clear();
@@ -279,6 +219,49 @@ void SensitivityScenarioGenerator::generateScenarios() {
         DLOG("KeyToFactor map: " << key << " to " << factor);
     }
 
+    // add simultaneous up-moves in two risk factors for cross gamma calculation
+
+    for (Size i = 0; i < scenarios_.size(); ++i) {
+        ScenarioDescription iDesc = scenarioDescriptions_[i];
+        if (iDesc.type() != ScenarioDescription::Type::Up)
+            continue;
+        string iKeyName = iDesc.keyName1();
+
+        // check if iKey matches filter
+        if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
+                    findFactor(iKeyName)) == sensitivityData_->crossGammaFilter().end())
+            continue;
+
+        for (Size j = i + 1; j < scenarios_.size(); ++j) {
+            ScenarioDescription jDesc = scenarioDescriptions_[j];
+            if (jDesc.type() != ScenarioDescription::Type::Up)
+                continue;
+            string jKeyName = jDesc.keyName1();
+
+            // check if jKey matches filter
+            if (find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(),
+                        findPair(iKeyName, jKeyName)) == sensitivityData_->crossGammaFilter().end())
+                continue;
+
+            // build cross scenario
+            boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory_->buildScenario(asof);
+
+            for (auto const& k : baseScenario_->keys()) {
+                Real v1 = scenarios_[i]->get(k);
+                Real v2 = scenarios_[j]->get(k);
+                Real b = baseScenario_->get(k);
+                if (!close_enough(v1, b) || !close_enough(v2, b))
+                    // FIXME, see ore ticket 1478
+                    crossScenario->add(k, v1 + v2 - b);
+            }
+
+            scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
+            crossScenario->label(to_string(scenarioDescriptions_.back()));
+            scenarios_.push_back(crossScenario);
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
+        }
+    }
+
     LOG("sensitivity scenario generator initialised");
 }
 
@@ -286,10 +269,7 @@ namespace {
 bool tryGetBaseScenarioValue(const boost::shared_ptr<Scenario> baseScenario, const RiskFactorKey& key, Real& value,
                              const bool continueOnError) {
     try {
-        if (auto sp = boost::dynamic_pointer_cast<SpreadScenario>(baseScenario))
-            value = sp->getAbsoluteValue(key);
-        else
-            value = baseScenario->get(key);
+        value = baseScenario->get(key);
         return true;
     } catch (const std::exception& e) {
         if (continueOnError) {
@@ -326,7 +306,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     // Log an ALERT if some currencies in simmarket are excluded from the list
     for (auto sim_fx : simMarketData_->fxCcyPairs()) {
         if (sensitivityData_->fxShiftData().find(sim_fx) == sensitivityData_->fxShiftData().end()) {
-            ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
+            WLOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
         }
     }
     for (auto sensi_fx : sensitivityData_->fxShiftData()) {
@@ -339,7 +319,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
 
         Real rate;
         RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
-        if (!tryGetBaseScenarioValue(baseScenario_, key, rate, continueOnError_))
+        if (!tryGetBaseScenarioValue(baseScenarioAbsolute_, key, rate, continueOnError_))
             continue;
 
         boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
@@ -370,7 +350,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
     // Log an ALERT if some equities in simmarket are excluded from the sensitivities list
     for (auto sim_equity : simMarketData_->equityNames()) {
         if (sensitivityData_->equityShiftData().find(sim_equity) == sensitivityData_->equityShiftData().end()) {
-            ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
+            WLOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
     for (auto e : sensitivityData_->equityShiftData()) {
@@ -382,7 +362,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
 
         Real rate;
         RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
-        if (!tryGetBaseScenarioValue(baseScenario_, key, rate, continueOnError_))
+        if (!tryGetBaseScenarioValue(baseScenarioAbsolute_, key, rate, continueOnError_))
             continue;
 
         boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
@@ -428,7 +408,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
     for (auto sim_ccy : simMarketData_->ccys()) {
         if (sensitivityData_->discountCurveShiftData().find(sim_ccy) ==
             sensitivityData_->discountCurveShiftData().end()) {
-            ALOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
+            WLOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -451,7 +431,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
             times[j] = dc.yearFraction(asof, d);
 
             RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote, continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, quote, continueOnError_);
             zeros[j] = -std::log(quote) / times[j];
         }
         if (!valid)
@@ -473,9 +453,6 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-            auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
-            QL_REQUIRE(!sensitivityData_->useSpreadedTermStructures() || spreadScenario,
-                       "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
             scenarioDescriptions_.push_back(discountScenarioDescription(ccy, j, up));
             DLOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
                                                           << scenarioDescriptions_.back());
@@ -491,8 +468,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
                     Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                     if (sensitivityData_->useSpreadedTermStructures()) {
                         Real discount = exp(-zeros[k] * times[k]);
-                        spreadScenario->add(key, discount);
-                        spreadScenario->addSpreadValue(key, shiftedDiscount / discount);
+                        scenario->add(key, shiftedDiscount / discount);
                     } else {
                         scenario->add(key, shiftedDiscount);
                     }
@@ -521,7 +497,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
     for (auto sim_idx : simMarketData_->indices()) {
         if (sensitivityData_->indexCurveShiftData().find(sim_idx) == sensitivityData_->indexCurveShiftData().end()) {
-            DLOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+            WLOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -545,7 +521,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
             Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote, continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, quote, continueOnError_);
             zeros[j] = -std::log(quote) / times[j];
         }
         if (!valid)
@@ -567,10 +543,6 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-            auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
-            QL_REQUIRE(!sensitivityData_->useSpreadedTermStructures() || spreadScenario,
-                       "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
-
             scenarioDescriptions_.push_back(indexScenarioDescription(indexName, j, up));
 
             // apply zero rate shift at tenor point j
@@ -583,8 +555,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 if (sensitivityData_->useSpreadedTermStructures()) {
                     Real discount = exp(-zeros[k] * times[k]);
-                    spreadScenario->add(key, discount);
-                    spreadScenario->addSpreadValue(key, shiftedDiscount / discount);
+                    scenario->add(key, shiftedDiscount / discount);
                 } else {
                     scenario->add(key, shiftedDiscount);
                 }
@@ -614,7 +585,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim_yc : simMarketData_->yieldCurveNames()) {
         if (sensitivityData_->yieldCurveShiftData().find(sim_yc) == sensitivityData_->yieldCurveShiftData().end()) {
-            ALOG("Yield Curve " << sim_yc << " in simmarket is not included in sensitivities analysis");
+            WLOG("Yield Curve " << sim_yc << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -637,7 +608,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
             Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote, continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, quote, continueOnError_);
             zeros[j] = -std::log(quote) / times[j];
         }
         if (!valid)
@@ -659,10 +630,6 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-            auto spreadScenario = boost::dynamic_pointer_cast<SpreadScenario>(scenario);
-            QL_REQUIRE(!sensitivityData_->useSpreadedTermStructures() || spreadScenario,
-                       "Can not generate spread scenarios, because scenario factory does not create SpreadScenario");
-
             scenarioDescriptions_.push_back(yieldScenarioDescription(name, j, up));
 
             // apply zero rate shift at tenor point j
@@ -674,8 +641,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
                 RiskFactorKey key(RFType::YieldCurve, name, k);
                 if (sensitivityData_->useSpreadedTermStructures()) {
                     Real discount = exp(-zeros[k] * times[k]);
-                    spreadScenario->add(key, discount);
-                    spreadScenario->addSpreadValue(key, shiftedDiscount / discount);
+                    scenario->add(key, shiftedDiscount / discount);
                 } else {
                     scenario->add(key, shiftedDiscount);
                 }
@@ -705,7 +671,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim : simMarketData_->equityNames()) {
         if (sensitivityData_->dividendYieldShiftData().find(sim) == sensitivityData_->dividendYieldShiftData().end()) {
-            ALOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
+            WLOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
         }
     }
 
@@ -728,7 +694,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
             Date d = asof + simMarketData_->equityDividendTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::DividendYield, name, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote, continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, quote, continueOnError_);
             zeros[j] = -std::log(quote) / times[j];
         }
         if (!valid)
@@ -750,7 +716,6 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-
             scenarioDescriptions_.push_back(dividendYieldScenarioDescription(name, j, up));
 
             // apply zero rate shift at tenor point j
@@ -758,10 +723,14 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                RiskFactorKey key(RFType::DividendYield, name, k);
-
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(key, shiftedDiscount);
+                RiskFactorKey key(RFType::DividendYield, name, k);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    Real discount = exp(-zeros[k] * times[k]);
+                    scenario->add(key, shiftedDiscount / discount);
+                } else {
+                    scenario->add(key, shiftedDiscount);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
@@ -787,7 +756,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     // Log an ALERT if some FX vol pairs in simmarket are excluded from the list
     for (auto sim_fx : simMarketData_->fxVolCcyPairs()) {
         if (sensitivityData_->fxVolShiftData().find(sim_fx) == sensitivityData_->fxVolShiftData().end()) {
-            ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
+            WLOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -827,7 +796,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
             for (Size k = 0; k < n_fxvol_strikes; k++) {
                 Size idx = k * n_fxvol_exp + j;
                 RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, values[j][k], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, values[j][k], continueOnError_);
             }
         }
         if (!valid)
@@ -854,7 +823,11 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
                         Size idx = k * n_fxvol_exp + l;
                         RiskFactorKey key(RFType::FXVolatility, ccyPair, idx);
 
-                        scenario->add(key, shiftedValues[l][k]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[l][k] - values[l][k]);
+                        } else {
+                            scenario->add(key, shiftedValues[l][k]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == l && strikeBucket == k) {
@@ -881,10 +854,10 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
     // Log an ALERT if an Equity in simmarket are excluded from the simulation list
     for (auto sim_equity : simMarketData_->equityVolNames()) {
         if (sensitivityData_->equityVolShiftData().find(sim_equity) == sensitivityData_->equityVolShiftData().end()) {
-            ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
+            WLOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
-    
+
     for (auto e : sensitivityData_->equityVolShiftData()) {
         string equity = e.first;
         SensitivityScenarioData::VolShiftData data = e.second;
@@ -893,7 +866,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
         Size n_eqvol_strikes;
         vector<Real> vol_strikes;
         if (!simMarketData_->equityVolIsSurface(equity)) {
-            vol_strikes = { 0.0 };
+            vol_strikes = {0.0};
             n_eqvol_strikes = 1;
         } else if (simMarketData_->equityUseMoneyness(equity)) {
             vol_strikes = simMarketData_->equityVolMoneyness(equity);
@@ -924,9 +897,9 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
             for (Size k = 0; k < n_eqvol_strikes; k++) {
                 Size idx = k * n_eqvol_exp + j;
                 RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, idx);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, values[k][j], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, values[k][j], continueOnError_);
             }
-        }        
+        }
         if (!valid)
             continue;
 
@@ -946,15 +919,19 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
                 scenarioDescriptions_.push_back(equityVolScenarioDescription(equity, j, strikeBucket, up));
 
                 applyShift(strikeBucket, j, shiftSize, up, shiftType, shiftStrikes, shiftTimes, vol_strikes, times,
-                    values, shiftedValues, true);
-                
+                           values, shiftedValues, true);
+
                 // update the scenario
                 for (Size k = 0; k < n_eqvol_strikes; ++k) {
                     for (Size l = 0; l < n_eqvol_exp; l++) {
                         Size idx = k * n_eqvol_exp + l;
                         RiskFactorKey key(RFType::EquityVolatility, equity, idx);
 
-                        scenario->add(key, shiftedValues[k][l]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[k][l] - values[k][l]);
+                        } else {
+                            scenario->add(key, shiftedValues[k][l]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == l && k == strikeBucket) {
@@ -1068,7 +1045,8 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
                 for (Size l = 0; l < n_strike; ++l) {
                     Size idx = j * n_term * n_strike + k * n_strike + l;
                     RiskFactorKey key(rfType, qualifier, idx);
-                    valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[l][j][k], continueOnError_);
+                    valid = valid &&
+                            tryGetBaseScenarioValue(baseScenarioAbsolute_, key, volData[l][j][k], continueOnError_);
                 }
             }
         }
@@ -1092,7 +1070,6 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
                 for (Size l = 0; l < shiftStrikes.size(); ++l) {
                     Size strikeBucket = l;
                     boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-
                     scenarioDescriptions_.push_back(getScenarioDescription(qualifier, j, k, strikeBucket, up));
 
                     // if simulating atm only we shift all strikes otherwise we shift each strike individually
@@ -1109,13 +1086,16 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
                     for (Size jj = 0; jj < n_expiry; ++jj) {
                         for (Size kk = 0; kk < n_term; ++kk) {
                             for (Size ll = 0; ll < n_strike; ++ll) {
+
                                 Size idx = jj * n_term * n_strike + kk * n_strike + ll;
                                 RiskFactorKey key(rfType, qualifier, idx);
 
                                 if (ll >= loopStart && ll < loopEnd) {
-                                    scenario->add(key, shiftedVolData[ll][jj][kk]);
-                                } else {
-                                    scenario->add(key, volData[ll][jj][kk]);
+                                    if (sensitivityData_->useSpreadedTermStructures()) {
+                                        scenario->add(key, shiftedVolData[ll][jj][kk] - volData[ll][jj][kk]);
+                                    } else {
+                                        scenario->add(key, shiftedVolData[ll][jj][kk]);
+                                    }
                                 }
 
                                 // Possibly store valid shift size
@@ -1145,7 +1125,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_ccy : simMarketData_->swapVolCcys()) {
         if (sensitivityData_->swaptionVolShiftData().find(sim_ccy) == sensitivityData_->swaptionVolShiftData().end()) {
-            ALOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
+            WLOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
     generateGenericYieldVolScenarios(up, RFType::SwaptionVolatility);
@@ -1158,7 +1138,7 @@ void SensitivityScenarioGenerator::generateYieldVolScenarios(bool up) {
     // Log an ALERT if some bond securityId in simmarket are excluded from the list
     for (auto sim_securityId : simMarketData_->yieldVolNames()) {
         if (sensitivityData_->yieldVolShiftData().find(sim_securityId) == sensitivityData_->yieldVolShiftData().end()) {
-            ALOG("Bond securityId " << sim_securityId << " in simmarket is not included in sensitivities analysis");
+            WLOG("Bond securityId " << sim_securityId << " in simmarket is not included in sensitivities analysis");
         }
     }
     generateGenericYieldVolScenarios(up, RFType::YieldVolatility);
@@ -1171,7 +1151,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     // Log an ALERT if some cap currencies in simmarket are excluded from the list
     for (auto sim_cap : simMarketData_->capFloorVolCcys()) {
         if (sensitivityData_->capFloorVolShiftData().find(sim_cap) == sensitivityData_->capFloorVolShiftData().end()) {
-            ALOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
+            WLOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1219,7 +1199,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Size idx = j * n_cfvol_strikes + k;
                 RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, idx);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[j][k], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, volData[j][k], continueOnError_);
             }
         }
         if (!valid)
@@ -1249,7 +1229,11 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
                         Size idx = jj * n_cfvol_strikes + kk;
                         RiskFactorKey key(RFType::OptionletVolatility, ccy, idx);
 
-                        scenario->add(key, shiftedVolData[jj][kk]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedVolData[jj][kk] - volData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedVolData[jj][kk]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {
@@ -1276,7 +1260,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
     // Log an ALERT if some names in simmarket are excluded from the list
     for (auto sim_name : simMarketData_->defaultNames()) {
         if (sensitivityData_->creditCurveShiftData().find(sim_name) == sensitivityData_->creditCurveShiftData().end()) {
-            ALOG("Credit Name " << sim_name << " in simmarket is not included in sensitivities analysis");
+            WLOG("Credit Name " << sim_name << " in simmarket is not included in sensitivities analysis");
         }
     }
     Size n_ten;
@@ -1303,7 +1287,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
             Date d = asof + simMarketData_->defaultTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, prob, continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, prob, continueOnError_);
             hazardRates[j] = -std::log(prob) / times[j];
         }
         if (!valid)
@@ -1338,7 +1322,12 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::SurvivalProbability, name, k);
                 Real shiftedProb = exp(-shiftedHazardRates[k] * times[k]);
-                scenario->add(key, shiftedProb);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    Real prob = exp(-hazardRates[k] * times[k]);
+                    scenario->add(key, shiftedProb / prob);
+                } else {
+                    scenario->add(key, shiftedProb);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && k == j) {
@@ -1364,7 +1353,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_name : simMarketData_->cdsVolNames()) {
         if (sensitivityData_->cdsVolShiftData().find(sim_name) == sensitivityData_->cdsVolShiftData().end()) {
-            ALOG("CDS name " << sim_name << " in simmarket is not included in sensitivities analysis");
+            WLOG("CDS name " << sim_name << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1392,7 +1381,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
         bool valid = true;
         for (Size j = 0; j < n_cdsvol_exp; ++j) {
             RiskFactorKey key(RiskFactorKey::KeyType::CDSVolatility, name, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[j], continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, volData[j], continueOnError_);
         }
         if (!valid)
             continue;
@@ -1415,7 +1404,11 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
             // add shifted vol data to the scenario
             for (Size jj = 0; jj < n_cdsvol_exp; ++jj) {
                 RiskFactorKey key(RFType::CDSVolatility, name, jj);
-                scenario->add(key, shiftedVolData[jj]);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedVolData[jj] - volData[jj]);
+                } else {
+                    scenario->add(key, shiftedVolData[jj]);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == jj) {
@@ -1441,7 +1434,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
     for (auto sim_idx : simMarketData_->zeroInflationIndices()) {
         if (sensitivityData_->zeroInflationCurveShiftData().find(sim_idx) ==
             sensitivityData_->zeroInflationCurveShiftData().end()) {
-            ALOG("Zero Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+            WLOG("Zero Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1460,7 +1453,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->zeroInflationTenors(indexName)[j];
             RiskFactorKey key(RiskFactorKey::KeyType::ZeroInflationCurve, indexName, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, zeros[j], continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, zeros[j], continueOnError_);
             times[j] = dc.yearFraction(asof, d);
         }
         if (!valid)
@@ -1491,7 +1484,11 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
             // store shifted discount curve for this index in the scenario
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::ZeroInflationCurve, indexName, k);
-                scenario->add(key, shiftedZeros[k]);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedZeros[k] - zeros[k]);
+                } else {
+                    scenario->add(key, shiftedZeros[k]);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
@@ -1521,7 +1518,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
     for (auto sim_idx : simMarketData_->yoyInflationIndices()) {
         if (sensitivityData_->yoyInflationCurveShiftData().find(sim_idx) ==
             sensitivityData_->yoyInflationCurveShiftData().end()) {
-            ALOG("YoY Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+            WLOG("YoY Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1543,7 +1540,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yoyInflationTenors(indexName)[j];
             RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, yoys[j], continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, yoys[j], continueOnError_);
             times[j] = dc.yearFraction(asof, d);
         }
         if (!valid)
@@ -1574,7 +1571,11 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
             // store shifted discount curve for this index in the scenario
             for (Size k = 0; k < n_ten; ++k) {
                 RiskFactorKey key(RFType::YoYInflationCurve, indexName, k);
-                scenario->add(key, shiftedYoys[k]);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedYoys[k] - yoys[k]);
+                } else {
+                    scenario->add(key, shiftedYoys[k]);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
@@ -1600,7 +1601,7 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
     for (auto sim_yoy : simMarketData_->yoyInflationCapFloorVolNames()) {
         if (sensitivityData_->yoyInflationCapFloorVolShiftData().find(sim_yoy) ==
             sensitivityData_->yoyInflationCapFloorVolShiftData().end()) {
-            ALOG("Inflation index " << sim_yoy << " in simmarket is not included in sensitivities analysis");
+            WLOG("Inflation index " << sim_yoy << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1637,7 +1638,7 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
             for (Size k = 0; k < n_yoyvol_strikes; ++k) {
                 Size idx = j * n_yoyvol_strikes + k;
                 RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, name, idx);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[j][k], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, volData[j][k], continueOnError_);
             }
         }
         if (!valid)
@@ -1665,8 +1666,11 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
                     for (Size kk = 0; kk < n_yoyvol_strikes; ++kk) {
                         Size idx = jj * n_yoyvol_strikes + kk;
                         RiskFactorKey key(RFType::YoYInflationCapFloorVolatility, name, idx);
-
-                        scenario->add(key, shiftedVolData[jj][kk]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedVolData[jj][kk] - volData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedVolData[jj][kk]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {
@@ -1692,7 +1696,7 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
     for (auto sim_zci : simMarketData_->zeroInflationCapFloorVolNames()) {
         if (sensitivityData_->zeroInflationCapFloorVolShiftData().find(sim_zci) ==
             sensitivityData_->zeroInflationCapFloorVolShiftData().end()) {
-            ALOG("Inflation index " << sim_zci << " in simmarket is not included in sensitivities analysis");
+            WLOG("Inflation index " << sim_zci << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1729,7 +1733,7 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
             for (Size k = 0; k < n_strikes; ++k) {
                 Size idx = j * n_strikes + k;
                 RiskFactorKey key(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility, name, idx);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[j][k], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, volData[j][k], continueOnError_);
             }
         }
         if (!valid)
@@ -1757,8 +1761,11 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
                     for (Size kk = 0; kk < n_strikes; ++kk) {
                         Size idx = jj * n_strikes + kk;
                         RiskFactorKey key(RFType::ZeroInflationCapFloorVolatility, name, idx);
-
-                        scenario->add(key, shiftedVolData[jj][kk]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedVolData[jj][kk] - volData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedVolData[jj][kk]);
+                        }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {
@@ -1786,7 +1793,7 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
     for (auto name : simMarketData_->baseCorrelationNames()) {
         if (sensitivityData_->baseCorrelationShiftData().find(name) ==
             sensitivityData_->baseCorrelationShiftData().end()) {
-            ALOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
+            WLOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -1818,7 +1825,7 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
         for (Size j = 0; j < n_bc_levels; ++j) {
             for (Size k = 0; k < n_bc_terms; ++k) {
                 RiskFactorKey key(RiskFactorKey::KeyType::BaseCorrelation, name, j);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, bcData[j][k], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, bcData[j][k], continueOnError_);
             }
         }
         if (!valid)
@@ -1908,7 +1915,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         for (Size j = 0; j < times.size(); ++j) {
             times[j] = curveDayCounter.yearFraction(asof, asof + simMarketTenors[j]);
             RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, name, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, basePrices[j], continueOnError_);
+            valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, basePrices[j], continueOnError_);
         }
         if (!valid)
             continue;
@@ -1940,7 +1947,11 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             // store shifted commodity price curve in the scenario
             for (Size k = 0; k < times.size(); ++k) {
                 RiskFactorKey key(RFType::CommodityCurve, name, k);
-                scenario->add(key, shiftedPrices[k]);
+                if (sensitivityData_->useSpreadedTermStructures()) {
+                    scenario->add(key, shiftedPrices[k] - basePrices[k]);
+                } else {
+                    scenario->add(key, shiftedPrices[k]);
+                }
 
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
@@ -1999,7 +2010,8 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
             times[j] = dayCounter.yearFraction(asof, asof + expiries[j]);
             for (Size i = 0; i < moneyness.size(); i++) {
                 RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, name, i * expiries.size() + j);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, baseValues[i][j], continueOnError_);
+                valid =
+                    valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, baseValues[i][j], continueOnError_);
             }
         }
         if (!valid)
@@ -2028,8 +2040,11 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
                 for (Size i = 0; i < moneyness.size(); i++) {
                     for (Size j = 0; j < expiries.size(); ++j) {
                         RiskFactorKey key(RFType::CommodityVolatility, name, counter++);
-                        scenario->add(key, shiftedValues[i][j]);
-
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedValues[i][j] - baseValues[i][j]);
+                        } else {
+                            scenario->add(key, shiftedValues[i][j]);
+                        }
                         // Possibly store valid shift size
                         if (validShiftSize && up && si == i && sj == j) {
                             shiftSizes_[key] = shiftedValues[i][j] - baseValues[i][j];
@@ -2054,7 +2069,7 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
     Date asof = baseScenario_->asof();
     for (auto sim_cap : simMarketData_->correlationPairs()) {
         if (sensitivityData_->correlationShiftData().find(sim_cap) == sensitivityData_->correlationShiftData().end()) {
-            ALOG("Correlation " << sim_cap << " in simmarket is not included in sensitivities analysis");
+            WLOG("Correlation " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
 
@@ -2093,7 +2108,7 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
             for (Size k = 0; k < n_c_strikes; ++k) {
                 Size idx = j * n_c_strikes + k;
                 RiskFactorKey key(RiskFactorKey::KeyType::Correlation, label, idx);
-                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, corrData[j][k], continueOnError_);
+                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, corrData[j][k], continueOnError_);
             }
         }
         if (!valid)
@@ -2129,7 +2144,11 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
                             shiftedCorrData[jj][kk] = -1;
                         }
 
-                        scenario->add(key, shiftedCorrData[jj][kk]);
+                        if (sensitivityData_->useSpreadedTermStructures()) {
+                            scenario->add(key, shiftedCorrData[jj][kk] - corrData[jj][kk]);
+                        } else {
+                            scenario->add(key, shiftedCorrData[jj][kk]);
+                        }
 
                         LOG(jj << " " << kk << " " << shiftedCorrData[jj][kk] << " " << corrData[jj][kk]);
                         // Possibly store valid shift size
@@ -2157,7 +2176,7 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
     // Log an ALERT if some equities in simmarket are excluded from the sensitivities list
     for (auto sim_security : simMarketData_->securities()) {
         if (sensitivityData_->securityShiftData().find(sim_security) == sensitivityData_->securityShiftData().end()) {
-            ALOG("Security " << sim_security << " in simmarket is not included in sensitivities analysis");
+            WLOG("Security " << sim_security << " in simmarket is not included in sensitivities analysis");
         }
     }
     for (auto s : sensitivityData_->securityShiftData()) {
@@ -2171,7 +2190,7 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
 
         RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
         Real base_spread;
-        if (!tryGetBaseScenarioValue(baseScenario_, key, base_spread, continueOnError_))
+        if (!tryGetBaseScenarioValue(baseScenarioAbsolute_, key, base_spread, continueOnError_))
             continue;
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);

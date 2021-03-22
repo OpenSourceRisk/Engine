@@ -191,12 +191,13 @@ public:
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
-                    QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>())
+                    QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
+                    bool localCapFloor = false)
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
-          gearingDates_(gearingDates), nakedOption_(nakedOption) {
+          gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor) {
         indices_.insert(index_);
     }
 
@@ -219,6 +220,7 @@ public:
     const vector<double>& gearings() const { return gearings_; }
     const vector<string>& gearingDates() const { return gearingDates_; }
     bool nakedOption() const { return nakedOption_; }
+    bool localCapFloor() const { return localCapFloor_; }
     //@}
 
     //! \name Modifiers
@@ -228,6 +230,7 @@ public:
     vector<double>& floors() { return floors_; }
     vector<string>& floorDates() { return floorDates_; }
     bool& nakedOption() { return nakedOption_; }
+    bool& localCapFloor() { return localCapFloor_; }
     //@}
 
     //! \name Serialisation
@@ -253,6 +256,7 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
+    bool localCapFloor_;
 
     static LegDataRegister<FloatingLegData> reg_;
 };
@@ -271,21 +275,23 @@ public:
                const vector<double>& rates, const vector<string>& rateDates = std::vector<string>(),
                bool subtractInflationNominal = true, const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false)
+               const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
+               double finalFlowFloor = Null<Real>(), bool nakedOption = false)
         : LegAdditionalData("CPI"), index_(index), startDate_(startDate), baseCPI_(baseCPI),
           observationLag_(observationLag), interpolation_(interpolation), rates_(rates), rateDates_(rateDates),
           subtractInflationNominal_(subtractInflationNominal), caps_(caps), capDates_(capDates), floors_(floors),
-          floorDates_(floorDates), nakedOption_(nakedOption) {
+          floorDates_(floorDates), finalFlowCap_(finalFlowCap), finalFlowFloor_(finalFlowFloor),
+          nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
     //! \name Inspectors
     //@{
-    const string index() const { return index_; }
-    const string startDate() const { return startDate_; }
+    const string& index() const { return index_; }
+    const string& startDate() const { return startDate_; }
     double baseCPI() const { return baseCPI_; }
-    const string observationLag() const { return observationLag_; }
-    const string interpolation() const { return interpolation_; }
+    const string& observationLag() const { return observationLag_; }
+    const string& interpolation() const { return interpolation_; }
     const std::vector<double>& rates() const { return rates_; }
     const std::vector<string>& rateDates() const { return rateDates_; }
     bool subtractInflationNominal() const { return subtractInflationNominal_; }
@@ -293,6 +299,8 @@ public:
     const vector<string>& capDates() const { return capDates_; }
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
+    double finalFlowCap() const { return finalFlowCap_; }
+    double finalFlowFloor() const { return finalFlowFloor_; }
     bool nakedOption() const { return nakedOption_; }
     //@}
 
@@ -314,6 +322,8 @@ private:
     vector<string> capDates_;
     vector<double> floors_;
     vector<string> floorDates_;
+    double finalFlowCap_;
+    double finalFlowFloor_;
     bool nakedOption_;
 
     static LegDataRegister<CPILegData> reg_;
@@ -810,8 +820,10 @@ Real currentNotional(const Leg& leg);
 //! Build a full vector of values from the given node.
 //  For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
 //  In all cases we can expand the vector to take the given schedule into account
+//  If checkAllValuesAppearInResult is true, we require that all input values are appearing in the result (in order)
 template <typename T>
-vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule);
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                               const bool checkAllValuesAppearInResult = false);
 
 // extend values to schedule size (if values is empty, the default value is used)
 template <typename T>
@@ -820,7 +832,13 @@ vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule,
 // normaliseToSchedule concat buildScheduledVector
 template <typename T>
 vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
-                                         const T& defaultValue);
+                                         const T& defaultValue, const bool checkAllValuesAppearInResult = false);
+
+/* returns an iterator to the first input value that is not appearing (in order) in the scheduled vector, or an iterator
+   pointing to the end of the input value vector if no such element exists */
+template <typename T>
+typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const vector<T>& scheduledVecotr,
+                                                                         const vector<T>& inputValues);
 
 // notional vector derived from a fixed amortisation amount
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
@@ -852,7 +870,8 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
 // template implementations
 
 template <typename T>
-vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule) {
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                               const bool checkAllValuesAppearInResult) {
     if (values.size() < 2 || dates.size() == 0)
         return values;
 
@@ -900,6 +919,12 @@ vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& da
         data[i] = values[j];
     }
 
+    if (checkAllValuesAppearInResult) {
+        auto it = checkAllValuesAppearInScheduledVector<T>(data, values);
+        QL_REQUIRE(it == values.end(),
+                   "buildScheduledVector: input value '" << *it << " does not appear in the result vector");
+    }
+
     return data;
 }
 
@@ -913,8 +938,26 @@ vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule,
 
 template <typename T>
 vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
-                                         const T& defaultValue) {
-    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
+                                         const T& defaultValue, const bool checkAllValuesAppearInResult) {
+    return normaliseToSchedule(buildScheduledVector(values, dates, schedule, checkAllValuesAppearInResult), schedule,
+                               defaultValue);
+}
+
+template <typename T>
+typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const vector<T>& scheduledVector,
+                                                                         const vector<T>& inputValues) {
+    auto s = scheduledVector.begin();
+    auto i = inputValues.begin();
+    while (i != inputValues.end()) {
+        if (s == scheduledVector.end())
+            return i;
+        if (*i == *s) {
+            ++i;
+        } else {
+            ++s;
+        }
+    }
+    return i;
 }
 
 // build an FX Index needed by legbuilders / makeLeg methods

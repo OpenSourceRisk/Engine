@@ -204,6 +204,12 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         results.upfrontBPS = Null<Rate>();
     }
 
+    results.additionalResults["upfrontPremium"] = arguments.upfrontPayment->amount();
+    results.additionalResults["upfrontPremiumNPV"] = results.upfrontNPV;
+    results.additionalResults["premiumLegNPV"] = results.couponLegNPV;
+    results.additionalResults["accrualRebateNPV"] = results.accrualRebateNPV;
+    results.additionalResults["protectionLegNPV"] = results.defaultLegNPV;
+
 } // MidPointCdsEngineBase::calculate()
 
 } // namespace QuantExt

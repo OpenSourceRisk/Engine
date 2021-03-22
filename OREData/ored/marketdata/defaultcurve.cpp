@@ -319,12 +319,16 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
         }
     }
 
+    // Ensure that the helpers are sorted. This is done in IterativeBootstrap, but we need
+    // a sorted instruments vector in the code here as well.
+    std::sort(helpers.begin(), helpers.end(), QuantLib::detail::BootstrapHelperSorter());
+
     // Get configuration values for bootstrap
     Real accuracy = config.bootstrapConfig().accuracy();
     Real globalAccuracy = config.bootstrapConfig().globalAccuracy();
     bool dontThrow = config.bootstrapConfig().dontThrow();
     Size maxAttempts = config.bootstrapConfig().maxAttempts();
-    Real maxFactor = config.bootstrapConfig().maxFactor();
+    Real maxFactor = config.allowNegativeRates() ? config.bootstrapConfig().maxFactor() : 1.0;
     Real minFactor = config.bootstrapConfig().minFactor();
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
 
@@ -347,7 +351,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
 
-            Date pillarDate = helpers[i]->latestDate();
+            Date pillarDate = helpers[i]->pillarDate();
             Probability sp = tmp->survivalProbability(pillarDate);
 
             // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a previous
@@ -370,7 +374,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
     curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
         dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(), std::vector<Date>(),
-        LogLinear());
+        LogLinear(), config.allowNegativeRates());
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
         DLOG("DefaultCurve: Enabled Extrapolation");

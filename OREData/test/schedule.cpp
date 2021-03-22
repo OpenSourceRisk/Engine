@@ -69,6 +69,28 @@ BOOST_AUTO_TEST_CASE(testScheduleData) {
         BOOST_CHECK_EQUAL(s[i], s3[i]);
 }
 
+// The original reason for adding the LastWednesday date generation rule was to generate the AU CPI publication dates 
+// using a rules based schedule. Here, we compare the dates for a number of years against the release dates from 
+// https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia
+BOOST_AUTO_TEST_CASE(testLastWednesdayDateGenerationRule) {
+
+    vector<Date> expected{
+        Date(30, Oct, 2018),
+        Date(30, Jan, 2019), Date(24, Apr, 2019), Date(31, Jul, 2019), Date(30, Oct, 2019), // 2019
+        Date(29, Jan, 2020), Date(29, Apr, 2020), Date(29, Jul, 2020), Date(28, Oct, 2020), // 2020
+        Date(27, Jan, 2021), Date(28, Apr, 2021), Date(28, Jul, 2021), Date(27, Oct, 2021), // 2021
+        Date(25, Jan, 2022)
+    };
+
+    // AU CPI publication dates are the last Wednesday of Jan, Apr, Jul and Oct. If that is not a good AU business 
+    // day, it is the preceding good AU business day.
+    Schedule s = makeSchedule(ScheduleData(ScheduleRules("2018-10-30", "2022-01-25", "3M", "AUD",
+        "Preceding", "Unadjusted", "LastWednesday")));
+
+    // Check
+    BOOST_CHECK_EQUAL_COLLECTIONS(s.dates().begin(), s.dates().end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

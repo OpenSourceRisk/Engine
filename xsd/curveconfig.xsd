@@ -13,7 +13,6 @@
       <xs:element type="defaultCurves" name="DefaultCurves" minOccurs="0" />
       <xs:element type="yieldCurves" name="YieldCurves" minOccurs="0" />
       <xs:element type="inflationCurves" name="InflationCurves" minOccurs="0" />
-      <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces" minOccurs="0" />
       <xs:element type="inflationCapFloorVolatlities" name="InflationCapFloorVolatilities" minOccurs="0" />
       <xs:element type="equityCurves" name="EquityCurves" minOccurs="0" />
       <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
@@ -129,12 +128,15 @@
       <xs:element type="xs:string" name="Deltas" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SmileDelta" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Expiries"/>
+      <xs:element type="xs:string" name="Expiries" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FXSpotID" minOccurs="0" />
       <xs:element type="xs:string" name="FXForeignCurveID" minOccurs="0" />
       <xs:element type="xs:string" name="FXDomesticCurveID" minOccurs="0" />  
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FXIndexTag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BaseVolatility1" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -414,33 +416,6 @@
     </xs:all>
   </xs:complexType>
 
-  <xs:complexType name="inflationCapFloorPriceSurfaces">
-    <xs:sequence>
-      <xs:element type="inflationCapFloorPriceSurface" name="InflationCapFloorPriceSurface" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="inflationCapFloorPriceSurface">
-    <xs:all>
-      <xs:element type="xs:string" name="CurveId"/>
-      <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:decimal" name="StartRate" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="ObservationLag" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="IndexCurve" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="bool" name="IndexInterpolated" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="YieldTermStructure" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="CapStrikes" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="FloorStrikes" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Maturities" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="ImplySeparateCapFloorVolSurfaces" minOccurs="0" maxOccurs="1"/>
-    </xs:all>
-  </xs:complexType>
-
   <xs:complexType name="inflationCapFloorVolatlities">
     <xs:sequence>
       <xs:element type="inflationCapFloorVolatility" name="InflationCapFloorVolatility" minOccurs="0" maxOccurs="unbounded"/>
@@ -472,6 +447,7 @@
       <xs:element type="bool" name="IndexInterpolated" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="ObservationLag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="YieldTermStructure" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="QuoteIndex" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="yieldCurves">
@@ -542,6 +518,18 @@
       <xs:element type="simCommodityCurve" name="CommodityCurve" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
+  
+  <xs:simpleType name="commodityInterpolationType">
+    <xs:restriction base="interpolationMethodType">
+      <xs:enumeration value="Linear"/>
+      <xs:enumeration value="LogLinear"/>
+      <xs:enumeration value="Cubic"/>
+      <xs:enumeration value="LinearFlat"/>
+      <xs:enumeration value="LogLinearFlat"/>
+      <xs:enumeration value="CubicFlat"/>
+      <xs:enumeration value="BackwardFlat"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="commodityBasisConfig">
     <xs:all>
@@ -550,21 +538,25 @@
       <xs:element type="quoteType" name="BasisQuotes"/>
       <xs:element type="xs:string" name="BasisConventions"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">
-        <xs:simpleType>
-          <xs:restriction base="interpolationMethodType">
-            <xs:enumeration value="Linear"/>
-            <xs:enumeration value="LogLinear"/>
-            <xs:enumeration value="Cubic"/>
-            <xs:enumeration value="LinearFlat"/>
-            <xs:enumeration value="LogLinearFlat"/>
-            <xs:enumeration value="CubicFlat"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:element>
+      <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AddBasis" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="MonthOffset" minOccurs="0" maxOccurs="1"/>
     </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="priceSegmentType">
+    <xs:all>
+      <xs:element type="priceSegmentTypeType" name="Type" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="priceSegmentsType">
+    <xs:sequence>
+      <xs:element type="priceSegmentType" name="PriceSegment" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="simCommodityCurve">
@@ -582,23 +574,18 @@
           <xs:element type="xs:string" name="SpotQuote" minOccurs="0" maxOccurs="1"/>
           <xs:element type="quoteType" name="Quotes"/>
           <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
-          <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">
-            <xs:simpleType>
-              <xs:restriction base="interpolationMethodType">
-                <xs:enumeration value="Linear"/>
-                <xs:enumeration value="LogLinear"/>
-                <xs:enumeration value="Cubic"/>
-                <xs:enumeration value="LinearFlat"/>
-                <xs:enumeration value="LogLinearFlat"/>
-                <xs:enumeration value="CubicFlat"/>
-              </xs:restriction>
-            </xs:simpleType>
-          </xs:element>
+          <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
           <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:element type="commodityBasisConfig" name="BasisConfiguration"/>
+        <xs:sequence>
+          <xs:element type="priceSegmentsType" name="PriceSegments"/>
+          <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
       </xs:choice>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

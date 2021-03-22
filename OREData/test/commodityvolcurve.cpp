@@ -112,17 +112,17 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
                                                    const string& marketFile = "market.txt",
                                                    const string& fixingsFile = "fixings.txt") {
 
-    Conventions conventions;
-    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+    auto conventions = boost::make_shared<Conventions>();
+    conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
 
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfigFile)));
+    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfigFile)));
 
-    TodaysMarketParameters todaysMarketParameters;
-    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
+    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
-                     TEST_INPUT_FILE(string(inputDir + "/" + fixingsFile)), false);
+    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
+                                                TEST_INPUT_FILE(string(inputDir + "/" + fixingsFile)), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
 }
@@ -704,8 +704,8 @@ BOOST_DATA_TEST_CASE(testCommodityApoSurface, bdata::make(asofDates), asof) {
         // Check the surface on the grid point.
         auto calcVolatility = vts->blackVol(expiryDate, strike);
         auto difference = volatility - calcVolatility;
-        BOOST_TEST_MESSAGE(std::fixed << std::setprecision(12) << strike << "," << volatility << "," <<
-            calcVolatility << "," << difference);
+        BOOST_TEST_MESSAGE(std::fixed << std::setprecision(12) << strike << "," << volatility << "," << calcVolatility
+                                      << "," << difference);
         BOOST_CHECK_SMALL(difference, tol);
     }
 }
@@ -746,9 +746,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceMyrCrudePalmOil) {
     }
 
     // Check equal.
-    BOOST_CHECK_EQUAL_COLLECTIONS(surfaceDates.begin(), surfaceDates.end(),
-        expectedDates.begin(), expectedDates.end());
-
+    BOOST_CHECK_EQUAL_COLLECTIONS(surfaceDates.begin(), surfaceDates.end(), expectedDates.begin(), expectedDates.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

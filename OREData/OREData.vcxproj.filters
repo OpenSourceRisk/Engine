@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="configuration">
@@ -99,6 +99,9 @@
     <ClInclude Include="ored\marketdata\todaysmarket.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\todaysmarketcalibrationinfo.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
@@ -130,6 +133,9 @@
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\utilities\currencycheck.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\currencyconfig.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\utilities\flowanalysis.hpp">
@@ -567,6 +573,24 @@
     <ClInclude Include="ored\portfolio\builders\equityfuturesoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\wrappedmarket.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\compositeloader.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\durationadjustedcmslegbuilder.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\durationadjustedcmslegdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\dependencygraph.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -632,6 +656,9 @@
     <ClCompile Include="ored\marketdata\todaysmarket.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
+    <ClCompile Include="ored\marketdata\todaysmarketcalibrationinfo.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
     <ClCompile Include="ored\marketdata\todaysmarketparameters.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
@@ -663,6 +690,9 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\currencycheck.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\currencyconfig.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\flowanalysis.cpp">
@@ -1006,6 +1036,21 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\equityfuturesoption.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\wrappedmarket.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\durationadjustedcmslegbuilder.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\durationadjustedcmslegdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\durationadjustedcms.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\dependencygraph.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

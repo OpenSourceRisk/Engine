@@ -202,19 +202,19 @@ struct TodaysMarketFiles {
 
 // Create todaysmarket from input files.
 boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir,
-    const TodaysMarketFiles& tmf) {
+                                                   const TodaysMarketFiles& tmf) {
 
-    Conventions conventions;
-    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.conventions)));
+    auto conventions = boost::make_shared<Conventions>();
+    conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.conventions)));
 
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.curveConfig)));
+    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.curveConfig)));
 
-    TodaysMarketParameters todaysMarketParameters;
-    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.todaysMarket)));
+    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.todaysMarket)));
 
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
-        TEST_INPUT_FILE(string(inputDir + "/" + tmf.fixings)), false);
+    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
+                                                TEST_INPUT_FILE(string(inputDir + "/" + tmf.fixings)), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
 }
@@ -269,13 +269,10 @@ ostream& operator<<(ostream& os, const UpfrontFiles& upfrontFiles) {
     return os << "[" << upfrontFiles.market << "," << upfrontFiles.curveConfig << "]";
 }
 
-UpfrontFiles upfrontFiles[] = {
-    {"market.txt", "curveconfig.xml"},
-    {"market_rs.txt", "curveconfig_rs.xml"}
-};
+UpfrontFiles upfrontFiles[] = {{"market.txt", "curveconfig.xml"}, {"market_rs.txt", "curveconfig_rs.xml"}};
 
-// Create CDS curve from upfront quotes. Price portfolio of CDS that match the curve instruments. Check that the 
-// value of each instrument is zero as expected. Notional is $10M and bootstrap accuracy is 1e-12 => tol of 1e-4 
+// Create CDS curve from upfront quotes. Price portfolio of CDS that match the curve instruments. Check that the
+// value of each instrument is zero as expected. Notional is $10M and bootstrap accuracy is 1e-12 => tol of 1e-4
 // should be adequate.
 BOOST_DATA_TEST_CASE(testUpfrontDefaultCurveConsistency, bdata::make(upfrontFiles), files) {
 
@@ -320,7 +317,6 @@ BOOST_AUTO_TEST_CASE(testUpfrontCurveBuildFailsIfNoRunningSpread) {
     Date asof(6, Nov, 2020);
     Settings::instance().evaluationDate() = Date(6, Nov, 2020);
     BOOST_CHECK_THROW(createTodaysMarket(asof, "upfront", tmf), QuantLib::Error);
-
 }
 
 BOOST_AUTO_TEST_CASE(testSimultaneousUsageCdsQuoteTypes) {
@@ -351,7 +347,6 @@ BOOST_AUTO_TEST_CASE(testSimultaneousUsageCdsQuoteTypes) {
             BOOST_CHECK_NO_THROW(dpts->survivalProbability(1.0));
         }
     }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

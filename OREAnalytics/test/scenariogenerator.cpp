@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
-    sgd->grid() = grid;
+    sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     sgd->sequenceType() = Sobol;
     sgd->directionIntegers() = SobolRsg::JoeKuoD7;
     sgd->seed() = 42;
-    sgd->grid() = grid;
+    sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
@@ -801,7 +801,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
-    sgd->grid() = grid;
+    sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
@@ -948,7 +948,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
-    sgd->grid() = grid;
+    sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
@@ -1075,7 +1075,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
-    sgd->grid() = grid;
+    sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
@@ -1208,7 +1208,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
-    sgd->grid() = grid;
+    sgd->setGrid(grid);
 
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();

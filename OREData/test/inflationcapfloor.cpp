@@ -84,11 +84,11 @@ public:
         // Add EUHICPXT yoy volatility term structure
         boost::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface =
             boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.01, 0, cal, bdc, dc, Period(3, Months),
-                                                                         Monthly, index->interpolated());
+                                                                         Monthly, index->interpolated(), -1.0, 100.0,
+                                                                         VolatilityType::Normal);
 
         yoyCapFloorVolSurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
-            Handle<QuantExt::YoYOptionletVolatilitySurface>(
-                boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(volSurface, VolatilityType::Normal));
+            Handle<QuantExt::YoYOptionletVolatilitySurface>(volSurface);
     }
 
     BusinessDayConvention bdc;
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
 
     boost::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
-    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(market->yoyCapFloorVol("EUHICPXT")->yoyVolSurface());
+    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs = market->yoyCapFloorVol("EUHICPXT");
     // Should we get this nominalTs from the index's inflation term structure or is this going to be deprecated as well?
     // Or should we use the market discount curve here?
     Handle<YieldTermStructure> nominalTs =

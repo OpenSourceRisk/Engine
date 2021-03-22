@@ -27,6 +27,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <qle/indexes/equityindex.hpp>
 
@@ -54,6 +55,7 @@ public:
     //@{
     const EquityCurveSpec& spec() const { return spec_; };
     boost::shared_ptr<QuantExt::EquityIndex> equityIndex() const { return equityIndex_; };
+    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     EquityCurveSpec spec_;
@@ -64,6 +66,7 @@ private:
     YieldCurve::InterpolationVariable dividendInterpVariable_;
     YieldCurve::InterpolationMethod dividendInterpMethod_;
     boost::shared_ptr<QuantExt::EquityIndex> equityIndex_;
+    boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

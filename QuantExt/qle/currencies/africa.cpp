@@ -84,4 +84,24 @@ GHSCurrency::GHSCurrency() {
     data_ = ghsData;
 }
 
+// Angolan kwanza
+AOACurrency::AOACurrency() {
+    static boost::shared_ptr<Data> aoaData(
+        new Data("Angolan kwanza", "AOA", 973, "AOA", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = aoaData;
+}
+
+// Ethiopian birr
+ETBCurrency::ETBCurrency() {
+    static boost::shared_ptr<Data> etbData(
+        new Data("Ethiopian birr", "ETB", 230, "ETB", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = etbData;
+}
+
+// West African CFA franc
+XOFCurrency::XOFCurrency() {
+    static boost::shared_ptr<Data> xofData(
+        new Data("West African CFA franc", "XOF", 952, "XOF", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = xofData;
+}
 } // namespace QuantExt

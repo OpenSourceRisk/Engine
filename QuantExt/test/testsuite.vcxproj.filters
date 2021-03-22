@@ -158,6 +158,9 @@
     <ClCompile Include="crcirpp.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="durationadjustedcmscoupon.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

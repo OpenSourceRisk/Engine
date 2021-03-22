@@ -99,22 +99,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
 } // NumericLgmSwaptionEngineBase::calculate
 
 std::map<std::string, boost::any> NumericLgmSwaptionEngineBase::additionalResults() const {
-    std::vector<Real> exerciseTimes, alpha, kappa, hullWhiteSigma;
-    for (auto const& d : exercise_->dates()) {
-        if (d > model()->parametrization()->termStructure()->referenceDate()) {
-            Real t = model()->parametrization()->termStructure()->timeFromReference(d);
-            exerciseTimes.push_back(t);
-            alpha.push_back(model()->parametrization()->alpha(t));
-            kappa.push_back(model()->parametrization()->kappa(t));
-            hullWhiteSigma.push_back(model()->parametrization()->hullWhiteSigma(t));
-        }
-    }
-    std::map<std::string, boost::any> result;
-    result["exerciseTimes"] = exerciseTimes;
-    result["lgmAlpha"] = alpha;
-    result["lgmKappa"] = kappa;
-    result["hullWhiteSigma"] = hullWhiteSigma;
-    return result;
+    return getAdditionalResultsMap(model()->getCalibrationInfo());
 }
 
 void NumericLgmSwaptionEngine::calculate() const {

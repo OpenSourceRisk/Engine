@@ -1,0 +1,26 @@
+<Conventions>
+  <CommodityFuture>
+    <Id>ice_erh</Id>
+    <AnchorDay>
+      <DayOfMonth>1</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>ICE_FuturesUS</Calendar>
+    <ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+    <ExpiryMonthLag>0</ExpiryMonthLag>
+    <OffsetDays>-4</OffsetDays>
+    <BusinessDayConvention>Following</BusinessDayConvention>
+    <AdjustBeforeOffset>true</AdjustBeforeOffset>
+    <IsAveraging>true</IsAveraging>
+    <AveragingData>
+      <CommodityName>ICE:EHD</CommodityName>
+      <Conventions>ICE:EHD</Conventions>
+      <Period>PreviousMonth</Period>
+      <PricingCalendar>US-NERC</PricingCalendar>
+      <UseBusinessDays>true</UseBusinessDays>
+      <DeliveryRollDays>0</DeliveryRollDays>
+      <FutureMonthOffset>0</FutureMonthOffset>
+    </AveragingData>
+  </CommodityFuture>
+</Conventions>
+

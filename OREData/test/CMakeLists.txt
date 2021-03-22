@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(OREData-Test_SRC bond.cpp
+set(OREData-Test_SRC basecorrelationcurve.cpp
+bond.cpp
 calendaradjustment.cpp
 calendars.cpp
 ccyswapwithresets.cpp
@@ -29,8 +30,10 @@ fixings.cpp
 fxoption.cpp
 fxswap.cpp
 fxtriangulation.cpp
+fxvolcurve.cpp
 indices.cpp
 inflationcapfloor.cpp
+inflationcurve.cpp
 legdata.cpp
 mxnircurves.cpp
 optionpaymentdata.cpp

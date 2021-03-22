@@ -28,7 +28,9 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/marketdata/dependencygraph.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/directed_graph.hpp>
@@ -98,24 +100,7 @@ public:
         //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
         const bool preserveQuoteLinkage = false);
 
-    /*! Constructor taking references. This ctor is deprecated, use the second ctor taking pointers instead.
-        TODO remove this ctor, remove the member reference variables */
-    TodaysMarket( //! Valuation date
-        const Date& asof,
-        //! Description of the market composition
-        const TodaysMarketParameters& params,
-        //! Market data loader
-        const Loader& loader,
-        //! Description of curve compositions
-        const CurveConfigurations& curveConfigs,
-        //! Repository of market conventions
-        const Conventions& conventions,
-        //! Continue even if build errors occur
-        const bool continueOnError = false,
-        //! Optional Load Fixings
-        const bool loadFixings = true,
-        //! Optional reference data manager, needed to build fitted bond curves
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
+    boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
 private:
     // MarketImpl interface
@@ -123,16 +108,10 @@ private:
 
     // input parameters
 
-    // only populated in ctor taking pointers
-    const boost::shared_ptr<TodaysMarketParameters> params_ref_;
-    const boost::shared_ptr<Loader> loader_ref_;
-    const boost::shared_ptr<CurveConfigurations> curveConfigs_ref_;
-    const boost::shared_ptr<Conventions> conventions_ref_;
-
-    // needed for the deprecated ctor taking references, TODO remove these
-    const TodaysMarketParameters& params_;
-    const Loader& loader_;
-    const CurveConfigurations curveConfigs_;
+    const boost::shared_ptr<TodaysMarketParameters> params_;
+    const boost::shared_ptr<Loader> loader_;
+    const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
+    const boost::shared_ptr<Conventions> conventions_;
 
     const bool continueOnError_;
     const bool loadFixings_;
@@ -143,21 +122,8 @@ private:
     // initialise market
     void initialise(const Date& asof);
 
-    // build a graph whose vertices represent the market objects to build (DiscountCurve, IndexCurve, EquityVol, ...)
-    // and an edge from x to y means that x must be built before y, since y depends on it. */
-    void buildDependencyGraph(const std::string& configuration, std::map<std::string, std::string>& buildErrors);
-
-    // data structure for a vertex in the graph
-    struct Node {
-        MarketObject obj;                       // the market object to build
-        std::string name;                       // the LHS of the todays market mapping
-        std::string mapping;                    // the RHS of the todays market mapping
-        boost::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
-        bool built;                             // true if we have built this node
-    };
-    friend std::ostream& operator<<(std::ostream& o, const Node& n);
-
     // some typedefs for graph related data types
+    using Node = DependencyGraph::Node;
     using Graph = boost::directed_graph<Node>;
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
@@ -172,6 +138,9 @@ private:
     // fx triangulation initially built using all fx spot quotes from the loader; this is provided to
     // curve builders that require fx spots (e.g. xccy discount curves)
     mutable FXTriangulation fxT_;
+
+    // calibration results
+    boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo_;
 
     // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
@@ -195,7 +164,7 @@ private:
     mutable map<string, map<string, boost::shared_ptr<SwapIndex>>> requiredSwapIndices_;
 };
 
-std::ostream& operator<<(std::ostream& o, const TodaysMarket::Node& n);
+std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n);
 
 } // namespace data
 } // namespace ore

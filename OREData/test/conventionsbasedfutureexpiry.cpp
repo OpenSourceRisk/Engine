@@ -40,7 +40,9 @@ vector<string> commodityNames = {
     "ice_brent_old",
     "nymex_cl",
     "ice_cig_basis",
-    "myr_palm_oil"
+    "myr_palm_oil",
+    "ice_pmi",
+    "ice_erh"
 };
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
@@ -74,7 +76,7 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
         Date expExpiryDate = parseDate(reader.get(1));
 
         // Calculate the expiry date using the future expiry calculator
-        Date expiryDate = cbfe.expiryDate(contractDate.month(), contractDate.year(), 0);
+        Date expiryDate = cbfe.expiryDate(contractDate, 0);
 
         // Check that the calculated expiry equals the expected expiry date
         BOOST_CHECK_EQUAL(expExpiryDate, expiryDate);
@@ -87,7 +89,7 @@ BOOST_DATA_TEST_CASE(testExpiryDates, bdata::make(commodityNames), commodityName
             Date expOptionExpiry = parseDate(strExpOptionExpiry);
 
             // Calculate the option expiry date using the future expiry calculator
-            Date optionExpiry = cbfe.expiryDate(contractDate.month(), contractDate.year(), 0, true);
+            Date optionExpiry = cbfe.expiryDate(contractDate, 0, true);
 
             BOOST_CHECK_EQUAL(expOptionExpiry, optionExpiry);
         }

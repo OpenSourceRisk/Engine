@@ -142,11 +142,17 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
             QL_FAIL("choice of calibration type invalid");
     }
 
+    bool generateAdditionalResults = false;
+    auto p = globalParameters_.find("GenerateAdditionalResults");
+    if (p != globalParameters_.end()) {
+        generateAdditionalResults = parseBool(p->second);
+    }
+
     // Build and calibrate model
     DLOG("Build LGM model");
     boost::shared_ptr<LgmBuilder> calib =
         boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance,
-                                       continueOnCalibrationError, referenceCalibrationGrid);
+                                       continueOnCalibrationError, referenceCalibrationGrid, generateAdditionalResults);
 
     // In some cases, we do not want to calibrate the model
     boost::shared_ptr<QuantExt::LGM> model;

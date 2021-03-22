@@ -37,11 +37,11 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 #include <qle/indexes/equityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace ore {
 namespace data {

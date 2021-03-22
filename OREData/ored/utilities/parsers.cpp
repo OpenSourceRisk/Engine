@@ -60,13 +60,16 @@
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/actual364.hpp>
 #include <qle/time/yearcounter.hpp>
+#include <qle/currencies/currencycomparator.hpp>
 
 #include <boost/lexical_cast.hpp>
+#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 using boost::algorithm::to_lower_copy;
+using boost::iequals;
 
 namespace ore {
 namespace data {
@@ -369,22 +372,37 @@ Calendar parseCalendar(const string& s, const string& newName) {
         { "ZAC", SouthAfrica() },
         { "ZAX", SouthAfrica() },
 
-        // fallback to TARGET for these emerging ccys
-        {"AED", TARGET()},
-        {"BHD", TARGET()},
-        {"CLF", TARGET()},
-        {"EGP", TARGET()},
-        {"KWD", TARGET()},
-        {"KZT", TARGET()},
-        {"MAD", TARGET()},
-        {"MXV", TARGET()},
-        {"NGN", TARGET()},
-        {"OMR", TARGET()},
-        {"PKR", TARGET()},
-        {"QAR", TARGET()},
-        {"UYU", TARGET()},
-        {"TND", TARGET()},
-        {"VND", TARGET()},
+        // fallback to WeekendsOnly for these emerging ccys
+        {"AED", WeekendsOnly()},
+        {"BHD", WeekendsOnly()},
+        {"CLF", WeekendsOnly()},
+        {"EGP", WeekendsOnly()},
+        {"KWD", WeekendsOnly()},
+        {"KZT", WeekendsOnly()},
+        {"MAD", WeekendsOnly()},
+        {"MXV", WeekendsOnly()},
+        {"NGN", WeekendsOnly()},
+        {"OMR", WeekendsOnly()},
+        {"PKR", WeekendsOnly()},
+        {"QAR", WeekendsOnly()},
+        {"UYU", WeekendsOnly()},
+        {"TND", WeekendsOnly()},
+        {"VND", WeekendsOnly()},
+        // new GFMA currencies
+        {"AOA", WeekendsOnly()},
+        {"BGN", WeekendsOnly()},
+        {"ETB", WeekendsOnly()},
+        {"GEL", WeekendsOnly()},
+        {"GHS", WeekendsOnly()},
+        {"HRK", WeekendsOnly()},
+        {"JOD", WeekendsOnly()},
+        {"KES", WeekendsOnly()},
+        {"LKR", WeekendsOnly()},
+        {"MUR", WeekendsOnly()},
+        {"RSD", WeekendsOnly()},
+        {"UGX", WeekendsOnly()},
+        {"XOF", WeekendsOnly()},
+        {"ZMW", WeekendsOnly()},
 
         // ISO 10383 MIC Exchange
         {"BVMF", Brazil(Brazil::Exchange)},
@@ -595,35 +613,43 @@ DayCounter parseDayCounter(const string& s) {
     }
 }
 
-Currency parseCurrency(const string& s) {
+Currency parseCurrency(const string& s, const Currency& currency) {
     static map<string, Currency> m = {
-        {"AED", AEDCurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, {"AUD", AUDCurrency()},
-        {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, {"BRL", BRLCurrency()},
-        {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CLF", CLFCurrency()}, {"CLP", CLPCurrency()},
-        {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()}, {"COP", COPCurrency()}, {"COU", COUCurrency()},
-        {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EGP", EGPCurrency()},
-        {"ESP", ESPCurrency()}, {"EUR", EURCurrency()}, {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()},
-        {"GBP", GBPCurrency()}, {"GHS", GHSCurrency()}, {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()},
-        {"HRK", HRKCurrency()}, {"HUF", HUFCurrency()}, {"IDR", IDRCurrency()}, {"IEP", IEPCurrency()},
-        {"ILS", ILSCurrency()}, {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"ITL", ITLCurrency()},
-        {"JOD", JODCurrency()}, {"JPY", JPYCurrency()}, {"KES", KESCurrency()}, {"KRW", KRWCurrency()},
-        {"KWD", KWDCurrency()}, {"KZT", KZTCurrency()}, {"LKR", LKRCurrency()}, {"LUF", LUFCurrency()},
-        {"MAD", MADCurrency()}, {"MUR", MURCurrency()}, {"MXN", MXNCurrency()}, {"MXV", MXVCurrency()},
-        {"MYR", MYRCurrency()}, {"NGN", NGNCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()},
-        {"NZD", NZDCurrency()}, {"OMR", OMRCurrency()}, {"PEN", PENCurrency()}, {"PHP", PHPCurrency()},
-        {"PKR", PKRCurrency()}, {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"QAR", QARCurrency()},
-        {"RON", RONCurrency()}, {"RSD", RSDCurrency()}, {"RUB", RUBCurrency()}, {"SAR", SARCurrency()},
-        {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TND", TNDCurrency()},
-        {"TRY", TRYCurrency()}, {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()},
-        {"USD", USDCurrency()}, {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XAG", XAGCurrency()},
-        {"XAU", XAUCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
+        {"AED", AEDCurrency()}, {"AOA", AOACurrency()}, {"ARS", ARSCurrency()}, {"ATS", ATSCurrency()}, 
+        {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BGN", BGNCurrency()}, {"BHD", BHDCurrency()}, 
+        {"BRL", BRLCurrency()}, {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CLF", CLFCurrency()}, 
+        {"CLP", CLPCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()}, {"COP", COPCurrency()}, 
+        {"COU", COUCurrency()}, {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, 
+        {"EGP", EGPCurrency()}, {"ESP", ESPCurrency()}, {"ETB", ETBCurrency()}, {"EUR", EURCurrency()}, 
+        {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()}, {"GEL", GELCurrency()}, 
+        {"GHS", GHSCurrency()}, {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()}, {"HRK", HRKCurrency()}, 
+        {"HUF", HUFCurrency()}, {"IDR", IDRCurrency()}, {"IEP", IEPCurrency()}, {"ILS", ILSCurrency()}, 
+        {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"ITL", ITLCurrency()}, {"JOD", JODCurrency()}, 
+        {"JPY", JPYCurrency()}, {"KES", KESCurrency()}, {"KRW", KRWCurrency()}, {"KWD", KWDCurrency()}, 
+        {"KZT", KZTCurrency()}, {"LKR", LKRCurrency()}, {"LUF", LUFCurrency()}, {"MAD", MADCurrency()}, 
+        {"MUR", MURCurrency()}, {"MXN", MXNCurrency()}, {"MXV", MXVCurrency()}, {"MYR", MYRCurrency()}, 
+        {"NGN", NGNCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()}, {"NZD", NZDCurrency()}, 
+        {"OMR", OMRCurrency()}, {"PEN", PENCurrency()}, {"PHP", PHPCurrency()}, {"PKR", PKRCurrency()}, 
+        {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"QAR", QARCurrency()}, {"RON", RONCurrency()}, 
+        {"RSD", RSDCurrency()}, {"RUB", RUBCurrency()}, {"SAR", SARCurrency()}, {"SEK", SEKCurrency()}, 
+        {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TND", TNDCurrency()}, {"TRY", TRYCurrency()}, 
+        {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()}, {"USD", USDCurrency()}, 
+        {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XAG", XAGCurrency()}, {"XAU", XAUCurrency()}, 
+        {"XOF", XOFCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
         {"ZMW", ZMWCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
     } else {
-        QL_FAIL("Currency \"" << s << "\" not recognized");
+	if (!currency.empty()) {
+	    LOG("Adding external currency " << currency.code() << " to the parser map");
+	    m[s] = currency;
+	    return currency;
+	}
+	else {
+	    QL_FAIL("Currency \"" << s << "\" not recognized");
+	}
     }
 }
 
@@ -660,7 +686,8 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
                                                   {"TwentiethIMM", DateGeneration::TwentiethIMM},
                                                   {"OldCDS", DateGeneration::OldCDS},
                                                   {"CDS2015", DateGeneration::CDS2015},
-                                                  {"CDS", DateGeneration::CDS}};
+                                                  {"CDS", DateGeneration::CDS},
+                                                  {"LastWednesday", DateGeneration::LastWednesday}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -727,6 +754,22 @@ Position::Type parsePositionType(const std::string& s) {
         return it->second;
     } else {
         QL_FAIL("Position type \"" << s << "\" not recognized");
+    }
+}
+
+Protection::Side parseProtectionSide(const std::string& s) {
+    static map<string, Protection::Side> m = {
+        {"Buyer", Protection::Buyer},
+        {"Seller", Protection::Seller},
+        {"B", Protection::Buyer},
+        {"S", Protection::Seller}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Protection side \"" << s << "\" not recognized");
     }
 }
 
@@ -979,6 +1022,26 @@ AssetClass parseAssetClass(const std::string& s) {
     }
 }
 
+
+std::ostream& operator<<(std::ostream& os, AssetClass a) {
+    switch (a) {
+    case AssetClass::EQ:
+        return os << "EQ";
+    case AssetClass::FX:
+        return os << "FX";
+    case AssetClass::COM:
+        return os << "COM";
+    case AssetClass::IR:
+        return os << "IR";
+    case AssetClass::INF:
+        return os << "INF";
+    case AssetClass::CR:
+        return os << "CR";
+    default:
+        QL_FAIL("Unknown AssetClass");
+    }
+}
+
 DeltaVolQuote::AtmType parseAtmType(const std::string& s) {
     static map<string, DeltaVolQuote::AtmType> m = {{"AtmNull", DeltaVolQuote::AtmNull},
                                                     {"AtmSpot", DeltaVolQuote::AtmSpot},
@@ -1097,10 +1160,14 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         resultType = "int";
         int r = boost::any_cast<int>(anyType);
         oss << std::fixed << std::setprecision(8) << r;
+    } else if (anyType.type() == typeid(Size)) {
+        resultType = "size";
+        int r = boost::any_cast<Size>(anyType);
+        oss << std::fixed << std::setprecision(8) << r;
     } else if (anyType.type() == typeid(double)) {
         resultType = "double";
         double r = boost::any_cast<double>(anyType);
-        oss << std::fixed << std::setprecision(8) << r; 
+        oss << std::fixed << std::setprecision(8) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
         std::string r = boost::any_cast<std::string>(anyType);
@@ -1108,7 +1175,10 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     } else if (anyType.type() == typeid(Date)) {
         resultType = "date";
         oss << io::iso_date(boost::any_cast<Date>(anyType));
-    } else if (anyType.type() == typeid(std::vector<double>)) {
+    } else if (anyType.type() == typeid(bool)) {
+        resultType = "bool";
+        oss << std::boolalpha << boost::any_cast<bool>(anyType);
+    } else if(anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
         std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
         if (r.size() == 0) {
@@ -1153,7 +1223,11 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        std::regex pattern("\n");
+        std::ostringstream tmp;
+        tmp << std::setprecision(8) << r;
+        oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
+
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
@@ -1200,6 +1274,190 @@ std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule 
     else {
         QL_FAIL("Internal error: unknown FutureConvention::DateGenerationRule - check implementation of operator<< "
                 "for this enum");
+    }
+}
+
+InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const string& s) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (s == "None") {
+        return IPR::None;
+    } else if (s == "OnPublicationDate") {
+        return IPR::OnPublicationDate;
+    } else if (s == "AfterPublicationDate") {
+        return IPR::AfterPublicationDate;
+    } else {
+        QL_FAIL("InflationSwapConvention::PublicationRoll '" << s << "' not known, expect " <<
+            "'None', 'OnPublicationDate' or 'AfterPublicationDate'");
+    }
+}
+
+QuantLib::Rounding::Type parseRoundingType(const std::string& s) {
+    static map<string, QuantLib::Rounding::Type> m = {
+        {"Up", QuantLib::Rounding::Type::Up},
+        {"Down", QuantLib::Rounding::Type::Down},
+        {"Closest", QuantLib::Rounding::Type::Closest},
+        {"Floor", QuantLib::Rounding::Type::Floor},
+        {"Ceiling", QuantLib::Rounding::Type::Ceiling}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Rounding type \"" << s << "\" not recognized");
+    }
+}
+
+  
+ostream& operator<<(ostream& os, InflationSwapConvention::PublicationRoll pr) {
+    using IPR = InflationSwapConvention::PublicationRoll;
+    if (pr == IPR::None) {
+        return os << "None";
+    } else if (pr == IPR::OnPublicationDate) {
+        return os << "OnPublicationDate";
+    } else if (pr == IPR::AfterPublicationDate) {
+        return os << "AfterPublicationDate";
+    } else {
+        QL_FAIL("Unknown InflationSwapConvention::PublicationRoll.");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t) {
+    static map<SobolBrownianGenerator::Ordering, string> m = {{SobolBrownianGenerator::Ordering::Factors, "Factors"},
+                                                              {SobolBrownianGenerator::Ordering::Steps, "Steps"},
+                                                              {SobolBrownianGenerator::Ordering::Diagonal, "Diagonal"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown SobolBrownianGenerator::Ordering - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t) {
+    static map<SobolRsg::DirectionIntegers, string> m = {
+        {SobolRsg::DirectionIntegers::Unit, "Unit"},
+        {SobolRsg::DirectionIntegers::Jaeckel, "Jaeckel"},
+        {SobolRsg::DirectionIntegers::SobolLevitan, "SobolLevitan"},
+        {SobolRsg::DirectionIntegers::SobolLevitanLemieux, "SobolLevitanLemieux"},
+        {SobolRsg::DirectionIntegers::JoeKuoD5, "JoeKuoD5"},
+        {SobolRsg::DirectionIntegers::JoeKuoD6, "JoeKuoD6"},
+        {SobolRsg::DirectionIntegers::JoeKuoD7, "JoeKuoD7"},
+        {SobolRsg::DirectionIntegers::Kuo, "Kuo"},
+        {SobolRsg::DirectionIntegers::Kuo2, "Kuo2"},
+        {SobolRsg::DirectionIntegers::Kuo3, "Kuo3"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown SobolRsg::DirectionIntegers - check implementation of operator<< "
+                "for this enum");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, QuantExt::CrossAssetStateProcess::discretization dis) {
+    switch (dis) {
+    case QuantExt::CrossAssetStateProcess::exact:
+        return out << "Exact";
+    case QuantExt::CrossAssetStateProcess::euler:
+        return out << "Euler";
+    default:
+        return out << "?";
+    }
+}
+
+using ADCP = CommodityFutureConvention::AveragingData::CalculationPeriod;
+ADCP parseAveragingDataPeriod(const string& s) {
+    if (s == "PreviousMonth") {
+        return ADCP::PreviousMonth;
+    } else if (s == "ExpiryToExpiry") {
+        return ADCP::ExpiryToExpiry;
+    } else {
+        QL_FAIL("AveragingData::CalculationPeriod '" << s << "' not known, expect " <<
+            "'PreviousMonth' or 'ExpiryToExpiry'");
+    }
+}
+
+ostream& operator<<(ostream& os, ADCP cp) {
+    if (cp == ADCP::PreviousMonth) {
+        return os << "PreviousMonth";
+    } else if (cp == ADCP::ExpiryToExpiry) {
+        return os << "ExpiryToExpiry";
+    } else {
+        QL_FAIL("Unknown AveragingData::CalculationPeriod.");
+    }
+}
+
+using PST = PriceSegment::Type;
+PriceSegment::Type parsePriceSegmentType(const string& s) {
+    if (s == "Future") {
+        return PST::Future;
+    } else if (s == "AveragingFuture") {
+        return PST::AveragingFuture;
+    } else if (s == "AveragingSpot") {
+        return PST::AveragingSpot;
+    } else {
+        QL_FAIL("PriceSegment::Type '" << s << "' not known, expect " <<
+            "'Future', 'AveragingFuture' or 'AveragingSpot'");
+    }
+}
+
+ostream& operator<<(ostream& os, PriceSegment::Type pst) {
+    if (pst == PST::Future) {
+        return os << "Future";
+    } else if (pst == PST::AveragingFuture) {
+        return os << "AveragingFuture";
+    } else if (pst == PST::AveragingSpot) {
+        return os << "AveragingSpot";
+    } else {
+        QL_FAIL("Unknown PriceSegment::Type.");
+    }
+}
+
+using CQF = CommodityQuantityFrequency;
+CommodityQuantityFrequency parseCommodityQuantityFrequency(const string& s) {
+    if (iequals(s, "PerCalculationPeriod")) {
+        return CQF::PerCalculationPeriod;
+    } else if (iequals(s, "PerCalendarDay")) {
+        return CQF::PerCalendarDay;
+    } else if (iequals(s, "PerPricingDay")) {
+        return CQF::PerPricingDay;
+    } else if (iequals(s, "PerHour")) {
+        return CQF::PerHour;
+    } else {
+        QL_FAIL("Could not parse " << s << " to CommodityQuantityFrequency");
+    }
+}
+
+ostream& operator<<(ostream& os, CommodityQuantityFrequency cqf) {
+    if (cqf == CQF::PerCalculationPeriod) {
+        return os << "PerCalculationPeriod";
+    } else if (cqf == CQF::PerCalendarDay) {
+        return os << "PerCalendarDay";
+    } else if (cqf == CQF::PerPricingDay) {
+        return os << "PerPricingDay";
+    } else if (cqf == CQF::PerHour) {
+        return os << "PerHour";
+    } else {
+        QL_FAIL("Do not recognise CommodityQuantityFrequency " << static_cast<int>(cqf));
+    }
+}
+
+ostream& operator<<(ostream& os, Rounding::Type t) {
+  static map<Rounding::Type, string> m = {
+        {Rounding::Type::Up, "Up"},
+        {Rounding::Type::Down, "Down"},
+        {Rounding::Type::Closest, "Closest"},
+        {Rounding::Type::Floor, "Floor"},
+        {Rounding::Type::Ceiling, "Ceiling"}};
+    auto it = m.find(t);
+    if (it != m.end()) {
+        return os << it->second;
+    } else {
+        QL_FAIL("Internal error: unknown Rounding::Type - check implementation of operator<< "
+                "for this enum");
+
     }
 }
 

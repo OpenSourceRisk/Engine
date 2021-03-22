@@ -137,14 +137,14 @@ described in section \ref{sec:conventions}. The \lstinline!Conventions! node ass
 
 \subsubsection*{Simple Segment}
 When the node name is \lstinline!Simple!, the \lstinline!Type! node has the value \emph{Deposit}, \emph{FRA},
-\emph{Future}, \emph{OIS} or \emph{Swap} and the node has the structure shown in Listing \ref{lst:simple_segment}. This
-segment holds quotes for a set of deposit, FRA, Future, OIS or swap instruments corresponding to the value in the
-\lstinline!Type! node. These quotes will be used by the bootstrap algorithm to imply a discount factor, or equivalently
-a zero rate, curve. The only difference between this segment and the direct segment is that there is a
-\lstinline!ProjectionCurve! node. This node allows us to specify the CurveId of another curve to project floating rates
-on the instruments underlying the quotes listed in the \lstinline!Quote! nodes during the bootstrap procedure. This is
-an optional node. If it is left blank or omitted, then the projection curve is assumed to equal the curve being
-bootstrapped i.e.\ the current CurveId.
+\emph{Future}, \emph{OIS}, \emph{Swap} or \emph{BMA Basis Swap} and the node has the structure shown in Listing
+\ref{lst:simple_segment}. This segment holds quotes for a set of deposit, FRA, Future, OIS or swap instruments
+corresponding to the value in the \lstinline!Type! node. These quotes will be used by the bootstrap algorithm to imply
+a discount factor, or equivalently a zero rate, curve. The only difference between this segment and the direct segment
+is that there is a \lstinline!ProjectionCurve! node. This node allows us to specify the CurveId of another curve to
+project floating rates on the instruments underlying the quotes listed in the \lstinline!Quote! nodes during the
+bootstrap procedure. This is an optional node. If it is left blank or omitted, then the projection curve is assumed to
+equal the curve being bootstrapped i.e.\ the current CurveId.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -242,13 +242,13 @@ to proceed.
 \end{listing}
 
 \subsubsection*{Cross Currency Segment}
-When the node name is \lstinline!CrossCurrency!, the \lstinline!Type! node has the value \emph{FX Forward} or
-\emph{Cross Currency Basis Swap}. When the \lstinline!Type! node has the value \emph{FX Forward}, the node has the
-structure shown in Listing \ref{lst:fx_forward_segment}. This segment is used to hold quotes for FX forward
-instruments. The \lstinline!DiscountCurve! node holds the CurveId of a curve used to discount cash flows in the other
-currency i.e.\ the currency in the currency pair that is not equal to the currency in Listing
-\ref{lst:top_level_yc}. The \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that is
-looked up in the {\tt market.txt} file.
+When the node name is \lstinline!CrossCurrency!, the \lstinline!Type! node has the value \emph{FX Forward},
+\emph{Cross Currency Basis Swap} or \emph{Cross Currency Fix Float Swap}. When the \lstinline!Type! node has the value
+\emph{FX Forward}, the node has the structure shown in Listing \ref{lst:fx_forward_segment}. This segment is used to
+hold quotes for FX forward instruments. The \lstinline!DiscountCurve! node holds the CurveId of a curve used to
+discount cash flows in the other currency i.e.\ the currency in the currency pair that is not equal to the currency in
+Listing \ref{lst:top_level_yc}. The \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that
+is looked up in the {\tt market.txt} file.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -465,7 +465,7 @@ weights.
 \label{sec:weigthed_average}
 
 When the node name is \lstinline!WeightedAverage!, the \lstinline!Type! node has the only allowable value
-\emph{WeightedAverage}, and the node has the structure shown in Listing \ref{lst:weighted_average_segment}. This segment
+\emph{Weighted Average}, and the node has the structure shown in Listing \ref{lst:weighted_average_segment}. This segment
 is used to build a curve with instantaneous forward rates that are the weighted sum of instantaneous forward rates of
 reference curves. This way a projection curve for non-standard Ibor curves can be build, e.g. to project a Euribor2M
 index using the curves for 1M and 3M.

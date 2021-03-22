@@ -362,39 +362,38 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
     return helpers;
 }
 
-Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb,
-    vector<bool>& active, Array& expiries) const {
+Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector<bool>& active, Array& expiries) const {
 
     DLOG("InfJyBuilder: start building the YoY cap floor calibration basket.");
 
     // Initial checks.
-    QL_REQUIRE(yoyInflationIndex_, "InfJyBuilder: need a valid year on year inflation index " <<
-        "to build a year on year cap floor calibration basket.");
+    QL_REQUIRE(yoyInflationIndex_, "InfJyBuilder: need a valid year on year inflation index "
+                                       << "to build a year on year cap floor calibration basket.");
     auto yoyTs = yoyInflationIndex_->yoyInflationTermStructure();
-    QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure " <<
-        "to build a year on year cap floor calibration basket.");
+    QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure "
+                                   << "to build a year on year cap floor calibration basket.");
     auto yts = yoyTs->nominalTermStructure();
-    QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure " <<
-        "to build a year on year cap floor calibration basket.");
-    QL_REQUIRE(!yoyVolatility_.empty(), "InfJyBuilder: need a valid year on year volatility " <<
-        "structure to build a year on year cap floor calibration basket.");
+    QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure "
+                                 << "to build a year on year cap floor calibration basket.");
+    QL_REQUIRE(!yoyVolatility_.empty(), "InfJyBuilder: need a valid year on year volatility "
+                                            << "structure to build a year on year cap floor calibration basket.");
 
-    // Procedure is to create a YoY cap floor as described by each instrument in the calibration basket. We then value 
-    // each of the YoY cap floor instruments using market data and an engine and pass the NPV as the market premium to 
+    // Procedure is to create a YoY cap floor as described by each instrument in the calibration basket. We then value
+    // each of the YoY cap floor instruments using market data and an engine and pass the NPV as the market premium to
     // helper that we create.
 
     Helpers helpers;
 
     // Create the engine which depends on the type of the YoY volatility and the shift.
     boost::shared_ptr<PricingEngine> engine;
-    Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(yoyVolatility_->yoyVolSurface());
     auto ovsType = yoyVolatility_->volatilityType();
     if (ovsType == Normal)
-        engine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyInflationIndex_, hovs, yts);
+        engine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, yts);
     else if (ovsType == ShiftedLognormal && close(yoyVolatility_->displacement(), 0.0))
-        engine = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyInflationIndex_, hovs, yts);
+        engine = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, yts);
     else if (ovsType == ShiftedLognormal)
-        engine = boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyInflationIndex_, hovs, yts);
+        engine =
+            boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, yts);
     else
         QL_FAIL("InfJyBuilder: can't create engine with yoy volatility type, " << ovsType << ".");
 

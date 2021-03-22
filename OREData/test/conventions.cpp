@@ -34,6 +34,28 @@ using namespace QuantLib;
 using namespace ore::data;
 using boost::algorithm::replace_all_copy;
 
+namespace {
+
+void testIborIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
+    const Size settlementDays, const string& businessDayConvention, const bool endOfMonth, 
+    const string& internalId = "") {
+    // Check construction raises no errors
+    boost::shared_ptr<IborIndexConvention> convention;
+    BOOST_CHECK_NO_THROW(
+        convention = boost::make_shared<IborIndexConvention>(id, fixingCalendar, dayCounter,
+            settlementDays, businessDayConvention, endOfMonth));
+
+    // Check object
+    BOOST_CHECK_EQUAL(convention->id(), internalId.empty() ? id : internalId);
+    BOOST_CHECK_EQUAL(convention->fixingCalendar(), fixingCalendar);
+    BOOST_CHECK_EQUAL(convention->dayCounter(), dayCounter);
+    BOOST_CHECK_EQUAL(convention->settlementDays(), settlementDays);
+    BOOST_CHECK_EQUAL(convention->businessDayConvention(), businessDayConvention);
+    BOOST_CHECK_EQUAL(convention->endOfMonth(), endOfMonth);
+}
+
+} // namespace
+
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ConventionsTests)
@@ -264,6 +286,23 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
                                   readConvention->prohibitedExpiries().begin(),
                                   readConvention->prohibitedExpiries().end());
+}
+
+BOOST_AUTO_TEST_CASE(testIborConventionConstructionWithTenor) {
+
+    BOOST_TEST_MESSAGE("Testing Ibor Index convention construction with Tenor");
+    testIborIndexConvention("AED-EIBOR-3M", "AED", "ACT/360", 2, "MF", false);
+}
+
+BOOST_AUTO_TEST_CASE(testIborConventionConstructionWithoutTenor) {
+
+    BOOST_TEST_MESSAGE("Testing Ibor Index convention construction with Tenor");
+    testIborIndexConvention("AED-EIBOR", "AED", "ACT/360", 2, "MF", false);
+}
+
+BOOST_AUTO_TEST_CASE(testIborConventionConstruction7D) {
+    BOOST_TEST_MESSAGE("Testing Ibor Index convention construction with Tenor");
+    testIborIndexConvention("CNY-REPO-7D", "CNY", "A365F", 2, "MF", true, "CNY-REPO-1W");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/portfolio/schedule.hpp>
 #include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -31,6 +32,8 @@
 #include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/commodityindex.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace ore {
 namespace data {
@@ -65,6 +68,7 @@ public:
         IborIndex,
         OvernightIndex,
         SwapIndex,
+        ZeroInflationIndex,
         InflationSwap,
         SecuritySpread,
         CMSSpreadOption,
@@ -100,13 +104,20 @@ protected:
 /*!
   \ingroup market
 */
-class Conventions : public XMLSerializable {
+class Conventions : public XMLSerializable, public boost::enable_shared_from_this<Conventions> {
 public:
     //! Default constructor
     Conventions() {}
 
     /*! Returns the convention if found and throws if not */
     boost::shared_ptr<Convention> get(const string& id) const;
+
+    /*! Get a convention with the given \p id and \p type. If no convention of the given \p type with the given \p id
+        is found, the first element of the returned pair is \c false and the second element is a \c nullptr. If a
+        convention is found, the first element of the returned pair is \c true and the second element holds the
+        convention.
+    */
+    std::pair<bool, boost::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
 
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
@@ -408,7 +419,6 @@ public:
     IborIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
                         const Size settlementDays, const string& businessDayConvention, const bool endOfMonth);
 
-    const string& id() const { return id_; }
     const string& fixingCalendar() const { return strFixingCalendar_; }
     const string& dayCounter() const { return strDayCounter_; }
     const Size settlementDays() const { return settlementDays_; }
@@ -420,6 +430,7 @@ public:
     virtual void build();
 
 private:
+    string localId_;
     string strFixingCalendar_;
     string strDayCounter_;
     Size settlementDays_;
@@ -437,7 +448,6 @@ public:
     OvernightIndexConvention(const string& id, const string& fixingCalendar, const string& dayCounter,
                              const Size settlementDays);
 
-    const string& id() const { return id_; }
     const string& fixingCalendar() const { return strFixingCalendar_; }
     const string& dayCounter() const { return strDayCounter_; }
     const Size settlementDays() const { return settlementDays_; }
@@ -1021,11 +1031,22 @@ private:
 
 class InflationSwapConvention : public Convention {
 public:
-    InflationSwapConvention() {}
+    //! Rule for determining when inflation swaps roll to observing latest inflation index release.
+    enum class PublicationRoll {
+        None,
+        OnPublicationDate,
+        AfterPublicationDate
+    };
+
+    InflationSwapConvention(const boost::shared_ptr<Conventions>& conventions = nullptr);
+
     InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
                             const string& strDayCounter, const string& strIndex, const string& strInterpolated,
                             const string& strObservationLag, const string& strAdjustInfObsDates,
-                            const string& strInfCalendar, const string& strInfConvention);
+                            const string& strInfCalendar, const string& strInfConvention,
+                            const boost::shared_ptr<Conventions>& conventions = nullptr,
+                            PublicationRoll publicationRoll = PublicationRoll::None,
+                            const boost::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
 
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
@@ -1037,6 +1058,8 @@ public:
     bool adjustInfObsDates() const { return adjustInfObsDates_; }
     const Calendar& infCalendar() const { return infCalendar_; }
     BusinessDayConvention infConvention() const { return infConvention_; }
+    PublicationRoll publicationRoll() const { return publicationRoll_; }
+    const Schedule& publicationSchedule() const { return publicationSchedule_; }
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -1052,8 +1075,9 @@ private:
     bool adjustInfObsDates_;
     Calendar infCalendar_;
     BusinessDayConvention infConvention_;
+    Schedule publicationSchedule_;
 
-    // Strings to store the inputs
+    // Store the inputs
     string strFixCalendar_;
     string strFixConvention_;
     string strDayCounter_;
@@ -1063,6 +1087,9 @@ private:
     string strAdjustInfObsDates_;
     string strInfCalendar_;
     string strInfConvention_;
+    boost::shared_ptr<Conventions> conventions_;
+    PublicationRoll publicationRoll_;
+    boost::shared_ptr<ScheduleData> publicationScheduleData_;
 };
 
 //! Container for storing Bond Spread Rate conventions
@@ -1256,6 +1283,63 @@ public:
     };
     //@}
 
+    /*! Struct to hold averaging information when \c isAveraging_ is \c true. It is generally needed when the 
+        in the CommodityFutureConvention when referenced in piecewise price curve construction.
+    */
+    class AveragingData : public XMLSerializable {
+    public:
+        //! Indicate location of calculation period relative to the future expiry date.
+        enum class CalculationPeriod { PreviousMonth, ExpiryToExpiry };
+
+        //! \name Constructors
+        //@{
+        //! Default constructor
+        AveragingData();
+        //! Detailed constructor
+        AveragingData(const std::string& commodityName, const std::string& period, const std::string& pricingCalendar,
+            bool useBusinessDays, const std::string& conventionsId = "", QuantLib::Natural deliveryRollDays = 0,
+            QuantLib::Natural futureMonthOffset = 0, QuantLib::Natural dailyExpiryOffset =
+            QuantLib::Null<QuantLib::Natural>());
+        //@}
+
+        //! \name Inspectors
+        //@{
+        const std::string& commodityName() const;
+        CalculationPeriod period() const;
+        const QuantLib::Calendar& pricingCalendar() const;
+        bool useBusinessDays() const;
+        const std::string& conventionsId() const;
+        QuantLib::Natural deliveryRollDays() const;
+        QuantLib::Natural futureMonthOffset() const;
+        QuantLib::Natural dailyExpiryOffset() const;
+        //@}
+
+        //! Returns \c true if the data has not been populated.
+        bool empty() const;
+
+        //! Serialisation
+        //@{
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) override;
+        //@}
+
+    private:
+        std::string commodityName_;
+        std::string strPeriod_;
+        std::string strPricingCalendar_;
+        bool useBusinessDays_;
+        std::string conventionsId_;
+        QuantLib::Natural deliveryRollDays_;
+        QuantLib::Natural futureMonthOffset_;
+        QuantLib::Natural dailyExpiryOffset_;
+
+        CalculationPeriod period_;
+        QuantLib::Calendar pricingCalendar_;
+
+        //! Populate members
+        void build();
+    };
+
     //! \name Constructors
     //@{
     //! Default constructor
@@ -1273,7 +1357,9 @@ public:
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
-                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+                              const AveragingData& averagingData = AveragingData(),
+                              QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1287,7 +1373,9 @@ public:
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
-                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+                              const AveragingData& averagingData = AveragingData(),
+                              QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1301,7 +1389,9 @@ public:
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
                               const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
-                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {});
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+                              const AveragingData& averagingData = AveragingData(),
+                              QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>());
     //@}
 
     //! \name Inspectors
@@ -1331,6 +1421,8 @@ public:
     const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings() const {
         return optionContinuationMappings_;
     }
+    const AveragingData& averagingData() const { return averagingData_; }
+    QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
     //@}
 
     //! Serialisation
@@ -1378,6 +1470,11 @@ private:
     std::string strOptionBdc_;
     std::map<QuantLib::Natural, QuantLib::Natural> futureContinuationMappings_;
     std::map<QuantLib::Natural, QuantLib::Natural> optionContinuationMappings_;
+    AveragingData averagingData_;
+    QuantLib::Natural hoursPerDay_;
+
+    //! Populate and check frequency.
+    void populateFrequency();
 };
 
 //! Container for storing FX Option conventions
@@ -1420,6 +1517,46 @@ private:
     string strSwitchTenor_;
     string strLongTermAtmType_;
     string strLongTermDeltaType_;
+};
+
+/*! Container for storing zero inflation index conventions
+   \ingroup marketdata
+*/
+class ZeroInflationIndexConvention : public Convention {
+public:
+    //! Constructor.
+    ZeroInflationIndexConvention();
+
+    //! Detailed constructor.
+    ZeroInflationIndexConvention(const std::string& id,
+        const std::string& regionName,
+        const std::string& regionCode,
+        bool revised,
+        const std::string& frequency,
+        const std::string& availabilityLag,
+        const std::string& currency);
+
+    QuantLib::Region region() const;
+    bool revised() const { return revised_; }
+    QuantLib::Frequency frequency() const { return frequency_; }
+    const QuantLib::Period& availabilityLag() const { return availabilityLag_; }
+    const QuantLib::Currency& currency() const { return currency_; }
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    void build() override;
+
+private:
+    std::string regionName_;
+    std::string regionCode_;
+    bool revised_;
+    std::string strFrequency_;
+    std::string strAvailabilityLag_;
+    std::string strCurrency_;
+
+    QuantLib::Frequency frequency_;
+    QuantLib::Period availabilityLag_;
+    QuantLib::Currency currency_;
 };
 
 } // namespace data

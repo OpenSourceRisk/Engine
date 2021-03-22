@@ -95,7 +95,7 @@ MarketDataLoader::MarketDataLoader() {
 // We have a set of files under ars_in_usd/failing and a set under ars_in_usd/passing:
 // - failing: has the old QuantLib::IterativeBootstrap parameters i.e. 1 attempt with hard bounds
 // - passing: has the default QuantExt::IterativeBootstrap parameters i.e. 5 attempts with widening bounds
-vector<string> curveConfigFiles = { "discount_linear.xml",
+vector<string> curveConfigFiles = {"discount_linear.xml",
                                    "discount_loglinear.xml",
                                    "discount_natural_cubic.xml",
                                    "discount_financial_cubic.xml",
@@ -105,35 +105,35 @@ vector<string> curveConfigFiles = { "discount_linear.xml",
                                    "forward_linear.xml",
                                    "forward_natural_cubic.xml",
                                    "forward_financial_cubic.xml",
-                                   "forward_convex_monotone.xml" };
+                                   "forward_convex_monotone.xml"};
 
 // Construct and hold the arguments needed to construct a TodaysMarket.
 struct TodaysMarketArguments {
-    
-    TodaysMarketArguments(const Date& asof, const string& inputDir,
-        const string& curveConfigFile = "curveconfig.xml") : asof(asof) {
+
+    TodaysMarketArguments(const Date& asof, const string& inputDir, const string& curveConfigFile = "curveconfig.xml")
+        : asof(asof) {
 
         Settings::instance().evaluationDate() = asof;
 
         string filename = inputDir + "/conventions.xml";
-        conventions.fromFile(TEST_INPUT_FILE(filename));
+        conventions->fromFile(TEST_INPUT_FILE(filename));
 
         filename = inputDir + "/" + curveConfigFile;
-        curveConfigs.fromFile(TEST_INPUT_FILE(filename));
+        curveConfigs->fromFile(TEST_INPUT_FILE(filename));
 
         filename = inputDir + "/todaysmarket.xml";
-        todaysMarketParameters.fromFile(TEST_INPUT_FILE(filename));
+        todaysMarketParameters->fromFile(TEST_INPUT_FILE(filename));
 
         filename = inputDir + "/market.txt";
         string fixingsFilename = inputDir + "/fixings.txt";
-        loader = CSVLoader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+        loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
     }
 
     Date asof;
-    Conventions conventions;
-    CurveConfigurations curveConfigs;
-    TodaysMarketParameters todaysMarketParameters;
-    CSVLoader loader;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    boost::shared_ptr<CurveConfigurations> curveConfigs = boost::make_shared<CurveConfigurations>();
+    boost::shared_ptr<TodaysMarketParameters> todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    boost::shared_ptr<Loader> loader;
 };
 
 // Used to check that the exception message contains the expected message string, expMsg.
@@ -149,11 +149,11 @@ struct ExpErrorPred {
     string expMsg;
 };
 
-// Test yield curve bootstrap from overnight index futures where the first future in the list of instruments may be 
-// expired. We use the March 2020 SOFR future contract whose last trade date is 16 Jun 2020 with settlement date 17 
+// Test yield curve bootstrap from overnight index futures where the first future in the list of instruments may be
+// expired. We use the March 2020 SOFR future contract whose last trade date is 16 Jun 2020 with settlement date 17
 // Jun 2020. A number of cases are tested:
 // 1. Valuation date is 9 Jun 2020. March 2020 SOFR future should be included in bootstrap fine.
-// 2. Valuation date is 16 Jun 2020. March 2020 SOFR future should be included in bootstrap. The final SOFR fixing 
+// 2. Valuation date is 16 Jun 2020. March 2020 SOFR future should be included in bootstrap. The final SOFR fixing
 //    i.e. the fixing for 16 Jun 2020 will not be known on 16 Jun 2020.
 // 3. Valuation date is 17 Jun 2020. March 2020 SOFR future should be excluded from the bootstrap.
 // 4. Valuation date is 23 Jun 2020. March 2020 SOFR future should be excluded from the bootstrap.
@@ -163,33 +163,28 @@ struct FutureCase {
     string desc;
 };
 
-vector<FutureCase> oiFutureCases{
-    { Date(9, Jun, 2020), "before_ltd" },
-    { Date(16, Jun, 2020), "on_ltd" },
-    { Date(17, Jun, 2020), "on_settlement" },
-    { Date(23, Jun, 2020), "after_ltd" }
-};
+vector<FutureCase> oiFutureCases{{Date(9, Jun, 2020), "before_ltd"},
+                                 {Date(16, Jun, 2020), "on_ltd"},
+                                 {Date(17, Jun, 2020), "on_settlement"},
+                                 {Date(23, Jun, 2020), "after_ltd"}};
 
 // Test yield curve bootstrap from money market futures where the first future in the list of instruments has an ibor
-// start date that is before, on and after the valuation date. We use the August 2020 Eurodollar future contract whose 
-// last trade date is 17 Aug 2020 with an underlying ibor start date of 19 Aug 2020. Note that the USD-LIBOR-3M fixing 
-// is known on 17 Aug 2020 and the future expires on this date with the associated final settlement price. A number of 
+// start date that is before, on and after the valuation date. We use the August 2020 Eurodollar future contract whose
+// last trade date is 17 Aug 2020 with an underlying ibor start date of 19 Aug 2020. Note that the USD-LIBOR-3M fixing
+// is known on 17 Aug 2020 and the future expires on this date with the associated final settlement price. A number of
 // cases are tested:
 // 1. Valuation date is 18 Aug 2020. August 2020 Eurodollar future should be included in bootstrap.
 // 2. Valuation date is 19 Aug 2020. August 2020 Eurodollar future should be included in bootstrap.
 // 3. Valuation date is 20 Aug 2020. August 2020 Eurodollar future should be excluded from the bootstrap.
-vector<FutureCase> mmFutureCases{
-    { Date(18, Aug, 2020), "before_ibor_start" },
-    { Date(19, Aug, 2020), "on_ibor_start" },
-    { Date(20, Aug, 2020), "after_ibor_start" }
-};
+vector<FutureCase> mmFutureCases{{Date(18, Aug, 2020), "before_ibor_start"},
+                                 {Date(19, Aug, 2020), "on_ibor_start"},
+                                 {Date(20, Aug, 2020), "after_ibor_start"}};
 
 ostream& operator<<(ostream& os, const FutureCase& c) {
     return os << "Date is " << io::iso_date(c.date) << " and case is " << c.desc << ".";
 }
 
-}
-
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -277,18 +272,18 @@ BOOST_DATA_TEST_CASE(testOiFirstFutureDateVsValuationDate, bdata::make(oiFutureC
     BOOST_TEST_MESSAGE("Testing OI future. " << oiFutureCase);
 
     BOOST_TEST_CONTEXT(oiFutureCase) {
-        
+
         TodaysMarketArguments tma(oiFutureCase.date, "oi_future/" + oiFutureCase.desc);
 
         boost::shared_ptr<TodaysMarket> todaysMarket;
-        BOOST_REQUIRE_NO_THROW(todaysMarket = boost::make_shared<TodaysMarket>(tma.asof,
-            tma.todaysMarketParameters, tma.loader, tma.curveConfigs, tma.conventions, false, true));
+        BOOST_REQUIRE_NO_THROW(todaysMarket =
+                                   boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                                                    tma.curveConfigs, tma.conventions, false, true));
 
         Handle<YieldTermStructure> yts;
         BOOST_REQUIRE_NO_THROW(yts = todaysMarket->discountCurve("USD"));
         BOOST_REQUIRE_NO_THROW(yts->discount(1.0));
     }
-    
 }
 
 BOOST_DATA_TEST_CASE(testMmFirstFutureDateVsValuationDate, bdata::make(mmFutureCases), mmFutureCase) {
@@ -300,14 +295,14 @@ BOOST_DATA_TEST_CASE(testMmFirstFutureDateVsValuationDate, bdata::make(mmFutureC
         TodaysMarketArguments tma(mmFutureCase.date, "mm_future/" + mmFutureCase.desc);
 
         boost::shared_ptr<TodaysMarket> todaysMarket;
-        BOOST_REQUIRE_NO_THROW(todaysMarket = boost::make_shared<TodaysMarket>(tma.asof,
-            tma.todaysMarketParameters, tma.loader, tma.curveConfigs, tma.conventions, false, true));
+        BOOST_REQUIRE_NO_THROW(todaysMarket =
+                                   boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                                                    tma.curveConfigs, tma.conventions, false, true));
 
         Handle<YieldTermStructure> yts;
         BOOST_REQUIRE_NO_THROW(yts = todaysMarket->discountCurve("USD"));
         BOOST_REQUIRE_NO_THROW(yts->discount(1.0));
     }
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -21,9 +21,10 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 namespace QuantExt {
 DynamicYoYOptionletVolatilitySurface::DynamicYoYOptionletVolatilitySurface(
     const boost::shared_ptr<YoYOptionletVolatilitySurface>& source, ReactionToTimeDecay decayMode)
-    : YoYOptionletVolatilitySurface(source->yoyVolSurface(), source->volatilityType(), source->displacement()),
-      source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()),
-      volatilityType_(source->volatilityType()), displacement_(source->displacement()) {
+    : YoYOptionletVolatilitySurface(source->settlementDays(), source->calendar(), source->businessDayConvention(),
+                                    source->dayCounter(), source->observationLag(), source->frequency(),
+                                    source->indexIsInterpolated(), source->volatilityType(), source->displacement()),
+      source_(source), decayMode_(decayMode), originalReferenceDate_(source->referenceDate()) {
     // Set extrapolation to source's extrapolation initially
     enableExtrapolation(source->allowsExtrapolation());
 }
@@ -46,20 +47,21 @@ Date DynamicYoYOptionletVolatilitySurface::maxDate() const {
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }
 
-void DynamicYoYOptionletVolatilitySurface::update() { TermStructure::update(); }
-
-Volatility DynamicYoYOptionletVolatilitySurface::volatilityImpl(Date optionDate, Rate strike) const {
+Volatility DynamicYoYOptionletVolatilitySurface::volatilityImpl(Time optionTime, Rate strike) const {
     if (decayMode_ == ConstantVariance) {
-        return source_->volatility(optionDate, strike, source_->observationLag());
+        return source_->volatility(optionTime, strike);
     }
 
     // TODO: check validity of ForwardVariance option before using it.
     QL_REQUIRE(decayMode_ != ForwardForwardVariance,
                "ForwardVariance not yet supported for DynamicYoYOptionletVolatilityStructure");
     if (decayMode_ == ForwardForwardVariance) {
-        Volatility varToRef = source_->totalVariance(referenceDate(), strike, source_->observationLag());
-        Volatility varToOptTime = source_->totalVariance(optionDate, strike, source_->observationLag());
-        return std::sqrt((varToOptTime - varToRef) / timeFromReference(optionDate));
+        // FIXME
+        Real t0 = timeFromBase(referenceDate());
+        Volatility varToRef = source_->volatility(t0, strike) * source_->volatility(t0, strike) * t0;
+        Volatility varToOptTime =
+            source_->volatility(optionTime, strike) * source_->volatility(optionTime, strike) * optionTime;
+        return std::sqrt((varToOptTime - varToRef) / (optionTime - t0));
     }
 
     QL_FAIL("Unexpected decay mode (" << decayMode_ << ")");

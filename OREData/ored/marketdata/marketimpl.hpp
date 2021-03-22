@@ -129,20 +129,10 @@ public:
     virtual Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const;
 
-    //! CPI Inflation Cap Floor Price Surfaces
-    // virtual Handle<CPICapFloorTermPriceSurface>
-    // cpiInflationCapFloorPriceSurface(const string& indexName,
-    //                                  const string& configuration = Market::defaultConfiguration) const;
-
     //! Inflation Cap Floor Volatility Surfaces
     virtual Handle<CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const;
-
-    //! YoY Inflation Cap Floor Price Surfaces
-    // virtual Handle<YoYCapFloorTermPriceSurface>
-    // yoyInflationCapFloorPriceSurface(const string& indexName,
-    //                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Equity curves
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
@@ -228,7 +218,7 @@ protected:
     mutable map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
     mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
-    mutable map<pair<string, string>, Handle<QuantExt::YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
+    mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     mutable map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;

@@ -26,9 +26,9 @@ extrapolation) \ingroup termstructures
 
 #include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/sabrinterpolation.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace QuantExt {
 

@@ -120,6 +120,8 @@ public:
     CPILeg& withCaps(const std::vector<Rate>& caps);
     CPILeg& withFloors(Rate floor);
     CPILeg& withFloors(const std::vector<Rate>& floors);
+    CPILeg& withFinalFlowCap(Rate cap);
+    CPILeg& withFinalFlowFloor(Rate floor);
     CPILeg& withExCouponPeriod(const Period&, const Calendar&, BusinessDayConvention, bool endOfMonth = false);
     CPILeg& withStartDate(const Date& startDate);
     CPILeg& withObservationLag(const Period& observationLag);
@@ -140,6 +142,7 @@ private:
     bool subtractInflationNominal_;
     std::vector<Spread> spreads_;
     std::vector<Rate> caps_, floors_;
+    double finalFlowCap_, finalFlowFloor_;
     Period exCouponPeriod_;
     Calendar exCouponCalendar_;
     BusinessDayConvention exCouponAdjustment_;

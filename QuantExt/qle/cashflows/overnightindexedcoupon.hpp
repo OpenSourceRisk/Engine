@@ -123,8 +123,11 @@ private:
 //! capped floored overnight indexed coupon
 class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
 public:
+    /*! capped / floored compounded, backward-looking on coupon, local means that the daily rates are capped / floored
+      while a global cap / floor is applied to the effective period rate */
     CappedFlooredOvernightIndexedCoupon(const ext::shared_ptr<OvernightIndexedCoupon>& underlying,
-                                        Real cap = Null<Real>(), Real floor = Null<Real>(), bool nakedOption = false);
+                                        Real cap = Null<Real>(), Real floor = Null<Real>(), bool nakedOption = false,
+                                        bool localCapFloor = false);
 
     //! \name Coupon interface
     //@{
@@ -136,9 +139,9 @@ public:
     Date fixingDate() const override { return underlying_->fixingDate(); }
     //@}
     //! cap
-    Rate cap() const { return cap_; }
+    Rate cap() const;
     //! floor
-    Rate floor() const { return floor_; }
+    Rate floor() const;
     //! effective cap of fixing
     Rate effectiveCap() const;
     //! effective floor of fixing
@@ -156,11 +159,14 @@ public:
     bool isFloored() const { return floor_ != Null<Real>(); }
 
     ext::shared_ptr<OvernightIndexedCoupon> underlying() const { return underlying_; }
+    bool nakedOption() const { return nakedOption_; }
+    bool localCapFloor() const { return localCapFloor_; }
 
 protected:
     ext::shared_ptr<OvernightIndexedCoupon> underlying_;
     Rate cap_, floor_;
     bool nakedOption_;
+    bool localCapFloor_;
 };
 
 //! capped floored overnight indexed coupon pricer base class
@@ -197,6 +203,7 @@ public:
     OvernightLeg& withFloors(Rate floor);
     OvernightLeg& withFloors(const std::vector<Rate>& floors);
     OvernightLeg& withNakedOption(const bool nakedOption);
+    OvernightLeg& withLocalCapFloor(const bool localCapFloor);
     operator Leg() const;
 
 private:
@@ -216,6 +223,7 @@ private:
     Natural fixingDays_;
     std::vector<Rate> caps_, floors_;
     bool nakedOption_;
+    bool localCapFloor_;
 };
 
 } // namespace QuantExt

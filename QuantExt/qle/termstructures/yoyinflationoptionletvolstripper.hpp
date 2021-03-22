@@ -26,8 +26,8 @@
 
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;

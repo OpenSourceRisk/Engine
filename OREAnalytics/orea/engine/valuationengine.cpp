@@ -25,6 +25,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/timer/timer.hpp>
 #include <ql/errors.hpp>
@@ -110,8 +111,9 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
             for (auto calc : calculators)
                 calc->calculateT0(trades[i], i, simMarket_, outputCube, outputCubeNettingSet);
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trades[i]->id(), trades[i]->tradeType(), "Error during trade simulation",
-                                             e.what()));
+            string expMsg = string("T0 valuation error: ") + e.what();
+            ALOG(StructuredTradeErrorMessage(trades[i]->id(), trades[i]->tradeType(), "ScenarioValuation",
+                                             expMsg.c_str()));
             tradeHasError[i] = true;
         }
 
@@ -185,7 +187,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 QL_REQUIRE(cubeDateIndex >= 0,
                            "negative cube date index, ensure that the date grid starts with a valuation date");
                 runCalculators(true, trades, tradeHasError, calculators, outputCube, outputCubeNettingSet, d,
-                               cubeDateIndex, sample);
+                               cubeDateIndex, sample, simMarket_->label());
                 if (mporStickyDate) // switch on again, if sticky
                     tradeExercisable(true, trades);
                 timer.stop();
@@ -223,7 +225,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 timer.start();
                 // loop over trades
                 runCalculators(false, trades, tradeHasError, calculators, outputCube, outputCubeNettingSet, d,
-                               cubeDateIndex, sample);
+                               cubeDateIndex, sample, simMarket_->label());
                 // loop over counterparty names
                 runCalculators(false, counterparties, cptyCalculators, outputCptyCube, d, cubeDateIndex, sample);
                 timer.stop();
@@ -267,7 +269,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
                                      const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
                                      boost::shared_ptr<analytics::NPVCube>& outputCube,
                                      boost::shared_ptr<analytics::NPVCube>& outputCubeNettingSet, const Date& d,
-                                     const Size cubeDateIndex, const Size sample) {
+                                     const Size cubeDateIndex, const Size sample, const string& label) {
     ObservationMode::Mode om = ObservationMode::instance().mode();
     // loop over trades
     for (Size j = 0; j < trades.size(); ++j) {
@@ -282,8 +284,9 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
                 calc->calculate(trade, j, simMarket_, outputCube, outputCubeNettingSet, d, cubeDateIndex, sample,
                                 isCloseOutDate);
         } catch (const std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade simulation",
-                                             e.what()));
+            string expMsg = "date = " + ore::data::to_string(io::iso_date(d)) +
+                            ", sample = " + ore::data::to_string(sample) + ", label = " + label + ": " + e.what();
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "ScenarioValuation", expMsg.c_str()));
             tradeHasError[j] = true;
         }
     }

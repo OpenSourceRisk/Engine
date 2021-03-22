@@ -18,22 +18,23 @@
 
 #include <qle/termstructures/spreadeddiscountcurve.hpp>
 
+#include <ql/math/interpolations/loginterpolation.hpp>
+
 namespace QuantExt {
 
 SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve,
-                                             const std::vector<Time>& times, const std::vector<Handle<Quote> >& quotes,
-                                             const DayCounter& dc)
-    : YieldTermStructure(dc), referenceCurve_(referenceCurve), times_(times), quotes_(quotes),
+                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes)
+    : YieldTermStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times), quotes_(quotes),
       data_(times_.size(), 1.0) {
+    QL_REQUIRE(times_.size() > 1, "SpreadedDiscountCurve: at least two times required");
+    QL_REQUIRE(times_.size() == quotes.size(), "SpreadedDiscountCurve: size of time and quote vectors do not match");
+    QL_REQUIRE(times_[0] == 0.0, "SpreadedDiscountCurve: first time must be 0, got " << times_[0]);
     for (Size i = 0; i < quotes.size(); ++i) {
-        QL_REQUIRE(times_.size() > 1, "at least two times required");
-        QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
-        QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
-        QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
         registerWith(quotes_[i]);
     }
     interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
-    registerWith(Settings::instance().evaluationDate());
+    interpolation_->enableExtrapolation();
+    registerWith(referenceCurve_);
 }
 
 Date SpreadedDiscountCurve::maxDate() const { return referenceCurve_->maxDate(); }
@@ -51,8 +52,9 @@ Natural SpreadedDiscountCurve::settlementDays() const { return referenceCurve_->
 
 void SpreadedDiscountCurve::performCalculations() const {
     for (Size i = 0; i < times_.size(); ++i) {
+        QL_REQUIRE(!quotes_[i].empty(), "SpreadedDiscountCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
-        QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve2: invalid value " << data_[i] << " at index " << i);
+        QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve: invalid value " << data_[i] << " at index " << i);
     }
     interpolation_->update();
 }

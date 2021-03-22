@@ -30,6 +30,7 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ql/quotes/all.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
@@ -65,8 +66,6 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
-#include <qle/termstructures/spreadedsmilesection.hpp>
-#include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
@@ -79,7 +78,6 @@
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 
@@ -109,13 +107,8 @@ public:
 };
 
 //! Simulation Market updated with discrete scenarios
-/*! If useSpreadedTermStructures is true, term structures for
-  - discount curves
-  - index curves
-  - yield curves
-  will be built as a spread over the initMarket curves and require scenarios that contain the spread
-  to the base scenario rather than the absolute scenario value. This is used by the SensitivityScenarioGenerator
-  if the respective flag is switched on there.
+/*! If useSpreadedTermStructures is true, spreaded term structures over the initMarket for supported risk factors will
+  be generated. This is used by the SensitivityScenarioGenerator.
 
   If cacheSimData is true, the scenario application is optimised. This requires that all scenarios are SimpleScenario
   instances with identical key structure in their data.
@@ -168,8 +161,16 @@ public:
     //! Reset sim market to initial state
     virtual void reset() override;
 
-    //! Scenario representing the initial state of the market
+    /*! Scenario representing the initial state of the market. If useSpreadedTermStructures = false, this scenario
+      contains absolute values for all risk factor keys. If useSpreadedTermStructures = true, this scenario contains
+      spread values for all risk factor keys which support spreaded term structures and absolute values for the other
+      risk factor keys. The spread values will typically be zero (e.g. for vol risk factors) or 1 (e.g. for rate curve
+      risk factors, since we use discount factors there). */
     boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+
+    /*! Scenario representing the initial state of the market. This scenario contains absolute values for all risk factor
+      types, no matter whether useSpreadedTermStructures is true or false. */
+    boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
     //! Return the fixing manager
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
@@ -199,6 +200,7 @@ protected:
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
     boost::shared_ptr<Scenario> baseScenario_;
+    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
 
     std::vector<boost::shared_ptr<SimpleQuote>> cachedSimData_;
     std::vector<bool> cachedSimDataActive_;
@@ -206,7 +208,7 @@ protected:
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 
     // if generate spread scenario values for keys, we store the absolute values in this map
-    // so that we can set up the base scenario with absolute values for all keys properly below
+    // so that we can set up the base scenario with absolute values
     bool useSpreadedTermStructures_;
     std::map<RiskFactorKey, Real> absoluteSimData_;
 

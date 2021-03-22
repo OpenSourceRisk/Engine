@@ -19,7 +19,6 @@
 #include <orea/aggregation/dimregressioncalculator.hpp>
 #include <orea/app/xvarunner.hpp>
 #include <orea/engine/mporcalculator.hpp>
-#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
@@ -99,7 +98,7 @@ void XvaRunner::bufferSimulationPaths() {
 
     auto stateProcess = model_->stateProcess(scenarioGeneratorData_->discretization());
     auto pathGen = MultiPathGeneratorFactory().build(scenarioGeneratorData_->sequenceType(), stateProcess,
-                                                     scenarioGeneratorData_->grid()->timeGrid(),
+                                                     scenarioGeneratorData_->getGrid()->timeGrid(),
                                                      scenarioGeneratorData_->seed(), scenarioGeneratorData_->ordering(),
                                                      scenarioGeneratorData_->directionIntegers());
 
@@ -119,8 +118,7 @@ void XvaRunner::bufferSimulationPaths() {
 }
 
 void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& market,
-                               const boost::optional<std::set<std::string>>& currencyFilter, const bool continueOnErr) {
-
+    const boost::optional<std::set<std::string>>& currencyFilter, const bool continueOnErr) {
     LOG("XvaRunner::buildSimMarket() called");
 
     Settings::instance().evaluationDate() = asof_;
@@ -128,7 +126,8 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
     boost::shared_ptr<ScenarioSimMarketParameters> projectedSsmData;
     if (currencyFilter) {
         projectedSsmData = projectSsmData(*currencyFilter);
-    } else {
+    }
+    else {
         projectedSsmData = simMarketData_;
     }
 
@@ -137,24 +136,27 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
     simMarket_ =
         boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, *conventions_, Market::defaultConfiguration,
-                                              *curveConfigs_, *todaysMarketParams_, true, false, true, false);
+            *curveConfigs_, *todaysMarketParams_, true, false, true, false);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)
         b->reset();
 
-    // TODO: Is this needed? PMMarket is in ORE Plus
-    // Rebuild portfolio linked to SSM (wrapped)
-    // auto simPmMarket = boost::make_shared<PreciousMetalMarket>(simMarket);
+    DLOG("build scenario data");
+
+    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
+        scenarioGeneratorData_->getGrid()->valuationDates().size(), scenarioGeneratorData_->samples());
+    simMarket_->aggregationScenarioData() = scenarioData_;
+
     simFactory_ = boost::make_shared<EngineFactory>(engineData_, simMarket_, map<MarketContext, string>(),
-                                                    extraEngineBuilders_, extraLegBuilders_, referenceData_);
+        extraEngineBuilders_, extraLegBuilders_, referenceData_);
 }
 
 void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
 
     LOG("XvaRunner::buildCube called");
 
-    Settings::instance().evaluationDate() = asof_;
+    Settings::instance().evaluationDate() = asof_;    
 
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (tradeIds) {
@@ -188,10 +190,10 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     if (scenarioGeneratorData_->withCloseOutLag()) {
         // depth 2: NPV and close-out NPV
         cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
-                                                                 scenarioGeneratorData_->grid()->valuationDates(),
+                                                                 scenarioGeneratorData_->getGrid()->valuationDates(),
                                                                  scenarioGeneratorData_->samples(),
                                                                  2); // depth 2: default date and close-out date NPV
-        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->grid());
+        cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->getGrid());
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
         calculationType_ = "NoLag";
@@ -202,14 +204,14 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
         if (storeFlows_) {
             // regular, depth 2: NPV and cash flow
             cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
-                                                                     scenarioGeneratorData_->grid()->dates(),
+                                                                     scenarioGeneratorData_->getGrid()->dates(),
                                                                      scenarioGeneratorData_->samples(), 2, 0.0f);
             calculators.push_back(
-                boost::make_shared<CashflowCalculator>(baseCurrency_, asof_, scenarioGeneratorData_->grid(), 1));
+                boost::make_shared<CashflowCalculator>(baseCurrency_, asof_, scenarioGeneratorData_->getGrid(), 1));
         } else
             // regular, depth 1
             cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, portfolio->ids(),
-                                                                    scenarioGeneratorData_->grid()->dates(),
+                                                                    scenarioGeneratorData_->getGrid()->dates(),
                                                                     scenarioGeneratorData_->samples(), 0.0f);
 
         cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
@@ -221,15 +223,9 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
 
     nettingCube_ = getNettingSetCube(calculators, portfolio);
 
-    DLOG("build scenario data");
-
-    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(
-        scenarioGeneratorData_->grid()->valuationDates().size(), scenarioGeneratorData_->samples());
-    simMarket_->aggregationScenarioData() = scenarioData_;
-
     DLOG("run valuation engine");
 
-    ValuationEngine engine(asof_, scenarioGeneratorData_->grid(), simMarket_);
+    ValuationEngine engine(asof_, scenarioGeneratorData_->getGrid(), simMarket_);
     engine.buildCube(portfolio, cube_, calculators, scenarioGeneratorData_->withMporStickyDate(), nettingCube_);
 }
 

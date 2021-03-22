@@ -75,7 +75,7 @@ public:
     //! build engine factory for a given market from an XML String
     boost::shared_ptr<ore::data::EngineFactory>
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
-                                    const std::string& pricingEngineXML);
+                                    const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
 protected:
     //! read setup from params_
@@ -92,7 +92,8 @@ protected:
     void getReferenceData();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                                const string& groupName = "setup") const;
+                                                                const string& groupName = "setup",
+                                                                const bool generateAdditionalResults = false) const;
     //! build trade factory
     boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
@@ -196,8 +197,6 @@ protected:
     getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
         return {};
     };
-    //! Get fixing manager
-    virtual boost::shared_ptr<FixingManager> getFixingManager() { return boost::make_shared<FixingManager>(asof_); }
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
@@ -206,6 +205,9 @@ protected:
                                  const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                  const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                                  const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
+    /*! Generate market data (based on the market data available in the loader passed as an argument) and return the
+     * generated data as a new loader, a nullptr can be returned if no data is generated */
+    virtual boost::shared_ptr<Loader> generateMarketData(const boost::shared_ptr<Loader>& loader) { return nullptr; }
 
     Size tab_, progressBarWidth_;
     //! ORE Input parameters

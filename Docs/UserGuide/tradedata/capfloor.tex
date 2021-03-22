@@ -1,15 +1,18 @@
 \subsubsection{Cap/Floor}
+\label{ss:capfloor}
 
 The \lstinline!CapFloorData! node is the trade data container for the \emph{CapFloor} trade type.  It's a cap, floor or collar
 (i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor or CMS rates. The
 \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
 is long or short, and a \lstinline!LegData!  sub-node where the
-LegType can be set to \emph{Floating}, \emph{CMS}, \emph{CPI}
+LegType can be set to \emph{Floating}, \emph{CMS}, \emph{DurationAdjustedCMS}, \emph{CPI}
 or \emph{YY}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
 \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
 elements, or both. In the case of both (I.e. a collar with long cap and short floor) the sequence is that  \lstinline!Caps! elements must be above the \lstinline!Floors! elements. Note that 
 the \lstinline!Caps! and \lstinline!Floors! elements must be outside the \lstinline!LegData! sub-node, i.e. a \emph{CapFloor} 
 can't have a capped or floored  \emph{Floating}  or \emph{CMS} leg.
+THe \emph{Payer} flag in the LegData subnode is ignored for this instrument. Notice that the signs in the definition of a collar (long cap, short floor) for the CapFloor
+instruments is exactly opposite to \ref{ss:floatingleg_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -24,6 +27,9 @@ can't have a capped or floored  \emph{Floating}  or \emph{CMS} leg.
   <Caps>
     <Cap>0.05</Cap>
   </Caps>
+  <PremiumAmount>1000</PremiumAmount>
+  <PremiumCurrency>EUR</PremiumCurrency>
+  <PremiumPayDate>2021-01-27</PremiumPayDate>
 </CapFloorData>
 \end{minted}
 \caption{Cap/Floor data}
@@ -63,5 +69,17 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
   Allowable values for each \lstinline!Floor! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
   a rate of 5\%
+
+\item PremiumAmount [Optional]: Option premium amount paid by the option buyer to the option seller.
+
+Allowable values:  Any positive real number.
+
+\item PremiumCurrency [Optional]: Currency of the option premium.
+
+Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+
+\item PremiumPayDate [Optional]: Date of the option premium payment.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \end{itemize}

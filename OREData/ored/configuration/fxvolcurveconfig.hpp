@@ -50,7 +50,7 @@ public:
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
      */
-    enum class Dimension { ATM, SmileVannaVolga, SmileDelta };
+    enum class Dimension { ATM, SmileVannaVolga, SmileDelta, ATMTriangulated };
     enum class SmileInterpolation {
         VannaVolga1,
         VannaVolga2,
@@ -71,6 +71,9 @@ public:
                             const Calendar& calendar = QuantLib::TARGET(),
                             const SmileInterpolation& interp = SmileInterpolation::VannaVolga2,
                             const string& conventionsID = "", const QuantLib::Natural& smileDelta = 25);
+
+    FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
+                            const string& baseVolatility1, const string& baseVolatility2, const string& fxIndexTag = "GENERIC");
 
     //@}
 
@@ -95,6 +98,9 @@ public:
     const string& conventionsID() const { return conventionsID_; }
     const QuantLib::Natural& smileDelta() const { return smileDelta_; }
     const vector<string>& quotes() override;
+    const string& baseVolatility1() const { return baseVolatility1_; }
+    const string& baseVolatility2() const { return baseVolatility2_; }
+    const string& fxIndexTag() const { return fxIndexTag_; }
     //@}
 
     //! \name Setters
@@ -110,6 +116,9 @@ public:
     string conventionsID() { return conventionsID_; }
     QuantLib::Natural& smileDelta() { return smileDelta_; }
     const std::set<string>& requiredYieldCurveIDs() const { return requiredYieldCurveIDs_; };
+    string& baseVolatility1() { return baseVolatility1_; }
+    string& baseVolatility2() { return baseVolatility2_; }
+    string& fxIndexTag() { return fxIndexTag_; }
     //@}
 private:
     void populateRequiredCurveIds();
@@ -126,6 +135,9 @@ private:
     QuantLib::Natural smileDelta_;
     std::set<string> requiredYieldCurveIDs_;
     SmileInterpolation smileInterpolation_;
+    string baseVolatility1_;
+    string baseVolatility2_;
+    string fxIndexTag_;
 };
 } // namespace data
 } // namespace ore

@@ -23,6 +23,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -764,7 +765,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Populate the matrix of volatilities and the expiry dates.
     vector<Date> expiryDates;
     Matrix vols(surfaceData.size(), numStrikes);
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates.push_back(row.value().first);
         copy(row.value().second.begin(), row.value().second.end(), vols.row_begin(row.index()));
     }
@@ -968,7 +969,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     vector<Date> expiryDates(surfaceData.size());
     vector<Time> expiryTimes(surfaceData.size());
     vector<vector<Handle<Quote>>> vols(moneynessLevels.size());
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates[row.index()] = row.value().first;
         expiryTimes[row.index()] = dayCounter_.yearFraction(asof, row.value().first);
         for (Size i = 0; i < row.value().second.size(); i++) {
@@ -1082,9 +1083,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Get the beta parameter to use for valuing the APOs in the surface
     Real beta = vapo.beta();
 
-    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a
-    // commodity future index during curve construction in QuantExt.
-    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
+    // Construct the commodity index.
+    auto index = parseCommodityIndex(baseConvention->id(), conventions, false, basePts);
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to

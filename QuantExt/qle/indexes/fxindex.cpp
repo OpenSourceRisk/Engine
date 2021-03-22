@@ -74,7 +74,8 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
-    QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
+    QL_REQUIRE(isValidFixingDate(fixingDate),
+               "Fixing date " << fixingDate << " is not valid for FxIndex '" << name() << "'");
 
     Date today = Settings::instance().evaluationDate();
 

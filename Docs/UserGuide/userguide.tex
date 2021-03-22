@@ -131,7 +131,7 @@
 %\date{7 December 2017}
 %\date{28 May 2019}
 %\date{19 June 2020}
-\date{30 October 2020}
+\date{17 March 2021}
 \maketitle
 
 \newpage
@@ -1054,7 +1054,11 @@ Example & Description \\
 \hline
 33 & CDS Exposure Simulation \\
 \hline
-34 & Wrong way risk \\
+34 & Wrong Way Risk \\
+\hline
+35 & Flip View \\
+\hline
+36 & Choice of Measure \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -2342,6 +2346,36 @@ Correlation & NettingSetId & CVA & DVA & FBA & FCA \\
 \end{center}
 \end{table}
 
+%--------------------------------------------------------------------
+\subsection{Flip View}% Example 35
+\label{example:35}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_35} demonstrates how ORE can be used to quickly switch perspectives in XVA calculations with minimal changes in the {\tt ore.xml} file only. In particular it does not involve manipulating the portfolio input.
+
+%--------------------------------------------------------------------
+\subsection{Choice of Measure}% Example 36
+\label{example:36}
+%--------------------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_36} illustrates the effect of measure changes on simulated expected and peak exposures. For that purpose we reuse Example 1 (un-collateralized vanilla swap exposure) and run the simulation three times with different risk-neutral measures,
+\begin{itemize}
+\item in the LGM measure as in Example 1 (note {\tt <Measure>LGM</Measure>} in {\tt simulation\_lgm.xml}, this is the default also if the Measure tag is omitted)  
+\item in the more common Bank Account measure (note {\tt <Measure>BA</Measure>} in {\tt simulation\_ba.xml})  
+\item in the T-Forward measure with horizon T=20 at the Swap maturity (note {\tt <Measure>LGM</Measure>}  and {\tt <ShiftHorizon>20.0</ShiftHorizon>} in {\tt simulation\_fwd.xml})
+\end{itemize}
+
+The results are summarized in the exposure evolution graphs in figure \ref{fig:36}. As expected, the expected exposures evolutions match across measures, as these are expected discounted NPVs and hence measure independent.
+However, peak exposures are dependent on the measure choice as confirmed graphically here. Many more measures are accessible with ORE, by way of varying the T-Forward horizon which was chosen arbitrarily here to match the Swap's maturity.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_exposures_measures.pdf}
+\end{center}
+\caption{Evolution of expected exposures (EPE) and peak exposures (PFE at the 95\% quantile) in three measures, LGM, Bank Account, T-Forward with T=20, with 10k Monte Carlo samples.}
+\label{fig:36}
+\end{figure}
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -2474,6 +2508,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+  <Parameter name="currencyConfiguration">../../Input/currencies.xml</Parameter>
   <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
@@ -2504,7 +2539,15 @@ e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconf
   conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the marketDataFile and the fixingDataFile are
 explained in the sections below.
 
-\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
+\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and
+business days to be added to specified calendars.
+
+\medskip The optional parameter {\tt currencyConfiguration} points to a configuration file that contains additional currencies
+to be added to ORE's setup, see {\tt Examples/Input/currencies.xml} for a full list of ISO currencies and a few unofficial currency
+codes that can thus be made available in ORE. Note that the external configuration does not override any currencies that are
+hard-coded in the QuantLib/QuantExt libraries, only currencies not present already are added from the external configuration file.
+
+\medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:
@@ -2563,6 +2606,7 @@ type can be (so far) in
 \item npv
 \item cashflow
 \item additionalResults
+\item todaysMarketCalibration
 \item curves
 \item simulation
 \item xva
@@ -2598,12 +2642,16 @@ the list above.
     <Parameter name="active">Y</Parameter>
     <Parameter name="outputFileName">additional\_results.csv</Parameter>
   </Analytic> 
+  <Analytic type="todaysMarketCalibration">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">todaysmarketcalibration.csv</Parameter>
+  </Analytic>
   <Analytic type="...">
     <!-- ... -->
   </Analytic>      
 </Analytics>      
 \end{minted}
-\caption{ORE analytics: npv, cashflow and curves}
+\caption{ORE analytics: npv, cashflow, curves, additional results, todays market calibratino}
 \label{lst:ore_analytics}
 \end{listing}
 
@@ -2670,6 +2718,9 @@ example\_swaption & vega & double & 309237709.5 \\
 \label{additionalreport}
 \end{center}
 \end{table}
+
+The todaysMarketCalibration analytic writes a report containing information on the build of the t0 market.
+
 \medskip The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as
 specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the
 portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from
@@ -3591,6 +3642,9 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
   </Product>
   <GlobalParameters>
     <Parameter name="ContinueOnCalibrationError">true</Parameter>
+    <!-- typcially not present in a user configuration, but used internally -->
+    <Parameter name="Calibrate">true</Parameter>
+    <Parameter name="GenerateAdditionalResults"</Parameter>
   </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
@@ -3630,9 +3684,16 @@ intended to allow the selection of optimised pricing engines for vanilla product
 \medskip
 In addition to product specific settings there is also a block with global parameters with the following meaning:
 \begin{itemize}
-\item ContinueOnCalibrationError If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
+\item ContinueOnCalibrationError: If set to true an exceedence of a prescribed model calibration tolerance (for e.g. the
   LGM model) will not cause the trade building to fail, instead a warning is logged and the trade is processed
   anyway. Optional, defaults to false.
+\item Calibrate: If false, model calibration is disabled. This flag is usually not present in a user configuration, but
+  only used internally for certain workflows within ORE which do not require a model calibration. Optional, defaults to
+  true.
+\item GenerateAdditionalResults: If false, the generation of additional results within pricing engines will be
+  suppressed (for those pricing engines which support this). This flag is usually not present in a user configuration,
+  but only used internally to improve the performance for processes which only rely on the NPV as a result from pricing
+  engines, e.g. when repricing trades under sensitivity or stress scenarios. Option, defaults to false.
 \end{itemize}
 
 %--------------------------------------------------------
@@ -3741,6 +3802,7 @@ exceptions, but add to the run time of ORE.
     <Currency>JPY</Currency>
   </Currencies>
   <BootstrapTolerance>0.0001</BootstrapTolerance>
+  <Measure>LGM</Measure><!-- Choices: LGM, BA -->
   <!-- ... -->
 </CrossAssetModel>
 \end{minted}
@@ -3751,6 +3813,8 @@ exceptions, but add to the run time of ORE.
 Bootstrap tolerance is a global parameter that applies to the calibration of all model components. If the calibration
 error of any component exceeds this tolerance, this will trigger an exception at runtime, early in the ORE process.
 
+The Measure tag allows switching between the LGM and the Bank Account (BA) measure for the risk-neutral market simulations using the Cross Asset Model. Note that within LGM one can shift the horizon (see ParameterTransformation below) to effectively switch to a T-Forward measure. 
+ 
 \medskip
 
 Each interest rate model is specified by a block as follows
@@ -4059,7 +4123,7 @@ the relevant calibration instrument times and the parameter's initial values are
 empty and giving a single value in the \lstinline!InitialValue! node is the clearest XML setup in this case.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}	
+\begin{minted}[fontsize=\footnotesize]{xml}
 <JarrowYildirim index="EUHICPXT">
   <Currency>EUR</Currency>
   <CalibrationType>Bootstrap</CalibrationType>
@@ -4122,7 +4186,7 @@ also allowed and it has the structure shown in Listing \ref{lst:yoy_cf_calibrati
 be a maturity period e.g.\ \lstinline!5Y!. The \lstinline!Strike! should be an absolute strike level for the year on year cap or floor e.g.\ \lstinline!0.01! for 1\%.
 
 \begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{xml}	
+\begin{minted}[fontsize=\footnotesize]{xml}
 <YoYCapFloor>
   <Type>...</Type>
   <Tenor>...</Tenor>
@@ -4139,7 +4203,7 @@ Finally, the instantaneous correlation structure is specified as follows.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<CrossAssetModel>	
+<CrossAssetModel>
   <!-- ... -->
   <InstantaneousCorrelations>
     <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
@@ -4623,15 +4687,15 @@ A sample {\tt calendaradjustment.xml} file can be found in the global example in
 \caption{Calendar Adjustment}\label{lst:calendar_adjustment}
 \end{longlisting}
 
-If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!Japan_amended! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
+If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!CUSTOM\_Japan! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
 
-If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be added to the \lstinline!calendar! type in the file \textit{ore\_types.xsd}.
+If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be prefixed with `CUSTOM\_'.
 
 \begin{longlisting}
 \hrule\medskip
 \begin{minted}[fontsize=\scriptsize]{xml}
 <CalendarAdjustments>
-  <Calendar name="Japan\_amended">
+  <Calendar name="CUSTOM\_Japan">
     <BaseCalendar>Japan</BaseCalendar>
     <AdditionalHolidays>
       <Date>2020-04-06</Date>
@@ -4739,7 +4803,7 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 
 \subsubsection{FX Volatility Structures}
 
-Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility structure configurations.
+Listing \ref{lst:fxoptionvol_configuration} shows three examples of FX volatility structure configurations.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4748,7 +4812,7 @@ Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility 
   <FXVolatility>
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
-    <!-- ATM, Smile -->
+    <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>ATM</Dimension> 
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
@@ -4759,7 +4823,7 @@ Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility 
   <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <!-- ATM, Smile -->
+    <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>Smile</Dimension> 
     <!-- VannaVolga, Delta -->
     <SmileType>Delta</SmileType> 
@@ -4771,6 +4835,16 @@ Listing \ref{lst:fxoptionvol_configuration} shows two examples of FX volatility 
     <FXSpotID>FX/USD/JPY</FXSpotID>
     <FXForeignCurveID>Yield/JPY/JPY1D</FXForeignCurveID>
     <FXDomesticCurveID>Yield/USD/USD1D</FXDomesticCurveID>
+  </FXVolatility>
+
+  <FXVolatility>
+    <CurveId>EURJPY</CurveId>
+    <CurveDescription />
+    <!-- ATM, Smile, ATMTriangulated -->
+    <Dimension>ATMTriangulated</Dimension> 
+    <FXSpotID>FX/EUR/JPY</FXSpotID>
+    <BaseVolatility1>EURUSD</BaseVolatility1>
+    <BaseVolatility2>USDJPY</BaseVolatility2>
   </FXVolatility>
 
   <FXVolatility>
@@ -4787,8 +4861,8 @@ The meaning of each of the elements in Listing \ref{lst:fxoptionvol_configuratio
 \begin{itemize}
 \item CurveId: Unique identifier of the FX volatility structure
 \item CurveDescription: A description of the volatility structure, may be left blank.
-\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. \\ 
-Allowable values: {\tt ATM, Smile}
+\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. An `ATMTriangulated' value denotes a curve triangulated from two other surfaces.\\ 
+Allowable values: {\tt ATM, Smile, ATMTriangulated}
 \item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
 Allowable values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006) and {\tt Delta}, with default value {\tt VannaVolga} if left blank.
 \item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
@@ -4801,7 +4875,7 @@ VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and 
 \item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of
   the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} for option tenors <= 2Y and {\tt
     AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y  if the conventions ID is omitted or left blank
-\item Expiries: Option expiries in period form
+\item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt ATM} or {\tt Delta} curves.
 \item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\
 Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol_configuration}
 \item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
@@ -4809,6 +4883,9 @@ Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol
 \item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
 \item DayCounter: The term structure's day counter used in date to time conversions
 \item Calendar: The term structure's calendar used in option tenor to date conversions
+\item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+\item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
+
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}
@@ -5177,6 +5254,7 @@ floor price surface.
           <IndexInterpolated>false</IndexInterpolated>
           <ObservationLag>3M</ObservationLag>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+          <QuoteIndex>...</QuoteIndex>
       </InflationCapFloorVolatility>
 \end{minted}
 \caption{Inflation ZC cap floor volatility surface configuration}
@@ -5203,6 +5281,7 @@ floor price surface.
 \item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
 \item {\tt Observation Lag}: The observation lag applicable to the term structure.
 \item {\tt YieldTermStructure}: The nominal term structure.
+\item \lstinline!QuoteIndex!: An optional node allowing the user to provide an alternative index name for forming the quotes that will be used in building the cap floor surface. If this node is not provided, the \lstinline!Index! node value is used in quote construction. For example, quotes must be created from each strike and each tenor and these quotes are subsequently looked up in the market data when building the cap floor volatility surface. The quotes are formed by concatenating \lstinline![Type]_INFLATIONCAPFLOOR!, \lstinline!PRICE! or \lstinline!RATE_[Vol_Type]VOL!, \lstinline![Index_Name]!, \lstinline![Tenor]!, \lstinline!C! or \lstinline!F! and \lstinline![Strike]! delimited by \lstinline!/!. If \lstinline!QuoteIndex! is provided, it is used as the \lstinline![Index_Name]! token. If it is not provided \lstinline!Index! is used as usual.
 \end{itemize}
 
 \subsubsection{CDS Volatilities}
@@ -5513,43 +5592,21 @@ Commodity Curves are setup as price curves in ORE, meaning that they return a pr
 
 Listing \ref{lst:commodity_curve_configuration_1} shows the configuration of Commodity curves built from futures prices, in this example WTI Oil prices, note there is no spot price in this configuration, rather we have a set of futures prices only.
 
-
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-    <CommodityCurve>
-      <CurveId>WTI_USD</CurveId>
-      <CurveDescription>WTI USD price curve</CurveDescription>
-      <Currency>USD</Currency>
-      <Quotes>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-06-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-07-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-08-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-09-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-10-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-11-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-12-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-01-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-02-28</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-03-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-04-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-05-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-06-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-07-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-08-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-09-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-10-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-11-30</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-12-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-01-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-02-28</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-03-31</Quote>
-        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-04-30</Quote>
-      </Quotes>
-      <DayCounter>A365</DayCounter>
-      <InterpolationMethod>Linear</InterpolationMethod>
-      <Extrapolation>true</Extrapolation>
-    </CommodityCurve>
-  </CommodityCurves>
+<CommodityCurve>
+  <CurveId>WTI_USD</CurveId>
+  <CurveDescription>WTI USD price curve</CurveDescription>
+  <Currency>USD</Currency>
+  <Quotes>
+    <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-06-30</Quote>
+    <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-07-31</Quote>
+    ...
+  </Quotes>
+  <DayCounter>A365</DayCounter>
+  <InterpolationMethod>Linear</InterpolationMethod>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
 \end{minted}
 \caption{Commodity Curve Configuration for WTI Oil}
 \label{lst:commodity_curve_configuration_1}
@@ -5559,29 +5616,23 @@ Listing \ref{lst:commodity_curve_configuration_2} shows the configuration for a 
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <CommodityCurves>
-    <CommodityCurve>
-      <CurveId>XAU</CurveId>
-      <CurveDescription>Gold USD price curve</CurveDescription>
-      <Currency>USD</Currency>
-      <SpotQuote>COMMODITY/PRICE/XAU/USD</SpotQuote>
-      <Quotes>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/ON</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/TN</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/SN</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1W</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1M</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/3M</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/6M</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/9M</Quote>
-        <Quote>COMMODITY_FWD/PRICE/XAU/USD/1Y</Quote>
-      </Quotes>
-      <DayCounter>A365</DayCounter>
-      <InterpolationMethod>Linear</InterpolationMethod>
-      <Conventions>XAU</Conventions>
-      <Extrapolation>true</Extrapolation>
-    </CommodityCurve>
-  </CommodityCurves>
+<CommodityCurve>
+  <CurveId>XAU</CurveId>
+  <CurveDescription>Gold USD price curve</CurveDescription>
+  <Currency>USD</Currency>
+  <SpotQuote>COMMODITY/PRICE/XAU/USD</SpotQuote>
+  <Quotes>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/ON</Quote>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/TN</Quote>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/SN</Quote>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/1W</Quote>
+    ...
+  </Quotes>
+  <DayCounter>A365</DayCounter>
+  <InterpolationMethod>Linear</InterpolationMethod>
+  <Conventions>XAU</Conventions>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
 \end{minted}
 \caption{Commodity Curve Configuration for Gold in USD}
 \label{lst:commodity_curve_configuration_2}
@@ -5597,7 +5648,7 @@ as 'Optional', then it may be excluded or included and left blank.
 \item Quotes: forward price quotes. These can be a futures price or forward points.
 \item DayCounter: The day count basis used internally by the curve to calculate the time between dates.
 \item InterpolationMethod [Optional]: The variable on which the interpolation is performed. The allowable values are
-Linear, LogLinear, Cubic, LinearFlat, LogLinearFlat, CubicFlat. This is different to yield curves above in that Flat versions
+Linear, LogLinear, Cubic, LinearFlat, LogLinearFlat, CubicFlat, BackwardFlat. This is different to yield curves above in that Flat versions
 of the standard methods are defined, with each of these if there is no Spot price than any extrapolation between $T_0$ and the
 first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$). 
 If the element is omitted or left blank, then it defaults to \emph{Linear}.
@@ -5612,21 +5663,148 @@ Alternatively commodity curves can be set up as a commodity curve times the rati
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <CommodityCurves>
-    <CommodityCurve>
-      <CurveId>XAUEUR</CurveId>
-      <CurveDescription>Gold EUR price curve</CurveDescription>
-      <Currency>EUR</Currency>
-      <BasePriceCurve>XAU</BasePriceCurve>
-      <BaseYieldCurve>USD-FedFunds</BaseYieldCurve>
-      <YieldCurve>EUR-IN-USD</YieldCurve>
-      <Extrapolation>true</Extrapolation>
-    </CommodityCurve>
-  </CommodityCurves>
+<CommodityCurve>
+  <CurveId>XAUEUR</CurveId>
+  <CurveDescription>Gold EUR price curve</CurveDescription>
+  <Currency>EUR</Currency>
+  <BasePriceCurve>XAU</BasePriceCurve>
+  <BaseYieldCurve>USD-FedFunds</BaseYieldCurve>
+  <YieldCurve>EUR-IN-USD</YieldCurve>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
 \end{minted}
 \caption{Commodity Curve Configuration for Gold in EUR}
 \label{lst:commodity_curve_configuration_3}
 \end{longlisting}
+
+Commodity curves may also be set up using a base future price curve and a set of future basis quotes to give an outright price curve. There are a number of options here depending on whether the base future and basis future are averaging or not averaging. Whether or not the base future and basis future is averaging is determined from the conventions supplied in the \lstinline!BasePriceConventions! and \lstinline!BasisConventions! fields. 
+\begin{itemize}
+\item
+The base future is not averaging and the basis future is not averaging. The commodity curve that is built gives the outright price of the non-averaging future. An example of this is the CME Henry Hub future contract, symbol NG, and the various locational gas basis future contracts, e.g.\ ICE Waha Basis Future, symbol WAH. Listing \ref{lst:commodity_crv_config_ice_waha} demonstrates an example set-up for this curve. The curve that is built will give the ICE Waha outright price on the basis contract's expiry dates.
+
+\item
+The base future is not averaging and the basis future is averaging. The commodity curve that is built gives the outright price of the averaging future. An example of this is the CME Light Sweet Crude Oil future contract, symbol CL, and the various locational oil basis future contracts, e.g.\ CME WTI Midland (Argus) Future, symbol FF. Listing \ref{lst:commodity_crv_config_cme_ff} demonstrates an example set-up for this curve. The curve that is built will give the outright average price of WTI Midland (Argus) over the calendar month.
+
+\item
+The base future is averaging and the basis future is averaging. The commodity curve that is built gives the outright price of the averaging future. The set-up is identical to that outlined in Listings \ref{lst:commodity_crv_config_ice_waha} and \ref{lst:commodity_crv_config_cme_ff}.
+
+\item
+The base future is averaging and the basis future is not averaging. This combination is not currently supported.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>ICE:WAH</CurveId>
+  <Currency>USD</Currency>
+  <BasisConfiguration>
+    <BasePriceCurve>NYMEX:NG</BasePriceCurve>
+    <BasePriceConventions>NYMEX:NG</BasePriceConventions>
+    <BasisQuotes>
+      <Quote>COMMODITY_FWD/PRICE/ICE:WAH/*</Quote>
+    </BasisQuotes>
+    <BasisConventions>ICE:WAH</BasisConventions>
+    <DayCounter>A365</DayCounter>
+    <InterpolationMethod>LinearFlat</InterpolationMethod>
+    <AddBasis>true</AddBasis>
+  </BasisConfiguration>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity curve configuration for ICE Waha}
+\label{lst:commodity_crv_config_ice_waha}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>NYMEX:FF</CurveId>
+  <Currency>USD</Currency>
+  <BasisConfiguration>
+    <BasePriceCurve>NYMEX:CL</BasePriceCurve>
+    <BasePriceConventions>NYMEX:CL</BasePriceConventions>
+    <BasisQuotes>
+      <Quote>COMMODITY_FWD/PRICE/NYMEX:FF/*</Quote>
+    </BasisQuotes>
+    <BasisConventions>NYMEX:FF</BasisConventions>
+    <DayCounter>A365</DayCounter>
+    <InterpolationMethod>LinearFlat</InterpolationMethod>
+    <AddBasis>true</AddBasis>
+  </BasisConfiguration>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity curve configuration for WTI Midland (Argus)}
+\label{lst:commodity_crv_config_cme_ff}
+\end{longlisting}
+
+The meaning of the fields in the \lstinline!BasisConfiguration! node in Listings \ref{lst:commodity_crv_config_ice_waha} and \ref{lst:commodity_crv_config_cme_ff} are as follows:
+\begin{itemize}
+\item \lstinline!BasePriceCurve!: The identifier for the base future commodity price curve.
+\item \lstinline!BasePriceConventions!: The identifier for the base future contract conventions.
+\item \lstinline!BasisQuotes!: The set of basis quotes to look for in the market. Note that this can be a single wildcard string as shown in the Listings or a list of explicit \lstinline!COMMODITY_FWD! \lstinline!PRICE! quote strings.
+\item \lstinline!BasisConventions!: The identifier for the basis future contract conventions.
+\item \lstinline!DayCounter!: Has the meaning given previously in this section.
+\item \lstinline!InterpolationMethod! [Optional]: Has the meaning given previously in this section.
+\item \lstinline!AddBasis! [Optional]: This is a boolean flag where \lstinline!true!, the default value, indicates that the basis value should be added to the base price to give the outright price and \lstinline!false! indicates that the basis value should be subtracted from the base price to give the outright price.
+\item \lstinline!MonthOffset! [Optional]: This is an optional non-negative integer value. In general, the basis contract period and the base contract period are equal, i.e.\ the value of the March basis contract for ICE Waha will be added to the value of thr March contract for CME NG. If for contracts with a monthly cycle or greater, the base contract month is $n$ months prior to the basis contract month, the \lstinline!MonthOffset! should be set to $n$. The default value if omitted is 0.
+\end{itemize}
+
+A commodity curve may also be set up as a piecewise price curve involving sets of quotes e.g. direct future price quotes, future price quotes that are the average of other future prices over a period, future price quotes that are the average of spot price over a period etc. This is particularly useful for cases where there are future contracts with different cycles. For example, in the power markets, there are daily future contracts at the short end and monthly future contracts that average the daily prices over the month at the long end. An example of such a set-up is shown in Listing \ref{lst:commodity_crv_config_ice_pdq}.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>ICE:PDQ</CurveId>
+  <Currency>USD</Currency>
+  <PriceSegments>
+    <PriceSegment>
+      <Type>Future</Type>
+      <Priority>1</Priority>
+      <Conventions>ICE:PDQ</Conventions>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/ICE:PDQ/*</Quote>
+      </Quotes>
+    </PriceSegment>
+    <PriceSegment>
+      <Type>AveragingFuture</Type>
+      <Priority>2</Priority>
+      <Conventions>ICE:PMI</Conventions>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/ICE:PMI/*</Quote>
+      </Quotes>
+    </PriceSegment>
+  </PriceSegments>
+  <DayCounter>A365</DayCounter>
+  <InterpolationMethod>LinearFlat</InterpolationMethod>
+  <Extrapolation>true</Extrapolation>
+  <BootstrapConfig>...</BootstrapConfig>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity curve configuration for PJM Real Time Peak}
+\label{lst:commodity_crv_config_ice_pdq}
+\end{longlisting}
+
+The \lstinline!BootstrapConfig! node is described in Section \ref{sec:bootstrap_config}. The remaining nodes in Listing \ref{lst:commodity_crv_config_ice_pdq} have been described already in this section. The meaning of each of the fields in the \lstinline!PriceSegment! node in Listing \ref{lst:commodity_crv_config_ice_pdq} is as follows:
+\begin{itemize}
+\item \lstinline!Type!:
+The type of the future contract for which quotes are being provided in the current \lstinline!PriceSegment!. The allowable values are:
+    \begin{itemize}
+    \item \lstinline!Future!: This indicates that the quote is a straight future contract price quote.
+    \item \lstinline!AveragingFuture!: This indicates that the quote is for a future contract price that is the average of other future contract prices over a given period. The averaging period for each quote and other conventions are given in the associated conventions determined by the \lstinline!Conventions! node.
+    \item \lstinline!AveragingSpot!: This indicates that the quote is for a future contract price that is the average of spot prices over a given period. The averaging period for each quote and other conventions are given in the associated conventions determined by the \lstinline!Conventions! node.
+    \end{itemize}
+
+\item \lstinline!Priority! [Optional]:
+An optional non-negative integer giving the priority of the current \lstinline!PriceSegment! relative to the other \lstinline!PriceSegment!s when there are quotes for contracts with the same expiry dates in those segments. Values closer to zero indicate higher priority i.e.\ quotes in this segment are given priority in the event of clashes. If omitted, the \lstinline!PriceSegment!s are currently read in the order that they are provided in the XML so that quotes in segments appearing earlier in the XML will be given preference in the case of clashes.
+
+\item \lstinline!Conventions!:
+The identifier for the future contract conventions associated with the quotes in the \lstinline!PriceSegment!. Details on these conventions are given in Section \ref{sec:commodity_future_conventions}.
+
+\item \lstinline!Quotes!:
+The set of future price quotes to look for in the market. Note that this can be a single wildcard string as shown in the Listing \ref{lst:commodity_crv_config_ice_pdq} or a list of explicit \lstinline!COMMODITY_FWD! \lstinline!PRICE! quote strings.
+
+\end{itemize}
 
 \subsubsection{Bootstrap Configuration}
 \label{sec:bootstrap_config}
@@ -5720,6 +5898,7 @@ This node is used only if \lstinline!DontThrow! is \lstinline!true!. The meaning
 \input{../../Docs/UserGuide/tradecomponents/indexings}
 \input{../../Docs/UserGuide/tradecomponents/cashflowleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsleg}
+\input{../../Docs/UserGuide/tradecomponents/durationadjustedcmsleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsspreadleg}
 \input{../../Docs/UserGuide/tradecomponents/digitalcmsspreadleg}
 \input{../../Docs/UserGuide/tradecomponents/equityleg}
@@ -6074,6 +6253,91 @@ The equity/credit covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (
 	\rho_{\phi(i)j}^{zC} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
 	&&+ \rho_{ij}^{sC} \int_s^t \sigma_i^S (u) H_{C,j} (u) \alpha_{C,j} (u) du\\
 \end{eqnarray*}
+
+\subsection{Change of Measure}
+
+We can change measure from LGM to the T-Forward measure by applying a shift transformation to the $H$ parameter of the domestic LGM process, as explained in \cite{Lichters} and shown in Example 12, section \ref{sec:longterm}. This does not involve amending the system of SDEs above.
+
+\medskip
+\noindent
+In the following we show how to move from the LGM to the Bank Account measure when we start with the Cross Asset Model in the LGM measure. This description and the implementation in ORE is limited so far to the cross currency case.
+
+First note that the stochastic Bank Account (BA) can be written
+\begin{align*}
+B(t) &= \frac{1}{P(0,t)}\exp\left(\int_0^t (H_t-H_s)\,\alpha_s\,dW_s^B + \frac{1}{2}\int_0^t (H_t-H_s)^2\,\alpha^2_s\,ds \right)
+\end{align*} 
+with Wiener processes in the BA measure. We can express this in terms of the domestic LGM's state variable $z(t)$ and an auxiliary random variable $y(t)$
+\begin{align*}
+B(t) &= \frac{1}{P(0,t)}\exp\left(H(t)\,z(t) - y(t) + \frac{1}{2} \left(H^2(t)\,\zeta_0(t) + \zeta_2(t)\right)\right)
+\intertext{with}
+dz(t) &= \alpha(t)\,dW^B(t) - H(t)\,\alpha^2(t)\,dt \\
+dy(t) &= H(t)\,\alpha(t)\,dW^B(t) \\
+\zeta_n(t) &= \int_0^t \alpha^2(s)\,H^n(s) \,ds
+\end{align*}
+Note the drift of LGM state variable $z(t)$ in the BA measure and the auxiliary state variable $y(t)$ which is driven by the same Wiener process as $z(t)$. The instantaneous correlation of $dz$ and $dy$ is one, but the terminal correlation of $z(t)$ and $y(t)$ is less than one because of their different volatility functions. This is all we need to switch measure to BA in a pure domestic currency case.
+
+To change measure in the cross currency case we need to make changes to the SDE beyond adding an auxiliary state variable $y$ and adding a drift to the domestic LGM state. Let us write down the SDEs in the LGM and BA measure with respective drift terms that ensure martingale properties.
+
+SDE in the LGM measure
+\begin{align*}
+dz_0 &= \alpha_0\,dW_0^z \\
+dz_i &= \left(-\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + {\color{red} \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0}\right)\,dt + \alpha_i\,dW_i^z \\
+d\ln x_i &= \left(r_0 - r_i - \frac{1}{2}\sigma^2_i + {\color{red} \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i} \right)\, dt + \sigma_i\,dW_i^x \\
+\intertext{SDE in the BA measure}
+{\color{blue}dy_0}  & = {\color{blue}\alpha_0\,H_0\,d\widetilde W_0^z} \\
+dz_0 &= {\color{blue}-\alpha_0^2\,H_0\,dt} + \alpha_0\,d\widetilde W_0^z \\
+dz_i &= \left(-\alpha_i^2\,H_i-\rho_{ii}^{zx}\,\sigma_i\,\alpha_i\right)\,dt + \alpha_i\,d\widetilde W_i^z \\
+d\ln x_i &= \left(r_0 - r_i - \frac{1}{2}\sigma^2_i\right)\, dt + \sigma_i\,d\widetilde W_i^x,\qquad 
+r_i = f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t)
+\end{align*}
+
+Blue terms are {\color{blue}added}, red terms are {\color{red}removed} when moving from LGM to BA.
+
+\medskip\noindent
+
+These drift term changes lead to the following changes in conditional expectations 
+\begin{align*}
+\E[\Delta y_0] =& 0 \\
+\E[\Delta z_0] =& - {\color{blue}\int_s^t H_0\,\alpha_0^2\,du}  \\
+\E[\Delta z_i] =& - \int_s^t H_i\,\alpha_i^2\,du 
+  - \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha_i\,du
+  + {\color{red}\rho^{zz}_{0i} \int_s^t H_0\,\alpha_0\,\alpha_i\,du } \\
+\E[\Delta \ln x] 
+  =& \left(H_0(t)-H_0(s)\right) z_0(s) -\left(H_i(t)-H_i(s)\right)\,z_i(s)\\
+  &+ \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) \\
+  & - \frac12 \int_s^t (\sigma^x_i)^2\,du \\
+  &+\frac12 \left(H^2_0(t)\, \zeta_0(t) -  H^2_0(s) \,\zeta_0(s) - \int_s^t H_0^2 \alpha_0^2\,du\right)\\
+  &-\frac12 \left(H^2_i(t) \,\zeta_i(t) -  H^2_i(s) \,\zeta_i(s) - \int_s^t H_i^2 \alpha_i^2\,du\right)\\
+  & + {\color{red} \rho^{zx}_{0i} \int_s^t H_0\, \alpha_0\, \sigma^x_i\,du} \\
+  &  - \int_s^t \left(H_i(t)-H_i\right)\gamma_i \,du \qquad\mbox{with}\qquad
+  \gamma_i = -\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + {\color{red}\rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0}   \\
+  & + {\color{blue}\int_s^t \left(H_0(t)-H_0\right)\,\gamma_0 \,du \qquad \mbox{with}\qquad \gamma_0 = - H_0\,\alpha_0^2}
+\end{align*}
+and the following additional variances and covariances
+\begin{align*}
+\mathrm{Var}[\Delta y_0] =& \int_s^t \alpha_0^2\,H_0^2\,du \\
+\mathrm{Cov}[\Delta y_0, \Delta z_i] =& \rho^{zz}_{0i} \int_s^t \alpha_0\,H_0\,\alpha_i\,du \\
+\mathrm{Cov}[\Delta y_0, \Delta \ln x_i] =& \int_s^t \left(H_0(t)-H_0\right) \alpha_0^2\,H_0\,du \\
+&  - \rho^{zz}_{0i}\int_s^t \alpha_0\,H_0\left(H_i(t)-H_i\right)\, \alpha_i \,du \\
+&  +\rho^{zx}_{0i}\int_s^t \alpha_0 \, H_0\,\sigma^x_i \,du 
+%\mathrm{Var}[\Delta z_i] =& \int_s^t \alpha_i^2\,du \\
+%\mathrm{Var}[\Delta \ln x_i] =&
+%      \int_s^t \left(H_0(t)-H_0\right)^2 \alpha_0^2\,du \nonumber\\
+%      & -2\rho^{zz}_{0i} \int_s^t \left(H_i(t)-H_i\right) \alpha_i\left(H_0(t)-H_0\right) \alpha_0\,du
+%  \nonumber\\
+%      &+ 2\rho^{zx}_{0i}\int_s^t \left(H_0(t)-H_0\right)\alpha_0 \,\sigma^x_i\,du \nonumber\\
+%      &- 2\rho^{zx}_{ii}\int_s^t \left(H_i(t)-H_i\right)\alpha_i \,\sigma^x_i\,du\nonumber\\
+%      &+ \int_s^t \left(H_i(t)-H_i\right)^2\alpha_i^2 \,du
+%  \nonumber\\
+%      &+ \int_s^t(\sigma^x_i)^2\,du \\
+%\mathrm{Cov} [\Delta z_i, \Delta z_j] =& \rho^{zz}_{ij}\int_s^t \alpha_i\,\alpha_j\,du \\
+%\mathrm{Cov} [\Delta z_i, \Delta \ln x_j] =& \rho^{zz}_{0i}\int_s^t \left(H_0(t)-H_0\right)
+%  \alpha_0\,\alpha_i\,du \nonumber\\
+%      &- \rho^{zz}_{ij}\int_s^t \alpha_i \,\alpha_j \,\left(H_j(t)-H_j\right) \,du \nonumber\\
+%      &+\rho^{zx}_{ij}\int_s^t \alpha_i \, \sigma^x_j \,du.
+\end{align*}
+
+Example 36 in section \ref{example:36} illustrates the effect of the choice of measure on exposure simulations.
 
 \subsection{Exposures}\label{sec:app_exposure}
 

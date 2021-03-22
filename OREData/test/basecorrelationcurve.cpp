@@ -43,17 +43,17 @@ namespace {
 
 boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const string& inputDir) {
 
-    Conventions conventions;
-    // conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+    auto conventions = boost::make_shared<Conventions>();
+    // conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
 
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
+    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
 
-    TodaysMarketParameters todaysMarketParameters;
-    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
+    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
-                     TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
+    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
+                                                TEST_INPUT_FILE(string(inputDir + "/fixings.txt")), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
 }

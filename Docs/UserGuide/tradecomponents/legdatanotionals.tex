@@ -53,7 +53,7 @@ Allowable values:  \emph{true, false}
 
 Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. When \lstinline!LegType! is \emph{Equity}, \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data} are also allowable.
 
-\item PaymentConvention: The payment convention of the leg coupons. 
+\item PaymentConvention: The payment convention of the leg coupons. Note that the calendar used in conjuction with the PaymentConvention and the PaymentLag to determine the payment date is the calendar in the \lstinline!ScheduleData! node, except for compounding OIS indices where the index calendar is used. If no calendar is set in the \lstinline!ScheduleData! node (for dates-based schedules the calendar field is optional), the \emph{NullCalendar} is used. 
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
@@ -122,7 +122,8 @@ An initial exchange, a final exchange
 and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
 \lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
 \lstinline!NotionalAmortizingExchange! as subelements, see Listing
-\ref{lst:notional_exchange}. The \lstinline!Exchanges! element is typically used in cross-currency swaps and inflation swaps, but can also be used in other trade and leg types.
+\ref{lst:notional_exchange}. The \lstinline!Exchanges! element is typically used in cross-currency swaps and inflation swaps, but can also be used in other trade and leg types. Note that for cross-currency swaps, the \lstinline!NotionalInitialExchange! must be set to the same value on both legs. The \lstinline!NotionalFinalExchange! must also be set to the same value on both legs, i.e. \emph{true} on both, or \emph{false} on both.
+
 
 Allowable values for \lstinline!NotionalInitialExchange!,  \lstinline!NotionalFinalExchange! and \lstinline!NotionalAmortizingExchange!:   \emph{true, false}. Defaults to  \emph{false} if omitted, or if the entire \lstinline!Exchanges! block is omitted.
 
@@ -158,7 +159,7 @@ Allowable values:  A string on the form FX-SOURCE-CCY1-CCY2.
 
 \item FixingDays: The FX fixing lag in business days
 
-Allowable values:  Any integer.
+Allowable values:  A non-negative integer.
 
 \item FixingCalendar[Optional]: The calendar associated with the FX Index. 
 
@@ -214,6 +215,8 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
   outlined in section \ref{ss:cashflowlegdata}.
 \item CMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMS}. It is
   outlined in section \ref{ss:cmslegdata}.
+\item DurationAdjustedCMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{DurationAdjustedCMS}. It is
+  outlined in section \ref{ss:duration_adjusted_cmslegdata}.  
 \item CMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMSSpread}. It is
   outlined in section \ref{ss:cmsspreadlegdata}.
 \item DigitalCMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{DigitalCMSSpread}. It is

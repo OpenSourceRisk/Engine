@@ -28,7 +28,8 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <Floors>
                         <Floor>0.01</Floor>
                     </Floors>
-                    <NakedOption>false</NakedOption>    
+                    <NakedOption>false</NakedOption>
+                    <LocalCapFloor>false</LocalCapFloor>
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -42,7 +43,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
   identifies the relevant fixings and yield curve of the floating leg.  
 
   Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
-  M or Y. See Table \ref{tab:indices}.
+  M or Y. See Table \ref{tab:indices}. TERM is not required for Overnight indices.
 
 \item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that
   the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by
@@ -216,16 +217,39 @@ If the entire {\tt <Spreads>} section is omitted, it defaults to a spread of \em
   
 If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \emph{1}.
 
-\item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
-  given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
+\item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is
+  capped at the given rate (after applying gearing and spread, if any). The mode of specification is analogous to
+  spreads, see above. Caps / Floors are supported for Ibor and compounded OIS coupons, but not for coupons with
+  subperiods or averaged OIS coupons.
+
+  For compounded OIS coupons notice how the gearing $g$ and spread $s$ enter the calculation of the coupon amount $A$
+  dependent on the IncludeSpread and LocalCapFloor flags and the cap rate $C$, floor rate $F$, daily rates $f_i$, daily
+  accrual fractions $\tau_i$ and the coupon accrual fraction $\tau$:
+  \begin{itemize}
+  \item IncludeSpread = false, LocalCapFloor = false:\\
+    $$ A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)$$
+  \item IncludeSpread = true, LocalCapFloor = false:\\
+    $$ A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)$$
+  \item IncludeSpread = false, LocalCapFloor = true:\\
+    $$ A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s $$
+  \item IncludeSpread = true, LocalCapFloor = true:\\
+    $$ A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau} $$
+  \end{itemize}
 
 \item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
 \item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar.
-  By convention the embedded floor (cap) are considered long if the leg is a receiver leg, otherwise short. For a
-  collar the floor is long and the cap is short if the leg is a receiver leg.
+  By convention the embedded floor (or cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  collar the floor is long and the cap is short if the leg is a receiver leg. Notice that this is opposite to
+  the definition of a collar in \ref{ss:capfloor}.
+
+ Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
+
+\item LocalCapFloor [Optional]: Optional node, if \emph{true} a cap (floor) will be applied to the daily rates of a
+  compounded overnight coupon. If \emph{false} the effective period rate will be capped (floored). The flag is ignored
+  for coupons other than compounded overnight coupons.
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 

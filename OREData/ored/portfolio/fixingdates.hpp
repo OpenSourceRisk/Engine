@@ -215,13 +215,17 @@ protected:
 void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter);
 
 /*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its
-    fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st of the
-    applicable month. Some market data providers by convention supply the inflation fixings with the date as the last
-    date of the month. This function scans the \p fixings map, and moves any inflation fixing dates from the 1st of
-    the month to the last day of the month. The key in the \p fixings map is the index name and the value is the set
-    of dates for which we require the fixings.
+    fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st day of the
+    applicable inflation period. Some market data providers by convention supply the inflation fixings with the date 
+    as the last date of the applicable inflation period. This function scans the \p fixings map, and moves any 
+    inflation fixing dates from the 1st day of the inflation period to the last day of the inflation period. The key 
+    in the \p fixings map is the index name and the value is the set of dates for which we require the fixings.
+
+    If inflation indices have been set up via ZeroInflationIndex entries in the Conventions, the \p conventions 
+    should be passed here. If not, the default \c nullptr parameter will be sufficient.
 */
-void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
+void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
+    const boost::shared_ptr<Conventions>& conventions = nullptr);
 
 /*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
 

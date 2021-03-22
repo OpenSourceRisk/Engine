@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
@@ -38,11 +38,9 @@ using namespace QuantLib;
   date in the reference curve. */
 class SpreadedDiscountCurve : public YieldTermStructure, public LazyObject {
 public:
-    //! \name Constructors
-    //@{
-    //! times based constructor, note that times should be consistent with day counter dc passed
+    //! times should be consistent with reference ts day counter
     SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
-                          const std::vector<Handle<Quote> >& quotes, const DayCounter& dc);
+                          const std::vector<Handle<Quote>>& quotes);
 
     Date maxDate() const override;
     void update() override;
@@ -58,7 +56,7 @@ protected:
 private:
     Handle<YieldTermStructure> referenceCurve_;
     std::vector<Time> times_;
-    std::vector<Handle<Quote> > quotes_;
+    std::vector<Handle<Quote>> quotes_;
     mutable std::vector<Real> data_;
     boost::shared_ptr<Interpolation> interpolation_;
 };

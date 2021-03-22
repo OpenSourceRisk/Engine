@@ -25,12 +25,14 @@
 
 #include <ored/marketdata/strike.hpp>
 
-#include <ql/models/calibrationhelper.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/infjyparameterization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/lgmcalibrationinfo.hpp>
+
+#include <ql/models/calibrationhelper.hpp>
 
 #include <boost/variant.hpp>
 
@@ -51,7 +53,7 @@ template <typename Helper> Real getCalibrationError(const std::vector<boost::sha
 }
 
 std::string getCalibrationDetails(
-    const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
+    LgmCalibrationInfo& info, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
     const boost::shared_ptr<IrLgm1fParametrization>& parametrization = boost::shared_ptr<IrLgm1fParametrization>());
 
 std::string getCalibrationDetails(
@@ -72,6 +74,8 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<Calibratio
                                   const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,
                                   const boost::shared_ptr<InfJyParameterization>& parameterization,
                                   bool calibrateRealRateVol = false);
+
+std::string getCalibrationDetails(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
 
 //! Return an option's maturity date, given an explicit date or a period.
 QuantLib::Date optionMaturity(const boost::variant<QuantLib::Date, QuantLib::Period>& maturity,

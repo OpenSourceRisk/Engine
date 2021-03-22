@@ -43,4 +43,11 @@ BGNCurrency::BGNCurrency() {
     data_ = bgnData;
 }
 
+// Georgian lari
+GELCurrency::GELCurrency() {
+    static boost::shared_ptr<Data> gelData(
+        new Data("Georgian lari", "GEL", 981, "GEL", "", 100, Rounding(), "1$.2F %3%"));
+    data_ = gelData;
+}
+
 } // namespace QuantExt

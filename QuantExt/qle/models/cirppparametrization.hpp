@@ -34,14 +34,14 @@ public:
     const Handle<TS> termStructure() const;
     const bool shifted() const;
 
+    Size numberOfParameters() const { return 4; }
+
 private:
     const Handle<TS> termStructure_;
     const bool shifted_;
 };
 
-template <class TS> inline const Handle<TS> CirppParametrization<TS>::termStructure() const {
-    return termStructure_;
-}
+template <class TS> inline const Handle<TS> CirppParametrization<TS>::termStructure() const { return termStructure_; }
 template <class TS> inline const bool CirppParametrization<TS>::shifted() const { return shifted_; }
 
 // typedef
@@ -49,10 +49,10 @@ typedef CirppParametrization<DefaultProbabilityTermStructure> CrCirppParametriza
 typedef CirppParametrization<YieldTermStructure> IrCirppParametrization;
 
 template <class TS>
-CirppParametrization<TS>::CirppParametrization(const Currency& currency, const Handle<TS>& termStructure,
-                                               bool shifted, const std::string& name)
-    : Parametrization(currency, name.empty() ? currency.code() : name),
-      termStructure_(termStructure), shifted_(shifted) {}
+CirppParametrization<TS>::CirppParametrization(const Currency& currency, const Handle<TS>& termStructure, bool shifted,
+                                               const std::string& name)
+    : Parametrization(currency, name.empty() ? currency.code() : name), termStructure_(termStructure),
+      shifted_(shifted) {}
 
 } // namespace QuantExt
 

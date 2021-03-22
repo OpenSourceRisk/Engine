@@ -52,7 +52,8 @@ public:
       engines for swaptions etc. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001,
-               const bool continueOnError = false, const std::string& referenceCalibrationGrid = "");
+               const bool continueOnError = false, const std::string& referenceCalibrationGrid = "",
+               const bool setCalibrationInfo = false);
     //! Return calibration error
     Real error() const;
 
@@ -75,7 +76,7 @@ private:
     void performCalculations() const override;
     void buildSwaptionBasket() const;
     void updateSwaptionBasketVols() const;
-    std::string getBasketDetails() const;
+    std::string getBasketDetails(QuantExt::LgmCalibrationInfo& info) const;
     // checks whether swaption vols have changed compared to cache and updates the cache if requested
     bool volSurfaceChanged(const bool updateCache) const;
     // populate expiry and term
@@ -90,6 +91,8 @@ private:
     const Real bootstrapTolerance_;
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
+    const bool setCalibrationInfo_;
+    bool requiresCalibration_ = false;
 
     mutable Real error_;
     mutable boost::shared_ptr<QuantExt::LGM> model_;

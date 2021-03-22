@@ -21,6 +21,7 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/durationadjustedcmslegdata.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
@@ -40,14 +41,13 @@ namespace data {
 
 void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-    DLOG("CapFloor::build() called for trade " << id());
+    DLOG("CapFloor::build() called for trade " << id() << ", leg type is " << legData_.legType());
 
-    // Make sure the leg is floating or CMS
-    QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") || (legData_.legType() == "CPI") ||
+    QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") ||
+                   (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CPI") ||
                    (legData_.legType() == "YY"),
-               "CapFloor build error, LegType must be Floating, CMS, CPI or YY");
+               "CapFloor build error, LegType must be Floating, CMS, DurationAdjustedCMS, CPI or YY");
 
-    // Determine if we have a cap, a floor or a collar
     QL_REQUIRE(caps_.size() > 0 || floors_.size() > 0, "CapFloor build error, no cap rates or floor rates provided");
     QuantLib::CapFloor::Type capFloorType;
     if (floors_.size() == 0) {
@@ -58,17 +58,19 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         capFloorType = QuantLib::CapFloor::Collar;
     }
 
-    // Clear legs before building
     legs_.clear();
-
-    // Make sure that the floating leg section does not have caps or floors
     boost::shared_ptr<EngineBuilder> builder;
     std::string underlyingIndex, qlIndexName;
+    boost::shared_ptr<QuantLib::Instrument> qlInstrument;
 
-    DLOG("Building cap/floor on leg of type " << legData_.legType());
+    // Account for long / short multiplier. In the following we expect the qlInstrument to be set up
+    // as a long cap resp. a long floor resp. as a collar which by definition is a long cap + short floor
+    // (this is opposite to the definition of a leg with naked option = true!)
+    // The isPayer flag in the leg data is ignored.
+    Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
+
     if (legData_.legType() == "Floating") {
 
-        Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
         boost::shared_ptr<FloatingLegData> floatData =
             boost::dynamic_pointer_cast<FloatingLegData>(legData_.concreteLegData());
         QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << legData_.legType());
@@ -105,11 +107,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // if both caps and floors are given, we have to use a payer leg, since in this case
             // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
             // and a short cap while we have documented a collar to be a short floor and long cap
-            auto swap =
+            qlInstrument =
                 boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
-            swap->setPricingEngine(
+            qlInstrument->setPricingEngine(
                 boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
-            instrument_ = boost::make_shared<VanillaInstrument>(swap, multiplier);
             maturity_ = CashFlows::maturityDate(legs_.front());
         } else {
             // For the cases where we don't have regular cap / floor support we treat the index approximately as an Ibor
@@ -117,6 +118,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // - BMA coupons
             // - Ibor coupons with sub periods (hasSubPeriods = true)
             // - averaged ON coupons (isAveraged = true)
+
             ALOG("CapFloor trade " << id()
                                    << " on a) BMA or b) sub periods Ibor or c) averaged ON underlying (index = '"
                                    << underlyingIndex
@@ -143,17 +145,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 caps_.resize(legs_[0].size(), caps_[0]);
 
             // Create QL CapFloor instrument
-            boost::shared_ptr<QuantLib::CapFloor> capFloor =
-                boost::make_shared<QuantLib::CapFloor>(capFloorType, legs_[0], caps_, floors_);
+            qlInstrument = boost::make_shared<QuantLib::CapFloor>(capFloorType, legs_[0], caps_, floors_);
 
             boost::shared_ptr<CapFloorEngineBuilder> capFloorBuilder =
                 boost::dynamic_pointer_cast<CapFloorEngineBuilder>(builder);
-            capFloor->setPricingEngine(capFloorBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(capFloorBuilder->engine(parseCurrency(legData_.currency())));
 
-            // Wrap the QL instrument in a vanilla instrument
-            instrument_ = boost::make_shared<VanillaInstrument>(capFloor, multiplier);
-
-            maturity_ = capFloor->maturityDate();
+            maturity_ = boost::dynamic_pointer_cast<QuantLib::CapFloor>(qlInstrument)->maturityDate();
         }
 
     } else if (legData_.legType() == "CMS") {
@@ -170,21 +168,45 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
         qlIndexName = index->name();
 
-        bool payer = (parsePositionType(longShort_) == Position::Long ? false : true);
-        vector<bool> legPayers_;
+        vector<bool> legPayers;
+        if (capFloorType == QuantLib::CapFloor::Collar)
+            // long cap, short floor
+            legPayers = {true, false};
+        else if(capFloorType == QuantLib::CapFloor::Cap)
+            // long cap
+            legPayers = {true, false};
+        else if(capFloorType == QuantLib::CapFloor::Floor)
+            // long floor
+            legPayers = {false, true};
         legs_.push_back(makeCMSLeg(legData_, index, engineFactory, caps_, floors_));
-        legPayers_.push_back(!payer);
         legs_.push_back(makeCMSLeg(legData_, index, engineFactory));
-        legPayers_.push_back(payer);
 
-        boost::shared_ptr<QuantLib::Swap> capFloor(new QuantLib::Swap(legs_, legPayers_));
+        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, legPayers);
         boost::shared_ptr<SwapEngineBuilderBase> cmsCapFloorBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        capFloor->setPricingEngine(cmsCapFloorBuilder->engine(parseCurrency(legData_.currency())));
+        qlInstrument->setPricingEngine(cmsCapFloorBuilder->engine(parseCurrency(legData_.currency())));
 
-        instrument_.reset(new VanillaInstrument(capFloor));
-        maturity_ = capFloor->maturityDate();
+        maturity_ = boost::dynamic_pointer_cast<QuantLib::Swap>(qlInstrument)->maturityDate();
 
+    } else if (legData_.legType() == "DurationAdjustedCMS") {
+        auto cmsData = boost::dynamic_pointer_cast<DurationAdjustedCmsLegData>(legData_.concreteLegData());
+        QL_REQUIRE(cmsData, "Wrong LegType, expected DurationAdjustedCmsLegData");
+        LegData tmpLegData = legData_;
+        auto tmpCmsData = boost::make_shared<DurationAdjustedCmsLegData>(*cmsData);
+        tmpCmsData->floors() = floors_;
+        tmpCmsData->caps() = caps_;
+        tmpCmsData->nakedOption() = true;
+        tmpLegData.concreteLegData() = tmpCmsData;
+        legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
+                            ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
+                                       engineFactory->configuration(MarketContext::pricing)));
+        // if both caps and floors are given, we have to use a payer leg, since in this case
+        // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
+        // and a short cap while we have documented a collar to be a short floor and long cap
+        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+        qlInstrument->setPricingEngine(
+            boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        maturity_ = CashFlows::maturityDate(legs_.front());
     } else if (legData_.legType() == "CPI") {
         DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
 
@@ -204,16 +226,14 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Date startDate;
         Schedule schedule = makeSchedule(legData_.schedule());
 
+        const string& start = cpiData->startDate();
         if (schedule.size() < 2) {
-            QL_REQUIRE(!cpiData->startDate().empty(),
-                       "makeCPILeg(): if only one schedule date is given, a StartDate must be given in addition");
-            startDate = parseDate(cpiData->startDate());
-        } else {
-            QL_REQUIRE(cpiData->startDate().empty() || parseDate(cpiData->startDate()) == schedule.dates().front(),
-                       "makeCPILeg(): first schedule date ("
-                           << schedule.dates().front() << ") must be identical to start date ("
-                           << parseDate(cpiData->startDate())
-                           << "), the start date can be omitted for schedules containing more than one date");
+            QL_REQUIRE(!start.empty(), "Only one schedule date, a 'StartDate' must be given.");
+            startDate = parseDate(start);
+        } else if (!start.empty()) {
+            DLOG("Schedule with more than 2 dates was provided. The first schedule date " <<
+                io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " <<
+                start << " is not used.");
             startDate = schedule.dates().front();
         }
 
@@ -249,75 +269,46 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<CpiCapFloorEngineBuilder>(builder);
 
         // Create QL CPI CapFloor instruments and add to a composite
-        boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
-        bool legIsPayer = legData_.isPayer();
+        qlInstrument = boost::make_shared<CompositeInstrument>();
         maturity_ = Date::minDate();
         for (Size i = 0; i < legs_[0].size(); ++i) {
             DLOG("Create composite " << i);
-            Real nominal, gearing, gearingSign;
+            Real nominal, gearing;
             Date paymentDate;
             boost::shared_ptr<CPICoupon> coupon = boost::dynamic_pointer_cast<CPICoupon>(legs_[0][i]);
             boost::shared_ptr<CPICashFlow> cashflow = boost::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
             if (coupon) {
                 nominal = coupon->nominal();
                 gearing = coupon->fixedRate() * coupon->accrualPeriod();
-                gearingSign = gearing >= 0.0 ? 1.0 : -1.0;
                 paymentDate = coupon->date();
             } else if (cashflow) {
                 nominal = cashflow->notional();
                 gearing = 1.0; // no gearing here
-                gearingSign = 1.0;
                 paymentDate = cashflow->date();
             } else {
                 QL_FAIL("Failed to interprete CPI flow");
             }
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
-                Option::Type type = legIsPayer ? Option::Put : Option::Call;
-                // long call, short put, consistent with IR and YOY caps/floors/collars
-                Real sign = type == Option::Call ? gearingSign : -gearingSign;
                 boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
-                                                    conv, caps_[i], zeroIndex, observationLag, interpolation);
+                    boost::make_shared<CPICapFloor>(Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv,
+                                                    cal, conv, caps_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
-                composite->add(capfloor, sign * gearing);
-                // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
-                //                                << " sign*gearing=" << sign * gearing);
+                boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
-                // if (coupon) {
-                //   std::cout << "CapFloor CPI Coupon " << std::endl
-                // 	    << "  payment date = " << QuantLib::io::iso_date(paymentDate) << std::endl
-                // 	    << "  nominal = " << nominal << std::endl
-                // 	    << "  gearing = " << gearing << std::endl
-                // 	    << "  start date = " << startDate << std::endl
-                // 	    << "  baseCPI = " << baseCPI << std::endl
-                // 	    << "  index  = " << zeroIndex->name() << std::endl
-                // 	    << "  lag = " << observationLag << std::endl
-                // 	    << "  interpolation = " << interpolation << std::endl;
-                //   }
             }
 
             if (capFloorType == QuantLib::CapFloor::Floor || capFloorType == QuantLib::CapFloor::Collar) {
-                Option::Type type = legIsPayer ? Option::Call : Option::Put;
-                // long call, short put, consistent with IR and YOY caps/floors/collars
-                Real sign = type == Option::Call ? gearingSign : -gearingSign;
+                // for collars we want a long cap, short floor
+                Real sign = capFloorType == QuantLib::CapFloor::Floor ? 1.0 : -1.0;
                 boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(type, nominal, startDate, baseCPI, paymentDate, cal, conv, cal,
-                                                    conv, floors_[i], zeroIndex, observationLag, interpolation);
+                    boost::make_shared<CPICapFloor>(Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv,
+                                                    cal, conv, floors_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
-                composite->add(capfloor, sign * gearing);
-                // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
-                //                                << " sign*gearing=" << sign * gearing);
+                boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
-
-            // DLOG(id() << " CPI CapFloor Composite NPV " << composite->NPV());
         }
-
-        // Wrap the QL instrument in a vanilla instrument
-        Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
-        instrument_ = boost::make_shared<VanillaInstrument>(composite, multiplier);
-        // DLOG(id() << " CPI CapFloor Instrument NPV " << instrument_->NPV());
 
     } else if (legData_.legType() == "YY") {
         builder = engineFactory->builder("YYCapFloor");
@@ -364,13 +355,12 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             caps_.resize(legs_[0].size(), caps_[0]);
 
         // Create QL YoY Inflation CapFloor instrument
-        boost::shared_ptr<QuantLib::YoYInflationCapFloor> yoyCapFloor;
         if (capFloorType == QuantLib::CapFloor::Cap) {
-            yoyCapFloor = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationCap(legs_[0], caps_));
+            qlInstrument = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationCap(legs_[0], caps_));
         } else if (capFloorType == QuantLib::CapFloor::Floor) {
-            yoyCapFloor = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationFloor(legs_[0], floors_));
+            qlInstrument = boost::shared_ptr<YoYInflationCapFloor>(new YoYInflationFloor(legs_[0], floors_));
         } else if (capFloorType == QuantLib::CapFloor::Collar) {
-            yoyCapFloor = boost::shared_ptr<YoYInflationCapFloor>(
+            qlInstrument = boost::shared_ptr<YoYInflationCapFloor>(
                 new YoYInflationCapFloor(QuantLib::YoYInflationCapFloor::Collar, legs_[0], caps_, floors_));
         } else {
             QL_FAIL("unknown YoYInflation cap/floor type");
@@ -378,26 +368,48 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         boost::shared_ptr<YoYCapFloorEngineBuilder> capFloorBuilder =
             boost::dynamic_pointer_cast<YoYCapFloorEngineBuilder>(builder);
-        yoyCapFloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
+        qlInstrument->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
 
         // Wrap the QL instrument in a vanilla instrument
-        Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
-        instrument_ = boost::make_shared<VanillaInstrument>(yoyCapFloor, multiplier);
 
-        maturity_ = yoyCapFloor->maturityDate();
+        maturity_ = boost::dynamic_pointer_cast<QuantLib::YoYInflationCapFloor>(qlInstrument)->maturityDate();
     } else {
-        QL_FAIL("Invalid legType for CapFloor");
+        QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
 
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    QL_REQUIRE((premiumPayDate_.empty() && premiumCcy_.empty() && premium_ == Null<Real>()) ||
+                   (!premiumPayDate_.empty() && !premiumCcy_.empty() && premium_ != Null<Real>()),
+               "CapFloorBuilder: incomplete premium data, expect PremiumAmount, PremiumCurrency, PremiumPayDate");
+    if (premiumPayDate_ != "" && premiumCcy_ != "" && premium_ != Null<Real>()) {
+        Real premiumAmount = -multiplier * premium_; // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(premiumCcy_);
+        Date premiumDate = parseDate(premiumPayDate_);
+        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency,
+                   parseCurrency(legData_.currency()), engineFactory,
+                   engineFactory->configuration(MarketContext::pricing));
+        DLOG("option premium added for cap/floor " << id());
+    }
+
+    // set instrument
+    instrument_ =
+        boost::make_shared<VanillaInstrument>(qlInstrument, multiplier, additionalInstruments, additionalMultipliers);
+
     // add required fixings
-    auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_,
-                                                    std::map<string, string>{{qlIndexName, underlyingIndex}});
-    for (auto const& l : legs_)
-        addToRequiredFixings(l, fdg);
+    if (!qlIndexName.empty() && !underlyingIndex.empty()) {
+        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_,
+                                                        std::map<string, string>{{qlIndexName, underlyingIndex}});
+        for (auto const& l : legs_)
+            addToRequiredFixings(l, fdg);
+    }
 
     // Fill in remaining Trade member data
     legCurrencies_.push_back(legData_.currency());
-    legPayers_.push_back(legData_.isPayer());
+    legPayers_.push_back(false); // already accounted for via the instrument multiplier
     npvCurrency_ = legData_.currency();
     notionalCurrency_ = legData_.currency();
     notional_ = currentNotional(legs_[0]);
@@ -410,6 +422,13 @@ void CapFloor::fromXML(XMLNode* node) {
     legData_.fromXML(XMLUtils::getChildNode(capFloorNode, "LegData"));
     caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Caps", "Cap");
     floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Floors", "Floor");
+    if (auto c = XMLUtils::getChildNode(capFloorNode, "PremiumAmount")) {
+        premium_ = parseReal(XMLUtils::getNodeValue(c));
+    } else {
+        premium_ = Null<Real>();
+    }
+    premiumCcy_ = XMLUtils::getChildValue(capFloorNode, "PremiumCurrency", false);
+    premiumPayDate_ = XMLUtils::getChildValue(capFloorNode, "PremiumPayDate", false);
 }
 
 XMLNode* CapFloor::toXML(XMLDocument& doc) {
@@ -420,6 +439,11 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(capFloorNode, legData_.toXML(doc));
     XMLUtils::addChildren(doc, capFloorNode, "Caps", "Cap", caps_);
     XMLUtils::addChildren(doc, capFloorNode, "Floors", "Floor", floors_);
+    if (!premiumCcy_.empty() && !premiumPayDate_.empty() && premium_ != Null<Real>()) {
+        XMLUtils::addChild(doc, capFloorNode, "PremiumAmount", premium_);
+        XMLUtils::addChild(doc, capFloorNode, "PremiumCurrency", premiumCcy_);
+        XMLUtils::addChild(doc, capFloorNode, "PremiumPayDate", premiumPayDate_);
+    }
     return node;
 }
 } // namespace data

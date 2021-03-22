@@ -373,6 +373,25 @@ YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& convent
 void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
     string name = XMLUtils::getNodeName(node);
+
+	// Check if curve type is valid for the given segment name
+	std::map<std::string, std::list<std::string>> validSegmentTypes = {
+		{"Direct", {"Zero", "Discount"}},
+		{"Simple", {"Deposit", "FRA", "Future", "OIS", "Swap", "BMA Basis Swap"}},
+		{"AverageOIS", {"Average OIS"}},
+		{"TenorBasis", {"Tenor Basis Swap", "Tenor Basis Two Swaps"}},
+		{"CrossCurrency", {"FX Forward", "Cross Currency Basis Swap", "Cross Currency Fix Float Swap"}},
+		{"ZeroSpread", {"Zero Spread"}},
+		{"FittedBond", {"FittedBond"}},
+		{"YieldPlusDefault", {"Yield Plus Default"}},
+		{"WeightedAverage", {"Weighted Average"}},
+		{"DiscountRatio", {"Discount Ratio"}}
+	};
+
+	std::list<std::string> validTypes = validSegmentTypes.at(name);
+	QL_REQUIRE(std::find(validTypes.begin(), validTypes.end(), typeID_) != validTypes.end(),
+		"The curve type " << typeID_ << " is not a valid " << name << " curve segment type");
+
     if (name == "DiscountRatio") {
     } else if (name == "AverageOIS") {
         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");

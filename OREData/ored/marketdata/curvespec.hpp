@@ -50,7 +50,6 @@ public:
         Default,
         CDSVolatility,
         Inflation,
-        InflationCapFloorPrice,
         InflationCapFloorVolatility,
         Equity,
         EquityVolatility,
@@ -317,24 +316,6 @@ public:
     InflationCurveSpec(const string& index, const string& curveConfigID) : CurveSpec(curveConfigID), index_(index) {}
 
     CurveType baseType() const { return CurveType::Inflation; }
-    const string& index() const { return index_; }
-
-    string subName() const { return index() + "/" + curveConfigID(); }
-
-private:
-    string index_;
-};
-
-//! Inflation cap floor price description
-/*! \ingroup curves
- */
-class InflationCapFloorPriceSurfaceSpec : public CurveSpec {
-public:
-    InflationCapFloorPriceSurfaceSpec() {}
-    InflationCapFloorPriceSurfaceSpec(const string& index, const string& curveConfigID)
-        : CurveSpec(curveConfigID), index_(index) {}
-
-    CurveType baseType() const { return CurveType::InflationCapFloorPrice; }
     const string& index() const { return index_; }
 
     string subName() const { return index() + "/" + curveConfigID(); }

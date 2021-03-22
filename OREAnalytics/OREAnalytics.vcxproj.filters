@@ -185,12 +185,6 @@
     <ClInclude Include="orea\engine\mporcalculator.hpp">
       <Filter>cube</Filter>
     </ClInclude>
-    <ClInclude Include="orea\scenario\spreadscenario.hpp">
-      <Filter>scenario</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\scenario\spreadscenariofactory.hpp">
-      <Filter>scenario</Filter>
-    </ClInclude>
     <ClInclude Include="orea\app\xvarunner.hpp">
       <Filter>app</Filter>
     </ClInclude>
@@ -215,6 +209,7 @@
     <ClInclude Include="orea\engine\cptycalculator.hpp">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="orea\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -342,12 +337,6 @@
     </ClCompile>
     <ClCompile Include="orea\engine\mporcalculator.cpp">
       <Filter>cube</Filter>
-    </ClCompile>
-    <ClCompile Include="orea\scenario\spreadscenario.cpp">
-      <Filter>scenario</Filter>
-    </ClCompile>
-    <ClCompile Include="orea\scenario\spreadscenariofactory.cpp">
-      <Filter>scenario</Filter>
     </ClCompile>
     <ClCompile Include="orea\app\xvarunner.cpp">
       <Filter>app</Filter>

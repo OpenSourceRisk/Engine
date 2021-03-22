@@ -111,5 +111,10 @@ void Trade::reset() {
     requiredFixings_.clear();
 }
 
+const std::map<std::string,boost::any>&
+Trade::additionalData() const {
+    return additionalData_;
+}
+
 } // namespace data
 } // namespace ore
