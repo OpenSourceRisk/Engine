@@ -10,6 +10,7 @@ sensitivityanalysis.cpp
 sensitivityanalysisanalytic.cpp
 sensitivityperformance.cpp
 shiftscenariogenerator.cpp
+simulationmeasures.cpp
 stresstest.cpp
 swapperformance.cpp
 testmarket.cpp

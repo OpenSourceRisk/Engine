@@ -474,6 +474,7 @@ processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
+termstructures/adjusteddefaultcurve.hpp
 termstructures/aposurface.hpp
 termstructures/averagefuturepricehelper.hpp
 termstructures/averageoisratehelper.hpp

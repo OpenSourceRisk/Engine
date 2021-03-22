@@ -30,26 +30,35 @@
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
+#include <ql/math/integrals/integral.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
 #include <ql/stochasticprocess.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
+
 //! Linear Gauss Morkov Model
 /*! LGM 1f interest rate model
     Basically the same remarks as for CrossAssetModel hold
     \ingroup models
 */
-
 class LinearGaussMarkovModel : public LinkableCalibratedModel {
 
 public:
-    LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
+    LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
+                           const boost::shared_ptr<Integrator>& integrator = boost::make_shared<SimpsonIntegral>(1.0E-8,
+                                                                                                                 100));
 
     const boost::shared_ptr<StochasticProcess1D> stateProcess() const;
     const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
 
     Real numeraire(const Time t, const Real x,
                    const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+
+    /*! Bank account measure numeraire B(t) as a function of LGM state variable x (with drift) and auxiliary state
+     * variable y */
+    Real bankAccountNumeraire(const Time t, const Real x, const Real y,
+                              const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
     Real discountBond(const Time t, const Time T, const Real x,
                       Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
@@ -115,6 +124,7 @@ public:
 
 private:
     boost::shared_ptr<IrLgm1fParametrization> parametrization_;
+    boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<StochasticProcess1D> stateProcess_;
     LgmCalibrationInfo calibrationInfo_;
 };

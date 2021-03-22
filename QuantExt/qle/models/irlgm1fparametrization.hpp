@@ -24,9 +24,12 @@
 #ifndef quantext_irlgm1f_parametrization_hpp
 #define quantext_irlgm1f_parametrization_hpp
 
-#include <ql/handle.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/models/parametrization.hpp>
+
+#include <ql/experimental/math/piecewiseintegral.hpp>
+#include <ql/handle.hpp>
+#include <ql/math/integrals/integral.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -48,6 +51,9 @@ public:
     virtual Real hullWhiteSigma(const Time t) const;
     const Handle<TS> termStructure() const;
 
+    /*! \f[ \int_0^t alpha^2(u) H^n(u) du \f]*/
+    Real zetan(const Size n, const Time t, const boost::shared_ptr<Integrator>& integrator);
+
     /*! allows to apply a shift to H (model invariance 1) */
     Real& shift();
 
@@ -57,11 +63,16 @@ public:
       while all other methods return scaled (and shifted) values */
     Real& scaling();
 
+    Size numberOfParameters() const { return 2; }
+
+    void update() const;
+
 protected:
     Real shift_, scaling_;
 
 private:
     const Handle<TS> termStructure_;
+    mutable std::map<std::pair<Size, Real>, Real> zetan_cached_;
 };
 
 // implementation
@@ -97,6 +108,28 @@ template <class TS> inline const Handle<TS> Lgm1fParametrization<TS>::termStruct
 template <class TS> inline Real& Lgm1fParametrization<TS>::shift() { return shift_; }
 
 template <class TS> inline Real& Lgm1fParametrization<TS>::scaling() { return scaling_; }
+
+template <class TS>
+inline Real Lgm1fParametrization<TS>::zetan(const Size n, const Time t,
+                                            const boost::shared_ptr<Integrator>& integrator) {
+    auto z = zetan_cached_.find(std::make_pair(n, t));
+    if (z == zetan_cached_.end()) {
+        std::vector<Real> times;
+        for (Size i = 0; i < numberOfParameters(); ++i)
+            times.insert(times.end(), parameterTimes(i).begin(), parameterTimes(i).end());
+        PiecewiseIntegral pwint(integrator, times, true);
+        Real v = pwint([this, n](Real s) { return std::pow(this->alpha(s), 2) * std::pow(this->H(s), n); }, 0.0, t);
+        zetan_cached_[std::make_pair(n, t)] = v;
+        return v;
+    } else {
+        return z->second;
+    }
+}
+
+template <class TS> inline void Lgm1fParametrization<TS>::update() const {
+    Parametrization::update();
+    zetan_cached_.clear();
+}
 
 // typedef
 
