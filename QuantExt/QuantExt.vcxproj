@@ -539,6 +539,7 @@
     <ClInclude Include="qle\indexes\bondindex.hpp" />
     <ClInclude Include="qle\indexes\cacpi.hpp" />
     <ClInclude Include="qle\indexes\commodityindex.hpp" />
+    <ClInclude Include="qle\indexes\compoequityindex.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
@@ -715,6 +716,7 @@
     <ClInclude Include="qle\quotes\exceptionquote.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
+    <ClInclude Include="qle\termstructures\adjusteddefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\aposurface.hpp" />
     <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
@@ -881,6 +883,7 @@
     <ClCompile Include="qle\currencies\configurablecurrency.cpp" />
     <ClCompile Include="qle\indexes\bondindex.cpp" />
     <ClCompile Include="qle\indexes\commodityindex.cpp" />
+    <ClCompile Include="qle\indexes\compoequityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\boebaserate.cpp" />

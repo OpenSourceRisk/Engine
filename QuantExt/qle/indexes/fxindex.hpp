@@ -59,7 +59,11 @@ public:
         fixingCalendar is the calendar defining good days for the pair
         this class uses the exchange rate manager to retrieve spot values
 
-        if inverseIndex is true, the returned fixing values are flipped
+        if inverseIndex is true, the returned fixing values are flipped, but all inspectors
+        - sourceCurremcy(), targetCurrency()
+        - sourceCurve(), targetCurve()
+        - fxQuote()
+        will still return results in terms of the original pair.
     */
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
@@ -87,7 +91,8 @@ public:
     const Currency& sourceCurrency() const { return sourceCurrency_; }
     const Currency& targetCurrency() const { return targetCurrency_; }
     const bool inverseIndex() const { return inverseIndex_; }
-    // fx quote does _not_ include the inversion, if inverseIndex() is true
+    const Handle<YieldTermStructure>& sourceCurve() const { return sourceYts_; }
+    const Handle<YieldTermStructure>& targetCurve() const { return targetYts_; }
     const Handle<Quote>& fxQuote() const { return fxQuote_; }
     const bool useQuote() const { return useQuote_; }
     //@}

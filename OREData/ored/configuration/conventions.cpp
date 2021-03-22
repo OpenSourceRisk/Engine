@@ -376,7 +376,7 @@ void IborIndexConvention::build() {
 
     // set the Id - this converts the local id term from "7D" to "1W", "28D" to "1M" etc, so if can be picked
     // up by searches
-    id_ = tokens[0] + "-" + tokens[1] + "-" + to_string(parsePeriod(tokens[2]));
+    id_ = (tokens.size() == 3) ? (tokens[0] + "-" + tokens[1] + "-" + to_string(parsePeriod(tokens[2]))) : localId_;
 }
 
 OvernightIndexConvention::OvernightIndexConvention(const string& id, const string& fixingCalendar,
@@ -1256,14 +1256,15 @@ XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) {
 
 CommodityFutureConvention::AveragingData::AveragingData()
     : useBusinessDays_(true), deliveryRollDays_(0), futureMonthOffset_(0),
-      period_(CalculationPeriod::ExpiryToExpiry) {}
+      dailyExpiryOffset_(Null<Natural>()), period_(CalculationPeriod::ExpiryToExpiry) {}
 
 CommodityFutureConvention::AveragingData::AveragingData(const string& commodityName, const string& period,
     const string& pricingCalendar, bool useBusinessDays, const string& conventionsId,
-    Natural deliveryRollDays, Natural futureMonthOffset)
+    Natural deliveryRollDays, Natural futureMonthOffset, Natural dailyExpiryOffset)
     : commodityName_(commodityName), strPeriod_(period), strPricingCalendar_(pricingCalendar),
       useBusinessDays_(useBusinessDays), conventionsId_(conventionsId), deliveryRollDays_(deliveryRollDays),
-      futureMonthOffset_(futureMonthOffset), period_(CalculationPeriod::ExpiryToExpiry) {
+      futureMonthOffset_(futureMonthOffset), dailyExpiryOffset_(dailyExpiryOffset),
+      period_(CalculationPeriod::ExpiryToExpiry) {
     build();
 }
 
@@ -1275,7 +1276,7 @@ CommodityFutureConvention::AveragingData::CalculationPeriod CommodityFutureConve
     return period_;
 }
 
-const QuantLib::Calendar& CommodityFutureConvention::AveragingData::pricingCalendar() const {
+const Calendar& CommodityFutureConvention::AveragingData::pricingCalendar() const {
     return pricingCalendar_;
 }
 
@@ -1287,12 +1288,16 @@ const string& CommodityFutureConvention::AveragingData::conventionsId() const {
     return conventionsId_;
 }
 
-QuantLib::Natural CommodityFutureConvention::AveragingData::deliveryRollDays() const {
+Natural CommodityFutureConvention::AveragingData::deliveryRollDays() const {
     return deliveryRollDays_;
 }
 
-QuantLib::Natural CommodityFutureConvention::AveragingData::futureMonthOffset() const {
+Natural CommodityFutureConvention::AveragingData::futureMonthOffset() const {
     return futureMonthOffset_;
+}
+
+Natural CommodityFutureConvention::AveragingData::dailyExpiryOffset() const {
+    return dailyExpiryOffset_;
 }
 
 bool CommodityFutureConvention::AveragingData::empty() const {
@@ -1321,6 +1326,11 @@ void CommodityFutureConvention::AveragingData::fromXML(XMLNode* node) {
         futureMonthOffset_ = parseInteger(XMLUtils::getNodeValue(n));
     }
 
+    dailyExpiryOffset_ = Null<Natural>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "DailyExpiryOffset")) {
+        dailyExpiryOffset_ = parseInteger(XMLUtils::getNodeValue(n));
+    }
+
     build();
 }
 
@@ -1337,6 +1347,8 @@ XMLNode* CommodityFutureConvention::AveragingData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DeliveryRollDays", static_cast<int>(deliveryRollDays_));
     if (futureMonthOffset_ != 0)
         XMLUtils::addChild(doc, node, "FutureMonthOffset", static_cast<int>(futureMonthOffset_));
+    if (dailyExpiryOffset_ != Null<Natural>())
+        XMLUtils::addChild(doc, node, "DailyExpiryOffset", static_cast<int>(dailyExpiryOffset_));
 
     return node;
 }

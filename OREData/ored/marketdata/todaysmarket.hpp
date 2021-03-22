@@ -30,6 +30,7 @@
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/marketdata/dependencygraph.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/directed_graph.hpp>
@@ -121,21 +122,8 @@ private:
     // initialise market
     void initialise(const Date& asof);
 
-    // build a graph whose vertices represent the market objects to build (DiscountCurve, IndexCurve, EquityVol, ...)
-    // and an edge from x to y means that x must be built before y, since y depends on it. */
-    void buildDependencyGraph(const std::string& configuration, std::map<std::string, std::string>& buildErrors);
-
-    // data structure for a vertex in the graph
-    struct Node {
-        MarketObject obj;                       // the market object to build
-        std::string name;                       // the LHS of the todays market mapping
-        std::string mapping;                    // the RHS of the todays market mapping
-        boost::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
-        bool built;                             // true if we have built this node
-    };
-    friend std::ostream& operator<<(std::ostream& o, const Node& n);
-
     // some typedefs for graph related data types
+    using Node = DependencyGraph::Node;
     using Graph = boost::directed_graph<Node>;
     using IndexMap = boost::property_map<Graph, boost::vertex_index_t>::type;
     using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
@@ -176,7 +164,7 @@ private:
     mutable map<string, map<string, boost::shared_ptr<SwapIndex>>> requiredSwapIndices_;
 };
 
-std::ostream& operator<<(std::ostream& o, const TodaysMarket::Node& n);
+std::ostream& operator<<(std::ostream& o, const DependencyGraph::Node& n);
 
 } // namespace data
 } // namespace ore

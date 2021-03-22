@@ -53,6 +53,7 @@ currencies/europe.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
 indexes/commodityindex.cpp
+indexes/compoequityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/boebaserate.cpp
@@ -293,6 +294,7 @@ indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
 indexes/commodityindex.hpp
+indexes/compoequityindex.hpp
 indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
@@ -472,6 +474,7 @@ processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
 quotes/exceptionquote.hpp
 quotes/logquote.hpp
+termstructures/adjusteddefaultcurve.hpp
 termstructures/aposurface.hpp
 termstructures/averagefuturepricehelper.hpp
 termstructures/averageoisratehelper.hpp
@@ -479,6 +482,7 @@ termstructures/averagespotpricehelper.hpp
 termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackmonotonevarvoltermstructure.hpp
+termstructures/blacktriangulationatmvol.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp

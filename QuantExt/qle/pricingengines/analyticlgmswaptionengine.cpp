@@ -23,6 +23,8 @@
 
 #include <boost/bind.hpp>
 
+#include <ostream>
+
 namespace QuantExt {
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
@@ -215,7 +217,26 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     try {
         yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1), 1.0E-6, 0.0, 0.01);
     } catch (const std::exception& e) {
-        QL_FAIL("AnalyticLgmSwaptionEngine, failed to compute yStar, " << e.what());
+        std::ostringstream os;
+        os << "AnalyticLgmSwaptionEngine: failed to compute yStar (" << e.what() << "), parameter details: [";
+        Real tte = p_->termStructure()->timeFromReference(expiry);
+        os << "tte=" << tte << ", vol=" << std::sqrt(zetaex_ / tte) << ", nominal=" << arguments_.nominal
+           << ", d=" << D0_;
+        for (Size j = 0; j < Dj_.size(); ++j)
+            os << ", d" << j << "=" << Dj_[j];
+        os << ", h=" << H0_;
+        for (Size j = 0; j < Hj_.size(); ++j)
+            os << ", h" << j << "=" << Hj_[j];
+        for (Size i = j1_; i < arguments_.fixedCoupons.size(); ++i) {
+            os << ", cpn" << i << "=(" << QuantLib::io::iso_date(arguments_.fixedResetDates[i]) << ","
+               << QuantLib::io::iso_date(arguments_.fixedPayDates[i]) << "," << arguments_.fixedCoupons[i] << ")";
+        }
+        os << ", S=" << S_m1;
+        for (Size j = 0; j < S_.size(); ++j) {
+            os << ", S" << j << "=" << S_[j];
+        }
+        os << "]";
+        QL_FAIL(os.str());
     }
 
     CumulativeNormalDistribution N;

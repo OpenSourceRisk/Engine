@@ -185,9 +185,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         } // for coupons_
         Leg leg = joinLegs(separateLegs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
-        // workaround, QL doesn't register a bond with its leg's cashflows
-        for (auto const& c : leg)
-            bond->registerWith(c);
     }
 
     Currency currency = parseCurrency(bondData_.currency());

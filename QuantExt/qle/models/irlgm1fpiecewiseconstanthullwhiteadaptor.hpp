@@ -38,15 +38,15 @@ class Lgm1fPiecewiseConstantHullWhiteAdaptor : public Lgm1fParametrization<TS>,
                                                private PiecewiseConstantHelper3,
                                                private PiecewiseConstantHelper2 {
 public:
-    Lgm1fPiecewiseConstantHullWhiteAdaptor(const Currency& currency, const Handle<TS>& termStructure,
-                                           const Array& sigmaTimes, const Array& sigma, const Array& kappaTimes,
-                                           const Array& kappa, const std::string& name = std::string(),
+    Lgm1fPiecewiseConstantHullWhiteAdaptor(
+        const Currency& currency, const Handle<TS>& termStructure, const Array& sigmaTimes, const Array& sigma,
+        const Array& kappaTimes, const Array& kappa, const std::string& name = std::string(),
         const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>(),
         const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint = boost::make_shared<QuantLib::NoConstraint>());
-    Lgm1fPiecewiseConstantHullWhiteAdaptor(const Currency& currency, const Handle<TS>& termStructure,
-                                           const std::vector<Date>& sigmaDates, const Array& sigma,
-                                           const std::vector<Date>& kappaDates, const Array& kappa,
-                                           const std::string& name = std::string(),
+    Lgm1fPiecewiseConstantHullWhiteAdaptor(
+        const Currency& currency, const Handle<TS>& termStructure, const std::vector<Date>& sigmaDates,
+        const Array& sigma, const std::vector<Date>& kappaDates, const Array& kappa,
+        const std::string& name = std::string(),
         const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>(),
         const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint = boost::make_shared<QuantLib::NoConstraint>());
     Real zeta(const Time t) const;
@@ -78,7 +78,7 @@ Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdapt
     const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint)
     : Lgm1fParametrization<TS>(currency, termStructure, name),
       PiecewiseConstantHelper3(sigmaTimes, kappaTimes, sigmaConstraint, kappaConstraint),
-      PiecewiseConstantHelper2(kappaTimes, kappaConstraint) {
+      PiecewiseConstantHelper2(PiecewiseConstantHelper3::t2_, PiecewiseConstantHelper3::y2_) {
     initialize(sigma, kappa);
 }
 
@@ -90,7 +90,7 @@ Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdapt
     const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint)
     : Lgm1fParametrization<TS>(currency, termStructure, name),
       PiecewiseConstantHelper3(sigmaDates, kappaDates, termStructure, sigmaConstraint, kappaConstraint),
-      PiecewiseConstantHelper2(kappaDates, termStructure, kappaConstraint) {
+      PiecewiseConstantHelper2(PiecewiseConstantHelper3::t2_,PiecewiseConstantHelper3::y2_) {
     initialize(sigma, kappa);
 }
 
@@ -109,9 +109,6 @@ void Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::initialize(const Array& sigma, 
     }
     for (Size i = 0; i < PiecewiseConstantHelper3::y2_->size(); ++i) {
         PiecewiseConstantHelper3::y2_->setParam(i, inverse(1, kappa[i]));
-    }
-    for (Size i = 0; i < PiecewiseConstantHelper2::y_->size(); ++i) {
-        PiecewiseConstantHelper2::y_->setParam(i, inverse(1, kappa[i]));
     }
     update();
 }
@@ -155,6 +152,7 @@ template <class TS> inline Real Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::hull
 }
 
 template <class TS> inline void Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::update() const {
+    Lgm1fParametrization<TS>::update();
     PiecewiseConstantHelper3::update();
     PiecewiseConstantHelper2::update();
 }

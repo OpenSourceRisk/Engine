@@ -30,6 +30,7 @@ marketdata/csvloader.cpp
 marketdata/curvespec.cpp
 marketdata/curvespecparser.cpp
 marketdata/defaultcurve.cpp
+marketdata/dependencygraph.cpp
 marketdata/equitycurve.cpp
 marketdata/equityvolcurve.cpp
 marketdata/expiry.cpp
@@ -140,7 +141,6 @@ utilities/calendaradjustmentconfig.cpp
 utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
-utilities/currencyconfig.cpp
 utilities/currencycheck.cpp
 utilities/currencyconfig.cpp
 utilities/dategrid.cpp
@@ -193,6 +193,7 @@ marketdata/csvloader.hpp
 marketdata/curvespec.hpp
 marketdata/curvespecparser.hpp
 marketdata/defaultcurve.hpp
+marketdata/dependencygraph.hpp
 marketdata/equitycurve.hpp
 marketdata/equityvolcurve.hpp
 marketdata/expiry.hpp
@@ -329,6 +330,7 @@ utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp
+utilities/currencyconfig.hpp
 utilities/dategrid.hpp
 utilities/flowanalysis.hpp
 utilities/indexparser.hpp

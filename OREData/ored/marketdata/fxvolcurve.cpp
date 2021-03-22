@@ -20,12 +20,15 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
+#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
+#include <qle/termstructures/blacktriangulationatmvol.hpp>
 #include <string.h>
 #include <regex>
 
@@ -75,17 +78,22 @@ namespace ore {
 namespace data {
 
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                       const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
-                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) {
-    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, conventions);
+                       const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots, 
+                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                       const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
+                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                       const Conventions& conventions) {
+    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, fxVols, correlationCurves, conventions);
 }
 
 // second ctor
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                        const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
-                       const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                       const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
+                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
                        const Conventions& conventions) {
-    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, conventions);
+    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, fxVols, correlationCurves, conventions);
 }
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
@@ -449,20 +457,164 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     }
     vol_->enableExtrapolation();
 }
+
+Handle<QuantExt::CorrelationTermStructure> getCorrelationCurve(const std::string& index1, const std::string& index2, 
+    const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
+    // straight pair
+    auto tmpCorr = correlationCurves.find("Correlation/" + index1 + "&" + index2);
+    if (tmpCorr != correlationCurves.end()) {
+        return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+    } 
+    // inverse pair
+    tmpCorr = correlationCurves.find("Correlation/" + index2 + "&" + index1);
+    if (tmpCorr != correlationCurves.end()) {
+        return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+    } 
+    // inverse fx index1
+    tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index1) + "&" + index2);
+    if (tmpCorr != correlationCurves.end()) {
+        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        return Handle<QuantExt::CorrelationTermStructure>(
+            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+    } 
+    tmpCorr = correlationCurves.find("Correlation/" + index2 + "&" + inverseFxIndex(index1));
+    if (tmpCorr != correlationCurves.end()) {
+        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        return Handle<QuantExt::CorrelationTermStructure>(
+            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+    } 
+    // inverse fx index2
+    tmpCorr = correlationCurves.find("Correlation/" + index1 + "&" + inverseFxIndex(index2));
+    if (tmpCorr != correlationCurves.end()) {
+        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        return Handle<QuantExt::CorrelationTermStructure>(
+            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+    } 
+    tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index2) + "&" + index1);
+    if (tmpCorr != correlationCurves.end()) {
+        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        return Handle<QuantExt::CorrelationTermStructure>(
+            boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
+    } 
+    // both fx indices inverted
+    tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index1) + "&" + inverseFxIndex(index2));
+    if (tmpCorr != correlationCurves.end()) {
+        return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+    } 
+    tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index2) + "&" + inverseFxIndex(index1));
+    if (tmpCorr != correlationCurves.end()) {
+        return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+    }
+
+    QL_FAIL("no correlation curve found for " << index1 << ":" << index2);
+}
+
+void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                                           boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                           const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
+                                           const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
+                                           const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                                           const Conventions& conventions) {
+    vector<string> tokens;
+    boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
+    QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << config->fxSpotID());
+    auto forTarget = tokens[1];
+    auto domTarget = tokens[2]; 
+    
+    DLOG("Triangulating FxVol curve " << config->curveID() << " from baseVols " << config->baseVolatility1() << ":" << config->baseVolatility2());
+    
+    std::string baseCcy;
+    QL_REQUIRE(config->baseVolatility1().size() == 6, "invalid ccy pair length for baseVolatility1");
+    auto forBase1 = config->baseVolatility1().substr(0, 3);
+    auto domBase1 = config->baseVolatility1().substr(3);
+    std::string spec1 = "FXVolatility/" + forBase1 + "/" + domBase1 + "/" + config->baseVolatility1();
+
+    bool base1Inverted = false;
+    if (forBase1 != forTarget && forBase1 != domTarget) {
+        // we invert the pair
+        base1Inverted = true;
+        std::string tmp = forBase1;
+        forBase1 = domTarget;
+        domBase1 = tmp;
+
+        QL_REQUIRE(forBase1 == forTarget || forBase1 == domTarget, 
+            "FxVol: mismatch in the baseVolatility1 " << config->baseVolatility1() << " and Target Pair " << forTarget << domTarget);
+    
+        
+    }
+    baseCcy = domBase1;
+
+    QL_REQUIRE(config->baseVolatility2().size() == 6, "invalid ccy pair length for baseVolatility2");
+    auto forBase2 = config->baseVolatility2().substr(0, 3);
+    auto domBase2 = config->baseVolatility2().substr(3);
+    std::string spec2 = "FXVolatility/" + forBase2 + "/" + domBase2 + "/" + config->baseVolatility2();
+    bool base2Inverted = false;
+
+    QL_REQUIRE(forBase2 == baseCcy || domBase2 == baseCcy, "baseVolatility2 must share a ccy code with the baseVolatility1");
+
+    if (forBase2 != forTarget && forBase2 != domTarget) {
+        // we invert the pair
+        std::string tmp = forBase2;
+        forBase2 = domTarget;
+        domBase2 = tmp;
+        base2Inverted = true;
+    }
+
+    auto tmp = fxVols.find(spec1);
+    QL_REQUIRE(tmp != fxVols.end(), "fx vol not found for " << config->baseVolatility1());
+    Handle<BlackVolTermStructure> forBaseVol;
+    if (base1Inverted) {
+        auto h = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
+        if (!h.empty())
+            forBaseVol = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(h));
+    } else {
+        forBaseVol = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
+    }
+    forBaseVol->enableExtrapolation();
+
+    tmp = fxVols.find(spec2);
+    QL_REQUIRE(tmp != fxVols.end(), "fx vol not found for " << config->baseVolatility2());
+    Handle<BlackVolTermStructure> domBaseVol;
+    if (base2Inverted) {
+        auto h = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
+        if (!h.empty())
+            domBaseVol = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::BlackInvertedVolTermStructure>(h));
+
+    } else {
+        domBaseVol = Handle<BlackVolTermStructure>(tmp->second->volTermStructure());
+    }
+    domBaseVol->enableExtrapolation();
+
+    string forIndex = "FX-" + config->fxIndexTag() + "-" + forTarget + "-" + baseCcy;
+    string domIndex = "FX-" + config->fxIndexTag() + "-" + domTarget + "-" + baseCcy;
+   
+    Handle<QuantExt::CorrelationTermStructure> rho = getCorrelationCurve(forIndex, domIndex, correlationCurves);
+
+    vol_ = boost::make_shared<QuantExt::BlackTriangulationATMVolTermStructure>(forBaseVol, domBaseVol, rho);
+    vol_->enableExtrapolation();
+
+}
+
 void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                       const CurveConfigurations& curveConfigs, const FXLookup& fxSpots,
-                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, const Conventions& conventions) {
+                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                      const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols, 
+                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                      const Conventions& conventions) {
     try {
 
         const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta,
                    "Unknown FX curve building dimension");
 
         if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta) {
             buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
+        } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
+            buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves, conventions);
         } else {
             buildVannaVolgaOrATMCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
         }

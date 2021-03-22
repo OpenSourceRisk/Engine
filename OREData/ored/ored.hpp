@@ -40,6 +40,7 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/dependencygraph.hpp>
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/expiry.hpp>
@@ -176,6 +177,7 @@
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexparser.hpp>

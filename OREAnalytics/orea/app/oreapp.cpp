@@ -105,9 +105,7 @@ int OREApp::run() {
         /*********
          * Build Markets
          */
-        out_ << setw(tab_) << left << "Market... " << flush;
         buildMarket();
-        out_ << "OK" << endl;
 
         /************************
          *Build Pricing Engine Factory
@@ -126,9 +124,7 @@ int OREApp::run() {
         /******************************
          * Write initial reports
          */
-        out_ << setw(tab_) << left << "Write Reports... " << flush;
         writeInitialReports();
-        out_ << "OK" << endl;
 
         /**************************
          * Write base scenario file
@@ -601,7 +597,7 @@ void OREApp::writeInitialReports() {
     /************
      * Curve dump
      */
-    out_ << endl << setw(tab_) << left << "Curve Report... " << flush;
+    out_ << setw(tab_) << left << "Curve Report... " << flush;
     if (params_->hasGroup("curves") && params_->get("curves", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("curves", "outputFileName");
         CSVFileReport curvesReport(fileName);
@@ -668,7 +664,7 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("cashflow", "outputFileName");
         CSVFileReport cashflowReport(fileName);
-        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_);
+        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, params_->get("markets", "pricing"));
         out_ << "OK" << endl;
     } else {
         LOG("skip cashflow generation");
@@ -917,7 +913,8 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
 
-        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, *conventions_, getFixingManager(),
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, *conventions_,
+                                                           boost::make_shared<FixingManager>(asof_),
                                                            params_->get("markets", "simulation"), *curveConfigs_,
                                                            *marketParameters_, continueOnError_, false, true, false);
         string groupName = "simulation";
@@ -1312,7 +1309,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     if (curveConfigXML != "")
         curveConfigs_->fromXMLString(curveConfigXML);
     else if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
-        out_ << endl << setw(tab_) << left << "Curve configuration... " << flush;
+        out_ << setw(tab_) << left << "Curve configuration... " << flush;
         string inputPath = params_->get("setup", "inputPath");
         string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
         LOG("Load curve configurations from file");
@@ -1363,8 +1360,10 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     }
 
     // build market
+    out_ << setw(tab_) << left << "Market... " << flush;
     market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_, conventions_,
                                                continueOnError_, true, lazyMarketBuilding_, referenceData_);
+    out_ << "OK" << endl;
 
     LOG("Today's market built");
     MEM_LOG;

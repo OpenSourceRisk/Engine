@@ -63,6 +63,7 @@
 #include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/compoequityindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
@@ -249,6 +250,7 @@
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
+#include <qle/termstructures/blacktriangulationatmvol.hpp>
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>

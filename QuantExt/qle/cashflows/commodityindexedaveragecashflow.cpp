@@ -26,12 +26,12 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     const ext::shared_ptr<CommodityIndex>& index, const Calendar& pricingCalendar, QuantLib::Real spread,
     QuantLib::Real gearing, bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
-    bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay)
+    bool useBusinessDays, CommodityQuantityFrequency quantityFrequency, Natural hoursPerDay, Natural dailyExpiryOffset)
     : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDate), index_(index),
       pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing), useFuturePrice_(useFuturePrice),
       deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset), includeEndDate_(includeEndDate),
       excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays), quantityFrequency_(quantityFrequency),
-      hoursPerDay_(hoursPerDay) {
+      hoursPerDay_(hoursPerDay), dailyExpiryOffset_(dailyExpiryOffset) {
     init(calc);
 }
 
@@ -42,12 +42,12 @@ CommodityIndexedAverageCashFlow::CommodityIndexedAverageCashFlow(
     bool useFuturePrice, Natural deliveryDateRoll, Natural futureMonthOffset,
     const ext::shared_ptr<FutureExpiryCalculator>& calc, bool includeEndDate, bool excludeStartDate,
     const QuantLib::Date& paymentDateOverride, bool useBusinessDays, CommodityQuantityFrequency quantityFrequency,
-    Natural hoursPerDay)
+    Natural hoursPerDay, Natural dailyExpiryOffset)
     : quantity_(quantity), startDate_(startDate), endDate_(endDate), paymentDate_(paymentDateOverride),
       index_(index), pricingCalendar_(pricingCalendar), spread_(spread), gearing_(gearing),
       useFuturePrice_(useFuturePrice), deliveryDateRoll_(deliveryDateRoll), futureMonthOffset_(futureMonthOffset),
       includeEndDate_(includeEndDate), excludeStartDate_(excludeStartDate), useBusinessDays_(useBusinessDays),
-      quantityFrequency_(quantityFrequency), hoursPerDay_(hoursPerDay) {
+      quantityFrequency_(quantityFrequency), hoursPerDay_(hoursPerDay), dailyExpiryOffset_(dailyExpiryOffset) {
 
     // Derive the payment date
     if (paymentDate_ == Date()) {
@@ -112,6 +112,12 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
         // If using future prices, first fill indices assuming delivery date roll is 0.
         for (const Date& pd : pds) {
             auto expiry = calc->nextExpiry(true, pd, futureMonthOffset_);
+
+            // If given an offset for each expiry, apply it now.
+            if (dailyExpiryOffset_ != Null<Natural>()) {
+                expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
+            }
+
             indices_[pd] = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
         }
 
@@ -186,7 +192,8 @@ CommodityIndexedAverageLeg::CommodityIndexedAverageLeg(const Schedule& schedule,
       paymentConvention_(Unadjusted), pricingCalendar_(Calendar()), payInAdvance_(false), useFuturePrice_(false),
       deliveryDateRoll_(0), futureMonthOffset_(0), payAtMaturity_(false), includeEndDate_(true),
       excludeStartDate_(true), useBusinessDays_(true),
-      quantityFrequency_(CommodityQuantityFrequency::PerCalculationPeriod), hoursPerDay_(Null<Natural>()) {}
+      quantityFrequency_(CommodityQuantityFrequency::PerCalculationPeriod), hoursPerDay_(Null<Natural>()),
+      dailyExpiryOffset_(Null<Natural>()) {}
 
 CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withQuantities(Real quantity) {
     quantities_ = vector<Real>(1, quantity);
@@ -300,6 +307,11 @@ CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withHoursPerDay(Natural 
     return *this;
 }
 
+CommodityIndexedAverageLeg& CommodityIndexedAverageLeg::withDailyExpiryOffset(Natural dailyExpiryOffset) {
+    dailyExpiryOffset_ = dailyExpiryOffset;
+    return *this;
+}
+
 CommodityIndexedAverageLeg::operator Leg() const {
 
     // Number of commodity indexed average cashflows
@@ -349,7 +361,7 @@ CommodityIndexedAverageLeg::operator Leg() const {
         leg.push_back(ext::make_shared<CommodityIndexedAverageCashFlow>(
             quantity, start, end, paymentLag_, paymentCalendar_, paymentConvention_, index_, pricingCalendar_, spread,
             gearing, payInAdvance_, useFuturePrice_, deliveryDateRoll_, futureMonthOffset_, calc_, includeEnd,
-            excludeStart, paymentDate, useBusinessDays_, quantityFrequency_, hoursPerDay_));
+            excludeStart, paymentDate, useBusinessDays_, quantityFrequency_, hoursPerDay_, dailyExpiryOffset_));
     }
 
     return leg;

@@ -985,7 +985,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Populate the matrix of volatilities and the expiry dates.
     vector<Date> expiryDates;
     Matrix vols(surfaceData.size(), numStrikes);
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates.push_back(row.value().first);
         copy(row.value().second.begin(), row.value().second.end(), vols.row_begin(row.index()));
     }
@@ -1192,7 +1192,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     vector<Date> expiryDates(surfaceData.size());
     vector<Time> expiryTimes(surfaceData.size());
     vector<vector<Handle<Quote>>> vols(moneynessLevels.size());
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates[row.index()] = row.value().first;
         expiryTimes[row.index()] = dayCounter_.yearFraction(asof, row.value().first);
         for (Size i = 0; i < row.value().second.size(); i++) {

@@ -828,6 +828,9 @@
     <ClInclude Include="qle\pricingengines\commodityapoengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\adjusteddefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\aposurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -1055,6 +1058,9 @@
     </ClInclude>
     <ClInclude Include="qle\cashflows\commoditycashflow.hpp">
       <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\compoequityindex.hpp">
+      <Filter>indexes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1812,6 +1818,9 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\commoditycashflow.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\compoequityindex.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
