@@ -91,6 +91,7 @@
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
+#include <qle/indexes/decpi.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -528,6 +529,8 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
         {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()},
         {"CACPI", boost::make_shared<ZeroInflationIndexParser<CACPI>>()},
         {"ESCPI", boost::make_shared<ZeroInflationIndexParser<ESCPI>>()},
+        {"DECPI", boost::make_shared<ZeroInflationIndexParser<DECPI>>()},
+        {"DE CPI", boost::make_shared<ZeroInflationIndexParser<DECPI>>()}
     };
 
     auto it = m.find(s);

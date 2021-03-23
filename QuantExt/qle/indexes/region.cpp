@@ -40,6 +40,11 @@ SpainRegion::SpainRegion() {
     data_ = ESdata;
 }
 
+GermanyRegion::GermanyRegion() {
+    static boost::shared_ptr<Data> DEdata = boost::make_shared<Data>("Germany","DE");
+    data_ = DEdata;
+}
+
 BelgiumRegion::BelgiumRegion() {
     static boost::shared_ptr<Data> BEdata = boost::make_shared<Data>("Belgium", "BE");
     data_ = BEdata;

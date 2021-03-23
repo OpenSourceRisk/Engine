@@ -133,9 +133,10 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
 CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                            const string& commodityName, const string& quoteCurrency,
                                            const boost::shared_ptr<Expiry>& expiry,
-                                           const boost::shared_ptr<BaseStrike>& strike)
+                                           const boost::shared_ptr<BaseStrike>& strike,
+                                           Option::Type optionType)
     : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
-      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {}
+      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike), optionType_(optionType) {}
 
 CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                    const string& index1, const string& index2, const string& expiry,

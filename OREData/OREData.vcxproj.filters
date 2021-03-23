@@ -588,6 +588,9 @@
     <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\onedimsolverconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
     <ClInclude Include="ored\marketdata\dependencygraph.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
@@ -1048,6 +1051,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\builders\durationadjustedcms.cpp">
       <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\onedimsolverconfig.cpp">
+      <Filter>configuration</Filter>
     </ClCompile>
     <ClCompile Include="ored\marketdata\dependencygraph.cpp">
       <Filter>marketdata</Filter>
