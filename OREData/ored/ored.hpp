@@ -5,6 +5,7 @@
 #include <ored/auto_link.hpp>
 #endif
 
+#include <ored/configuration/arbitragecheckconfig.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
