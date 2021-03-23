@@ -123,7 +123,7 @@ void CapFloorTermVolSurfaceSparse<IS, IE>::initialiseStrikesTenors() {
     std::sort(optionTenors_.begin(), optionTenors_.end());
 
     for (auto s : allStrikes_) {
-        vector<Real>::iterator fnd =
+        std::vector<Real>::iterator fnd =
             find_if(strikes_.begin(), strikes_.end(), CloseEnoughComparator(s));
         if (fnd == strikes_.end()) {
             strikes_.push_back(s);
