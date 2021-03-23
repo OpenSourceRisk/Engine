@@ -294,10 +294,10 @@ void OptionSurfaceStripper::setUpSolver() {
     using std::placeholders::_1;
     if (min != Null<Real>() && max != Null<Real>()) {
         typedef Real (Brent::* MinMaxSolver)(const PriceError&, Real, Real, Real, Real) const;
-        solver_ = bind(static_cast<MinMaxSolver>(&Brent::solve), &brent_, _1, accuracy, guess, min, max);
+        solver_ = std::bind(static_cast<MinMaxSolver>(&Brent::solve), &brent_, _1, accuracy, guess, min, max);
     } else if (step != Null<Real>()) {
         typedef Real(Brent::* StepSolver)(const PriceError&, Real, Real, Real) const;
-        solver_ = bind(static_cast<StepSolver>(&Brent::solve), &brent_, _1, accuracy, guess, step);
+        solver_ = std::bind(static_cast<StepSolver>(&Brent::solve), &brent_, _1, accuracy, guess, step);
     } else {
         QL_FAIL("OptionSurfaceStripper: need a valid step size or (min, max) pair for a price based surface.");
     }
