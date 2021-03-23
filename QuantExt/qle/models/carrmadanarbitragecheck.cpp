@@ -100,14 +100,17 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     // perform the checks 1, 2 from the paper, and populate the set of violations
 
-    violationsType1_.resize(Q.size(), false);
-    violationsType2_.resize(BS.size(), false);
+    smileIsArbitrageFree_ = true;
+    callSpreadViolations_.resize(strikes_.size());
+    butterflyViolations_.resize(strikes_.size());
 
     // check 1: Q(i,j) in [0,1]
 
     for (Size i = 0; i < Q.size(); ++i) {
         if ((Q[i] < 0.0 && !close_enough(Q[i], 0.0)) || (Q[i] > 1.0 && !close_enough(Q[i], 1.0))) {
-            violationsType1_[i] = true;
+            callSpreadViolations_[i] = true;
+            callSpreadViolations_[i + 1] = true;
+            smileIsArbitrageFree_ = false;
         }
     }
 
@@ -115,17 +118,21 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     for (Size i = 0; i < BS.size(); ++i) {
         if (BS[i] < 0.0 && !close_enough(BS[i], 0.0)) {
-            violationsType2_[i] = true;
+            butterflyViolations_[i] = true;
+            butterflyViolations_[i + 1] = true;
+            butterflyViolations_[i + 2] = true;
+            smileIsArbitrageFree_ = false;
         }
     }
 
     // compute the density q
 
-    q_.resize(Q.size());
+    q_.resize(strikes_.size());
     q_[0] = 1.0 - Q.front();
     for (Size i = 0; i < Q.size() - 1; ++i) {
         q_[i + 1] = Q[i] - Q[i + 1];
     }
+    q_.back() = 0.0;
 }
 
 const std::vector<Real>& CarrMadanMarginalProbability::moneyness() const { return moneyness_; }
@@ -133,21 +140,19 @@ Real CarrMadanMarginalProbability::spot() const { return spot_; }
 Real CarrMadanMarginalProbability::forward() const { return forward_; }
 const std::vector<Real>& CarrMadanMarginalProbability::callPrices() const { return callPrices_; }
 
-bool CarrMadanMarginalProbability::arbitrageFree() const {
-    return violationsType1_.empty() && violationsType2_.empty();
-}
+bool CarrMadanMarginalProbability::arbitrageFree() const { return smileIsArbitrageFree_; }
 
-const std::vector<bool>& CarrMadanMarginalProbability::violationsType1() const { return violationsType1_; }
+const std::vector<bool>& CarrMadanMarginalProbability::callSpreadViolations() const { return callSpreadViolations_; }
 
-const std::vector<bool>& CarrMadanMarginalProbability::violationsType2() const { return violationsType2_; }
+const std::vector<bool>& CarrMadanMarginalProbability::butterflyViolations() const { return butterflyViolations_; }
 
 std::string arbitrageViolationsAsString(const CarrMadanMarginalProbability& cm) {
     std::ostringstream out;
     for (Size i = 0; i < cm.strikes().size(); ++i) {
         Size code = 0;
-        if (i < cm.strikes().size() - 1 && cm.violationsType1()[i])
+        if (cm.callSpreadViolations()[i])
             code += 1;
-        if (i > 0 && i < cm.strikes().size() - 1 && cm.violationsType2()[i - 1])
+        if (cm.butterflyViolations()[i])
             code += 2;
         out << (code > 0 ? std::to_string(code) : ".");
     }
@@ -158,15 +163,17 @@ const std::vector<Real>& CarrMadanMarginalProbability::density() const { return 
 const std::vector<Real>& CarrMadanMarginalProbability::strikes() const { return strikes_; }
 
 CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneyness, const Real spot,
-                                   const Handle<YieldTermStructure>& r, const Handle<YieldTermStructure>& q,
-                                   const std::vector<std::vector<Real>>& callPrices)
-    : times_(times), moneyness_(moneyness), spot_(spot), r_(r), q_(q), callPrices_(callPrices) {
+                                   const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices)
+    : times_(times), moneyness_(moneyness), spot_(spot), forwards_(forwards), callPrices_(callPrices) {
 
     // checks
 
-    QL_REQUIRE(times.size() == callPrices.size(),
-               "CarrMadanSurface: times size (" << times.size() << ") does not match callPrices outer vector size ("
-                                                << callPrices.size() << ")");
+    QL_REQUIRE(times_.size() == callPrices_.size(),
+               "CarrMadanSurface: times size (" << times_.size() << ") does not match callPrices outer vector size ("
+                                                << callPrices_.size() << ")");
+    QL_REQUIRE(times.size() == forwards_.size(), "CarrMadanSurface: times size (" << times_.size()
+                                                                                  << ") does not match forwards size ("
+                                                                                  << forwards_.size() << ")");
 
     QL_REQUIRE(times_.empty(), "CarrMadanSurface: times are empty");
 
@@ -192,7 +199,7 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
     if (moneyness_.empty() || !close_enough(moneyness_.front(), 0.0)) {
         moneyness_.insert(moneyness_.begin(), 0.0);
         for (Size i = 0; i < callPrices_.size(); ++i) {
-            callPrices_[i].insert(callPrices_[i].begin(), forward(times_[i]));
+            callPrices_[i].insert(callPrices_[i].begin(), forwards_[i]);
         }
     }
 
@@ -200,6 +207,7 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
 
     if (!close_enough(times_.front(), 0.0)) {
         times_.insert(times_.begin(), 0.0);
+        forwards_.insert(forwards_.begin(), spot_);
         callPrices_.insert(callPrices_.begin(), std::vector<Real>());
         for (Size i = 0; i < moneyness_.size(); ++i) {
             callPrices_.front().push_back(std::max(0.0, spot - moneyness_[i] * spot));
@@ -217,31 +225,29 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
 
     surfaceIsArbitrageFree_ = true;
     for (Size i = 0; i < times_.size(); ++i) {
-        timeSlices_.push_back(CarrMadanMarginalProbability(moneyness_, spot_, forward(times_[i]), callPrices_[i]));
+        timeSlices_.push_back(CarrMadanMarginalProbability(moneyness_, spot_, forwards_[i], callPrices_[i]));
         surfaceIsArbitrageFree_ = surfaceIsArbitrageFree_ && timeSlices_.back().arbitrageFree();
     }
 
     // check for calendar arbitrage
 
-    calendarArbitrage_ = std::vector<std::vector<bool>>(times_.size() - 1, std::vector<bool>(moneyness_.size()));
+    calendarArbitrage_ = std::vector<std::vector<bool>>(times_.size(), std::vector<bool>(moneyness_.size()));
     for (Size i = 0; i < moneyness_.size(); ++i) {
         for (Size j = 0; j < times_.size() - 1; ++j) {
-            Real c2 = callPrices_[j + 1][i] * spot_ / forward(times[j + 1]);
-            Real c1 = callPrices_[j][i] * spot_ / forward(times[j]);
+            Real c2 = callPrices_[j + 1][i] * spot_ / forwards_[j];
+            Real c1 = callPrices_[j][i] * spot_ / forwards_[j];
             bool af = c2 > c1 || close_enough(c1, c2);
             calendarArbitrage_[j][i] = !af;
+            calendarArbitrage_[j + 1][i] = !af;
             surfaceIsArbitrageFree_ = surfaceIsArbitrageFree_ && af;
         }
     }
 }
 
-Real CarrMadanSurface::forward(const Real t) const { return spot_ / r_->discount(t) * q_->discount(t); }
-
 const std::vector<Real>& CarrMadanSurface::times() const { return times_; }
 const std::vector<Real>& CarrMadanSurface::moneyness() const { return moneyness_; }
 Real CarrMadanSurface::spot() const { return spot_; }
-const Handle<YieldTermStructure>& CarrMadanSurface::r() const { return r_; }
-const Handle<YieldTermStructure>& CarrMadanSurface::q() const { return q_; }
+const std::vector<Real>& CarrMadanSurface::forwards() const { return forwards_; }
 const std::vector<std::vector<Real>>& CarrMadanSurface::callPrices() const { return callPrices_; }
 
 bool CarrMadanSurface::arbitrageFree() const { return surfaceIsArbitrageFree_; }
@@ -251,12 +257,12 @@ const std::vector<CarrMadanMarginalProbability>& CarrMadanSurface::timeSlices() 
 
 std::string arbitrageViolationsAsString(const CarrMadanSurface& cm) {
     std::ostringstream out;
-    for (Size j = 0; j < cm.times().size() - 1; ++j) {
+    for (Size j = 0; j < cm.times().size(); ++j) {
         Size code = 0;
         for (Size i = 0; i < cm.moneyness().size(); ++i) {
-            if (i < cm.moneyness().size() - 1 && cm.timeSlices()[j].violationsType1()[i])
+            if (cm.timeSlices()[j].callSpreadViolations()[i])
                 code += 1;
-            if (i > 0 && i < cm.moneyness().size() - 1 && cm.timeSlices()[j].violationsType2()[i - 1])
+            if (cm.timeSlices()[j].butterflyViolations()[i - 1])
                 code += 2;
             if (cm.calendarArbitrage()[j][i])
                 code += 4;
