@@ -19,12 +19,14 @@
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
-    <!--Additional warnings-->
+    <!-- Additional warnings -->
     <additionalWarning/>
     <additionalWarning Condition="'$(VisualStudioVersion)' &gt;= '15.3'">$(additionalWarning) /w35038</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
+    <!-- Disable some warnings if necessary here -->
+    <additionalWarning>$(additionalWarning) /wd4834</additionalWarning>
   </PropertyGroup>
   <PropertyGroup>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>

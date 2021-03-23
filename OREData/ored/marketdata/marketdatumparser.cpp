@@ -631,18 +631,34 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::COMMODITY_OPTION: {
-        // Expects the following form:
-        // COMMODITY_OPTION/RATE_LNVOL/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>
+        // Expects one of the following forms:
+        // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>
+        // COMMODITY_OPTION/<QT>/<COMDTY_NAME>/<CCY>/<EXPIRY>/<STRIKE>/<OT>
+        // where QT = RATE_LNVOL or PRICE and OT = C (for Call) or P (for Put)
+        using QT = MarketDatum::QuoteType;
         QL_REQUIRE(tokens.size() >= 6, "At least 6 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL,
-                   "Quote type for " << datumName << " should be 'RATE_LNVOL'");
+        QL_REQUIRE(quoteType == QT::RATE_LNVOL || quoteType == QT::PRICE,
+                   "Quote type for " << datumName << " should be 'RATE_LNVOL' or 'PRICE'");
 
         boost::shared_ptr<Expiry> expiry = parseExpiry(tokens[4]);
-        string strStrike = boost::algorithm::join(boost::make_iterator_range(tokens.begin() + 5, tokens.end()), "/");
+
+        // If the last token is C or P, process it and update bounds of strike portion.
+        auto itStkBeg = tokens.begin() + 5;
+        auto itStkEnd = tokens.end();
+        Option::Type optionType = Option::Call;
+        if (tokens.back() == "C" || tokens.back() == "P") {
+            if (tokens.back() == "P")
+                optionType = Option::Put;
+            itStkEnd = prev(itStkEnd);
+        }
+
+        // Parse the strike
+        QL_REQUIRE(itStkBeg != itStkEnd, "");
+        string strStrike = boost::algorithm::join(boost::make_iterator_range(itStkBeg, itStkEnd), "/");
         boost::shared_ptr<BaseStrike> strike = parseBaseStrike(strStrike);
 
-        return boost::make_shared<CommodityOptionQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3], expiry,
-                                                        strike);
+        return boost::make_shared<CommodityOptionQuote>(value, asof, datumName, quoteType, tokens[2],
+            tokens[3], expiry, strike, optionType);
     }
 
     case MarketDatum::InstrumentType::CORRELATION: {

@@ -64,6 +64,7 @@
 #include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/compoequityindex.hpp>
+#include <qle/indexes/decpi.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
@@ -285,9 +286,9 @@
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
+#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
-#include <qle/termstructures/equityoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>
