@@ -281,8 +281,7 @@ void CapFloorVolatilityCurveConfig::validate() const {
     }
 }
 
-const MarketDatum::QuoteType& CapFloorVolatilityCurveConfig::quoteType() const {
-
+MarketDatum::QuoteType CapFloorVolatilityCurveConfig::quoteType() const {
     switch (volatilityType_) {
     case CapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
         return MarketDatum::QuoteType::RATE_LNVOL;

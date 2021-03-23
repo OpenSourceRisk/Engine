@@ -70,7 +70,7 @@ public:
     //! \name Inspectors
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
-    const MarketDatum::QuoteType& quoteType() const;
+    MarketDatum::QuoteType quoteType() const;
     bool extrapolate() const { return extrapolate_; }
     bool flatExtrapolation() const { return flatExtrapolation_; }
     bool includeAtm() const { return includeAtm_; }
