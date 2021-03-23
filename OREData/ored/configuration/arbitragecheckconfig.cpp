@@ -35,15 +35,13 @@ ArbitrageCheckConfig::ArbitrageCheckConfig() {
 
     moneyness_ = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3,
                   1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0};
-
-    std::cout << "set " << tenors_.size() << " tenors and " << moneyness_.size() << "moneys" << std::endl;
 }
 
 void ArbitrageCheckConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ArbitrageCheck");
     tenors_ = parseListOfValues<Period>(XMLUtils::getChildValue(node, "Tenors"), &parsePeriod);
     moneyness_ = parseListOfValues<Real>(XMLUtils::getChildValue(node, "Moneyness"), &parseReal);
-    std::cout << "set fromXML " << tenors_.size() << " tenors and " << moneyness_.size() << "moneys" << std::endl;
+    defaultValues_ = false;
 }
 
 XMLNode* ArbitrageCheckConfig::toXML(XMLDocument& doc) {

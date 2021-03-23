@@ -32,15 +32,20 @@ class ArbitrageCheckConfig : public XMLSerializable {
 public:
     ArbitrageCheckConfig();
     ArbitrageCheckConfig(const std::vector<Period>& tenors, const std::vector<Real>& moneyness)
-        : tenors_(tenors), moneyness_(moneyness) {}
+        : tenors_(tenors), moneyness_(moneyness) {
+        defaultValues_ = false;
+    }
 
     const std::vector<Period>& tenors() const { return tenors_; }
     const std::vector<Real>& moneyness() const { return moneyness_; }
+
+    bool defaultValues() const { return defaultValues_; }
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
 
 private:
+    bool defaultValues_ = true;
     std::vector<Period> tenors_;
     std::vector<Real> moneyness_;
 };

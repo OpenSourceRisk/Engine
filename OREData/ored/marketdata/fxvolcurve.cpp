@@ -630,6 +630,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         if (!config->arbitrageCheckConfig().moneyness().empty() && !config->arbitrageCheckConfig().tenors().empty() &&
             !domYts_.empty() && !forYts_.empty()) {
+            std::vector<Real> moneyness = config->arbitrageCheckConfig().moneyness();
+            if (config->arbitrageCheckConfig().defaultValues() &&
+                (config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
+                 config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated)) {
+                moneyness = {1.0};
+            }
             calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
             std::vector<Real> times, forwards;
             for (auto const& p : config->arbitrageCheckConfig().tenors()) {
@@ -637,10 +643,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 forwards.push_back(fxSpot_->value() / domYts_->discount(times.back()) *
                                    forYts_->discount(times.back()));
             }
-            std::vector<std::vector<Real>> callPrices(
-                times.size(), std::vector<Real>(config->arbitrageCheckConfig().moneyness().size(), 0.0));
+            std::vector<std::vector<Real>> callPrices(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             for (Size i = 0; i < times.size(); ++i) {
-                for (Size j = 0; j < config->arbitrageCheckConfig().moneyness().size(); ++j) {
+                for (Size j = 0; j < moneyness.size(); ++j) {
                     try {
                         Real mny = config->arbitrageCheckConfig().moneyness()[j];
                         Real stddev = std::sqrt(vol_->blackVariance(times[i], mny * forwards[i]));
@@ -649,14 +654,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     }
                 }
             }
-            QuantExt::CarrMadanSurface cm(times, config->arbitrageCheckConfig().moneyness(), fxSpot_->value(), forwards,
-                                          callPrices);
+            QuantExt::CarrMadanSurface cm(times, moneyness, fxSpot_->value(), forwards, callPrices);
 
             calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
             calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
             calibrationInfo_->times = cm.times();
             calibrationInfo_->moneyness = cm.moneyness();
-            std::cout << "set money: " << calibrationInfo_->moneyness.size() << std::endl;
             calibrationInfo_->forwards = cm.forwards();
             calibrationInfo_->isArbitrageFree = cm.arbitrageFree();
             calibrationInfo_->callSpreadArbitrage = cm.callSpreadArbitrage();
