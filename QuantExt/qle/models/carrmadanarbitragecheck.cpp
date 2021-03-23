@@ -132,7 +132,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
     for (Size i = 0; i < Q.size() - 1; ++i) {
         q_[i + 1] = Q[i] - Q[i + 1];
     }
-    q_.back() = 0.0;
+    q_.back() = Q.back();
 }
 
 const std::vector<Real>& CarrMadanMarginalProbability::moneyness() const { return moneyness_; }
