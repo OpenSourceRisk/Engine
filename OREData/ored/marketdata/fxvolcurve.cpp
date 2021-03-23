@@ -18,19 +18,20 @@
 
 #include <algorithm>
 #include <ored/marketdata/fxvolcurve.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/utilities/indexparser.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <qle/termstructures/blackvolsurfacedelta.hpp>
-#include <qle/termstructures/fxblackvolsurface.hpp>
+#include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
-#include <string.h>
+#include <qle/termstructures/blackvolsurfacedelta.hpp>
+#include <qle/termstructures/fxblackvolsurface.hpp>
 #include <regex>
+#include <string.h>
 
 using namespace QuantLib;
 using namespace std;
@@ -78,7 +79,7 @@ namespace ore {
 namespace data {
 
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                       const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots, 
+                       const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                        const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                        const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
@@ -263,16 +264,13 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
     Calendar cal = config->calendar();
-    auto fxSpot = fxSpots.fxPairLookup(config->fxSpotID());
-    auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
-    auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
     std::vector<Real> putDeltasNum, callDeltasNum;
     std::transform(putDeltas.begin(), putDeltas.end(), std::back_inserter(putDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
     std::transform(callDeltas.begin(), callDeltas.end(), std::back_inserter(callDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
-        asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot, domYTS, forYTS, deltaType,
+        asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_, deltaType,
         atmType, boost::none, switchTenor, longTermDeltaType, longTermAtmType);
 
     vol_->enableExtrapolation();
@@ -423,10 +421,6 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
             vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
         } else {
             // Smile
-            auto fxSpot = fxSpots.fxPairLookup(config->fxSpotID());
-            auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
-            auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
-
             std::string conventionsID = config->conventionsID();
             DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
             DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Spot;
@@ -451,56 +445,61 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
             }
 
             vol_ = boost::make_shared<QuantExt::FxBlackVannaVolgaVolatilitySurface>(
-                asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false, vvFirstApprox, atmType,
-                deltaType, smileDelta / 100.0, switchTenor, longTermAtmType, longTermDeltaType);
+                asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot_, domYts_, forYts_, false, vvFirstApprox,
+                atmType, deltaType, smileDelta / 100.0, switchTenor, longTermAtmType, longTermDeltaType);
         }
     }
     vol_->enableExtrapolation();
 }
 
-Handle<QuantExt::CorrelationTermStructure> getCorrelationCurve(const std::string& index1, const std::string& index2, 
-    const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
+Handle<QuantExt::CorrelationTermStructure>
+getCorrelationCurve(const std::string& index1, const std::string& index2,
+                    const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
     // straight pair
     auto tmpCorr = correlationCurves.find("Correlation/" + index1 + "&" + index2);
     if (tmpCorr != correlationCurves.end()) {
         return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
-    } 
+    }
     // inverse pair
     tmpCorr = correlationCurves.find("Correlation/" + index2 + "&" + index1);
     if (tmpCorr != correlationCurves.end()) {
         return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
-    } 
+    }
     // inverse fx index1
     tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index1) + "&" + index2);
     if (tmpCorr != correlationCurves.end()) {
-        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        Handle<QuantExt::CorrelationTermStructure> h =
+            Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
             boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
-    } 
+    }
     tmpCorr = correlationCurves.find("Correlation/" + index2 + "&" + inverseFxIndex(index1));
     if (tmpCorr != correlationCurves.end()) {
-        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        Handle<QuantExt::CorrelationTermStructure> h =
+            Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
             boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
-    } 
+    }
     // inverse fx index2
     tmpCorr = correlationCurves.find("Correlation/" + index1 + "&" + inverseFxIndex(index2));
     if (tmpCorr != correlationCurves.end()) {
-        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        Handle<QuantExt::CorrelationTermStructure> h =
+            Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
             boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
-    } 
+    }
     tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index2) + "&" + index1);
     if (tmpCorr != correlationCurves.end()) {
-        Handle<QuantExt::CorrelationTermStructure> h = Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
+        Handle<QuantExt::CorrelationTermStructure> h =
+            Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
         return Handle<QuantExt::CorrelationTermStructure>(
             boost::make_shared<QuantExt::NegativeCorrelationTermStructure>(h));
-    } 
+    }
     // both fx indices inverted
     tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index1) + "&" + inverseFxIndex(index2));
     if (tmpCorr != correlationCurves.end()) {
         return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
-    } 
+    }
     tmpCorr = correlationCurves.find("Correlation/" + inverseFxIndex(index2) + "&" + inverseFxIndex(index1));
     if (tmpCorr != correlationCurves.end()) {
         return Handle<QuantExt::CorrelationTermStructure>(tmpCorr->second->corrTermStructure());
@@ -510,19 +509,20 @@ Handle<QuantExt::CorrelationTermStructure> getCorrelationCurve(const std::string
 }
 
 void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                                           boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                                           const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
-                                           const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                                           const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                                           const Conventions& conventions) {
+                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
+                                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                                      const Conventions& conventions) {
     vector<string> tokens;
     boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
     QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << config->fxSpotID());
     auto forTarget = tokens[1];
-    auto domTarget = tokens[2]; 
-    
-    DLOG("Triangulating FxVol curve " << config->curveID() << " from baseVols " << config->baseVolatility1() << ":" << config->baseVolatility2());
-    
+    auto domTarget = tokens[2];
+
+    DLOG("Triangulating FxVol curve " << config->curveID() << " from baseVols " << config->baseVolatility1() << ":"
+                                      << config->baseVolatility2());
+
     std::string baseCcy;
     QL_REQUIRE(config->baseVolatility1().size() == 6, "invalid ccy pair length for baseVolatility1");
     auto forBase1 = config->baseVolatility1().substr(0, 3);
@@ -537,10 +537,9 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
         forBase1 = domTarget;
         domBase1 = tmp;
 
-        QL_REQUIRE(forBase1 == forTarget || forBase1 == domTarget, 
-            "FxVol: mismatch in the baseVolatility1 " << config->baseVolatility1() << " and Target Pair " << forTarget << domTarget);
-    
-        
+        QL_REQUIRE(forBase1 == forTarget || forBase1 == domTarget,
+                   "FxVol: mismatch in the baseVolatility1 " << config->baseVolatility1() << " and Target Pair "
+                                                             << forTarget << domTarget);
     }
     baseCcy = domBase1;
 
@@ -550,7 +549,8 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     std::string spec2 = "FXVolatility/" + forBase2 + "/" + domBase2 + "/" + config->baseVolatility2();
     bool base2Inverted = false;
 
-    QL_REQUIRE(forBase2 == baseCcy || domBase2 == baseCcy, "baseVolatility2 must share a ccy code with the baseVolatility1");
+    QL_REQUIRE(forBase2 == baseCcy || domBase2 == baseCcy,
+               "baseVolatility2 must share a ccy code with the baseVolatility1");
 
     if (forBase2 != forTarget && forBase2 != domTarget) {
         // we invert the pair
@@ -611,13 +611,79 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta,
                    "Unknown FX curve building dimension");
 
+        fxSpot_ = fxSpots.fxPairLookup(config->fxSpotID());
+        if (!config->fxDomesticYieldCurveID().empty())
+            domYts_ = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
+        if (!config->fxForeignYieldCurveID().empty())
+            forYts_ = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
+
         if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta) {
             buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
-            buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves, conventions);
+            buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves,
+                                 conventions);
         } else {
             buildVannaVolgaOrATMCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
         }
+
+        // build calibration info
+
+        if (!config->arbitrageCheckConfig().moneyness().empty() && !config->arbitrageCheckConfig().tenors().empty() &&
+            !domYts_.empty() && !forYts_.empty()) {
+            calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
+            std::vector<Real> times, forwards;
+            for (auto const& p : config->arbitrageCheckConfig().tenors()) {
+                times.push_back(config->dayCounter().yearFraction(asof, config->calendar().advance(asof, p)));
+                forwards.push_back(fxSpot_->value() / domYts_->discount(times.back()) *
+                                   forYts_->discount(times.back()));
+            }
+            std::vector<std::vector<Real>> callPrices(
+                times.size(), std::vector<Real>(config->arbitrageCheckConfig().moneyness().size(), 0.0));
+            for (Size i = 0; i < times.size(); ++i) {
+                for (Size j = 0; j < config->arbitrageCheckConfig().moneyness().size(); ++j) {
+                    try {
+                        Real mny = config->arbitrageCheckConfig().moneyness()[j];
+                        Real stddev = std::sqrt(vol_->blackVariance(times[i], mny * forwards[i]));
+                        callPrices[i][j] = blackFormula(Option::Call, forwards[i] * mny, forwards[i], stddev);
+                    } catch (...) {
+                    }
+                }
+            }
+            QuantExt::CarrMadanSurface cm(times, config->arbitrageCheckConfig().moneyness(), fxSpot_->value(), forwards,
+                                          callPrices);
+
+            calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
+            calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
+            calibrationInfo_->times = cm.times();
+            calibrationInfo_->moneyness = cm.moneyness();
+            std::cout << "set money: " << calibrationInfo_->moneyness.size() << std::endl;
+            calibrationInfo_->forwards = cm.forwards();
+            calibrationInfo_->isArbitrageFree = cm.arbitrageFree();
+            calibrationInfo_->callSpreadArbitrage = cm.callSpreadArbitrage();
+            calibrationInfo_->butterflyArbitrage = cm.butterflyArbitrage();
+            calibrationInfo_->calendarArbitrage = cm.calendarArbitrage();
+            calibrationInfo_->strikes = std::vector<std::vector<Real>>(
+                cm.times().size(), std::vector<Real>(cm.moneyness().size(), Null<Real>()));
+            calibrationInfo_->impliedVolatility = std::vector<std::vector<Real>>(
+                cm.times().size(), std::vector<Real>(cm.moneyness().size(), Null<Real>()));
+            calibrationInfo_->prob = std::vector<std::vector<Real>>(
+                cm.times().size(), std::vector<Real>(cm.moneyness().size(), Null<Real>()));
+            for (Size i = 0; i < cm.times().size(); ++i) {
+                for (Size j = 0; j < cm.moneyness().size(); ++j) {
+                    calibrationInfo_->strikes[i][j] = cm.timeSlices()[i].strikes()[j];
+                    calibrationInfo_->prob[i][j] = cm.timeSlices()[i].density()[j];
+                    try {
+                        calibrationInfo_->impliedVolatility[i][j] =
+                            vol_->blackVol(times[i], cm.timeSlices()[i].strikes()[j]);
+                    } catch (...) {
+                    }
+                }
+            }
+
+            TLOG("Arbitrage analysis result:");
+            TLOGGERSTREAM << arbitrageAsString(cm);
+        }
+
     } catch (std::exception& e) {
         QL_FAIL("fx vol curve building failed :" << e.what());
     } catch (...) {

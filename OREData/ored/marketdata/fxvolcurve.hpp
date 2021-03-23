@@ -25,12 +25,12 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/correlationcurve.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
-#include <ored/marketdata/correlationcurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
 namespace ore {
@@ -58,14 +58,16 @@ public:
     FXVolCurve() {}
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-               const std::map<string, boost::shared_ptr<FXSpot>>& fxSpots, const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-               const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols, 
+               const std::map<string, boost::shared_ptr<FXSpot>>& fxSpots,
+               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+               const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
                const Conventions& conventions);
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-               const ore::data::FXTriangulation& fxSpots, const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-               const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols, 
+               const ore::data::FXTriangulation& fxSpots,
+               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+               const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
                const Conventions& conventions);
     //@}
@@ -73,12 +75,15 @@ public:
     //! \name Inspectors
     //@{
     const FXVolatilityCurveSpec& spec() const { return spec_; }
-
     const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
+    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     FXVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
+    Handle<YieldTermStructure> domYts_, forYts_;
+    Handle<Quote> fxSpot_;
+    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
               const FXLookup& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
