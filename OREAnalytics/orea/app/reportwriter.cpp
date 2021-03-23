@@ -1021,6 +1021,7 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
 
     addRowMktCalReport(report, type, id, "dayCounter", "", "", "", info->dayCounter);
     addRowMktCalReport(report, type, id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
 
     for (Size i = 0; i < info->times.size(); ++i) {
         for (Size j = 0; j < info->moneyness.size(); ++j) {
