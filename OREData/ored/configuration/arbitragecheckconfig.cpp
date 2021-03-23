@@ -44,7 +44,7 @@ void ArbitrageCheckConfig::fromXML(XMLNode* node) {
         defaultTenors_ = false;
     }
     if (auto tmp = XMLUtils::getChildNode(node, "Moneyness")) {
-        moneyness_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp)), &parseReal);
+        moneyness_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp), &parseReal);
         defaultMoneyness_ = false;
     }
 }
