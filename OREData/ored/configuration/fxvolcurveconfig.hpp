@@ -23,7 +23,9 @@
 
 #pragma once
 
+#include <ored/configuration/arbitragecheckconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/period.hpp>
@@ -73,7 +75,8 @@ public:
                             const string& conventionsID = "", const QuantLib::Natural& smileDelta = 25);
 
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const string& baseVolatility1, const string& baseVolatility2, const string& fxIndexTag = "GENERIC");
+                            const string& baseVolatility1, const string& baseVolatility2,
+                            const string& fxIndexTag = "GENERIC");
 
     //@}
 
@@ -101,6 +104,7 @@ public:
     const string& baseVolatility1() const { return baseVolatility1_; }
     const string& baseVolatility2() const { return baseVolatility2_; }
     const string& fxIndexTag() const { return fxIndexTag_; }
+    const ArbitrageCheckConfig& arbitrageCheckConfig() const { return arbitrageCheckConfig_; }
     //@}
 
     //! \name Setters
@@ -138,6 +142,7 @@ private:
     string baseVolatility1_;
     string baseVolatility2_;
     string fxIndexTag_;
+    ArbitrageCheckConfig arbitrageCheckConfig_;
 };
 } // namespace data
 } // namespace ore
