@@ -47,8 +47,8 @@ public:
     bool arbitrageFree() const;
 
     const std::vector<Real>& strikes() const;
-    const std::vector<bool>& callSpreadViolations() const;
-    const std::vector<bool>& butterflyViolations() const;
+    const std::vector<bool>& callSpreadArbitrage() const;
+    const std::vector<bool>& butterflyArbitrage() const;
     const std::vector<Real>& density() const;
 
 private:
@@ -57,7 +57,7 @@ private:
     std::vector<Real> callPrices_;
 
     std::vector<Real> strikes_;
-    std::vector<bool> callSpreadViolations_, butterflyViolations_;
+    std::vector<bool> callSpreadArbitrage_, butterflyArbitrage_;
     std::vector<Real> q_;
     bool smileIsArbitrageFree_;
 };
@@ -67,7 +67,7 @@ public:
     /*! The times and moneyness should be strictly increasing, a zero time and moneyness together
         with corresponding call prices are added, if not present. The outer vectors for call prices
         and the calendarAbritrage() result represent times, the inner strikes. */
-    CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneynes, const Real spot,
+    CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneyness, const Real spot,
                      const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices);
     const std::vector<Real>& times() const;
     const std::vector<Real>& moneyness() const;
@@ -81,6 +81,8 @@ public:
 
     /* outer vector = times, length = number of result of times(),
        inner vector = strikes, length = number of strikes */
+    const std::vector<std::vector<bool>>& callSpreadArbitrage() const;
+    const std::vector<std::vector<bool>>& butterflyArbitrage() const;
     const std::vector<std::vector<bool>>& calendarArbitrage() const;
 
 private:
@@ -91,10 +93,10 @@ private:
 
     std::vector<CarrMadanMarginalProbability> timeSlices_;
     bool surfaceIsArbitrageFree_;
-    std::vector<std::vector<bool>> calendarArbitrage_;
+    std::vector<std::vector<bool>> callSpreadArbitrage_, butterflyArbitrage_, calendarArbitrage_;
 };
 
-std::string arbitrageViolationsAsString(const CarrMadanMarginalProbability& cm);
-std::string arbitrageViolationsAsString(const CarrMadanSurface& cm);
+std::string arbitrageAsString(const CarrMadanMarginalProbability& cm);
+std::string arbitrageAsString(const CarrMadanSurface& cm);
 
 } // namespace QuantExt

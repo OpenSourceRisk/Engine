@@ -35,7 +35,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
                                                             << moneyness_.size() << ") inconsistent to callPrices ("
                                                             << callPrices.size() << ")";)
 
-    QL_REQUIRE(moneyness_.empty(), "CarrMadanMarginalProbability: input moneyness is empty");
+    QL_REQUIRE(!moneyness_.empty(), "CarrMadanMarginalProbability: input moneyness is empty");
 
     for (Size i = 1; i < moneyness_.size(); ++i) {
         QL_REQUIRE(moneyness_[i] > moneyness_[i - 1] && !close_enough(moneyness_[i], moneyness_[i - 1]),
@@ -77,7 +77,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
         transformedStrikes.push_back(k * spot / forward);
 
     for (auto const& p : callPrices_)
-        transformedStrikes.push_back(p * spot / forward);
+        transformedCallPrices.push_back(p * spot / forward);
 
     // compute Q
 
@@ -98,18 +98,18 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
                         (transformedStrikes[i + 1] - transformedStrikes[i]) * transformedCallPrices[i + 1];
     }
 
-    // perform the checks 1, 2 from the paper, and populate the set of violations
+    // perform the checks 1, 2 from the paper, and populate the set of arbitrage
 
     smileIsArbitrageFree_ = true;
-    callSpreadViolations_.resize(strikes_.size());
-    butterflyViolations_.resize(strikes_.size());
+    callSpreadArbitrage_.resize(strikes_.size());
+    butterflyArbitrage_.resize(strikes_.size());
 
     // check 1: Q(i,j) in [0,1]
 
     for (Size i = 0; i < Q.size(); ++i) {
         if ((Q[i] < 0.0 && !close_enough(Q[i], 0.0)) || (Q[i] > 1.0 && !close_enough(Q[i], 1.0))) {
-            callSpreadViolations_[i] = true;
-            callSpreadViolations_[i + 1] = true;
+            callSpreadArbitrage_[i] = true;
+            callSpreadArbitrage_[i + 1] = true;
             smileIsArbitrageFree_ = false;
         }
     }
@@ -117,10 +117,10 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
     // check 2: BS(i,j) >= 0
 
     for (Size i = 0; i < BS.size(); ++i) {
-        if (BS[i] < 0.0 && !close_enough(BS[i], 0.0)) {
-            butterflyViolations_[i] = true;
-            butterflyViolations_[i + 1] = true;
-            butterflyViolations_[i + 2] = true;
+        if (BS[i] < -1.0E-10) {
+            butterflyArbitrage_[i] = true;
+            butterflyArbitrage_[i + 1] = true;
+            butterflyArbitrage_[i + 2] = true;
             smileIsArbitrageFree_ = false;
         }
     }
@@ -142,17 +142,17 @@ const std::vector<Real>& CarrMadanMarginalProbability::callPrices() const { retu
 
 bool CarrMadanMarginalProbability::arbitrageFree() const { return smileIsArbitrageFree_; }
 
-const std::vector<bool>& CarrMadanMarginalProbability::callSpreadViolations() const { return callSpreadViolations_; }
+const std::vector<bool>& CarrMadanMarginalProbability::callSpreadArbitrage() const { return callSpreadArbitrage_; }
 
-const std::vector<bool>& CarrMadanMarginalProbability::butterflyViolations() const { return butterflyViolations_; }
+const std::vector<bool>& CarrMadanMarginalProbability::butterflyArbitrage() const { return butterflyArbitrage_; }
 
-std::string arbitrageViolationsAsString(const CarrMadanMarginalProbability& cm) {
+std::string arbitrageAsString(const CarrMadanMarginalProbability& cm) {
     std::ostringstream out;
     for (Size i = 0; i < cm.strikes().size(); ++i) {
         Size code = 0;
-        if (cm.callSpreadViolations()[i])
+        if (cm.callSpreadArbitrage()[i])
             code += 1;
-        if (cm.butterflyViolations()[i])
+        if (cm.butterflyArbitrage()[i])
             code += 2;
         out << (code > 0 ? std::to_string(code) : ".");
     }
@@ -175,7 +175,7 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
                                                                                   << ") does not match forwards size ("
                                                                                   << forwards_.size() << ")");
 
-    QL_REQUIRE(times_.empty(), "CarrMadanSurface: times are empty");
+    QL_REQUIRE(!times_.empty(), "CarrMadanSurface: times are empty");
 
     for (Size i = 1; i < times_.size(); ++i) {
         QL_REQUIRE(times_[i] > times_[i - 1] && !close_enough(times_[i], times_[i - 1]),
@@ -227,6 +227,8 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
     for (Size i = 0; i < times_.size(); ++i) {
         timeSlices_.push_back(CarrMadanMarginalProbability(moneyness_, spot_, forwards_[i], callPrices_[i]));
         surfaceIsArbitrageFree_ = surfaceIsArbitrageFree_ && timeSlices_.back().arbitrageFree();
+        callSpreadArbitrage_.push_back(timeSlices_.back().callSpreadArbitrage());
+        butterflyArbitrage_.push_back(timeSlices_.back().butterflyArbitrage());
     }
 
     // check for calendar arbitrage
@@ -234,12 +236,14 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
     calendarArbitrage_ = std::vector<std::vector<bool>>(times_.size(), std::vector<bool>(moneyness_.size()));
     for (Size i = 0; i < moneyness_.size(); ++i) {
         for (Size j = 0; j < times_.size() - 1; ++j) {
-            Real c2 = callPrices_[j + 1][i] * spot_ / forwards_[j];
+            Real c2 = callPrices_[j + 1][i] * spot_ / forwards_[j + 1];
             Real c1 = callPrices_[j][i] * spot_ / forwards_[j];
             bool af = c2 > c1 || close_enough(c1, c2);
-            calendarArbitrage_[j][i] = !af;
-            calendarArbitrage_[j + 1][i] = !af;
-            surfaceIsArbitrageFree_ = surfaceIsArbitrageFree_ && af;
+            if (!af) {
+                calendarArbitrage_[j][i] = true;
+                calendarArbitrage_[j + 1][i] = true;
+                surfaceIsArbitrageFree_ = false;
+            }
         }
     }
 }
@@ -253,16 +257,19 @@ const std::vector<std::vector<Real>>& CarrMadanSurface::callPrices() const { ret
 bool CarrMadanSurface::arbitrageFree() const { return surfaceIsArbitrageFree_; }
 const std::vector<std::vector<bool>>& CarrMadanSurface::calendarArbitrage() const { return calendarArbitrage_; }
 
+const std::vector<std::vector<bool>>& CarrMadanSurface::callSpreadArbitrage() const { return callSpreadArbitrage_; }
+const std::vector<std::vector<bool>>& CarrMadanSurface::butterflyArbitrage() const { return butterflyArbitrage_; }
+
 const std::vector<CarrMadanMarginalProbability>& CarrMadanSurface::timeSlices() const { return timeSlices_; }
 
-std::string arbitrageViolationsAsString(const CarrMadanSurface& cm) {
+std::string arbitrageAsString(const CarrMadanSurface& cm) {
     std::ostringstream out;
     for (Size j = 0; j < cm.times().size(); ++j) {
-        Size code = 0;
         for (Size i = 0; i < cm.moneyness().size(); ++i) {
-            if (cm.timeSlices()[j].callSpreadViolations()[i])
+            Size code = 0;
+            if (cm.timeSlices()[j].callSpreadArbitrage()[i])
                 code += 1;
-            if (cm.timeSlices()[j].butterflyViolations()[i - 1])
+            if (cm.timeSlices()[j].butterflyArbitrage()[i])
                 code += 2;
             if (cm.calendarArbitrage()[j][i])
                 code += 4;
