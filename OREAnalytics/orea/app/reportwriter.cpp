@@ -1014,6 +1014,32 @@ void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::stri
     }
 }
 
+void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
+                               boost::shared_ptr<FxEqVolCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    addRowMktCalReport(report, type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, type, id, "calendar", "", "", "", info->calendar);
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        for (Size j = 0; j < info->moneyness.size(); ++j) {
+            std::string tStr = std::to_string(info->times.at(i));
+            std::string mStr = std::to_string(info->moneyness.at(j));
+            addRowMktCalReport(report, type, id, "forward", tStr, mStr, "", info->forwards.at(i));
+            addRowMktCalReport(report, type, id, "strike", tStr, mStr, "", info->strikes.at(i).at(j));
+            addRowMktCalReport(report, type, id, "vol", tStr, mStr, "", info->impliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "prob", tStr, mStr, "", info->prob.at(i).at(j));
+            addRowMktCalReport(report, type, id, "callSpreadArb", tStr, mStr, "",
+                               static_cast<bool>(info->callSpreadArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "butterflyArb", tStr, mStr, "",
+                               static_cast<bool>(info->butterflyArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "calendarArb", tStr, mStr, "",
+                               static_cast<bool>(info->calendarArbitrage.at(i).at(j)));
+        }
+    }
+}
+
 } // namespace
 
 void ReportWriter::writeTodaysMarketCalibrationReport(
@@ -1045,7 +1071,10 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addInflationCurveCalibrationInfo(report, r.first, r.second);
     }
 
-    // ...
+    // fx vol results
+    for (auto const& r : calibrationInfo->fxVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "fxVol", r.first, r.second);
+    }
 
     report.end();
     LOG("TodaysMktCalibration report written");
