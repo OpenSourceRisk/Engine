@@ -569,6 +569,8 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     vector<Real> qtStrikes;
     vector<Real> qtData;
     vector<Period> qtTenors;
+    Period tenor = parsePeriod(config.iborTenor());
+    string currency = config.currency();
 
     for (auto& md : loader.loadQuotes(asof)) {
 
@@ -576,7 +578,7 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
             md->quoteType() == config.quoteType()) {
 
             boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
-            if (cfq->ccy() == config.curveID() && !cfq->atm()) {
+            if (cfq->ccy() == currency && cfq->underlying() == tenor && !cfq->atm()) {
                 auto j = std::find(config.tenors().begin(), config.tenors().end(), to_string(cfq->term()));
                 tenorRelevant = j != config.tenors().end();
                 

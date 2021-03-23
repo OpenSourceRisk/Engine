@@ -182,6 +182,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
+    XMLUtils::addChild(doc, node, "OptionalQuotes", optionalQuotes_);
     XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
     XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);
@@ -216,15 +217,26 @@ void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
 }
 
+string CapFloorVolatilityCurveConfig::iborTenor() const {
+    string tenor;
+    // Ibor index term and currency (do not allow for convention based ibor indices here)
+    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
+    return tenor;
+}
+
+const string& CapFloorVolatilityCurveConfig::currency() const {
+    string tenor;
+    // Ibor index term and currency (do not allow for convention based ibor indices here)
+    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
+    return index->currency().code();
+}
+
 void CapFloorVolatilityCurveConfig::populateQuotes() {
 
     // Cap floor quotes are for the form:
     // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE>
-
-    // Ibor index term and currency (do not allow for convention based ibor indices here)
-    string tenor;
-    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
-    string ccy = index->currency().code();
+    string ccy = currency();
+    string tenor = iborTenor();
 
     // Volatility quote stem
     MarketDatum::QuoteType qType = quoteType();

@@ -90,6 +90,8 @@ public:
     const std::vector<std::string>& atmTenors() const { return atmTenors_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     Type type() const { return type_; }
+    const string& currency() const;
+    string iborTenor() const;
     //@}
 
     //! Convert VolatilityType \p type to string
@@ -102,7 +104,7 @@ private:
     bool includeAtm_;
     std::vector<std::string> tenors_;
     std::vector<std::string> strikes_;
-    bool optionalQuotes_;
+    bool optionalQuotes_ = false;
     QuantLib::DayCounter dayCounter_;
     QuantLib::Natural settleDays_;
     QuantLib::Calendar calendar_;
