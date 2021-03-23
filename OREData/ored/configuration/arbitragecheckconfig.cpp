@@ -39,15 +39,22 @@ ArbitrageCheckConfig::ArbitrageCheckConfig() {
 
 void ArbitrageCheckConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ArbitrageCheck");
-    tenors_ = parseListOfValues<Period>(XMLUtils::getChildValue(node, "Tenors"), &parsePeriod);
-    moneyness_ = parseListOfValues<Real>(XMLUtils::getChildValue(node, "Moneyness"), &parseReal);
-    defaultValues_ = false;
+    if (auto tmp = XMLUtils::getChildNode(node, "Tenors")) {
+        tenors_ = parseListOfValues<Period>(XMLUtils::getNodeValue(tmp), &parsePeriod);
+        defaultTenors_ = false;
+    }
+    if (auto tmp = XMLUtils::getChildNode(node, "Moneyness")) {
+        moneyness_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp)), &parseReal);
+        defaultMoneyness_ = false;
+    }
 }
 
 XMLNode* ArbitrageCheckConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ArbitrageCheck");
-    XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
-    XMLUtils::addGenericChildAsList(doc, node, "Moneyness", moneyness_);
+    if (!defaultTenors_)
+        XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
+    if (!defaultMoneyness_)
+        XMLUtils::addGenericChildAsList(doc, node, "Moneyness", moneyness_);
     return node;
 }
 

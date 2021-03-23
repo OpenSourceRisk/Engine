@@ -81,8 +81,11 @@ public:
 private:
     FXVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
-    Handle<YieldTermStructure> domYts_, forYts_;
     Handle<Quote> fxSpot_;
+    Handle<YieldTermStructure> domYts_, forYts_;
+    std::vector<Period> expiries_;
+    bool expiriesRegex_;
+
     boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,

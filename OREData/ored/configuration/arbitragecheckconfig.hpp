@@ -33,19 +33,21 @@ public:
     ArbitrageCheckConfig();
     ArbitrageCheckConfig(const std::vector<Period>& tenors, const std::vector<Real>& moneyness)
         : tenors_(tenors), moneyness_(moneyness) {
-        defaultValues_ = false;
+        defaultTenors_ = defaultMoneyness_ = false;
     }
 
     const std::vector<Period>& tenors() const { return tenors_; }
     const std::vector<Real>& moneyness() const { return moneyness_; }
 
-    bool defaultValues() const { return defaultValues_; }
+    bool defaultTenors() const { return defaultTenors_; }
+    bool defaultMoneyness() const { return defaultMoneyness_; }
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
 
 private:
-    bool defaultValues_ = true;
+    bool defaultTenors_ = true;
+    bool defaultMoneyness_ = true;
     std::vector<Period> tenors_;
     std::vector<Real> moneyness_;
 };
