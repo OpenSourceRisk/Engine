@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
-set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
+set(OREData_SRC configuration/arbitragecheckconfig.cpp
+configuration/basecorrelationcurveconfig.cpp
 configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
@@ -157,6 +158,7 @@ utilities/xmlutils.cpp)
 # hpp files, this list is maintained manually
 
 set(OREData_HDR auto_link.hpp
+configuration/arbitragecheckconfig.hpp
 configuration/basecorrelationcurveconfig.hpp
 configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
