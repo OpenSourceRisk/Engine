@@ -91,7 +91,21 @@ struct YoYInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
     std::vector<double> yoyRates;
 };
 
-// ... add more curve types here
+// fx, eq vols
+
+struct FxEqVolCalibrationInfo {
+    virtual ~FxEqVolCalibrationInfo() {}
+    std::string dayCounter;
+    std::string calendar;
+    std::vector<double> times;
+    std::vector<double> moneyness;
+    std::vector<double> forwards;
+    std::vector<std::vector<double>> strikes;
+    std::vector<std::vector<double>> prob;
+    std::vector<std::vector<double>> impliedVolatility;
+    bool isArbitrageFree;
+    std::vector<std::vector<bool>> callSpreadArbitrage, butterflyArbitrage, calendarArbitrage;
+};
 
 // main container
 
@@ -103,7 +117,10 @@ struct TodaysMarketCalibrationInfo {
     std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
     // inflation curves
     std::map<std::string, boost::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
-    // ...
+    // fx vols
+    std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> fxVolCalibrationInfo;
+    // eq vols
+    std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> eqVolCalibrationInfo;
 };
 
 } // namespace data
