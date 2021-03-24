@@ -692,7 +692,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         std::vector<Real> times, forwards;
         for (auto const& p : expiries) {
-            Date d = vol_->optionDateFromTenor(p);
+            // FIXME here and above in the build methods: vol_->optionDateFromTenor(p);
+            Date d = asof + p;
             calibrationInfo_->expiryDates.push_back(d);
             times.push_back(vol_->timeFromReference(d));
             forwards.push_back(fxSpot_->value() / domYts_->discount(times.back()) * forYts_->discount(times.back()));
