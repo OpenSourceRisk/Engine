@@ -36,7 +36,7 @@
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
-#include <qle/termstructures/equityoptionsurfacestripper.hpp>
+#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 #include <regex>
 
@@ -432,8 +432,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                  << " strike extrapolation settings are ignored");
         }
 
+        bool preferOutOfTheMoney = vc.preferOutOfTheMoney() && *vc.preferOutOfTheMoney();
+
         if (vc.quoteType() == MarketDatum::QuoteType::PRICE) {
-            // build a call and put price surface
+
+            // Create the 1D solver options used in the price stripping.
+            Solver1DOptions solverOptions = vc.solverConfig();
 
             DLOG("Building a option price surface for calls and puts");
             boost::shared_ptr<OptionPriceSurface> callSurface =
@@ -445,8 +449,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
             DLOG("Stripping equity volatility surface from the option premium surfaces");
             boost::shared_ptr<EquityOptionSurfaceStripper> eoss = boost::make_shared<EquityOptionSurfaceStripper>(
-                callSurface, putSurface, eqIndex, calendar_, dayCounter_, vc.exerciseType(), flatStrikeExtrap,
-                flatStrikeExtrap, flatTimeExtrap);
+                eqIndex, callSurface, putSurface, calendar_, dayCounter_, vc.exerciseType(), flatStrikeExtrap,
+                flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney, solverOptions);
             vol_ = eoss->volSurface();
 
         } else if (vc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
@@ -474,8 +478,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
 
                     boost::shared_ptr<EquityOptionSurfaceStripper> eoss =
                         boost::make_shared<EquityOptionSurfaceStripper>(
-                            callSurface, putSurface, eqIndex, calendar_, dayCounter_, QuantLib::Exercise::European,
-                            flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
+                            eqIndex, callSurface, putSurface, calendar_, dayCounter_, Exercise::European,
+                            flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap, preferOutOfTheMoney);
                     vol_ = eoss->volSurface();
                 }
             }
@@ -640,7 +644,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     vector<Date> expiryDates(surfaceData.size());
     vector<Time> expiryTimes(surfaceData.size());
     vector<vector<Handle<Quote>>> vols(moneynessLevels.size());
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates[row.index()] = row.value().first;
         expiryTimes[row.index()] = dayCounter_.yearFraction(asof, row.value().first);
         for (Size i = 0; i < row.value().second.size(); i++) {

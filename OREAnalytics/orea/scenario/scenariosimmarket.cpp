@@ -154,12 +154,11 @@ void checkDayCounterConsistency(const std::string& curveId, const DayCounter& in
     if (initCurveDayCounter != simCurveDayCounter) {
         std::string initDcName = initCurveDayCounter.empty() ? "(empty)" : initCurveDayCounter.name();
         std::string ssmDcName = simCurveDayCounter.empty() ? "(empty)" : simCurveDayCounter.name();
-        ALOG(StructuredCurveErrorMessage(
-            curveId, "inconsistent day counters",
-            "when using spreaded curves in scenario sim market, the init curve day counter (" + initDcName +
-                ") should be equal to the ssm day counter (" + ssmDcName +
-                "), continuing anyway, please consider fixing this in either the initial market or ssm "
-                "configuration"));
+        ALOG("inconsistent day counters: when using spreaded curves in scenario sim market, the init curve day counter"
+             "(" +
+             initDcName + ") should be equal to the ssm day counter (" + ssmDcName +
+             "), continuing anyway, please consider fixing this in either the initial market or ssm "
+             "configuration");
     }
 }
 
@@ -168,8 +167,9 @@ void checkDayCounterConsistency(const std::string& curveId, const DayCounter& in
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                                       const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
                                       const string& dayCounter, bool simulate, bool spreaded) {
-    Handle<YieldTermStructure> wrapper = (riskFactorYieldCurve(rf) == ore::data::YieldCurveType::Discount) ? 
-        initMarket->discountCurve(key, configuration) : initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
+    Handle<YieldTermStructure> wrapper = (riskFactorYieldCurve(rf) == ore::data::YieldCurveType::Discount)
+                                             ? initMarket->discountCurve(key, configuration)
+                                             : initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
     // include today
@@ -1363,15 +1363,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     bool stickyStrike = true;
 
                                     if (useSpreadedTermStructures_) {
-                                        eqVolCurve =
-                                            boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
-                                                Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                                parameters->equityVolMoneyness(name), quotes,
-                                                Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
-                                                initMarket->equityCurve(name, configuration)->equityDividendCurve(),
-                                                initMarket->equityCurve(name, configuration)->equityForecastCurve(),
-                                                eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
-                                                stickyStrike);
+                                        eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
+                                            Handle<BlackVolTermStructure>(wrapper), spot, times,
+                                            parameters->equityVolMoneyness(name), quotes,
+                                            Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
+                                            initMarket->equityCurve(name, configuration)->equityDividendCurve(),
+                                            initMarket->equityCurve(name, configuration)->equityForecastCurve(),
+                                            eqCurve->equityDividendCurve(), eqCurve->equityForecastCurve(),
+                                            stickyStrike);
                                     } else {
                                         // FIXME should that be Forward, since we read the vols at fwd moneyness above?
                                         eqVolCurve = boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
@@ -1706,8 +1705,9 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
                         its->enableExtrapolation();
-                        boost::shared_ptr<ZeroInflationIndex> i = parseZeroInflationIndex(name, false,
-                            Handle<ZeroInflationTermStructure>(its), boost::make_shared<Conventions>(conventions_));
+                        boost::shared_ptr<ZeroInflationIndex> i =
+                            parseZeroInflationIndex(name, false, Handle<ZeroInflationTermStructure>(its),
+                                                    boost::make_shared<Conventions>(conventions_));
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>(
                             make_pair(Market::defaultConfiguration, name), zh));

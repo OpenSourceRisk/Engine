@@ -23,6 +23,7 @@
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>

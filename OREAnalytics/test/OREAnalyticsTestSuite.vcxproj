@@ -50,6 +50,7 @@
     <ClCompile Include="sensitivityanalysisanalytic.cpp" />
     <ClCompile Include="sensitivityperformance.cpp" />
     <ClCompile Include="shiftscenariogenerator.cpp" />
+    <ClCompile Include="simulationmeasures.cpp" />
     <ClCompile Include="stresstest.cpp" />
     <ClCompile Include="swapperformance.cpp" />
     <ClCompile Include="testmarket.cpp" />

@@ -51,6 +51,12 @@ public:
     SpainRegion();
 };
 
+//! Germany as geographical/economic region
+class GermanyRegion : public QuantLib::Region {
+    public:
+    GermanyRegion();
+};
+
 //! Belgium as geographical/economic region
 class BelgiumRegion : public QuantLib::Region {
 public:

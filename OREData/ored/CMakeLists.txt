@@ -17,6 +17,7 @@ configuration/fxvolcurveconfig.cpp
 configuration/genericyieldvolcurveconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
+configuration/onedimsolverconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
@@ -175,6 +176,7 @@ configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
+configuration/onedimsolverconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp

@@ -39,9 +39,14 @@ public:
     Parametrization(const Currency& currency, const std::string& name = "");
     virtual ~Parametrization() {}
 
+    /*! the currency associated to this parametrization */
     virtual const Currency currency() const;
 
+    /*! the times associated to parameter i */
     virtual const Array& parameterTimes(const Size) const;
+
+    /*! the number of parameters in this parametrization */
+    virtual Size numberOfParameters() const { return 0; }
 
     /*! these are the actual (real) parameter values in contrast
         to the raw values which are stored in Parameter::params_

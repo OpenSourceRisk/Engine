@@ -30,9 +30,12 @@ namespace data {
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency,
                                                          const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-                                                         const string& dayCounter, const string& calendar)
+                                                         const string& dayCounter, const string& calendar,
+                                                         const OneDimSolverConfig& solverConfig,
+                                                         const boost::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
-      dayCounter_(dayCounter), calendar_(calendar) {
+      dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
+      preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -90,6 +93,16 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     dayCounter_ = "A365";
     if ((n = XMLUtils::getChildNode(node, "DayCounter")))
         dayCounter_ = XMLUtils::getNodeValue(n);
+
+    solverConfig_ = OneDimSolverConfig();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "OneDimSolverConfig")) {
+        solverConfig_.fromXML(n);
+    }
+
+    preferOutOfTheMoney_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
+        preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
+    }
 
     // In order to remain backward compatible, we first check for a dimension node
     // If this is present we read the nodes as before but create volatilityConfigs from the inputs
@@ -178,7 +191,26 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
 
+    if (!solverConfig_.empty())
+        XMLUtils::appendNode(node, solverConfig_.toXML(doc));
+
+    if (preferOutOfTheMoney_)
+        XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
+
     return node;
+}
+
+OneDimSolverConfig EquityVolatilityCurveConfig::solverConfig() const {
+    return solverConfig_.empty() ? defaultSolverConfig() : solverConfig_;
+}
+
+OneDimSolverConfig EquityVolatilityCurveConfig::defaultSolverConfig() {
+
+    // Backward compatible with code that existed before EquityVolatilityCurveConfig
+    // accepted a solver configuration.
+    static OneDimSolverConfig res(100, 0.2, 0.0001, 0.01, 0.0001);
+
+    return res;
 }
 
 } // namespace data
