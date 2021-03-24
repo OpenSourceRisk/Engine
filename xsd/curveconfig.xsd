@@ -268,7 +268,8 @@
       <xs:element type="calendar" name="Calendar"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
       <xs:element type="xs:string" name="Tenors" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>	  
+      <xs:element type="bool" name="OptionalQuotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="indexNameType" name="IborIndex"/>
       <xs:element type="xs:string" name="DiscountCurve"/>
       <xs:element type="xs:string" name="AtmTenors" minOccurs="0" maxOccurs="1"/>
