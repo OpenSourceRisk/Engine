@@ -664,17 +664,22 @@ CapFloorVolCurve::atmCurve(const Date& asof, CapFloorVolatilityCurveConfig& conf
     map<Period, Handle<Quote>> volQuotes;
 
     bool optionalQuotes = config.optionalQuotes();
+    Period tenor = parsePeriod(config.iborTenor());
+    string currency = config.currency();
     // Load the relevant quotes
-    for (const string& quoteId : config.quotes()) {
+    for (auto& md : loader.loadQuotes(asof)) {
 
-        boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CAPFLOOR &&
+            md->quoteType() == config.quoteType()) {
 
-        // If it is an ATM cap floor quote, store it and fail if there are duplicates
-        if (boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md)) {
-            if (cfq->atm()) {
-                auto r = volQuotes.insert(make_pair(cfq->term(), cfq->quote()));
-                QL_REQUIRE(r.second, "Duplicate ATM cap floor quote in config " << config.curveID() << " for tenor "
-                                                                                << cfq->term());
+            boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md);
+            if (cfq->ccy() == currency && cfq->underlying() == tenor && cfq->atm()) {
+                auto j = std::find(config.atmTenors().begin(), config.atmTenors().end(), to_string(cfq->term()));
+                if (j != config.atmTenors().end()) {
+                    auto r = volQuotes.insert(make_pair(cfq->term(), cfq->quote()));
+                    QL_REQUIRE(r.second, "Duplicate ATM cap floor quote in config " << config.curveID() << " for tenor "
+                        << cfq->term());
+                }
             }
         }
     }
