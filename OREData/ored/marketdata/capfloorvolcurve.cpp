@@ -663,6 +663,7 @@ CapFloorVolCurve::atmCurve(const Date& asof, CapFloorVolatilityCurveConfig& conf
     // Map to store the quote values
     map<Period, Handle<Quote>> volQuotes;
 
+    bool optionalQuotes = config.optionalQuotes();
     // Load the relevant quotes
     for (const string& quoteId : config.quotes()) {
 
@@ -680,12 +681,32 @@ CapFloorVolCurve::atmCurve(const Date& asof, CapFloorVolatilityCurveConfig& conf
 
     // Check that the loaded quotes cover all of the configured ATM tenors
     vector<Period> tenors = parseVectorOfValues<Period>(config.atmTenors(), &parsePeriod);
-    vector<Handle<Quote>> vols(tenors.size());
+    vector<Handle<Quote>> vols;
+    vector<Period> quoteTenors;
+    if (!optionalQuotes) {
+        vols.resize(tenors.size());
+        quoteTenors = tenors;
+    }
     for (Size i = 0; i < tenors.size(); i++) {
         auto it = volQuotes.find(tenors[i]);
-        QL_REQUIRE(it != volQuotes.end(),
-                   "ATM cap floor quote in config " << config.curveID() << " for tenor " << tenors[i] << " not found ");
-        vols[i] = it->second;
+        if (!optionalQuotes) {
+            QL_REQUIRE(it != volQuotes.end(),
+                "ATM cap floor quote in config " << config.curveID() << " for tenor " << tenors[i] << " not found ");
+            vols[i] = it->second;
+        } else {
+            if (it == volQuotes.end()) {
+                DLOG("Could not find ATM cap floor quote with tenor " << tenors[i] << " for cap floor config " << config.curveID());
+            } else {
+                vols.push_back(it->second);
+                quoteTenors.push_back(it->first);
+            }
+        }
+    }
+
+    if (optionalQuotes) {
+        QL_REQUIRE(vols.size() > 0, "No ATM cap floor quotes found for cap floor config " << config.curveID());
+        if (vols.size() == 1)
+            WLOG("Only one ATM cap floor quote found for cap floor config " << config.curveID() << ", using constant volatility");
     }
 
     // Return for the cap floor ATM term volatility curve
@@ -694,21 +715,21 @@ CapFloorVolCurve::atmCurve(const Date& asof, CapFloorVolatilityCurveConfig& conf
     if (config.interpolationMethod() == CftvsInterp::BicubicSpline) {
         if (config.flatExtrapolation()) {
             return boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat>>(
-                config.settleDays(), config.calendar(), config.businessDayConvention(), tenors, vols,
+                config.settleDays(), config.calendar(), config.businessDayConvention(), quoteTenors, vols,
                 config.dayCounter());
         } else {
             return boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic>>(config.settleDays(), config.calendar(),
-                                                                               config.businessDayConvention(), tenors,
+                                                                               config.businessDayConvention(), quoteTenors,
                                                                                vols, config.dayCounter());
         }
     } else if (config.interpolationMethod() == CftvsInterp::Bilinear) {
         if (config.flatExtrapolation()) {
             return boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat>>(
-                config.settleDays(), config.calendar(), config.businessDayConvention(), tenors, vols,
+                config.settleDays(), config.calendar(), config.businessDayConvention(), quoteTenors, vols,
                 config.dayCounter());
         } else {
             return boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear>>(config.settleDays(), config.calendar(),
-                                                                                config.businessDayConvention(), tenors,
+                                                                                config.businessDayConvention(), quoteTenors,
                                                                                 vols, config.dayCounter());
         }
     } else {
