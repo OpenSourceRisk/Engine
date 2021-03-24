@@ -67,7 +67,6 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
-
 namespace ore {
 namespace data {
 
@@ -198,7 +197,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
                                                 gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
-    if(localCapFloor_)
+    if (localCapFloor_)
         XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
     return node;
 }
@@ -262,9 +261,9 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
-    if(finalFlowCap_ != Null<Real>())
+    if (finalFlowCap_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FinalFlowCap", finalFlowCap_);
-    if(finalFlowFloor_ != Null<Real>())
+    if (finalFlowFloor_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FinalFlowFloor", finalFlowFloor_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
@@ -831,6 +830,12 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule());
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
@@ -856,7 +861,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
             bool underflow = data.amortizationData().front().underflow();
             vector<boost::shared_ptr<Coupon>> coupons;
             for (Size i = 0; i < schedule.size() - 1; i++) {
-                Date paymentDate = schedule.calendar().adjust(schedule[i + 1], bdc);
+                Date paymentDate = paymentCalendar.adjust(schedule[i + 1], bdc);
                 if (schedule[i] < startDate || i == 0) {
                     boost::shared_ptr<FloatingRateCoupon> coupon;
                     if (!floatData->hasSubPeriods()) {
@@ -913,6 +918,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     IborLeg iborLeg = IborLeg(schedule, index)
                           .withNotionals(notionals)
                           .withSpreads(spreads)
+                          .withPaymentCalendar(paymentCalendar)
                           .withPaymentDayCounter(dc)
                           .withPaymentAdjustment(bdc)
                           .withFixingDays(fixingDays)
@@ -967,7 +973,13 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Natural paymentLag = data.paymentLag();
-    Calendar paymentCalendar = index->fixingCalendar();
+    Calendar paymentCalendar;
+    
+	if (data.paymentCalendar().empty())
+        paymentCalendar = index->fixingCalendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
@@ -977,7 +989,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     applyAmortization(notionals, data, schedule, false);
 
     if (floatData->isAveraged()) {
-
+		
         if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
             QL_FAIL("Caps and floors are not supported for OIS averaged legs");
 
@@ -987,6 +999,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
             QuantExt::AverageONLeg(schedule, index)
                 .withNotionals(notionals)
                 .withSpreads(spreads)
+                .withPaymentCalendar(paymentCalendar)
                 .withGearings(gearings)
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(bdc)
@@ -1058,7 +1071,7 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     AverageBMALeg leg = AverageBMALeg(schedule, index)
                             .withNotionals(notionals)
                             .withSpreads(spreads)
-                            .withPaymentDayCounter(dc)
+                            .withPaymentDayCounter(dc) 
                             .withPaymentAdjustment(bdc)
                             .withGearings(gearings);
 
@@ -1130,6 +1143,12 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
+    Calendar paymentCalendar;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Period observationLag = parsePeriod(cpiLegData->observationLag());
     CPI::InterpolationType interpolationMethod = parseObservationInterpolation(cpiLegData->interpolation());
@@ -1142,7 +1161,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                                   .withNotionals(notionals)
                                   .withPaymentDayCounter(dc)
                                   .withPaymentAdjustment(bdc)
-                                  .withPaymentCalendar(schedule.calendar())
+                                  .withPaymentCalendar(paymentCalendar)
                                   .withFixedRates(rates)
                                   .withObservationInterpolation(interpolationMethod)
                                   .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
@@ -1155,9 +1174,9 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         QL_REQUIRE(!start.empty(), "makeCPILeg(): only one schedule date, a 'StartDate' must be given.");
         cpiLeg.withStartDate(parseDate(start));
     } else if (!start.empty()) {
-        DLOG("Schedule with more than 2 dates was provided. The first schedule date " <<
-            io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " <<
-            start << " is not used.");
+        DLOG("Schedule with more than 2 dates was provided. The first schedule date "
+             << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
+             << " is not used.");
     }
 
     bool couponCap = cpiLegData->caps().size() > 0;
@@ -1566,11 +1585,9 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
             TLOG("Cannot find currency for equity " << equityCurve->name());
 
         // initial price currency must match leg or equity currency
-        QL_REQUIRE(initialPriceCurrency == dataCurrency ||
-            initialPriceCurrency == eqCurrency || eqCurrency.empty(),
-                   "initial price ccy (" << initialPriceCurrency << ") must match either leg ccy ("
-                                         << dataCurrency << ") or equity ccy (if given, got '"
-                                         << eqCurrency << "')");
+        QL_REQUIRE(initialPriceCurrency == dataCurrency || initialPriceCurrency == eqCurrency || eqCurrency.empty(),
+                   "initial price ccy (" << initialPriceCurrency << ") must match either leg ccy (" << dataCurrency
+                                         << ") or equity ccy (if given, got '" << eqCurrency << "')");
         initialPriceIsInTargetCcy = initialPriceCurrency == dataCurrency;
         // adjust for minor currency
         initialPrice = convertMinorToMajorCurrency(eqLegData->initialPriceCurrency(), initialPrice);
@@ -1936,7 +1953,7 @@ Leg joinLegs(const std::vector<Leg>& legs) {
     Size lastLeg = Null<Size>();
     for (Size i = 0; i < legs.size(); ++i) {
         // skip empty legs
-        if(legs[i].empty())
+        if (legs[i].empty())
             continue;
         // check if the periods of adjacent legs are consistent
         if (lastLeg != Null<Size>()) {
