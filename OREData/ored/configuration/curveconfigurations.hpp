@@ -63,6 +63,9 @@ public:
 
     //! \name Setters and Getters
     //@{
+    const FxEqVolReportConfig& volReportConfigEqVols() const { return volReportConfigEqVols_; }
+    const FxEqVolReportConfig& volReportConfigFxVols() const { return volReportConfigFxVols_; }
+
     bool hasYieldCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) { return yieldCurveConfigs_[curveID]; }
     const boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) const;
@@ -191,6 +194,9 @@ public:
     XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
+    FxEqVolReportConfig volReportConfigEqVols_;
+    FxEqVolReportConfig volReportConfigFxVols_;
+
     std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;
     std::map<std::string, boost::shared_ptr<FXVolatilityCurveConfig>> fxVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<SwaptionVolatilityCurveConfig>> swaptionVolCurveConfigs_;
@@ -214,7 +220,8 @@ private:
     void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m);
 
     // utility function for getting a value from the map storing the configs, throwing if it is not present
-    template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) const;
+    template <class T>
+    const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) const;
 
     // stores errors (parentName, msg) during parsing for keys (T, curveId), T = YieldCurveConfig etc.
     std::map<std::pair<std::type_index, std::string>, std::pair<std::string, std::string>> parseErrors_;

@@ -1021,22 +1021,43 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
 
     addRowMktCalReport(report, type, id, "dayCounter", "", "", "", info->dayCounter);
     addRowMktCalReport(report, type, id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, type, id, "atmType", "", "", "", info->atmType);
+    addRowMktCalReport(report, type, id, "deltaType", "", "", "", info->deltaType);
+    addRowMktCalReport(report, type, id, "longTermAtmType", "", "", "", info->longTermAtmType);
+    addRowMktCalReport(report, type, id, "longTermDeltaType", "", "", "", info->longTermDeltaType);
+    addRowMktCalReport(report, type, id, "switchTenor", "", "", "", info->switchTenor);
     addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
 
     for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        addRowMktCalReport(report, type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+        for (Size j = 0; j < info->deltas.size(); ++j) {
+            std::string dStr = info->deltas.at(j);
+            addRowMktCalReport(report, type, id, "forward", tStr, dStr, "", info->forwards.at(i));
+            addRowMktCalReport(report, type, id, "strike", tStr, dStr, "", info->deltaGridStrikes.at(i).at(j));
+            addRowMktCalReport(report, type, id, "vol", tStr, dStr, "", info->deltaGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "prob", tStr, dStr, "", info->deltaGridProb.at(i).at(j));
+            addRowMktCalReport(report, type, id, "callSpreadArb", tStr, dStr, "",
+                               static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "butterflyArb", tStr, dStr, "",
+                               static_cast<bool>(info->deltaGridButterflyArbitrage.at(i).at(j)));
+        }
+    }
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
         for (Size j = 0; j < info->moneyness.size(); ++j) {
-            std::string tStr = std::to_string(info->times.at(i));
             std::string mStr = std::to_string(info->moneyness.at(j));
             addRowMktCalReport(report, type, id, "forward", tStr, mStr, "", info->forwards.at(i));
-            addRowMktCalReport(report, type, id, "strike", tStr, mStr, "", info->strikes.at(i).at(j));
-            addRowMktCalReport(report, type, id, "vol", tStr, mStr, "", info->impliedVolatility.at(i).at(j));
-            addRowMktCalReport(report, type, id, "prob", tStr, mStr, "", info->prob.at(i).at(j));
+            addRowMktCalReport(report, type, id, "strike", tStr, mStr, "", info->moneynessGridStrikes.at(i).at(j));
+            addRowMktCalReport(report, type, id, "vol", tStr, mStr, "",
+                               info->moneynessGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "prob", tStr, mStr, "", info->moneynessGridProb.at(i).at(j));
             addRowMktCalReport(report, type, id, "callSpreadArb", tStr, mStr, "",
-                               static_cast<bool>(info->callSpreadArbitrage.at(i).at(j)));
+                               static_cast<bool>(info->moneynessGridCallSpreadArbitrage.at(i).at(j)));
             addRowMktCalReport(report, type, id, "butterflyArb", tStr, mStr, "",
-                               static_cast<bool>(info->butterflyArbitrage.at(i).at(j)));
+                               static_cast<bool>(info->moneynessGridButterflyArbitrage.at(i).at(j)));
             addRowMktCalReport(report, type, id, "calendarArb", tStr, mStr, "",
-                               static_cast<bool>(info->calendarArbitrage.at(i).at(j)));
+                               static_cast<bool>(info->moneynessGridCalendarArbitrage.at(i).at(j)));
         }
     }
 }

@@ -33,30 +33,25 @@ using namespace QuantLib;
 
 class CarrMadanMarginalProbability {
 public:
-    /*! The moneyness is defined as K / F, K = strike, F = forward at the relevant time.
-        A moneyness 0 and corresponding call price will be added, if not contained in the given vector.
-        The given callPrices should be non-discounted call prices. */
-    CarrMadanMarginalProbability(const std::vector<Real>& moneyness, const Real spot, const Real forward,
+    /*! The callPrices should be non-discounted */
+    CarrMadanMarginalProbability(const std::vector<Real>& strikes, const Real forward,
                                  const std::vector<Real>& callPrices);
 
-    const std::vector<Real>& moneyness() const;
-    Real spot() const;
+    const std::vector<Real>& strikes() const;
     Real forward() const;
     const std::vector<Real>& callPrices() const;
 
     bool arbitrageFree() const;
 
-    const std::vector<Real>& strikes() const;
     const std::vector<bool>& callSpreadArbitrage() const;
     const std::vector<bool>& butterflyArbitrage() const;
     const std::vector<Real>& density() const;
 
 private:
-    std::vector<Real> moneyness_;
-    Real spot_, forward_;
+    std::vector<Real> strikes_;
+    Real forward_;
     std::vector<Real> callPrices_;
 
-    std::vector<Real> strikes_;
     std::vector<bool> callSpreadArbitrage_, butterflyArbitrage_;
     std::vector<Real> q_;
     bool smileIsArbitrageFree_;
@@ -64,11 +59,12 @@ private:
 
 class CarrMadanSurface {
 public:
-    /*! The times and moneyness should be strictly increasing, a zero time and moneyness together
-        with corresponding call prices are added, if not present. The outer vectors for call prices
-        and the calendarAbritrage() result represent times, the inner strikes. */
+    /*! The moneyness is defined as K / F, K = strike, F = forward at the relevant time.
+        The times and moneyness should be strictly increasing.
+        The outer vectors for call prices and the calendarAbritrage() result represent times, the inner strikes. */
     CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneyness, const Real spot,
                      const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices);
+
     const std::vector<Real>& times() const;
     const std::vector<Real>& moneyness() const;
     Real spot() const;

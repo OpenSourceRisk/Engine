@@ -1,7 +1,6 @@
 # cpp files, this list is maintained manually
 
-set(OREData_SRC configuration/arbitragecheckconfig.cpp
-configuration/basecorrelationcurveconfig.cpp
+set(OREData_SRC configuration/basecorrelationcurveconfig.cpp
 configuration/bootstrapconfig.cpp
 configuration/capfloorvolcurveconfig.cpp
 configuration/cdsvolcurveconfig.cpp
@@ -14,6 +13,7 @@ configuration/curveconfigurations.cpp
 configuration/defaultcurveconfig.cpp
 configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
+configuration/fxeqvolreportconfig.cpp
 configuration/fxvolcurveconfig.cpp
 configuration/genericyieldvolcurveconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
@@ -159,7 +159,6 @@ utilities/xmlutils.cpp)
 # hpp files, this list is maintained manually
 
 set(OREData_HDR auto_link.hpp
-configuration/arbitragecheckconfig.hpp
 configuration/basecorrelationcurveconfig.hpp
 configuration/bootstrapconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
@@ -173,6 +172,7 @@ configuration/curveconfigurations.hpp
 configuration/defaultcurveconfig.hpp
 configuration/equitycurveconfig.hpp
 configuration/equityvolcurveconfig.hpp
+configuration/fxeqvolreportconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp

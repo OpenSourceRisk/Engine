@@ -160,8 +160,8 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
     fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
 
-    if (auto tmp = XMLUtils::getChildNode(node, "ArbitrageCheck")) {
-        arbitrageCheckConfig_.fromXML(tmp);
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        volReportConfig_.fromXML(tmp);
     }
 
     populateRequiredCurveIds();
@@ -219,7 +219,7 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     }
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-    XMLUtils::appendNode(node, arbitrageCheckConfig_.toXML(doc));
+    XMLUtils::appendNode(node, volReportConfig_.toXML(doc));
 
     return node;
 }

@@ -25,77 +25,59 @@
 
 namespace QuantExt {
 
-CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Real>& moneyness, const Real spot,
-                                                           const Real forward, const std::vector<Real>& callPrices)
-    : moneyness_(moneyness), spot_(spot), forward_(forward), callPrices_(callPrices) {
+CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Real>& strikes, const Real forward,
+                                                           const std::vector<Real>& callPrices)
+    : strikes_(strikes), forward_(forward), callPrices_(callPrices) {
 
     // check input
 
-    QL_REQUIRE(moneyness_.size() == callPrices_.size(), "CarrMadanMarginalProbability: moneyness ("
-                                                            << moneyness_.size() << ") inconsistent to callPrices ("
-                                                            << callPrices.size() << ")";)
+    QL_REQUIRE(strikes_.size() == callPrices_.size(), "CarrMadanMarginalProbability: strikes ("
+                                                          << strikes_.size() << ") inconsistent to callPrices ("
+                                                          << callPrices_.size() << ")";)
 
-    QL_REQUIRE(!moneyness_.empty(), "CarrMadanMarginalProbability: input moneyness is empty");
+    QL_REQUIRE(!strikes_.empty(), "CarrMadanMarginalProbability: input moneyness is empty");
 
-    for (Size i = 1; i < moneyness_.size(); ++i) {
-        QL_REQUIRE(moneyness_[i] > moneyness_[i - 1] && !close_enough(moneyness_[i], moneyness_[i - 1]),
-                   "CarrMadanMarginalProbability: moneyness not increasing at index "
-                       << (i - 1) << ", " << i << ": " << moneyness_[i - 1] << ", " << moneyness_[i]);
+    for (Size i = 1; i < strikes_.size(); ++i) {
+        QL_REQUIRE(strikes_[i] > strikes_[i - 1] && !close_enough(strikes_[i], strikes_[i - 1]),
+                   "CarrMadanMarginalProbability: strikes not increasing at index "
+                       << (i - 1) << ", " << i << ": " << strikes_[i - 1] << ", " << strikes_[i]);
     }
 
-    QL_REQUIRE(moneyness_.front() > 0.0 || close_enough(moneyness_.front(), 0.0),
-               "CarrMadanMarginalProbability: all input moneyness must be positive or zero, got "
-                   << moneyness_.front());
+    QL_REQUIRE(strikes_.front() > 0.0 || close_enough(strikes_.front(), 0.0),
+               "CarrMadanMarginalProbability: all input strikes must be positive or zero, got " << strikes_.front());
 
-    // add moneyness 0 and corresponding call price (= forward), if not already present
+    // add strike 0 and corresponding call price (= forward), if not already present
 
-    if (!close_enough(moneyness_.front(), 0.0)) {
-        moneyness_.insert(moneyness_.begin(), 0.0);
+    bool zeroStrikeAdded = false;
+    if (!close_enough(strikes_.front(), 0.0)) {
+        strikes_.insert(strikes_.begin(), 0.0);
         callPrices_.insert(callPrices_.begin(), forward_);
+        zeroStrikeAdded = true;
     } else {
         QL_REQUIRE(close_enough(callPrices_.front(), forward_),
-                   "CarrMadanMarginalProbability: call price for moneyness 0 ("
-                       << callPrices_.front() << ") should match forward (" << forward << ")");
+                   "CarrMadanMarginalProbability: call price for strike 0 ("
+                       << callPrices_.front() << ") should match forward (" << forward_ << ")");
     }
 
     // check we have two strikes at least
 
-    QL_REQUIRE(moneyness.size() >= 2,
-               "CarrMadanMarginalProbability: at least two moneyness levels required (after adding 0)");
-
-    // calculate strikes
-
-    for (auto const& m : moneyness)
-        strikes_.push_back(m * forward);
-
-    /* apply the transformation S -> S' := spot / forward * S, so that the assumptions of the paper are fulfilled,
-       i.e. zero rates and dividends */
-
-    std::vector<Real> transformedStrikes, transformedCallPrices;
-
-    for (auto const& k : strikes_)
-        transformedStrikes.push_back(k * spot / forward);
-
-    for (auto const& p : callPrices_)
-        transformedCallPrices.push_back(p * spot / forward);
+    QL_REQUIRE(strikes_.size() >= 2,
+               "CarrMadanMarginalProbability: at least two strikes levels required (after adding 0)");
 
     // compute Q
 
-    std::vector<Real> Q(transformedStrikes.size() - 1);
-    for (Size i = 1; i < transformedStrikes.size(); ++i) {
-        Q[i - 1] = (transformedCallPrices[i - 1] - transformedCallPrices[i]) /
-                   (transformedStrikes[i] - transformedStrikes[i - 1]);
+    std::vector<Real> Q(strikes_.size() - 1);
+    for (Size i = 1; i < strikes_.size(); ++i) {
+        Q[i - 1] = (callPrices_[i - 1] - callPrices_[i]) / (strikes_[i] - strikes_[i - 1]);
     }
 
     // compute BS
 
-    std::vector<Real> BS(transformedStrikes.size() - 2);
-    for (Size i = 1; i < transformedStrikes.size() - 1; ++i) {
-        BS[i - 1] = transformedCallPrices[i - 1] -
-                    (transformedStrikes[i + 1] - transformedStrikes[i - 1]) /
-                        (transformedStrikes[i + 1] - transformedStrikes[i]) * transformedCallPrices[i] +
-                    (transformedStrikes[i] - transformedStrikes[i - 1]) /
-                        (transformedStrikes[i + 1] - transformedStrikes[i]) * transformedCallPrices[i + 1];
+    std::vector<Real> BS(strikes_.size() - 2);
+    for (Size i = 1; i < strikes_.size() - 1; ++i) {
+        BS[i - 1] = callPrices_[i - 1] -
+                    (strikes_[i + 1] - strikes_[i - 1]) / (strikes_[i + 1] - strikes_[i]) * callPrices_[i] +
+                    (strikes_[i] - strikes_[i - 1]) / (strikes_[i + 1] - strikes_[i]) * callPrices_[i + 1];
     }
 
     // perform the checks 1, 2 from the paper, and populate the set of arbitrage
@@ -133,18 +115,27 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
         q_[i + 1] = Q[i] - Q[i + 1];
     }
     q_.back() = Q.back();
+
+    // remove zero strike again, if not present from the start
+
+    if (zeroStrikeAdded) {
+        strikes_.erase(strikes_.begin());
+        callPrices_.erase(callPrices_.begin());
+        callSpreadArbitrage_.erase(callSpreadArbitrage_.begin());
+        butterflyArbitrage_.erase(butterflyArbitrage_.begin());
+        q_.erase(q_.begin());
+    }
 }
 
-const std::vector<Real>& CarrMadanMarginalProbability::moneyness() const { return moneyness_; }
-Real CarrMadanMarginalProbability::spot() const { return spot_; }
+const std::vector<Real>& CarrMadanMarginalProbability::strikes() const { return strikes_; }
 Real CarrMadanMarginalProbability::forward() const { return forward_; }
 const std::vector<Real>& CarrMadanMarginalProbability::callPrices() const { return callPrices_; }
 
 bool CarrMadanMarginalProbability::arbitrageFree() const { return smileIsArbitrageFree_; }
 
 const std::vector<bool>& CarrMadanMarginalProbability::callSpreadArbitrage() const { return callSpreadArbitrage_; }
-
 const std::vector<bool>& CarrMadanMarginalProbability::butterflyArbitrage() const { return butterflyArbitrage_; }
+const std::vector<Real>& CarrMadanMarginalProbability::density() const { return q_; }
 
 std::string arbitrageAsString(const CarrMadanMarginalProbability& cm) {
     std::ostringstream out;
@@ -158,9 +149,6 @@ std::string arbitrageAsString(const CarrMadanMarginalProbability& cm) {
     }
     return out.str();
 }
-
-const std::vector<Real>& CarrMadanMarginalProbability::density() const { return q_; }
-const std::vector<Real>& CarrMadanMarginalProbability::strikes() const { return strikes_; }
 
 CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneyness, const Real spot,
                                    const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices)
@@ -193,39 +181,15 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
                                                                    << moneyness_.size() << ")");
     }
 
-    /*  add zero moneyness, if not present, further checks on the moneyness vector are done later
-        when constructing the time slices */
-
-    if (moneyness_.empty() || !close_enough(moneyness_.front(), 0.0)) {
-        moneyness_.insert(moneyness_.begin(), 0.0);
-        for (Size i = 0; i < callPrices_.size(); ++i) {
-            callPrices_[i].insert(callPrices_[i].begin(), forwards_[i]);
-        }
-    }
-
-    // add time 0 and corresponding call prices (= spot - strike), if not already present
-
-    if (!close_enough(times_.front(), 0.0)) {
-        times_.insert(times_.begin(), 0.0);
-        forwards_.insert(forwards_.begin(), spot_);
-        callPrices_.insert(callPrices_.begin(), std::vector<Real>());
-        for (Size i = 0; i < moneyness_.size(); ++i) {
-            callPrices_.front().push_back(std::max(0.0, spot - moneyness_[i] * spot));
-        }
-    } else {
-        for (Size i = 0; i < moneyness_.size(); ++i) {
-            QL_REQUIRE(close_enough(callPrices_.front()[i], std::max(0.0, spot - moneyness_[i] * spot)),
-                       "CarrMadanSurface: call price for time 0, strike "
-                           << moneyness_[i] * spot << " (" << callPrices_.front()[i] << ") should match spot (" << spot
-                           << ") minus strike (" << spot - moneyness_[i] * spot << ")");
-        }
-    }
-
     // construct the time slices
 
     surfaceIsArbitrageFree_ = true;
     for (Size i = 0; i < times_.size(); ++i) {
-        timeSlices_.push_back(CarrMadanMarginalProbability(moneyness_, spot_, forwards_[i], callPrices_[i]));
+        std::vector<Real> strikes;
+        for (auto const& m : moneyness_) {
+            strikes.push_back(forwards_[i] * m);
+        }
+        timeSlices_.push_back(CarrMadanMarginalProbability(strikes, forwards_[i], callPrices_[i]));
         surfaceIsArbitrageFree_ = surfaceIsArbitrageFree_ && timeSlices_.back().arbitrageFree();
         callSpreadArbitrage_.push_back(timeSlices_.back().callSpreadArbitrage());
         butterflyArbitrage_.push_back(timeSlices_.back().butterflyArbitrage());

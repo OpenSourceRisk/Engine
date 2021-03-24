@@ -5,7 +5,6 @@
 #include <ored/auto_link.hpp>
 #endif
 
-#include <ored/configuration/arbitragecheckconfig.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
@@ -19,6 +18,7 @@
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/configuration/fxeqvolreportconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>

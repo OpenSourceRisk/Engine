@@ -85,6 +85,11 @@ private:
     Handle<YieldTermStructure> domYts_, forYts_;
     std::vector<Period> expiries_;
     bool expiriesRegex_;
+    QuantLib::Period switchTenor_;
+    QuantLib::DeltaVolQuote::AtmType atmType_;
+    QuantLib::DeltaVolQuote::DeltaType deltaType_;
+    QuantLib::DeltaVolQuote::AtmType longTermAtmType_;
+    QuantLib::DeltaVolQuote::DeltaType longTermDeltaType_;
 
     boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 

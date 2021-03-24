@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/configuration/arbitragecheckconfig.hpp>
+#include <ored/configuration/fxeqvolreportconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 
 #include <ql/time/calendars/target.hpp>
@@ -104,7 +104,7 @@ public:
     const string& baseVolatility1() const { return baseVolatility1_; }
     const string& baseVolatility2() const { return baseVolatility2_; }
     const string& fxIndexTag() const { return fxIndexTag_; }
-    const ArbitrageCheckConfig& arbitrageCheckConfig() const { return arbitrageCheckConfig_; }
+    const FxEqVolReportConfig& volReportConfig() const { return volReportConfig_; }
     //@}
 
     //! \name Setters
@@ -142,7 +142,7 @@ private:
     string baseVolatility1_;
     string baseVolatility2_;
     string fxIndexTag_;
-    ArbitrageCheckConfig arbitrageCheckConfig_;
+    FxEqVolReportConfig volReportConfig_;
 };
 } // namespace data
 } // namespace ore
