@@ -1065,6 +1065,21 @@
     <ClInclude Include="qle\indexes\decpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabr.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrinterpolation.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrsmilesection.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1824,6 +1839,18 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\compoequityindex.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\exactbachelierimpliedvolatility.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabr.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabrsmilesection.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
