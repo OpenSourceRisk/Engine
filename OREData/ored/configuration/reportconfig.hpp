@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/configuration/arbitragecheckconfig.hpp
-    \brief arbitrage check configuration
+/*! \file ored/configuration/reportconfig.hpp
+    \brief md report and arbitrage check configuration
     \ingroup configuration
 */
 
@@ -30,14 +30,13 @@
 namespace ore {
 namespace data {
 
-class FxEqVolReportConfig : public XMLSerializable {
+class ReportConfig : public XMLSerializable {
 public:
-    FxEqVolReportConfig() {}
-    FxEqVolReportConfig(const boost::optional<bool>& reportOnDeltaGrid,
-                        const boost::optional<bool>& reportOnMoneynessGrid,
-                        const boost::optional<std::vector<std::string>>& deltas,
-                        const boost::optional<std::vector<Real>>& moneyness,
-                        const boost::optional<std::vector<Period>>& expiries)
+    ReportConfig() {}
+    ReportConfig(const boost::optional<bool>& reportOnDeltaGrid, const boost::optional<bool>& reportOnMoneynessGrid,
+                 const boost::optional<std::vector<std::string>>& deltas,
+                 const boost::optional<std::vector<Real>>& moneyness,
+                 const boost::optional<std::vector<Period>>& expiries)
         : reportOnDeltaGrid_(reportOnDeltaGrid), reportOnMoneynessGrid_(reportOnMoneynessGrid), deltas_(deltas),
           moneyness_(moneyness), expiries_(expiries) {}
 

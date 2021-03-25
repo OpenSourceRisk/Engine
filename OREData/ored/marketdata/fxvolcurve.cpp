@@ -664,30 +664,30 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         std::vector<std::string> deltas;
         std::vector<Period> expiries;
 
-        if (config->volReportConfig().reportOnDeltaGrid())
-            reportOnDeltaGrid = *config->volReportConfig().reportOnDeltaGrid();
-        else if (curveConfigs.volReportConfigFxVols().reportOnDeltaGrid())
-            reportOnDeltaGrid = *curveConfigs.volReportConfigFxVols().reportOnDeltaGrid();
+        if (config->reportConfig().reportOnDeltaGrid())
+            reportOnDeltaGrid = *config->reportConfig().reportOnDeltaGrid();
+        else if (curveConfigs.reportConfigFxVols().reportOnDeltaGrid())
+            reportOnDeltaGrid = *curveConfigs.reportConfigFxVols().reportOnDeltaGrid();
 
-        if (config->volReportConfig().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *config->volReportConfig().reportOnMoneynessGrid();
-        else if (curveConfigs.volReportConfigFxVols().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *curveConfigs.volReportConfigFxVols().reportOnMoneynessGrid();
+        if (config->reportConfig().reportOnMoneynessGrid())
+            reportOnMoneynessGrid = *config->reportConfig().reportOnMoneynessGrid();
+        else if (curveConfigs.reportConfigFxVols().reportOnMoneynessGrid())
+            reportOnMoneynessGrid = *curveConfigs.reportConfigFxVols().reportOnMoneynessGrid();
 
-        if (config->volReportConfig().moneyness())
-            moneyness = *config->volReportConfig().moneyness();
-        else if (curveConfigs.volReportConfigFxVols().moneyness())
-            moneyness = *curveConfigs.volReportConfigFxVols().moneyness();
+        if (config->reportConfig().moneyness())
+            moneyness = *config->reportConfig().moneyness();
+        else if (curveConfigs.reportConfigFxVols().moneyness())
+            moneyness = *curveConfigs.reportConfigFxVols().moneyness();
 
-        if (config->volReportConfig().deltas())
-            deltas = *config->volReportConfig().deltas();
-        else if (curveConfigs.volReportConfigFxVols().deltas())
-            deltas = *curveConfigs.volReportConfigFxVols().deltas();
+        if (config->reportConfig().deltas())
+            deltas = *config->reportConfig().deltas();
+        else if (curveConfigs.reportConfigFxVols().deltas())
+            deltas = *curveConfigs.reportConfigFxVols().deltas();
 
-        if (config->volReportConfig().expiries())
-            expiries = *config->volReportConfig().expiries();
-        else if (curveConfigs.volReportConfigFxVols().expiries())
-            expiries = *curveConfigs.volReportConfigFxVols().expiries();
+        if (config->reportConfig().expiries())
+            expiries = *config->reportConfig().expiries();
+        else if (curveConfigs.reportConfigFxVols().expiries())
+            expiries = *curveConfigs.reportConfigFxVols().expiries();
 
         calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
 

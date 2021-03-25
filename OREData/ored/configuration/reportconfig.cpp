@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/configuration/fxeqvolreportconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 
 #include <ored/utilities/parsers.hpp>
 
@@ -25,7 +25,7 @@ namespace data {
 
 using namespace QuantLib;
 
-void FxEqVolReportConfig::fromXML(XMLNode* node) {
+void ReportConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Report");
 
     if (auto tmp = XMLUtils::getChildNode(node, "ReportOnDeltaGrid")) {
@@ -59,7 +59,7 @@ void FxEqVolReportConfig::fromXML(XMLNode* node) {
     }
 }
 
-XMLNode* FxEqVolReportConfig::toXML(XMLDocument& doc) {
+XMLNode* ReportConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Report");
     if (reportOnDeltaGrid_)
         XMLUtils::addChild(doc, node, "ReportOnDeltaGrid", *reportOnDeltaGrid_);

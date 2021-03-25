@@ -18,13 +18,13 @@
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
-#include <ored/configuration/fxeqvolreportconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>

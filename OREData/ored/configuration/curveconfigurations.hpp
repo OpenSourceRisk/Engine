@@ -63,8 +63,8 @@ public:
 
     //! \name Setters and Getters
     //@{
-    const FxEqVolReportConfig& volReportConfigEqVols() const { return volReportConfigEqVols_; }
-    const FxEqVolReportConfig& volReportConfigFxVols() const { return volReportConfigFxVols_; }
+    const ReportConfig& reportConfigEqVols() const { return reportConfigEqVols_; }
+    const ReportConfig& reportConfigFxVols() const { return reportConfigFxVols_; }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) { return yieldCurveConfigs_[curveID]; }
@@ -194,8 +194,8 @@ public:
     XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
-    FxEqVolReportConfig volReportConfigEqVols_;
-    FxEqVolReportConfig volReportConfigFxVols_;
+    ReportConfig reportConfigEqVols_;
+    ReportConfig reportConfigFxVols_;
 
     std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;
     std::map<std::string, boost::shared_ptr<FXVolatilityCurveConfig>> fxVolCurveConfigs_;
