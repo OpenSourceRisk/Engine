@@ -94,7 +94,7 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
     Real result = forward, lastResult;
     Size iterations = 0;
     do {
-        Real stddev = std::sqrt(vol->blackVariance(t, forward));
+        Real stddev = std::sqrt(vol->blackVariance(t, result));
         BlackDeltaCalculator bdc(optionType, dt, spot, domDiscount, forDiscount, stddev);
         lastResult = result;
         result = bdc.strikeFromDelta(delta);
@@ -110,7 +110,7 @@ Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real s
     Real result = forward, lastResult;
     Size iterations = 0;
     do {
-        Real stddev = std::sqrt(vol->blackVariance(t, forward));
+        Real stddev = std::sqrt(vol->blackVariance(t, result));
         BlackDeltaCalculator bdc(Option::Call, dt, spot, domDiscount, forDiscount, stddev);
         lastResult = result;
         result = bdc.atmStrike(at);
