@@ -242,7 +242,7 @@
               "EAD",
               "CC"
             ],
-            "abs_tol": null,
+            "abs_tol": 0.05,
             "rel_tol": 1e-12
           }
         ]
@@ -272,7 +272,7 @@
               "Price",
               "Strike"
             ],
-            "abs_tol": null,
+            "abs_tol": 0.05,
             "rel_tol": 1e-12
           }
         ]
