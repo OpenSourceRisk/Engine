@@ -700,8 +700,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         }
 
         calibrationInfo_->times = times;
-        calibrationInfo_->deltas = deltas;
-        calibrationInfo_->moneyness = moneyness;
         calibrationInfo_->forwards = forwards;
 
         Real switchTime =
@@ -710,35 +708,22 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
         std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
 
-        calibrationInfo_->deltaGridStrikes =
-            std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), Null<Real>()));
-        calibrationInfo_->deltaGridProb =
-            std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), Null<Real>()));
-        calibrationInfo_->deltaGridImpliedVolatility =
-            std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), Null<Real>()));
-        calibrationInfo_->moneynessGridStrikes =
-            std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), Null<Real>()));
-        calibrationInfo_->moneynessGridProb =
-            std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), Null<Real>()));
-        calibrationInfo_->moneynessGridImpliedVolatility =
-            std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), Null<Real>()));
-
-        calibrationInfo_->deltaGridCallSpreadArbitrage =
-            std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
-        calibrationInfo_->deltaGridButterflyArbitrage =
-            std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
-        calibrationInfo_->moneynessGridCallSpreadArbitrage =
-            std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
-        calibrationInfo_->moneynessGridButterflyArbitrage =
-            std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
-        calibrationInfo_->moneynessGridCalendarArbitrage =
-            std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
-
         calibrationInfo_->isArbitrageFree = true;
 
         if (reportOnDeltaGrid) {
-            constexpr Real accuracy = 1E-8;    // accuracy for strike from delta calculation
-            constexpr Size maxIterations = 10; // max iterations for strike from delta calculation
+            calibrationInfo_->deltas = deltas;
+            calibrationInfo_->deltaGridStrikes =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), std::nan("")));
+            calibrationInfo_->deltaGridProb =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), std::nan("")));
+            calibrationInfo_->deltaGridImpliedVolatility =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), std::nan("")));
+            calibrationInfo_->deltaGridCallSpreadArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+            calibrationInfo_->deltaGridButterflyArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+            constexpr Real accuracy = 1E-8;      // accuracy for strike from delta calculation
+            constexpr Size maxIterations = 1000; // max iterations for strike from delta calculation
             DeltaVolQuote::DeltaType dt;
             DeltaVolQuote::AtmType at;
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
@@ -792,6 +777,19 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         }
 
         if (reportOnMoneynessGrid) {
+            calibrationInfo_->moneyness = moneyness;
+            calibrationInfo_->moneynessGridStrikes =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), std::nan("")));
+            calibrationInfo_->moneynessGridProb =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), std::nan("")));
+            calibrationInfo_->moneynessGridImpliedVolatility =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), std::nan("")));
+            calibrationInfo_->moneynessGridCallSpreadArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            calibrationInfo_->moneynessGridButterflyArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            calibrationInfo_->moneynessGridCalendarArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
                 for (Size j = 0; j < moneyness.size(); ++j) {

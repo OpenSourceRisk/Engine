@@ -474,10 +474,12 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     // Load global settings
     if (auto tmp = XMLUtils::getChildNode(node, "ReportConfiguration")) {
         if (auto tmp2 = XMLUtils::getChildNode(tmp, "EquityVolatilities")) {
-            volReportConfigEqVols_.fromXML(XMLUtils::getChildNode(tmp2, "Report"));
+            if (auto tmp3 = XMLUtils::getChildNode(tmp, "Report"))
+                volReportConfigEqVols_.fromXML(tmp3);
         }
         if (auto tmp2 = XMLUtils::getChildNode(tmp, "FXVolatilities")) {
-            volReportConfigFxVols_.fromXML(XMLUtils::getChildNode(tmp2, "Report"));
+            if (auto tmp3 = XMLUtils::getChildNode(tmp, "Report"))
+                volReportConfigFxVols_.fromXML(tmp3);
         }
     }
 

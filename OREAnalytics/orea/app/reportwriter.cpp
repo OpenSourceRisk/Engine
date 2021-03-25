@@ -1031,6 +1031,10 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
     for (Size i = 0; i < info->times.size(); ++i) {
         std::string tStr = std::to_string(info->times.at(i));
         addRowMktCalReport(report, type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
         for (Size j = 0; j < info->deltas.size(); ++j) {
             std::string dStr = info->deltas.at(j);
             addRowMktCalReport(report, type, id, "forward", tStr, dStr, "", info->forwards.at(i));
@@ -1043,6 +1047,7 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
                                static_cast<bool>(info->deltaGridButterflyArbitrage.at(i).at(j)));
         }
     }
+
     for (Size i = 0; i < info->times.size(); ++i) {
         std::string tStr = std::to_string(info->times.at(i));
         for (Size j = 0; j < info->moneyness.size(); ++j) {
