@@ -722,11 +722,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         if (reportOnDeltaGrid) {
             calibrationInfo_->deltas = deltas;
             calibrationInfo_->deltaGridStrikes =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), std::nan("")));
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridProb =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), std::nan("")));
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridImpliedVolatility =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), std::nan("")));
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
             calibrationInfo_->deltaGridCallSpreadArbitrage =
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
             calibrationInfo_->deltaGridButterflyArbitrage =
@@ -781,6 +781,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     TLOGGERSTREAM << arbitrageAsString(cm);
                 } else {
                     calibrationInfo_->isArbitrageFree = false;
+                    TLOGGERSTREAM << "..(invalid slice)..";
                 }
             }
         }
@@ -788,11 +789,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         if (reportOnMoneynessGrid) {
             calibrationInfo_->moneyness = moneyness;
             calibrationInfo_->moneynessGridStrikes =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), std::nan("")));
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             calibrationInfo_->moneynessGridProb =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), std::nan("")));
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             calibrationInfo_->moneynessGridImpliedVolatility =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), std::nan("")));
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
             calibrationInfo_->moneynessGridCallSpreadArbitrage =
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
             calibrationInfo_->moneynessGridButterflyArbitrage =
