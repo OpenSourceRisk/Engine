@@ -630,6 +630,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             longTermAtmType_ = fxOptConv->longTermAtmType();
             longTermDeltaType_ = fxOptConv->longTermDeltaType();
             switchTenor_ = fxOptConv->switchTenor();
+        } else {
+            WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
+                                                                             << ", assuming defaults");
         }
 
         fxSpot_ = fxSpots.fxPairLookup(config->fxSpotID());
@@ -648,6 +651,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         }
 
         // build calibration info
+
+        if (domYts_.empty() || forYts_.empty()) {
+            WLOG("no domestic / foreign yield curves given in fx vol curve config for "
+                 << spec.curveConfigID() << ", skip building calibration info");
+            return;
+        }
 
         bool reportOnDeltaGrid = false;
         bool reportOnMoneynessGrid = false;
