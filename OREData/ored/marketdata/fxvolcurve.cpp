@@ -409,7 +409,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     // build vol curve
     if (isATM && quotes[0].size() == 1) {
         vol_ = boost::shared_ptr<BlackVolTermStructure>(
-            new BlackConstantVol(asof, Calendar(), quotes[0].front()->quote()->value(), dc));
+            new BlackConstantVol(asof, config->calendar(), quotes[0].front()->quote()->value(), dc));
         expiries_ = {quotes[0].front()->expiry()};
     } else {
 
