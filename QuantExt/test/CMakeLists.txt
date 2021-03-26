@@ -32,12 +32,14 @@ dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
 equityblackvolsurfaceproxy.cpp
 equityforwardcurvestripper.cpp
+exactbachelierimpliedvolatility.cpp
 fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
+normalfreeboundarysabr.cpp
 optionletstripper.cpp
 payment.cpp
 piecewiseatmoptionletcurve.cpp

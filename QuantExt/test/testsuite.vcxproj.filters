@@ -161,6 +161,12 @@
     <ClCompile Include="durationadjustedcmscoupon.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="exactbachelierimpliedvolatility.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="normalfreeboundarysabr.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

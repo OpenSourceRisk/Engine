@@ -1014,6 +1014,59 @@ void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::stri
     }
 }
 
+void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
+                               boost::shared_ptr<FxEqVolCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    addRowMktCalReport(report, type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, type, id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, type, id, "atmType", "", "", "", info->atmType);
+    addRowMktCalReport(report, type, id, "deltaType", "", "", "", info->deltaType);
+    addRowMktCalReport(report, type, id, "longTermAtmType", "", "", "", info->longTermAtmType);
+    addRowMktCalReport(report, type, id, "longTermDeltaType", "", "", "", info->longTermDeltaType);
+    addRowMktCalReport(report, type, id, "switchTenor", "", "", "", info->switchTenor);
+    addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        addRowMktCalReport(report, type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size j = 0; j < info->deltas.size(); ++j) {
+            std::string dStr = info->deltas.at(j);
+            addRowMktCalReport(report, type, id, "forward", tStr, dStr, "", info->forwards.at(i));
+            addRowMktCalReport(report, type, id, "strike", tStr, dStr, "", info->deltaGridStrikes.at(i).at(j));
+            addRowMktCalReport(report, type, id, "vol", tStr, dStr, "", info->deltaGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "prob", tStr, dStr, "", info->deltaGridProb.at(i).at(j));
+            addRowMktCalReport(report, type, id, "callSpreadArb", tStr, dStr, "",
+                               static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "butterflyArb", tStr, dStr, "",
+                               static_cast<bool>(info->deltaGridButterflyArbitrage.at(i).at(j)));
+        }
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size j = 0; j < info->moneyness.size(); ++j) {
+            std::string mStr = std::to_string(info->moneyness.at(j));
+            addRowMktCalReport(report, type, id, "forward", tStr, mStr, "", info->forwards.at(i));
+            addRowMktCalReport(report, type, id, "strike", tStr, mStr, "", info->moneynessGridStrikes.at(i).at(j));
+            addRowMktCalReport(report, type, id, "vol", tStr, mStr, "",
+                               info->moneynessGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "prob", tStr, mStr, "", info->moneynessGridProb.at(i).at(j));
+            addRowMktCalReport(report, type, id, "callSpreadArb", tStr, mStr, "",
+                               static_cast<bool>(info->moneynessGridCallSpreadArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "butterflyArb", tStr, mStr, "",
+                               static_cast<bool>(info->moneynessGridButterflyArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "calendarArb", tStr, mStr, "",
+                               static_cast<bool>(info->moneynessGridCalendarArbitrage.at(i).at(j)));
+        }
+    }
+}
+
 } // namespace
 
 void ReportWriter::writeTodaysMarketCalibrationReport(
@@ -1045,7 +1098,10 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addInflationCurveCalibrationInfo(report, r.first, r.second);
     }
 
-    // ...
+    // fx vol results
+    for (auto const& r : calibrationInfo->fxVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "fxVol", r.first, r.second);
+    }
 
     report.end();
     LOG("TodaysMktCalibration report written");
