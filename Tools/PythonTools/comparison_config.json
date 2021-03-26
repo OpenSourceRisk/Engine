@@ -243,7 +243,7 @@
               "CC"
             ],
             "abs_tol": 0.05,
-            "rel_tol": 1e-12
+            "rel_tol": null
           }
         ]
       },
@@ -273,7 +273,7 @@
               "Strike"
             ],
             "abs_tol": 0.05,
-            "rel_tol": 1e-12
+            "rel_tol": null
           }
         ]
       },
