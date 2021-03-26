@@ -26,6 +26,7 @@
 #include <ql/types.hpp>
 
 #include <vector>
+#include <string>
 
 namespace QuantExt {
 
