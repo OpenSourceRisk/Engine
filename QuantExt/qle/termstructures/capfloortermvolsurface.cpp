@@ -157,8 +157,7 @@ void CapFloorTermVolSurfaceExact::update() {
             initializeOptionDatesAndTimes();
         }
     }
-    CapFloorTermVolatilityStructure::update();
-    LazyObject::update();
+    CapFloorTermVolSurface::update();    
 }
 
 void CapFloorTermVolSurfaceExact::initializeOptionDatesAndTimes() const {

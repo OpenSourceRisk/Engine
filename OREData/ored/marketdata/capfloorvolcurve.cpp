@@ -561,10 +561,10 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     map<pair<Period, Rate>, Real, decltype(comp)> volQuotes(comp);
 
     bool optionalQuotes = config.optionalQuotes();
-    bool quoteRelevant = false;
-    bool tenorRelevant = true;
-    bool strikeRelevant = true;
     Size quoteCounter = 0;
+    bool quoteRelevant = false;
+    bool tenorRelevant = false;
+    bool strikeRelevant = false;
 
     vector<Real> qtStrikes;
     vector<Real> qtData;
@@ -573,7 +573,6 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     string currency = config.currency();
 
     for (auto& md : loader.loadQuotes(asof)) {
-
         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CAPFLOOR && 
             md->quoteType() == config.quoteType()) {
 
@@ -581,30 +580,30 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
             if (cfq->ccy() == currency && cfq->underlying() == tenor && !cfq->atm()) {
                 auto j = std::find(config.tenors().begin(), config.tenors().end(), to_string(cfq->term()));
                 tenorRelevant = j != config.tenors().end();
-                
+
                 Real strike = cfq->strike();
-                auto i = std::find_if(config.strikes().begin(), config.strikes().end(), 
-                    [&strike](const std::string& x){
-                        return close_enough(parseReal(x), strike);
-                    });
+                auto i = std::find_if(config.strikes().begin(), config.strikes().end(),
+                    [&strike](const std::string& x) {
+                    return close_enough(parseReal(x), strike);
+                });
                 strikeRelevant = i != config.strikes().end();
-                
+
                 quoteRelevant = strikeRelevant && tenorRelevant;
-            }
-            if (quoteRelevant) {
-                // if we have optional quotes we just make vectors of all quotes and let the sparse surface
-                // handle them
-                quoteCounter++;
-                if (optionalQuotes) {
-                    qtStrikes.push_back(cfq->strike());
-                    qtTenors.push_back(cfq->term());
-                    qtData.push_back(cfq->quote()->value());
-                } 
-                auto key = make_pair(cfq->term(), cfq->strike());
-                auto r = volQuotes.insert(make_pair(key, cfq->quote()->value()));
-                QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << " for tenor "
-                    << key.first << " and strike "
-                    << key.second);                
+
+                if (quoteRelevant) {
+                    // if we have optional quotes we just make vectors of all quotes and let the sparse surface
+                    // handle them
+                    quoteCounter++;
+                    if (optionalQuotes) {
+                        qtStrikes.push_back(cfq->strike());
+                        qtTenors.push_back(cfq->term());
+                        qtData.push_back(cfq->quote()->value());
+                    }
+                    auto key = make_pair(cfq->term(), cfq->strike());
+                    auto r = volQuotes.insert(make_pair(key, cfq->quote()->value()));
+                    QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << ", with underlying tenor " << tenor <<
+                        " and currency " << currency << ", for tenor " << key.first << " and strike " << key.second);
+                }
             }
         }
     }

@@ -37,7 +37,7 @@ using namespace QuantLib;
 /*! This is a base class and defines the interface of capfloor term
     surface which will be derived from this one.
 */
-class CapFloorTermVolSurface : public CapFloorTermVolatilityStructure {    
+class CapFloorTermVolSurface : public LazyObject, public CapFloorTermVolatilityStructure {
 public:   
     //! default constructor
     CapFloorTermVolSurface(QuantLib::BusinessDayConvention bdc,
@@ -64,8 +64,17 @@ public:
             std::vector<QuantLib::Rate> strikes = {})
         : CapFloorTermVolatilityStructure(settlementDays, cal, bdc, dc), optionTenors_(optionTenors), strikes_(strikes) {};
 
-    virtual const std::vector<QuantLib::Period>& optionTenors() const { return optionTenors_; }
-    virtual const std::vector<QuantLib::Rate>& strikes() const { return strikes_; }
+    const std::vector<QuantLib::Period>& optionTenors() const { return optionTenors_; }
+    const std::vector<QuantLib::Rate>& strikes() const { return strikes_; }
+
+    //! \name LazyObject interface
+    //@{
+    void update() {
+        CapFloorTermVolatilityStructure::update();
+        LazyObject::update();
+    }
+    void performCalculations() const {};
+    //@}
 
 protected:
     std::vector<QuantLib::Period> optionTenors_;
@@ -81,7 +90,7 @@ protected:
     BiLinear instead of BiCubic Spline interpolation.
     Default is BiCubic Spline for backwards compatibility with QuantLib
 */
-class CapFloorTermVolSurfaceExact : public LazyObject, public CapFloorTermVolSurface {
+class CapFloorTermVolSurfaceExact : public CapFloorTermVolSurface {
 public:
     enum InterpolationMethod { BicubicSpline, Bilinear };
 
@@ -121,10 +130,8 @@ public:
     //@}
     //! \name some inspectors
     //@{
-    const std::vector<Period>& optionTenors() const;
     const std::vector<Date>& optionDates() const;
     const std::vector<Time>& optionTimes() const;
-    const std::vector<Rate>& strikes() const;
     InterpolationMethod interpolationMethod() const;
     //@}
 protected:
@@ -170,8 +177,6 @@ inline Volatility CapFloorTermVolSurfaceExact::volatilityImpl(Time t, Rate strik
     return interpolation_(strike, t, true);
 }
 
-inline const std::vector<Period>& CapFloorTermVolSurfaceExact::optionTenors() const { return optionTenors_; }
-
 inline const std::vector<Date>& CapFloorTermVolSurfaceExact::optionDates() const {
     // what if quotes are not available?
     calculate();
@@ -183,8 +188,6 @@ inline const std::vector<Time>& CapFloorTermVolSurfaceExact::optionTimes() const
     calculate();
     return optionTimes_;
 }
-
-inline const std::vector<Rate>& CapFloorTermVolSurfaceExact::strikes() const { return strikes_; }
 
 inline CapFloorTermVolSurfaceExact::InterpolationMethod CapFloorTermVolSurfaceExact::interpolationMethod() const {
     return interpolationMethod_;

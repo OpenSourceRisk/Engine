@@ -42,7 +42,7 @@ namespace QuantExt {
     of a set of caps/floors.
 */
 template <class InterpolatorStrike, class InterpolatorExpiry>
-class CapFloorTermVolSurfaceSparse : public LazyObject, public CapFloorTermVolSurface {
+class CapFloorTermVolSurfaceSparse : public CapFloorTermVolSurface {
     
 public:
     //! fixed reference date, fixed market data
@@ -68,7 +68,6 @@ public:
     //@}
     //! \name LazyObject interface
     //@{
-    void update();
     void performCalculations() const;
     //@}
 
@@ -150,12 +149,6 @@ QuantLib::Real CapFloorTermVolSurfaceSparse<IS, IE>::maxStrike() const { return 
 template <class IS, class IE>
 QuantLib::Volatility CapFloorTermVolSurfaceSparse<IS, IE>::volatilityImpl(Time t, Rate strike) const {
     return optionInterpolator_->getValue(t, strike);
-}
-
-template <class IS, class IE>
-void CapFloorTermVolSurfaceSparse<IS, IE>::update() {
-    CapFloorTermVolatilityStructure::update();
-    LazyObject::update();
 }
 
 template <class IS, class IE>
