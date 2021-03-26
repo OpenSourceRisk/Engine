@@ -691,8 +691,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
 
-        calibrationInfo_->dayCounter = vol_->dayCounter().empty() ? "na" : vol_->dayCounter().name();
-        calibrationInfo_->calendar = vol_->calendar().empty() ? "na" : vol_->calendar().name();
+        calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
+        calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
         calibrationInfo_->atmType = ore::data::to_string(atmType_);
         calibrationInfo_->deltaType = ore::data::to_string(deltaType_);
         calibrationInfo_->longTermAtmType = ore::data::to_string(longTermAtmType_);
@@ -704,15 +704,19 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             // FIXME here and above in the build methods: vol_->optionDateFromTenor(p);
             Date d = asof + p;
             calibrationInfo_->expiryDates.push_back(d);
-            times.push_back(vol_->timeFromReference(d));
+            times.push_back(vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
+                                                       : vol_->timeFromReference(d));
             forwards.push_back(fxSpot_->value() / domYts_->discount(times.back()) * forYts_->discount(times.back()));
         }
 
         calibrationInfo_->times = times;
         calibrationInfo_->forwards = forwards;
 
-        Real switchTime =
-            switchTenor_ == 0 * Days ? QL_MAX_REAL : vol_->timeFromReference(vol_->optionDateFromTenor(switchTenor_));
+        Date switchExpiry = vol_->calendar().empty() ? asof + switchTenor_ : vol_->optionDateFromTenor(switchTenor_);
+        Real switchTime = vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, switchExpiry)
+                                                     : vol_->timeFromReference(switchExpiry);
+        if (switchTenor_ == 0 * Days)
+            switchTime = QL_MAX_REAL;
 
         std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
         std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
