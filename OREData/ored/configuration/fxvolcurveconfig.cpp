@@ -54,6 +54,8 @@ const vector<string>& FXVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         vector<string> tokens;
         boost::split(tokens, fxSpotID(), boost::is_any_of("/"));
+        QL_REQUIRE(tokens.size() == 3, "Expected 3 tokens FX/CCY1/CCY2 in fxSpotID (" << fxSpotID() << ")");
+        quotes_.push_back("FX/RATE/" + tokens[1] + "/" + tokens[2]);
         string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
         for (auto e : expiries_) {
             quotes_.push_back(base + e + "/ATM");
