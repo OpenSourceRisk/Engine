@@ -828,13 +828,16 @@
     <ClInclude Include="qle\pricingengines\commodityapoengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\adjusteddefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\aposurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\indexedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp">
+    <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\cpicoupon.hpp">
@@ -1057,6 +1060,12 @@
       <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\compoequityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\decpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1651,7 +1660,7 @@
     <ClCompile Include="qle\cashflows\indexedcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
+    <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\cpicoupon.cpp">

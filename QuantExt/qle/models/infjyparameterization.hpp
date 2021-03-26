@@ -23,20 +23,19 @@
 #ifndef quantext_inf_jy_parameterization_hpp
 #define quantext_inf_jy_parameterization_hpp
 
+#include <boost/shared_ptr.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
-#include <ql/indexes/inflationindex.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace QuantExt {
 
 class InfJyParameterization : public Parametrization {
 public:
-    InfJyParameterization(
-        boost::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate,
-        boost::shared_ptr<FxBsParametrization> index,
-        boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex);
+    InfJyParameterization(boost::shared_ptr<Lgm1fParametrization<QuantLib::ZeroInflationTermStructure>> realRate,
+                          boost::shared_ptr<FxBsParametrization> index,
+                          boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex);
 
     //! \name Parametrization interface
     //@{
@@ -51,6 +50,8 @@ public:
     boost::shared_ptr<FxBsParametrization> index() const;
     boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex() const;
     //@}
+
+    Size numberOfParameters() const override { return 3; }
 
 protected:
     //! \name Parametrization interface
@@ -68,6 +69,6 @@ private:
     void checkIndex(QuantLib::Size i) const;
 };
 
-}
+} // namespace QuantExt
 
 #endif

@@ -125,7 +125,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
         dfValues.push_back(1.0);
     }
 
-    for (const auto kv : discounts) {
+    for (const auto& kv : discounts) {
         dfDates.push_back(kv.first);
         dfValues.push_back(kv.second);
     }

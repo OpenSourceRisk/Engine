@@ -91,6 +91,7 @@ private:
  */
 class PiecewiseConstantHelper2 {
 public:
+    PiecewiseConstantHelper2(const Array& t, const boost::shared_ptr<PseudoParameter>& y);
     PiecewiseConstantHelper2(const Array& t,
         const boost::shared_ptr<QuantLib::Constraint>& constraint = boost::make_shared<QuantLib::NoConstraint>());
     PiecewiseConstantHelper2(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts,

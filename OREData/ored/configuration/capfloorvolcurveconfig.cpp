@@ -132,6 +132,9 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", false);
     strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", false);
 
+    // Optional flag, if set to true some tenor/strike quotes can be omitted
+    optionalQuotes_ = XMLUtils::getChildValueAsBool(node, "OptionalQuotes", false, false);
+
     // Interpolation for cap floor term volatilities (optional)
     interpolationMethod_ = "BicubicSpline";
     if (XMLNode* n = XMLUtils::getChildNode(node, "InterpolationMethod")) {
@@ -179,6 +182,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
+    XMLUtils::addChild(doc, node, "OptionalQuotes", optionalQuotes_);
     XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
     XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);
@@ -191,7 +195,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-typedef QuantExt::CapFloorTermVolSurface::InterpolationMethod CftvsInterp;
+typedef QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod CftvsInterp;
 CftvsInterp CapFloorVolatilityCurveConfig::interpolationMethod() const {
     if (interpolationMethod_ == "BicubicSpline") {
         return CftvsInterp::BicubicSpline;
@@ -213,18 +217,30 @@ void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
 }
 
+string CapFloorVolatilityCurveConfig::iborTenor() const {
+    string tenor;
+    // Ibor index term and currency (do not allow for convention based ibor indices here)
+    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
+    return tenor;
+}
+
+const string& CapFloorVolatilityCurveConfig::currency() const {
+    string tenor;
+    // Ibor index term and currency (do not allow for convention based ibor indices here)
+    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
+    return index->currency().code();
+}
+
 void CapFloorVolatilityCurveConfig::populateQuotes() {
 
     // Cap floor quotes are for the form:
     // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE>
-
-    // Ibor index term and currency (do not allow for convention based ibor indices here)
-    string tenor;
-    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
-    string ccy = index->currency().code();
+    string ccy = currency();
+    string tenor = iborTenor();
 
     // Volatility quote stem
-    string stem = "CAPFLOOR/" + quoteType(volatilityType_) + "/" + ccy + "/";
+    MarketDatum::QuoteType qType = quoteType();
+    string stem = "CAPFLOOR/" + to_string(qType) + "/" + ccy + "/";
 
     // Cap floor matrix quotes. So, ATM flag is false i.e. 0 and RELATIVE flag is false also as strikes are absolute.
     for (const string& t : tenors_) {
@@ -277,16 +293,16 @@ void CapFloorVolatilityCurveConfig::validate() const {
     }
 }
 
-string quoteType(CapFloorVolatilityCurveConfig::VolatilityType type) {
-    switch (type) {
+MarketDatum::QuoteType CapFloorVolatilityCurveConfig::quoteType() const {
+    switch (volatilityType_) {
     case CapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
-        return "RATE_LNVOL";
-    case CapFloorVolatilityCurveConfig::VolatilityType::Normal:
-        return "RATE_NVOL";
+        return MarketDatum::QuoteType::RATE_LNVOL;
     case CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
-        return "RATE_SLNVOL";
+        return MarketDatum::QuoteType::RATE_SLNVOL;
+    case CapFloorVolatilityCurveConfig::VolatilityType::Normal:
+        return MarketDatum::QuoteType::RATE_NVOL;
     default:
-        QL_FAIL("Unknown VolatilityType (" << static_cast<int>(type) << ")");
+        QL_FAIL("Unknown VolatilityType (" << static_cast<int>(volatilityType_) << ")");
     }
 }
 

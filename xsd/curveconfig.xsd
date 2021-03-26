@@ -164,7 +164,9 @@
         <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
         <xs:element type="xs:string" name="ProxySurface"/>
       </xs:choice>
-      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/> 	  
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -266,7 +268,8 @@
       <xs:element type="calendar" name="Calendar"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
       <xs:element type="xs:string" name="Tenors" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>	  
+      <xs:element type="bool" name="OptionalQuotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="indexNameType" name="IborIndex"/>
       <xs:element type="xs:string" name="DiscountCurve"/>
       <xs:element type="xs:string" name="AtmTenors" minOccurs="0" maxOccurs="1"/>
@@ -612,6 +615,13 @@
       <xs:element type="non-negative-decimal" name="Beta" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:simpleType name="commVolQuoteSuffix">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="P"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="commodityVolatility">
     <xs:sequence>
@@ -632,6 +642,9 @@
       <xs:element type="xs:string" name="OptionExpiryRollDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PriceCurveId" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="YieldCurveId" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="commVolQuoteSuffix" name="QuoteSuffix" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -904,6 +917,27 @@
       <xs:element type="xs:decimal" name="MinFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:positiveInteger" name="DontThrowSteps" minOccurs="0" maxOccurs="1"/>
     </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="minMaxType">
+    <xs:all>
+      <xs:element type="xs:decimal" name="Min"/>
+      <xs:element type="xs:decimal" name="Max"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="oneDimSolverConfigType">
+    <xs:sequence>
+      <xs:element type="xs:positiveInteger" name="MaxEvaluations"/>
+      <xs:element type="xs:decimal" name="InitialGuess"/>
+      <xs:element type="positiveDecimal" name="Accuracy"/>
+      <xs:choice>
+        <xs:element type="minMaxType" name="MinMax"/>
+        <xs:element type="positiveDecimal" name="Step"/>
+      </xs:choice>
+      <xs:element type="xs:decimal" name="LowerBound" minOccurs="0"/>
+      <xs:element type="xs:decimal" name="UpperBound" minOccurs="0"/>
+    </xs:sequence>
   </xs:complexType>
 
 </xs:schema>
