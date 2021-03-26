@@ -99,7 +99,9 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
         lastResult = result;
         result = bdc.strikeFromDelta(delta);
     } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
-    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getStrikeFromDelta: max iterations, no solution found");
+    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getStrikeFromDelta: max iterations ("
+                                               << maxIterations << "), no solution found for accuracy " << accuracy
+                                               << ", last iterations: " << lastResult << ", " << result);
     return result;
 }
 
@@ -115,7 +117,9 @@ Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real s
         lastResult = result;
         result = bdc.atmStrike(at);
     } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
-    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getAtmStrike: max iterations, no solution found");
+    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getAtmStrike: max iterations ("
+                                               << maxIterations << "), no solution found for accuracy " << accuracy
+                                               << ", last iterations: " << lastResult << ", " << result);
     return result;
 }
 
@@ -770,8 +774,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                         calibrationInfo_->deltaGridStrikes[i][j] = strike;
                         calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
-                    } catch (...) {
+                    } catch (const std::exception& e) {
                         validSlice = false;
+                        TLOG("error for time " << t << " delta " << deltas[j] << ": " << e.what());
                     }
                 }
                 if (validSlice) {
@@ -813,7 +818,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
                         calibrationInfo_->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
-                    } catch (...) {
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
                     }
                 }
             }
