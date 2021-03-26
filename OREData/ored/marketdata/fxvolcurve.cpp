@@ -691,8 +691,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
 
-        calibrationInfo_->dayCounter = vol_->dayCounter().name();
-        calibrationInfo_->calendar = vol_->calendar().name();
+        calibrationInfo_->dayCounter = vol_->dayCounter().empty() ? "na" : vol_->dayCounter().name();
+        calibrationInfo_->calendar = vol_->calendar().empty() ? "na" : vol_->calendar().name();
         calibrationInfo_->atmType = ore::data::to_string(atmType_);
         calibrationInfo_->deltaType = ore::data::to_string(deltaType_);
         calibrationInfo_->longTermAtmType = ore::data::to_string(longTermAtmType_);
