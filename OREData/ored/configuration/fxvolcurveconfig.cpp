@@ -224,7 +224,7 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
 }
 
 void FXVolatilityCurveConfig::populateRequiredCurveIds() {
-    if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
+    if (!fxDomesticYieldCurveID_.empty() && !fxForeignYieldCurveID_.empty()) {
         std::vector<string> domTokens, forTokens;
         split(domTokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
         split(forTokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
