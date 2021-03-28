@@ -580,7 +580,7 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                         for (const Date& expiry : dates) {
                             auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar(), true).name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << indexName << ")");
-                            fixings[indexName] = { expiry };
+                            fixings[indexName].insert(expiry);
                         }
                     } else {
                         DLOG("Commodity " << kv.first << " is not daily so adding the monthly contracts.");
