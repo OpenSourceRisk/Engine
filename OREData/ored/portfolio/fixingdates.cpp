@@ -461,6 +461,7 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings, const boost::sha
 }
 
 void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+                          const Conventions& conventions,
                           const Period& iborLookback, const Period& oisLookback,
                           const Period& inflationLookback, const string& configuration) {
 
@@ -546,13 +547,12 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
             set<Date> dates;
             do {
                 TLOG("Adding date " << io::iso_date(lookback) << " to fixings for commodities");
-                dates.insert(lookback);
-                lookback = WeekendsOnly().advance(lookback, 1 * Days);
+                dates.insert(lookback++);
             } while (lookback <= today);
 
             // Expiry months and years for which we require future contract fixings. For our purposes here, using the
             // 1st of the month does not matter. We will just use the date to get the appropriate commodity future
-            // index name below when adding the dates and the "-01" will be removed.
+            // index name below when adding the dates and the "-01" will be removed (for non-daily contracts).
             Size numberMonths = 2;
             vector<Date> contractExpiries;
             Date startContract = today - numberMonths * Months;
@@ -566,15 +566,32 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
             } while (startContract <= endContract);
 
             // For each of the commodity names, create the future contract name with the relevant expiry and insert
-            // the dates. There may be some spot commodities here treated like futures but this should not matter
-            // i.e. we will just not get fixings for them.
-            if (mktParams.hasMarketObject(MarketObject::CommodityCurve)) {
-                for (const auto& kv : mktParams.mapping(MarketObject::CommodityCurve, configuration)) {
-                    for (const Date& expiry : contractExpiries) {
-                        auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar()).name();
-                        TLOG("Adding extra fixing dates for commodity future " << indexName);
-                        fixings[indexName].insert(dates.begin(), dates.end());
+            // the dates. Skip commodity names that do not have future conventions.
+            for (const auto& kv : mktParams.mapping(MarketObject::CommodityCurve, configuration)) {
+
+                boost::shared_ptr<CommodityFutureConvention> cfc;
+                if (conventions.has(kv.first)) {
+                    cfc = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(kv.first));
+                }
+
+                if (cfc) {
+                    if (cfc->contractFrequency() == Daily) {
+                        DLOG("Commodity " << kv.first << " has daily frequency so adding daily contracts.");
+                        for (const Date& expiry : dates) {
+                            auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar(), true).name();
+                            TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << indexName << ")");
+                            fixings[indexName] = { expiry };
+                        }
+                    } else {
+                        DLOG("Commodity " << kv.first << " is not daily so adding the monthly contracts.");
+                        for (const Date& expiry : contractExpiries) {
+                            auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar()).name();
+                            TLOG("Adding extra fixing dates for commodity future " << indexName);
+                            fixings[indexName].insert(dates.begin(), dates.end());
+                        }
                     }
+                } else {
+                    DLOG("Commodity " << kv.first << " does not have future conventions so skipping.");
                 }
             }
         }
