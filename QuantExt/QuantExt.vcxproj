@@ -501,6 +501,8 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="qle\termstructures\blackvolatilitysurfacemoneyness.hpp" />
+    <ClInclude Include="indexes\ibor\dkkcita.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
     <ClInclude Include="qle\calendars\belgium.hpp" />
@@ -589,6 +591,7 @@
     <ClInclude Include="qle\indexes\ibor\saibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\seksior.hpp" />
     <ClInclude Include="qle\indexes\ibor\sekstibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\sekstina.hpp" />
     <ClInclude Include="qle\indexes\ibor\sgdsibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
@@ -631,7 +634,9 @@
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
+    <ClInclude Include="qle\math\logquadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
+    <ClInclude Include="qle\math\quadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
@@ -793,6 +798,7 @@
     <ClInclude Include="qle\time\yearcounter.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="qle\termstructures\blackvolatilitysurfacemoneyness.cpp" />
     <ClCompile Include="qle\calendars\austria.cpp" />
     <ClCompile Include="qle\calendars\belgium.cpp" />
     <ClCompile Include="qle\calendars\chile.cpp" />
@@ -986,6 +992,7 @@
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
     <ClCompile Include="qle\time\actual364.cpp" />
     <ClCompile Include="qle\time\yearcounter.cpp" />
+    <ClCompile Include="test\quadraticinterpolation.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

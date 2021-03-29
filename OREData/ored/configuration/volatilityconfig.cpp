@@ -312,11 +312,12 @@ VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(
     const string& moneynessType, const vector<string>& moneynessLevels, const vector<string>& expiries,
     const string& timeInterpolation, const string& strikeInterpolation, bool extrapolation,
     const string& timeExtrapolation, const string& strikeExtrapolation, bool futurePriceCorrection,
-    MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType)
+    MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType,
+    InterpolationVariable interpolationVariable)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
                               strikeExtrapolation, quoteType, exerciseType),
       moneynessType_(moneynessType), moneynessLevels_(moneynessLevels), expiries_(expiries),
-      futurePriceCorrection_(futurePriceCorrection) {}
+      futurePriceCorrection_(futurePriceCorrection), interpolationVariable_(interpolationVariable) {}
 
 const string& VolatilityMoneynessSurfaceConfig::moneynessType() const { return moneynessType_; }
 
@@ -325,6 +326,10 @@ const vector<string>& VolatilityMoneynessSurfaceConfig::moneynessLevels() const 
 const vector<string>& VolatilityMoneynessSurfaceConfig::expiries() const { return expiries_; }
 
 bool VolatilityMoneynessSurfaceConfig::futurePriceCorrection() const { return futurePriceCorrection_; }
+
+VolatilityMoneynessSurfaceConfig::InterpolationVariable VolatilityMoneynessSurfaceConfig::interpolationVariable() const {
+    return interpolationVariable_;
+}
 
 vector<pair<string, string>> VolatilityMoneynessSurfaceConfig::quotes() const {
 
@@ -351,6 +356,9 @@ void VolatilityMoneynessSurfaceConfig::fromXML(XMLNode* node) {
     futurePriceCorrection_ = true;
     if (XMLNode* n = XMLUtils::getChildNode(node, "FuturePriceCorrection"))
         futurePriceCorrection_ = parseBool(XMLUtils::getNodeValue(n));
+    interpolationVariable_ = VolatilityMoneynessSurfaceConfig::InterpolationVariable::Variance;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "InterpolationVariable"))
+        interpolationVariable_ = parseInterpolationVariable(XMLUtils::getChildValue(node, "InterpolationVariable", true));
     fromNode(node);
 }
 
@@ -364,6 +372,22 @@ XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FuturePriceCorrection", futurePriceCorrection_);
 
     return node;
+}
+
+VolatilityMoneynessSurfaceConfig::InterpolationVariable
+VolatilityMoneynessSurfaceConfig::parseInterpolationVariable(const std::string& interpolationVariable) const {
+    if (interpolationVariable == "Variance") {
+        return InterpolationVariable::Variance;
+    } else if (interpolationVariable == "Volatility") {
+        return InterpolationVariable::Volatility;
+    } else {
+        DLOG("InterpolationVariable "
+             << interpolationVariable
+             << " not supported for VolatilityMoneynessSurfaceConfig. Use Variance or Volatility");
+        QL_FAIL("InterpolationVariable "
+                << interpolationVariable
+                << " not supported for VolatilityMoneynessSurfaceConfig. Use Variance or Volatility");
+    }
 }
 
 VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(MarketDatum::QuoteType quoteType,

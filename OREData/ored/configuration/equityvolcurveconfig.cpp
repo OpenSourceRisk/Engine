@@ -19,6 +19,7 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
@@ -29,9 +30,11 @@ namespace data {
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency,
                                                          const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-                                                         const string& dayCounter, const string& calendar)
+                                                         const string& dayCounter, const string& calendar,
+                                                         const std::string& equityCurveId,
+                                                         const std::string& yieldCurveId)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
-      dayCounter_(dayCounter), calendar_(calendar) {
+      dayCounter_(dayCounter), calendar_(calendar), equityCurveId_(equityCurveId), yieldCurveId_(yieldCurveId) {
     populateQuotes();
 }
 
@@ -107,8 +110,11 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
             } else {
                 Size i = 0;
                 for (auto ex : expiries) {
-                    quotes[i] = (quoteStem + ex + "/ATMF");
+                    // TODO: /ATMF or /ATM/AtmFwd? How to preserve backward compatibility with updated strike handling?
+                    quotes[i] = (quoteStem + ex + "/ATM/AtmFwd");
                     i++;
+                    WLOG("Using deprecated configuration of ATM curve. Quotes may not be read if denoting ATM forward "
+                         << "quotes by /ATMF. Consider using /ATM/AtmFwd instead.");
                 }
             }
             volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation);
@@ -121,28 +127,39 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     } else if (dim == "") {
         XMLNode* n;
         if ((n = XMLUtils::getChildNode(node, "Constant"))) {
+            DLOG("CurveId " << curveID_ << " is of volatility config type ConstantVolatilityConfig");
             volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
+            DLOG("CurveId " << curveID_ << " is of volatility config type VolatilityCurveConfig");
             volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
+            DLOG("CurveId " << curveID_ << " is of volatility config type VolatilityStrikeSurfaceConfig");
             volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
+            DLOG("CurveId " << curveID_ << " is of volatility config type VolatilityDeltaSurfaceConfig");
             QL_FAIL("DeltaSurface not currently supported for equity volatilities.");
         } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
-            QL_FAIL("MoneynessSurface not currently supported for equity volatilities.");
+            DLOG("CurveId " << curveID_ << " is of volatility config type VolatilityMoneynessSurfaceConfig");
+            volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
+            DLOG("CurveId " << curveID_ << " is of volatility config type VolatilityApoFutureSurfaceConfig");
             QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
         } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
+            DLOG("CurveId " << curveID_ << " is of volatility config type ProxySurface");
             proxySurface_ = XMLUtils::getChildValue(node, "ProxySurface", true);
         } else {
             QL_FAIL("EquityVolatility node expects one child node with name in list: Constant,"
-                    << " Curve, StrikeSurface, ProxySurface.");
+                    << " Curve, StrikeSurface, MoneynessSurface, ProxySurface.");
         }
         if (proxySurface_.empty())
             volatilityConfig_->fromXML(n);
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
+
+    equityCurveId_ = XMLUtils::getChildValue(node, "EquityCurveId", false);
+    yieldCurveId_ = XMLUtils::getChildValue(node, "YieldCurveId", false);
+
     populateQuotes();
 }
 
@@ -163,6 +180,10 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     }
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
+    if (!equityCurveId_.empty())
+        XMLUtils::addChild(doc, node, "EquityCurveId", equityCurveId_);
+    if (!yieldCurveId_.empty())
+        XMLUtils::addChild(doc, node, "YieldCurveId", yieldCurveId_);
 
     return node;
 }

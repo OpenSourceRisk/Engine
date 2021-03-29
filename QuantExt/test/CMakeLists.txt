@@ -5,6 +5,7 @@ analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
+blackvolatilitysurfacemoneyness.cpp
 blackvolsurfacedelta.cpp
 bonds.cpp
 capfloortermvolcurve.cpp
@@ -43,6 +44,7 @@ piecewiseoptionletstripper.cpp
 pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
+quadraticinterpolation.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp

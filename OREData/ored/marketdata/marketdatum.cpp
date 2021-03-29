@@ -56,7 +56,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
 }
 
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
-                                     string equityName, string ccy, string expiry, string strike, bool isCall)
+                                     string equityName, string ccy, string expiry,
+                                     const boost::shared_ptr<BaseStrike>& strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
       expiry_(expiry), strike_(strike), isCall_(isCall) {
 

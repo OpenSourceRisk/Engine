@@ -88,6 +88,13 @@ int OREApp::run() {
         LOG("ORE starting");
         // readSetup();
 
+        cout << "SEB-ORE -- an extension to ORE -- http://www.opensourcerisk.org/" << endl;
+        cout << "ORE original version   : " << OPEN_SOURCE_RISK_VERSION << endl;
+        cout << "Build date             : " << __TIMESTAMP__ << endl;
+        cout << "Build location         : " << __FILE__ << endl;
+        cout << "QuantLib Version       : " << QL_VERSION << endl;
+        cout << "Boost Version          : " << BOOST_LIB_VERSION << endl;
+
         /*********
          * Build Markets
          */
