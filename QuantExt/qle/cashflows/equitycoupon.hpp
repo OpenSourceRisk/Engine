@@ -53,7 +53,7 @@ public:
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
                  const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
-                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
+                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false, const bool isAbsoluteReturn = false);
 
     //! \name CashFlow interface
     //@{
@@ -79,6 +79,8 @@ public:
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //! total return or price return?
     bool isTotalReturn() const { return isTotalReturn_; }
+    //! absolute return or relative return
+    bool absoluteReturn() const { return isAbsoluteReturn_; }
     //! are dividends scaled (e.g. to account for tax)
     Real dividendFactor() const { return dividendFactor_; }
     //! The date at which the starting equity price is fixed
@@ -120,6 +122,7 @@ protected:
     boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
     bool isTotalReturn_;
+    bool isAbsoluteReturn_;
     Real dividendFactor_;
     bool notionalReset_;
     Real initialPrice_;
@@ -157,6 +160,7 @@ public:
     EquityLeg& withPaymentLag(Natural paymentLag);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
+    EquityLeg& withAbsoluteReturn(bool);
     EquityLeg& withDividendFactor(Real);
     EquityLeg& withInitialPrice(Real);
     EquityLeg& withInitialPriceIsInTargetCcy(bool);
@@ -176,6 +180,7 @@ private:
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
+    bool absoluteReturn_;
     Real initialPrice_;
     bool initialPriceIsInTargetCcy_;
     Real dividendFactor_;
