@@ -122,7 +122,6 @@ protected:
     boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
     bool isTotalReturn_;
-    bool isAbsoluteReturn_;
     Real dividendFactor_;
     bool notionalReset_;
     Real initialPrice_;
@@ -132,6 +131,7 @@ protected:
     Date fixingEndDate_;
     Natural paymentLag_;
     boost::shared_ptr<FxIndex> fxIndex_;
+    bool isAbsoluteReturn_;
 };
 
 // inline definitions
