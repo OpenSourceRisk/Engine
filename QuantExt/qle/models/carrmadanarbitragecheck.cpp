@@ -185,10 +185,9 @@ CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::ve
 
     surfaceIsArbitrageFree_ = true;
     for (Size i = 0; i < times_.size(); ++i) {
-        std::vector<Real> strikes;
-        for (auto const& m : moneyness_) {
-            strikes.push_back(forwards_[i] * m);
-        }
+        std::vector<Real> strikes(moneyness_.size());
+        Real f = forwards_[i];
+        std::transform(moneyness_.begin(), moneyness_.end(), strikes.begin(), [&f](Real m) { return m * f; });
         timeSlices_.push_back(CarrMadanMarginalProbability(strikes, forwards_[i], callPrices_[i]));
         surfaceIsArbitrageFree_ = surfaceIsArbitrageFree_ && timeSlices_.back().arbitrageFree();
         callSpreadArbitrage_.push_back(timeSlices_.back().callSpreadArbitrage());
