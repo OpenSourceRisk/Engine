@@ -163,6 +163,7 @@
         <xs:element type="volatilityCurveConfig" name="Curve"/>
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
         <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
+        <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
         <xs:element type="xs:string" name="ProxySurface"/>
       </xs:choice>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
