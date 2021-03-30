@@ -554,6 +554,8 @@
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
       <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PeakPriceCurveId" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PeakPriceCalendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   

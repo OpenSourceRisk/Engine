@@ -1408,6 +1408,8 @@ PriceSegment::Type parsePriceSegmentType(const string& s) {
         return PST::AveragingFuture;
     } else if (s == "AveragingSpot") {
         return PST::AveragingSpot;
+    } else if (s == "AveragingOffPeakPower") {
+        return PST::AveragingOffPeakPower;
     } else {
         QL_FAIL("PriceSegment::Type '" << s << "' not known, expect " <<
             "'Future', 'AveragingFuture' or 'AveragingSpot'");
@@ -1421,6 +1423,8 @@ ostream& operator<<(ostream& os, PriceSegment::Type pst) {
         return os << "AveragingFuture";
     } else if (pst == PST::AveragingSpot) {
         return os << "AveragingSpot";
+    } else if (pst == PST::AveragingOffPeakPower) {
+        return os << "AveragingOffPeakPower";
     } else {
         QL_FAIL("Unknown PriceSegment::Type.");
     }

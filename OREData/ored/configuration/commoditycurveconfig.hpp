@@ -36,7 +36,7 @@ namespace data {
 class PriceSegment : public XMLSerializable {
 public:
     //! Type of price segment being represented, i.e. type of instrument in the price segment.
-    enum class Type { Future, AveragingFuture, AveragingSpot };
+    enum class Type { Future, AveragingFuture, AveragingSpot, AveragingOffPeakPower };
 
     //! \name Constructors
     //@{
@@ -44,7 +44,8 @@ public:
     PriceSegment();
     //! Detailed constructor
     PriceSegment(const std::string& type, const std::string& conventionsId, const std::vector<std::string>& quotes,
-        const boost::optional<unsigned short>& priority = boost::none);
+        const boost::optional<unsigned short>& priority = boost::none, const std::string& peakPriceCurveId = "",
+        const std::string& peakPriceCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -53,6 +54,8 @@ public:
     const std::string& conventionsId() const;
     const std::vector<std::string>& quotes() const;
     const boost::optional<unsigned short>& priority() const;
+    const std::string& peakPriceCurveId() const;
+    const std::string& peakPriceCalendar() const;
     bool empty() const;
     //@}
 
@@ -67,6 +70,8 @@ private:
     std::string conventionsId_;
     std::vector<std::string> quotes_;
     boost::optional<unsigned short> priority_;
+    std::string peakPriceCurveId_;
+    std::string peakPriceCalendar_;
 
     bool empty_;
     Type type_;
