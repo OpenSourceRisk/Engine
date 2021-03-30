@@ -94,7 +94,8 @@ void CurveConfigurations::parseNode(XMLNode* node, const char* parentName, const
 }
 
 template <class T>
-const boost::shared_ptr<T>& CurveConfigurations::get(const string& id, const map<string, boost::shared_ptr<T>>& m) const {
+const boost::shared_ptr<T>& CurveConfigurations::get(const string& id,
+                                                     const map<string, boost::shared_ptr<T>>& m) const {
     auto it = m.find(id);
     if (it != m.end())
         return it->second;
@@ -469,6 +470,18 @@ CurveConfigurations::correlationCurveConfig(const string& curveID) const {
 
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
+
+    // Load global settings
+    if (auto tmp = XMLUtils::getChildNode(node, "ReportConfiguration")) {
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "EquityVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigEqVols_.fromXML(tmp3);
+        }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "FXVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigFxVols_.fromXML(tmp3);
+        }
+    }
 
     // Load YieldCurves, FXVols, etc, etc
     parseNode(node, "YieldCurves", "YieldCurve", yieldCurveConfigs_);

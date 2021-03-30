@@ -659,12 +659,14 @@
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="equityforwardcurvestripper.cpp" />
+    <ClCompile Include="exactbachelierimpliedvolatility.cpp" />
     <ClCompile Include="fillemptymatrix.cpp" />
     <ClCompile Include="forwardbond.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
     <ClCompile Include="logquote.cpp" />
+    <ClCompile Include="normalfreeboundarysabr.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
     <ClCompile Include="piecewiseatmoptionletcurve.cpp" />

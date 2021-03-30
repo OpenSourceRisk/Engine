@@ -94,6 +94,7 @@ math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
 models/annuitymapping.cpp
+models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
@@ -108,6 +109,7 @@ models/dkimpliedzeroinflationtermstructure.cpp
 models/eqbsconstantparametrization.cpp
 models/eqbsparametrization.cpp
 models/eqbspiecewiseconstantparametrization.cpp
+models/exactbachelierimpliedvolatility.cpp
 models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
@@ -122,6 +124,8 @@ models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
+models/normalsabr.cpp
+models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
@@ -394,6 +398,7 @@ math/trace.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
 models/annuitymapping.hpp
+models/carrmadanarbitragecheck.hpp
 models/cdsoptionhelper.hpp
 models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
@@ -413,6 +418,7 @@ models/dkimpliedzeroinflationtermstructure.hpp
 models/eqbsconstantparametrization.hpp
 models/eqbsparametrization.hpp
 models/eqbspiecewiseconstantparametrization.hpp
+models/exactbachelierimpliedvolatility.hpp
 models/fxbsconstantparametrization.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
@@ -433,6 +439,9 @@ models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
+models/normalsabr.hpp
+models/normalsabrinterpolation.hpp
+models/normalsabrsmilesection.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
 models/projectedcrossassetmodel.hpp

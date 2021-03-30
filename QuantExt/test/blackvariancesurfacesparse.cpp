@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceEdgeCases) {
     BOOST_CHECK_THROW(surface.blackVol(t, strikeNeg), QuantLib::Error);
 }
 
-BOOST_AUTO_TEST_CASE(testBalckVarianceSinglePoint) {
+BOOST_AUTO_TEST_CASE(testBlackVarianceSinglePoint) {
     BOOST_TEST_MESSAGE("Testing surface from single point");
     // Given a single point, every request should be expected extrapolated value.
 

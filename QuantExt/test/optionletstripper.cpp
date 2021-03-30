@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStripping) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStripping) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_1,
                                                              vars.dayCounter);
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStripping) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStripping) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_2,
                                                              vars.dayCounter);
 
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStripping) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_2,
                                                              vars.dayCounter);
 
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_2,
                                                              vars.dayCounter);
 
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_1,
                                                              vars.dayCounter);
 
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_1,
                                                              vars.dayCounter);
 
@@ -779,7 +779,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalGivesError) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -806,7 +806,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalModifiedGivesError) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, strikes, vols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalWithPositiveForwards) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurfaceExact>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, strikes, vols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine

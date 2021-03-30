@@ -51,6 +51,7 @@ protected:
     boost::shared_ptr<EquityIndex> equityCurve_;
     boost::shared_ptr<FxIndex> fxIndex_;
     bool isTotalReturn_;
+    bool absoluteReturn_;
     Real dividendFactor_;
 };
 } // namespace QuantExt

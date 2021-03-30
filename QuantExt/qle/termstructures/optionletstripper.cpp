@@ -43,6 +43,7 @@ OptionletStripper::OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTer
     registerWith(Settings::instance().evaluationDate());
 
     Period indexTenor = iborIndex_->tenor();
+    QL_REQUIRE(termVolSurface->optionTenors().size() > 0, "OptionletStripper: No OptionTenors provided.");
     Period maxCapFloorTenor = termVolSurface->optionTenors().back();
 
     // optionlet tenors and capFloor lengths

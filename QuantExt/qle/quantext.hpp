@@ -162,6 +162,7 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/methods/pathgeneratorfactory.hpp>
 #include <qle/models/annuitymapping.hpp>
+#include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cirppconstantfellerparametrization.hpp>
 #include <qle/models/cirppconstantparametrization.hpp>
@@ -181,6 +182,7 @@
 #include <qle/models/eqbsconstantparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/eqbspiecewiseconstantparametrization.hpp>
+#include <qle/models/exactbachelierimpliedvolatility.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
@@ -201,6 +203,9 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/normalsabr.hpp>
+#include <qle/models/normalsabrinterpolation.hpp>
+#include <qle/models/normalsabrsmilesection.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/projectedcrossassetmodel.hpp>
@@ -244,6 +249,7 @@
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/quotes/exceptionquote.hpp>
 #include <qle/quotes/logquote.hpp>
+#include <qle/termstructures/adjusteddefaultcurve.hpp>
 #include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/averagefuturepricehelper.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>

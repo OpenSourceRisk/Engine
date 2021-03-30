@@ -242,8 +242,8 @@
               "EAD",
               "CC"
             ],
-            "abs_tol": null,
-            "rel_tol": 1e-12
+            "abs_tol": 0.05,
+            "rel_tol": null
           }
         ]
       },
@@ -271,6 +271,25 @@
               "NumNominalFlows",
               "Price",
               "Strike"
+            ],
+            "abs_tol": 0.05,
+            "rel_tol": null
+          }
+        ]
+      },
+      "smrc.csv": {
+        "keys": [
+            "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "TradeType",
+                "NettingSet",
+                "NPV",
+                "Notional",
+                "RiskWeight",
+                "SMRC"
             ],
             "abs_tol": null,
             "rel_tol": 1e-12

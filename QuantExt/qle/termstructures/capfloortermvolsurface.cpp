@@ -28,15 +28,14 @@ using std::ostream;
 namespace QuantExt {
 
 // floating reference date, floating market data
-CapFloorTermVolSurface::CapFloorTermVolSurface(Natural settlementDays, const Calendar& calendar,
+CapFloorTermVolSurfaceExact::CapFloorTermVolSurfaceExact(Natural settlementDays, const Calendar& calendar,
                                                BusinessDayConvention bdc, const std::vector<Period>& optionTenors,
                                                const std::vector<Rate>& strikes,
                                                const std::vector<std::vector<Handle<Quote> > >& vols,
                                                const DayCounter& dc, InterpolationMethod interpolationMethod)
-    : CapFloorTermVolatilityStructure(settlementDays, calendar, bdc, dc), nOptionTenors_(optionTenors.size()),
-      optionTenors_(optionTenors), optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_),
-      nStrikes_(strikes.size()), strikes_(strikes), volHandles_(vols), vols_(vols.size(), vols[0].size()),
-      interpolationMethod_(interpolationMethod) {
+    : CapFloorTermVolSurface(settlementDays, calendar, bdc, dc, optionTenors, strikes), nOptionTenors_(optionTenors.size()),
+      optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_), nStrikes_(strikes.size()), volHandles_(vols), 
+      vols_(vols.size(), vols[0].size()), interpolationMethod_(interpolationMethod) {
     checkInputs();
     initializeOptionDatesAndTimes();
     for (Size i = 0; i < nOptionTenors_; ++i)
@@ -51,15 +50,14 @@ CapFloorTermVolSurface::CapFloorTermVolSurface(Natural settlementDays, const Cal
 }
 
 // fixed reference date, floating market data
-CapFloorTermVolSurface::CapFloorTermVolSurface(const Date& settlementDate, const Calendar& calendar,
+CapFloorTermVolSurfaceExact::CapFloorTermVolSurfaceExact(const Date& settlementDate, const Calendar& calendar,
                                                BusinessDayConvention bdc, const std::vector<Period>& optionTenors,
                                                const std::vector<Rate>& strikes,
                                                const std::vector<std::vector<Handle<Quote> > >& vols,
                                                const DayCounter& dc, InterpolationMethod interpolationMethod)
-    : CapFloorTermVolatilityStructure(settlementDate, calendar, bdc, dc), nOptionTenors_(optionTenors.size()),
-      optionTenors_(optionTenors), optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_),
-      nStrikes_(strikes.size()), strikes_(strikes), volHandles_(vols), vols_(vols.size(), vols[0].size()),
-      interpolationMethod_(interpolationMethod) {
+    : CapFloorTermVolSurface(settlementDate, calendar, bdc, dc, optionTenors, strikes), nOptionTenors_(optionTenors.size()),
+      optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_), nStrikes_(strikes.size()), volHandles_(vols), 
+      vols_(vols.size(), vols[0].size()), interpolationMethod_(interpolationMethod) {
     checkInputs();
     initializeOptionDatesAndTimes();
     for (Size i = 0; i < nOptionTenors_; ++i)
@@ -74,13 +72,12 @@ CapFloorTermVolSurface::CapFloorTermVolSurface(const Date& settlementDate, const
 }
 
 // fixed reference date, fixed market data
-CapFloorTermVolSurface::CapFloorTermVolSurface(const Date& settlementDate, const Calendar& calendar,
+CapFloorTermVolSurfaceExact::CapFloorTermVolSurfaceExact(const Date& settlementDate, const Calendar& calendar,
                                                BusinessDayConvention bdc, const std::vector<Period>& optionTenors,
                                                const std::vector<Rate>& strikes, const Matrix& vols,
                                                const DayCounter& dc, InterpolationMethod interpolationMethod)
-    : CapFloorTermVolatilityStructure(settlementDate, calendar, bdc, dc), nOptionTenors_(optionTenors.size()),
-      optionTenors_(optionTenors), optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_),
-      nStrikes_(strikes.size()), strikes_(strikes), volHandles_(vols.rows()), vols_(vols),
+    : CapFloorTermVolSurface(settlementDate, calendar, bdc, dc, optionTenors, strikes), nOptionTenors_(optionTenors.size()),
+      optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_), nStrikes_(strikes.size()), volHandles_(vols.rows()), vols_(vols),
       interpolationMethod_(interpolationMethod) {
     checkInputs();
     initializeOptionDatesAndTimes();
@@ -94,13 +91,13 @@ CapFloorTermVolSurface::CapFloorTermVolSurface(const Date& settlementDate, const
 }
 
 // floating reference date, fixed market data
-CapFloorTermVolSurface::CapFloorTermVolSurface(Natural settlementDays, const Calendar& calendar,
+CapFloorTermVolSurfaceExact::CapFloorTermVolSurfaceExact(Natural settlementDays, const Calendar& calendar,
                                                BusinessDayConvention bdc, const std::vector<Period>& optionTenors,
                                                const std::vector<Rate>& strikes, const Matrix& vols,
                                                const DayCounter& dc, InterpolationMethod interpolationMethod)
-    : CapFloorTermVolatilityStructure(settlementDays, calendar, bdc, dc), nOptionTenors_(optionTenors.size()),
-      optionTenors_(optionTenors), optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_),
-      nStrikes_(strikes.size()), strikes_(strikes), volHandles_(vols.rows()), vols_(vols),
+    : CapFloorTermVolSurface(settlementDays, calendar, bdc, dc, optionTenors, strikes), nOptionTenors_(optionTenors.size()),
+      optionDates_(nOptionTenors_), optionTimes_(nOptionTenors_),
+      nStrikes_(strikes.size()), volHandles_(vols.rows()), vols_(vols),
       interpolationMethod_(interpolationMethod) {
     checkInputs();
     initializeOptionDatesAndTimes();
@@ -113,7 +110,7 @@ CapFloorTermVolSurface::CapFloorTermVolSurface(Natural settlementDays, const Cal
     interpolate();
 }
 
-void CapFloorTermVolSurface::checkInputs() const {
+void CapFloorTermVolSurfaceExact::checkInputs() const {
 
     QL_REQUIRE(!optionTenors_.empty(), "empty option tenor vector");
     QL_REQUIRE(nOptionTenors_ == vols_.rows(), "mismatch between number of option tenors ("
@@ -133,13 +130,13 @@ void CapFloorTermVolSurface::checkInputs() const {
                                               << io::ordinal(j + 1) << " is " << io::rate(strikes_[j]));
 }
 
-void CapFloorTermVolSurface::registerWithMarketData() {
+void CapFloorTermVolSurfaceExact::registerWithMarketData() {
     for (Size i = 0; i < nOptionTenors_; ++i)
         for (Size j = 0; j < nStrikes_; ++j)
             registerWith(volHandles_[i][j]);
 }
 
-void CapFloorTermVolSurface::interpolate() {
+void CapFloorTermVolSurfaceExact::interpolate() {
     if (interpolationMethod_ == BicubicSpline)
         interpolation_ =
             QuantLib::BicubicSpline(strikes_.begin(), strikes_.end(), optionTimes_.begin(), optionTimes_.end(), vols_);
@@ -151,7 +148,7 @@ void CapFloorTermVolSurface::interpolate() {
     }
 }
 
-void CapFloorTermVolSurface::update() {
+void CapFloorTermVolSurfaceExact::update() {
     // recalculate dates if necessary...
     if (moving_) {
         Date d = Settings::instance().evaluationDate();
@@ -160,18 +157,17 @@ void CapFloorTermVolSurface::update() {
             initializeOptionDatesAndTimes();
         }
     }
-    CapFloorTermVolatilityStructure::update();
-    LazyObject::update();
+    CapFloorTermVolSurface::update();    
 }
 
-void CapFloorTermVolSurface::initializeOptionDatesAndTimes() const {
+void CapFloorTermVolSurfaceExact::initializeOptionDatesAndTimes() const {
     for (Size i = 0; i < nOptionTenors_; ++i) {
         optionDates_[i] = optionDateFromTenor(optionTenors_[i]);
         optionTimes_[i] = timeFromReference(optionDates_[i]);
     }
 }
 
-void CapFloorTermVolSurface::performCalculations() const {
+void CapFloorTermVolSurfaceExact::performCalculations() const {
     // check if date recalculation must be called here
 
     for (Size i = 0; i < nOptionTenors_; ++i)
@@ -181,11 +177,11 @@ void CapFloorTermVolSurface::performCalculations() const {
     interpolation_.update();
 }
 
-ostream& operator<<(ostream& out, CapFloorTermVolSurface::InterpolationMethod method) {
+ostream& operator<<(ostream& out, CapFloorTermVolSurfaceExact::InterpolationMethod method) {
     switch (method) {
-    case CapFloorTermVolSurface::BicubicSpline:
+    case CapFloorTermVolSurfaceExact::BicubicSpline:
         return out << "BicubicSpline";
-    case CapFloorTermVolSurface::Bilinear:
+    case CapFloorTermVolSurfaceExact::Bilinear:
         return out << "Bilinear";
     default:
         QL_FAIL("Unknown CapFloorTermVolSurface::InterpolationMethod (" << Integer(method) << ")");
