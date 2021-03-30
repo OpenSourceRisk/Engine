@@ -507,7 +507,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     if (!initialPriceCurrency_.empty())
         XMLUtils::addChild(doc, node, "InitialPriceCurrency", initialPriceCurrency_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
-
+    
     if (valuationSchedule_.hasData()) {
         XMLNode* schedNode = valuationSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule");
@@ -1548,6 +1548,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
+    bool isAbsoluteReturn = eqLegData->returnType() == "Absolute";
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
     bool initialPriceIsInTargetCcy = false;
@@ -1592,6 +1593,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentAdjustment(bdc)
                   .withPaymentLag(paymentLag)
                   .withTotalReturn(isTotalReturn)
+                  .withAbsoluteReturn(isAbsoluteReturn)
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)
                   .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)

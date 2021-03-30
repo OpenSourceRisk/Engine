@@ -91,7 +91,35 @@ struct YoYInflationCurveCalibrationInfo : public InflationCurveCalibrationInfo {
     std::vector<double> yoyRates;
 };
 
-// ... add more curve types here
+// fx, eq vols
+
+struct FxEqVolCalibrationInfo {
+    virtual ~FxEqVolCalibrationInfo() {}
+    std::string dayCounter;
+    std::string calendar;
+    std::string atmType;
+    std::string deltaType;
+    std::string longTermAtmType;
+    std::string longTermDeltaType;
+    std::string switchTenor;
+    bool isArbitrageFree;
+    std::vector<QuantLib::Date> expiryDates;
+    std::vector<double> times;
+    std::vector<std::string> deltas;
+    std::vector<double> moneyness;
+    std::vector<double> forwards;
+    std::vector<std::vector<double>> moneynessGridStrikes;
+    std::vector<std::vector<double>> moneynessGridProb;
+    std::vector<std::vector<double>> moneynessGridImpliedVolatility;
+    std::vector<std::vector<double>> deltaGridStrikes;
+    std::vector<std::vector<double>> deltaGridProb;
+    std::vector<std::vector<double>> deltaGridImpliedVolatility;
+    std::vector<std::vector<bool>> moneynessGridCallSpreadArbitrage;
+    std::vector<std::vector<bool>> moneynessGridButterflyArbitrage;
+    std::vector<std::vector<bool>> moneynessGridCalendarArbitrage;
+    std::vector<std::vector<bool>> deltaGridCallSpreadArbitrage;
+    std::vector<std::vector<bool>> deltaGridButterflyArbitrage;
+};
 
 // main container
 
@@ -103,7 +131,10 @@ struct TodaysMarketCalibrationInfo {
     std::map<std::string, boost::shared_ptr<YieldCurveCalibrationInfo>> dividendCurveCalibrationInfo;
     // inflation curves
     std::map<std::string, boost::shared_ptr<InflationCurveCalibrationInfo>> inflationCurveCalibrationInfo;
-    // ...
+    // fx vols
+    std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> fxVolCalibrationInfo;
+    // eq vols
+    std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> eqVolCalibrationInfo;
 };
 
 } // namespace data

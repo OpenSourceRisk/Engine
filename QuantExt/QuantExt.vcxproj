@@ -634,6 +634,7 @@
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\models\annuitymapping.hpp" />
+    <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
     <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp" />
     <ClInclude Include="qle\models\cirppconstantparametrization.hpp" />
@@ -653,6 +654,7 @@
     <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
     <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
+    <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp" />
     <ClInclude Include="qle\models\fxbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxbsparametrization.hpp" />
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp" />
@@ -673,6 +675,9 @@
     <ClInclude Include="qle\models\lgmimpliedyieldtermstructure.hpp" />
     <ClInclude Include="qle\models\linearannuitymapping.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
+    <ClInclude Include="qle\models\normalsabr.hpp" />
+    <ClInclude Include="qle\models\normalsabrinterpolation.hpp" />
+    <ClInclude Include="qle\models\normalsabrsmilesection.hpp" />
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
     <ClInclude Include="qle\models\projectedcrossassetmodel.hpp" />
@@ -926,6 +931,7 @@
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\annuitymapping.cpp" />
+    <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp" />
     <ClCompile Include="qle\models\cdsoptionhelper.cpp" />
     <ClCompile Include="qle\models\cirppimplieddefaulttermstructure.cpp" />
     <ClCompile Include="qle\models\cmscaphelper.cpp" />
@@ -940,6 +946,7 @@
     <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp" />
     <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp" />
+    <ClCompile Include="qle\models\exactbachelierimpliedvolatility.cpp" />
     <ClCompile Include="qle\models\fxbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\fxbsparametrization.cpp" />
     <ClCompile Include="qle\models\fxbspiecewiseconstantparametrization.cpp" />
@@ -954,6 +961,8 @@
     <ClCompile Include="qle\models\lgmimpliedyieldtermstructure.cpp" />
     <ClCompile Include="qle\models\linearannuitymapping.cpp" />
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
+    <ClCompile Include="qle\models\normalsabr.cpp" />
+    <ClCompile Include="qle\models\normalsabrsmilesection.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
     <ClCompile Include="qle\models\yoycapfloorhelper.cpp" />
