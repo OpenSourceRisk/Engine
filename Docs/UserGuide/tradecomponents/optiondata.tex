@@ -65,11 +65,13 @@ The meaning of Call and Put values depend on the trade type and asset class of t
 Equity/ Commodity/Bond Option & \emph{Call}: The right to buy the underlying equity/commodity/bond at the strike price.
 \newline \emph{Put}: The right to sell the underlying equity/commodity/bond at the strike price. \\  \hline
  IR Swaption, CallableSwap, Commodity Swaption&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined by the  \lstinline!Payer! fields in the Leg Data nodes of the underlying swap. \\ \hline
-FX Options (all variants, except Digital, Asian) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
+FX Options (all variants, except Touch, Digital, Asian) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node. Note that barriers are not switched / unaffected. \\ \hline
 Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field is optional. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection. \\ \hline
 Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency at the strike price.  \newline \emph{Put}: The right to sell/pay  the underlying currency at the strike price.   \\ \hline
 Digital FX Options &  \emph{Call}: The digital payout will occur if the fx rate at the expiry date is above the givenstrike, \newline \emph{Put}: The digital payout will occur if the fx rate at the expiry date is below the given strike.   \\ \hline
+FX Single Touch Options &  The OptionType should be \emph{Call} for Up and \emph{Put} for Down barrier types - this is used to check whether the barrier has been hit in the past.   \\ \hline
+FX Double Touch Options &  \emph{Call/Put} values are ignored, and the OptionType field is optional.  \\ \hline
 
   \end{tabu}
   \caption{Specification of Option Type Call / Put}
