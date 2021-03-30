@@ -165,6 +165,7 @@ processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
+termstructures/averageoffpeakpowerhelper.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/averagespotpricehelper.cpp
 termstructures/basistwoswaphelper.cpp
@@ -478,6 +479,7 @@ quotes/logquote.hpp
 termstructures/adjusteddefaultcurve.hpp
 termstructures/aposurface.hpp
 termstructures/averagefuturepricehelper.hpp
+termstructures/averageoffpeakpowerhelper.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/averagespotpricehelper.hpp
 termstructures/basistwoswaphelper.hpp

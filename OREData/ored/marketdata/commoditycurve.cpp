@@ -23,6 +23,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/termstructures/averagefuturepricehelper.hpp>
+#include <qle/termstructures/averageoffpeakpowerhelper.hpp>
 #include <qle/termstructures/averagespotpricehelper.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
@@ -35,11 +36,13 @@
 #include <regex>
 
 using QuantExt::AverageFuturePriceHelper;
+using QuantExt::AverageOffPeakPowerHelper;
 using QuantExt::AverageSpotPriceHelper;
 using QuantExt::FutureExpiryCalculator;
 using QuantExt::FuturePriceHelper;
 using QuantExt::CommodityAverageBasisPriceCurve;
 using QuantExt::CommodityBasisPriceCurve;
+using QuantExt::CommodityIndex;
 using QuantExt::CommoditySpotIndex;
 using QuantExt::CrossCurrencyPriceTermStructure;
 using QuantExt::CubicFlat;
@@ -112,7 +115,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         } else if (config->type() == CommodityCurveConfig::Type::Piecewise) {
 
             // We have a piecewise commodity configuration
-            buildPiecewiseCurve(asof, *config, conventions, loader);
+            buildPiecewiseCurve(asof, *config, conventions, loader, commodityCurves);
 
         } else {
 
@@ -382,7 +385,8 @@ template<class I> using Crv = QuantExt::PiecewisePriceCurve<I, QuantExt::Iterati
 template<class C> using BS = QuantExt::IterativeBootstrap<C>;
 
 void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveConfig& config,
-    const Conventions& conventions, const Loader& loader) {
+    const Conventions& conventions, const Loader& loader,
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves) {
 
     LOG("CommodityCurve: start building commodity piecewise curve.");
 
@@ -392,7 +396,8 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
     const auto& priceSegments = config.priceSegments();
     QL_REQUIRE(!priceSegments.empty(), "CommodityCurve: need at least one price segment to build piecewise curve.");
     for (const auto& kv : priceSegments) {
-        addInstruments(asof, loader, config.curveID(), kv.second, conventions, mpInstruments);
+        addInstruments(asof, loader, config.curveID(), config.currency(), kv.second,
+            conventions, commodityCurves, mpInstruments);
     }
 
     // Populate the vector of helpers.
@@ -508,11 +513,85 @@ CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector
 }
 
 void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, const string& configId,
-    const PriceSegment& priceSegment, const Conventions& conventions,
+    const string& currency, const PriceSegment& priceSegment, const Conventions& conventions,
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
     map<Date, boost::shared_ptr<Helper>>& instruments) {
 
     // Get the relevant quotes
     auto quotes = getQuotes(asof, configId, priceSegment.quotes(), loader);
+
+    using PST = PriceSegment::Type;
+    using AD = CommodityFutureConvention::AveragingData;
+    PST type = priceSegment.type();
+
+    // Pre-populate some variables if averaging segment.
+    boost::shared_ptr<CommodityFutureConvention> convention;
+    AD ad;
+    boost::shared_ptr<CommodityIndex> index;
+    boost::shared_ptr<FutureExpiryCalculator> uFec;
+    if (type == PST::AveragingFuture || type == PST::AveragingSpot || type == PST::AveragingOffPeakPower) {
+
+        // Get the associated averaging commodity future convention.
+        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+            conventions.get(priceSegment.conventionsId()));
+        QL_REQUIRE(convention, "Convention " << priceSegment.conventionsId() <<
+            " not of expected type CommodityFutureConvention.");
+
+        ad = convention->averagingData();
+        QL_REQUIRE(!ad.empty(), "CommodityCurve: convention " << convention->id() <<
+            " should have non-empty averaging data for piecewise price curve construction.");
+
+        // The commodity index for which we are building a price curve.
+        index = parseCommodityIndex(ad.commodityName(), conventions, false);
+
+        // If referencing a future, we need conventions for the underlying future that is being averaged.
+        if (type == PST::AveragingFuture || type == PST::AveragingOffPeakPower) {
+
+            auto uConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                conventions.get(ad.conventionsId()));
+            QL_REQUIRE(uConvention, "Convention " << priceSegment.conventionsId() <<
+                " not of expected type CommodityFutureConvention.");
+            uFec = boost::make_shared<ConventionsBasedFutureExpiry>(*uConvention);
+
+            if (ad.dailyExpiryOffset() != Null<Natural>() && ad.dailyExpiryOffset() > 0) {
+                QL_REQUIRE(uConvention->contractFrequency() == Daily, "CommodityCurve: the averaging data has" <<
+                    " a positive DailyExpiryOffset (" << ad.dailyExpiryOffset() << ") but the underlying future" <<
+                    " contract frequency is not daily (" << uConvention->contractFrequency() << ").");
+            }
+        }
+
+    }
+
+    // Pre-populate some variables if the price segment is AveragingOffPeakPower.
+    boost::shared_ptr<CommodityIndex> peakIndex;
+    Natural peakHoursPerDay = 16;
+    Calendar peakCalendar;
+    if (type == PST::AveragingOffPeakPower) {
+
+        // Look up the peak price curve in the commodityCurves map
+        const string& ppId = priceSegment.peakPriceCurveId();
+        QL_REQUIRE(!ppId.empty(), "CommodityCurve: AveragingOffPeakPower segment in " <<
+            " curve configuration " << configId << " does not provide a peak price curve ID.");
+        CommodityCurveSpec ccSpec(currency, ppId);
+        DLOG("Looking for peak price curve with id, " << ppId << ", and spec, " << ccSpec << ".");
+        auto itCc = commodityCurves.find(ccSpec.name());
+        QL_REQUIRE(itCc != commodityCurves.end(), "Can't find peak price curve with id " << ppId);
+        auto peakPts = Handle<PriceTermStructure>(itCc->second->commodityPriceCurve());
+
+        // Create the daily peak price index linked to the peak price term structure.
+        peakIndex = boost::make_shared<CommodityIndex>(ppId, Date(), NullCalendar(), true, peakPts);
+
+        // Calendar defining the peak business days.
+        peakCalendar = parseCalendar(priceSegment.peakPriceCalendar());
+
+        // Look up the conventions for the peak price commodity to determine peak hours per day.
+        if (conventions.has(ppId)) {
+            auto peakConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(ppId));
+            if (peakConvention && peakConvention->hoursPerDay() != Null<Natural>()) {
+                peakHoursPerDay = peakConvention->hoursPerDay();
+            }
+        }
+    }
 
     // Add an instrument for each relevant quote.
     for (const auto& quote : quotes) {
@@ -529,11 +608,6 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
             continue;
         }
 
-        using PST = PriceSegment::Type;
-        using AD = CommodityFutureConvention::AveragingData;
-        using ADCP = AD::CalculationPeriod;
-
-        PST type = priceSegment.type();
         switch (type) {
         case PST::Future:
             if (instruments.count(expiry) == 0) {
@@ -546,19 +620,11 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
 
         // An averaging future referencing an underlying future or spot. Setup is similar.
         case PST::AveragingFuture:
-        case PST::AveragingSpot: {
-
-            // Get the associated averaging commodity future convention.
-            auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
-                conventions.get(priceSegment.conventionsId()));
-            QL_REQUIRE(convention, "Convention " << priceSegment.conventionsId() <<
-                " not of expected type CommodityFutureConvention.");
-
-            const AD& ad = convention->averagingData();
-            QL_REQUIRE(!ad.empty(), "CommodityCurve: convention " << convention->id() <<
-                " should have non-empty averaging data for piecewise price curve construction.");
+        case PST::AveragingSpot:
+        case PST::AveragingOffPeakPower: {
 
             // Determine the calculation period.
+            using ADCP = AD::CalculationPeriod;
             Date start;
             Date end;
             if (ad.period() == ADCP::ExpiryToExpiry) {
@@ -577,32 +643,22 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
                 start = Date(1, end.month(), end.year());
             }
 
-            // If referencing a future, we need conventions for the underlying future that is being averaged.
-            boost::shared_ptr<FutureExpiryCalculator> uFec;
-            if (type == PST::AveragingFuture) {
-                auto uConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
-                    conventions.get(ad.conventionsId()));
-                QL_REQUIRE(uConvention, "Convention " << priceSegment.conventionsId() <<
-                    " not of expected type CommodityFutureConvention.");
-                uFec = boost::make_shared<ConventionsBasedFutureExpiry>(*uConvention);
-
-                if (ad.dailyExpiryOffset() != Null<Natural>() && ad.dailyExpiryOffset() > 0) {
-                    QL_REQUIRE(uConvention->contractFrequency() == Daily, "CommodityCurve: the averaging data has" <<
-                        " a positive DailyExpiryOffset (" << ad.dailyExpiryOffset() << ") but the underlying future" <<
-                        " contract frequency is not daily (" << uConvention->contractFrequency() << ").");
-                }
+            boost::shared_ptr<Helper> helper;
+            if (type == PST::AveragingOffPeakPower) {
+                TLOG("Building average off-peak power helper from quote, " << quote->name() << ".");
+                helper = boost::make_shared<AverageOffPeakPowerHelper>(quote->quote(), index, start,
+                    end, uFec, peakIndex, peakCalendar, peakHoursPerDay);
+            } else {
+                TLOG("Building average future price helper from quote, " << quote->name() << ".");
+                helper = boost::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
+                    ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays(),
+                    ad.dailyExpiryOffset());
             }
 
-            // Build the instrument.
-            auto index = parseCommodityIndex(ad.commodityName(), conventions, false);
-            auto afph = boost::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
-                ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays(),
-                ad.dailyExpiryOffset());
-
             // Only add to instruments if an instrument with the same pillar date is not there already.
-            Date pillar = afph->pillarDate();
+            Date pillar = helper->pillarDate();
             if (instruments.count(pillar) == 0) {
-                instruments[pillar] = afph;
+                instruments[pillar] = helper;
             } else {
                 TLOG("Skipping quote, " << quote->name() << ", because an instrument with its pillar date, " <<
                     io::iso_date(pillar) << ", is already in the instrument set.");

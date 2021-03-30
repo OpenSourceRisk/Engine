@@ -1065,6 +1065,9 @@
     <ClInclude Include="qle\indexes\decpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1824,6 +1827,9 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\compoequityindex.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averageoffpeakpowerhelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
