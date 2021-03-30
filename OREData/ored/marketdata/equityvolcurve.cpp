@@ -35,6 +35,7 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
@@ -81,6 +82,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 buildVolatility(asof, config, *vssc, loader, eqIndex);
             } else if (auto vmsc = boost::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
                 buildVolatility(asof, config, *vmsc, loader, eqIndex);
+            } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
+                buildVolatility(asof, config, *vdsc, loader, eqIndex);
             } else {
                 QL_FAIL("Unexpected VolatilityConfig in EquityVolatilityConfig");
             }
@@ -715,6 +718,234 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     vol_->enableExtrapolation(vmsc.extrapolation());
 
     LOG("EquityVolCurve: finished building 2-D volatility moneyness strike surface");
+}
+
+void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
+                                     const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
+                                     const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex) {
+
+    using boost::adaptors::transformed;
+    using boost::algorithm::join;
+
+    LOG("EquityVolCurve: start building 2-D volatility delta strike surface");
+
+    QL_REQUIRE(vc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "EquityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for a 2-D volatility delta strike surface.");
+
+    // Parse, sort and check the vector of configured put deltas
+    vector<Real> putDeltas = parseVectorOfValues<Real>(vdsc.putDeltas(), &parseReal);
+    sort(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
+    QL_REQUIRE(adjacent_find(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
+        putDeltas.end(),
+        "The configured put deltas contain duplicates");
+    DLOG("Parsed " << putDeltas.size() << " unique configured put deltas");
+    DLOG("Put deltas are: " << join(putDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
+
+    // Parse, sort descending and check the vector of configured call deltas
+    vector<Real> callDeltas = parseVectorOfValues<Real>(vdsc.callDeltas(), &parseReal);
+    sort(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return !close(x, y) && x > y; });
+    QL_REQUIRE(adjacent_find(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
+        callDeltas.end(),
+        "The configured call deltas contain duplicates");
+    DLOG("Parsed " << callDeltas.size() << " unique configured call deltas");
+    DLOG("Call deltas are: " << join(callDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
+
+    // Expiries may be configured with a wildcard or given explicitly
+    bool expWc = false;
+    if (find(vdsc.expiries().begin(), vdsc.expiries().end(), "*") != vdsc.expiries().end()) {
+        expWc = true;
+        QL_REQUIRE(vdsc.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
+        DLOG("Have expiry wildcard pattern " << vdsc.expiries()[0]);
+    }
+
+    // Map to hold the rows of the equity volatility matrix. The keys are the expiry dates and the values are the
+    // vectors of volatilities, one for each configured delta.
+    map<Date, vector<Real>> surfaceData;
+
+    // Number of strikes = number of put deltas + ATM + number of call deltas
+    Size numStrikes = putDeltas.size() + 1 + callDeltas.size();
+
+    // Count the number of quotes added. We check at the end that we have added all configured quotes.
+    Size quotesAdded = 0;
+
+    // Configured delta and Atm types.
+    DeltaVolQuote::DeltaType deltaType = parseDeltaType(vdsc.deltaType());
+    DeltaVolQuote::AtmType atmType = parseAtmType(vdsc.atmType());
+    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
+    if (!vdsc.atmDeltaType().empty()) {
+        atmDeltaType = parseDeltaType(vdsc.atmDeltaType());
+    }
+
+    // Populate the configured strikes.
+    vector<boost::shared_ptr<BaseStrike>> strikes;
+    for (const auto& pd : putDeltas) {
+        strikes.push_back(boost::make_shared<DeltaStrike>(deltaType, Option::Put, pd));
+    }
+    strikes.push_back(boost::make_shared<AtmStrike>(atmType, atmDeltaType));
+    for (const auto& cd : callDeltas) {
+        strikes.push_back(boost::make_shared<DeltaStrike>(deltaType, Option::Call, cd));
+    }
+
+    // Read the quotes to fill the expiry dates and vols matrix.
+    for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+
+        // Go to next quote if the market data point's date does not equal our asof.
+        if (md->asofDate() != asof)
+            continue;
+
+        // Go to next quote if not a commodity option quote.
+        auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+        if (!q)
+            continue;
+
+        // Go to next quote if not a equity name or currency do not match config.
+        if (vc.curveID() != q->eqName() || vc.ccy() != q->ccy())
+            continue;
+
+        // Iterator to one of the configured strikes.
+        vector<boost::shared_ptr<BaseStrike>>::iterator strikeIt;
+
+        if (!expWc) {
+
+            // If we have explicitly configured expiries and the quote is not in the configured quotes continue.
+            auto it = find(vc.quotes().begin(), vc.quotes().end(), q->name());
+            if (it == vc.quotes().end())
+                continue;
+
+            // Check if quote's strike is in the configured strikes.
+            // It should be as we have selected from the explicitly configured quotes in the last step.
+            strikeIt = find_if(strikes.begin(), strikes.end(),
+                [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+            QL_REQUIRE(strikeIt != strikes.end(),
+                "The quote '"
+                << q->name()
+                << "' is in the list of configured quotes but does not match any of the configured strikes");
+
+        } else {
+
+            // Check if quote's strike is in the configured strikes and continue if it is not.
+            strikeIt = find_if(strikes.begin(), strikes.end(),
+                [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+            if (strikeIt == strikes.end())
+                continue;
+        }
+
+        // Position of quote in vector of strikes
+        Size pos = std::distance(strikes.begin(), strikeIt);
+
+        // Process the quote
+        Date eDate;
+        boost::shared_ptr<Expiry> expiry = parseExpiry(q->expiry());
+        if (auto expiryDate = boost::dynamic_pointer_cast<ExpiryDate>(expiry)) {
+            eDate = expiryDate->expiryDate();
+        } else if (auto expiryPeriod = boost::dynamic_pointer_cast<ExpiryPeriod>(expiry)) {
+            // We may need more conventions here eventually.
+            eDate = calendar_.adjust(asof + expiryPeriod->expiryPeriod());
+        }
+
+        // Add quote to surface
+        if (surfaceData.count(eDate) == 0)
+            surfaceData[eDate] = vector<Real>(numStrikes, Null<Real>());
+
+        QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
+            "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
+            << " and strike " << *q->strike());
+        surfaceData[eDate][pos] = q->quote()->value();
+        quotesAdded++;
+
+        TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
+            << setprecision(9) << "," << q->quote()->value() << ")");
+    }
+
+    LOG("EquityVolCurve: added " << quotesAdded << " quotes in building delta strike surface.");
+
+    // Check the data gathered.
+    if (!expWc) {
+        // If expiries were configured explicitly, the number of configured quotes should equal the
+        // number of quotes added.
+        QL_REQUIRE(vc.quotes().size() == quotesAdded,
+            "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
+    } else {
+        // If the expiries were configured via a wildcard, check that no surfaceData element has a Null<Real>().
+        for (const auto& kv : surfaceData) {
+            for (Size j = 0; j < numStrikes; j++) {
+                QL_REQUIRE(kv.second[j] != Null<Real>(), "Volatility for expiry date "
+                    << io::iso_date(kv.first) << " and strike " << *strikes[j]
+                    << " not found. Cannot proceed with a sparse matrix.");
+            }
+        }
+    }
+
+    // Populate the matrix of volatilities and the expiry dates.
+    vector<Date> expiryDates;
+    Matrix vols(surfaceData.size(), numStrikes);
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
+        expiryDates.push_back(row.value().first);
+        copy(row.value().second.begin(), row.value().second.end(), vols.row_begin(row.index()));
+    }
+
+    // Need to multiply each put delta value by -1 before passing it to the BlackVolatilitySurfaceDelta ctor
+    // i.e. a put delta of 0.25 that is passed in to the config must be -0.25 when passed to the ctor.
+    transform(putDeltas.begin(), putDeltas.end(), putDeltas.begin(), [](Real pd) { return -1.0 * pd; });
+    DLOG("Multiply put deltas by -1.0 before creating BlackVolatilitySurfaceDelta object.");
+    DLOG("Put deltas are: " << join(putDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
+
+    // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
+    // BlackVolatilitySurfaceDelta time extrapolation is hard-coded to constant in volatility.
+    bool flatExtrapolation = true;
+    if (vdsc.extrapolation()) {
+
+        auto strikeExtrapType = parseExtrapolation(vdsc.strikeExtrapolation());
+        if (strikeExtrapType == Extrapolation::UseInterpolator) {
+            DLOG("Strike extrapolation switched to using interpolator.");
+            flatExtrapolation = false;
+        } else if (strikeExtrapType == Extrapolation::None) {
+            DLOG("Strike extrapolation cannot be turned off on its own so defaulting to flat.");
+        } else if (strikeExtrapType == Extrapolation::Flat) {
+            DLOG("Strike extrapolation has been set to flat.");
+        } else {
+            DLOG("Strike extrapolation " << strikeExtrapType << " not expected so default to flat.");
+        }
+
+        auto timeExtrapType = parseExtrapolation(vdsc.timeExtrapolation());
+        if (timeExtrapType != Extrapolation::Flat) {
+            DLOG("BlackVolatilitySurfaceDelta only supports flat volatility extrapolation in the time direction");
+        }
+    } else {
+        DLOG("Extrapolation is turned off for the whole surface so the time and"
+            << " strike extrapolation settings are ignored");
+    }
+
+    // Time interpolation
+    if (vdsc.timeInterpolation() != "Linear") {
+        DLOG("BlackVolatilitySurfaceDelta only supports linear time interpolation.");
+    }
+
+    // Strike interpolation
+    InterpolatedSmileSection::InterpolationMethod im;
+    if (vdsc.strikeInterpolation() == "Linear") {
+        im = InterpolatedSmileSection::InterpolationMethod::Linear;
+    } else if (vdsc.strikeInterpolation() == "NaturalCubic") {
+        im = InterpolatedSmileSection::InterpolationMethod::NaturalCubic;
+    } else if (vdsc.strikeInterpolation() == "FinancialCubic") {
+        im = InterpolatedSmileSection::InterpolationMethod::FinancialCubic;
+    } else {
+        im = InterpolatedSmileSection::InterpolationMethod::Linear;
+        DLOG("BlackVolatilitySurfaceDelta does not support strike interpolation '" << vdsc.strikeInterpolation()
+            << "' so setting it to linear.");
+    }
+
+    DLOG("Creating BlackVolatilitySurfaceDelta object");
+    bool hasAtm = true;
+    vol_ = boost::make_shared<BlackVolatilitySurfaceDelta>(
+        asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
+        eqIndex->equityDividendCurve(), deltaType, atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatExtrapolation);
+
+    DLOG("Setting BlackVolatilitySurfaceDelta extrapolation to " << to_string(vdsc.extrapolation()));
+    vol_->enableExtrapolation(vdsc.extrapolation());
+
+    LOG("EquityVolCurve: finished building 2-D volatility delta strike surface");
+
 }
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,

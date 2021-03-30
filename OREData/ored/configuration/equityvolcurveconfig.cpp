@@ -152,7 +152,7 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
             volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
-            QL_FAIL("DeltaSurface not currently supported for equity volatilities.");
+            volatilityConfig_ = boost::make_shared<VolatilityDeltaSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
             volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
