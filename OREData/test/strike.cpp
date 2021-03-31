@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeNoDeltaEquality) {
     vector<boost::shared_ptr<BaseStrike>> strikes;
     strikes.push_back(boost::make_shared<AtmStrike>(atmType, atmDeltaType));
     strikes.push_back(boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd));
-    BOOST_REQUIRE(*strikes[0] == *strikes[1]);
+    BOOST_CHECK(*strikes[0] == *strikes[1]);
 }
 
 BOOST_AUTO_TEST_CASE(testAtmStrikeWithDelta) {
