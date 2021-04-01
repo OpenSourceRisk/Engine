@@ -156,6 +156,54 @@ public:
     //@}
 };
 
+class IRUnderlying : public Underlying {
+public:
+    //! Default Constructor
+    explicit IRUnderlying() : Underlying() { setType("IR"); };
+
+    //! Constructor with identifer infomation
+    IRUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+        : Underlying(type, name, weight){};
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+};
+
+class INFUnderlying : public Underlying {
+public:
+    //! Default Constructor
+    explicit INFUnderlying() : Underlying() { setType("INF"); };
+
+    //! Constructor with identifer infomation
+    INFUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+        : Underlying(type, name, weight){};
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+};
+
+class CRUnderlying : public Underlying {
+public:
+    //! Default Constructor
+    explicit CRUnderlying() : Underlying() { setType("CR"); };
+
+    //! Constructor with identifer infomation
+    CRUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+        : Underlying(type, name, weight){};
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+};
+
 class UnderlyingBuilder : public XMLSerializable {
 public:
     explicit UnderlyingBuilder(const std::string& nodeName = "Underlying",

@@ -167,6 +167,75 @@ XMLNode* FXUnderlying::toXML(XMLDocument& doc) {
     return node;
 }
 
+void IRUnderlying::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
+        name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
+        Underlying::fromXML(node);
+        isBasic_ = false;
+    } else {
+        QL_FAIL("Need either a Name or Underlying node for IRUnderlying.");
+    }
+    setType("IR");
+}
+
+XMLNode* IRUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node;
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+    }
+    return node;
+}
+
+void INFUnderlying::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
+        name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
+        Underlying::fromXML(node);
+        isBasic_ = false;
+    } else {
+        QL_FAIL("Need either a Name or Underlying node for INFUnderlying.");
+    }
+    setType("INF");
+}
+
+XMLNode* CRUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node;
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+    }
+    return node;
+}
+
+void CRUnderlying::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
+        name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
+        Underlying::fromXML(node);
+        isBasic_ = false;
+    } else {
+        QL_FAIL("Need either a Name or Underlying node for CRUnderlying.");
+    }
+    setType("CR");
+}
+
+XMLNode* INFUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node;
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+    }
+    return node;
+}
+
 void UnderlyingBuilder::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         underlying_ = boost::make_shared<BasicUnderlying>();
@@ -178,6 +247,12 @@ void UnderlyingBuilder::fromXML(XMLNode* node) {
             underlying_ = boost::make_shared<CommodityUnderlying>();
         else if (type == "FX")
             underlying_ = boost::make_shared<FXUnderlying>();
+        else if (type == "IR")
+            underlying_ = boost::make_shared<IRUnderlying>();
+        else if (type == "INF")
+            underlying_ = boost::make_shared<INFUnderlying>();
+        else if (type == "CR")
+            underlying_ = boost::make_shared<CRUnderlying>();
         else {
             QL_FAIL("Unknown Underlying type " << type);
         }
