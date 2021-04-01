@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -32,6 +33,7 @@
 #include <qle/indexes/ibor/czkpribor.hpp>
 #include <qle/indexes/ibor/demlibor.hpp>
 #include <qle/indexes/ibor/dkkcibor.hpp>
+#include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
 #include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
@@ -52,6 +54,7 @@
 #include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
+#include <qle/indexes/ibor/sekstina.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
@@ -92,6 +95,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
         { CZKPribor(pd), "CZK-PRIBOR", CzechRepublic().name(), CZKCurrency().name() },
         { DKKCibor(pd), "DKK-CIBOR", Denmark().name(), DKKCurrency().name() },
+        { DKKCita(), "DKK-CITA", Denmark().name(), DKKCurrency().name() },
         { DKKOis(), "DKK-DKKOIS", Denmark().name(), DKKCurrency().name() },
         { HKDHibor(pd), "HKD-HIBOR", HongKong().name(), HKDCurrency().name() },
         { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
@@ -105,6 +109,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
         { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
         { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
+        { SEKStina(), "SEK-STINA", Sweden().name(), SEKCurrency().name() },
         { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
         { SGDSibor(pd), "SGD-SIBOR", Singapore().name(), SGDCurrency().name() },
         { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
