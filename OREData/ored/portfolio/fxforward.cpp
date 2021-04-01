@@ -92,7 +92,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = soldCurrency_;
     notional_ = Null<Real>(); // soldAmount_;
     notionalCurrency_ = "";   // soldCurrency_;
-    maturity_ = maturityDate;
+    maturity_ = std::max(payDate, maturityDate);
 
     // Set up Legs
     legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},
