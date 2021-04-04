@@ -20,7 +20,6 @@
 
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
-
 namespace QuantExt {
 
 DiscountingFxForwardEngine::DiscountingFxForwardEngine(
@@ -71,7 +70,7 @@ void DiscountingFxForwardEngine::calculate() const {
     QL_REQUIRE(currency1Discountcurve_->referenceDate() == currency2Discountcurve_->referenceDate(),
                "Term structures should have the same reference date.");
 
-    QL_REQUIRE(arguments_.maturityDate >= currency1Discountcurve_->referenceDate(),
+    QL_REQUIRE(arguments_.payDate >= currency1Discountcurve_->referenceDate(),
                "FX forward maturity should exceed or equal the "
                "discount curve reference date.");
 
@@ -81,7 +80,7 @@ void DiscountingFxForwardEngine::calculate() const {
     results_.additionalResults["ccy1"] = ccy1_.code();
     results_.additionalResults["ccy2"] = ccy2_.code();
 
-    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
         Real disc1far = currency1Discountcurve_->discount(arguments_.payDate);
         Real disc2near = currency2Discountcurve_->discount(npvDate);
