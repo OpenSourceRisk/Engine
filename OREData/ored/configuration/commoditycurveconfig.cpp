@@ -29,8 +29,9 @@ namespace data {
 PriceSegment::PriceSegment() : empty_(true), type_(Type::Future) {}
 
 PriceSegment::PriceSegment(const string& type, const string& conventionsId, const vector<string>& quotes,
-    const boost::optional<unsigned short>& priority)
-    : strType_(type), conventionsId_(conventionsId), quotes_(quotes), priority_(priority), empty_(false),
+    const boost::optional<unsigned short>& priority, const string& peakPriceCurveId, const string& peakPriceCalendar)
+    : strType_(type), conventionsId_(conventionsId), quotes_(quotes), priority_(priority),
+      peakPriceCurveId_(peakPriceCurveId), peakPriceCalendar_(peakPriceCalendar), empty_(false),
       type_(parsePriceSegmentType(strType_)) {}
 
 PriceSegment::Type PriceSegment::type() const {
@@ -49,6 +50,14 @@ const boost::optional<unsigned short>& PriceSegment::priority() const {
     return priority_;
 }
 
+const string& PriceSegment::peakPriceCurveId() const {
+    return peakPriceCurveId_;
+}
+
+const string& PriceSegment::peakPriceCalendar() const {
+    return peakPriceCalendar_;
+}
+
 bool PriceSegment::empty() const {
     return empty_;
 }
@@ -64,6 +73,9 @@ void PriceSegment::fromXML(XMLNode* node) {
         priority_ = parseInteger(XMLUtils::getNodeValue(n));
     }
 
+    peakPriceCurveId_ = XMLUtils::getChildValue(node, "PeakPriceCurveId", false);
+    peakPriceCalendar_ = XMLUtils::getChildValue(node, "PeakPriceCalendar", false);
+
     empty_ = false;
     type_ = parsePriceSegmentType(strType_);
 }
@@ -77,6 +89,12 @@ XMLNode* PriceSegment::toXML(XMLDocument& doc) {
     }
     XMLUtils::addChild(doc, node, "Conventions", conventionsId_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
+    if (!peakPriceCurveId_.empty()) {
+        XMLUtils::addChild(doc, node, "PeakPriceCurveId", peakPriceCurveId_);
+    }
+    if (!peakPriceCalendar_.empty()) {
+        XMLUtils::addChild(doc, node, "PeakPriceCalendar", peakPriceCalendar_);
+    }
 
     return node;
 }
@@ -268,6 +286,13 @@ void CommodityCurveConfig::processSegments(std::vector<PriceSegment> priceSegmen
     // add to the priceSegments_ map. What remains in priceSegments are price segments without a priority.
     auto it = priceSegments.begin();
     while (it != priceSegments.end()) {
+
+        // If price segment is AveragingOffPeakPower, need a peak power curve Id.
+        if (it->type() == PriceSegment::Type::AveragingOffPeakPower) {
+            QL_REQUIRE(!it->peakPriceCurveId().empty(), "An AveragingOffPeakPower price segment should have" <<
+                " a non empty PeakPriceCurveId");
+            requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(it->peakPriceCurveId());
+        }
 
         // Quotes
         fwdQuotes_.insert(fwdQuotes_.end(), it->quotes().begin(), it->quotes().end());

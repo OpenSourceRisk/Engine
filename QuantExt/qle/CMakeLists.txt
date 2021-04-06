@@ -94,6 +94,7 @@ math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
 models/annuitymapping.cpp
+models/carrmadanarbitragecheck.cpp
 models/cdsoptionhelper.cpp
 models/cirppimplieddefaulttermstructure.cpp
 models/cmscaphelper.cpp
@@ -108,6 +109,7 @@ models/dkimpliedzeroinflationtermstructure.cpp
 models/eqbsconstantparametrization.cpp
 models/eqbsparametrization.cpp
 models/eqbspiecewiseconstantparametrization.cpp
+models/exactbachelierimpliedvolatility.cpp
 models/fxbsconstantparametrization.cpp
 models/fxbsparametrization.cpp
 models/fxbspiecewiseconstantparametrization.cpp
@@ -122,6 +124,8 @@ models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
 models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
+models/normalsabr.cpp
+models/normalsabrsmilesection.cpp
 models/parametrization.cpp
 models/piecewiseconstanthelper.cpp
 models/projectedcrossassetmodel.cpp
@@ -165,6 +169,7 @@ processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/aposurface.cpp
 termstructures/averagefuturepricehelper.cpp
+termstructures/averageoffpeakpowerhelper.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/averagespotpricehelper.cpp
 termstructures/basistwoswaphelper.cpp
@@ -190,9 +195,9 @@ termstructures/dynamiccpivolatilitystructure.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
 termstructures/dynamicyoyoptionletvolatilitystructure.cpp
+termstructures/eqcommoptionsurfacestripper.cpp
 termstructures/equityblackvolsurfaceproxy.cpp
 termstructures/equityforwardcurvestripper.cpp
-termstructures/equityoptionsurfacestripper.cpp
 termstructures/flatcorrelation.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
@@ -300,6 +305,7 @@ indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
 indexes/escpi.hpp
 indexes/frcpi.hpp
+indexes/decpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
@@ -392,6 +398,7 @@ math/trace.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
 models/annuitymapping.hpp
+models/carrmadanarbitragecheck.hpp
 models/cdsoptionhelper.hpp
 models/cirppconstantfellerparametrization.hpp
 models/cirppconstantparametrization.hpp
@@ -411,6 +418,7 @@ models/dkimpliedzeroinflationtermstructure.hpp
 models/eqbsconstantparametrization.hpp
 models/eqbsparametrization.hpp
 models/eqbspiecewiseconstantparametrization.hpp
+models/exactbachelierimpliedvolatility.hpp
 models/fxbsconstantparametrization.hpp
 models/fxbsparametrization.hpp
 models/fxbspiecewiseconstantparametrization.hpp
@@ -431,6 +439,9 @@ models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
+models/normalsabr.hpp
+models/normalsabrinterpolation.hpp
+models/normalsabrsmilesection.hpp
 models/parametrization.hpp
 models/piecewiseconstanthelper.hpp
 models/projectedcrossassetmodel.hpp
@@ -477,6 +488,7 @@ quotes/logquote.hpp
 termstructures/adjusteddefaultcurve.hpp
 termstructures/aposurface.hpp
 termstructures/averagefuturepricehelper.hpp
+termstructures/averageoffpeakpowerhelper.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/averagespotpricehelper.hpp
 termstructures/basistwoswaphelper.hpp
@@ -511,9 +523,9 @@ termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
+termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityblackvolsurfaceproxy.hpp
 termstructures/equityforwardcurvestripper.hpp
-termstructures/equityoptionsurfacestripper.hpp
 termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
 termstructures/futurepricehelper.hpp

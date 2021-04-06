@@ -4,6 +4,7 @@
 
   <xs:complexType name="curveconfiguration">
     <xs:all>
+      <xs:element type="globalReportConfiguration" name="ReportConfiguration" minOccurs="0" />
       <xs:element type="fxSpots" name="FXSpots" minOccurs="0" />
       <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
       <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
@@ -162,9 +163,12 @@
         <xs:element type="volatilityCurveConfig" name="Curve"/>
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
         <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
+        <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
         <xs:element type="xs:string" name="ProxySurface"/>
       </xs:choice>
-      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/> 	  
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -266,7 +270,8 @@
       <xs:element type="calendar" name="Calendar"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
       <xs:element type="xs:string" name="Tenors" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>	  
+      <xs:element type="bool" name="OptionalQuotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="indexNameType" name="IborIndex"/>
       <xs:element type="xs:string" name="DiscountCurve"/>
       <xs:element type="xs:string" name="AtmTenors" minOccurs="0" maxOccurs="1"/>
@@ -550,6 +555,8 @@
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
       <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PeakPriceCurveId" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PeakPriceCalendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
@@ -612,6 +619,13 @@
       <xs:element type="non-negative-decimal" name="Beta" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:simpleType name="commVolQuoteSuffix">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="P"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="commodityVolatility">
     <xs:sequence>
@@ -632,6 +646,9 @@
       <xs:element type="xs:string" name="OptionExpiryRollDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PriceCurveId" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="YieldCurveId" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="commVolQuoteSuffix" name="QuoteSuffix" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -903,6 +920,49 @@
       <xs:element type="xs:decimal" name="MaxFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="MinFactor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:positiveInteger" name="DontThrowSteps" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="minMaxType">
+    <xs:all>
+      <xs:element type="xs:decimal" name="Min"/>
+      <xs:element type="xs:decimal" name="Max"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="oneDimSolverConfigType">
+    <xs:sequence>
+      <xs:element type="xs:positiveInteger" name="MaxEvaluations"/>
+      <xs:element type="xs:decimal" name="InitialGuess"/>
+      <xs:element type="positiveDecimal" name="Accuracy"/>
+      <xs:choice>
+        <xs:element type="minMaxType" name="MinMax"/>
+        <xs:element type="positiveDecimal" name="Step"/>
+      </xs:choice>
+      <xs:element type="xs:decimal" name="LowerBound" minOccurs="0"/>
+      <xs:element type="xs:decimal" name="UpperBound" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="globalReportConfiguration">
+    <xs:all>
+      <xs:element name="FXVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="reportConfiguration">
+    <xs:all>
+      <xs:element type="bool" name="ReportOnDeltaGrid" minOccurs="0"/>
+      <xs:element type="bool" name="ReportOnMoneynessGrid" minOccurs="0"/>
+      <xs:element type="xs:string" name="Deltas" minOccurs="0"/>
+      <xs:element type="xs:string" name="Moneyness" minOccurs="0"/>
+      <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

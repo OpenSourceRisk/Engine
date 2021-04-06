@@ -43,7 +43,7 @@ using namespace boost::unit_test_framework;
 
 namespace bdata = boost::unit_test::data;
 typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
-using TermVolSurface = QuantExt::CapFloorTermVolSurface;
+using TermVolSurface = QuantExt::CapFloorTermVolSurfaceExact;
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 using std::boolalpha;

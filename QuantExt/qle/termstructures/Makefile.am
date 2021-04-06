@@ -116,6 +116,7 @@ this_include_HEADERS = \
     interpolatedcorrelationcurve.hpp \
 	strippedcpivolatilitystructure.hpp \
 	capfloortermvolsurface.hpp \
+	capfloortermvolsurfacesparse.hpp \
 	probabilitytraits.hpp \
 	blackvariancesurfacesparse.hpp \
 	constantyoyinflationoptionletvolatility.hpp

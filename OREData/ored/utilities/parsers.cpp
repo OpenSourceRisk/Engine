@@ -1178,7 +1178,18 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
     } else if (anyType.type() == typeid(bool)) {
         resultType = "bool";
         oss << std::boolalpha << boost::any_cast<bool>(anyType);
-    } else if(anyType.type() == typeid(std::vector<double>)) {
+    } else if (anyType.type() == typeid(std::vector<bool>)) {
+        resultType = "vector_bool";
+        std::vector<bool> r = boost::any_cast<std::vector<bool>>(anyType);
+        if (r.size() == 0) {
+            oss << "";
+        } else {
+            oss << std::boolalpha << boost::any_cast<bool>(anyType);
+            for (Size i = 1; i < r.size(); i++) {
+                oss << ", " << r[i];
+            }
+        }
+    } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
         std::vector<double> r = boost::any_cast<std::vector<double>>(anyType);
         if (r.size() == 0) {
@@ -1397,6 +1408,8 @@ PriceSegment::Type parsePriceSegmentType(const string& s) {
         return PST::AveragingFuture;
     } else if (s == "AveragingSpot") {
         return PST::AveragingSpot;
+    } else if (s == "AveragingOffPeakPower") {
+        return PST::AveragingOffPeakPower;
     } else {
         QL_FAIL("PriceSegment::Type '" << s << "' not known, expect " <<
             "'Future', 'AveragingFuture' or 'AveragingSpot'");
@@ -1410,6 +1423,8 @@ ostream& operator<<(ostream& os, PriceSegment::Type pst) {
         return os << "AveragingFuture";
     } else if (pst == PST::AveragingSpot) {
         return os << "AveragingSpot";
+    } else if (pst == PST::AveragingOffPeakPower) {
+        return os << "AveragingOffPeakPower";
     } else {
         QL_FAIL("Unknown PriceSegment::Type.");
     }

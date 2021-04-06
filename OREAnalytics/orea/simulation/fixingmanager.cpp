@@ -44,6 +44,17 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+// Search for a valid fixing date maximum gap days larger than d, the only relevant case for this so far is BMA/SIFMA
+Date nextValidFixingDate(Date d, const boost::shared_ptr<Index>& index, Size gap = 7) {
+    Date adjusted = d;
+    for (Size i = 0; i <= gap; ++i) {
+        adjusted = d + i;
+        if (index->isValidFixingDate(adjusted))
+            return adjusted;
+    }
+    QL_FAIL("no valid fixing date found for index " << index->name() << " within gap from " << io::iso_date(d));
+}
+
 FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
 
 std::set<boost::shared_ptr<FixingManager::CashflowHandler>> FixingManager::additionalCashflowHandlers_;
@@ -141,6 +152,9 @@ void FixingManager::applyFixings(Date start, Date end) {
             }
         } else {
             currentFixingDate = m.first->fixingCalendar().adjust(fixEnd, Following);
+            // This date is a business day but may not be a valid fixing date in case of BMA/SIFMA
+            if (!m.first->isValidFixingDate(currentFixingDate))
+                currentFixingDate = nextValidFixingDate(currentFixingDate, m.first);
             fixingDates = m.second;
         }
 
@@ -163,8 +177,12 @@ void FixingManager::applyFixings(Date start, Date end) {
             TimeSeries<Real> history;
             for (auto const& d : fixingDates) {
                 if (d >= fixStart && d < fixEnd) {
-                    history[d] = currentFixing;
-                    modifiedFixingHistory_ = true;
+                    // Fixing dates include the valuation grid dates which might not be valid fixing dates (BMA/SIFMA)
+                    bool valid = m.first->isValidFixingDate(d);
+                    if (valid) {
+                        history[d] = currentFixing;
+                        modifiedFixingHistory_ = true;
+                    }
                 }
                 if (d >= fixEnd)
                     break;

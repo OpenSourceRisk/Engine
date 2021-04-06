@@ -42,18 +42,20 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
     populateRequiredCurveIds();
 }
 
-FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const string& baseVolatility1, const string& baseVolatility2, const string& fxIndexTag) : 
-                            CurveConfig(curveID, curveDescription), dimension_(dimension), baseVolatility1_(baseVolatility1),
-                            baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag){
+FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
+                                                 const Dimension& dimension, const string& baseVolatility1,
+                                                 const string& baseVolatility2, const string& fxIndexTag)
+    : CurveConfig(curveID, curveDescription), dimension_(dimension), baseVolatility1_(baseVolatility1),
+      baseVolatility2_(baseVolatility2), fxIndexTag_(fxIndexTag) {
     populateRequiredCurveIds();
 }
-
 
 const vector<string>& FXVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         vector<string> tokens;
         boost::split(tokens, fxSpotID(), boost::is_any_of("/"));
+        QL_REQUIRE(tokens.size() == 3, "Expected 3 tokens FX/CCY1/CCY2 in fxSpotID (" << fxSpotID() << ")");
+        quotes_.push_back("FX/RATE/" + tokens[1] + "/" + tokens[2]);
         string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
         for (auto e : expiries_) {
             quotes_.push_back(base + e + "/ATM");
@@ -88,12 +90,11 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         dc = "A365";
     dayCounter_ = parseDayCounter(dc);
 
-    
     if (dim == "ATMTriangulated") {
         dimension_ = Dimension::ATMTriangulated;
-        baseVolatility1_ =  XMLUtils::getChildValue(node, "BaseVolatility1", true);
-        baseVolatility2_ =  XMLUtils::getChildValue(node, "BaseVolatility2", true);
-        
+        baseVolatility1_ = XMLUtils::getChildValue(node, "BaseVolatility1", true);
+        baseVolatility2_ = XMLUtils::getChildValue(node, "BaseVolatility2", true);
+
         string fxIndexTag = XMLUtils::getChildValue(node, "FXIndexTag");
         if (fxIndexTag == "")
             fxIndexTag = "GENERIC";
@@ -152,9 +153,17 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
             fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", true);
             fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", true);
+        } else {
+            // for ATM curves read the curves optionally, they can be useful to perform arbitrage checks
+            fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", false);
+            fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", false);
         }
     }
     fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
 
     populateRequiredCurveIds();
 }
@@ -211,12 +220,13 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     }
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }
 
 void FXVolatilityCurveConfig::populateRequiredCurveIds() {
-    if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
+    if (!fxDomesticYieldCurveID_.empty() && !fxForeignYieldCurveID_.empty()) {
         std::vector<string> domTokens, forTokens;
         split(domTokens, fxDomesticYieldCurveID_, boost::is_any_of("/"));
         split(forTokens, fxForeignYieldCurveID_, boost::is_any_of("/"));
@@ -241,15 +251,13 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
     if (dimension_ == Dimension::ATMTriangulated) {
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility1_);
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(baseVolatility2_);
-        
-        
+
         vector<string> tokens;
         boost::split(tokens, fxSpotID_, boost::is_any_of("/"));
         QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << fxSpotID_);
         auto forTarget = tokens[1];
-        auto domTarget = tokens[2]; 
-        
-    
+        auto domTarget = tokens[2];
+
         // we need to include inverse ccy pairs as well
         QL_REQUIRE(baseVolatility1_.size() == 6, "invalid ccy pair length");
         QL_REQUIRE(baseVolatility2_.size() == 6, "invalid ccy pair length");
@@ -260,7 +268,7 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
 
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(domBase1 + forBase1);
         requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(domBase2 + forBase2);
-        
+
         // we need to establish the common currency between the two pairs to include the correlations
         std::string baseCcy = "";
         if (forBase1 == forBase2 || forBase1 == domBase2) {
@@ -269,7 +277,7 @@ void FXVolatilityCurveConfig::populateRequiredCurveIds() {
             QL_REQUIRE(domBase1 == forBase2 || domBase1 == domBase2, "no common currency found for baseVolatilities");
             baseCcy = domBase1;
         }
-       
+
         // straight pair
         std::string forIndex = "FX-" + fxIndexTag_ + "-" + forTarget + "-" + baseCcy;
         std::string domIndex = "FX-" + fxIndexTag_ + "-" + domTarget + "-" + baseCcy;

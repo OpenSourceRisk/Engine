@@ -837,7 +837,7 @@
     <ClInclude Include="qle\cashflows\indexedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp">
+    <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\cpicoupon.hpp">
@@ -1061,6 +1061,30 @@
     </ClInclude>
     <ClInclude Include="qle\indexes\compoequityindex.hpp">
       <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\decpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabr.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrinterpolation.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrsmilesection.hpp">
+      <Filter>models</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1654,7 +1678,7 @@
     <ClCompile Include="qle\cashflows\indexedcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
+    <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\cpicoupon.cpp">
@@ -1821,6 +1845,21 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\compoequityindex.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averageoffpeakpowerhelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\exactbachelierimpliedvolatility.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabr.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabrsmilesection.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

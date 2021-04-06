@@ -540,6 +540,7 @@
     <ClInclude Include="qle\indexes\cacpi.hpp" />
     <ClInclude Include="qle\indexes\commodityindex.hpp" />
     <ClInclude Include="qle\indexes\compoequityindex.hpp" />
+    <ClInclude Include="qle\indexes\decpi.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
@@ -633,6 +634,7 @@
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\models\annuitymapping.hpp" />
+    <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
     <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp" />
     <ClInclude Include="qle\models\cirppconstantparametrization.hpp" />
@@ -652,6 +654,7 @@
     <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
     <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
+    <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp" />
     <ClInclude Include="qle\models\fxbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxbsparametrization.hpp" />
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp" />
@@ -672,6 +675,9 @@
     <ClInclude Include="qle\models\lgmimpliedyieldtermstructure.hpp" />
     <ClInclude Include="qle\models\linearannuitymapping.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
+    <ClInclude Include="qle\models\normalsabr.hpp" />
+    <ClInclude Include="qle\models\normalsabrinterpolation.hpp" />
+    <ClInclude Include="qle\models\normalsabrsmilesection.hpp" />
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
     <ClInclude Include="qle\models\projectedcrossassetmodel.hpp" />
@@ -719,6 +725,7 @@
     <ClInclude Include="qle\termstructures\adjusteddefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\aposurface.hpp" />
     <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp" />
+    <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
     <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
@@ -729,6 +736,7 @@
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
+    <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
@@ -745,7 +753,7 @@
     <ClInclude Include="qle\termstructures\dynamiccpivolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
-    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp" />
+    <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
@@ -924,6 +932,7 @@
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\annuitymapping.cpp" />
+    <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp" />
     <ClCompile Include="qle\models\cdsoptionhelper.cpp" />
     <ClCompile Include="qle\models\cirppimplieddefaulttermstructure.cpp" />
     <ClCompile Include="qle\models\cmscaphelper.cpp" />
@@ -938,6 +947,7 @@
     <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp" />
     <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp" />
+    <ClCompile Include="qle\models\exactbachelierimpliedvolatility.cpp" />
     <ClCompile Include="qle\models\fxbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\fxbsparametrization.cpp" />
     <ClCompile Include="qle\models\fxbspiecewiseconstantparametrization.cpp" />
@@ -952,6 +962,8 @@
     <ClCompile Include="qle\models\lgmimpliedyieldtermstructure.cpp" />
     <ClCompile Include="qle\models\linearannuitymapping.cpp" />
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
+    <ClCompile Include="qle\models\normalsabr.cpp" />
+    <ClCompile Include="qle\models\normalsabrsmilesection.cpp" />
     <ClCompile Include="qle\models\parametrization.cpp" />
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
     <ClCompile Include="qle\models\yoycapfloorhelper.cpp" />
@@ -995,6 +1007,7 @@
     <ClCompile Include="qle\quotes\logquote.cpp" />
     <ClCompile Include="qle\termstructures\aposurface.cpp" />
     <ClCompile Include="qle\termstructures\averagefuturepricehelper.cpp" />
+    <ClCompile Include="qle\termstructures\averageoffpeakpowerhelper.cpp" />
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
@@ -1022,7 +1035,7 @@
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
-    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp" />
+    <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
     <ClCompile Include="qle\termstructures\futurepricehelper.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
