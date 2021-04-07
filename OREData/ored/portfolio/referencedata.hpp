@@ -124,10 +124,9 @@ class CreditIndexConstituent : public XMLSerializable {
 public:
     CreditIndexConstituent();
 
-    CreditIndexConstituent(const std::string& name,
-        QuantLib::Real weight,
-        QuantLib::Real priorWeight = QuantLib::Null<QuantLib::Real>(),
-        QuantLib::Real recovery = QuantLib::Null<QuantLib::Real>());
+    CreditIndexConstituent(const std::string& name, QuantLib::Real weight,
+                           QuantLib::Real priorWeight = QuantLib::Null<QuantLib::Real>(),
+                           QuantLib::Real recovery = QuantLib::Null<QuantLib::Real>());
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
@@ -219,7 +218,10 @@ public:
     void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) override;
 
 protected:
+    void check(const string& type, const string& id) const;
     map<pair<string, string>, boost::shared_ptr<ReferenceDatum>> data_;
+    std::set<pair<string, string>> duplicates_;
+    map<pair<string, string>, string> buildErrors_;
 };
 
 } // namespace data
