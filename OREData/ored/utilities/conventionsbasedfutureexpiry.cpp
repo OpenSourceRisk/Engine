@@ -101,8 +101,8 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         contractYear = newDate.year();
     }
 
-    // Move n months previously for the expiry if necessary
-    if (convention_.expiryMonthLag() > 0) {
+    // Move n months before (+ve) or after (-ve) for the expiry if necessary
+    if (convention_.expiryMonthLag() != 0) {
         Date newDate = Date(15, contractMonth, contractYear) - convention_.expiryMonthLag() * Months;
         contractMonth = newDate.month();
         contractYear = newDate.year();
@@ -145,7 +145,7 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
             auto optionMonth = expiry.month();
             auto optionYear = expiry.year();
 
-            if (convention_.optionExpiryMonthLag() > 0) {
+            if (convention_.optionExpiryMonthLag() != 0) {
                 Date newDate = Date(15, optionMonth, optionYear) - convention_.optionExpiryMonthLag() * Months;
                 optionMonth = newDate.month();
                 optionYear = newDate.year();
