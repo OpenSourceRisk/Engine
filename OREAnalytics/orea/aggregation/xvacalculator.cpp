@@ -262,7 +262,7 @@ const Real& ValueAdjustmentCalculator::nettingSetFca_exAllSp(const std::string& 
 }
 
 const Real& ValueAdjustmentCalculator::nettingSetMva(const std::string& nettingSet) {
-    if (nettingSetDva_.find(nettingSet) != nettingSetMva_.end())
+    if (nettingSetMva_.find(nettingSet) != nettingSetMva_.end())
         return nettingSetMva_[nettingSet];
     else
         QL_FAIL("netting set " << nettingSet << " not found in expected MVA results");
