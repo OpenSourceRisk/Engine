@@ -128,32 +128,21 @@ XMLNode* CreditIndexConstituent::toXML(ore::data::XMLDocument& doc) {
     return node;
 }
 
-const string& CreditIndexConstituent::name() const {
-    return name_;
-}
+const string& CreditIndexConstituent::name() const { return name_; }
 
-Real CreditIndexConstituent::weight() const {
-    return weight_;
-}
+Real CreditIndexConstituent::weight() const { return weight_; }
 
-Real CreditIndexConstituent::priorWeight() const {
-    return priorWeight_;
-}
+Real CreditIndexConstituent::priorWeight() const { return priorWeight_; }
 
-Real CreditIndexConstituent::recovery() const {
-    return recovery_;
-}
+Real CreditIndexConstituent::recovery() const { return recovery_; }
 
-bool operator<(const CreditIndexConstituent& lhs, const CreditIndexConstituent& rhs) {
-    return lhs.name() < rhs.name();
-}
+bool operator<(const CreditIndexConstituent& lhs, const CreditIndexConstituent& rhs) { return lhs.name() < rhs.name(); }
 
 ReferenceDatumRegister<ReferenceDatumBuilder<CreditIndexReferenceDatum>> CreditIndexReferenceDatum::reg_(TYPE);
 
 CreditIndexReferenceDatum::CreditIndexReferenceDatum() {}
 
-CreditIndexReferenceDatum::CreditIndexReferenceDatum(const string& name)
-    : ReferenceDatum(TYPE, name) {}
+CreditIndexReferenceDatum::CreditIndexReferenceDatum(const string& name) : ReferenceDatum(TYPE, name) {}
 
 void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
 
@@ -165,7 +154,7 @@ void CreditIndexReferenceDatum::fromXML(XMLNode* node) {
     constituents_.clear();
 
     for (XMLNode* child = XMLUtils::getChildNode(cird, "Underlying"); child;
-        child = XMLUtils::getNextSibling(child, "Underlying")) {
+         child = XMLUtils::getNextSibling(child, "Underlying")) {
         CreditIndexConstituent c;
         c.fromXML(child);
         add(c);
@@ -195,9 +184,7 @@ void CreditIndexReferenceDatum::add(const CreditIndexConstituent& c) {
     }
 }
 
-const set<CreditIndexConstituent>& CreditIndexReferenceDatum::constituents() const {
-    return constituents_;
-}
+const set<CreditIndexConstituent>& CreditIndexReferenceDatum::constituents() const { return constituents_; }
 
 // BasicReferenceDataManager
 
@@ -206,20 +193,39 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
 
     for (XMLNode* child = XMLUtils::getChildNode(node, "ReferenceDatum"); child;
          child = XMLUtils::getNextSibling(child, "ReferenceDatum")) {
-        // get type and id
-        string refDataType = XMLUtils::getChildValue(child, "Type", true);
+
+        string refDataType = XMLUtils::getChildValue(child, "Type", false);
+
+        if (refDataType.empty()) {
+            ALOG("Found referenceDatum without Type - skipping");
+            continue;
+        }
+
         string id = XMLUtils::getAttribute(child, "id");
-        QL_REQUIRE(id != "", "ReferenceDatum has no id");
 
-        QL_REQUIRE(!hasData(refDataType, id),
-                   "BasicReferenceDataManager already has " << refDataType << " with id " << id);
+        if (id.empty()) {
+            ALOG("Found referenceDatum without id - skipping");
+            continue;
+        }
 
-        boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);
-        refData->fromXML(child);
-        // set the type and id at top level (is this needed?)
-        refData->setType(refDataType);
-        refData->setId(id);
-        data_[make_pair(refDataType, id)] = refData;
+        if (data_.find(make_pair(refDataType, id)) != data_.end()) {
+            duplicates_.insert(make_pair(refDataType, id));
+            ALOG("Found duplicate referenceDatum for type='" << refDataType << "', id='" << id << "'");
+            continue;
+        }
+
+        try {
+            boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);
+            refData->fromXML(child);
+            // set the type and id at top level (is this needed?)
+            refData->setType(refDataType);
+            refData->setId(id);
+            data_[make_pair(refDataType, id)] = refData;
+            TLOG("added referenceDatum for type='" << refDataType << "', id='" << id << "'");
+        } catch (const std::exception& e) {
+            buildErrors_[make_pair(refDataType, id)] = e.what();
+            ALOG("Error building referenceDatum for type='" << refDataType << "', id='" << id << "': " << e.what());
+        }
     }
 }
 
@@ -243,13 +249,25 @@ XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
     return node;
 }
 
+void BasicReferenceDataManager::check(const string& type, const string& id) const {
+    auto key = make_pair(type, id);
+    QL_REQUIRE(duplicates_.find(key) == duplicates_.end(),
+               "BasicReferenceDataManager: duplicate entries for type='" << type << "', id='" << id << "'");
+    auto err = buildErrors_.find(key);
+    QL_REQUIRE(err == buildErrors_.end(),
+               "BasicReferenceDataManager: Build error for type='" << type << "', id='" << id << "': " << err->second);
+}
+
 bool BasicReferenceDataManager::hasData(const string& type, const string& id) const {
+    check(type, id);
     return data_.find(make_pair(type, id)) != data_.end();
 }
 
 boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::getData(const string& type, const string& id) {
+    check(type, id);
     auto it = data_.find(make_pair(type, id));
-    QL_REQUIRE(it != data_.end(), "No Reference data for " << type << " " << id);
+    QL_REQUIRE(it != data_.end(),
+               "BasicReferenceDataManager::getData(): No Reference data for type='" << type << "', id='" << id << "'");
     return it->second;
 }
 
