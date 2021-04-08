@@ -252,6 +252,7 @@
 #include <qle/termstructures/adjusteddefaultcurve.hpp>
 #include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/averagefuturepricehelper.hpp>
+#include <qle/termstructures/averageoffpeakpowerhelper.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/averagespotpricehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
