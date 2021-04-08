@@ -4825,7 +4825,7 @@ Listing \ref{lst:fxoptionvol_configuration} shows three examples of FX volatilit
     <CurveDescription />
     <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>Smile</Dimension> 
-    <!-- VannaVolga, Delta, BFRR -->
+    <!-- VannaVolga, Delta -->
     <SmileType>Delta</SmileType> 
     <!-- VannaVolga1, VannaVolga2, Linear, Cubic -->
     <SmileInterpolation>Linear</SmileInterpolation>
@@ -4864,18 +4864,17 @@ The meaning of each of the elements in Listing \ref{lst:fxoptionvol_configuratio
 \item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. An `ATMTriangulated' value denotes a curve triangulated from two other surfaces.\\ 
 Allowable values: {\tt ATM, Smile, ATMTriangulated}
 \item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
-Allowable values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006), {\tt Delta}, {\tt BFRR}, with default value {\tt VannaVolga} if left blank.
+Allowable values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006) and {\tt Delta}, with default value {\tt VannaVolga} if left blank.
 \item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
 Allowable values: 
 \begin{itemize}
 \item {\tt VannaVolga1} or {\tt VannaVolga2} in case of SmileType {\tt VannaVolga} with default VannaVolga2 if left blank.
 VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and (eq. 14) of the reference above.
-\item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} or {\tt BFRR} with default {\tt Linear} if left blank
+\item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} with default {\tt Linear} if left blank
 \end{itemize}
 \item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of
   the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} for option tenors <= 2Y and {\tt
-    AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y if the conventions ID is omitted or left blank. Furthermore,
-  in this case RiskReversalInFavorOf defaults to {\tt Call} and ButterflyStyle to {\tt Broker) (relevant for BF, RR market data input).
+    AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y  if the conventions ID is omitted or left blank
 \item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt ATM} or {\tt Delta} curves.
 \item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\
 Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol_configuration}

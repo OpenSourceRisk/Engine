@@ -802,8 +802,6 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
   <SwitchTenor> </SwitchTenor>
   <LongTermAtmType> </LongTermAtmType>
   <LongTermDeltaType> </LongTermDeltaType>
-  <RiskReversalInFavorOf> </RiskReversalInFavorOf>
-  <ButterflyStyle> </ButterflyStyle>
 </FxOption> 
 \end{minted} 
 \caption{FX option conventions} 
@@ -823,8 +821,6 @@ AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}).
   point, if SwitchTenor is given
 \item LongTermDeltaType [Mandatory if and only if SwitchTenor is given]: Delta type to use for options with tenor >
   switch point, if SwitchTenor is given
-\item RiskReversalInFavorOf [Optional]: Call (default), Put. Only relevant for BF, RR market data input.
-\item ButterflyStyle [Optional]: Broker (default), Smile. Only relevant for BF, RR market data input.
 \end{itemize} 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

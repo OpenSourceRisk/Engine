@@ -309,9 +309,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     std::string deltaRr;
     std::string deltaBf;
     if (!isATM) {
-        QL_REQUIRE(config->smileDelta().size() == 1,
-                   "Exactly one SmileDelta required for VannaVolga Curve (got " << config->smileDelta().size() << ")");
-        smileDelta = config->smileDelta().front();
+        smileDelta = config->smileDelta();
         deltaRr = to_string(smileDelta) + "RR";
         deltaBf = to_string(smileDelta) + "BF";
     }
@@ -625,8 +623,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         switchTenor_ = 2 * Years;
         longTermAtmType_ = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         longTermDeltaType_ = DeltaVolQuote::DeltaType::Fwd;
-        riskReversalInFavorOf_ = Option::Call;
-        butterflyIsBrokerStyle_ = true;
 
         if (config->conventionsID() != "") {
             boost::shared_ptr<Convention> conv = conventions.get(config->conventionsID());
@@ -638,8 +634,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             longTermAtmType_ = fxOptConv->longTermAtmType();
             longTermDeltaType_ = fxOptConv->longTermDeltaType();
             switchTenor_ = fxOptConv->switchTenor();
-            riskReversalInFavorOf_ = fxOptConv->riskReversalInFavorOf();
-            butterflyIsBrokerStyle_ = fxOptConv->butterflyIsBrokerStyle();
         } else {
             WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
@@ -708,8 +702,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         calibrationInfo_->longTermAtmType = ore::data::to_string(longTermAtmType_);
         calibrationInfo_->longTermDeltaType = ore::data::to_string(longTermDeltaType_);
         calibrationInfo_->switchTenor = ore::data::to_string(switchTenor_);
-        calibrationInfo_->riskReversalInFavorOf = riskReversalInFavorOf_ == Option::Call ? "Call" : "Put";
-        calibrationInfo_->butterflyStyle = butterflyIsBrokerStyle_ ? "Broker" : "Smile";
 
         std::vector<Real> times, forwards;
         for (auto const& p : expiries) {

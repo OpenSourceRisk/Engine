@@ -1026,8 +1026,6 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
     addRowMktCalReport(report, type, id, "longTermAtmType", "", "", "", info->longTermAtmType);
     addRowMktCalReport(report, type, id, "longTermDeltaType", "", "", "", info->longTermDeltaType);
     addRowMktCalReport(report, type, id, "switchTenor", "", "", "", info->switchTenor);
-    addRowMktCalReport(report, type, id, "riskReversalInFavorOf", "", "", "", info->riskReversalInFavorOf);
-    addRowMktCalReport(report, type, id, "butterflyStyle", "", "", "", info->butterflyStyle);
     addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
 
     for (Size i = 0; i < info->times.size(); ++i) {
