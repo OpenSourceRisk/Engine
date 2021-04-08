@@ -1663,10 +1663,22 @@ void CommodityFutureConvention::build() {
     offsetDays_ = strOffsetDays_.empty() ? 0 : lexical_cast<Integer>(strOffsetDays_);
     bdc_ = strBdc_.empty() ? Preceding : parseBusinessDayConvention(strBdc_);
     optionExpiryOffset_ = strOptionExpiryOffset_.empty() ? 0 : lexical_cast<Natural>(strOptionExpiryOffset_);
+
+    // Add the prohibited expiries. Skip with warning where convention is not supported.
     for (const auto& kv : strProhibitedExpiries_) {
-        prohibitedExpiries_.emplace(parseDate(kv.first),
-            kv.second.empty() ? Preceding : parseBusinessDayConvention(kv.second));
+        if (!kv.second.empty()) {
+            auto bdc = parseBusinessDayConvention(kv.second);
+            if (bdc == Preceding || bdc == Following || bdc == ModifiedPreceding || bdc == ModifiedFollowing) {
+                prohibitedExpiries_.emplace(parseDate(kv.first), bdc);
+            } else {
+                WLOG("Prohibited expiry bdc must be one of {Preceding, Following, ModifiedPreceding," <<
+                    " ModifiedFollowing} but got " << bdc << " for date " << kv.first << " so skipping it.");
+            }
+        } else {
+            prohibitedExpiries_.emplace(parseDate(kv.first), Preceding);
+        }
     }
+
     optionBdc_ = strOptionBdc_.empty() ? Preceding : parseBusinessDayConvention(strOptionBdc_);
 
     // Check the continuation mappings

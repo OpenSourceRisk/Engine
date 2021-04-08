@@ -297,13 +297,41 @@
       <xs:element type="weekdayType" name="Weekday" minOccurs="1" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:simpleType name="prohibitedExpiriesBdcType">
+    <xs:restriction base="businessDayConvention">
+      <xs:enumeration value="F"/>
+      <xs:enumeration value="Following"/>
+      <xs:enumeration value="FOLLOWING"/>
+      <xs:enumeration value="MF"/>
+      <xs:enumeration value="ModifiedFollowing"/>
+      <xs:enumeration value="Modified Following"/>
+      <xs:enumeration value="MODIFIEDF"/>
+      <xs:enumeration value="MODFOLLOWING"/>
+      <xs:enumeration value="P"/>
+      <xs:enumeration value="Preceding"/>
+      <xs:enumeration value="PRECEDING"/>
+      <xs:enumeration value="MP"/>
+      <xs:enumeration value="ModifiedPreceding"/>
+      <xs:enumeration value="Modified Preceding"/>
+      <xs:enumeration value="MODIFIEDP"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="prohibitedExpiriesType">
     <xs:all>
       <xs:element name="Dates">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="Date" minOccurs="1" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="date">
+                    <xs:attribute name="convention" type="prohibitedExpiriesBdcType" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
