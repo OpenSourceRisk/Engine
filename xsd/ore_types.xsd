@@ -474,6 +474,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="VannaVolga"/>
       <xs:enumeration value="Delta"/>
+      <xs:enumeration value="BFRR"/>
     </xs:restriction>
   </xs:simpleType>
 

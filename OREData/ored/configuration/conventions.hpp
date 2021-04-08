@@ -30,6 +30,7 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <ql/option.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/commodityindex.hpp>
@@ -1488,7 +1489,8 @@ public:
     //@{
     FxOptionConvention() {}
     FxOptionConvention(const string& id, const string& atmType, const string& deltaType, const string& switchTenor = "",
-                       const string& longTermAtmType = "", const string& longTermDeltaType = "");
+                       const string& longTermAtmType = "", const string& longTermDeltaType = "",
+                       const string& riskReversalInFavorOf = "Call", const string& butterflyStyle = "Broker");
     //@}
 
     //! \name Inspectors
@@ -1498,6 +1500,8 @@ public:
     const Period& switchTenor() const { return switchTenor_; }
     const DeltaVolQuote::AtmType& longTermAtmType() const { return longTermAtmType_; }
     const DeltaVolQuote::DeltaType& longTermDeltaType() const { return longTermDeltaType_; }
+    const QuantLib::Option::Type& riskReversalInFavorOf() const { return riskReversalInFavorOf_; }
+    const bool butterflyIsBrokerStyle() const { return butterflyIsBrokerStyle_; }
     //@}
 
     //! \name Serialisation
@@ -1510,6 +1514,8 @@ private:
     DeltaVolQuote::AtmType atmType_, longTermAtmType_;
     DeltaVolQuote::DeltaType deltaType_, longTermDeltaType_;
     Period switchTenor_;
+    QuantLib::Option::Type riskReversalInFavorOf_;
+    bool butterflyIsBrokerStyle_;
 
     // Strings to store the inputs
     string strAtmType_;
@@ -1517,6 +1523,8 @@ private:
     string strSwitchTenor_;
     string strLongTermAtmType_;
     string strLongTermDeltaType_;
+    string strRiskReversalInFavorOf_;
+    string strButterflyStyle_;
 };
 
 /*! Container for storing zero inflation index conventions
