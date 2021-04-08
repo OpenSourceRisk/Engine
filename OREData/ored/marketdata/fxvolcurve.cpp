@@ -30,6 +30,7 @@
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
+#include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <regex>
 #include <string.h>
 
@@ -295,6 +296,149 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
         deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_);
+
+    vol_->enableExtrapolation();
+}
+
+void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                                     boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                     const Conventions& conventions) {
+
+    // collect relevant market data and populate expiries (as per regex or configured list)
+
+    std::set<Period> expiriesTmp;
+
+    boost::optional<regex> regexp;
+    if(expiriesRegex_)
+        regexp = regex(boost::replace_all_copy(config->expiries()[0], "*", ".*"));
+
+    std::vector<boost::shared_ptr<FXOptionQuote>> data;
+    for (auto const& md : loader.loadQuotes(asof)) {
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
+            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+            Strike s = parseStrike(q->strike());
+            if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy() &&
+                (s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::ATM)) {
+                vector<string> tokens;
+                boost::split(tokens, md->name(), boost::is_any_of("/"));
+                QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+                if (expiriesRegex_ && regex_match(tokens[4], *regexp))
+                    expiriesTmp.insert(q->expiry());
+                data.push_back(q);
+            }
+        }
+    }
+
+    if (!expiriesRegex_) {
+        auto tmp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        expiriesTmp = std::set<Period>(tmp.begin(), tmp.end());
+    }
+
+    // populate quotes
+
+    std::vector<Size> smileDeltas = config->smileDelta();
+    std::sort(smileDeltas.begin(), smileDeltas.end());
+
+    std::vector<std::vector<Real>> bfQuotesTmp(expiriesTmp.size(), std::vector<Real>(smileDeltas.size(), Null<Real>()));
+    std::vector<std::vector<Real>> rrQuotesTmp(expiriesTmp.size(), std::vector<Real>(smileDeltas.size(), Null<Real>()));
+    std::vector<Real> atmQuotesTmp(expiriesTmp.size(), Null<Real>());
+
+    for (auto const& q : data) {
+        Size expiryIdx = std::distance(expiriesTmp.begin(), expiriesTmp.find(q->expiry()));
+        if (expiryIdx >= expiriesTmp.size())
+            continue;
+        Strike s = parseStrike(q->strike());
+        if (s.type == Strike::Type::ATM) {
+            atmQuotesTmp[expiryIdx] = q->quote()->value();
+        } else {
+            Size deltaIdx = std::distance(smileDeltas.begin(), std::find(smileDeltas.begin(), smileDeltas.end(),
+                                                                         static_cast<Size>(s.value + 0.5)));
+            if (deltaIdx >= smileDeltas.size())
+                continue;
+            if (s.type == Strike::Type::BF) {
+                bfQuotesTmp[expiryIdx][deltaIdx] = q->quote()->value();
+            } else if (s.type == Strike::Type::RR) {
+                rrQuotesTmp[expiryIdx][deltaIdx] = q->quote()->value();
+            }
+        }
+    }
+
+    // identify the rows with complete data
+
+    std::vector<bool> dataComplete(expiriesTmp.size(), true);
+
+    for (Size i = 0; i < expiriesTmp.size(); ++i) {
+        for (Size j = 0; i < smileDeltas.size(); ++j) {
+            if (bfQuotesTmp[i][j] == Null<Real>() || rrQuotesTmp[i][j] == Null<Real>() ||
+                atmQuotesTmp[i] == Null<Real>())
+                dataComplete[i] = false;
+        }
+    }
+
+    // if we have an explicitly configured expiry list, we require that the data is complete for all expiries
+
+    if (!expiriesRegex_) {
+        Size i = 0;
+        for (auto const& e : expiriesTmp) {
+            QL_REQUIRE(dataComplete[i++], "BFRR FX vol surface: incomplete data for expiry " << e);
+        }
+    }
+
+    // build the final quotes for the expiries that have complete data
+
+    Size i = 0;
+    for (auto const& e : expiriesTmp) {
+        if (dataComplete[i++]) {
+            expiries_.push_back(e);
+            TLOG("adding expiry " << e << " with complete data");
+        } else {
+            TLOG("removing expiry " << e << ", because data is not complete");
+        }
+    }
+
+    std::vector<std::vector<Real>> bfQuotes(expiries_.size(), std::vector<Real>(smileDeltas.size()));
+    std::vector<std::vector<Real>> rrQuotes(expiries_.size(), std::vector<Real>(smileDeltas.size()));
+    std::vector<Real> atmQuotes(expiries_.size());
+
+    Size row = 0;
+    for (Size i = 0; i < expiriesTmp.size(); ++i) {
+        if (!dataComplete[i])
+            continue;
+        atmQuotes[row] = atmQuotesTmp[i];
+        for (Size j = 0; j < smileDeltas.size(); ++j) {
+            bfQuotes[row][j] = bfQuotesTmp[i][j];
+            rrQuotes[row][j] = rrQuotesTmp[i][j];
+        }
+        ++row;
+    }
+
+    // build BFRR surface
+
+    DLOG("build BFRR fx vol surface with " << expiries_.size() << " expiries and " << smileDeltas.size()
+                                           << " delta(s)");
+
+    QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation interp;
+    if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Linear)
+        interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Linear;
+    else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
+        interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Cubic;
+    else {
+        QL_FAIL("BFRR FX vol surface: invalid interpolation, expected Linear, Cubic");
+    }
+
+    std::vector<Date> dates;
+    std::transform(expiries_.begin(), expiries_.end(), std::back_inserter(dates),
+                   [&asof, &config](const Period& p) { return config->calendar().advance(asof, p); });
+
+    std::vector<Real> smileDeltasScaled;
+    std::transform(smileDeltas.begin(), smileDeltas.end(), std::back_inserter(smileDeltasScaled),
+                   [](Size d) { return static_cast<Real>(d) / 100.0; });
+
+    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
+        asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
+        fxSpot_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_, longTermAtmType_,
+        riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
 
     vol_->enableExtrapolation();
 }
@@ -653,6 +797,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta) {
             buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
+        } else if(config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR) {
+            buildSmileBfRrCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
             buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves,
                                  conventions);
