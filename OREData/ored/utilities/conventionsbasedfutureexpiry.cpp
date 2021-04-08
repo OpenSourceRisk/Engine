@@ -132,9 +132,11 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
     // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
     expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
 
-    // If expiry date is one of the prohibited dates, move to preceding business day
+    // If expiry date is one of the prohibited dates, move to preceding or following business day
     while (convention_.prohibitedExpiries().count(expiry) > 0) {
-        expiry = convention_.calendar().advance(expiry, -1, Days);
+        auto bdc = convention_.prohibitedExpiries().at(expiry);
+        expiry = bdc == Preceding ? convention_.calendar().advance(expiry, -1, Days, bdc) :
+            convention_.calendar().advance(expiry, 1, Days);
     }
 
     // If we want the option contract expiry, do the extra work here.
@@ -167,7 +169,9 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
 
         // If expiry date is one of the prohibited dates, move to preceding business day
         while (convention_.prohibitedExpiries().count(expiry) > 0) {
-            expiry = convention_.expiryCalendar().advance(expiry, -1, Days);
+            auto bdc = convention_.prohibitedExpiries().at(expiry);
+            expiry = bdc == Preceding ? convention_.calendar().advance(expiry, -1, Days, bdc) :
+                convention_.calendar().advance(expiry, 1, Days);
         }
     }
 
@@ -180,7 +184,9 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     if (convention_.contractFrequency() == Daily) {
         Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
         while (convention_.prohibitedExpiries().count(expiry) > 0) {
-            expiry = convention_.expiryCalendar().advance(expiry, -1, Days);
+            auto bdc = convention_.prohibitedExpiries().at(expiry);
+            expiry = bdc == Preceding ? convention_.calendar().advance(expiry, -1, Days, bdc) :
+                convention_.calendar().advance(expiry, 1, Days);
         }
         return expiry;
     }

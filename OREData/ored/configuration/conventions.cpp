@@ -1383,7 +1383,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      const string& oneContractMonth, const string& offsetDays,
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
-                                                     const vector<string>& prohibitedExpiries,
+                                                     const map<string, string>& prohibitedExpiries,
                                                      Size optionExpiryMonthLag,
                                                      Natural optionExpiryDay,
                                                      const string& optionBdc,
@@ -1409,7 +1409,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      const string& oneContractMonth, const string& offsetDays,
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
-                                                     const vector<string>& prohibitedExpiries,
+                                                     const map<string, string>& prohibitedExpiries,
                                                      Size optionExpiryMonthLag,
                                                      Natural optionExpiryDay,
                                                      const string& optionBdc,
@@ -1435,7 +1435,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      const string& oneContractMonth, const string& offsetDays,
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
-                                                     const vector<string>& prohibitedExpiries,
+                                                     const map<string, string>& prohibitedExpiries,
                                                      Size optionExpiryMonthLag,
                                                      Natural optionExpiryDay,
                                                      const string& optionBdc,
@@ -1510,7 +1510,11 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     strOptionExpiryOffset_ = XMLUtils::getChildValue(node, "OptionExpiryOffset", false);
 
     if (XMLNode* n = XMLUtils::getChildNode(node, "ProhibitedExpiries")) {
-        strProhibitedExpiries_ = XMLUtils::getChildrenValues(n, "Dates", "Date");
+        vector<string> conventions;
+        vector<string> dates;
+        dates = XMLUtils::getChildrenValuesWithAttributes(n, "Dates", "Date", "convention", conventions, false);
+        for (Size i = 0; i < dates.size(); ++i)
+            strProhibitedExpiries_.emplace(dates[i], conventions[i]);
     }
 
     optionExpiryMonthLag_ = 0;
@@ -1594,7 +1598,10 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     if (!strProhibitedExpiries_.empty()) {
         XMLNode* prohibitedExpiriesNode = doc.allocNode("ProhibitedExpiries");
-        XMLUtils::addChildren(doc, prohibitedExpiriesNode, "Dates", "Date", strProhibitedExpiries_);
+        XMLNode* datesNode = XMLUtils::addChild(doc, prohibitedExpiriesNode, "Dates");
+        for (const auto& kv : strProhibitedExpiries_) {
+            XMLUtils::addChild(doc, datesNode, "Date", kv.first, "convention", kv.second);
+        }
         XMLUtils::appendNode(node, prohibitedExpiriesNode);
     }
 
@@ -1656,8 +1663,9 @@ void CommodityFutureConvention::build() {
     offsetDays_ = strOffsetDays_.empty() ? 0 : lexical_cast<Integer>(strOffsetDays_);
     bdc_ = strBdc_.empty() ? Preceding : parseBusinessDayConvention(strBdc_);
     optionExpiryOffset_ = strOptionExpiryOffset_.empty() ? 0 : lexical_cast<Natural>(strOptionExpiryOffset_);
-    for (const string& strDate : strProhibitedExpiries_) {
-        prohibitedExpiries_.insert(parseDate(strDate));
+    for (const auto& kv : strProhibitedExpiries_) {
+        prohibitedExpiries_.emplace(parseDate(kv.first),
+            kv.second.empty() ? Preceding : parseBusinessDayConvention(kv.second));
     }
     optionBdc_ = strOptionBdc_.empty() ? Preceding : parseBusinessDayConvention(strOptionBdc_);
 

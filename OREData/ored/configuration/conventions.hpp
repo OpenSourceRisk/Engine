@@ -1352,7 +1352,7 @@ public:
                               const std::string& offsetDays = "", const std::string& bdc = "",
                               bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::vector<std::string>& prohibitedExpiries = {},
+                              const std::map<std::string, std::string>& prohibitedExpiries = {},
                               QuantLib::Size optionExpiryMonthLag = 0,
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
@@ -1368,7 +1368,7 @@ public:
                               const std::string& oneContractMonth = "", const std::string& offsetDays = "",
                               const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::vector<std::string>& prohibitedExpiries = {},
+                              const std::map<std::string, std::string>& prohibitedExpiries = {},
                               QuantLib::Size optionExpiryMonthLag = 0,
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
@@ -1384,7 +1384,7 @@ public:
                               const std::string& oneContractMonth = "", const std::string& offsetDays = "",
                               const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::vector<std::string>& prohibitedExpiries = {},
+                              const std::map<std::string, std::string>& prohibitedExpiries = {},
                               QuantLib::Size optionExpiryMonthLag = 0,
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
@@ -1411,7 +1411,9 @@ public:
     bool adjustBeforeOffset() const { return adjustBeforeOffset_; }
     bool isAveraging() const { return isAveraging_; }
     QuantLib::Natural optionExpiryOffset() const { return optionExpiryOffset_; }
-    const std::set<QuantLib::Date>& prohibitedExpiries() const { return prohibitedExpiries_; }
+    const std::map<QuantLib::Date, QuantLib::BusinessDayConvention>& prohibitedExpiries() const {
+        return prohibitedExpiries_;
+    }
     QuantLib::Size optionExpiryMonthLag() const { return optionExpiryMonthLag_; }
     QuantLib::Natural optionExpiryDay() const { return optionExpiryDay_; }
     QuantLib::BusinessDayConvention optionBusinessDayConvention() const { return optionBdc_; }
@@ -1447,7 +1449,7 @@ private:
     QuantLib::Integer offsetDays_;
     QuantLib::BusinessDayConvention bdc_;
     QuantLib::Natural optionExpiryOffset_;
-    std::set<QuantLib::Date> prohibitedExpiries_;
+    std::map<QuantLib::Date, QuantLib::BusinessDayConvention> prohibitedExpiries_;
 
     std::string strDayOfMonth_;
     std::string strNth_;
@@ -1463,7 +1465,7 @@ private:
     bool adjustBeforeOffset_;
     bool isAveraging_;
     std::string strOptionExpiryOffset_;
-    std::vector<std::string> strProhibitedExpiries_;
+    std::map<std::string, std::string> strProhibitedExpiries_;
     QuantLib::Size optionExpiryMonthLag_;
     Natural optionExpiryDay_;
     QuantLib::BusinessDayConvention optionBdc_;
