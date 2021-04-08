@@ -113,11 +113,6 @@ private:
                               const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                               const Conventions& conventions);
 
-    void buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                             boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                             const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                             const Conventions& conventions);
-
     void buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                                    boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
                                    const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
