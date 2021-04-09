@@ -2068,15 +2068,20 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
             boost::shared_ptr<CrossCcyFixFloatSwapQuote> swapQuote =
                 boost::dynamic_pointer_cast<CrossCcyFixFloatSwapQuote>(marketQuote);
             QL_REQUIRE(swapQuote, "Market quote should be of type 'CrossCcyFixFloatSwapQuote'");
+            bool isResettableSwap = swapConvention->isResettable();
+            boost::shared_ptr<RateHelper> helper;
+            if (!isResettableSwap) {
+                // Create the helper
+                helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
+                    swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
+                    swapConvention->settlementConvention(), swapQuote->maturity(), currency_,
+                    swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
+                    floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
+            } else {
 
-            // Create the helper
-            boost::shared_ptr<RateHelper> helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
-                swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
-                swapConvention->settlementConvention(), swapQuote->maturity(), currency_,
-                swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
-                floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
-
+            }
             instruments.push_back(helper);
+
         }
     }
 }
