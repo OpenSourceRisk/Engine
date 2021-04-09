@@ -205,9 +205,9 @@ Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry) const {
     while (convention_.prohibitedExpiries().count(result) > 0) {
         auto bdc = convention_.prohibitedExpiries().at(result);
         if (bdc == Preceding || bdc == ModifiedPreceding) {
-            convention_.calendar().advance(result, -1, Days, bdc);
+            result = convention_.calendar().advance(result, -1, Days, bdc);
         } else if (bdc == Following || bdc == ModifiedFollowing) {
-            convention_.calendar().advance(result, 1, Days, bdc);
+            result = convention_.calendar().advance(result, 1, Days, bdc);
         } else {
             QL_FAIL("Convention " << bdc << " associated with prohibited expiry " <<
                 io::iso_date(result) << " is not supported.");
