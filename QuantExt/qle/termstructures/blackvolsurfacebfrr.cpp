@@ -414,30 +414,24 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
 
     /* find the strikes and vols on both smiles for the artificial smile conventions */
 
-    Real atmStrike_m, atmStrike_p;
-    std::vector<Real> putStrikes_m, callStrikes_m, putStrikes_p, callStrikes_p;
     Real atmVol_m, atmVol_p;
     std::vector<Real> putVols_m, callVols_m, putVols_p, callVols_p;
 
     if (index_m != Null<Size>()) {
-        atmStrike_m = smiles_[index_m]->atmStrike(dt_c, at_c);
-        atmVol_m = smiles_[index_m]->volatility(atmStrike_m);
+        atmVol_m = smiles_[index_m]->volatility(smiles_[index_m]->atmStrike(dt_c, at_c));
         for (auto const& d : deltas_) {
-            putStrikes_m.push_back(smiles_[index_m]->strikeFromDelta(Option::Call, d, dt_c));
-            callStrikes_m.push_back(smiles_[index_m]->strikeFromDelta(Option::Put, d, dt_c));
-            putVols_m.push_back(smiles_[index_m]->volatility(putStrikes_m.back()));
-            callVols_m.push_back(smiles_[index_m]->volatility(callStrikes_m.back()));
+            putVols_m.push_back(smiles_[index_m]->volatility(smiles_[index_m]->strikeFromDelta(Option::Put, d, dt_c)));
+            callVols_m.push_back(
+                smiles_[index_m]->volatility(smiles_[index_m]->strikeFromDelta(Option::Call, d, dt_c)));
         }
     }
 
     if (index_p != Null<Size>()) {
-        atmStrike_p = smiles_[index_p]->atmStrike(dt_c, at_c);
-        atmVol_p = smiles_[index_p]->volatility(atmStrike_p);
+        atmVol_p = smiles_[index_p]->volatility(smiles_[index_p]->atmStrike(dt_c, at_c));
         for (auto const& d : deltas_) {
-            putStrikes_p.push_back(smiles_[index_p]->strikeFromDelta(Option::Call, d, dt_c));
-            callStrikes_p.push_back(smiles_[index_p]->strikeFromDelta(Option::Put, d, dt_c));
-            putVols_p.push_back(smiles_[index_p]->volatility(putStrikes_p.back()));
-            callVols_p.push_back(smiles_[index_p]->volatility(callStrikes_p.back()));
+            putVols_p.push_back(smiles_[index_p]->volatility(smiles_[index_p]->strikeFromDelta(Option::Put, d, dt_c)));
+            callVols_p.push_back(
+                smiles_[index_p]->volatility(smiles_[index_p]->strikeFromDelta(Option::Call, d, dt_c)));
         }
     }
 
