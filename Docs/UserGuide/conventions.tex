@@ -453,7 +453,7 @@ rate on the short swap minus the fair rate on the long swap. If not provided, it
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{FX Conventions}
+\subsubsection{FX Conventions}\label{sss:fx_convention}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The
 structure of this node is shown in Listing \ref{lst:fx_conventions}.
@@ -796,7 +796,8 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
 %\hrule\medskip 
 \begin{minted}[fontsize=\footnotesize]{xml}
 <FxOption> 
-  <Id> </Id> 
+  <Id> </Id>
+  <FXConventionID> </FXConventionID>
   <AtmType> </AtmType> 
   <DeltaType> </DeltaType> 
   <SwitchTenor> </SwitchTenor>
@@ -812,7 +813,8 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
  
  
 The meanings of the various elements in this node are as follows: 
-\begin{itemize} 
+\begin{itemize}
+\item FXConventionID: The FX convention for the currency pair (see \ref{sss:fx_convention})
 \item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd, 
 AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
 \item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 

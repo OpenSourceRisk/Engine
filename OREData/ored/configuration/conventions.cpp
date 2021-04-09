@@ -1675,10 +1675,11 @@ void CommodityFutureConvention::populateFrequency() {
 FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType,
                                        const string& switchTenor, const string& longTermAtmType,
                                        const string& longTermDeltaType, const string& riskReversalInFavorOf,
-                                       const string& butterflyStyle)
+                                       const string& butterflyStyle, const string& fxConventionID)
     : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType), strSwitchTenor_(switchTenor),
       strLongTermAtmType_(longTermAtmType), strLongTermDeltaType_(longTermDeltaType),
-      strRiskReversalInFavorOf_(riskReversalInFavorOf), strButterflyStyle_(butterflyStyle) {
+      strRiskReversalInFavorOf_(riskReversalInFavorOf), strButterflyStyle_(butterflyStyle),
+      fxConventionID_(fxConventionID) {
     build();
 }
 
@@ -1713,6 +1714,7 @@ void FxOptionConvention::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FxOption");
     type_ = Type::FxOption;
     id_ = XMLUtils::getChildValue(node, "Id", true);
+    fxConventionID_ = XMLUtils::getChildValue(node, "FXConventionID", true);
 
     // Get string values from xml
     strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true);
@@ -1729,6 +1731,7 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("FxOption");
     XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "FXConventionID", fxConventinoID_);
     XMLUtils::addChild(doc, node, "AtmType", strAtmType_);
     XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_);
     XMLUtils::addChild(doc, node, "SwitchTenor", strSwitchTenor_);
@@ -1736,7 +1739,6 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LongTermDeltaType", strLongTermDeltaType_);
     XMLUtils::addChild(doc, node, "RiskReversalInFavorOf", strRiskReversalInFavorOf_);
     XMLUtils::addChild(doc, node, "ButterflyStyle", strButterflyStyle_);
-
     return node;
 }
 

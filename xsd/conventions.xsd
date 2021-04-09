@@ -372,6 +372,7 @@
   <xs:complexType name="fxOption">
     <xs:all>
       <xs:element type="xs:string" name="Id"/>
+      <xs:element type="xs:string" name="FXConventionID"/>
       <xs:element type="xs:string" name="AtmType"/>
       <xs:element type="xs:string" name="DeltaType"/>
       <xs:element type="xs:string" name="SwitchTenor" minOccurs="0"/>
