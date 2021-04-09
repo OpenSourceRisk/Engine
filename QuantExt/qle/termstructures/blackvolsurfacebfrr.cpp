@@ -471,7 +471,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         atmVol_i = (1.0 - a) * atmVol_m + a * atmVol_p;
         for (Size i = 0; i < deltas_.size(); ++i) {
             putVols_i.push_back((1.0 - a) * putVols_m[i] + a * putVols_p[i]);
-            callVols_i.push_back((1.0 - a) * callVols_m[i] * a * callVols_p[i]);
+            callVols_i.push_back((1.0 - a) * callVols_m[i] + a * callVols_p[i]);
         }
     }
 
