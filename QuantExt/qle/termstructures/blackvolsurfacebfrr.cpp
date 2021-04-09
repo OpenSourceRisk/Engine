@@ -442,12 +442,9 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
 
     if (index_p == Null<Size>()) {
         // extrapolate beyond last expiry
-        Real dt = std::sqrt(t / expiryTimes_[index_m]);
-        atmVol_i = atmVol_m * dt;
-        for (Size i = 0; i < deltas_.size(); ++i) {
-            putVols_i.push_back(putVols_m[i] * dt);
-            callVols_i.push_back(callVols_m[i] * dt);
-        }
+        atmVol_i = atmVol_m;
+        putVols_i = putVols_m;
+        callVols_i = callVols_m;
     } else if (index_m == Null<Size>()) {
         // extrapolate before first expiry
         atmVol_i = atmVol_p;
