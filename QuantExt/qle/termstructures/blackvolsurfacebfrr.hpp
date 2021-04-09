@@ -133,6 +133,7 @@ private:
     Real accuracy_;
     Size maxIterations_;
 
+    Real forward_;
     std::vector<Real> x_, y_;
     boost::shared_ptr<Interpolation> interpolation_;
 };

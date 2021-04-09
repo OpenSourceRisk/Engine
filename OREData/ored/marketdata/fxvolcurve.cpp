@@ -317,6 +317,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     for (auto const& md : loader.loadQuotes(asof)) {
         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
             boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+            QL_REQUIRE(q, "internal error: could not cast to FXOptionQuote");
             Strike s = parseStrike(q->strike());
             if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy() &&
                 (s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::ATM)) {
@@ -369,7 +370,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     std::vector<bool> dataComplete(expiriesTmp.size(), true);
 
     for (Size i = 0; i < expiriesTmp.size(); ++i) {
-        for (Size j = 0; i < smileDeltas.size(); ++j) {
+        for (Size j = 0; j < smileDeltas.size(); ++j) {
             if (bfQuotesTmp[i][j] == Null<Real>() || rrQuotesTmp[i][j] == Null<Real>() ||
                 atmQuotesTmp[i] == Null<Real>())
                 dataComplete[i] = false;
@@ -752,7 +753,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
-                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta,
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta ||
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR,
                    "Unknown FX curve building dimension");
 
         expiriesRegex_ = false;
@@ -1001,7 +1003,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         }
 
     } catch (std::exception& e) {
-        QL_FAIL("fx vol curve building failed :" << e.what());
+        QL_FAIL("fx vol curve building failed: " << e.what());
     } catch (...) {
         QL_FAIL("fx vol curve building failed: unknown error");
     }
