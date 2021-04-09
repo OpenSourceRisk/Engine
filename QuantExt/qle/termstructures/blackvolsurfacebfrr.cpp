@@ -55,10 +55,10 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     x_.push_back(simpleDeltaFromStrike(c.atmStrike(at_)));
     y_.push_back(std::log(atmVol_));
 
-    for (Size i = 0; i < deltas_.size(); ++i) {
-        BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_, callVols_[i] * std::sqrt(expiryTime_));
-        x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(deltas[i])));
-        y_.push_back(std::log(callVols_[i]));
+    for (Size i = deltas_.size(); i > 0; --i) {
+        BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_, callVols_[i - 1] * std::sqrt(expiryTime_));
+        x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(deltas[i - 1])));
+        y_.push_back(std::log(callVols_[i - 1]));
     }
 
     /* Create the interpolation object */
@@ -127,9 +127,9 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
     if (!butterflyIsBrokerStyle) {
 
-        // butterfly is not broker style: we can directly compute the call/put strikes and vols ...
+        // butterfly is not broker style: we can directly compute the call/put vols ...
 
-        std::vector<Real> k_c, k_p, vol_c, vol_p;
+        std::vector<Real> vol_p, vol_c;
 
         for (Size i = 0; i < deltas.size(); ++i) {
             QL_REQUIRE(atmVol + bfQuotes[i] - 0.5 * rrQuotes[i] > 0.0,
@@ -137,12 +137,6 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
                                                << ") must be positive when creating smile from smile bf quotes");
             vol_p.push_back(atmVol + bfQuotes[i] - 0.5 * phirr * rrQuotes[i]);
             vol_c.push_back(atmVol + bfQuotes[i] + 0.5 * phirr * rrQuotes[i]);
-            BlackDeltaCalculator cp(Option::Type::Put, dt, spot, domDisc, forDisc,
-                                    vol_p.back() * std::sqrt(expiryTime));
-            BlackDeltaCalculator cc(Option::Type::Call, dt, spot, domDisc, forDisc,
-                                    vol_p.back() * std::sqrt(expiryTime));
-            k_p.push_back(cp.strikeFromDelta(-deltas[i]));
-            k_c.push_back(cc.strikeFromDelta(deltas[i]));
         }
 
         // ... and set up the interpolated smile
@@ -227,9 +221,9 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
                 std::vector<Real> vs;
                 for (Size i = 0; i < deltas.size(); ++i) {
-                    vs.push_back(blackFormula(Option::Put, kb_p.back(), forward,
+                    vs.push_back(blackFormula(Option::Put, kb_p[i], forward,
                                               tmpSmile->volatility(k_p[i]) * std::sqrt(expiryTime)) +
-                                 blackFormula(Option::Call, kb_c.back(), forward,
+                                 blackFormula(Option::Call, kb_c[i], forward,
                                               tmpSmile->volatility(k_c[i]) * std::sqrt(expiryTime)));
                 }
 
@@ -376,7 +370,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
 
     /* build the smiles on the indices, if we do not have them yet */
 
-    if (smiles_[index_m] == nullptr) {
+    if (index_m != Null<Size>() && smiles_[index_m] == nullptr) {
         DeltaVolQuote::AtmType at;
         DeltaVolQuote::DeltaType dt;
         if (expiryTimes_[index_m] < switchTime_ || close_enough(expiryTimes_[index_m], switchTime_)) {
@@ -393,7 +387,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
                                 riskReversalInFavorOf_, butterflyIsBrokerStyle_, smileInterpolation_);
     }
 
-    if (smiles_[index_p] == nullptr) {
+    if (index_p != Null<Size>() && smiles_[index_p] == nullptr) {
         DeltaVolQuote::AtmType at;
         DeltaVolQuote::DeltaType dt;
         if (expiryTimes_[index_p] < switchTime_ || close_enough(expiryTimes_[index_p], switchTime_)) {
