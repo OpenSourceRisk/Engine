@@ -1676,10 +1676,9 @@ FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, 
                                        const string& switchTenor, const string& longTermAtmType,
                                        const string& longTermDeltaType, const string& riskReversalInFavorOf,
                                        const string& butterflyStyle, const string& fxConventionID)
-    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType), strSwitchTenor_(switchTenor),
-      strLongTermAtmType_(longTermAtmType), strLongTermDeltaType_(longTermDeltaType),
-      strRiskReversalInFavorOf_(riskReversalInFavorOf), strButterflyStyle_(butterflyStyle),
-      fxConventionID_(fxConventionID) {
+    : Convention(id, Type::FxOption), fxConventionID_(fxConventionID), strAtmType_(atmType), strDeltaType_(deltaType),
+      strSwitchTenor_(switchTenor), strLongTermAtmType_(longTermAtmType), strLongTermDeltaType_(longTermDeltaType),
+      strRiskReversalInFavorOf_(riskReversalInFavorOf), strButterflyStyle_(butterflyStyle) {
     build();
 }
 
@@ -1731,7 +1730,7 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("FxOption");
     XMLUtils::addChild(doc, node, "Id", id_);
-    XMLUtils::addChild(doc, node, "FXConventionID", fxConventinoID_);
+    XMLUtils::addChild(doc, node, "FXConventionID", fxConventionID_);
     XMLUtils::addChild(doc, node, "AtmType", strAtmType_);
     XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_);
     XMLUtils::addChild(doc, node, "SwitchTenor", strSwitchTenor_);
