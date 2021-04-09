@@ -24,15 +24,19 @@
 
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/math/interpolation.hpp>
+#include <ql/option.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
-#include <ql/option.hpp>
 
 namespace QuantExt {
 
 using namespace QuantLib;
+
+namespace detail {
+class SimpleDeltaInterpolatedSmile;
+}
 
 class BlackVolatilitySurfaceBFRR : public BlackVolatilityTermStructure {
 public:
@@ -41,8 +45,9 @@ public:
         Date referenceDate, const std::vector<Date>& dates, const std::vector<Real>& deltas,
         const std::vector<std::vector<Real>>& bfQuotes, const std::vector<std::vector<Real>>& rrQuotes,
         const std::vector<Real>& atmQuotes, const DayCounter& dayCounter, const Calendar& calendar,
-        const Handle<Quote>& spot, const Handle<YieldTermStructure>& domesticTS,
-        const Handle<YieldTermStructure>& foreignTS, const DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
+        const Handle<Quote>& spot, const Size spotDays, const Calendar spotCalendar,
+        const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS,
+        const DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
         const DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral, const Period& switchTenor = 0 * Days,
         const DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
         const DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
@@ -72,6 +77,8 @@ public:
 
 private:
     Volatility blackVolImpl(Time t, Real strike) const override;
+    void update() override;
+    void init();
 
     std::vector<Date> dates_;
     std::vector<Real> deltas_;
@@ -79,6 +86,8 @@ private:
     std::vector<std::vector<Real>> rrQuotes_;
     std::vector<Real> atmQuotes_;
     Handle<Quote> spot_;
+    Size spotDays_;
+    Calendar spotCalendar_;
     Handle<YieldTermStructure> domesticTS_;
     Handle<YieldTermStructure> foreignTS_;
     DeltaVolQuote::DeltaType dt_;
@@ -89,6 +98,52 @@ private:
     Option::Type riskReversalInFavorOf_;
     bool butterflyIsBrokerStyle_;
     SmileInterpolation smileInterpolation_;
+
+    Real switchTime_, settlDomDisc_, settlForDisc_;
+    std::vector<Real> expiryTimes_;
+
+    mutable std::vector<boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> smiles_;
+    mutable std::map<Real, boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> cachedInterpolatedSmiles_;
 };
+
+namespace detail {
+
+class SimpleDeltaInterpolatedSmile {
+public:
+    SimpleDeltaInterpolatedSmile(const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime,
+                                 const std::vector<Real>& deltas, const std::vector<Real>& putVols,
+                                 const std::vector<Real>& callVols, const Real atmVol,
+                                 const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at,
+                                 const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation,
+                                 const Real accuracy = 1E-8, const Size maxIterations = 1000);
+
+    Real volatility(const Real strike);
+    Real strikeFromDelta(const Option::Type type, const Real delta, const DeltaVolQuote::DeltaType dt);
+    Real atmStrike(const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at);
+
+private:
+    Real simpleDeltaFromStrike(const Real strike) const;
+
+    Real spot_, domDisc_, forDisc_, expiryTime_;
+    std::vector<Real> deltas_, putVols_, callVols_;
+    Real atmVol_;
+    DeltaVolQuote::DeltaType dt_;
+    DeltaVolQuote::AtmType at_;
+    BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation_;
+    Real accuracy_;
+    Size maxIterations_;
+
+    std::vector<Real> x_, y_;
+    boost::shared_ptr<Interpolation> interpolation_;
+};
+
+boost::shared_ptr<SimpleDeltaInterpolatedSmile>
+createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime,
+            const std::vector<Real>& deltas, const std::vector<Real>& bfQuotes, const std::vector<Real>& rrQuotes,
+            const Real atmVol, const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at,
+            const Option::Type riskReversalInFavorOf, const bool butterflyIsBrokerStyle,
+            const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation);
+
+} // namespace detail
 
 } // namespace QuantExt

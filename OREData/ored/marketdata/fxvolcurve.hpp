@@ -85,6 +85,8 @@ private:
     Handle<YieldTermStructure> domYts_, forYts_;
     std::vector<Period> expiries_;
     bool expiriesRegex_;
+    Size spotDays_;
+    Calendar spotCalendar_;
     QuantLib::Period switchTenor_;
     QuantLib::DeltaVolQuote::AtmType atmType_;
     QuantLib::DeltaVolQuote::DeltaType deltaType_;

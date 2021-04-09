@@ -28,9 +28,9 @@
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
+#include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
-#include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <regex>
 #include <string.h>
 
@@ -310,7 +310,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     std::set<Period> expiriesTmp;
 
     boost::optional<regex> regexp;
-    if(expiriesRegex_)
+    if (expiriesRegex_)
         regexp = regex(boost::replace_all_copy(config->expiries()[0], "*", ".*"));
 
     std::vector<boost::shared_ptr<FXOptionQuote>> data;
@@ -437,8 +437,8 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
         asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
-        fxSpot_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_, longTermAtmType_,
-        riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
+        fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
+        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
 
     vol_->enableExtrapolation();
 }
@@ -771,12 +771,17 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         longTermDeltaType_ = DeltaVolQuote::DeltaType::Fwd;
         riskReversalInFavorOf_ = Option::Call;
         butterflyIsBrokerStyle_ = true;
+        spotDays_ = 2;
+        spotCalendar_ = UnitedStates();
 
         if (config->conventionsID() != "") {
-            boost::shared_ptr<Convention> conv = conventions.get(config->conventionsID());
-            auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conv);
+            auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions.get(config->conventionsID()));
             QL_REQUIRE(fxOptConv,
-                       "unable to cast convention (" << config->conventionsID() << ") into FxOptionConvention");
+                       "unable to cast convention '" << config->conventionsID() << "' into FxOptionConvention");
+            auto fxConv = boost::dynamic_pointer_cast<FXConvention>(conventions.get(fxOptConv->fxConventionID()));
+            QL_REQUIRE(fxConv, "unable to cast convention '" << fxOptConv->fxConventionID()
+                                                             << "', from FxOptionConvention '"
+                                                             << config->conventionsID() << "' into FxConvention");
             atmType_ = fxOptConv->atmType();
             deltaType_ = fxOptConv->deltaType();
             longTermAtmType_ = fxOptConv->longTermAtmType();
@@ -784,6 +789,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             switchTenor_ = fxOptConv->switchTenor();
             riskReversalInFavorOf_ = fxOptConv->riskReversalInFavorOf();
             butterflyIsBrokerStyle_ = fxOptConv->butterflyIsBrokerStyle();
+            spotDays_ = fxConv->spotDays();
+            spotCalendar_ = fxConv->advanceCalendar();
         } else {
             WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
@@ -797,7 +804,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta) {
             buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
-        } else if(config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR) {
+        } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR) {
             buildSmileBfRrCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
             buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves,
