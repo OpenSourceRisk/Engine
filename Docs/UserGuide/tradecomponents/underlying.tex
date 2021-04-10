@@ -1,9 +1,8 @@
 \subsubsection{Underlying}
 \label{ss:underlying}
 
-This trade component can be used to define the underlying entity for an Equity, Commodity or FX trade, but also an underlying interest rate index. It can be used for a single underlying, or within a basket with associated weight.
+This trade component can be used to define the underlying entity for an Equity, Commodity or FX trade, but it can also define an underlying interest rate, inflation index or credit name. It can be used for a single underlying, or within a basket with associated weight.
 For an equity underlying a string representation is used to match \lstinline!Underlying! node to requied configuration and reference data. The string representation is of the form {IdentifierType}:{Name}:{Currency}:{Exchange}, with all entries optional except for Name.
-
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -27,7 +26,7 @@ For an equity underlying a string representation is used to match \lstinline!Und
 
 Example structures of the \lstinline!Underlying! trade component node are shown in Listings \ref{lst:equnderlyingric} and \ref{lst:equnderlyingisin} for
 an equity underlying, in Listing \ref{lst:fxunderlying} for an fx underlying, in Listing \ref{lst:communderlying} for
-a commodity underlying, and in Listing \ref{lst:irunderlying} for an underlying interest rate index.
+a commodity underlying, in Listing \ref{lst:irunderlying} for an underlying interest rate index, in Listing \ref{lst:infunderlying} for an underlying inflation index, in Listing \ref{lst:crunderlying} for an underlying credit name.  
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -93,14 +92,41 @@ a commodity underlying, and in Listing \ref{lst:irunderlying} for an underlying 
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
         <Underlying>
-          <Type>IR</Type>
+          <Type>InterestRate</Type>
           <Name>USD-CMS-10Y</Name>
           <Weight>1.0</Weight>
         </Underlying>
 \end{minted}
-\caption{IR Underlying}
+\caption{InterestRate Underlying}
 \label{lst:irunderlying}
 \end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+          <Type>Inflation</Type>
+          <Name>USCPI</Name>
+          <Weight>1.0</Weight>
+        </Underlying>
+\end{minted}
+\caption{Inflation Index Underlying}
+\label{lst:infunderlying}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+          <Type>Credit</Type>
+          <Name>ISSUER_A</Name>
+          <Weight>1.0</Weight>
+        </Underlying>
+\end{minted}
+\caption{Credit Underlying}
+\label{lst:crunderlying}
+\end{listing}
+
 
 The meanings and allowable values of the elements in the \lstinline!Underlying! node are as follows:
 
@@ -108,7 +134,7 @@ The meanings and allowable values of the elements in the \lstinline!Underlying! 
 
 \item \lstinline!Type!: The type of the Underlying asset.
 
-  Allowable values:  \emph{Equity}, \emph{FX}, \emph{Commodity}, \emph{IR}.
+  Allowable values:  \emph{Equity}, \emph{FX}, \emph{Commodity}, \emph{InterestRate}, \emph{Inflation}, \emph{Credit}.
 
 \item \lstinline!Name!:
   The name of the Underlying asset. 
@@ -121,9 +147,13 @@ The meanings and allowable values of the elements in the \lstinline!Underlying! 
   \emph{TR20H-GBP-USD}, \emph{TR20H-EUR-USD}, \emph{TR20H-AUD-USD} and \emph{TR20H-NZD-USD}. For the USD-EUR pair, \emph{TR20H} or ECB (ECB-EUR-USD) can be used. \\ See Table
   \ref{tab:fxindex_data}, and note that the FX- prefix is not included in \lstinline!Name! as it is already included in \lstinline!Type!.
 
- \emph{IR}: See Table \ref{tab:indices}
- 
-  \emph{Commodity}: An identifier specifying the commodity being referenced in the leg.
+ \emph{InterestRate}: Any valid interest rate index name, see Table \ref{tab:indices}
+
+ \emph{Inflation}: Any valid zero coupon inflation index (CPI) name, See Table \ref{tab:cpiindex_data}
+
+ \emph{Credit}: Any valid credit name with a configured default curve, see Table \ref{tab:equity_credit_data}
+
+ \emph{Commodity}: An identifier specifying the commodity being referenced in the leg.
 % The following needs to move into client-specific documentation of allowable values:
 %The \lstinline!Name! is of the form \lstinline!Prefix:Identifier!. The \lstinline!Prefix! is either \lstinline!PM! for precious metal or a code representing the exchange on which the commodity is traded. For precious metals, the \lstinline!Identifier! is the precious metal code followed by the precious metal price currency. For future contracts, the \lstinline!Identifier! is the exchange code for the future contract.
 Table \ref{tab:commodity_data} lists the allowable values for \lstinline!Name! and gives a description. \\
