@@ -99,8 +99,9 @@ private:
     bool butterflyIsBrokerStyle_;
     SmileInterpolation smileInterpolation_;
 
-    Real switchTime_, settlDomDisc_, settlForDisc_;
+    Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
     std::vector<Real> expiryTimes_;
+    std::vector<Date> settlementDates_;
 
     mutable std::vector<boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> smiles_;
     mutable std::map<Real, boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> cachedInterpolatedSmiles_;

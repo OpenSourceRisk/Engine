@@ -323,18 +323,21 @@ void BlackVolatilitySurfaceBFRR::init() {
 
     // calculate times associated to expiry dates
 
-    for (auto const& d : dates_)
+    for (auto const& d : dates_) {
         expiryTimes_.push_back(timeFromReference(d));
+        settlementDates_.push_back(spotCalendar_.advance(d, spotDays_ * Days));
+    }
 
     // resize cache for smiles on expiry dates
 
     smiles_.resize(expiryTimes_.size());
 
-    // calculate discount factors for spot settlement date
+    // calculate discount factors for spot settlement date and the settlement lag
 
     Date settlDate = spotCalendar_.advance(referenceDate(), spotDays_ * Days);
     settlDomDisc_ = domesticTS_->discount(settlDate);
     settlForDisc_ = foreignTS_->discount(settlDate);
+    settlLag_ = timeFromReference(settlDate);
 
     // clear caches
 
@@ -381,8 +384,8 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
             dt = ltdt_;
         }
         smiles_[index_m] =
-            detail::createSmile(spot_->value(), domesticTS_->discount(expiryTimes_[index_m]) / settlDomDisc_,
-                                foreignTS_->discount(expiryTimes_[index_m]) / settlForDisc_, expiryTimes_[index_m],
+            detail::createSmile(spot_->value(), domesticTS_->discount(settlementDates_[index_m]) / settlDomDisc_,
+                                foreignTS_->discount(settlementDates_[index_m]) / settlForDisc_, expiryTimes_[index_m],
                                 deltas_, bfQuotes_[index_m], rrQuotes_[index_m], atmQuotes_[index_m], dt, at,
                                 riskReversalInFavorOf_, butterflyIsBrokerStyle_, smileInterpolation_);
     }
@@ -398,8 +401,8 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
             dt = ltdt_;
         }
         smiles_[index_p] =
-            detail::createSmile(spot_->value(), domesticTS_->discount(expiryTimes_[index_p]) / settlDomDisc_,
-                                foreignTS_->discount(expiryTimes_[index_p]) / settlForDisc_, expiryTimes_[index_m],
+            detail::createSmile(spot_->value(), domesticTS_->discount(settlementDates_[index_p]) / settlDomDisc_,
+                                foreignTS_->discount(settlementDates_[index_p]) / settlForDisc_, expiryTimes_[index_m],
                                 deltas_, bfQuotes_[index_p], rrQuotes_[index_p], atmQuotes_[index_p], dt, at,
                                 riskReversalInFavorOf_, butterflyIsBrokerStyle_, smileInterpolation_);
     }
@@ -460,11 +463,18 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         }
     }
 
-    /* build a new smile using the interpolated vols and artifical conventions */
+    /* build a new smile using the interpolated vols and artifical conventions
+       (querying the dom / for TS at t + settlLag_ is not entirely correct, because
+        - of possibly different dcs in the curves and the vol ts and
+        - because settLag_ is the time from today
+          to today's settlement date,
+        but the best we can realistically do in this context, because we don't have a date
+        corresponding to t) */
 
     auto smile = boost::make_shared<detail::SimpleDeltaInterpolatedSmile>(
-        spot_->value(), domesticTS_->discount(t) / settlDomDisc_, foreignTS_->discount(t) / settlForDisc_, t, deltas_,
-        putVols_i, callVols_i, atmVol_i, dt_c, at_c, smileInterpolation_);
+        spot_->value(), domesticTS_->discount(t + settlLag_) / settlDomDisc_,
+        foreignTS_->discount(t + settlLag_) / settlForDisc_, t, deltas_, putVols_i, callVols_i, atmVol_i, dt_c, at_c,
+        smileInterpolation_);
 
     /* store the new smile in the cache */
 
