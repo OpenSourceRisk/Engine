@@ -158,7 +158,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                 }
                 string sDelta = XMLUtils::getChildValue(node, "SmileDelta");
                 if (sDelta == "")
-                    smileDelta_ = {25};
+                    smileDelta_ = {10, 25};
                 else
                     smileDelta_ = parseListOfValues<Size>(sDelta, &parseInteger);
             } else {
