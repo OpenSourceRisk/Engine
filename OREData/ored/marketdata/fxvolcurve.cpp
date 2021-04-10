@@ -780,10 +780,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions.get(config->conventionsID()));
             QL_REQUIRE(fxOptConv,
                        "unable to cast convention '" << config->conventionsID() << "' into FxOptionConvention");
-            auto fxConv = boost::dynamic_pointer_cast<FXConvention>(conventions.get(fxOptConv->fxConventionID()));
-            QL_REQUIRE(fxConv, "unable to cast convention '" << fxOptConv->fxConventionID()
-                                                             << "', from FxOptionConvention '"
-                                                             << config->conventionsID() << "' into FxConvention");
+            boost::shared_ptr<FXConvention> fxConv;
+            if (!fxOptConv->fxConventionID().empty()) {
+                fxConv = boost::dynamic_pointer_cast<FXConvention>(conventions.get(fxOptConv->fxConventionID()));
+                QL_REQUIRE(fxConv, "unable to cast convention '" << fxOptConv->fxConventionID()
+                                                                 << "', from FxOptionConvention '"
+                                                                 << config->conventionsID() << "' into FxConvention");
+            }
             atmType_ = fxOptConv->atmType();
             deltaType_ = fxOptConv->deltaType();
             longTermAtmType_ = fxOptConv->longTermAtmType();
@@ -791,8 +794,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             switchTenor_ = fxOptConv->switchTenor();
             riskReversalInFavorOf_ = fxOptConv->riskReversalInFavorOf();
             butterflyIsBrokerStyle_ = fxOptConv->butterflyIsBrokerStyle();
-            spotDays_ = fxConv->spotDays();
-            spotCalendar_ = fxConv->advanceCalendar();
+            if (fxConv) {
+                spotDays_ = fxConv->spotDays();
+                spotCalendar_ = fxConv->advanceCalendar();
+            }
         } else {
             WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
