@@ -1713,7 +1713,7 @@ void FxOptionConvention::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FxOption");
     type_ = Type::FxOption;
     id_ = XMLUtils::getChildValue(node, "Id", true);
-    fxConventionID_ = XMLUtils::getChildValue(node, "FXConventionID", true);
+    fxConventionID_ = XMLUtils::getChildValue(node, "FXConventionID", false);
 
     // Get string values from xml
     strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true);
