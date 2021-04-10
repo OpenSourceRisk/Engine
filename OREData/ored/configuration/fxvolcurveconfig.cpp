@@ -84,7 +84,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     string smileInterp = XMLUtils::getChildValue(node, "SmileInterpolation");
 
     if (cal == "")
-        cal = "TARGET";
+        cal = "US";
     calendar_ = parseCalendar(cal);
 
     string dc = XMLUtils::getChildValue(node, "DayCounter");
