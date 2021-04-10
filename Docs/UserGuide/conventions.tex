@@ -814,7 +814,8 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
  
 The meanings of the various elements in this node are as follows: 
 \begin{itemize}
-\item FXConventionID: The FX convention for the currency pair (see \ref{sss:fx_convention})
+\item FXConventionID: The FX convention for the currency pair (see \ref{sss:fx_convention}). Optional, if not given, the
+  values FX spot days and advance calendar default to $2$ and US, respectively.
 \item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd, 
 AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
 \item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 
