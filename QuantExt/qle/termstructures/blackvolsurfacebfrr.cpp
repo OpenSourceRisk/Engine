@@ -88,7 +88,8 @@ Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, cons
     } while (std::abs(result - lastResult) > accuracy_ && ++iterations < maxIterations_);
     QL_REQUIRE(iterations < maxIterations_, "SmileDeltaInterpolatedSmile::strikeFromDelta: max iterations ("
                                                 << maxIterations_ << "), no solution found for accuracy " << accuracy_
-                                                << ", last iterations. " << lastResult << ", " << result);
+                                                << ", last iterations. " << lastResult << ", " << result
+                                                << ", tte=" << expiryTime_);
     return result;
 }
 
@@ -103,7 +104,8 @@ Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, 
     } while (std::abs(result - lastResult) > accuracy_ && ++iterations < maxIterations_);
     QL_REQUIRE(iterations < maxIterations_, "SmileDeltaInterpolatedSmile::atmStrikeFromDelta: max iterations ("
                                                 << maxIterations_ << "), no solution found for accuracy " << accuracy_
-                                                << ", last iterations. " << lastResult << ", " << result);
+                                                << ", last iterations. " << lastResult << ", " << result
+                                                << ", tte=" << expiryTime_);
     return result;
 }
 
@@ -133,8 +135,9 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
         for (Size i = 0; i < deltas.size(); ++i) {
             QL_REQUIRE(atmVol + bfQuotes[i] - 0.5 * rrQuotes[i] > 0.0,
-                       "createSmile: atmVol (" << atmVol << ") + bf (" << bfQuotes[i] << ") - rr (" << rrQuotes[i]
-                                               << ") must be positive when creating smile from smile bf quotes");
+                       "createSmile: atmVol ("
+                           << atmVol << ") + bf (" << bfQuotes[i] << ") - rr (" << rrQuotes[i]
+                           << ") must be positive when creating smile from smile bf quotes, tte=" << expiryTime);
             vol_p.push_back(atmVol + bfQuotes[i] - 0.5 * phirr * rrQuotes[i]);
             vol_c.push_back(atmVol + bfQuotes[i] + 0.5 * phirr * rrQuotes[i]);
         }
