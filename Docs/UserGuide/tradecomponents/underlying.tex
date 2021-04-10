@@ -108,7 +108,9 @@ a commodity underlying, in Listing \ref{lst:irunderlying} for an underlying inte
           <Type>Inflation</Type>
           <Name>USCPI</Name>
           <Weight>1.0</Weight>
-        </Underlying>
+          <!-- optional -->
+          <Interpolation>Linear</Interpolation>
+</Underlying>
 \end{minted}
 \caption{Inflation Index Underlying}
 \label{lst:infunderlying}
@@ -198,5 +200,10 @@ Allowable values: An integer. Defaults to 0 if left blank or omitted, and \lstin
 Only valid when  \lstinline!Type! is  \emph{Commodity}.  The calendar used to roll forward the observation date.
 
 Allowable values: See Table \ref{tab:calendar}. Defaults to the null calendar if left blank or omitted, and \lstinline!Type!: is  \emph{Commodity}.
+
+\item \lstinline!Interpolation! [Optional]:
+Only valid when \lstinline!Type! is  \emph{Inflation}. The index observation interpolation between fixings.
+
+Allowable values: Flat, Linear
 
 \end{itemize}

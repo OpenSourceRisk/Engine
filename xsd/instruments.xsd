@@ -919,6 +919,7 @@
       <xs:element type="xs:int" name="FutureMonthOffset" minOccurs="0"/>
       <xs:element type="xs:int" name="DeliveryRollDays" minOccurs="0"/>
       <xs:element type="xs:string" name="DeliveryRollCalendar" minOccurs="0"/>
+      <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   

@@ -213,15 +213,18 @@ XMLNode* CreditUnderlying::toXML(XMLDocument& doc) {
     return node;
 }
 
-
 void InflationUnderlying::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
         isBasic_ = true;
     } else if (XMLUtils::getNodeName(node) == nodeName_) {
         Underlying::fromXML(node);
-	std::string interpolationString = XMLUtils::getChildValue(node, "Interpolation");
-        interpolation_ = parseObservationInterpolation(interpolationString);
+        // optional
+        std::string interpolationString = XMLUtils::getChildValue(node, "Interpolation", false);
+        if (interpolationString != "")
+            interpolation_ = parseObservationInterpolation(interpolationString);
+        else
+            interpolation_ = QuantLib::CPI::InterpolationType::Flat;
         isBasic_ = false;
     } else {
         QL_FAIL("Need either a Name or Underlying node for InflationUnderlying.");
@@ -235,7 +238,7 @@ XMLNode* InflationUnderlying::toXML(XMLDocument& doc) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
     } else {
         node = Underlying::toXML(doc);
-	XMLUtils::addChild(doc, node, "Interpolation", std::to_string(interpolation_));
+        XMLUtils::addChild(doc, node, "Interpolation", std::to_string(interpolation_));
     }
     return node;
 }

@@ -180,7 +180,7 @@ public:
 
     //! Constructor with identifer infomation
     InflationUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight,
-                        const QuantLib::CPI::InterpolationType& interpolation)
+                        const QuantLib::CPI::InterpolationType& interpolation = QuantLib::CPI::InterpolationType::Flat)
         : Underlying(type, name, weight), interpolation_(interpolation){};
     const QuantLib::CPI::InterpolationType& interpolation() const { return interpolation_; }
 
