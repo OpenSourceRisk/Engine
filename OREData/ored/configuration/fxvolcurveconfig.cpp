@@ -89,7 +89,11 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     boost::split(tokens, fxSpotID_, boost::is_any_of("/"));
     QL_REQUIRE(tokens.size() == 3, "Expected 3 tokens FX/CCY1/CCY2 in fxSpotID (" << fxSpotID_ << ")");
     if (cal == "") {
-        cal = tokens[1] + "," + tokens[2];
+        // FIXME for bwd comp / regression testing only!!!
+        if (dim == "Smile" && smileType == "BFRR")
+            cal = tokens[1] + "," + tokens[2];
+        else
+            cal = "TARGET";
     }
     calendar_ = parseCalendar(cal);
 
