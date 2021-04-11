@@ -159,10 +159,10 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
                 }
             } else if (smileType == "BFRR") {
                 dimension_ = Dimension::SmileBFRR;
-                if (smileInterp == "" || smileInterp == "Linear") {
-                    smileInterpolation_ = SmileInterpolation::Linear;
-                } else if (smileInterp == "Cubic") {
+                if (smileInterp == "" || smileInterp == "Cubic") {
                     smileInterpolation_ = SmileInterpolation::Cubic;
+                } else if (smileInterp == "Linear") {
+                    smileInterpolation_ = SmileInterpolation::Linear;
                 } else {
                     QL_FAIL("SmileInterpolation " << smileInterp << " not supported");
                 }
