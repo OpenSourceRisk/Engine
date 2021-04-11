@@ -4943,7 +4943,8 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
 \item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in smile
   curves, may be omitted for ATM curves.
 \item DayCounter: The term structure's day counter used in date to time conversions. Optional, defaults to A365.
-\item Calendar: The term structure's calendar used in option tenor to date conversions. Optional, defaults to US.
+\item Calendar: The term structure's calendar used in option tenor to date conversions. Optional, defaults to source ccy
+  + target ccy default calendars.
 \item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of
   the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} for option tenors <= 2Y and {\tt
     AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y if the conventions ID is omitted or left blank. Furthermore,

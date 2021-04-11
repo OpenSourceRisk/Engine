@@ -83,8 +83,14 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     string cal = XMLUtils::getChildValue(node, "Calendar");
     string smileInterp = XMLUtils::getChildValue(node, "SmileInterpolation");
 
-    if (cal == "")
-        cal = "US";
+    fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
+
+    vector<string> tokens;
+    boost::split(tokens, fxSpotID_, boost::is_any_of("/"));
+    QL_REQUIRE(tokens.size() == 3, "Expected 3 tokens FX/CCY1/CCY2 in fxSpotID (" << fxSpotID_ << ")");
+    if (cal == "") {
+        cal = tokens[1] + "," + tokens[2];
+    }
     calendar_ = parseCalendar(cal);
 
     string dc = XMLUtils::getChildValue(node, "DayCounter");
@@ -174,7 +180,6 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", curvesRequired);
         fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", curvesRequired);
     }
-    fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);

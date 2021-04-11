@@ -83,6 +83,7 @@ private:
     boost::shared_ptr<BlackVolTermStructure> vol_;
     Handle<Quote> fxSpot_;
     Handle<YieldTermStructure> domYts_, forYts_;
+    string sourceCcy_, targetCcy_;
     std::vector<Period> expiries_;
     bool expiriesRegex_;
     Size spotDays_;

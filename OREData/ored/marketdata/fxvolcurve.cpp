@@ -176,9 +176,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vector<Date> dates;
     Matrix blackVolMatrix;
 
-    vector<string> tokens;
-    boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
-    string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
+    string base = "FX_OPTION/RATE_LNVOL/" + sourceCcy_ + "/" + targetCcy_ + "/";
 
     // build quote names
     std::vector<std::string> deltaNames;
@@ -660,11 +658,6 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
                                       const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
                                       const Conventions& conventions) {
-    vector<string> tokens;
-    boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
-    QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << config->fxSpotID());
-    auto forTarget = tokens[1];
-    auto domTarget = tokens[2];
 
     DLOG("Triangulating FxVol curve " << config->curveID() << " from baseVols " << config->baseVolatility1() << ":"
                                       << config->baseVolatility2());
@@ -676,16 +669,16 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     std::string spec1 = "FXVolatility/" + forBase1 + "/" + domBase1 + "/" + config->baseVolatility1();
 
     bool base1Inverted = false;
-    if (forBase1 != forTarget && forBase1 != domTarget) {
+    if (forBase1 != sourceCcy_ && forBase1 != targetCcy_) {
         // we invert the pair
         base1Inverted = true;
         std::string tmp = forBase1;
-        forBase1 = domTarget;
+        forBase1 = targetCcy_;
         domBase1 = tmp;
 
-        QL_REQUIRE(forBase1 == forTarget || forBase1 == domTarget,
+        QL_REQUIRE(forBase1 == sourceCcy_ || forBase1 == targetCcy_,
                    "FxVol: mismatch in the baseVolatility1 " << config->baseVolatility1() << " and Target Pair "
-                                                             << forTarget << domTarget);
+                                                             << sourceCcy_ << targetCcy_);
     }
     baseCcy = domBase1;
 
@@ -698,10 +691,10 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     QL_REQUIRE(forBase2 == baseCcy || domBase2 == baseCcy,
                "baseVolatility2 must share a ccy code with the baseVolatility1");
 
-    if (forBase2 != forTarget && forBase2 != domTarget) {
+    if (forBase2 != sourceCcy_ && forBase2 != targetCcy_) {
         // we invert the pair
         std::string tmp = forBase2;
-        forBase2 = domTarget;
+        forBase2 = targetCcy_;
         domBase2 = tmp;
         base2Inverted = true;
     }
@@ -731,8 +724,8 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     }
     domBaseVol->enableExtrapolation();
 
-    string forIndex = "FX-" + config->fxIndexTag() + "-" + forTarget + "-" + baseCcy;
-    string domIndex = "FX-" + config->fxIndexTag() + "-" + domTarget + "-" + baseCcy;
+    string forIndex = "FX-" + config->fxIndexTag() + "-" + sourceCcy_ + "-" + baseCcy;
+    string domIndex = "FX-" + config->fxIndexTag() + "-" + targetCcy_ + "-" + baseCcy;
 
     Handle<QuantExt::CorrelationTermStructure> rho = getCorrelationCurve(forIndex, domIndex, correlationCurves);
 
@@ -766,6 +759,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             }
         }
 
+        std::vector<std::string> tokens;
+        boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
+        QL_REQUIRE(tokens.size() == 3, "Expected 3 tokens in fx spot id '" << config->fxSpotID() << "'");
+        sourceCcy_ = tokens[1];
+        targetCcy_ = tokens[2];
+
         atmType_ = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         deltaType_ = DeltaVolQuote::DeltaType::Spot;
         switchTenor_ = 2 * Years;
@@ -774,7 +773,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         riskReversalInFavorOf_ = Option::Call;
         butterflyIsBrokerStyle_ = true;
         spotDays_ = 2;
-        spotCalendar_ = UnitedStates();
+        string calTmp = sourceCcy_ + "," + targetCcy_;
+        spotCalendar_ = parseCalendar(calTmp);
 
         if (config->conventionsID() != "") {
             auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions.get(config->conventionsID()));
