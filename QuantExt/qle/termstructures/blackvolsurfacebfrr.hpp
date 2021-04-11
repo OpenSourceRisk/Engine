@@ -48,11 +48,11 @@ public:
         const Handle<Quote>& spot, const Size spotDays, const Calendar spotCalendar,
         const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS,
         const DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
-        const DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral, const Period& switchTenor = 0 * Days,
-        const DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
+        const DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+        const Period& switchTenor = 2 * Years, const DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
         const DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
         const Option::Type riskReversalInFavorOf = Option::Call, const bool butterflyIsBrokerStyle = true,
-        const SmileInterpolation smileInterpolation = SmileInterpolation::Linear);
+        const SmileInterpolation smileInterpolation = SmileInterpolation::Cubic);
 
     Date maxDate() const override { return Date::maxDate(); }
     Real minStrike() const override { return 0; }

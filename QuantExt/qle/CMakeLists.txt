@@ -173,6 +173,7 @@ termstructures/averageoffpeakpowerhelper.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/averagespotpricehelper.cpp
 termstructures/basistwoswaphelper.cpp
+termstructures/blackdeltautilities.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
@@ -493,6 +494,7 @@ termstructures/averageoffpeakpowerhelper.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/averagespotpricehelper.hpp
 termstructures/basistwoswaphelper.hpp
+termstructures/blackdeltautilities.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackmonotonevarvoltermstructure.hpp
 termstructures/blacktriangulationatmvol.hpp

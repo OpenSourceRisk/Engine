@@ -26,6 +26,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
@@ -87,42 +88,6 @@ Real getDelta(const std::string& s) {
     validateDelta(s);
     return ore::data::parseReal(s.substr(0, s.size() - 1)) / 100.0 * (isPut(s) ? -1.0 : 1.0);
 };
-
-// utility to get a strike from a delta
-Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot, Real domDiscount,
-                        Real forDiscount, boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real forward,
-                        Real accuracy, Size maxIterations) {
-    Real result = forward, lastResult;
-    Size iterations = 0;
-    do {
-        Real stddev = std::sqrt(vol->blackVariance(t, result));
-        BlackDeltaCalculator bdc(optionType, dt, spot, domDiscount, forDiscount, stddev);
-        lastResult = result;
-        result = bdc.strikeFromDelta(delta);
-    } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
-    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getStrikeFromDelta: max iterations ("
-                                               << maxIterations << "), no solution found for accuracy " << accuracy
-                                               << ", last iterations: " << lastResult << ", " << result);
-    return result;
-}
-
-// utility to get an atm strike
-Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real spot, Real domDiscount, Real forDiscount,
-                  boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real forward, Real accuracy,
-                  Size maxIterations) {
-    Real result = forward, lastResult;
-    Size iterations = 0;
-    do {
-        Real stddev = std::sqrt(vol->blackVariance(t, result));
-        BlackDeltaCalculator bdc(Option::Call, dt, spot, domDiscount, forDiscount, stddev);
-        lastResult = result;
-        result = bdc.atmStrike(at);
-    } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
-    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getAtmStrike: max iterations ("
-                                               << maxIterations << "), no solution found for accuracy " << accuracy
-                                               << ", last iterations: " << lastResult << ", " << result);
-    return result;
-}
 
 } // namespace
 
@@ -244,6 +209,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 tmpMatrix[i][j] = q->quote()->value();
                 // if we have found all the quotes then this is a valid expiry
                 if (j == deltaNames.size() - 1) {
+                    // FIXME adjust with vol surface calendar
                     dates.push_back(asof + expiries_[i]);
                     validExpiryIdx.push_back(i);
                 }
@@ -567,6 +533,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         vector<vector<Volatility>> vols(n, vector<Volatility>(numExpiries)); // same as above: [0] = ATM, etc.
 
         for (Size i = 0; i < numExpiries; i++) {
+            // FIXME adjust with vol surface calendar
             dates[i] = asof + quotes[0][i]->expiry();
             expiries_.push_back(quotes[0][i]->expiry());
             DLOG("Spec Tenor Vol Variance");
@@ -822,6 +789,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         // build calibration info
 
+        DLOG("Building calibration info for fx vol surface");
+
         if (domYts_.empty() || forYts_.empty()) {
             WLOG("no domestic / foreign yield curves given in fx vol curve config for "
                  << spec.curveConfigID() << ", skip building calibration info");
@@ -871,14 +840,17 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         calibrationInfo_->riskReversalInFavorOf = riskReversalInFavorOf_ == Option::Call ? "Call" : "Put";
         calibrationInfo_->butterflyStyle = butterflyIsBrokerStyle_ ? "Broker" : "Smile";
 
-        std::vector<Real> times, forwards;
+        std::vector<Real> times, forwards, domDisc, forDisc;
+        Date settl = spotCalendar_.advance(asof, spotDays_ * Days);
         for (auto const& p : expiries) {
-            // FIXME here and above in the build methods: vol_->optionDateFromTenor(p);
-            Date d = asof + p;
+            Date d = vol_->optionDateFromTenor(p);
+            Date settlFwd = spotCalendar_.advance(d, spotDays_ * Days);
             calibrationInfo_->expiryDates.push_back(d);
             times.push_back(vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
                                                        : vol_->timeFromReference(d));
-            forwards.push_back(fxSpot_->value() / domYts_->discount(times.back()) * forYts_->discount(times.back()));
+            domDisc.push_back(domYts_->discount(settlFwd) / domYts_->discount(settl));
+            forDisc.push_back(forYts_->discount(settlFwd) / forYts_->discount(settl));
+            forwards.push_back(fxSpot_->value() / domDisc.back() * forDisc.back());
         }
 
         calibrationInfo_->times = times;
@@ -907,8 +879,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
             calibrationInfo_->deltaGridButterflyArbitrage =
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
-            constexpr Real accuracy = 1E-8;      // accuracy for strike from delta calculation
-            constexpr Size maxIterations = 1000; // max iterations for strike from delta calculation
             DeltaVolQuote::DeltaType dt;
             DeltaVolQuote::AtmType at;
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
@@ -925,18 +895,20 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 for (Size j = 0; j < deltas.size(); ++j) {
                     validateDelta(deltas[j]);
                     try {
+                        Real outDelta;
                         Real strike;
                         if (isAtm(deltas[j])) {
-                            strike = getAtmStrike(dt, at, fxSpot_->value(), domYts_->discount(t), forYts_->discount(t),
-                                                  vol_, t, forwards[i], accuracy, maxIterations);
+                            strike = QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t,
+                                                            forwards[i]);
+                            outDelta = 0.50;
                         } else if (isCall(deltas[j])) {
-                            strike = getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt, fxSpot_->value(),
-                                                        domYts_->discount(t), forYts_->discount(t), vol_, t,
-                                                        forwards[i], accuracy, maxIterations);
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt,
+                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
+                            outDelta = 1.0 - getDelta(deltas[j]);
                         } else {
-                            strike = getStrikeFromDelta(Option::Put, getDelta(deltas[j]), dt, fxSpot_->value(),
-                                                        domYts_->discount(t), forYts_->discount(t), vol_, t,
-                                                        forwards[i], accuracy, maxIterations);
+                            strike = QuantExt::getStrikeFromDelta(Option::Put, getDelta(deltas[j]), dt,
+                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
+                            outDelta = -getDelta(deltas[j]);
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
@@ -961,6 +933,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     TLOGGERSTREAM << "..(invalid slice)..";
                 }
             }
+            TLOG("Delta surface arbitrage analysis completed.");
         }
 
         if (reportOnMoneynessGrid) {
@@ -1004,8 +977,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
                 TLOG("Moneyness surface Arbitrage analysis result:");
                 TLOGGERSTREAM << arbitrageAsString(cm);
+                TLOG("Moneyness surface Arbitrage analysis completed:");
             }
         }
+
+        DLOG("Building calibration info for fx vol surface completed.");
 
     } catch (std::exception& e) {
         QL_FAIL("fx vol curve building failed: " << e.what());

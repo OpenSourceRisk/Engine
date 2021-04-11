@@ -256,6 +256,7 @@
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/averagespotpricehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
