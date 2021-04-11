@@ -97,6 +97,7 @@ public:
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
         const bool preserveQuoteLinkage = false,
+        //! Map of underlying discount curves if required
         const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves =
             map<string, boost::shared_ptr<YieldCurve>>());
 
