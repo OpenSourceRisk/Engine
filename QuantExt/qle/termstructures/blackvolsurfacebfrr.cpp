@@ -184,7 +184,7 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
         }
 
         /* set initial guess for smile butterfly vol := broker butterfly vol
-           we optimise in z = log( atmVol + bf - 0.5 * rr ) */
+           we optimise in z = log( atmVol + bf - 0.5 * abs(rr) */
 
         Array guess(deltas.size());
         for (Size i = 0; i < deltas.size(); ++i) {
@@ -215,15 +215,19 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
             Disposable<Array> values(const Array& x) const override {
 
                 Array rrTmp(rrQuotes.begin(), rrQuotes.end());
-                Array smileBfVol = Exp(x) - atmVol + 0.5 * rrTmp;
+                Array smileBfVol = Exp(x) - atmVol + 0.5 * Abs(rrTmp);
 
                 // compute the call/put vols ....
 
                 std::vector<Real> vol_c, vol_p;
 
                 for (Size i = 0; i < deltas.size(); ++i) {
-                    vol_p.push_back(atmVol + smileBfVol[i] - rrQuotes[i] / (2.0 * phirr));
-                    vol_c.push_back(atmVol + smileBfVol[i] + rrQuotes[i] / (2.0 * phirr));
+                    vol_p.push_back(atmVol + smileBfVol[i] - 0.5 * phirr * rrQuotes[i]);
+                    vol_c.push_back(atmVol + smileBfVol[i] + 0.5 * phirr * rrQuotes[i]);
+                    QL_REQUIRE(vol_p.back() > 0.0, " createSmile: internal error: put vol = "
+                                                       << vol_p.back() << " during broker bf fitting");
+                    QL_REQUIRE(vol_c.back() > 0.0, " createSmile: internal error: call vol = "
+                                                       << vol_c.back() << " during broker bf fitting");
                 }
 
                 // ... set up the interpolated smile ...
