@@ -895,7 +895,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 for (Size j = 0; j < deltas.size(); ++j) {
                     validateDelta(deltas[j]);
                     try {
-                        Real outDelta;
                         Real strike;
                         if (isAtm(deltas[j])) {
                             strike = QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t,
@@ -904,11 +903,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                         } else if (isCall(deltas[j])) {
                             strike = QuantExt::getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt,
                                                                   fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
-                            outDelta = 1.0 - getDelta(deltas[j]);
                         } else {
                             strike = QuantExt::getStrikeFromDelta(Option::Put, getDelta(deltas[j]), dt,
                                                                   fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
-                            outDelta = -getDelta(deltas[j]);
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);

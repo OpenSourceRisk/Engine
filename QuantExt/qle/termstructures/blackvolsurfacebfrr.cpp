@@ -414,7 +414,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
 
     /* find the strikes and vols on both smiles for the artificial smile conventions */
 
-    Real atmVol_m, atmVol_p;
+    Real atmVol_m = 0.0, atmVol_p = 0.0;
     std::vector<Real> putVols_m, callVols_m, putVols_p, callVols_p;
 
     if (index_m != Null<Size>()) {
