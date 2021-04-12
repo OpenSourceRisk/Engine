@@ -373,7 +373,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
     if (index_m != Null<Size>() && smiles_[index_m] == nullptr) {
         DeltaVolQuote::AtmType at;
         DeltaVolQuote::DeltaType dt;
-        if (expiryTimes_[index_m] < switchTime_ || close_enough(expiryTimes_[index_m], switchTime_)) {
+        if (expiryTimes_[index_m] < switchTime_ && !close_enough(switchTime_, expiryTimes_[index_m])) {
             at = at_;
             dt = dt_;
         } else {
@@ -390,7 +390,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
     if (index_p != Null<Size>() && smiles_[index_p] == nullptr) {
         DeltaVolQuote::AtmType at;
         DeltaVolQuote::DeltaType dt;
-        if (expiryTimes_[index_p] < switchTime_ || close_enough(expiryTimes_[index_p], switchTime_)) {
+        if (expiryTimes_[index_p] < switchTime_ && !close_enough(switchTime_, expiryTimes_[index_p])) {
             at = at_;
             dt = dt_;
         } else {
