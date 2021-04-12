@@ -820,8 +820,8 @@ The meanings of the various elements in this node are as follows:
 AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
 \item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 
     PaFwd}).
-\item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is > switch
-  tenor
+\item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is greater
+  or equal the switch tenor (``long term'' atm and delta type)
 \item LongTermAtmType [Mandatory if and only if SwitchTenor is given]: ATM type to use for options with tenor > switch
   point, if SwitchTenor is given
 \item LongTermDeltaType [Mandatory if and only if SwitchTenor is given]: Delta type to use for options with tenor >

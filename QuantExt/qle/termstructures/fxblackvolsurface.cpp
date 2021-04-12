@@ -114,7 +114,7 @@ boost::shared_ptr<FxSmileSection> FxBlackVannaVolgaVolatilitySurface::blackVolSm
     Real switchTime = switchTenor_ == 0 * Days ? QL_MAX_REAL : timeFromReference(optionDateFromTenor(switchTenor_));
     DeltaVolQuote::AtmType at;
     DeltaVolQuote::DeltaType dt;
-    if (t <= switchTime || close_enough(t, switchTime)) {
+    if (t < switchTime && !close_enough(t, switchTime)) {
         at = atmType_;
         dt = deltaType_;
     } else {
