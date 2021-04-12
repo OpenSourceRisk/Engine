@@ -106,7 +106,8 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
                                            const string& conventionsId)
     : CurveConfig(curveId, curveDescription), type_(Type::Direct), fwdQuotes_(quotes), currency_(currency),
       commoditySpotQuoteId_(commoditySpotQuote), dayCountId_(dayCountId), interpolationMethod_(interpolationMethod),
-      extrapolation_(extrapolation), conventionsId_(conventionsId) {
+      extrapolation_(extrapolation), conventionsId_(conventionsId), addBasis_(true), monthOffset_(0),
+      averageBase_(true) {
 
     quotes_ = quotes;
     if (!commoditySpotQuote.empty()) {
@@ -120,7 +121,7 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
                                            bool extrapolation)
     : CurveConfig(curveId, curveDescription), type_(Type::CrossCurrency), currency_(currency),
       basePriceCurveId_(basePriceCurveId), baseYieldCurveId_(baseYieldCurveId), yieldCurveId_(yieldCurveId),
-      extrapolation_(extrapolation), addBasis_(true), monthOffset_(0) {
+      extrapolation_(extrapolation), addBasis_(true), monthOffset_(0), averageBase_(true) {
     populateRequiredCurveIds();
 }
 
@@ -129,11 +130,11 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
                                            const string& baseConventionsId, const vector<string>& basisQuotes,
                                            const string& basisConventionsId, const string& dayCountId,
                                            const string& interpolationMethod, bool extrapolation, bool addBasis,
-                                           QuantLib::Natural monthOffset)
+                                           QuantLib::Natural monthOffset, bool averageBase)
     : CurveConfig(curveId, curveDescription), type_(Type::Basis), fwdQuotes_(basisQuotes), currency_(currency),
       dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), basePriceCurveId_(basePriceCurveId),
       extrapolation_(extrapolation), conventionsId_(basisConventionsId), baseConventionsId_(baseConventionsId),
-      addBasis_(addBasis), monthOffset_(monthOffset) {
+      addBasis_(addBasis), monthOffset_(monthOffset), averageBase_(averageBase) {
     populateRequiredCurveIds();
 }
 
@@ -142,7 +143,7 @@ CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& 
     const string& interpolationMethod, bool extrapolation, const boost::optional<BootstrapConfig>& bootstrapConfig)
     : CurveConfig(curveId, curveDescription), type_(Type::Piecewise), currency_(currency),
       dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), extrapolation_(extrapolation),
-      addBasis_(false), monthOffset_(0), bootstrapConfig_(bootstrapConfig) {
+      addBasis_(true), monthOffset_(0), averageBase_(true), bootstrapConfig_(bootstrapConfig) {
     processSegments(priceSegments);
 }
 
@@ -165,6 +166,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
         interpolationMethod_ = XMLUtils::getChildValue(n, "InterpolationMethod", false);
         addBasis_ = XMLUtils::getChildValueAsBool(n, "AddBasis", false);
         monthOffset_ = XMLUtils::getChildValueAsInt(n, "MonthOffset", false);
+        averageBase_ = XMLUtils::getChildValueAsBool(n, "AverageBase", false);
 
     } else if (XMLNode* n = XMLUtils::getChildNode(node, "BasePriceCurve")) {
 
@@ -231,6 +233,7 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, basisNode, "InterpolationMethod", interpolationMethod_);
         XMLUtils::addChild(doc, basisNode, "AddBasis", addBasis_);
         XMLUtils::addChild(doc, basisNode, "MonthOffset", static_cast<int>(monthOffset_));
+        XMLUtils::addChild(doc, basisNode, "AverageBase", averageBase_);
 
     } else if (type_ == Type::CrossCurrency) {
 
