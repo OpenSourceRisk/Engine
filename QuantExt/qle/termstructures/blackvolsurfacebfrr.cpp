@@ -46,8 +46,14 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
        the log of the vols as y-values */
 
     for (Size i = 0; i < deltas_.size(); ++i) {
-        BlackDeltaCalculator c(Option::Put, dt_, spot_, domDisc_, forDisc_, putVols_[i] * std::sqrt(expiryTime_));
-        x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(-deltas[i])));
+        try {
+            BlackDeltaCalculator c(Option::Put, dt_, spot_, domDisc_, forDisc_, putVols_[i] * std::sqrt(expiryTime_));
+            x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(-deltas[i])));
+        } catch (const std::exception& e) {
+            QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
+                    << -deltas[i] << ") could not be computed for spot=" << spot_ << ", forward="
+                    << spot_ / domDisc_ * forDisc_ << ", putVol=" << putVols_[i] << ", expiry=" << expiryTime_);
+        }
         y_.push_back(std::log(putVols_[i]));
     }
 
@@ -56,9 +62,16 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     y_.push_back(std::log(atmVol_));
 
     for (Size i = deltas_.size(); i > 0; --i) {
-        BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_, callVols_[i - 1] * std::sqrt(expiryTime_));
-        x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(deltas[i - 1])));
-        y_.push_back(std::log(callVols_[i - 1]));
+        try {
+            BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_,
+                                   callVols_[i - 1] * std::sqrt(expiryTime_));
+            x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(deltas[i - 1])));
+            y_.push_back(std::log(callVols_[i - 1]));
+        } catch (const std::exception& e) {
+            QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
+                    << deltas[i - 1] << ") could not be computed for spot=" << spot_ << ", forward="
+                    << spot_ / domDisc_ * forDisc_ << ", callVol=" << callVols_[i - 1] << ", expiry=" << expiryTime_);
+        }
     }
 
     /* Create the interpolation object */
@@ -158,6 +171,10 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
 
         for (Size i = 0; i < deltas.size(); ++i) {
             Real stddevb = (atmVol + bfQuotes[i]) * std::sqrt(expiryTime);
+            QL_REQUIRE(stddevb > 0.0,
+                       "createSmile: atmVol ("
+                           << atmVol << ") + bf (" << bfQuotes[i]
+                           << ") must be positive when creating smile from broker bf quotes, tte=" << expiryTime);
             BlackDeltaCalculator cp(Option::Type::Put, dt, spot, domDisc, forDisc, stddevb);
             BlackDeltaCalculator cc(Option::Type::Call, dt, spot, domDisc, forDisc, stddevb);
             kb_p.push_back(cp.strikeFromDelta(-deltas[i]));
@@ -445,18 +462,41 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         atmVol_i = atmVol_m;
         putVols_i = putVols_m;
         callVols_i = callVols_m;
+        QL_REQUIRE(atmVol_i > 0.0, "BlackVolatilitySurfaceBFRR: negative front-extrapolated atm vol " << atmVol_i);
+        for (Size i = 0; i < deltas_.size(); ++i) {
+            QL_REQUIRE(putVols_i[i] > 0.0,
+                       "BlackVolatilitySurfaceBFRR: negative front-extrapolated put vol " << putVols_i[i]);
+            QL_REQUIRE(callVols_i[i] > 0.0,
+                       "BlackVolatilitySurfaceBFRR: negative front-extrapolated call vol " << callVols_i[i]);
+        }
     } else if (index_m == Null<Size>()) {
         // extrapolate before first expiry
         atmVol_i = atmVol_p;
         putVols_i = putVols_p;
         callVols_i = callVols_p;
+        QL_REQUIRE(atmVol_i > 0.0, "BlackVolatilitySurfaceBFRR: negative back-extrapolated atm vol " << atmVol_i);
+        for (Size i = 0; i < deltas_.size(); ++i) {
+            QL_REQUIRE(putVols_i[i] > 0.0,
+                       "BlackVolatilitySurfaceBFRR: negative back-extrapolated put vol " << putVols_i[i]);
+            QL_REQUIRE(callVols_i[i] > 0.0,
+                       "BlackVolatilitySurfaceBFRR: negative back-extrapolated call vol " << callVols_i[i]);
+        }
     } else {
         // interpolate between two expiries
         Real a = (t - expiryTimes_[index_m]) / (expiryTimes_[index_p] - expiryTimes_[index_m]);
         atmVol_i = (1.0 - a) * atmVol_m + a * atmVol_p;
+        QL_REQUIRE(atmVol_i > 0.0, "BlackVolatilitySurfaceBFRR: negative atm vol "
+                                       << atmVol_i << " = " << (1.0 - a) << " * " << atmVol_m << " + " << a << " * "
+                                       << atmVol_p);
         for (Size i = 0; i < deltas_.size(); ++i) {
             putVols_i.push_back((1.0 - a) * putVols_m[i] + a * putVols_p[i]);
             callVols_i.push_back((1.0 - a) * callVols_m[i] + a * callVols_p[i]);
+            QL_REQUIRE(putVols_i.back() > 0.0, "BlackVolatilitySurfaceBFRR: negative put vol for delta="
+                                                   << deltas_[i] << ", " << putVols_i.back() << " = " << (1.0 - a)
+                                                   << " * " << putVols_m[i] << " + " << a << " * " << putVols_p[i]);
+            QL_REQUIRE(callVols_i.back() > 0.0, "BlackVolatilitySurfaceBFRR: negative call vol for delta="
+                                                    << deltas_[i] << ", " << callVols_i.back() << " = " << (1.0 - a)
+                                                    << " * " << callVols_m[i] << " + " << a << " * " << callVols_p[i]);
         }
     }
 
