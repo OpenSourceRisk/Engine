@@ -915,14 +915,20 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     }
                 }
                 if (validSlice) {
-                    QuantExt::CarrMadanMarginalProbability cm(calibrationInfo_->deltaGridStrikes[i], forwards[i],
-                                                              callPricesDelta[i]);
-                    calibrationInfo_->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
-                    calibrationInfo_->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
-                    if (!cm.arbitrageFree())
+                    try {
+                        QuantExt::CarrMadanMarginalProbability cm(calibrationInfo_->deltaGridStrikes[i], forwards[i],
+                                                                  callPricesDelta[i]);
+                        calibrationInfo_->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
+                        calibrationInfo_->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
+                        if (!cm.arbitrageFree())
+                            calibrationInfo_->isArbitrageFree = false;
+                        calibrationInfo_->deltaGridProb[i] = cm.density();
+                        TLOGGERSTREAM << arbitrageAsString(cm);
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << ": " << e.what());
                         calibrationInfo_->isArbitrageFree = false;
-                    calibrationInfo_->deltaGridProb[i] = cm.density();
-                    TLOGGERSTREAM << arbitrageAsString(cm);
+                        TLOGGERSTREAM << "..(invalid slice)..";
+                    }
                 } else {
                     calibrationInfo_->isArbitrageFree = false;
                     TLOGGERSTREAM << "..(invalid slice)..";
@@ -960,18 +966,22 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 }
             }
             if (!times.empty() && !moneyness.empty()) {
-                QuantExt::CarrMadanSurface cm(times, moneyness, fxSpot_->value(), forwards, callPricesMoneyness);
-                for (Size i = 0; i < times.size(); ++i) {
-                    calibrationInfo_->moneynessGridProb[i] = cm.timeSlices()[i].density();
-                }
-                calibrationInfo_->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
-                calibrationInfo_->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
-                calibrationInfo_->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
-                if (!cm.arbitrageFree())
+                try {
+                    QuantExt::CarrMadanSurface cm(times, moneyness, fxSpot_->value(), forwards, callPricesMoneyness);
+                    for (Size i = 0; i < times.size(); ++i) {
+                        calibrationInfo_->moneynessGridProb[i] = cm.timeSlices()[i].density();
+                    }
+                    calibrationInfo_->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
+                    calibrationInfo_->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
+                    calibrationInfo_->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
+                    if (!cm.arbitrageFree())
+                        calibrationInfo_->isArbitrageFree = false;
+                    TLOG("Moneyness surface Arbitrage analysis result:");
+                    TLOGGERSTREAM << arbitrageAsString(cm);
+                } catch (const std::exception& e) {
+                    TLOG("error: " << e.what());
                     calibrationInfo_->isArbitrageFree = false;
-
-                TLOG("Moneyness surface Arbitrage analysis result:");
-                TLOGGERSTREAM << arbitrageAsString(cm);
+                }
                 TLOG("Moneyness surface Arbitrage analysis completed:");
             }
         }
