@@ -175,7 +175,11 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
     BOOST_TEST_MESSAGE("Testing commodity future convention construction with day of month based anchor day");
 
     // Check construction raises no errors
-    vector<string> prohibitedExpiries{"2020-12-31", "2021-12-31", "2022-12-30"};
+    map<string, string> prohibitedExpiries{
+        {"2020-12-31", ""},
+        {"2021-12-31", ""},
+        {"2022-12-30", ""}
+    };
     boost::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
@@ -198,8 +202,14 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
     BOOST_CHECK_EQUAL(convention->optionExpiryOffset(), 3);
 
     set<Date> expExpiries{Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022)};
-    BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
-                                  expExpiries.begin(), expExpiries.end());
+    const auto& proExps = convention->prohibitedExpiries();
+    BOOST_CHECK_EQUAL(proExps.size(), expExpiries.size());
+    for (const Date& expExpiry : expExpiries) {
+        auto it = proExps.find(expExpiry);
+        BOOST_REQUIRE_MESSAGE(it != proExps.end(), "Expected date " << io::iso_date(expExpiry) <<
+            " not found in Prohibited Expiries");
+        BOOST_CHECK_EQUAL(it->second, Preceding);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionFromXml) {
@@ -247,9 +257,15 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionFromXml) {
     BOOST_CHECK(!convention->isAveraging());
     BOOST_CHECK_EQUAL(convention->optionExpiryOffset(), 3);
 
-    set<Date> expExpiries{Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022)};
-    BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
-                                  expExpiries.begin(), expExpiries.end());
+    set<Date> expExpiries{ Date(31, Dec, 2020), Date(31, Dec, 2021), Date(30, Dec, 2022) };
+    const auto& proExps = convention->prohibitedExpiries();
+    BOOST_CHECK_EQUAL(proExps.size(), expExpiries.size());
+    for (const Date& expExpiry : expExpiries) {
+        auto it = proExps.find(expExpiry);
+        BOOST_REQUIRE_MESSAGE(it != proExps.end(), "Expected date " << io::iso_date(expExpiry) <<
+            " not found in Prohibited Expiries");
+        BOOST_CHECK_EQUAL(it->second, Preceding);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
@@ -257,7 +273,11 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     BOOST_TEST_MESSAGE("Testing writing of commodity future convention with day of month based anchor day to XML");
 
     // Construct the convention
-    vector<string> prohibitedExpiries{"2020-12-31", "2021-12-31", "2022-12-30"};
+    map<string, string> prohibitedExpiries{
+        {"2020-12-31", ""},
+        {"2021-12-31", ""},
+        {"2022-12-30", ""}
+    };
     boost::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
     BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
@@ -283,9 +303,16 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
     BOOST_CHECK_EQUAL(convention->businessDayConvention(), readConvention->businessDayConvention());
     BOOST_CHECK_EQUAL(convention->adjustBeforeOffset(), readConvention->adjustBeforeOffset());
     BOOST_CHECK_EQUAL(convention->isAveraging(), readConvention->isAveraging());
-    BOOST_CHECK_EQUAL_COLLECTIONS(convention->prohibitedExpiries().begin(), convention->prohibitedExpiries().end(),
-                                  readConvention->prohibitedExpiries().begin(),
-                                  readConvention->prohibitedExpiries().end());
+
+    const auto& proExps = convention->prohibitedExpiries();
+    const auto& readProExps = readConvention->prohibitedExpiries();
+    BOOST_CHECK_EQUAL(proExps.size(), readProExps.size());
+    for (const auto& kv : proExps) {
+        auto it = readProExps.find(kv.first);
+        BOOST_REQUIRE_MESSAGE(it != readProExps.end(), "Expected date " << io::iso_date(kv.first) <<
+            " not found in Prohibited Expiries");
+        BOOST_CHECK_EQUAL(it->second, kv.second);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testIborConventionConstructionWithTenor) {

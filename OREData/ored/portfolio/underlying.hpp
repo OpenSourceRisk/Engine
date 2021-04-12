@@ -11,6 +11,7 @@
 #pragma once
 
 #include <ored/portfolio/schedule.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 
 namespace ore {
 namespace data {
@@ -147,6 +148,58 @@ public:
 
     //! Constructor with identifer infomation
     FXUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+        : Underlying(type, name, weight){};
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+};
+
+class InterestRateUnderlying : public Underlying {
+public:
+    //! Default Constructor
+    explicit InterestRateUnderlying() : Underlying() { setType("InterestRate"); };
+
+    //! Constructor with identifer infomation
+    InterestRateUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+        : Underlying(type, name, weight){};
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+};
+
+class InflationUnderlying : public Underlying {
+public:
+    //! Default Constructor
+    explicit InflationUnderlying() : Underlying() { setType("Inflation"); };
+
+    //! Constructor with identifer infomation
+    InflationUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight,
+                        const QuantLib::CPI::InterpolationType& interpolation = QuantLib::CPI::InterpolationType::Flat)
+        : Underlying(type, name, weight), interpolation_(interpolation){};
+    const QuantLib::CPI::InterpolationType& interpolation() const { return interpolation_; }
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+private:
+    QuantLib::CPI::InterpolationType interpolation_;
+};
+
+class CreditUnderlying : public Underlying {
+public:
+    //! Default Constructor
+    explicit CreditUnderlying() : Underlying() { setType("Credit"); };
+
+    //! Constructor with identifer infomation
+    CreditUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
         : Underlying(type, name, weight){};
 
     //! \name Serialisation
