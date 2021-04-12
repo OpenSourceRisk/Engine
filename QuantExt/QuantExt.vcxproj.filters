@@ -504,9 +504,6 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -1086,6 +1083,25 @@
     <ClInclude Include="qle\models\normalsabrsmilesection.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\currencies\currencycomparator.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\escpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\plnpolonia.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\covariancesalvage.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\pathgeneratorfactory.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blacktriangulationatmvol.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

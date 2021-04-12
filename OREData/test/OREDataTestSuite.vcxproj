@@ -658,6 +658,7 @@
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
+    <ClCompile Include="fxvolcurve.cpp" />
     <ClCompile Include="indices.cpp" />
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="inflationcurve.cpp" />
