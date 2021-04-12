@@ -90,7 +90,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     QL_REQUIRE(tokens.size() == 3, "Expected 3 tokens FX/CCY1/CCY2 in fxSpotID (" << fxSpotID_ << ")");
     if (cal == "") {
         // FIXME for bwd comp / regression testing only!!!
-        if (dim == "Smile" && XMLUtils::getChildValue(node, "SmileType") == "BFRR")
+        if (dim == "Smile" && smileType == "BFRR")
             cal = tokens[1] + "," + tokens[2];
         else
             cal = "TARGET";
