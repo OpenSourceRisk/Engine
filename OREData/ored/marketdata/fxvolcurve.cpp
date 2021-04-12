@@ -133,6 +133,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
             callDeltas.push_back(std::make_pair(getDelta(delta), delta));
     }
 
+    Calendar cal = config->calendar();
+
     // sort puts 10P, 15P, 20P, ... and calls 45C, 40C, 35C, ... (notice put deltas have a negative sign)
     auto comp = [](const std::pair<Real, string>& x, const std::pair<Real, string>& y) { return x.first > y.first; };
     std::sort(putDeltas.begin(), putDeltas.end(), comp);
@@ -209,8 +211,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 tmpMatrix[i][j] = q->quote()->value();
                 // if we have found all the quotes then this is a valid expiry
                 if (j == deltaNames.size() - 1) {
-                    // FIXME adjust with vol surface calendar
-                    dates.push_back(asof + expiries_[i]);
+                    dates.push_back(cal.advance(asof, expiries_[i]));
                     validExpiryIdx.push_back(i);
                 }
             }
@@ -237,7 +238,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         for (Size i = 0; i < expiries_.size(); i++) {
             Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries_[i]) - unsortedExp.begin();
             string e = config->expiries()[idx];
-            dates.push_back(asof + expiries_[i]);
+            dates.push_back(cal.advance(asof, expiries_[i]));
             for (Size j = 0; j < deltaNames.size(); ++j) {
                 string qs = base + e + "/" + deltaNames[j];
                 boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
@@ -251,7 +252,6 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
-    Calendar cal = config->calendar();
     std::vector<Real> putDeltasNum, callDeltasNum;
     std::transform(putDeltas.begin(), putDeltas.end(), std::back_inserter(putDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
@@ -430,7 +430,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     Size n = isATM ? 1 : 3; // [0] = ATM, [1] = RR, [2] = BF
     vector<vector<boost::shared_ptr<FXOptionQuote>>> quotes(n);
 
-    QL_REQUIRE(!expiriesRegex_ || isATM, "wildcards only supported for ATM or Delta FxVol Curves");
+    QL_REQUIRE(!expiriesRegex_ || isATM, "wildcards only supported for ATM, Delta, BFRR FxVol Curves");
 
     vector<Period> cExpiries;
     vector<vector<Period>> expiries;
@@ -533,8 +533,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         vector<vector<Volatility>> vols(n, vector<Volatility>(numExpiries)); // same as above: [0] = ATM, etc.
 
         for (Size i = 0; i < numExpiries; i++) {
-            // FIXME adjust with vol surface calendar
-            dates[i] = asof + quotes[0][i]->expiry();
+            dates[i] = cal.advance(asof, quotes[0][i]->expiry());
             expiries_.push_back(quotes[0][i]->expiry());
             DLOG("Spec Tenor Vol Variance");
             for (Size idx = 0; idx < n; idx++) {
