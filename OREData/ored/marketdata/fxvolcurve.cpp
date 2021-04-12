@@ -899,7 +899,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                         if (isAtm(deltas[j])) {
                             strike = QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t,
                                                             forwards[i]);
-                            outDelta = 0.50;
                         } else if (isCall(deltas[j])) {
                             strike = QuantExt::getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt,
                                                                   fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
