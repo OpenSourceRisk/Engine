@@ -200,19 +200,13 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
                 Array rrTmp(rrQuotes.begin(), rrQuotes.end());
                 Array smileBfVol = Exp(x) - atmVol + 0.5 * rrTmp;
 
-                // compute the call/put strikes and vols ....
+                // compute the call/put vols ....
 
-                std::vector<Real> k_c, k_p, vol_c, vol_p;
+                std::vector<Real> vol_c, vol_p;
 
                 for (Size i = 0; i < deltas.size(); ++i) {
                     vol_p.push_back(atmVol + smileBfVol[i] - rrQuotes[i] / (2.0 * phirr));
                     vol_c.push_back(atmVol + smileBfVol[i] + rrQuotes[i] / (2.0 * phirr));
-                    BlackDeltaCalculator cp(Option::Type::Put, dt, spot, domDisc, forDisc,
-                                            vol_p.back() * std::sqrt(expiryTime));
-                    BlackDeltaCalculator cc(Option::Type::Call, dt, spot, domDisc, forDisc,
-                                            vol_p.back() * std::sqrt(expiryTime));
-                    k_p.push_back(cp.strikeFromDelta(-deltas[i]));
-                    k_c.push_back(cc.strikeFromDelta(deltas[i]));
                 }
 
                 // ... set up the interpolated smile ...
@@ -225,9 +219,9 @@ createSmile(const Real spot, const Real domDisc, const Real forDisc, const Real 
                 std::vector<Real> vs;
                 for (Size i = 0; i < deltas.size(); ++i) {
                     vs.push_back(blackFormula(Option::Put, kb_p[i], forward,
-                                              tmpSmile->volatility(k_p[i]) * std::sqrt(expiryTime)) +
+                                              tmpSmile->volatility(kb_p[i]) * std::sqrt(expiryTime)) +
                                  blackFormula(Option::Call, kb_c[i], forward,
-                                              tmpSmile->volatility(k_c[i]) * std::sqrt(expiryTime)));
+                                              tmpSmile->volatility(kb_c[i]) * std::sqrt(expiryTime)));
                 }
 
                 // now set the target function to the relative difference of smile vs. market price
@@ -405,7 +399,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         }
         smiles_[index_p] =
             detail::createSmile(spot_->value(), domesticTS_->discount(settlementDates_[index_p]) / settlDomDisc_,
-                                foreignTS_->discount(settlementDates_[index_p]) / settlForDisc_, expiryTimes_[index_m],
+                                foreignTS_->discount(settlementDates_[index_p]) / settlForDisc_, expiryTimes_[index_p],
                                 deltas_, bfQuotes_[index_p], rrQuotes_[index_p], atmQuotes_[index_p], dt, at,
                                 riskReversalInFavorOf_, butterflyIsBrokerStyle_, smileInterpolation_);
     }
@@ -415,7 +409,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
        atm type = delta neutral */
 
     DeltaVolQuote::DeltaType dt_c =
-        dt_ == DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
+        dt_ == (DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
     DeltaVolQuote::AtmType at_c = DeltaVolQuote::AtmDeltaNeutral;
 
     /* find the strikes and vols on both smiles for the artificial smile conventions */
