@@ -23,5 +23,5 @@ using namespace QuantLib;
 namespace QuantExt {
 
 BOEBaseRateIndex::BOEBaseRateIndex(const Handle<YieldTermStructure>& h)
-  : OvernightIndex("BOEBaseRate", 0, GBPCurrency(), UnitedKingdom(UnitedKingdom::Settlement), Actual365Fixed(), h) {}
+  : OvernightIndex("BoEBase", 0, GBPCurrency(), UnitedKingdom(UnitedKingdom::Settlement), Actual365Fixed(), h) {}
 } // namespace QuantExt

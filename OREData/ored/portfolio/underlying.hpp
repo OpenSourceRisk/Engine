@@ -11,6 +11,7 @@
 #pragma once
 
 #include <ored/portfolio/schedule.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 
 namespace ore {
 namespace data {
@@ -156,13 +157,13 @@ public:
     //@}
 };
 
-class IRUnderlying : public Underlying {
+class InterestRateUnderlying : public Underlying {
 public:
     //! Default Constructor
-    explicit IRUnderlying() : Underlying() { setType("IR"); };
+    explicit InterestRateUnderlying() : Underlying() { setType("InterestRate"); };
 
     //! Constructor with identifer infomation
-    IRUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+    InterestRateUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
         : Underlying(type, name, weight){};
 
     //! \name Serialisation
@@ -172,29 +173,33 @@ public:
     //@}
 };
 
-class INFUnderlying : public Underlying {
+class InflationUnderlying : public Underlying {
 public:
     //! Default Constructor
-    explicit INFUnderlying() : Underlying() { setType("INF"); };
+    explicit InflationUnderlying() : Underlying() { setType("Inflation"); };
 
     //! Constructor with identifer infomation
-    INFUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
-        : Underlying(type, name, weight){};
+    InflationUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight,
+                        const QuantLib::CPI::InterpolationType& interpolation = QuantLib::CPI::InterpolationType::Flat)
+        : Underlying(type, name, weight), interpolation_(interpolation){};
+    const QuantLib::CPI::InterpolationType& interpolation() const { return interpolation_; }
 
     //! \name Serialisation
     //@{
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
     //@}
+private:
+    QuantLib::CPI::InterpolationType interpolation_;
 };
 
-class CRUnderlying : public Underlying {
+class CreditUnderlying : public Underlying {
 public:
     //! Default Constructor
-    explicit CRUnderlying() : Underlying() { setType("CR"); };
+    explicit CreditUnderlying() : Underlying() { setType("Credit"); };
 
     //! Constructor with identifer infomation
-    CRUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
+    CreditUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
         : Underlying(type, name, weight){};
 
     //! \name Serialisation
