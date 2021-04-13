@@ -130,10 +130,12 @@ Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, cons
                     << ", expiry=" << expiryTime_ << ": " << e.what());
         }
     } while (std::abs((result - lastResult) / lastResult) > accuracy_ && ++iterations < maxIterations_);
-    QL_REQUIRE(iterations < maxIterations_, "SmileDeltaInterpolatedSmile::strikeFromDelta: max iterations ("
-                                                << maxIterations_ << "), no solution found for accuracy " << accuracy_
-                                                << ", last iterations. " << lastResult << ", " << result
-                                                << ", tte=" << expiryTime_);
+    QL_REQUIRE(iterations < maxIterations_,
+               "SmileDeltaInterpolatedSmile::strikeFromDelta: max iterations ("
+                   << maxIterations_ << "), no solution found for accuracy " << accuracy_
+                   << ", last iterations: " << lastResult << "/" << result << ", spot=" << spot_
+                   << ", forward=" << spot_ / domDisc_ * forDisc_ << " (domRate=" << -std::log(domDisc_) / expiryTime_
+                   << ", forRate=" << -std::log(forDisc_) / expiryTime_ << "), expiry=" << expiryTime_);
     return result;
 }
 
@@ -153,10 +155,12 @@ Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, 
                     << "), vol=" << stddev / std::sqrt(expiryTime_) << ", expiry=" << expiryTime_ << ": " << e.what());
         }
     } while (std::abs((result - lastResult) / lastResult) > accuracy_ && ++iterations < maxIterations_);
-    QL_REQUIRE(iterations < maxIterations_, "SmileDeltaInterpolatedSmile::atmStrikeFromDelta: max iterations ("
-                                                << maxIterations_ << "), no solution found for accuracy " << accuracy_
-                                                << ", last iterations. " << lastResult << ", " << result
-                                                << ", tte=" << expiryTime_);
+    QL_REQUIRE(iterations < maxIterations_,
+               "SmileDeltaInterpolatedSmile::atmStrikeFromDelta: max iterations ("
+                   << maxIterations_ << "), no solution found for accuracy " << accuracy_
+                   << ", last iterations: " << lastResult << "/" << result << ", spot=" << spot_
+                   << ", forward=" << spot_ / domDisc_ * forDisc_ << " (domRate=" << -std::log(domDisc_) / expiryTime_
+                   << ", forRate=" << -std::log(forDisc_) / expiryTime_ << "), expiry=" << expiryTime_);
     return result;
 }
 
