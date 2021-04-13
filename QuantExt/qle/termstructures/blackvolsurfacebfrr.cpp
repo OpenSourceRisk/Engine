@@ -41,6 +41,8 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
 
     forward_ = spot_ / domDisc_ * forDisc_;
 
+    std::vector<Real> x, y;
+
     /* Convert the puts, atm, calls to strikes using the given conventions and then to simple delta
        using the given conventions. Store the simple deltas as x-values for the interpolation and
        the log of the vols as y-values */
@@ -48,7 +50,7 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     for (Size i = 0; i < deltas_.size(); ++i) {
         try {
             BlackDeltaCalculator c(Option::Put, dt_, spot_, domDisc_, forDisc_, putVols_[i] * std::sqrt(expiryTime_));
-            x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(-deltas[i])));
+            x.push_back(simpleDeltaFromStrike(c.strikeFromDelta(-deltas[i])));
         } catch (const std::exception& e) {
             QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
                     << -deltas[i] << ") could not be computed for spot=" << spot_
@@ -56,26 +58,26 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
                     << ", forRate=" << -std::log(forDisc) / expiryTime_ << "), putVol=" << putVols_[i]
                     << ", expiry=" << expiryTime_ << ": " << e.what());
         }
-        y_.push_back(std::log(putVols_[i]));
+        y.push_back(std::log(putVols_[i]));
     }
 
     try {
         BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_, atmVol * std::sqrt(expiryTime_));
-        x_.push_back(simpleDeltaFromStrike(c.atmStrike(at_)));
+        x.push_back(simpleDeltaFromStrike(c.atmStrike(at_)));
     } catch (const std::exception& e) {
         QL_FAIL("SimpleDeltaIinterpolatedSmile: atmStrike could not be computed for spot="
                 << spot_ << ", forward=" << spot_ / domDisc_ * forDisc_
                 << " (domRate=" << -std::log(domDisc_) / expiryTime_ << ", forRate=" << -std::log(forDisc) / expiryTime_
                 << "), atmVol=" << atmVol << ", expiry=" << expiryTime_ << ": " << e.what());
     }
-    y_.push_back(std::log(atmVol_));
+    y.push_back(std::log(atmVol_));
 
     for (Size i = deltas_.size(); i > 0; --i) {
         try {
             BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_,
                                    callVols_[i - 1] * std::sqrt(expiryTime_));
-            x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(deltas[i - 1])));
-            y_.push_back(std::log(callVols_[i - 1]));
+            x.push_back(simpleDeltaFromStrike(c.strikeFromDelta(deltas[i - 1])));
+            y.push_back(std::log(callVols_[i - 1]));
         } catch (const std::exception& e) {
             QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
                     << deltas[i - 1] << ") could not be computed for spot=" << spot_
@@ -85,10 +87,14 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
         }
     }
 
-    /* Check that the strikes are in increasing order */
-    for (Size i = 0; i < x_.size() - 1; ++i) {
-        QL_REQUIRE(x_[i] < x_[i + 1], "SimpleDeltaInterpolatedSmile: interpolation data x is not increasing at index "
-                                          << i << ": " << x_[i] << ", " << x_[i + 1]);
+    /* sort the strikes */
+
+    std::vector<Size> perm(x.size());
+    std::iota(perm.begin(), perm.end(), 0);
+    std::sort(perm.begin(), perm.end(), [&x](Size a, Size b) { return x[a] < x[b]; });
+    for (Size i = 0; i < perm.size(); ++i) {
+        x_.push_back(x[perm[i]]);
+        y_.push_back(y[perm[i]]);
     }
 
     /* Create the interpolation object */
