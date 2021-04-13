@@ -881,6 +881,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             DeltaVolQuote::DeltaType dt;
             DeltaVolQuote::AtmType at;
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
+            Real maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
                 if (t <= switchTime || close_enough(t, switchTime)) {
@@ -889,6 +890,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 } else {
                     at = longTermAtmType_;
                     dt = longTermDeltaType_;
+                }
+                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike
+                // from delta conversions: we keep the pa feature, but use fwd delta always and ATM DNS
+                if (t > maxTime) {
+                    at = DeltaVolQuote::AtmDeltaNeutral;
+                    dt = (deltaType_ == DeltaVolQuote::Spot || deltaType_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd
+                                                                                                 : DeltaVolQuote::PaFwd;
                 }
                 bool validSlice = true;
                 for (Size j = 0; j < deltas.size(); ++j) {
