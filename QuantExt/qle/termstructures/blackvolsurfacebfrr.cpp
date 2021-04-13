@@ -51,14 +51,21 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
             x_.push_back(simpleDeltaFromStrike(c.strikeFromDelta(-deltas[i])));
         } catch (const std::exception& e) {
             QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
-                    << -deltas[i] << ") could not be computed for spot=" << spot_ << ", forward="
-                    << spot_ / domDisc_ * forDisc_ << ", putVol=" << putVols_[i] << ", expiry=" << expiryTime_);
+                    << -deltas[i] << ") could not be computed for spot=" << spot_
+                    << ", forward=" << spot_ / domDisc_ * forDisc_ << ", putVol=" << putVols_[i]
+                    << ", expiry=" << expiryTime_ << ": " << e.what());
         }
         y_.push_back(std::log(putVols_[i]));
     }
 
-    BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_, atmVol * std::sqrt(expiryTime_));
-    x_.push_back(simpleDeltaFromStrike(c.atmStrike(at_)));
+    try {
+        BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_, atmVol * std::sqrt(expiryTime_));
+        x_.push_back(simpleDeltaFromStrike(c.atmStrike(at_)));
+    } catch (const std::exception& e) {
+        QL_FAIL("SimpleDeltaIinterpolatedSmile: atmStrike could not be computed for spot="
+                << spot_ << ", forward=" << spot_ / domDisc_ * forDisc_ << ", atmVol=" << atmVol
+                << ", expiry=" << expiryTime_ << ": " << e.what());
+    }
     y_.push_back(std::log(atmVol_));
 
     for (Size i = deltas_.size(); i > 0; --i) {
@@ -69,8 +76,9 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
             y_.push_back(std::log(callVols_[i - 1]));
         } catch (const std::exception& e) {
             QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
-                    << deltas[i - 1] << ") could not be computed for spot=" << spot_ << ", forward="
-                    << spot_ / domDisc_ * forDisc_ << ", callVol=" << callVols_[i - 1] << ", expiry=" << expiryTime_);
+                    << deltas[i - 1] << ") could not be computed for spot=" << spot_
+                    << ", forward=" << spot_ / domDisc_ * forDisc_ << ", callVol=" << callVols_[i - 1]
+                    << ", expiry=" << expiryTime_ << ": " << e.what());
         }
     }
 
@@ -95,9 +103,16 @@ Real SimpleDeltaInterpolatedSmile::strikeFromDelta(const Option::Type type, cons
     Size iterations = 0;
     do {
         Real stddev = std::sqrt(expiryTime_) * volatility(result);
-        BlackDeltaCalculator c(type, dt, spot_, domDisc_, forDisc_, stddev);
-        lastResult = result;
-        result = c.strikeFromDelta((type == Option::Call ? 1.0 : -1.0) * delta);
+        try {
+            BlackDeltaCalculator c(type, dt, spot_, domDisc_, forDisc_, stddev);
+            lastResult = result;
+            result = c.strikeFromDelta((type == Option::Call ? 1.0 : -1.0) * delta);
+        } catch (const std::exception& e) {
+            QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
+                    << (type == Option::Call ? 1.0 : -1.0) * delta << ") could not be computed for spot=" << spot_
+                    << ", forward=" << spot_ / domDisc_ * forDisc_ << ", vol=" << stddev / std::sqrt(expiryTime_)
+                    << ", expiry=" << expiryTime_ << ": " << e.what());
+        }
     } while (std::abs(result - lastResult) > accuracy_ && ++iterations < maxIterations_);
     QL_REQUIRE(iterations < maxIterations_, "SmileDeltaInterpolatedSmile::strikeFromDelta: max iterations ("
                                                 << maxIterations_ << "), no solution found for accuracy " << accuracy_
@@ -111,9 +126,15 @@ Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, 
     Size iterations = 0;
     do {
         Real stddev = std::sqrt(expiryTime_) * volatility(result);
-        BlackDeltaCalculator c(Option::Call, dt, spot_, domDisc_, forDisc_, stddev);
-        lastResult = result;
-        result = c.atmStrike(at);
+        try {
+            BlackDeltaCalculator c(Option::Call, dt, spot_, domDisc_, forDisc_, stddev);
+            lastResult = result;
+            result = c.atmStrike(at);
+        } catch (const std::exception& e) {
+            QL_FAIL("SimpleDeltaInterpolatedSmile: atmStrike could not be computed for spot="
+                    << spot_ << ", forward=" << spot_ / domDisc_ * forDisc_
+                    << ", vol=" << stddev / std::sqrt(expiryTime_) << ", expiry=" << expiryTime_ << ": " << e.what());
+        }
     } while (std::abs(result - lastResult) > accuracy_ && ++iterations < maxIterations_);
     QL_REQUIRE(iterations < maxIterations_, "SmileDeltaInterpolatedSmile::atmStrikeFromDelta: max iterations ("
                                                 << maxIterations_ << "), no solution found for accuracy " << accuracy_
@@ -425,9 +446,9 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
                                 riskReversalInFavorOf_, butterflyIsBrokerStyle_, smileInterpolation_);
     }
 
-    /* choose a consistent set of smile conventions for all maturities, we follow Clark, 4.2.3 and set
-       delta type = forward delta, with pa if the original (short term) delta convention has pa
-       atm type = delta neutral */
+    /* Choose a consistent set of smile conventions for all maturities, we follow Clark, 4.2.3 and set
+       delta type = forward delta, with pa if the original (short term) delta convention has pa.
+       The atm type ist set to delta neutral. */
 
     DeltaVolQuote::DeltaType dt_c =
         dt_ == (DeltaVolQuote::Spot || dt_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd : DeltaVolQuote::PaFwd;
