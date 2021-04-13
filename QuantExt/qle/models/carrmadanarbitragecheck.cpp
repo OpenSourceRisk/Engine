@@ -60,8 +60,8 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
     bool zeroStrikeAdded = false;
     if (!close_enough(strikes_[perm[0]], 0.0)) {
         strikes_.push_back(0.0);
-        perm.insert(perm.begin(), strikes_.size() - 1);
         callPrices_.push_back(forward_);
+        perm.insert(perm.begin(), strikes_.size() - 1);
         zeroStrikeAdded = true;
     } else {
         QL_REQUIRE(close_enough(callPrices_[perm[0]], forward_),
