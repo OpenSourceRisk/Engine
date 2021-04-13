@@ -92,6 +92,9 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
         }
     }
 
+    DLOG("sigmaTimes before calibration: " << sigmaTimes);
+    DLOG("sigma before calibration: " << sigma);
+
     if (data->sigmaParamType() == ParamType::Piecewise)
         parametrization_ =
             boost::make_shared<QuantExt::FxBsPiecewiseConstantParametrization>(ccy, fxSpot_, sigmaTimes, sigma);

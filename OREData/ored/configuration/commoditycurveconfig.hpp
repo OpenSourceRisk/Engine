@@ -36,7 +36,7 @@ namespace data {
 class PriceSegment : public XMLSerializable {
 public:
     //! Type of price segment being represented, i.e. type of instrument in the price segment.
-    enum class Type { Future, AveragingFuture, AveragingSpot };
+    enum class Type { Future, AveragingFuture, AveragingSpot, AveragingOffPeakPower };
 
     //! \name Constructors
     //@{
@@ -44,7 +44,8 @@ public:
     PriceSegment();
     //! Detailed constructor
     PriceSegment(const std::string& type, const std::string& conventionsId, const std::vector<std::string>& quotes,
-        const boost::optional<unsigned short>& priority = boost::none);
+        const boost::optional<unsigned short>& priority = boost::none, const std::string& peakPriceCurveId = "",
+        const std::string& peakPriceCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -53,6 +54,8 @@ public:
     const std::string& conventionsId() const;
     const std::vector<std::string>& quotes() const;
     const boost::optional<unsigned short>& priority() const;
+    const std::string& peakPriceCurveId() const;
+    const std::string& peakPriceCalendar() const;
     bool empty() const;
     //@}
 
@@ -67,6 +70,8 @@ private:
     std::string conventionsId_;
     std::vector<std::string> quotes_;
     boost::optional<unsigned short> priority_;
+    std::string peakPriceCurveId_;
+    std::string peakPriceCalendar_;
 
     bool empty_;
     Type type_;
@@ -89,7 +94,8 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CommodityCurveConfig() : type_(Type::Direct), extrapolation_(true), addBasis_(true), monthOffset_(0) {}
+    CommodityCurveConfig() : type_(Type::Direct), extrapolation_(true), addBasis_(true),
+        monthOffset_(0), averageBase_(true) {}
 
     //! Detailed constructor for Direct commodity curve configuration
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
@@ -107,7 +113,8 @@ public:
                          const std::string& basePriceCurveId, const std::string& baseConventionsId,
                          const std::vector<std::string>& basisQuotes, const std::string& basisConventionsId,
                          const std::string& dayCountId = "A365", const std::string& interpolationMethod = "Linear",
-                         bool extrapolation = true, bool addBasis = true, QuantLib::Natural monthOffset = 0);
+                         bool extrapolation = true, bool addBasis = true, QuantLib::Natural monthOffset = 0,
+                         bool averageBase = true);
 
     //! Detailed constructor for Piecewise commodity curve configuration
     CommodityCurveConfig(const std::string& curveId, const std::string& curveDescription, const std::string& currency,
@@ -138,6 +145,7 @@ public:
     const std::string& baseConventionsId() const { return baseConventionsId_; }
     bool addBasis() const { return addBasis_; }
     QuantLib::Natural monthOffset() const { return monthOffset_; }
+    bool averageBase() const { return averageBase_; }
     const std::map<unsigned short, PriceSegment>& priceSegments() const { return priceSegments_; }
     const boost::optional<BootstrapConfig>& bootstrapConfig() const { return bootstrapConfig_; }
     //@}
@@ -157,6 +165,7 @@ public:
     std::string& baseConventionsId() { return baseConventionsId_; }
     bool& addBasis() { return addBasis_; }
     QuantLib::Natural& monthOffset() { return monthOffset_; }
+    bool& averageBase() { return averageBase_; }
     void setPriceSegments(const std::map<unsigned short, PriceSegment>& priceSegments) {
         priceSegments_ = priceSegments;
     }
@@ -184,6 +193,7 @@ private:
     std::string baseConventionsId_;
     bool addBasis_;
     QuantLib::Natural monthOffset_;
+    bool averageBase_;
     /*! The map key is the internal priority of the price segment and does not necessarily map the PriceSegment's 
         priority member value. We are allowing here for the priority to be unspecified in the PriceSegment during 
         configuration.

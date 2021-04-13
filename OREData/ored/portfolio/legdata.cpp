@@ -506,7 +506,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     if (!initialPriceCurrency_.empty())
         XMLUtils::addChild(doc, node, "InitialPriceCurrency", initialPriceCurrency_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
-
+    
     if (valuationSchedule_.hasData()) {
         XMLNode* schedNode = valuationSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule");
@@ -1567,6 +1567,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
+    bool isAbsoluteReturn = eqLegData->returnType() == "Absolute";
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
     bool initialPriceIsInTargetCcy = false;
@@ -1609,6 +1610,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentAdjustment(bdc)
                   .withPaymentLag(paymentLag)
                   .withTotalReturn(isTotalReturn)
+                  .withAbsoluteReturn(isAbsoluteReturn)
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)
                   .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
@@ -1650,7 +1652,7 @@ vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notion
             schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] - amort;
             lastAmortDate = schedule[i];
-        } else if (i > 0 && schedule[i] >= endDate) {
+        } else if (i > 0 && lastAmortDate > Date::minDate()) {
             nominals[i] = nominals[i - 1];
         }
         if (amort > nominals[i] && underflow == false)
@@ -1679,7 +1681,7 @@ vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<d
             schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] - amort;
             lastAmortDate = schedule[i];
-        } else if (i > 0 && schedule[i] >= endDate)
+        } else if (i > 0 && lastAmortDate > Date::minDate())
             nominals[i] = nominals[i - 1];
         if (amort > nominals[i] && underflow == false) {
             amort = std::max(nominals[i], 0.0);
@@ -1705,7 +1707,7 @@ vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<
             schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] * (1.0 - fraction);
             lastAmortDate = schedule[i];
-        } else if (i > 0 && schedule[i] >= endDate)
+        } else if (i > 0 && lastAmortDate > Date::minDate())
             nominals[i] = nominals[i - 1];
     }
     LOG("Fixed amortization notional schedule done");
@@ -1722,10 +1724,13 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
     bool underflow = data.underflow();
     double annuity = data.value();
     Real amort = 0.0;
+    Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
-        if (i > 0 && schedule[i] >= startDate && schedule[i] < endDate)
+        if (i > 0 && schedule[i] >= startDate && schedule[i] < endDate) {
             nominals[i] = nominals[i - 1] - amort;
-        else if (i > 0 && schedule[i] >= endDate)
+            lastAmortDate = schedule[i];
+        }
+        else if (i > 0 && lastAmortDate > Date::minDate())
             nominals[i] = nominals[i - 1];
         Real dcf = dc.yearFraction(schedule[i], schedule[i + 1]);
         Real rate = i < rates.size() ? rates[i] : rates.back();

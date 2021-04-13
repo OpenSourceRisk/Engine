@@ -85,6 +85,9 @@ PiecewiseConstantHelper2::PiecewiseConstantHelper2(const std::vector<Date>& date
     checkTimes(t_);
 }
 
+PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array& t, const boost::shared_ptr<PseudoParameter>& p)
+    : zeroCutoff_(1.0E-6), t_(t), y_(p) {}
+
 PiecewiseConstantHelper3::PiecewiseConstantHelper3(const Array& t1, const Array& t2,
     const boost::shared_ptr<Constraint>& constraint1,
     const boost::shared_ptr<Constraint>& constraint2)

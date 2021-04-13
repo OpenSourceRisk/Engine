@@ -16,18 +16,39 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <iostream>
+#include <ql/experimental/math/piecewiseintegral.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 
 namespace QuantExt {
 
-LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization)
+LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization,
+                                               const boost::shared_ptr<Integrator>& integrator)
     : parametrization_(parametrization) {
     stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization_);
     arguments_.resize(2);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
     registerWith(parametrization_->termStructure());
+
+    std::vector<Time> allTimes;
+    for (Size i = 0; i < 2; ++i)
+        allTimes.insert(allTimes.end(), parametrization_->parameterTimes(i).begin(),
+                        parametrization_->parameterTimes(i).end());
+
+    integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
+}
+
+Real LinearGaussMarkovModel::bankAccountNumeraire(const Time t, const Real x, const Real y,
+                                                  const Handle<YieldTermStructure> discountCurve) const {
+    QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::bankAccountNumeraire");
+    Real Ht = parametrization_->H(t);
+    Real zeta0 = parametrization_->zeta(t);
+    Real zeta2 = parametrization_->zetan(2, t, integrator_);
+    Real Vt = 0.5 * (Ht * Ht * zeta0 + zeta2);
+    return std::exp(Ht * x - y + Vt) /
+           (discountCurve.empty() ? parametrization_->termStructure()->discount(t) : discountCurve->discount(t));
 }
 
 } // namespace QuantExt

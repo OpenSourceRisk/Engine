@@ -56,6 +56,9 @@ The business day convention used to advance dates by periods in the underlying s
 \item \lstinline!Tenors! [Optional]:
 A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!AtmTenors! node instead. If the tenors are provided here, the \lstinline!AtmTenors! node may be omitted.
 
+\item \lstinline!OptionalQuotes! [Optional]:
+A boolean flag to indicate wheather market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are povided. If false, the curve will fail to build if any quotes are missing. This also applites to quotes for the \lstinline!AtmTenors!. Default value is false.
+
 \item \lstinline!IborIndex!:
 A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
 
@@ -89,6 +92,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <Calendar>...</Calendar>
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
+  <OptionalQuotes>...</OptionalQuotes>
   <IborIndex>...</IborIndex>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
@@ -131,6 +135,9 @@ The business day convention used to advance dates by periods in the underlying s
 \item \lstinline!Tenors! [Optional]:
 A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the ATM curve. If omitted, the tenors for the ATM curve must be provided in the \lstinline!AtmTenors! node instead. If the tenors are provided here, the \lstinline!AtmTenors! node may be omitted.
 
+\item \lstinline!OptionalQuotes! [Optional]:
+A boolean flag to indicate wheather market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are povided. If false, the curve will fail to build if any quotes are missing. This also applites to quotes for the \lstinline!AtmTenors!. Default value is false.
+
 \item \lstinline!IborIndex!:
 A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
 
@@ -166,6 +173,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <Calendar>...</Calendar>
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
+  <OptionalQuotes>...</OptionalQuotes>
   <IborIndex>...</IborIndex>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
@@ -212,6 +220,9 @@ The business day convention used to advance dates by periods in the underlying s
 \item \lstinline!Tenors!:
 A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the tenor by strike surface. In this case, i.e.\ configuring a surface, they must be provided.
 
+\item \lstinline!OptionalQuotes! [Optional]:
+A boolean flag to indicate wheather market data quotes for all tenors are required. If true, we attempt to build the curve from whatever quotes are povided. If false, the curve will fail to build if any quotes are missing. This also applites to quotes for the \lstinline!AtmTenors!. Default value is false.
+
 \item \lstinline!IborIndex!:
 A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
 
@@ -245,6 +256,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <Calendar>...</Calendar>
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
+  <OptionalQuotes>...</OptionalQuotes>
   <IborIndex>...</IborIndex>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>
@@ -287,6 +299,9 @@ The business day convention used to advance dates by periods in the underlying s
 \item \lstinline!Tenors!:
 A comma separated list of valid tenor strings giving the cap floor maturity tenors to be used in the tenor by strike surface. In this case, i.e.\ configuring a surface, they must be provided.
 
+\item \lstinline!OptionalQuotes! [Optional]:
+A boolean flag to indicate wheather market data quotes for all tenors and strikes are required. If true, we attempt to build the curve from whatever quotes are povided. If false, the curve will fail to build if any quotes are missing. This also applites to quotes for the \lstinline!AtmTenors!. Default value is false.
+
 \item \lstinline!IborIndex!:
 A valid interest rate index name giving the index underlying the cap floor quotes. Allowable values are given in the Table \ref{tab:indices}.
 
@@ -326,6 +341,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <Calendar>...</Calendar>
   <BusinessDayConvention>...</BusinessDayConvention>
   <Tenors>...</Tenors>
+  <OptionalQuotes>...</OptionalQuotes>
   <IborIndex>...</IborIndex>
   <DiscountCurve>...</DiscountCurve>
   <AtmTenors>...</AtmTenors>

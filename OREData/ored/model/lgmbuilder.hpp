@@ -92,6 +92,7 @@ private:
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
     const bool setCalibrationInfo_;
+    bool requiresCalibration_ = false;
 
     mutable Real error_;
     mutable boost::shared_ptr<QuantExt::LGM> model_;

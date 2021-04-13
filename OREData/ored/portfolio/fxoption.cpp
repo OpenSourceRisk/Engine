@@ -77,6 +77,8 @@ void FxOption::fromXML(XMLNode* node) {
     strike_ = soldAmount / boughtAmount;
     quantity_ = boughtAmount;
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
+    QL_REQUIRE(boughtAmount > 0.0, "positive BoughtAmount required");
+    QL_REQUIRE(soldAmount > 0.0, "positive SoldAmount required");
 }
 
 XMLNode* FxOption::toXML(XMLDocument& doc) {

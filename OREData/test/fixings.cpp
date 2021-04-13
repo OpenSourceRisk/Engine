@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     // Populate empty fixings map using the function to be tested
     map<string, set<Date>> fixings;
-    addMarketFixingDates(fixings, mktParams);
+    addMarketFixingDates(fixings, mktParams, Conventions());
 
     // Check the results
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());

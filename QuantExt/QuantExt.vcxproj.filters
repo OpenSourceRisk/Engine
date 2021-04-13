@@ -504,9 +504,6 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -828,13 +825,16 @@
     <ClInclude Include="qle\pricingengines\commodityapoengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\adjusteddefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\aposurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\indexedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp">
+    <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\cpicoupon.hpp">
@@ -1059,6 +1059,49 @@
     <ClInclude Include="qle\indexes\compoequityindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\decpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabr.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrinterpolation.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrsmilesection.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\currencies\currencycomparator.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\escpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\plnpolonia.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\covariancesalvage.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\pathgeneratorfactory.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blacktriangulationatmvol.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1651,7 +1694,7 @@
     <ClCompile Include="qle\cashflows\indexedcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
+    <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\cpicoupon.cpp">
@@ -1818,6 +1861,21 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\compoequityindex.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averageoffpeakpowerhelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\exactbachelierimpliedvolatility.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabr.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabrsmilesection.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

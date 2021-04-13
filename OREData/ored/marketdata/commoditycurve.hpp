@@ -108,7 +108,8 @@ private:
 
     //! Build commodity piecewise price curve
     void buildPiecewiseCurve(const QuantLib::Date& asof, const CommodityCurveConfig& config,
-        const Conventions& conventions, const Loader& loader);
+        const Conventions& conventions, const Loader& loader,
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
 
     //! Get the configured quotes
     std::vector<boost::shared_ptr<CommodityForwardQuote>>
@@ -121,7 +122,8 @@ private:
     //! Add the instruments relating to a \p priceSegment to \p instruments.
     using Helper = QuantLib::BootstrapHelper<QuantExt::PriceTermStructure>;
     void addInstruments(const QuantLib::Date& asof, const Loader& loader, const std::string& configId,
-        const PriceSegment& priceSegment, const Conventions& conventions,
+        const std::string& currency, const PriceSegment& priceSegment, const Conventions& conventions,
+        const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
         std::map<QuantLib::Date, boost::shared_ptr<Helper>>& instruments);
 };
 

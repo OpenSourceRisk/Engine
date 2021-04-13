@@ -1759,7 +1759,8 @@ private:
 */
 class CommodityOptionQuote : public MarketDatum {
 public:
-    CommodityOptionQuote() {}
+    CommodityOptionQuote() : optionType_(QuantLib::Option::Call) {}
+
     //! Constructor
     /*! \param value         The volatility value
         \param asof          The quote date
@@ -1769,14 +1770,17 @@ public:
         \param quoteCurrency The quote currency
         \param expiry        Expiry object defining the quote's expiry
         \param strike        Strike object defining the quote's strike
+        \param optionType    The option type.
     */
     CommodityOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
                          const std::string& commodityName, const std::string& quoteCurrency,
-                         const boost::shared_ptr<Expiry>& expiry, const boost::shared_ptr<BaseStrike>& strike);
+                         const boost::shared_ptr<Expiry>& expiry, const boost::shared_ptr<BaseStrike>& strike,
+                         QuantLib::Option::Type optionType = QuantLib::Option::Call);
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() {
-        return boost::make_shared<CommodityOptionQuote>(quote_->value(), asofDate_, name_, quoteType_, commodityName_, quoteCurrency_, expiry_, strike_);
+        return boost::make_shared<CommodityOptionQuote>(quote_->value(), asofDate_, name_,
+            quoteType_, commodityName_, quoteCurrency_, expiry_, strike_, optionType_);
     }
 
     //! \name Inspectors
@@ -1785,6 +1789,7 @@ public:
     const std::string& quoteCurrency() const { return quoteCurrency_; }
     const boost::shared_ptr<Expiry>& expiry() const { return expiry_; }
     const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
+    QuantLib::Option::Type optionType() const { return optionType_; }
     //@}
 
 private:
@@ -1792,6 +1797,7 @@ private:
     std::string quoteCurrency_;
     boost::shared_ptr<Expiry> expiry_;
     boost::shared_ptr<BaseStrike> strike_;
+    QuantLib::Option::Type optionType_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

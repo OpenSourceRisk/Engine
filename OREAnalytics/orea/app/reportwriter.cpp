@@ -21,6 +21,7 @@
 #include <orea/app/reportwriter.hpp>
 
 // FIXME: including all is slow and bad
+#include <boost/lexical_cast.hpp>
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
@@ -30,9 +31,8 @@
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <qle/instruments/cashflowresults.hpp>
 #include <qle/currencies/currencycomparator.hpp>
-#include <boost/lexical_cast.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -146,163 +146,182 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
+
+        // if trade is marked as not having cashflows, we skip it
+
         if (!trades[k]->hasCashflows()) {
             WLOG("cashflow for " << trades[k]->tradeType() << " " << trades[k]->id() << " skipped");
             continue;
         }
+
+        // if trade provides cashflows as additional results, we use that information instead of the legs
+
+        auto qlInstr = trades[k]->instrument()->qlInstrument();
+        bool useAdditionalResults = qlInstr != nullptr && qlInstr->additionalResults().find("cashFlowResults") !=
+                                                              qlInstr->additionalResults().end();
+
         try {
-            const vector<Leg>& legs = trades[k]->legs();
+
             const Real multiplier = trades[k]->instrument()->multiplier();
-            for (size_t i = 0; i < legs.size(); i++) {
-                const QuantLib::Leg& leg = legs[i];
-                bool payer = trades[k]->legPayers()[i];
-                string ccy = trades[k]->legCurrencies()[i];
-                Handle<YieldTermStructure> discountCurve;
-                if (write_discount_factor)
-                    discountCurve = market->discountCurve(ccy, configuration);
-                for (size_t j = 0; j < leg.size(); j++) {
-                    boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
-                    Date payDate = ptrFlow->date();
-                    if (!ptrFlow->hasOccurred(asof)) {
-                        Real amount = ptrFlow->amount();
-                        string flowType = "";
-                        if (payer)
-                            amount *= -1.0;
-                        std::string ccy = trades[k]->legCurrencies()[i];
-                        boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                            boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                        Real coupon;
-                        Real accrual;
-                        Real notional;
-                        Date accrualStartDate, accrualEndDate;
-                        Real accruedAmount;
-                        if (ptrCoupon) {
-                            coupon = ptrCoupon->rate();
-                            accrual = ptrCoupon->accrualPeriod();
-                            notional = ptrCoupon->nominal();
-                            accrualStartDate = ptrCoupon->accrualStartDate();
-                            accrualEndDate = ptrCoupon->accrualEndDate();
-                            accruedAmount = ptrCoupon->accruedAmount(asof);
+
+            if (!useAdditionalResults) {
+
+                // leg based cashflow reporting
+
+                const vector<Leg>& legs = trades[k]->legs();
+                for (size_t i = 0; i < legs.size(); i++) {
+                    const QuantLib::Leg& leg = legs[i];
+                    bool payer = trades[k]->legPayers()[i];
+                    string ccy = trades[k]->legCurrencies()[i];
+                    Handle<YieldTermStructure> discountCurve;
+                    if (write_discount_factor)
+                        discountCurve = market->discountCurve(ccy, configuration);
+                    for (size_t j = 0; j < leg.size(); j++) {
+                        boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
+                        Date payDate = ptrFlow->date();
+                        if (!ptrFlow->hasOccurred(asof)) {
+                            Real amount = ptrFlow->amount();
+                            string flowType = "";
                             if (payer)
-                                accruedAmount *= -1.0;
-                            flowType = "Interest";
-                        } else {
-                            coupon = Null<Real>();
-                            accrual = Null<Real>();
-                            notional = Null<Real>();
-                            accrualStartDate = accrualEndDate = Null<Date>();
-                            accruedAmount = Null<Real>();
-                            flowType = "Notional";
-                        }
-                        // This BMA part here (and below) is necessary because the fixingDay() method of
-                        // AverageBMACoupon returns an exception rather than the last fixing day of the period.
-                        boost::shared_ptr<AverageBMACoupon> ptrBMA =
-                            boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
-                        boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                            boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-                        boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
-                            boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
-                        boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
-                            boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
-                        boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
-                            boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
-                        Date fixingDate;
-                        Real fixingValue;
-                        if (ptrBMA) {
-                            // We return the last fixing inside the coupon period
-                            fixingDate = ptrBMA->fixingDates().end()[-2];
-                            fixingValue = ptrBMA->pricer()->swapletRate();
-                            if (fixingDate > asof)
-                                flowType = "BMAaverage";
-                        } else if (ptrFloat) {
-                            fixingDate = ptrFloat->fixingDate();
-                            fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            if (fixingDate > asof)
-                                flowType = "InterestProjected";
-                        } else if (ptrInfl) {
-                            fixingDate = ptrInfl->fixingDate();
-                            fixingValue = ptrInfl->indexFixing();
-                            flowType = "Inflation";
-                        } else if (ptrIndCf) {
-                            fixingDate = ptrIndCf->fixingDate();
-                            fixingValue = ptrIndCf->index()->fixing(fixingDate);
-                            flowType = "Index";
-                        } else if (ptrFxlCf) {
-                            fixingDate = ptrFxlCf->fxFixingDate();
-                            fixingValue = ptrFxlCf->fxRate();
-                        } else {
-                            fixingDate = Null<Date>();
-                            fixingValue = Null<Real>();
-                        }
-                        Real effectiveAmount = amount * (amount == Null<Real>() ? 1.0 : multiplier);
-                        report.next()
-                            .add(trades[k]->id())
-                            .add(trades[k]->tradeType())
-                            .add(j + 1)
-                            .add(i)
-                            .add(payDate)
-                            .add(flowType)
-                            .add(effectiveAmount)
-                            .add(ccy)
-                            .add(coupon)
-                            .add(accrual)
-                            .add(accrualStartDate)
-                            .add(accrualEndDate)
-                            .add(accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier))
-                            .add(fixingDate)
-                            .add(fixingValue)
-                            .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
+                                amount *= -1.0;
+                            std::string ccy = trades[k]->legCurrencies()[i];
+                            boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
+                                boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                            Real coupon;
+                            Real accrual;
+                            Real notional;
+                            Date accrualStartDate, accrualEndDate;
+                            Real accruedAmount;
+                            if (ptrCoupon) {
+                                coupon = ptrCoupon->rate();
+                                accrual = ptrCoupon->accrualPeriod();
+                                notional = ptrCoupon->nominal();
+                                accrualStartDate = ptrCoupon->accrualStartDate();
+                                accrualEndDate = ptrCoupon->accrualEndDate();
+                                accruedAmount = ptrCoupon->accruedAmount(asof);
+                                if (payer)
+                                    accruedAmount *= -1.0;
+                                flowType = "Interest";
+                            } else {
+                                coupon = Null<Real>();
+                                accrual = Null<Real>();
+                                notional = Null<Real>();
+                                accrualStartDate = accrualEndDate = Null<Date>();
+                                accruedAmount = Null<Real>();
+                                flowType = "Notional";
+                            }
+                            // This BMA part here (and below) is necessary because the fixingDay() method of
+                            // AverageBMACoupon returns an exception rather than the last fixing day of the period.
+                            boost::shared_ptr<AverageBMACoupon> ptrBMA =
+                                boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
+                            boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
+                                boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
+                            boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
+                                boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
+                            boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
+                                boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                            boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
+                                boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
+                            Date fixingDate;
+                            Real fixingValue;
+                            if (ptrBMA) {
+                                // We return the last fixing inside the coupon period
+                                fixingDate = ptrBMA->fixingDates().end()[-2];
+                                fixingValue = ptrBMA->pricer()->swapletRate();
+                                if (fixingDate > asof)
+                                    flowType = "BMAaverage";
+                            } else if (ptrFloat) {
+                                fixingDate = ptrFloat->fixingDate();
+                                fixingValue = ptrFloat->index()->fixing(fixingDate);
+                                if (fixingDate > asof)
+                                    flowType = "InterestProjected";
+                            } else if (ptrInfl) {
+                                fixingDate = ptrInfl->fixingDate();
+                                fixingValue = ptrInfl->indexFixing();
+                                flowType = "Inflation";
+                            } else if (ptrIndCf) {
+                                fixingDate = ptrIndCf->fixingDate();
+                                fixingValue = ptrIndCf->index()->fixing(fixingDate);
+                                flowType = "Index";
+                            } else if (ptrFxlCf) {
+                                fixingDate = ptrFxlCf->fxFixingDate();
+                                fixingValue = ptrFxlCf->fxRate();
+                            } else {
+                                fixingDate = Null<Date>();
+                                fixingValue = Null<Real>();
+                            }
+                            Real effectiveAmount = amount * (amount == Null<Real>() ? 1.0 : multiplier);
+                            report.next()
+                                .add(trades[k]->id())
+                                .add(trades[k]->tradeType())
+                                .add(j + 1)
+                                .add(i)
+                                .add(payDate)
+                                .add(flowType)
+                                .add(effectiveAmount)
+                                .add(ccy)
+                                .add(coupon)
+                                .add(accrual)
+                                .add(accrualStartDate)
+                                .add(accrualEndDate)
+                                .add(accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier))
+                                .add(fixingDate)
+                                .add(fixingValue)
+                                .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
 
-                        if (write_discount_factor) {
-                            Real discountFactor = discountCurve->discount(payDate);
-                            report.add(discountFactor);
-                            Real presentValue = discountFactor * effectiveAmount;
-                            report.add(presentValue);
+                            if (write_discount_factor) {
+                                Real discountFactor = discountCurve->discount(payDate);
+                                report.add(discountFactor);
+                                Real presentValue = discountFactor * effectiveAmount;
+                                report.add(presentValue);
+                            }
                         }
-
                     }
                 }
-            }
 
-            // write cashflows that are provided as additional results
-            // we assume a fixed label and type for these results, if we do not find that we do not write out anything
-            auto qlInstr = trades[k]->instrument()->qlInstrument();
-            // we don't require a ql instrument always
-            if (qlInstr) {
-                auto tmp = qlInstr->additionalResults().find("cashFlowResults");
-                if (tmp != qlInstr->additionalResults().end()) {
-                    QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
-                               "cashflowResults type not handlded");
-                    std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
-                    std::map<Size,Size> cashflowNumber;
-                    for (auto const& cf : cfResults) {
-                        Real effectiveAmount =
-                            cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
-                        report.next()
-                            .add(trades[k]->id())
-                            .add(trades[k]->tradeType())
-                            .add(++cashflowNumber[cf.legNumber])
-                            .add(cf.legNumber)
-                            .add(cf.payDate)
-                            .add(cf.type)
-                            .add(effectiveAmount)
-                            .add(cf.currency)
-                            .add(cf.rate)
-                            .add(cf.accrualPeriod)
-                            .add(cf.accrualStartDate)
-                            .add(cf.accrualEndDate)
-                            .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
-                            .add(cf.fixingDate)
-                            .add(cf.fixingValue)
-                            .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier));
-                        if (write_discount_factor) {
-                            if (!cf.currency.empty() && cf.payDate != Null<Date>()) {
-                                Handle<YieldTermStructure> discountCurve = market->discountCurve(cf.currency);
-                                Real discountFactor = discountCurve->discount(cf.payDate);
-                                report.add(discountFactor).add(discountFactor * effectiveAmount);
-                            } else {
-                                // fallback if currency or pay date are not given in the additional results
-                                report.add(1.0).add(effectiveAmount);
+            } else {
+
+                // additional result based cashflow reporting
+
+                if (qlInstr) {
+                    auto tmp = qlInstr->additionalResults().find("cashFlowResults");
+                    if (tmp != qlInstr->additionalResults().end()) {
+                        QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
+                                   "cashflowResults type not handlded");
+                        std::vector<CashFlowResults> cfResults =
+                            boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
+                        std::map<Size, Size> cashflowNumber;
+                        for (auto const& cf : cfResults) {
+                            Real effectiveAmount = cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
+                            report.next()
+                                .add(trades[k]->id())
+                                .add(trades[k]->tradeType())
+                                .add(++cashflowNumber[cf.legNumber])
+                                .add(cf.legNumber)
+                                .add(cf.payDate)
+                                .add(cf.type)
+                                .add(effectiveAmount)
+                                .add(cf.currency)
+                                .add(cf.rate)
+                                .add(cf.accrualPeriod)
+                                .add(cf.accrualStartDate)
+                                .add(cf.accrualEndDate)
+                                .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
+                                .add(cf.fixingDate)
+                                .add(cf.fixingValue)
+                                .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier));
+                            if (write_discount_factor) {
+                                Real discountFactor = 1.0;
+                                if (cf.discountFactor != Null<Real>()) {
+                                    discountFactor = cf.discountFactor;
+                                } else if (!cf.currency.empty() && cf.payDate != Null<Date>()) {
+                                    discountFactor = market->discountCurve(cf.currency)->discount(cf.payDate);
+                                }
+                                Real presentValue = effectiveAmount * discountFactor;
+                                if (cf.presentValue != Null<Real>()) {
+                                    presentValue = cf.presentValue;
+                                }
+                                report.add(discountFactor).add(presentValue);
                             }
                         }
                     }
@@ -454,7 +473,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
         .add(ee_b[0])
         .add(eee_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
-        
+
         Time time = dc.yearFraction(today, dates[j]);
         report.next()
             .add(tradeId)
@@ -472,7 +491,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
 }
 
 void addNettingSetExposure(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                            const string& nettingSetId) {
+                           const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
@@ -533,7 +552,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
         .addColumn("ExpectedCollateral", double(), 2)
         .addColumn("BaselEE", double(), 2)
         .addColumn("BaselEEE", double(), 2);
-    
+
     for (auto n : postProcess->nettingSetIds()) {
         addNettingSetExposure(report, postProcess, n);
     }
@@ -552,14 +571,10 @@ void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
         .addColumn("CvaSpreadSensitivity", double(), 6);
 
     if (sensiHazardRate.size() == 0 || sensiCdsSpread.size() == 0)
-        return; 
-    
+        return;
+
     for (Size j = 0; j < grid.size(); ++j) {
-        report.next()
-            .add(nettingSetId)
-            .add(grid[j])
-            .add(sensiHazardRate[j])
-            .add(sensiCdsSpread[j]);
+        report.next().add(nettingSetId).add(grid[j]).add(sensiHazardRate[j]).add(sensiCdsSpread[j]);
     }
     report.end();
 }
@@ -808,23 +823,19 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
 }
 
 template <class T>
-void addMapResults(boost::any resultMap, const std::string&  tradeId, const std::string& resultName, Report& report) {
+void addMapResults(boost::any resultMap, const std::string& tradeId, const std::string& resultName, Report& report) {
     T map = boost::any_cast<T>(resultMap);
     for (auto it : map) {
         std::string name = resultName + "_" + it.first.code();
         boost::any tmp = it.second;
         auto p = parseBoostAny(tmp);
-        report.next()
-            .add(tradeId)
-            .add(name)
-            .add(p.first)
-            .add(p.second);
-
+        report.next().add(tradeId).add(name).add(p.first).add(p.second);
     }
 }
 
-void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Market> market, const std::string& baseCurrency) {
-    
+void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_ptr<Portfolio> portfolio,
+                                                boost::shared_ptr<Market> market, const std::string& baseCurrency) {
+
     LOG("Writing AdditionalResults report");
 
     report.addColumn("TradeId", string())
@@ -841,11 +852,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
         auto additionalData = trade->additionalData();
         for (const auto& kv : additionalData) {
             auto p = parseBoostAny(kv.second);
-            report.next()
-                .add(tradeId)
-                .add(kv.first)
-                .add(p.first)
-                .add(p.second);
+            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
         }
         // if the 'notionalTwo' has been provided convert it to base currency
         if (additionalData.count("notionalTwo") != 0 && additionalData.count("notionalTwoCurrency") != 0) {
@@ -857,7 +864,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
             if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
                 notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
-                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency"); 
+                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency");
             }
         }
 
@@ -867,22 +874,19 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
             std::ostringstream oss;
             oss << std::fixed << std::setprecision(8) << notional2 * fx;
-            report.next()
-                .add(tradeId)
-                .add("notionalTwoInBaseCurrency")
-                .add("double")
-                .add(oss.str());
+            report.next().add(tradeId).add("notionalTwoInBaseCurrency").add("double").add(oss.str());
         }
 
         // Just use the unadjusted trade ID in the additional results report for the main instrument.
-        // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each 
-        // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the 
+        // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each
+        // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the
         // multiplier as an extra additional result if additional results exist.
         auto instruments = trade->instrument()->additionalInstruments();
         auto multipliers = trade->instrument()->additionalMultipliers();
-        QL_REQUIRE(instruments.size() == multipliers.size(), "Expected the number of " <<
-            "additional instruments (" << instruments.size() << ") to equal the number of " <<
-            "additional multipliers (" << multipliers.size() << ").");
+        QL_REQUIRE(instruments.size() == multipliers.size(),
+                   "Expected the number of "
+                       << "additional instruments (" << instruments.size() << ") to equal the number of "
+                       << "additional multipliers (" << multipliers.size() << ").");
         instruments.insert(instruments.begin(), trade->instrument()->qlInstrument());
         multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
 
@@ -893,7 +897,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             if (!instrument)
                 continue;
 
-            // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in 
+            // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in
             // the portfolio (still a risk).
             tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
 
@@ -916,15 +920,10 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                     addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                 } else {
                     auto p = parseBoostAny(kv.second);
-                    report.next()
-                        .add(tradeId)
-                        .add(kv.first)
-                        .add(p.first)
-                        .add(p.second);
+                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
                 }
             }
         }
-
     }
 
     report.end();
@@ -1015,6 +1014,59 @@ void addInflationCurveCalibrationInfo(ore::data::Report& report, const std::stri
     }
 }
 
+void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
+                               boost::shared_ptr<FxEqVolCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    addRowMktCalReport(report, type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, type, id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, type, id, "atmType", "", "", "", info->atmType);
+    addRowMktCalReport(report, type, id, "deltaType", "", "", "", info->deltaType);
+    addRowMktCalReport(report, type, id, "longTermAtmType", "", "", "", info->longTermAtmType);
+    addRowMktCalReport(report, type, id, "longTermDeltaType", "", "", "", info->longTermDeltaType);
+    addRowMktCalReport(report, type, id, "switchTenor", "", "", "", info->switchTenor);
+    addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        addRowMktCalReport(report, type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size j = 0; j < info->deltas.size(); ++j) {
+            std::string dStr = info->deltas.at(j);
+            addRowMktCalReport(report, type, id, "forward", tStr, dStr, "", info->forwards.at(i));
+            addRowMktCalReport(report, type, id, "strike", tStr, dStr, "", info->deltaGridStrikes.at(i).at(j));
+            addRowMktCalReport(report, type, id, "vol", tStr, dStr, "", info->deltaGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "prob", tStr, dStr, "", info->deltaGridProb.at(i).at(j));
+            addRowMktCalReport(report, type, id, "callSpreadArb", tStr, dStr, "",
+                               static_cast<bool>(info->deltaGridCallSpreadArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "butterflyArb", tStr, dStr, "",
+                               static_cast<bool>(info->deltaGridButterflyArbitrage.at(i).at(j)));
+        }
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size j = 0; j < info->moneyness.size(); ++j) {
+            std::string mStr = std::to_string(info->moneyness.at(j));
+            addRowMktCalReport(report, type, id, "forward", tStr, mStr, "", info->forwards.at(i));
+            addRowMktCalReport(report, type, id, "strike", tStr, mStr, "", info->moneynessGridStrikes.at(i).at(j));
+            addRowMktCalReport(report, type, id, "vol", tStr, mStr, "",
+                               info->moneynessGridImpliedVolatility.at(i).at(j));
+            addRowMktCalReport(report, type, id, "prob", tStr, mStr, "", info->moneynessGridProb.at(i).at(j));
+            addRowMktCalReport(report, type, id, "callSpreadArb", tStr, mStr, "",
+                               static_cast<bool>(info->moneynessGridCallSpreadArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "butterflyArb", tStr, mStr, "",
+                               static_cast<bool>(info->moneynessGridButterflyArbitrage.at(i).at(j)));
+            addRowMktCalReport(report, type, id, "calendarArb", tStr, mStr, "",
+                               static_cast<bool>(info->moneynessGridCalendarArbitrage.at(i).at(j)));
+        }
+    }
+}
+
 } // namespace
 
 void ReportWriter::writeTodaysMarketCalibrationReport(
@@ -1046,7 +1098,10 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addInflationCurveCalibrationInfo(report, r.first, r.second);
     }
 
-    // ...
+    // fx vol results
+    for (auto const& r : calibrationInfo->fxVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "fxVol", r.first, r.second);
+    }
 
     report.end();
     LOG("TodaysMktCalibration report written");

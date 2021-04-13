@@ -91,6 +91,7 @@
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
+#include <qle/indexes/decpi.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -283,7 +284,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"BRL-CDI", boost::make_shared<BRLCdi>()},         {"NOK-NOWA", boost::make_shared<Nowa>()},
         {"CLP-CAMARA", boost::make_shared<CLPCamara>()},   {"NZD-OCR", boost::make_shared<Nzocr>()},
         {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}, {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()},
-	{"GBP-BOEBaseRate", boost::make_shared<BOEBaseRateIndex>()}};
+	    {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()}};
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
@@ -528,6 +529,8 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
         {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()},
         {"CACPI", boost::make_shared<ZeroInflationIndexParser<CACPI>>()},
         {"ESCPI", boost::make_shared<ZeroInflationIndexParser<ESCPI>>()},
+        {"DECPI", boost::make_shared<ZeroInflationIndexParser<DECPI>>()},
+        {"DE CPI", boost::make_shared<ZeroInflationIndexParser<DECPI>>()}
     };
 
     auto it = m.find(s);

@@ -820,8 +820,10 @@ Real currentNotional(const Leg& leg);
 //! Build a full vector of values from the given node.
 //  For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
 //  In all cases we can expand the vector to take the given schedule into account
+//  If checkAllValuesAppearInResult is true, we require that all input values are appearing in the result (in order)
 template <typename T>
-vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule);
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                               const bool checkAllValuesAppearInResult = false);
 
 // extend values to schedule size (if values is empty, the default value is used)
 template <typename T>
@@ -830,7 +832,13 @@ vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule,
 // normaliseToSchedule concat buildScheduledVector
 template <typename T>
 vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
-                                         const T& defaultValue);
+                                         const T& defaultValue, const bool checkAllValuesAppearInResult = false);
+
+/* returns an iterator to the first input value that is not appearing (in order) in the scheduled vector, or an iterator
+   pointing to the end of the input value vector if no such element exists */
+template <typename T>
+typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const vector<T>& scheduledVecotr,
+                                                                         const vector<T>& inputValues);
 
 // notional vector derived from a fixed amortisation amount
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
@@ -862,7 +870,8 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
 // template implementations
 
 template <typename T>
-vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule) {
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                               const bool checkAllValuesAppearInResult) {
     if (values.size() < 2 || dates.size() == 0)
         return values;
 
@@ -910,6 +919,12 @@ vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& da
         data[i] = values[j];
     }
 
+    if (checkAllValuesAppearInResult) {
+        auto it = checkAllValuesAppearInScheduledVector<T>(data, values);
+        QL_REQUIRE(it == values.end(),
+                   "buildScheduledVector: input value '" << *it << " does not appear in the result vector");
+    }
+
     return data;
 }
 
@@ -923,8 +938,26 @@ vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule,
 
 template <typename T>
 vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
-                                         const T& defaultValue) {
-    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
+                                         const T& defaultValue, const bool checkAllValuesAppearInResult) {
+    return normaliseToSchedule(buildScheduledVector(values, dates, schedule, checkAllValuesAppearInResult), schedule,
+                               defaultValue);
+}
+
+template <typename T>
+typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const vector<T>& scheduledVector,
+                                                                         const vector<T>& inputValues) {
+    auto s = scheduledVector.begin();
+    auto i = inputValues.begin();
+    while (i != inputValues.end()) {
+        if (s == scheduledVector.end())
+            return i;
+        if (*i == *s) {
+            ++i;
+        } else {
+            ++s;
+        }
+    }
+    return i;
 }
 
 // build an FX Index needed by legbuilders / makeLeg methods

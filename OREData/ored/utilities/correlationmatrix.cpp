@@ -222,6 +222,7 @@ CorrelationMatrixBuilder::ProcessInfo CorrelationMatrixBuilder::createProcessInf
 void CorrelationMatrixBuilder::checkFactor(const CorrelationFactor& f) const {
     switch (f.type) {
     case CT::IR:
+    case CT::AUX:
         QL_REQUIRE(f.name.size() == 3, "Expected IR factor name to be 3 character currency code but got: " << f.name);
         break;
     case CT::FX:

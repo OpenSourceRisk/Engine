@@ -54,6 +54,8 @@
     <ClInclude Include="ored\configuration\genericyieldvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\onedimsolverconfig.hpp" />
+    <ClInclude Include="ored\configuration\reportconfig.hpp" />
     <ClInclude Include="ored\configuration\securityconfig.hpp" />
     <ClInclude Include="ored\configuration\swaptionvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\volatilityconfig.hpp" />
@@ -122,6 +124,7 @@
     <ClInclude Include="ored\model\irlgmdata.hpp" />
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
+    <ClInclude Include="ored\model\marketobserver.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
     <ClInclude Include="ored\model\modeldata.hpp" />
     <ClInclude Include="ored\model\modelparameter.hpp" />
@@ -143,6 +146,7 @@
     <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
+    <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
@@ -243,6 +247,8 @@
     <ClCompile Include="ored\configuration\genericyieldvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\onedimsolverconfig.cpp" />
+    <ClCompile Include="ored\configuration\reportconfig.cpp" />
     <ClCompile Include="ored\configuration\volatilityconfig.cpp" />
     <ClCompile Include="ored\configuration\yieldcurveconfig.cpp" />
     <ClCompile Include="ored\marketdata\basecorrelationcurve.cpp" />
