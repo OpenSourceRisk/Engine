@@ -1086,6 +1086,12 @@
     <ClInclude Include="qle\models\normalsabrsmilesection.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfacebfrr.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackdeltautilities.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1860,6 +1866,12 @@
     </ClCompile>
     <ClCompile Include="qle\models\normalsabrsmilesection.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackdeltautilities.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
