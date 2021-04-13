@@ -144,7 +144,18 @@ Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, 
 }
 
 Real SimpleDeltaInterpolatedSmile::volatility(const Real strike) {
-    return std::exp((*interpolation_)(simpleDeltaFromStrike(strike)));
+    Real tmp = std::exp((*interpolation_)(simpleDeltaFromStrike(strike)));
+    if (!std::isfinite(tmp)) {
+        std::ostringstream os;
+        for (Size i = 0; i < x_.size(); ++i) {
+            os << "(" << x_[i] << "," << y_[i] << ")";
+        }
+        QL_FAIL("SimpleDeltaInterpolatedSmile: non-finite result ("
+                << tmp << ") for strike " << strike << ", simple delta is " << simpleDeltaFromStrike(strike)
+                << ", interpolated value is " << (*interpolation_)(simpleDeltaFromStrike(strike))
+                << ", interpolation data point are " << os.str());
+    }
+    return tmp;
 }
 
 Real SimpleDeltaInterpolatedSmile::simpleDeltaFromStrike(const Real strike) const {
