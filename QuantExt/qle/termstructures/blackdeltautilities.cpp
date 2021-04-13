@@ -44,7 +44,11 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
     } while (std::abs((result - lastResult) / lastResult) > accuracy && ++iterations < maxIterations);
     QL_REQUIRE(iterations < maxIterations, "getStrikeFromDelta: max iterations ("
                                                << maxIterations << "), no solution found for accuracy " << accuracy
-                                               << ", last iterations: " << lastResult << ", " << result);
+                                               << ", last iterations: " << lastResult << "/" << result
+                                               << ", spot=" << spot << ", forward=" << spot / domDiscount * forDiscount
+                                               << " (domRate=" << -std::log(domDiscount) / t
+                                               << ", forRate=" << -std::log(forDiscount) / t << "), expiry=" << t);
+
     return result;
 }
 
@@ -68,7 +72,10 @@ Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real s
     } while (std::abs((result - lastResult) / lastResult) > accuracy && ++iterations < maxIterations);
     QL_REQUIRE(iterations < maxIterations, "getAtmStrike: max iterations ("
                                                << maxIterations << "), no solution found for accuracy " << accuracy
-                                               << ", last iterations: " << lastResult << ", " << result);
+                                               << ", last iterations: " << lastResult << "/" << result
+                                               << ", spot=" << spot << ", forward=" << spot / domDiscount * forDiscount
+                                               << " (domRate=" << -std::log(domDiscount) / t
+                                               << ", forRate=" << -std::log(forDiscount) / t << "), expiry=" << t);
     return result;
 }
 
