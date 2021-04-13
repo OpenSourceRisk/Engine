@@ -116,7 +116,7 @@ public:
                                  const std::vector<Real>& callVols, const Real atmVol,
                                  const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at,
                                  const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation,
-                                 const Real accuracy = 1E-8, const Size maxIterations = 1000);
+                                 const Real accuracy = 1E-6, const Size maxIterations = 1000);
 
     Real volatility(const Real strike);
     Real strikeFromDelta(const Option::Type type, const Real delta, const DeltaVolQuote::DeltaType dt);

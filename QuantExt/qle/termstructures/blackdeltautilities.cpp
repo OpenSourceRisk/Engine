@@ -37,10 +37,11 @@ Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::Delt
         } catch (const std::exception& e) {
             QL_FAIL("getStrikeFromDelta("
                     << (optionType == Option::Call ? 1.0 : -1.0) * delta << ") could not be computed for spot=" << spot
-                    << ", forward=" << spot / domDiscount * forDiscount << ", vol=" << stddev / std::sqrt(t)
+                    << ", forward=" << spot / domDiscount * forDiscount << " (domRate=" << -std::log(domDiscount) / t
+                    << ", forRate=" << -std::log(forDiscount) / t << "), vol=" << stddev / std::sqrt(t)
                     << ", expiry=" << t << ": " << e.what());
         }
-    } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
+    } while (std::abs((result - lastResult) / lastResult) > accuracy && ++iterations < maxIterations);
     QL_REQUIRE(iterations < maxIterations, "getStrikeFromDelta: max iterations ("
                                                << maxIterations << "), no solution found for accuracy " << accuracy
                                                << ", last iterations: " << lastResult << ", " << result);
@@ -60,10 +61,11 @@ Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real s
             result = bdc.atmStrike(at);
         } catch (const std::exception& e) {
             QL_FAIL("getAtmStrike() could not be computed for spot="
-                    << spot << ", forward=" << spot / domDiscount * forDiscount << ", vol=" << stddev / std::sqrt(t)
-                    << ", expiry=" << t << ": " << e.what());
+                    << spot << ", forward=" << spot / domDiscount * forDiscount
+                    << " (domRate=" << -std::log(domDiscount) / t << ", forRate=" << -std::log(forDiscount) / t
+                    << "), vol=" << stddev / std::sqrt(t) << ", expiry=" << t << ": " << e.what());
         }
-    } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
+    } while (std::abs((result - lastResult) / lastResult) > accuracy && ++iterations < maxIterations);
     QL_REQUIRE(iterations < maxIterations, "getAtmStrike: max iterations ("
                                                << maxIterations << "), no solution found for accuracy " << accuracy
                                                << ", last iterations: " << lastResult << ", " << result);
