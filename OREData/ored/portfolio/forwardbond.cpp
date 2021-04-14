@@ -186,5 +186,12 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>> ForwardBond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    std::map<AssetClass, std::set<std::string>> result;
+    result[AssetClass::BOND] = { bondData_.securityId() };
+    return result;
+}
+
 } // namespace data
 } // namespace ore

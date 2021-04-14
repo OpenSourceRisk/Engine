@@ -148,6 +148,10 @@ public:
     const string& currency() const { return bondData_.currency(); }
     const string& creditCurveId() const { return bondData_.creditCurveId(); }
 
+    //! Add underlying Bond names
+    std::map<AssetClass, std::set<std::string>>
+        underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
