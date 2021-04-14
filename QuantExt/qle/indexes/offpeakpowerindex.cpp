@@ -37,11 +37,16 @@ OffPeakPowerIndex::OffPeakPowerIndex(const string& underlyingName,
     : CommodityFuturesIndex(underlyingName, expiryDate, NullCalendar(), true, priceCurve),
       offPeakIndex_(offPeakIndex), peakIndex_(peakIndex), offPeakHours_(offPeakHours),
       peakCalendar_(peakCalendar) {
-    QL_REQUIRE(0.0 < offPeakHours_ && offPeakHours_ < 24.0, "Off-peak hours must be in (0, 24.0)");
-    QL_REQUIRE(expiryDate_ == offPeakIndex_->expiryDate(), "The expiry date (" << io::iso_date(expiryDate_) <<
-        ") should equal the off-peak index expiry date (" << io::iso_date(offPeakIndex_->expiryDate()) << ").");
-    QL_REQUIRE(expiryDate_ == peakIndex_->expiryDate(), "The expiry date (" << io::iso_date(expiryDate_) <<
-        ") should equal the peak index expiry date (" << io::iso_date(peakIndex_->expiryDate()) << ").");
+    string msgPrefix = "Constructing " + underlyingName + ": ";
+    QL_REQUIRE(0.0 < offPeakHours_ && offPeakHours_ < 24.0, msgPrefix << "off-peak hours must be in (0, 24.0)");
+    QL_REQUIRE(expiryDate_ == offPeakIndex_->expiryDate(), msgPrefix << "the expiry date (" <<
+        io::iso_date(expiryDate_) << ") should equal the off-peak index expiry date (" <<
+        io::iso_date(offPeakIndex_->expiryDate()) << ").");
+    QL_REQUIRE(expiryDate_ == peakIndex_->expiryDate(), msgPrefix << "the expiry date (" <<
+        io::iso_date(expiryDate_) << ") should equal the peak index expiry date (" <<
+        io::iso_date(peakIndex_->expiryDate()) << ").");
+    QL_REQUIRE(offPeakIndex_, msgPrefix << "the off-peak index should not be null.");
+    QL_REQUIRE(peakIndex_, msgPrefix << "the peak index should not be null.");
 }
 
 const boost::shared_ptr<CommodityFuturesIndex>& OffPeakPowerIndex::offPeakIndex() const {
