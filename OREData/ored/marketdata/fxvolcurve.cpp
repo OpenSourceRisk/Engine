@@ -734,7 +734,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 tmp.push_back(std::make_tuple(e, p, config->calendar().advance(asof, p)));
             }
             std::sort(tmp.begin(), tmp.end(),
-                      [](std::tuple<std::string, Period, Date>& a, std::tuple<std::string, Period, Date>& b) -> bool {
+                      [](const std::tuple<std::string, Period, Date>& a,
+                         const std::tuple<std::string, Period, Date>& b) -> bool {
                           if (std::get<2>(a) == std::get<2>(b)) {
                               try {
                                   // equal dates => compare periods (might throw!)
