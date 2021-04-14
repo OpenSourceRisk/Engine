@@ -118,7 +118,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
                 expiry = index_->fixingCalendar().advance(expiry, dailyExpiryOffset_ * Days);
             }
 
-            indices_[pd] = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
+            indices_[pd] = index_->clone(expiry);
         }
 
         // Update indices_ where necessary if delivery date roll is greater than 0.
@@ -141,7 +141,7 @@ void CommodityIndexedAverageCashFlow::init(const ext::shared_ptr<FutureExpiryCal
                 // If the pricing date is after the roll date, we use the next expiry.
                 if (kv.first > rollDate) {
                     expiry = calc->nextExpiry(false, expiry);
-                    kv.second = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
+                    kv.second = index_->clone(expiry);
                 }
 
             }

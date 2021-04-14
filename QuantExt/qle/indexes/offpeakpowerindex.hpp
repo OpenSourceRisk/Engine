@@ -66,6 +66,10 @@ public:
     const QuantLib::Calendar& peakCalendar() const;
     //@}
 
+    //! Implement the base clone.
+    boost::shared_ptr<CommodityIndex> clone(const QuantLib::Date& expiryDate,
+        const QuantLib::Handle<PriceTermStructure>& ts) const override;
+
 protected:
     //! \name CommodityIndex interface
     //@{

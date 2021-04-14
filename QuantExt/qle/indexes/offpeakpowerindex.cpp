@@ -65,6 +65,14 @@ const Calendar& OffPeakPowerIndex::peakCalendar() const {
     return peakCalendar_;
 }
 
+boost::shared_ptr<CommodityIndex> OffPeakPowerIndex::clone(const Date& expiry,
+    const Handle<PriceTermStructure>& ts) const {
+    const auto& pts = ts.empty() ? priceCurve() : ts;
+    const auto& ed = expiry == Date() ? expiryDate() : expiry;
+    return boost::make_shared<OffPeakPowerIndex>(underlyingName(), ed, offPeakIndex_,
+        peakIndex_, offPeakHours_, peakCalendar_, pts);
+}
+
 Real OffPeakPowerIndex::pastFixing(const Date& fixingDate) const {
     if (peakCalendar_.isBusinessDay(fixingDate))
         return offPeakIndex_->fixing(fixingDate);

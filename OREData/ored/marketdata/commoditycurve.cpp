@@ -589,7 +589,7 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
         auto peakPts = Handle<PriceTermStructure>(itCc->second->commodityPriceCurve());
 
         // Create the daily peak price index linked to the peak price term structure.
-        peakIndex = boost::make_shared<CommodityIndex>(ppId, Date(), NullCalendar(), true, peakPts);
+        peakIndex = parseCommodityIndex(ppId, conventions, false, peakPts);
 
         // Calendar defining the peak business days.
         peakCalendar = parseCalendar(priceSegment.peakPriceCalendar());
