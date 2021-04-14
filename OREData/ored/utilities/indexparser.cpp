@@ -622,32 +622,32 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
         }
     }
 
-    // If we have provided a convention of type OffPeakPowerIndex with a name equal to commName, we use that 
-    // convention to construct the off peak power commodity index.
-    pair<bool, boost::shared_ptr<Convention>> p = conventions.get(commName, Convention::Type::OffPeakPowerIndex);
-    if (p.first) {
-        auto c = boost::dynamic_pointer_cast<OffPeakPowerIndexConvention>(p.second);
-
-        if (expiry == Date()) {
-            // If expiry is still not set use any date (off peak index is calendar daily)
-            expiry = Settings::instance().evaluationDate();
-        }
-        string suffix = "-" + to_string(expiry);
-
-        auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
-            c->offPeakIndex() + suffix, conventions, false));
-        auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
-            c->peakIndex() + suffix, conventions, false));
-
-        return boost::make_shared<OffPeakPowerIndex>(commName, expiry, offPeakIndex, peakIndex,
-            c->offPeakHours(), c->peakCalendar(), ts);
-    }
-
     // Do we have a commodity future convention for the commodity.
-    p = conventions.get(commName, Convention::Type::CommodityFuture);
+    pair<bool, boost::shared_ptr<Convention>> p = conventions.get(commName, Convention::Type::CommodityFuture);
     boost::shared_ptr<CommodityFutureConvention> convention;
     if (p.first) {
+
         convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
+
+        // If we have provided OffPeakPowerIndexData, we use that to construct the off peak power commodity index.
+        if (convention->offPeakPowerIndexData()) {
+
+            const auto& oppIdxData = *convention->offPeakPowerIndexData();
+
+            if (expiry == Date()) {
+                // If expiry is still not set use any date (off peak index is calendar daily)
+                expiry = Settings::instance().evaluationDate();
+            }
+            string suffix = "-" + to_string(expiry);
+
+            auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+                oppIdxData.offPeakIndex() + suffix, conventions, false));
+            auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+                oppIdxData.peakIndex() + suffix, conventions, false));
+
+            return boost::make_shared<OffPeakPowerIndex>(commName, expiry, offPeakIndex, peakIndex,
+                oppIdxData.offPeakHours(), oppIdxData.peakCalendar(), ts);
+        }
     }
 
     // Create and return the required future index

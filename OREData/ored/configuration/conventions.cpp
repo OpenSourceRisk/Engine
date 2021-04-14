@@ -1358,6 +1358,47 @@ void CommodityFutureConvention::AveragingData::build() {
     pricingCalendar_ = parseCalendar(strPricingCalendar_);
 }
 
+CommodityFutureConvention::OffPeakPowerIndexData::OffPeakPowerIndexData() : offPeakHours_(0.0) {}
+
+CommodityFutureConvention::OffPeakPowerIndexData::OffPeakPowerIndexData(
+    const string& offPeakIndex,
+    const string& peakIndex,
+    const string& offPeakHours,
+    const string& peakCalendar)
+    : offPeakIndex_(offPeakIndex),
+      peakIndex_(peakIndex),
+      strOffPeakHours_(offPeakHours),
+      strPeakCalendar_(peakCalendar) {
+    build();
+}
+
+void CommodityFutureConvention::OffPeakPowerIndexData::build() {
+    offPeakHours_ = parseReal(strOffPeakHours_);
+    peakCalendar_ = parseCalendar(strPeakCalendar_);
+}
+
+void CommodityFutureConvention::OffPeakPowerIndexData::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "OffPeakPowerIndexData");
+    offPeakIndex_ = XMLUtils::getChildValue(node, "OffPeakIndex", true);
+    peakIndex_ = XMLUtils::getChildValue(node, "PeakIndex", true);
+    strOffPeakHours_ = XMLUtils::getChildValue(node, "OffPeakHours", true);
+    strPeakCalendar_ = XMLUtils::getChildValue(node, "PeakCalendar", true);
+
+    build();
+}
+
+XMLNode* CommodityFutureConvention::OffPeakPowerIndexData::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("OffPeakPowerIndexData");
+    XMLUtils::addChild(doc, node, "OffPeakIndex", offPeakIndex_);
+    XMLUtils::addChild(doc, node, "PeakIndex", peakIndex_);
+    XMLUtils::addChild(doc, node, "OffPeakHours", strOffPeakHours_);
+    XMLUtils::addChild(doc, node, "PeakCalendar", strPeakCalendar_);
+
+    return node;
+}
+
 CommodityFutureConvention::CommodityFutureConvention()
     : anchorType_(AnchorType::DayOfMonth),
       dayOfMonth_(1),
@@ -1390,7 +1431,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      const map<Natural, Natural>& futureContinuationMappings,
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
-                                                     Natural hoursPerDay)
+                                                     Natural hoursPerDay,
+                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
       strDayOfMonth_(dayOfMonth.dayOfMonth_), strContractFrequency_(contractFrequency), strCalendar_(calendar),
       strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth),
@@ -1399,7 +1441,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       optionExpiryMonthLag_(optionExpiryMonthLag), optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
       optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
-      hoursPerDay_(hoursPerDay) {
+      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData) {
     build();
 }
 
@@ -1416,7 +1458,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      const map<Natural, Natural>& futureContinuationMappings,
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
-                                                     Natural hoursPerDay)
+                                                     Natural hoursPerDay,
+                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
       strContractFrequency_(contractFrequency), strCalendar_(calendar), strExpiryCalendar_(expiryCalendar),
       expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
@@ -1425,7 +1468,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
       optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
-      hoursPerDay_(hoursPerDay) {
+      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData) {
     build();
 }
 
@@ -1442,7 +1485,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      const map<Natural, Natural>& futureContinuationMappings,
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
-                                                     Natural hoursPerDay)
+                                                     Natural hoursPerDay,
+                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
       strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -1452,7 +1496,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
       optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
-      hoursPerDay_(hoursPerDay) {
+      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData) {
     build();
 }
 
@@ -1552,6 +1596,11 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         hoursPerDay_ = parseInteger(XMLUtils::getNodeValue(n));
     }
 
+    if (XMLNode* n = XMLUtils::getChildNode(node, "OffPeakPowerIndexData")) {
+        offPeakPowerIndexData_ = OffPeakPowerIndexData();
+        offPeakPowerIndexData_->fromXML(n);
+    }
+
     build();
 }
 
@@ -1637,6 +1686,10 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     if (hoursPerDay_ != Null<Natural>())
         XMLUtils::addChild(doc, node, "HoursPerDay", static_cast<int>(hoursPerDay_));
 
+    if (offPeakPowerIndexData_) {
+        XMLUtils::appendNode(node, offPeakPowerIndexData_->toXML(doc));
+    }
+
     return node;
 }
 
@@ -1684,6 +1737,16 @@ void CommodityFutureConvention::build() {
     // Check the continuation mappings
     checkContinuationMappings(futureContinuationMappings_, "future");
     checkContinuationMappings(optionContinuationMappings_, "option");
+
+    // Check that neither of the indexes in OffPeakPowerIndexData self reference
+    if (offPeakPowerIndexData_) {
+        const string& opIdx = offPeakPowerIndexData_->offPeakIndex();
+        QL_REQUIRE(id_ != opIdx, "The off-peak index (" << opIdx << ") cannot equal the index for which" <<
+            " we are providing conventions (" << id_ << ").");
+        const string& pIdx = offPeakPowerIndexData_->peakIndex();
+        QL_REQUIRE(id_ != pIdx, "The peak index (" << pIdx << ") cannot equal the index for which" <<
+            " we are providing conventions (" << id_ << ").");
+    }
 }
 
 void CommodityFutureConvention::populateFrequency() {
@@ -1804,57 +1867,6 @@ XMLNode* ZeroInflationIndexConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-OffPeakPowerIndexConvention::OffPeakPowerIndexConvention() : offPeakHours_(0.0) {}
-
-OffPeakPowerIndexConvention::OffPeakPowerIndexConvention(
-    const string& id,
-    const string& offPeakIndex,
-    const string& peakIndex,
-    const string& offPeakHours,
-    const string& peakCalendar)
-    : Convention(id, Type::OffPeakPowerIndex),
-      offPeakIndex_(offPeakIndex),
-      peakIndex_(peakIndex),
-      strOffPeakHours_(offPeakHours),
-      strPeakCalendar_(peakCalendar) {
-    build();
-}
-
-void OffPeakPowerIndexConvention::build() {
-    QL_REQUIRE(id_ != offPeakIndex_, "The off-peak index (" << offPeakIndex_ << ") cannot equal the index for which" <<
-        " we are providing conventions (" << id_ << ").");
-    QL_REQUIRE(id_ != peakIndex_, "The peak index (" << peakIndex_ << ") cannot equal the index for which" <<
-        " we are providing conventions (" << id_ << ").");
-    offPeakHours_ = parseReal(strOffPeakHours_);
-    peakCalendar_ = parseCalendar(strPeakCalendar_);
-}
-
-void OffPeakPowerIndexConvention::fromXML(XMLNode* node) {
-
-    XMLUtils::checkNode(node, "OffPeakPowerIndex");
-    type_ = Type::OffPeakPowerIndex;
-    id_ = XMLUtils::getChildValue(node, "Id", true);
-
-    offPeakIndex_ = XMLUtils::getChildValue(node, "OffPeakIndex", true);
-    peakIndex_ = XMLUtils::getChildValue(node, "PeakIndex", true);
-    strOffPeakHours_ = XMLUtils::getChildValue(node, "OffPeakHours", true);
-    strPeakCalendar_ = XMLUtils::getChildValue(node, "PeakCalendar", true);
-
-    build();
-}
-
-XMLNode* OffPeakPowerIndexConvention::toXML(XMLDocument& doc) {
-
-    XMLNode* node = doc.allocNode("OffPeakPowerIndex");
-    XMLUtils::addChild(doc, node, "Id", id_);
-    XMLUtils::addChild(doc, node, "OffPeakIndex", offPeakIndex_);
-    XMLUtils::addChild(doc, node, "PeakIndex", peakIndex_);
-    XMLUtils::addChild(doc, node, "OffPeakHours", strOffPeakHours_);
-    XMLUtils::addChild(doc, node, "PeakCalendar", strPeakCalendar_);
-
-    return node;
-}
-
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -1914,8 +1926,6 @@ void Conventions::fromXML(XMLNode* node) {
             convention = boost::make_shared<OvernightIndexConvention>();
         } else if (childName == "ZeroInflationIndex") {
             convention = boost::make_shared<ZeroInflationIndexConvention>();
-        } else if (childName == "OffPeakPowerIndex") {
-            convention = boost::make_shared<OffPeakPowerIndexConvention>();
         } else {
             // No need to QL_FAIL here, just go to the next one
             WLOG("Convention name, " << childName << ", not recognized.");
