@@ -26,8 +26,10 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
+#include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <regex>
@@ -87,42 +89,6 @@ Real getDelta(const std::string& s) {
     return ore::data::parseReal(s.substr(0, s.size() - 1)) / 100.0 * (isPut(s) ? -1.0 : 1.0);
 };
 
-// utility to get a strike from a delta
-Real getStrikeFromDelta(Option::Type optionType, Real delta, DeltaVolQuote::DeltaType dt, Real spot, Real domDiscount,
-                        Real forDiscount, boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real forward,
-                        Real accuracy, Size maxIterations) {
-    Real result = forward, lastResult;
-    Size iterations = 0;
-    do {
-        Real stddev = std::sqrt(vol->blackVariance(t, result));
-        BlackDeltaCalculator bdc(optionType, dt, spot, domDiscount, forDiscount, stddev);
-        lastResult = result;
-        result = bdc.strikeFromDelta(delta);
-    } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
-    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getStrikeFromDelta: max iterations ("
-                                               << maxIterations << "), no solution found for accuracy " << accuracy
-                                               << ", last iterations: " << lastResult << ", " << result);
-    return result;
-}
-
-// utility to get an atm strike
-Real getAtmStrike(DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at, Real spot, Real domDiscount, Real forDiscount,
-                  boost::shared_ptr<BlackVolTermStructure> vol, Real t, Real forward, Real accuracy,
-                  Size maxIterations) {
-    Real result = forward, lastResult;
-    Size iterations = 0;
-    do {
-        Real stddev = std::sqrt(vol->blackVariance(t, result));
-        BlackDeltaCalculator bdc(Option::Call, dt, spot, domDiscount, forDiscount, stddev);
-        lastResult = result;
-        result = bdc.atmStrike(at);
-    } while (std::abs(result - lastResult) > accuracy && ++iterations < maxIterations);
-    QL_REQUIRE(iterations < maxIterations, "FXVolCurve::getAtmStrike: max iterations ("
-                                               << maxIterations << "), no solution found for accuracy " << accuracy
-                                               << ", last iterations: " << lastResult << ", " << result);
-    return result;
-}
-
 } // namespace
 
 namespace ore {
@@ -167,6 +133,8 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
             callDeltas.push_back(std::make_pair(getDelta(delta), delta));
     }
 
+    Calendar cal = config->calendar();
+
     // sort puts 10P, 15P, 20P, ... and calls 45C, 40C, 35C, ... (notice put deltas have a negative sign)
     auto comp = [](const std::pair<Real, string>& x, const std::pair<Real, string>& y) { return x.first > y.first; };
     std::sort(putDeltas.begin(), putDeltas.end(), comp);
@@ -175,9 +143,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vector<Date> dates;
     Matrix blackVolMatrix;
 
-    vector<string> tokens;
-    boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
-    string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
+    string base = "FX_OPTION/RATE_LNVOL/" + sourceCcy_ + "/" + targetCcy_ + "/";
 
     // build quote names
     std::vector<std::string> deltaNames;
@@ -192,7 +158,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     }
 
     if (expiriesRegex_) {
-        regex regexp(boost::replace_all_copy(config->expiries()[0], "*", ".*"));
+        regex regexp(boost::replace_all_copy(expiriesNoDuplicates_[0], "*", ".*"));
 
         // we save relevant delta quotes to avoid looping twice
         std::vector<boost::shared_ptr<MarketDatum>> data;
@@ -245,7 +211,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                 tmpMatrix[i][j] = q->quote()->value();
                 // if we have found all the quotes then this is a valid expiry
                 if (j == deltaNames.size() - 1) {
-                    dates.push_back(asof + expiries_[i]);
+                    dates.push_back(cal.advance(asof, expiries_[i]));
                     validExpiryIdx.push_back(i);
                 }
             }
@@ -264,15 +230,15 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         }
 
     } else {
-        expiries_ = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
-        unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        expiries_ = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
+        unsortedExp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
         std::sort(expiries_.begin(), expiries_.end());
 
         blackVolMatrix = Matrix(expiries_.size(), config->deltas().size());
         for (Size i = 0; i < expiries_.size(); i++) {
             Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries_[i]) - unsortedExp.begin();
-            string e = config->expiries()[idx];
-            dates.push_back(asof + expiries_[i]);
+            string e = expiriesNoDuplicates_[idx];
+            dates.push_back(cal.advance(asof, expiries_[i]));
             for (Size j = 0; j < deltaNames.size(); ++j) {
                 string qs = base + e + "/" + deltaNames[j];
                 boost::shared_ptr<MarketDatum> md = loader.get(qs, asof);
@@ -286,7 +252,6 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     // daycounter used for interpolation in time.
     // TODO: push into conventions or config
     DayCounter dc = config->dayCounter();
-    Calendar cal = config->calendar();
     std::vector<Real> putDeltasNum, callDeltasNum;
     std::transform(putDeltas.begin(), putDeltas.end(), std::back_inserter(putDeltasNum),
                    [](const std::pair<Real, string>& x) { return x.first; });
@@ -295,6 +260,150 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceDelta>(
         asof, dates, putDeltasNum, callDeltasNum, hasATM, blackVolMatrix, dc, cal, fxSpot_, domYts_, forYts_,
         deltaType_, atmType_, boost::none, switchTenor_, longTermDeltaType_, longTermAtmType_);
+
+    vol_->enableExtrapolation();
+}
+
+void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                                     boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
+                                     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                     const Conventions& conventions) {
+
+    // collect relevant market data and populate expiries (as per regex or configured list)
+
+    std::set<Period> expiriesTmp;
+
+    boost::optional<regex> regexp;
+    if (expiriesRegex_)
+        regexp = regex(boost::replace_all_copy(expiriesNoDuplicates_[0], "*", ".*"));
+
+    std::vector<boost::shared_ptr<FXOptionQuote>> data;
+    for (auto const& md : loader.loadQuotes(asof)) {
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
+            boost::shared_ptr<FXOptionQuote> q = boost::dynamic_pointer_cast<FXOptionQuote>(md);
+            QL_REQUIRE(q, "internal error: could not cast to FXOptionQuote");
+            Strike s = parseStrike(q->strike());
+            if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy() &&
+                (s.type == Strike::Type::BF || s.type == Strike::Type::RR || s.type == Strike::Type::ATM)) {
+                vector<string> tokens;
+                boost::split(tokens, md->name(), boost::is_any_of("/"));
+                QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
+                if (expiriesRegex_ && regex_match(tokens[4], *regexp))
+                    expiriesTmp.insert(q->expiry());
+                data.push_back(q);
+            }
+        }
+    }
+
+    if (!expiriesRegex_) {
+        auto tmp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
+        expiriesTmp = std::set<Period>(tmp.begin(), tmp.end());
+    }
+
+    // populate quotes
+
+    std::vector<Size> smileDeltas = config->smileDelta();
+    std::sort(smileDeltas.begin(), smileDeltas.end());
+
+    std::vector<std::vector<Real>> bfQuotesTmp(expiriesTmp.size(), std::vector<Real>(smileDeltas.size(), Null<Real>()));
+    std::vector<std::vector<Real>> rrQuotesTmp(expiriesTmp.size(), std::vector<Real>(smileDeltas.size(), Null<Real>()));
+    std::vector<Real> atmQuotesTmp(expiriesTmp.size(), Null<Real>());
+
+    for (auto const& q : data) {
+        Size expiryIdx = std::distance(expiriesTmp.begin(), expiriesTmp.find(q->expiry()));
+        if (expiryIdx >= expiriesTmp.size())
+            continue;
+        Strike s = parseStrike(q->strike());
+        if (s.type == Strike::Type::ATM) {
+            atmQuotesTmp[expiryIdx] = q->quote()->value();
+        } else {
+            Size deltaIdx = std::distance(smileDeltas.begin(), std::find(smileDeltas.begin(), smileDeltas.end(),
+                                                                         static_cast<Size>(s.value + 0.5)));
+            if (deltaIdx >= smileDeltas.size())
+                continue;
+            if (s.type == Strike::Type::BF) {
+                bfQuotesTmp[expiryIdx][deltaIdx] = q->quote()->value();
+            } else if (s.type == Strike::Type::RR) {
+                rrQuotesTmp[expiryIdx][deltaIdx] = q->quote()->value();
+            }
+        }
+    }
+
+    // identify the rows with complete data
+
+    std::vector<bool> dataComplete(expiriesTmp.size(), true);
+
+    for (Size i = 0; i < expiriesTmp.size(); ++i) {
+        for (Size j = 0; j < smileDeltas.size(); ++j) {
+            if (bfQuotesTmp[i][j] == Null<Real>() || rrQuotesTmp[i][j] == Null<Real>() ||
+                atmQuotesTmp[i] == Null<Real>())
+                dataComplete[i] = false;
+        }
+    }
+
+    // if we have an explicitly configured expiry list, we require that the data is complete for all expiries
+
+    if (!expiriesRegex_) {
+        Size i = 0;
+        for (auto const& e : expiriesTmp) {
+            QL_REQUIRE(dataComplete[i++], "BFRR FX vol surface: incomplete data for expiry " << e);
+        }
+    }
+
+    // build the final quotes for the expiries that have complete data
+
+    Size i = 0;
+    for (auto const& e : expiriesTmp) {
+        if (dataComplete[i++]) {
+            expiries_.push_back(e);
+            TLOG("adding expiry " << e << " with complete data");
+        } else {
+            TLOG("removing expiry " << e << ", because data is not complete");
+        }
+    }
+
+    std::vector<std::vector<Real>> bfQuotes(expiries_.size(), std::vector<Real>(smileDeltas.size()));
+    std::vector<std::vector<Real>> rrQuotes(expiries_.size(), std::vector<Real>(smileDeltas.size()));
+    std::vector<Real> atmQuotes(expiries_.size());
+
+    Size row = 0;
+    for (Size i = 0; i < expiriesTmp.size(); ++i) {
+        if (!dataComplete[i])
+            continue;
+        atmQuotes[row] = atmQuotesTmp[i];
+        for (Size j = 0; j < smileDeltas.size(); ++j) {
+            bfQuotes[row][j] = bfQuotesTmp[i][j];
+            rrQuotes[row][j] = rrQuotesTmp[i][j];
+        }
+        ++row;
+    }
+
+    // build BFRR surface
+
+    DLOG("build BFRR fx vol surface with " << expiries_.size() << " expiries and " << smileDeltas.size()
+                                           << " delta(s)");
+
+    QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation interp;
+    if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Linear)
+        interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Linear;
+    else if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::Cubic)
+        interp = QuantExt::BlackVolatilitySurfaceBFRR::SmileInterpolation::Cubic;
+    else {
+        QL_FAIL("BFRR FX vol surface: invalid interpolation, expected Linear, Cubic");
+    }
+
+    std::vector<Date> dates;
+    std::transform(expiries_.begin(), expiries_.end(), std::back_inserter(dates),
+                   [&asof, &config](const Period& p) { return config->calendar().advance(asof, p); });
+
+    std::vector<Real> smileDeltasScaled;
+    std::transform(smileDeltas.begin(), smileDeltas.end(), std::back_inserter(smileDeltasScaled),
+                   [](Size d) { return static_cast<Real>(d) / 100.0; });
+
+    vol_ = boost::make_shared<QuantExt::BlackVolatilitySurfaceBFRR>(
+        asof, dates, smileDeltasScaled, bfQuotes, rrQuotes, atmQuotes, config->dayCounter(), config->calendar(),
+        fxSpot_, spotDays_, spotCalendar_, domYts_, forYts_, deltaType_, atmType_, switchTenor_, longTermDeltaType_,
+        longTermAtmType_, riskReversalInFavorOf_, butterflyIsBrokerStyle_, interp);
 
     vol_->enableExtrapolation();
 }
@@ -309,7 +418,9 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     std::string deltaRr;
     std::string deltaBf;
     if (!isATM) {
-        smileDelta = config->smileDelta();
+        QL_REQUIRE(config->smileDelta().size() == 1,
+                   "Exactly one SmileDelta required for VannaVolga Curve (got " << config->smileDelta().size() << ")");
+        smileDelta = config->smileDelta().front();
         deltaRr = to_string(smileDelta) + "RR";
         deltaBf = to_string(smileDelta) + "BF";
     }
@@ -319,17 +430,17 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     Size n = isATM ? 1 : 3; // [0] = ATM, [1] = RR, [2] = BF
     vector<vector<boost::shared_ptr<FXOptionQuote>>> quotes(n);
 
-    QL_REQUIRE(!expiriesRegex_ || isATM, "wildcards only supported for ATM or Delta FxVol Curves");
+    QL_REQUIRE(!expiriesRegex_ || isATM, "wildcards only supported for ATM, Delta, BFRR FxVol Curves");
 
     vector<Period> cExpiries;
     vector<vector<Period>> expiries;
     // Create the regular expression
     regex regexp;
     if (!expiriesRegex_) {
-        cExpiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        cExpiries = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
         expiries = vector<vector<Period>>(n, cExpiries);
     } else {
-        string regexstr = config->expiries()[0];
+        string regexstr = expiriesNoDuplicates_[0];
         regexstr = boost::replace_all_copy(regexstr, "*", ".*");
         regexp = regex(regexstr);
     }
@@ -422,7 +533,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
         vector<vector<Volatility>> vols(n, vector<Volatility>(numExpiries)); // same as above: [0] = ATM, etc.
 
         for (Size i = 0; i < numExpiries; i++) {
-            dates[i] = asof + quotes[0][i]->expiry();
+            dates[i] = cal.advance(asof, quotes[0][i]->expiry());
             expiries_.push_back(quotes[0][i]->expiry());
             DLOG("Spec Tenor Vol Variance");
             for (Size idx = 0; idx < n; idx++) {
@@ -513,11 +624,6 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
                                       const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
                                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
                                       const Conventions& conventions) {
-    vector<string> tokens;
-    boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
-    QL_REQUIRE(tokens.size() == 3, "unexpected fxSpot format: " << config->fxSpotID());
-    auto forTarget = tokens[1];
-    auto domTarget = tokens[2];
 
     DLOG("Triangulating FxVol curve " << config->curveID() << " from baseVols " << config->baseVolatility1() << ":"
                                       << config->baseVolatility2());
@@ -529,16 +635,16 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     std::string spec1 = "FXVolatility/" + forBase1 + "/" + domBase1 + "/" + config->baseVolatility1();
 
     bool base1Inverted = false;
-    if (forBase1 != forTarget && forBase1 != domTarget) {
+    if (forBase1 != sourceCcy_ && forBase1 != targetCcy_) {
         // we invert the pair
         base1Inverted = true;
         std::string tmp = forBase1;
-        forBase1 = domTarget;
+        forBase1 = targetCcy_;
         domBase1 = tmp;
 
-        QL_REQUIRE(forBase1 == forTarget || forBase1 == domTarget,
+        QL_REQUIRE(forBase1 == sourceCcy_ || forBase1 == targetCcy_,
                    "FxVol: mismatch in the baseVolatility1 " << config->baseVolatility1() << " and Target Pair "
-                                                             << forTarget << domTarget);
+                                                             << sourceCcy_ << targetCcy_);
     }
     baseCcy = domBase1;
 
@@ -551,10 +657,10 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     QL_REQUIRE(forBase2 == baseCcy || domBase2 == baseCcy,
                "baseVolatility2 must share a ccy code with the baseVolatility1");
 
-    if (forBase2 != forTarget && forBase2 != domTarget) {
+    if (forBase2 != sourceCcy_ && forBase2 != targetCcy_) {
         // we invert the pair
         std::string tmp = forBase2;
-        forBase2 = domTarget;
+        forBase2 = targetCcy_;
         domBase2 = tmp;
         base2Inverted = true;
     }
@@ -584,8 +690,8 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
     }
     domBaseVol->enableExtrapolation();
 
-    string forIndex = "FX-" + config->fxIndexTag() + "-" + forTarget + "-" + baseCcy;
-    string domIndex = "FX-" + config->fxIndexTag() + "-" + domTarget + "-" + baseCcy;
+    string forIndex = "FX-" + config->fxIndexTag() + "-" + sourceCcy_ + "-" + baseCcy;
+    string domIndex = "FX-" + config->fxIndexTag() + "-" + targetCcy_ + "-" + baseCcy;
 
     Handle<QuantExt::CorrelationTermStructure> rho = getCorrelationCurve(forIndex, domIndex, correlationCurves);
 
@@ -606,7 +712,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
-                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta,
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta ||
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR,
                    "Unknown FX curve building dimension");
 
         expiriesRegex_ = false;
@@ -618,22 +725,96 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             }
         }
 
+        // remove expiries that would lead to duplicate expiry dates (keep the later expiry in this case)
+
+        if (!expiriesRegex_) {
+            std::vector<std::tuple<std::string, Period, Date>> tmp;
+            for (auto const& e : config->expiries()) {
+                auto p = parsePeriod(e);
+                tmp.push_back(std::make_tuple(e, p, config->calendar().advance(asof, p)));
+            }
+            std::sort(tmp.begin(), tmp.end(),
+                      [](const std::tuple<std::string, Period, Date>& a,
+                         const std::tuple<std::string, Period, Date>& b) -> bool {
+                          if (std::get<2>(a) == std::get<2>(b)) {
+                              try {
+                                  // equal dates => compare periods (might throw!)
+                                  return std::get<1>(a) < std::get<1>(b);
+                              } catch (...) {
+                                  // period comparison not possible => compare the strings
+                                  return std::get<0>(a) < std::get<0>(b);
+                              }
+                          }
+                          // different dates => compare them
+                          return std::get<2>(a) < std::get<2>(b);
+                      });
+            Date lastDate = Date::maxDate();
+            for (Size i = tmp.size(); i > 0; --i) {
+                if (std::get<2>(tmp[i - 1]) == lastDate)
+                    continue;
+                expiriesNoDuplicates_.insert(expiriesNoDuplicates_.begin(), std::get<0>(tmp[i - 1]));
+                lastDate = std::get<2>(tmp[i - 1]);
+            }
+        } else {
+            // wildcard => we have exactly one expiry string
+            expiriesNoDuplicates_ = {config->expiries()[0]};
+        }
+
+        DLOG("expiries in configuration:")
+        for (auto const& e : config->expiries()) {
+            DLOG(e);
+        }
+
+        DLOG("expiries after removing duplicate expiry dates and sorting:");
+        for (auto const& e : expiriesNoDuplicates_) {
+            DLOG(e);
+        }
+
+        QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
+                       !expiriesNoDuplicates_.empty(),
+                   "no expiries after removing duplicate expiry dates");
+
+        //
+
+        std::vector<std::string> tokens;
+        boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
+        QL_REQUIRE(tokens.size() == 3, "Expected 3 tokens in fx spot id '" << config->fxSpotID() << "'");
+        sourceCcy_ = tokens[1];
+        targetCcy_ = tokens[2];
+
         atmType_ = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         deltaType_ = DeltaVolQuote::DeltaType::Spot;
         switchTenor_ = 2 * Years;
         longTermAtmType_ = DeltaVolQuote::AtmType::AtmDeltaNeutral;
         longTermDeltaType_ = DeltaVolQuote::DeltaType::Fwd;
+        riskReversalInFavorOf_ = Option::Call;
+        butterflyIsBrokerStyle_ = true;
+        spotDays_ = 2;
+        string calTmp = sourceCcy_ + "," + targetCcy_;
+        spotCalendar_ = parseCalendar(calTmp);
 
         if (config->conventionsID() != "") {
-            boost::shared_ptr<Convention> conv = conventions.get(config->conventionsID());
-            auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conv);
+            auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions.get(config->conventionsID()));
             QL_REQUIRE(fxOptConv,
-                       "unable to cast convention (" << config->conventionsID() << ") into FxOptionConvention");
+                       "unable to cast convention '" << config->conventionsID() << "' into FxOptionConvention");
+            boost::shared_ptr<FXConvention> fxConv;
+            if (!fxOptConv->fxConventionID().empty()) {
+                fxConv = boost::dynamic_pointer_cast<FXConvention>(conventions.get(fxOptConv->fxConventionID()));
+                QL_REQUIRE(fxConv, "unable to cast convention '" << fxOptConv->fxConventionID()
+                                                                 << "', from FxOptionConvention '"
+                                                                 << config->conventionsID() << "' into FxConvention");
+            }
             atmType_ = fxOptConv->atmType();
             deltaType_ = fxOptConv->deltaType();
             longTermAtmType_ = fxOptConv->longTermAtmType();
             longTermDeltaType_ = fxOptConv->longTermDeltaType();
             switchTenor_ = fxOptConv->switchTenor();
+            riskReversalInFavorOf_ = fxOptConv->riskReversalInFavorOf();
+            butterflyIsBrokerStyle_ = fxOptConv->butterflyIsBrokerStyle();
+            if (fxConv) {
+                spotDays_ = fxConv->spotDays();
+                spotCalendar_ = fxConv->advanceCalendar();
+            }
         } else {
             WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
@@ -647,6 +828,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta) {
             buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
+        } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR) {
+            buildSmileBfRrCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
             buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves,
                                  conventions);
@@ -655,6 +838,8 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         }
 
         // build calibration info
+
+        DLOG("Building calibration info for fx vol surface");
 
         if (domYts_.empty() || forYts_.empty()) {
             WLOG("no domestic / foreign yield curves given in fx vol curve config for "
@@ -702,15 +887,20 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         calibrationInfo_->longTermAtmType = ore::data::to_string(longTermAtmType_);
         calibrationInfo_->longTermDeltaType = ore::data::to_string(longTermDeltaType_);
         calibrationInfo_->switchTenor = ore::data::to_string(switchTenor_);
+        calibrationInfo_->riskReversalInFavorOf = riskReversalInFavorOf_ == Option::Call ? "Call" : "Put";
+        calibrationInfo_->butterflyStyle = butterflyIsBrokerStyle_ ? "Broker" : "Smile";
 
-        std::vector<Real> times, forwards;
+        std::vector<Real> times, forwards, domDisc, forDisc;
+        Date settl = spotCalendar_.advance(asof, spotDays_ * Days);
         for (auto const& p : expiries) {
-            // FIXME here and above in the build methods: vol_->optionDateFromTenor(p);
-            Date d = asof + p;
+            Date d = vol_->optionDateFromTenor(p);
+            Date settlFwd = spotCalendar_.advance(d, spotDays_ * Days);
             calibrationInfo_->expiryDates.push_back(d);
             times.push_back(vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
                                                        : vol_->timeFromReference(d));
-            forwards.push_back(fxSpot_->value() / domYts_->discount(times.back()) * forYts_->discount(times.back()));
+            domDisc.push_back(domYts_->discount(settlFwd) / domYts_->discount(settl));
+            forDisc.push_back(forYts_->discount(settlFwd) / forYts_->discount(settl));
+            forwards.push_back(fxSpot_->value() / domDisc.back() * forDisc.back());
         }
 
         calibrationInfo_->times = times;
@@ -739,11 +929,10 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
             calibrationInfo_->deltaGridButterflyArbitrage =
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
-            constexpr Real accuracy = 1E-8;      // accuracy for strike from delta calculation
-            constexpr Size maxIterations = 1000; // max iterations for strike from delta calculation
             DeltaVolQuote::DeltaType dt;
             DeltaVolQuote::AtmType at;
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
+            Real maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
                 if (t <= switchTime || close_enough(t, switchTime)) {
@@ -753,22 +942,26 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     at = longTermAtmType_;
                     dt = longTermDeltaType_;
                 }
+                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike
+                // from delta conversions: we keep the pa feature, but use fwd delta always and ATM DNS
+                if (t > maxTime) {
+                    at = DeltaVolQuote::AtmDeltaNeutral;
+                    dt = (deltaType_ == DeltaVolQuote::Spot || deltaType_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd
+                                                                                                 : DeltaVolQuote::PaFwd;
+                }
                 bool validSlice = true;
                 for (Size j = 0; j < deltas.size(); ++j) {
                     validateDelta(deltas[j]);
                     try {
                         Real strike;
                         if (isAtm(deltas[j])) {
-                            strike = getAtmStrike(dt, at, fxSpot_->value(), domYts_->discount(t), forYts_->discount(t),
-                                                  vol_, t, forwards[i], accuracy, maxIterations);
+                            strike = QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
                         } else if (isCall(deltas[j])) {
-                            strike = getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt, fxSpot_->value(),
-                                                        domYts_->discount(t), forYts_->discount(t), vol_, t,
-                                                        forwards[i], accuracy, maxIterations);
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt,
+                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
                         } else {
-                            strike = getStrikeFromDelta(Option::Put, getDelta(deltas[j]), dt, fxSpot_->value(),
-                                                        domYts_->discount(t), forYts_->discount(t), vol_, t,
-                                                        forwards[i], accuracy, maxIterations);
+                            strike = QuantExt::getStrikeFromDelta(Option::Put, getDelta(deltas[j]), dt,
+                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
@@ -780,19 +973,26 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     }
                 }
                 if (validSlice) {
-                    QuantExt::CarrMadanMarginalProbability cm(calibrationInfo_->deltaGridStrikes[i], forwards[i],
-                                                              callPricesDelta[i]);
-                    calibrationInfo_->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
-                    calibrationInfo_->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
-                    if (!cm.arbitrageFree())
+                    try {
+                        QuantExt::CarrMadanMarginalProbability cm(calibrationInfo_->deltaGridStrikes[i], forwards[i],
+                                                                  callPricesDelta[i]);
+                        calibrationInfo_->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
+                        calibrationInfo_->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
+                        if (!cm.arbitrageFree())
+                            calibrationInfo_->isArbitrageFree = false;
+                        calibrationInfo_->deltaGridProb[i] = cm.density();
+                        TLOGGERSTREAM << arbitrageAsString(cm);
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << ": " << e.what());
                         calibrationInfo_->isArbitrageFree = false;
-                    calibrationInfo_->deltaGridProb[i] = cm.density();
-                    TLOGGERSTREAM << arbitrageAsString(cm);
+                        TLOGGERSTREAM << "..(invalid slice)..";
+                    }
                 } else {
                     calibrationInfo_->isArbitrageFree = false;
                     TLOGGERSTREAM << "..(invalid slice)..";
                 }
             }
+            TLOG("Delta surface arbitrage analysis completed.");
         }
 
         if (reportOnMoneynessGrid) {
@@ -824,23 +1024,30 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 }
             }
             if (!times.empty() && !moneyness.empty()) {
-                QuantExt::CarrMadanSurface cm(times, moneyness, fxSpot_->value(), forwards, callPricesMoneyness);
-                for (Size i = 0; i < times.size(); ++i) {
-                    calibrationInfo_->moneynessGridProb[i] = cm.timeSlices()[i].density();
-                }
-                calibrationInfo_->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
-                calibrationInfo_->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
-                calibrationInfo_->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
-                if (!cm.arbitrageFree())
+                try {
+                    QuantExt::CarrMadanSurface cm(times, moneyness, fxSpot_->value(), forwards, callPricesMoneyness);
+                    for (Size i = 0; i < times.size(); ++i) {
+                        calibrationInfo_->moneynessGridProb[i] = cm.timeSlices()[i].density();
+                    }
+                    calibrationInfo_->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
+                    calibrationInfo_->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
+                    calibrationInfo_->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
+                    if (!cm.arbitrageFree())
+                        calibrationInfo_->isArbitrageFree = false;
+                    TLOG("Moneyness surface Arbitrage analysis result:");
+                    TLOGGERSTREAM << arbitrageAsString(cm);
+                } catch (const std::exception& e) {
+                    TLOG("error: " << e.what());
                     calibrationInfo_->isArbitrageFree = false;
-
-                TLOG("Moneyness surface Arbitrage analysis result:");
-                TLOGGERSTREAM << arbitrageAsString(cm);
+                }
+                TLOG("Moneyness surface Arbitrage analysis completed:");
             }
         }
 
+        DLOG("Building calibration info for fx vol surface completed.");
+
     } catch (std::exception& e) {
-        QL_FAIL("fx vol curve building failed :" << e.what());
+        QL_FAIL("fx vol curve building failed: " << e.what());
     } catch (...) {
         QL_FAIL("fx vol curve building failed: unknown error");
     }

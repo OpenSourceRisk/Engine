@@ -2,6 +2,7 @@
 
 set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
 analyticlgmswaptionengine.cpp
+bfrrvolsurface.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
