@@ -770,7 +770,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             DLOG(e);
         }
 
-        QL_REQUIRE(!expiriesNoDuplicates_.empty(), "no expiries after removing duplicate expiry dates");
+        QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
+                       !expiriesNoDuplicates_.empty(),
+                   "no expiries after removing duplicate expiry dates");
 
         //
 
