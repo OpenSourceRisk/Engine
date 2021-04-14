@@ -84,6 +84,7 @@ private:
     Handle<Quote> fxSpot_;
     Handle<YieldTermStructure> domYts_, forYts_;
     string sourceCcy_, targetCcy_;
+    std::vector<string> expiriesNoDuplicates_;
     std::vector<Period> expiries_;
     bool expiriesRegex_;
     Size spotDays_;

@@ -158,7 +158,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     }
 
     if (expiriesRegex_) {
-        regex regexp(boost::replace_all_copy(config->expiries()[0], "*", ".*"));
+        regex regexp(boost::replace_all_copy(expiriesNoDuplicates_[0], "*", ".*"));
 
         // we save relevant delta quotes to avoid looping twice
         std::vector<boost::shared_ptr<MarketDatum>> data;
@@ -230,14 +230,14 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         }
 
     } else {
-        expiries_ = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
-        unsortedExp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        expiries_ = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
+        unsortedExp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
         std::sort(expiries_.begin(), expiries_.end());
 
         blackVolMatrix = Matrix(expiries_.size(), config->deltas().size());
         for (Size i = 0; i < expiries_.size(); i++) {
             Size idx = std::find(unsortedExp.begin(), unsortedExp.end(), expiries_[i]) - unsortedExp.begin();
-            string e = config->expiries()[idx];
+            string e = expiriesNoDuplicates_[idx];
             dates.push_back(cal.advance(asof, expiries_[i]));
             for (Size j = 0; j < deltaNames.size(); ++j) {
                 string qs = base + e + "/" + deltaNames[j];
@@ -275,7 +275,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
     boost::optional<regex> regexp;
     if (expiriesRegex_)
-        regexp = regex(boost::replace_all_copy(config->expiries()[0], "*", ".*"));
+        regexp = regex(boost::replace_all_copy(expiriesNoDuplicates_[0], "*", ".*"));
 
     std::vector<boost::shared_ptr<FXOptionQuote>> data;
     for (auto const& md : loader.loadQuotes(asof)) {
@@ -296,7 +296,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
     }
 
     if (!expiriesRegex_) {
-        auto tmp = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        auto tmp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
         expiriesTmp = std::set<Period>(tmp.begin(), tmp.end());
     }
 
@@ -437,10 +437,10 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     // Create the regular expression
     regex regexp;
     if (!expiriesRegex_) {
-        cExpiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        cExpiries = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
         expiries = vector<vector<Period>>(n, cExpiries);
     } else {
-        string regexstr = config->expiries()[0];
+        string regexstr = expiriesNoDuplicates_[0];
         regexstr = boost::replace_all_copy(regexstr, "*", ".*");
         regexp = regex(regexstr);
     }
@@ -724,6 +724,54 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 break;
             }
         }
+
+        // remove expiries that would lead to duplicate expiry dates (keep the later expiry in this case)
+
+        if (!expiriesRegex_) {
+            std::vector<std::tuple<std::string, Period, Date>> tmp;
+            for (auto const& e : config->expiries()) {
+                auto p = parsePeriod(e);
+                tmp.push_back(std::make_tuple(e, p, config->calendar().advance(asof, p)));
+            }
+            std::sort(tmp.begin(), tmp.end(),
+                      [](std::tuple<std::string, Period, Date>& a, std::tuple<std::string, Period, Date>& b) -> bool {
+                          if (std::get<2>(a) == std::get<2>(b)) {
+                              try {
+                                  // equal dates => compare periods (might throw!)
+                                  return std::get<1>(a) < std::get<1>(b);
+                              } catch (...) {
+                                  // period comparison not possible => compare the strings
+                                  return std::get<0>(a) < std::get<0>(b);
+                              }
+                          }
+                          // different dates => compare them
+                          return std::get<2>(a) < std::get<2>(b);
+                      });
+            Date lastDate = Date::maxDate();
+            for (Size i = tmp.size(); i > 0; --i) {
+                if (std::get<2>(tmp[i - 1]) == lastDate)
+                    continue;
+                expiriesNoDuplicates_.insert(expiriesNoDuplicates_.begin(), std::get<0>(tmp[i - 1]));
+                lastDate = std::get<2>(tmp[i - 1]);
+            }
+        } else {
+            // wildcard => we have exactly one expiry string
+            expiriesNoDuplicates_ = {config->expiries()[0]};
+        }
+
+        DLOG("expiries in configuration:")
+        for (auto const& e : config->expiries()) {
+            DLOG(e);
+        }
+
+        DLOG("expiries after removing duplicate expiry dates and sorting:");
+        for (auto const& e : expiriesNoDuplicates_) {
+            DLOG(e);
+        }
+
+        QL_REQUIRE(!expiriesNoDuplicates_.empty(), "no expiries after removing duplicate expiry dates");
+
+        //
 
         std::vector<std::string> tokens;
         boost::split(tokens, config->fxSpotID(), boost::is_any_of("/"));
