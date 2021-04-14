@@ -1760,7 +1760,9 @@ ZeroInflationIndexConvention::ZeroInflationIndexConvention(
       strFrequency_(frequency),
       strAvailabilityLag_(availabilityLag),
       strCurrency_(currency),
-      frequency_(Monthly) {}
+      frequency_(Monthly) {
+    build();
+}
 
 QuantLib::Region ZeroInflationIndexConvention::region() const {
     return QuantLib::CustomRegion(regionName_, regionCode_);
@@ -1798,6 +1800,57 @@ XMLNode* ZeroInflationIndexConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Frequency", strFrequency_);
     XMLUtils::addChild(doc, node, "AvailabilityLag", strAvailabilityLag_);
     XMLUtils::addChild(doc, node, "Currency", strCurrency_);
+
+    return node;
+}
+
+OffPeakPowerIndexConvention::OffPeakPowerIndexConvention() : offPeakHours_(0.0) {}
+
+OffPeakPowerIndexConvention::OffPeakPowerIndexConvention(
+    const string& id,
+    const string& offPeakIndex,
+    const string& peakIndex,
+    const string& offPeakHours,
+    const string& peakCalendar)
+    : Convention(id, Type::OffPeakPowerIndex),
+      offPeakIndex_(offPeakIndex),
+      peakIndex_(peakIndex),
+      strOffPeakHours_(offPeakHours),
+      strPeakCalendar_(peakCalendar) {
+    build();
+}
+
+void OffPeakPowerIndexConvention::build() {
+    QL_REQUIRE(id_ != offPeakIndex_, "The off-peak index (" << offPeakIndex_ << ") cannot equal the index for which" <<
+        " we are providing conventions (" << id_ << ").");
+    QL_REQUIRE(id_ != peakIndex_, "The peak index (" << peakIndex_ << ") cannot equal the index for which" <<
+        " we are providing conventions (" << id_ << ").");
+    offPeakHours_ = parseReal(strOffPeakHours_);
+    peakCalendar_ = parseCalendar(strPeakCalendar_);
+}
+
+void OffPeakPowerIndexConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "OffPeakPowerIndex");
+    type_ = Type::OffPeakPowerIndex;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    offPeakIndex_ = XMLUtils::getChildValue(node, "OffPeakIndex", true);
+    peakIndex_ = XMLUtils::getChildValue(node, "PeakIndex", true);
+    strOffPeakHours_ = XMLUtils::getChildValue(node, "OffPeakHours", true);
+    strPeakCalendar_ = XMLUtils::getChildValue(node, "PeakCalendar", true);
+
+    build();
+}
+
+XMLNode* OffPeakPowerIndexConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("OffPeakPowerIndex");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "OffPeakIndex", offPeakIndex_);
+    XMLUtils::addChild(doc, node, "PeakIndex", peakIndex_);
+    XMLUtils::addChild(doc, node, "OffPeakHours", strOffPeakHours_);
+    XMLUtils::addChild(doc, node, "PeakCalendar", strPeakCalendar_);
 
     return node;
 }
@@ -1861,6 +1914,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention = boost::make_shared<OvernightIndexConvention>();
         } else if (childName == "ZeroInflationIndex") {
             convention = boost::make_shared<ZeroInflationIndexConvention>();
+        } else if (childName == "OffPeakPowerIndex") {
+            convention = boost::make_shared<OffPeakPowerIndexConvention>();
         } else {
             // No need to QL_FAIL here, just go to the next one
             WLOG("Convention name, " << childName << ", not recognized.");

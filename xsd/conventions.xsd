@@ -27,6 +27,7 @@
       <xs:element type="commodityFutureType" name="CommodityFuture"/>
       <xs:element type="fxOption" name="FxOption"/>
       <xs:element type="zeroInflationIndexType" name="ZeroInflationIndex"/>
+      <xs:element type="offPeakPowerIndexType" name="OffPeakPowerIndex"/>
     </xs:choice>
   </xs:complexType>
 
@@ -417,6 +418,23 @@
       <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="AvailabilityLag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="currencyCode" name="Currency" minOccurs="1" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="offPeakPowerIndexType">
+    <xs:all>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="OffPeakIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PeakIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="OffPeakHours" minOccurs="1" maxOccurs="1">
+        <xs:simpleType>
+          <xs:restriction base="xs:decimal">
+            <xs:minExclusive value="0"/>
+            <xs:maxExclusive value="24"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element type="xs:string" name="PeakCalendar" minOccurs="1" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

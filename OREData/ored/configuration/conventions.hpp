@@ -74,6 +74,7 @@ public:
         CMSSpreadOption,
         CommodityForward,
         CommodityFuture,
+        OffPeakPowerIndex,
         FxOption
     };
 
@@ -1559,6 +1560,40 @@ private:
     QuantLib::Frequency frequency_;
     QuantLib::Period availabilityLag_;
     QuantLib::Currency currency_;
+};
+
+/*! Container for storing off peak power index conventions
+   \ingroup marketdata
+*/
+class OffPeakPowerIndexConvention : public Convention {
+public:
+    //! Constructor.
+    OffPeakPowerIndexConvention();
+
+    //! Detailed constructor.
+    OffPeakPowerIndexConvention(const std::string& id,
+        const std::string& offPeakIndex,
+        const std::string& peakIndex,
+        const std::string& offPeakHours,
+        const std::string& peakCalendar);
+
+    const std::string& offPeakIndex() const { return offPeakIndex_; }
+    const std::string& peakIndex() const { return peakIndex_; }
+    QuantLib::Real offPeakHours() const { return offPeakHours_; }
+    const QuantLib::Calendar& peakCalendar() const { return peakCalendar_; }
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    void build() override;
+
+private:
+    std::string offPeakIndex_;
+    std::string peakIndex_;
+    std::string strOffPeakHours_;
+    std::string strPeakCalendar_;
+
+    QuantLib::Real offPeakHours_;
+    QuantLib::Calendar peakCalendar_;
 };
 
 } // namespace data

@@ -30,6 +30,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -92,6 +93,7 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/indexes/decpi.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -620,10 +622,32 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
         }
     }
 
+    // If we have provided a convention of type OffPeakPowerIndex with a name equal to commName, we use that 
+    // convention to construct the off peak power commodity index.
+    pair<bool, boost::shared_ptr<Convention>> p = conventions.get(commName, Convention::Type::OffPeakPowerIndex);
+    if (p.first) {
+        auto c = boost::dynamic_pointer_cast<OffPeakPowerIndexConvention>(p.second);
+
+        if (expiry == Date()) {
+            // If expiry is still not set use any date (off peak index is calendar daily)
+            expiry = Settings::instance().evaluationDate();
+        }
+        string suffix = "-" + to_string(expiry);
+
+        auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+            c->offPeakIndex() + suffix, conventions, false));
+        auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+            c->peakIndex() + suffix, conventions, false));
+
+        return boost::make_shared<OffPeakPowerIndex>(commName, expiry, offPeakIndex, peakIndex,
+            c->offPeakHours(), c->peakCalendar(), ts);
+    }
+
     // Do we have a commodity future convention for the commodity.
+    p = conventions.get(commName, Convention::Type::CommodityFuture);
     boost::shared_ptr<CommodityFutureConvention> convention;
-    if (conventions.has(commName)) {
-        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commName));
+    if (p.first) {
+        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
     }
 
     // Create and return the required future index
