@@ -288,21 +288,16 @@ CommodityBasisPriceCurve<Interpolator>::getContractDate(const QuantLib::Date& ex
     using QuantLib::Date;
     using QuantLib::io::iso_date;
 
-    // Try the expiry date's month and year
+    // Try the expiry date's associated contract month and year. Start with the expiry month and year itself.
+    // Assume that expiry is within 12 months of the contract month and year.
     Date result(1, expiry.month(), expiry.year());
     Date calcExpiry = fec->expiryDate(result, 0);
-    if (calcExpiry == expiry) {
-        return result;
-    }
-
-    QL_REQUIRE(calcExpiry < expiry, "Expected the calculated expiry, "
-                                        << iso_date(calcExpiry) << ", to be before the expiry, " << iso_date(expiry)
-                                        << ".");
-
-    // Future contracts should not be spaced more than yearly intervals
     Size maxIncrement = 12;
-    while (calcExpiry < expiry && maxIncrement > 0) {
-        result += 1 * Months;
+    while (calcExpiry != expiry && maxIncrement > 0) {
+        if (calcExpiry < expiry)
+            result += 1 * Months;
+        else
+            result -= 1 * Months;
         calcExpiry = fec->expiryDate(result, 0);
         maxIncrement--;
     }

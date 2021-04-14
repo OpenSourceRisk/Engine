@@ -96,7 +96,10 @@ public:
         //! optional pointer to reference data, needed to build fitted bond curves
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
-        const bool preserveQuoteLinkage = false);
+        const bool preserveQuoteLinkage = false,
+        //! Map of underlying discount curves if required
+        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves =
+            map<string, boost::shared_ptr<YieldCurve>>());
 
     //! \name Inspectors
     //@{
@@ -148,6 +151,7 @@ private:
     const FXTriangulation& fxTriangulation_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
     const bool preserveQuoteLinkage_;
+    map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments);
 

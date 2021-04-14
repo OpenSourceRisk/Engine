@@ -178,10 +178,12 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
                        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
-                       const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool preserveQuoteLinkage)
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool preserveQuoteLinkage,
+                       const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
       requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
-      fxTriangulation_(fxTriangulation), referenceData_(referenceData), preserveQuoteLinkage_(preserveQuoteLinkage) {
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData), preserveQuoteLinkage_(preserveQuoteLinkage),
+      requiredDiscountCurves_(requiredDiscountCurves) {
 
     try {
 
@@ -1768,17 +1770,32 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
 
     // LOG("YieldCurve::addFXForwards(), retrieve known discount curve");
     string knownDiscountID = fxForwardSegment->foreignDiscountCurveID();
-    knownDiscountID = yieldCurveKey(knownCurrency, knownDiscountID, asofDate_);
     boost::shared_ptr<YieldCurve> knownDiscountCurve;
-    auto it = requiredYieldCurves_.find(knownDiscountID);
-    if (it != requiredYieldCurves_.end()) {
-        knownDiscountCurve = it->second;
+
+    if (!knownDiscountID.empty()) {
+        knownDiscountID = yieldCurveKey(knownCurrency, knownDiscountID, asofDate_);
+        auto it = requiredYieldCurves_.find(knownDiscountID);
+        if (it != requiredYieldCurves_.end()) {
+            knownDiscountCurve = it->second;
+        } else {
+            QL_FAIL("The foreign discount curve, " << knownDiscountID
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
     } else {
-        QL_FAIL("The foreign discount curve, " << knownDiscountID
-                                               << ", required in the building "
-                                                  "of the curve, "
-                                               << curveSpec_.name() << ", was not found.");
+        // fall back on the foreign discount curve if no index given
+        auto it = requiredDiscountCurves_.find(knownCurrency.code());
+        if (it != requiredDiscountCurves_.end()) {
+            knownDiscountCurve = it->second;
+        } else {
+            QL_FAIL("The foreign discount curve, " << knownCurrency.code()
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
     }
+
 
     /* Need to retrieve the market FX spot rate */
     // LOG("YieldCurve::addFXForwards(), retrieve FX rate");
@@ -1864,16 +1881,29 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
     /* Need to retrieve the discount curve in the other (foreign) currency. */
     string foreignDiscountID = basisSwapSegment->foreignDiscountCurveID();
     Currency foreignCcy = fxSpotSourceCcy == currency_ ? fxSpotTargetCcy : fxSpotSourceCcy;
-    foreignDiscountID = yieldCurveKey(foreignCcy, foreignDiscountID, asofDate_);
     boost::shared_ptr<YieldCurve> foreignDiscountCurve;
-    auto it = requiredYieldCurves_.find(foreignDiscountID);
-    if (it != requiredYieldCurves_.end()) {
-        foreignDiscountCurve = it->second;
+    if (!foreignDiscountID.empty()) {
+        foreignDiscountID = yieldCurveKey(foreignCcy, foreignDiscountID, asofDate_);
+        auto it = requiredYieldCurves_.find(foreignDiscountID);
+        if (it != requiredYieldCurves_.end()) {
+            foreignDiscountCurve = it->second;
+        } else {
+            QL_FAIL("The foreign discount curve, " << foreignDiscountID
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
     } else {
-        QL_FAIL("The foreign discount curve, " << foreignDiscountID
-                                               << ", required in the building "
-                                                  "of the curve, "
-                                               << curveSpec_.name() << ", was not found.");
+        // fall back on the foreign discount curve if no index given
+        auto it = requiredDiscountCurves_.find(foreignCcy.code());
+        if (it != requiredDiscountCurves_.end()) {
+            foreignDiscountCurve = it->second;
+        } else {
+            QL_FAIL("The foreign discount curve, " << foreignCcy.code()
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
     }
 
     /* Need to retrieve the foreign projection curve in the other currency. If its ID is empty,
@@ -2019,12 +2049,33 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     // Retrieve the discount curve on the float leg
     boost::shared_ptr<IborIndex> floatIndex = swapConvention->index();
     Currency floatLegCcy = floatIndex->currency();
-    string floatLegDiscId = yieldCurveKey(floatLegCcy, swapSegment->foreignDiscountCurveID(), asofDate_);
-    auto it = requiredYieldCurves_.find(floatLegDiscId);
-    QL_REQUIRE(it != requiredYieldCurves_.end(), "The discount curve " << floatLegDiscId
-                                                                       << " required in the building of curve "
-                                                                       << curveSpec_.name() << " was not found.");
-    Handle<YieldTermStructure> floatLegDisc = it->second->handle();
+    string foreignDiscountID = swapSegment->foreignDiscountCurveID();
+    Handle<YieldTermStructure> floatLegDisc;
+
+    boost::shared_ptr<YieldCurve> foreignDiscountCurve;
+    if (!foreignDiscountID.empty()) {
+        string floatLegDiscId = yieldCurveKey(floatLegCcy, foreignDiscountID, asofDate_);
+        auto it = requiredYieldCurves_.find(floatLegDiscId);
+        if (it != requiredYieldCurves_.end()) {
+            floatLegDisc = it->second->handle();
+        } else {
+            QL_FAIL("The foreign discount curve, " << floatLegDiscId
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
+    } else {
+        // fall back on the foreign discount curve if no index given
+        auto it = requiredDiscountCurves_.find(floatLegCcy.code());
+        if (it != requiredDiscountCurves_.end()) {
+            floatLegDisc = it->second->handle();
+        } else {
+            QL_FAIL("The foreign discount curve, " << floatLegCcy.code()
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
+    }
 
     // Retrieve the projection curve on the float leg. If empty, use discount curve.
     string floatLegProjId = swapSegment->foreignProjectionCurveID();
@@ -2032,7 +2083,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
         floatIndex = floatIndex->clone(floatLegDisc);
     } else {
         floatLegProjId = yieldCurveKey(floatLegCcy, floatLegProjId, asofDate_);
-        it = requiredYieldCurves_.find(floatLegProjId);
+        auto it = requiredYieldCurves_.find(floatLegProjId);
         QL_REQUIRE(it != requiredYieldCurves_.end(), "The projection curve " << floatLegProjId
                                                                              << " required in the building of curve "
                                                                              << curveSpec_.name() << " was not found.");

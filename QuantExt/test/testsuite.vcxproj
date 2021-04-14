@@ -649,6 +649,7 @@
     <ClCompile Include="crossccyfixfloatswap.cpp" />
     <ClCompile Include="crossccyfixfloatswaphelper.cpp" />
     <ClCompile Include="currency.cpp" />
+    <ClCompile Include="dategeneration.cpp" />
     <ClCompile Include="deltagammavar.cpp" />
     <ClCompile Include="deposit.cpp" />
     <ClCompile Include="discountcurve.cpp" />

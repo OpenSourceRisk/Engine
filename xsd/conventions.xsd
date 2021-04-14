@@ -297,13 +297,41 @@
       <xs:element type="weekdayType" name="Weekday" minOccurs="1" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:simpleType name="prohibitedExpiriesBdcType">
+    <xs:restriction base="businessDayConvention">
+      <xs:enumeration value="F"/>
+      <xs:enumeration value="Following"/>
+      <xs:enumeration value="FOLLOWING"/>
+      <xs:enumeration value="MF"/>
+      <xs:enumeration value="ModifiedFollowing"/>
+      <xs:enumeration value="Modified Following"/>
+      <xs:enumeration value="MODIFIEDF"/>
+      <xs:enumeration value="MODFOLLOWING"/>
+      <xs:enumeration value="P"/>
+      <xs:enumeration value="Preceding"/>
+      <xs:enumeration value="PRECEDING"/>
+      <xs:enumeration value="MP"/>
+      <xs:enumeration value="ModifiedPreceding"/>
+      <xs:enumeration value="Modified Preceding"/>
+      <xs:enumeration value="MODIFIEDP"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="prohibitedExpiriesType">
     <xs:all>
       <xs:element name="Dates">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="date" name="Date" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="Date" minOccurs="1" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="date">
+                    <xs:attribute name="convention" type="prohibitedExpiriesBdcType" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -351,7 +379,7 @@
       <xs:element type="frequencyType" name="ContractFrequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="ExpiryCalendar" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:nonNegativeInteger" name="ExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="ExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="monthType" name="OneContractMonth" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="OffsetDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
@@ -359,7 +387,7 @@
       <xs:element type="bool" name="IsAveraging" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="OptionExpiryOffset" minOccurs="0" maxOccurs="1"/>
       <xs:element type="prohibitedExpiriesType" name="ProhibitedExpiries" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:nonNegativeInteger" name="OptionExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="OptionExpiryMonthLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayOfMonth" name="OptionExpiryDay" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="OptionBusinessDayConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="continuationMappingsType" name="FutureContinuationMappings" minOccurs="0" maxOccurs="1"/>

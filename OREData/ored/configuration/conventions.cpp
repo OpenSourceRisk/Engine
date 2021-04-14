@@ -1379,12 +1379,12 @@ CommodityFutureConvention::CommodityFutureConvention()
 
 CommodityFutureConvention::CommodityFutureConvention(const string& id, const DayOfMonth& dayOfMonth,
                                                      const string& contractFrequency, const string& calendar,
-                                                     const string& expiryCalendar, Natural expiryMonthLag,
+                                                     const string& expiryCalendar, Size expiryMonthLag,
                                                      const string& oneContractMonth, const string& offsetDays,
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
-                                                     const vector<string>& prohibitedExpiries,
-                                                     Natural optionExpiryMonthLag,
+                                                     const map<string, string>& prohibitedExpiries,
+                                                     Size optionExpiryMonthLag,
                                                      Natural optionExpiryDay,
                                                      const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
@@ -1405,12 +1405,12 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
 
 CommodityFutureConvention::CommodityFutureConvention(const string& id, const string& nth, const string& weekday,
                                                      const string& contractFrequency, const string& calendar,
-                                                     const string& expiryCalendar, Natural expiryMonthLag,
+                                                     const string& expiryCalendar, Size expiryMonthLag,
                                                      const string& oneContractMonth, const string& offsetDays,
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
-                                                     const vector<string>& prohibitedExpiries,
-                                                     Natural optionExpiryMonthLag,
+                                                     const map<string, string>& prohibitedExpiries,
+                                                     Size optionExpiryMonthLag,
                                                      Natural optionExpiryDay,
                                                      const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
@@ -1431,12 +1431,12 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
 
 CommodityFutureConvention::CommodityFutureConvention(const string& id, const CalendarDaysBefore& calendarDaysBefore,
                                                      const string& contractFrequency, const string& calendar,
-                                                     const string& expiryCalendar, Natural expiryMonthLag,
+                                                     const string& expiryCalendar, Size expiryMonthLag,
                                                      const string& oneContractMonth, const string& offsetDays,
                                                      const string& bdc, bool adjustBeforeOffset, bool isAveraging,
                                                      const string& optionExpiryOffset,
-                                                     const vector<string>& prohibitedExpiries,
-                                                     Natural optionExpiryMonthLag,
+                                                     const map<string, string>& prohibitedExpiries,
+                                                     Size optionExpiryMonthLag,
                                                      Natural optionExpiryDay,
                                                      const string& optionBdc,
                                                      const map<Natural, Natural>& futureContinuationMappings,
@@ -1510,7 +1510,11 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     strOptionExpiryOffset_ = XMLUtils::getChildValue(node, "OptionExpiryOffset", false);
 
     if (XMLNode* n = XMLUtils::getChildNode(node, "ProhibitedExpiries")) {
-        strProhibitedExpiries_ = XMLUtils::getChildrenValues(n, "Dates", "Date");
+        vector<string> conventions;
+        vector<string> dates;
+        dates = XMLUtils::getChildrenValuesWithAttributes(n, "Dates", "Date", "convention", conventions, false);
+        for (Size i = 0; i < dates.size(); ++i)
+            strProhibitedExpiries_.emplace(dates[i], conventions[i]);
     }
 
     optionExpiryMonthLag_ = 0;
@@ -1594,7 +1598,10 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
 
     if (!strProhibitedExpiries_.empty()) {
         XMLNode* prohibitedExpiriesNode = doc.allocNode("ProhibitedExpiries");
-        XMLUtils::addChildren(doc, prohibitedExpiriesNode, "Dates", "Date", strProhibitedExpiries_);
+        XMLNode* datesNode = XMLUtils::addChild(doc, prohibitedExpiriesNode, "Dates");
+        for (const auto& kv : strProhibitedExpiries_) {
+            XMLUtils::addChild(doc, datesNode, "Date", kv.first, "convention", kv.second);
+        }
         XMLUtils::appendNode(node, prohibitedExpiriesNode);
     }
 
@@ -1656,9 +1663,22 @@ void CommodityFutureConvention::build() {
     offsetDays_ = strOffsetDays_.empty() ? 0 : lexical_cast<Integer>(strOffsetDays_);
     bdc_ = strBdc_.empty() ? Preceding : parseBusinessDayConvention(strBdc_);
     optionExpiryOffset_ = strOptionExpiryOffset_.empty() ? 0 : lexical_cast<Natural>(strOptionExpiryOffset_);
-    for (const string& strDate : strProhibitedExpiries_) {
-        prohibitedExpiries_.insert(parseDate(strDate));
+
+    // Add the prohibited expiries. Skip with warning where convention is not supported.
+    for (const auto& kv : strProhibitedExpiries_) {
+        if (!kv.second.empty()) {
+            auto bdc = parseBusinessDayConvention(kv.second);
+            if (bdc == Preceding || bdc == Following || bdc == ModifiedPreceding || bdc == ModifiedFollowing) {
+                prohibitedExpiries_.emplace(parseDate(kv.first), bdc);
+            } else {
+                WLOG("Prohibited expiry bdc must be one of {Preceding, Following, ModifiedPreceding," <<
+                    " ModifiedFollowing} but got " << bdc << " for date " << kv.first << " so skipping it.");
+            }
+        } else {
+            prohibitedExpiries_.emplace(parseDate(kv.first), Preceding);
+        }
     }
+
     optionBdc_ = strOptionBdc_.empty() ? Preceding : parseBusinessDayConvention(strOptionBdc_);
 
     // Check the continuation mappings

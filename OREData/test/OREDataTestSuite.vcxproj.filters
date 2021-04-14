@@ -145,5 +145,8 @@
     <ClCompile Include="inflationcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="fxvolcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
