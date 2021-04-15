@@ -35,12 +35,13 @@ public:
 
     //! Constructor taking an envelope and bond data
     ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string fwdSettlementDate,
-                string settlement, string amount, string lockRate, string settlementDirty, string compensationPayment,
-                string compensationPaymentDate, string longInForward)
+                string settlement, string amount, string lockRate, string lockRateDayCounter, string settlementDirty,
+                string compensationPayment, string compensationPaymentDate, string longInForward)
         : Trade("ForwardBond", env), bondData_(bondData), fwdMaturityDate_(fwdMaturityDate),
           fwdSettlementDate_(fwdSettlementDate), settlement_(settlement), amount_(amount), lockRate_(lockRate),
-          settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-          compensationPaymentDate_(compensationPaymentDate), longInForward_(longInForward) {}
+          lockRateDayCounter_(lockRateDayCounter), settlementDirty_(settlementDirty),
+          compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
+          longInForward_(longInForward) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -59,11 +60,15 @@ public:
     const string& creditCurveId() const { return bondData_.creditCurveId(); }
 
     const string& fwdMaturityDate() const { return fwdMaturityDate_; }
+    const string& fwdSettlementDate() const { return fwdSettlementDate_; }
+    const string& settlement() const { return settlement_; }
     const string& amount() const { return amount_; }
-    const string& longInForward() const { return longInForward_; }
+    const string& lockRate() const { return lockRate_; }
+    const string& lockRateDayCounter() const { return lockRateDayCounter_; }
     const string& settlementDirty() const { return settlementDirty_; }
     const string& compensationPayment() const { return compensationPayment_; }
     const string& compensationPaymentDate() const { return compensationPaymentDate_; }
+    const string& longInForward() const { return longInForward_; }
 
 protected:
     BondData bondData_;
@@ -74,6 +79,7 @@ protected:
     string settlement_;
     string amount_;
     string lockRate_;
+    string lockRateDayCounter_;
     string settlementDirty_;
     string compensationPayment_;
     string compensationPaymentDate_;

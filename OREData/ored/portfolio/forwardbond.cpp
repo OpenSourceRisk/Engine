@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -27,14 +26,18 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/instruments/forwardbond.hpp>
+
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <qle/instruments/forwardbond.hpp>
-
-#include <boost/make_shared.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/daycounters/actual360.hpp>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -61,9 +64,17 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date fwdMaturityDate = parseDate(fwdMaturityDate_);
     Date fwdSettlementDate = fwdSettlementDate_.empty() ? fwdMaturityDate : parseDate(fwdSettlementDate_);
-    bool isPhysicallySettled = settlement_.empty() ? true : parseBool(settlement_);
+    bool isPhysicallySettled;
+    if (settlement_ == "Physical" || settlement_.empty())
+        isPhysicallySettled = true;
+    else if (settlement_ == "Cash")
+        isPhysicallySettled = false;
+    else {
+        QL_FAIL("ForwardBond: invalid settlement '" << settlement_ << "', expected Cash or Physical");
+    }
     Real amount = amount_.empty() ? Null<Real>() : parseReal(amount_);
     Real lockRate = lockRate_.empty() ? Null<Real>() : parseReal(lockRate_);
+    DayCounter lockRateDayCounter = lockRateDayCounter_.empty() ? Actual360() : parseDayCounter(lockRateDayCounter_);
     bool settlementDirty = settlementDirty_.empty() ? true : parseBool(settlementDirty_);
     Real compensationPayment = parseReal(compensationPayment_);
     Date compensationPaymentDate = parseDate(compensationPaymentDate_);
@@ -123,9 +134,10 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         payoff ? boost::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
                                                            isPhysicallySettled, settlementDirty, compensationPayment,
                                                            compensationPaymentDate, bondData_.bondNotional())
-               : boost::make_shared<QuantExt::ForwardBond>(
-                     bond, lockRate, longInForward, fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
-                     settlementDirty, compensationPayment, compensationPaymentDate, bondData_.bondNotional());
+               : boost::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
+                                                           fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
+                                                           settlementDirty, compensationPayment,
+                                                           compensationPaymentDate, bondData_.bondNotional());
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
@@ -150,6 +162,7 @@ void ForwardBond::fromXML(XMLNode* node) {
     settlement_ = XMLUtils::getChildValue(fwdSettlementNode, "Settlement", false);
     amount_ = XMLUtils::getChildValue(fwdSettlementNode, "Amount", false);
     lockRate_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRate", false);
+    lockRateDayCounter_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRateDayCounter", false);
     settlementDirty_ = XMLUtils::getChildValue(fwdSettlementNode, "SettlementDirty", false);
 
     XMLNode* fwdPremiumNode = XMLUtils::getChildNode(fwdBondNode, "PremiumData");
@@ -181,6 +194,8 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, fwdSettlementNode, "Amount", amount_);
     if (!lockRate_.empty())
         XMLUtils::addChild(doc, fwdSettlementNode, "LockRate", lockRate_);
+    if (!lockRateDayCounter_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "LockRateDayCounter", lockRateDayCounter_);
     if (!settlementDirty_.empty())
         XMLUtils::addChild(doc, fwdSettlementNode, "SettlementDirty", settlementDirty_);
 

@@ -32,14 +32,14 @@ ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const boost:
       compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
       bondNotional_(bondNotional) {}
 
-ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const Real lockRate, const bool longInForward,
-                         const Date& fwdMaturityDate, const Date& fwdSettlementDate, const bool isPhysicallySettled,
-                         const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
-                         const Real bondNotional)
-    : underlying_(underlying), payoff_(nullptr), lockRate_(lockRate), longInForward_(longInForward),
-      fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate), settlementDirty_(settlementDirty),
-      compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
-      bondNotional_(bondNotional) {}
+ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const Real lockRate,
+                         const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
+                         const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
+                         const Real compensationPayment, const Date compensationPaymentDate, const Real bondNotional)
+    : underlying_(underlying), payoff_(nullptr), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
+      longInForward_(longInForward), fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate),
+      settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
+      compensationPaymentDate_(compensationPaymentDate), bondNotional_(bondNotional) {}
 
 bool ForwardBond::isExpired() const { return detail::simple_event(fwdMaturityDate_).hasOccurred(); }
 
@@ -49,6 +49,7 @@ void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     arguments->underlying = underlying_;
     arguments->payoff = payoff_;
     arguments->lockRate = lockRate_;
+    arguments->lockRateDayCounter = lockRateDayCounter_;
     arguments->longInForward = longInForward_;
     arguments->fwdMaturityDate = fwdMaturityDate_;
     arguments->fwdSettlementDate = fwdSettlementDate_;
