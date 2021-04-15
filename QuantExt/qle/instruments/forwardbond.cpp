@@ -28,9 +28,9 @@ ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const boost:
                          const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
                          const Real bondNotional)
     : underlying_(underlying), payoff_(payoff), lockRate_(Null<Real>()), fwdMaturityDate_(fwdMaturityDate),
-      fwdSettlementDate_(fwdSettlementDate), settlementDirty_(settlementDirty),
-      compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
-      bondNotional_(bondNotional) {}
+      fwdSettlementDate_(fwdSettlementDate), isPhysicallySettled_(isPhysicallySettled),
+      settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
+      compensationPaymentDate_(compensationPaymentDate), bondNotional_(bondNotional) {}
 
 ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const Real lockRate,
                          const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
@@ -38,8 +38,9 @@ ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const Real l
                          const Real compensationPayment, const Date compensationPaymentDate, const Real bondNotional)
     : underlying_(underlying), payoff_(nullptr), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
       longInForward_(longInForward), fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate),
-      settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-      compensationPaymentDate_(compensationPaymentDate), bondNotional_(bondNotional) {}
+      isPhysicallySettled_(isPhysicallySettled), settlementDirty_(settlementDirty),
+      compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
+      bondNotional_(bondNotional) {}
 
 bool ForwardBond::isExpired() const { return detail::simple_event(fwdMaturityDate_).hasOccurred(); }
 
