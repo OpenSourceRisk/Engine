@@ -69,8 +69,10 @@ boost::shared_ptr<CommodityIndex> OffPeakPowerIndex::clone(const Date& expiry,
     const boost::optional<Handle<PriceTermStructure>>& ts) const {
     const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
-    return boost::make_shared<OffPeakPowerIndex>(underlyingName(), ed, offPeakIndex_,
-        peakIndex_, offPeakHours_, peakCalendar_, pts);
+    auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(offPeakIndex_->clone(ed));
+    auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(peakIndex_->clone(ed));
+    return boost::make_shared<OffPeakPowerIndex>(underlyingName(), ed, offPeakIndex,
+        peakIndex, offPeakHours_, peakCalendar_, pts);
 }
 
 Real OffPeakPowerIndex::pastFixing(const Date& fixingDate) const {
