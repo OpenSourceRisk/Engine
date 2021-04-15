@@ -209,14 +209,16 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     boost::shared_ptr<YieldTermStructure> yieldCurve;
 
     if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
+        yieldCurve = boost::shared_ptr<YieldTermStructure>(boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
+            yieldCurveTimes, quotes, 0, TARGET(), dc, QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero));
     } else {
         if (spreaded) {
             checkDayCounterConsistency(key, wrapper->dayCounter(), dc);
-            yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(wrapper, yieldCurveTimes, quotes);
+            yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(
+                wrapper, yieldCurveTimes, quotes, SpreadedDiscountCurve::Extrapolation::flatZero);
         } else {
-            yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(yieldCurveTimes, quotes, dc);
+            yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
+                yieldCurveTimes, quotes, dc, InterpolatedDiscountCurve2::Extrapolation::flatZero);
         }
     }
 
@@ -357,16 +359,18 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::shared_ptr<YieldTermStructure> indexCurve;
                         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister &&
                             !useSpreadedTermStructures_) {
-                            indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                                yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
+                            indexCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
+                                yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc,
+                                QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero);
                         } else {
                             if (useSpreadedTermStructures_) {
                                 checkDayCounterConsistency(name, wrapperIndex->dayCounter(), dc);
-                                indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes));
+                                indexCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(
+                                    wrapperIndex, yieldCurveTimes, quotes,
+                                    SpreadedDiscountCurve::Extrapolation::flatZero);
                             } else {
-                                indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                                indexCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
+                                    yieldCurveTimes, quotes, dc, InterpolatedDiscountCurve2::Extrapolation::flatZero);
                             }
                         }
 
