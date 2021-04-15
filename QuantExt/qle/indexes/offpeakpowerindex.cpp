@@ -66,8 +66,8 @@ const Calendar& OffPeakPowerIndex::peakCalendar() const {
 }
 
 boost::shared_ptr<CommodityIndex> OffPeakPowerIndex::clone(const Date& expiry,
-    const Handle<PriceTermStructure>& ts) const {
-    const auto& pts = ts.empty() ? priceCurve() : ts;
+    const boost::optional<Handle<PriceTermStructure>>& ts) const {
+    const auto& pts = ts ? *ts : priceCurve();
     const auto& ed = expiry == Date() ? expiryDate() : expiry;
     return boost::make_shared<OffPeakPowerIndex>(underlyingName(), ed, offPeakIndex_,
         peakIndex_, offPeakHours_, peakCalendar_, pts);
