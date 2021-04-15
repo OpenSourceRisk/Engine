@@ -259,9 +259,11 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     // Long: forwardBondValue - strike_dirt = (forwardBondValue - accrual) - strike_clean
     // Short: strike_dirt - forwardBondValue = strike_clean - (forwardBondValue - accrual)
     // In total:
+    boost::shared_ptr<Payoff> effectivePayoff;
     if (arguments_.payoff) {
         // vanilla forward bond calculation
         forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount);
+        effectivePayoff = arguments_.payoff;
     } else if (arguments_.lockRate != Null<Real>()) {
         // lock rate specified forward bond calculation, use hardcoded conventions (compounded / semi annual) here, from
         // treasury bonds
@@ -271,9 +273,14 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         Real dv01 = price / 100.0 *
                     BondFunctions::duration(*bd, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                             Duration::Modified, bondSettlementDate);
+        QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
+                                             "populated if payoff is specified via lock-rate");
+        Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
         forwardContractForwardValue =
-            (arguments_.lockRate - yield) * dv01 * arguments_.bondNotional * bd->notional(computeDate);
-        std::cerr << "price = " << price << " yield=" << yield << " dv01 = " << dv01 << std::endl;
+            multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional * bd->notional(computeDate);
+        effectivePayoff = boost::make_shared<ForwardBondTypePayoff>(
+            (*arguments_.longInForward) ? Position::Long : Position::Short,
+            arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(computeDate));
     } else {
         QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
                 "of them to be populated.");
@@ -318,7 +325,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
             Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, effectiveEndDate);
 
             fwdBondRecovery +=
-                (*arguments_.payoff)(coupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) * P *
+                (*effectivePayoff)(coupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) * P *
                 (discountCurve_->discount(defaultDate));
         }
     }
@@ -335,8 +342,8 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
             Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
 
             fwdBondRecovery +=
-                (*arguments_.payoff)(firstCoupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) *
-                P * (discountCurve_->discount(defaultDate));
+                (*effectivePayoff)(firstCoupon->nominal() * arguments_.bondNotional * recoveryVal - accruedAmount) * P *
+                (discountCurve_->discount(defaultDate));
             startDate = stepDate;
         }
     }
@@ -356,7 +363,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
                 Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
 
                 fwdBondRecovery +=
-                    (*arguments_.payoff)(redemption->amount() * arguments_.bondNotional * recoveryVal - accruedAmount) *
+                    (*effectivePayoff)(redemption->amount() * arguments_.bondNotional * recoveryVal - accruedAmount) *
                     P * (discountCurve_->discount(defaultDate));
                 startDate = stepDate;
             }
