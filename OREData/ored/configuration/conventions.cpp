@@ -1694,9 +1694,11 @@ void CommodityFutureConvention::populateFrequency() {
 
 FxOptionConvention::FxOptionConvention(const string& id, const string& atmType, const string& deltaType,
                                        const string& switchTenor, const string& longTermAtmType,
-                                       const string& longTermDeltaType)
-    : Convention(id, Type::FxOption), strAtmType_(atmType), strDeltaType_(deltaType), strSwitchTenor_(switchTenor),
-      strLongTermAtmType_(longTermAtmType), strLongTermDeltaType_(longTermDeltaType) {
+                                       const string& longTermDeltaType, const string& riskReversalInFavorOf,
+                                       const string& butterflyStyle, const string& fxConventionID)
+    : Convention(id, Type::FxOption), fxConventionID_(fxConventionID), strAtmType_(atmType), strDeltaType_(deltaType),
+      strSwitchTenor_(switchTenor), strLongTermAtmType_(longTermAtmType), strLongTermDeltaType_(longTermDeltaType),
+      strRiskReversalInFavorOf_(riskReversalInFavorOf), strButterflyStyle_(butterflyStyle) {
     build();
 }
 
@@ -1712,6 +1714,18 @@ void FxOptionConvention::build() {
         longTermAtmType_ = atmType_;
         longTermDeltaType_ = deltaType_;
     }
+    if (!strRiskReversalInFavorOf_.empty()) {
+        riskReversalInFavorOf_ = parseOptionType(strRiskReversalInFavorOf_);
+    } else {
+        riskReversalInFavorOf_ = Option::Call;
+    }
+    if (strButterflyStyle_.empty() || strButterflyStyle_ == "Broker") {
+        butterflyIsBrokerStyle_ = true;
+    } else if (strButterflyStyle_ == "Smile") {
+        butterflyIsBrokerStyle_ = false;
+    } else {
+        QL_FAIL("invalid butterfly style '" << strButterflyStyle_ << "', expected Broker or Smile");
+    }
 }
 
 void FxOptionConvention::fromXML(XMLNode* node) {
@@ -1719,6 +1733,7 @@ void FxOptionConvention::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FxOption");
     type_ = Type::FxOption;
     id_ = XMLUtils::getChildValue(node, "Id", true);
+    fxConventionID_ = XMLUtils::getChildValue(node, "FXConventionID", false);
 
     // Get string values from xml
     strAtmType_ = XMLUtils::getChildValue(node, "AtmType", true);
@@ -1726,6 +1741,8 @@ void FxOptionConvention::fromXML(XMLNode* node) {
     strSwitchTenor_ = XMLUtils::getChildValue(node, "SwitchTenor", false);
     strLongTermAtmType_ = XMLUtils::getChildValue(node, "LongTermAtmType", false);
     strLongTermDeltaType_ = XMLUtils::getChildValue(node, "LongTermDeltaType", false);
+    strRiskReversalInFavorOf_ = XMLUtils::getChildValue(node, "RiskReversalInFavorOf", false);
+    strButterflyStyle_ = XMLUtils::getChildValue(node, "ButterflyStyle", false);
     build();
 }
 
@@ -1733,12 +1750,14 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("FxOption");
     XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "FXConventionID", fxConventionID_);
     XMLUtils::addChild(doc, node, "AtmType", strAtmType_);
     XMLUtils::addChild(doc, node, "DeltaType", strDeltaType_);
     XMLUtils::addChild(doc, node, "SwitchTenor", strSwitchTenor_);
     XMLUtils::addChild(doc, node, "LongTermAtmType", strLongTermAtmType_);
     XMLUtils::addChild(doc, node, "LongTermDeltaType", strLongTermDeltaType_);
-
+    XMLUtils::addChild(doc, node, "RiskReversalInFavorOf", strRiskReversalInFavorOf_);
+    XMLUtils::addChild(doc, node, "ButterflyStyle", strButterflyStyle_);
     return node;
 }
 

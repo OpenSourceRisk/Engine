@@ -45,6 +45,10 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
+    //! Add underlying Bond names
+    std::map<AssetClass, std::set<std::string>>
+        underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
     //! inspectors
     const BondData bondData() const { return bondData_; }
     // only available after build() was called

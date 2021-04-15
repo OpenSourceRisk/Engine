@@ -124,6 +124,7 @@
     <ClInclude Include="ored\model\irlgmdata.hpp" />
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
+    <ClInclude Include="ored\model\marketobserver.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
     <ClInclude Include="ored\model\modeldata.hpp" />
     <ClInclude Include="ored\model\modelparameter.hpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
+    <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />

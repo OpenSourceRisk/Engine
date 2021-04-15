@@ -129,7 +129,7 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
     DeltaVolQuote::AtmType at;
     DeltaVolQuote::DeltaType dt;
     DeltaVolQuote::DeltaType atmDt;
-    if (t <= switchTime_ || close_enough(t, switchTime_)) {
+    if (t < switchTime_ && !close_enough(t, switchTime_)) {
         at = at_;
         dt = dt_;
         atmDt = *atmDeltaType_;

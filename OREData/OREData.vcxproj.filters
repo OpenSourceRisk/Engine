@@ -597,6 +597,12 @@
     <ClInclude Include="ored\configuration\reportconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\marketobserver.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">

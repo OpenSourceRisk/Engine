@@ -1611,7 +1611,7 @@ Real currentNotional(const Leg& leg) {
     // assume the leg is sorted
     // We just take the first coupon::nominal we find, otherwise return 0
     for (auto cf : leg) {
-        if (cf->date() >= today) {
+        if (cf->date() > today) {
             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(cf);
             if (coupon)
                 return coupon->nominal();
