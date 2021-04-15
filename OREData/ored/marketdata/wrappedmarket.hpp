@@ -106,6 +106,8 @@ public:
     QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const std::string& commodityName,
                         const std::string& configuration = Market::defaultConfiguration) const override;
+    QuantLib::Handle<QuantExt::CommodityIndex> commodityIndex(const std::string& commodityName,
+            const std::string& configuration = Market::defaultConfiguration) const override;
     QuantLib::Handle<QuantLib::BlackVolTermStructure>
     commodityVolatility(const std::string& commodityName,
                         const std::string& configuration = Market::defaultConfiguration) const override;
