@@ -41,6 +41,8 @@ A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and 
          true). Exactly one of the fields Amount, LockRate must be given. In case the LockRate is given, the Settlement
          must be set to Cash. If Settlement is not given, it defaults to Cash in this case. \\
          Allowable values: Any non-negative real number.
+       \item LockRateDayCounter [Optional]: The day counter w.r.t. which the lock rate is expressed. Optional, defaults to A360. \\
+         Allowable values: see table \ref{tab:daycount}
        \item SettlementDirty [Optional]: A flag that determines whether the settlement amount {({\tt Amount})} reflects
          a clean (\emph{false}) or dirty (\emph{true}) price. In either case, the dirty amount is actually paid on the
          forward maturity date, i.e. if SettlementDirty = \emph{false}, the (forward) accruals are computed internally
