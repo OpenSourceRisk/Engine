@@ -15,16 +15,20 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <boost/date_time.hpp>
-#include <boost/make_shared.hpp>
+
+#include <qle/pricingengines/discountingforwardbondengine.hpp>
+
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/event.hpp>
+#include <ql/pricingengines/bond/bondfunctions.hpp>
 #include <ql/quotes/compositequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
-#include <qle/pricingengines/discountingforwardbondengine.hpp>
+
+#include <boost/date_time.hpp>
+#include <boost/make_shared.hpp>
 
 namespace QuantExt {
 
@@ -95,7 +99,8 @@ void DiscountingForwardBondEngine::calculate() const {
     results_.underlyingSpotValue = calculateBondNpv(npvDate, maturityDate); // cashflows before maturity will be ignored
 
     boost::tie(results_.forwardValue, results_.value) = calculateForwardContractPresentValue(
-        results_.underlyingSpotValue, cmpPayment, npvDate, maturityDate, cmpPaymentDate_use, dirty);
+        results_.underlyingSpotValue, cmpPayment, npvDate, maturityDate, arguments_.fwdSettlementDate,
+        !arguments_.isPhysicallySettled, cmpPaymentDate_use, dirty);
 }
 
 Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDate) const {
@@ -115,7 +120,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
 
     std::vector<Date> bondCashflowPayDates;
     std::vector<Real> bondCashflows, bondCashflowSurvivalProbabilities, bondCashflowDiscountFactors;
-    
+
     // load the shared pointer into bd
     boost::shared_ptr<Bond> bd = arguments_.underlying;
     for (Size i = 0; i < bd->cashflows().size(); i++) {
@@ -148,7 +153,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
         Probability S = creditCurvePtr->survivalProbability(bd->cashflows()[i]->date()) /
                         creditCurvePtr->survivalProbability(computeDate);
         npvValue += bd->cashflows()[i]->amount() * S * bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date());
-        
+
         bondCashflows.push_back(bd->cashflows()[i]->amount());
         bondCashflowPayDates.push_back(bd->cashflows()[i]->date());
         bondCashflowSurvivalProbabilities.push_back(S);
@@ -192,25 +197,28 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
                 Date defaultDate = startDate + (endDate - startDate) / 2;
                 Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
 
-                bondRecovery += redemption->amount() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
+                bondRecovery +=
+                    redemption->amount() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
                 startDate = stepDate;
             }
         }
     }
-    
+
     npvValue += bondRecovery;
-    
+
     results_.additionalResults["bondCashflow"] = bondCashflows;
     results_.additionalResults["bondCashflowPayDates"] = bondCashflowPayDates;
     results_.additionalResults["bondCashflowSurvivalProbabilities"] = bondCashflowSurvivalProbabilities;
     results_.additionalResults["bondCashflowDiscountFactors"] = bondCashflowDiscountFactors;
     results_.additionalResults["bondRecovery"] = bondRecovery;
-    
+
     return npvValue * arguments_.bondNotional;
 }
 
 boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractPresentValue(
-    Real spotValue, Real cmpPayment, Date npvDate, Date computeDate, Date cmpPaymentDate, bool dirty) const {
+    Real spotValue, Real cmpPayment, Date npvDate, Date computeDate, Date settlementDate, bool cashSettlement,
+    Date cmpPaymentDate, bool dirty) const {
+
     // here we go with the true forward computation
     Real forwardBondValue = 0.0;
     Real forwardContractPresentValue = 0.0;
@@ -218,7 +226,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
 
     std::vector<Date> fwdBondCashflowPayDates;
     std::vector<Real> fwdBondCashflows, fwdBondCashflowSurvivalProbabilities, fwdBondCashflowDiscountFactors;
-    
+
     // handle case where we wish to price simply with benchmark curve and scalar security spread
     // i.e. credit curve term structure (and recovery) have not been specified
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
@@ -232,25 +240,48 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     boost::shared_ptr<Bond> bd = arguments_.underlying;
 
     // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
+    Date bondSettlementDate = bd->settlementDate(computeDate);
     Real accruedAmount =
-        dirty ? 0.0 : bd->accruedAmount(computeDate) * bd->notional(computeDate) / 100 * arguments_.bondNotional;
-    
+        dirty ? 0.0
+              : bd->accruedAmount(bondSettlementDate) * bd->notional(computeDate) / 100.0 * arguments_.bondNotional;
+
     /* Discounting and compounding, taking account of possible bond default before delivery*/
 
-    forwardBondValue =
-        spotValue / (incomeCurve_->discount(computeDate)); // compounding to date of maturity of forward contract
-    
+    if (cashSettlement) {
+        forwardBondValue = spotValue / (incomeCurve_->discount(bondSettlementDate));
+    } else {
+        forwardBondValue = spotValue / (incomeCurve_->discount(settlementDate));
+    }
+
     // Subtract strike at maturity. Regarding accrual (i.e. strike is given clean vs dirty) there are two
     // cases: long or short.
 
     // Long: forwardBondValue - strike_dirt = (forwardBondValue - accrual) - strike_clean
     // Short: strike_dirt - forwardBondValue = strike_clean - (forwardBondValue - accrual)
     // In total:
-    forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount);
+    if (arguments_.payoff) {
+        // vanilla forward bond calculation
+        forwardContractForwardValue = (*arguments_.payoff)(forwardBondValue - accruedAmount);
+    } else if (arguments_.lockRate != Null<Real>()) {
+        // lock rate specified forward bond calculation, use hardcoded conventions (compounded / semi annual) here, from
+        // treasury bonds
+        Real price = forwardBondValue / arguments_.bondNotional / bd->notional(computeDate) * 100.0;
+        Real yield = BondFunctions::yield(*bd, price, arguments_.lockRateDayCounter, Compounded, Semiannual,
+                                          bondSettlementDate, 1E-10, 100, 0.05, Bond::Price::Dirty);
+        Real dv01 = price / 100.0 *
+                    BondFunctions::duration(*bd, yield, arguments_.lockRateDayCounter, Compounded, Semiannual,
+                                            Duration::Modified, bondSettlementDate);
+        forwardContractForwardValue =
+            (arguments_.lockRate - yield) * dv01 * arguments_.bondNotional * bd->notional(computeDate);
+        std::cerr << "price = " << price << " yield=" << yield << " dv01 = " << dv01 << std::endl;
+    } else {
+        QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
+                "of them to be populated.");
+    }
 
     // forwardContractPresentValue adjusted for potential default before computeDate:
     forwardContractPresentValue =
-        forwardContractForwardValue * (discountCurve_->discount(computeDate)) *
+        forwardContractForwardValue * (discountCurve_->discount(settlementDate)) *
             creditCurvePtr->survivalProbability(computeDate) -
         cmpPayment *
             (discountCurve_->discount(cmpPaymentDate)); // The forward is a derivative. We use "OIS curve" to discount.
@@ -265,7 +296,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     fwdBondCashflowPayDates.push_back(cmpPaymentDate);
     fwdBondCashflowSurvivalProbabilities.push_back(1);
     fwdBondCashflowDiscountFactors.push_back(discountCurve_->discount(cmpPaymentDate));
-    
+
     Real fwdBondRecovery = 0;
     // Take account of face value recovery:
     // A) Recovery for time period when coupons are present
@@ -337,9 +368,9 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     results_.additionalResults["forwardBondCashflowSurvivalProbabilities"] = fwdBondCashflowSurvivalProbabilities;
     results_.additionalResults["forwardBondCashflowDiscountFactors"] = fwdBondCashflowDiscountFactors;
     results_.additionalResults["forwardBondRecovery"] = fwdBondRecovery;
-    
+
     forwardContractPresentValue += fwdBondRecovery;
-    
+
     return boost::make_tuple(forwardContractForwardValue, forwardContractPresentValue);
 }
 
