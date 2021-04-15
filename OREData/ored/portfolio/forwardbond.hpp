@@ -34,11 +34,13 @@ public:
     ForwardBond() : Trade("ForwardBond") {}
 
     //! Constructor taking an envelope and bond data
-    ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string payOff, string longInBond,
-                string settlementDirty, string compensationPayment, string compensationPaymentDate)
-        : Trade("ForwardBond", env), bondData_(bondData), fwdMaturityDate_(fwdMaturityDate), payOff_(payOff),
-          longInBond_(longInBond), settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
-          compensationPaymentDate_(compensationPaymentDate) {}
+    ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string fwdSettlementDate,
+                string settlement, string amount, string lockRate, string settlementDirty, string compensationPayment,
+                string compensationPaymentDate, string longInForward)
+        : Trade("ForwardBond", env), bondData_(bondData), fwdMaturityDate_(fwdMaturityDate),
+          fwdSettlementDate_(fwdSettlementDate), settlement_(settlement), amount_(amount), lockRate_(lockRate),
+          settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
+          compensationPaymentDate_(compensationPaymentDate), longInForward_(longInForward) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -47,7 +49,7 @@ public:
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
-        underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! inspectors
     const BondData bondData() const { return bondData_; }
@@ -57,8 +59,8 @@ public:
     const string& creditCurveId() const { return bondData_.creditCurveId(); }
 
     const string& fwdMaturityDate() const { return fwdMaturityDate_; }
-    const string& payOff() const { return payOff_; }
-    const string& longInBond() const { return longInBond_; }
+    const string& amount() const { return amount_; }
+    const string& longInForward() const { return longInForward_; }
     const string& settlementDirty() const { return settlementDirty_; }
     const string& compensationPayment() const { return compensationPayment_; }
     const string& compensationPaymentDate() const { return compensationPaymentDate_; }
@@ -68,11 +70,14 @@ protected:
     string currency_;
 
     string fwdMaturityDate_;
-    string payOff_;
-    string longInBond_;
+    string fwdSettlementDate_;
+    string settlement_;
+    string amount_;
+    string lockRate_;
     string settlementDirty_;
     string compensationPayment_;
     string compensationPaymentDate_;
+    string longInForward_;
 };
 } // namespace data
 } // namespace ore
