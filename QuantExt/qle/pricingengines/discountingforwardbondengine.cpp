@@ -241,9 +241,9 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
 
     // the case of dirty strike corresponds here to an accrual of 0.0. This will be convenient in the code.
     Date bondSettlementDate = bd->settlementDate(computeDate);
-    Real accruedAmount =
-        dirty ? 0.0
-              : bd->accruedAmount(bondSettlementDate) * bd->notional(computeDate) / 100.0 * arguments_.bondNotional;
+    Real accruedAmount = dirty ? 0.0
+                               : bd->accruedAmount(bondSettlementDate) * bd->notional(bondSettlementDate) / 100.0 *
+                                     arguments_.bondNotional;
 
     /* Discounting and compounding, taking account of possible bond default before delivery*/
 
@@ -267,7 +267,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     } else if (arguments_.lockRate != Null<Real>()) {
         // lock rate specified forward bond calculation, use hardcoded conventions (compounded / semi annual) here, from
         // treasury bonds
-        Real price = forwardBondValue / arguments_.bondNotional / bd->notional(computeDate) * 100.0;
+        Real price = forwardBondValue / arguments_.bondNotional / bd->notional(bondSettlementDate) * 100.0;
         Real yield = BondFunctions::yield(*bd, price, arguments_.lockRateDayCounter, Compounded, Semiannual,
                                           bondSettlementDate, 1E-10, 100, 0.05, Bond::Price::Dirty);
         Real dv01 = price / 100.0 *
@@ -276,11 +276,11 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
         QL_REQUIRE(arguments_.longInForward, "DiscountingForwardBondEngine: internal error, longInForward must be "
                                              "populated if payoff is specified via lock-rate");
         Real multiplier = (*arguments_.longInForward) ? 1.0 : -1.0;
-        forwardContractForwardValue =
-            multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional * bd->notional(computeDate);
+        forwardContractForwardValue = multiplier * (yield - arguments_.lockRate) * dv01 * arguments_.bondNotional *
+                                      bd->notional(bondSettlementDate);
         effectivePayoff = boost::make_shared<ForwardBondTypePayoff>(
             (*arguments_.longInForward) ? Position::Long : Position::Short,
-            arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(computeDate));
+            arguments_.lockRate * dv01 * arguments_.bondNotional * bd->notional(bondSettlementDate));
     } else {
         QL_FAIL("DiscountingForwardBondEngine: internal error, no payoff and no lock rate given, expected exactly one "
                 "of them to be populated.");
