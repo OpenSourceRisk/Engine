@@ -118,7 +118,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Leg leg = joinLegs(separateLegs);
     auto bond = boost::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);
 
-    npvCurrency_ = currency_;
+    npvCurrency_ = currency_ = bondData_.coupons().front().currency();
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     notionalCurrency_ = currency_;
