@@ -52,6 +52,7 @@ using QuantExt::LogLinearFlat;
 using QuantExt::PriceTermStructure;
 using QuantExt::PiecewisePriceCurve;
 using QuantLib::BootstrapHelper;
+using std::make_pair;
 using std::map;
 using std::regex;
 using std::string;
@@ -335,18 +336,7 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
     // match our own calculated expiry date based on the basis conventions.
     map<Date, Handle<Quote>> basisData;
-    for (auto& q : getQuotes(asof, config.curveID(), config.fwdQuotes(), loader)) {
-
-        if (q->tenorBased()) {
-            TLOG("Skipping tenor based quote, " << q->name() << ".");
-            continue;
-        }
-
-        if (q->expiryDate() < asof) {
-            TLOG("Skipping quote because its expiry date, " << io::iso_date(q->expiryDate())
-                                                            << ", is before the market date " << io::iso_date(asof));
-            continue;
-        }
+    for (auto& q : getQuotes(asof, config.curveID(), config.fwdQuotes(), loader, true)) {
 
         QL_REQUIRE(basisData.find(q->expiryDate()) == basisData.end(), "Found duplicate quote, "
                                                                            << q->name() << ", for expiry date "
@@ -406,8 +396,12 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
     const auto& priceSegments = config.priceSegments();
     QL_REQUIRE(!priceSegments.empty(), "CommodityCurve: need at least one price segment to build piecewise curve.");
     for (const auto& kv : priceSegments) {
-        addInstruments(asof, loader, config.curveID(), config.currency(), kv.second,
-            conventions, commodityCurves, mpInstruments);
+        if (kv.second.type() != PriceSegment::Type::OffPeakPowerDaily) {
+            addInstruments(asof, loader, config.curveID(), config.currency(), kv.second,
+                conventions, commodityCurves, mpInstruments);
+        } else {
+            addOffPeakPowerInstruments(asof, loader, config.curveID(), kv.second, conventions, mpInstruments);
+        }
     }
 
     // Populate the vector of helpers.
@@ -468,7 +462,7 @@ void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveC
 
 vector<boost::shared_ptr<CommodityForwardQuote>>
 CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector<string>& quotes,
-    const Loader& loader) {
+    const Loader& loader, bool filter) {
 
     LOG("CommodityCurve: start getting configured commodity quotes.");
 
@@ -511,6 +505,19 @@ CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector
                     continue;
             }
 
+            // If filter is true, remove tenor based quotes and quotes with expiry before asof.
+            if (filter) {
+                if (q->tenorBased()) {
+                    TLOG("Skipping tenor based quote, " << q->name() << ".");
+                    continue;
+                }
+                if (q->expiryDate() < asof) {
+                    TLOG("Skipping quote because its expiry date, " << io::iso_date(q->expiryDate())
+                        << ", is before the market date " << io::iso_date(asof));
+                    continue;
+                }
+            }
+
             // If we make it here, the quote is relevant.
             result.push_back(q);
             TLOG("Added quote " << q->name() << ".");
@@ -526,9 +533,6 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
     const string& currency, const PriceSegment& priceSegment, const Conventions& conventions,
     const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
     map<Date, boost::shared_ptr<Helper>>& instruments) {
-
-    // Get the relevant quotes
-    auto quotes = getQuotes(asof, configId, priceSegment.quotes(), loader);
 
     using PST = PriceSegment::Type;
     using AD = CommodityFutureConvention::AveragingData;
@@ -603,21 +607,13 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
         }
     }
 
+    // Get the relevant quotes
+    auto quotes = getQuotes(asof, configId, priceSegment.quotes(), loader, true);
+
     // Add an instrument for each relevant quote.
     for (const auto& quote : quotes) {
 
-        if (quote->tenorBased()) {
-            TLOG("Skipping tenor based quote, " << quote->name() << ".");
-            continue;
-        }
-
         const Date& expiry = quote->expiryDate();
-        if (expiry < asof) {
-            TLOG("Skipping quote, " << quote->name() << ", because its expiry date, " << io::iso_date(expiry)
-                << ", is before the market date " << io::iso_date(asof));
-            continue;
-        }
-
         switch (type) {
         case PST::Future:
             if (instruments.count(expiry) == 0) {
@@ -680,6 +676,101 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
             QL_FAIL("CommodityCurve: unrecognised price segment type.");
             break;
         }
+    }
+}
+
+void CommodityCurve::addOffPeakPowerInstruments(const Date& asof, const Loader& loader, const string& configId,
+    const PriceSegment& priceSegment, const Conventions& conventions,
+    map<Date, boost::shared_ptr<Helper>>& instruments) {
+
+    // Check that we have been called with the expected segment type.
+    using PST = PriceSegment::Type;
+    QL_REQUIRE(priceSegment.type() == PST::OffPeakPowerDaily, "Expecting a price segment type of OffPeakPowerDaily.");
+
+    // Check we have a commodity future convention for the price segment.
+    const string& convId = priceSegment.conventionsId();
+    auto p = conventions.get(convId, Convention::Type::CommodityFuture);
+    QL_REQUIRE(p.first, "Could not get conventions with id " << convId << " for OffPeakPowerDaily price segment" <<
+        " in curve configuration " << configId << ".");
+    auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
+
+    // Check that the commodity future convention has off-peak information for the name.
+    const auto& oppIdxData = convention->offPeakPowerIndexData();
+    QL_REQUIRE(oppIdxData, "Conventions with id " << convId << " for OffPeakPowerDaily price segment" <<
+        " should have an OffPeakPowerIndexData section.");
+    Real offPeakHours = oppIdxData->offPeakHours();
+    TLOG("Off-peak hours is " << offPeakHours);
+    const Calendar& peakCalendar = oppIdxData->peakCalendar();
+
+    // Check that the price segment has off-peak daily section.
+    const auto& opd = priceSegment.offPeakDaily();
+    QL_REQUIRE(opd, "The OffPeakPowerDaily price segment for curve configuration " << configId <<
+        " should have an OffPeakDaily section.");
+
+    // Get all the peak and off-peak quotes that we have and store them in a map. The map key is the expiry date and 
+    // the map value is a pair of values the first being the off-peak value for that expiry and the second being the 
+    // peak value for that expiry. We only need the peak portion to form the quote on peakCalendar holidays. We need 
+    // the off-peak portion always.
+    map<Date, pair<Real, Real>> quotes;
+
+    auto opqs = getQuotes(asof, configId, opd->offPeakQuotes(), loader, true);
+    for (const auto& q : opqs) {
+        Real value = q->quote()->value();
+        Date expiry = q->expiryDate();
+        TLOG("Adding off-peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
+        if (quotes.count(expiry) != 0) {
+            DLOG("Already have off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+        } else {
+            quotes[expiry] = make_pair(value, Null<Real>());
+        }
+    }
+
+    auto pqs = getQuotes(asof, configId, opd->peakQuotes(), loader, true);
+    for (const auto& q : pqs) {
+        Real value = q->quote()->value();
+        Date expiry = q->expiryDate();
+        TLOG("Adding peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
+        auto it = quotes.find(expiry);
+        if (it == quotes.end()) {
+            DLOG("Have no off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+        } else if (it->second.second != Null<Real>()) {
+            DLOG("Already have a peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+        } else {
+            it->second.second = value;
+        }
+    }
+
+    // Now, use the quotes to create the future instruments in the curve.
+    for (const auto& kv : quotes) {
+
+        // If the expiry is already in the instrument set, we skip it.
+        const Date& expiry = kv.first;
+        if (instruments.count(expiry) != 0) {
+            TLOG("Skipping expiry " << io::iso_date(expiry) << " because it is already in the instrument set.");
+            continue;
+        }
+
+        // Determine the quote that we will use in the future instrument for this expiry.
+        Real quote = 0.0;
+        if (peakCalendar.isHoliday(expiry)) {
+            Real peakValue = kv.second.second;
+            if (peakValue == Null<Real>()) {
+                DLOG("The peak portion of the quote on holiday " << io::iso_date(expiry) << " is missing so skip.");
+                continue;
+            } else {
+                Real offPeakValue = kv.second.first;
+                quote = (offPeakHours * offPeakValue + (24.0 - offPeakHours) * peakValue) / 24.0;
+                TLOG("The quote on holiday " << io::iso_date(expiry) << " is " << quote << ". (off-peak,peak) is" <<
+                    " (" << offPeakValue << "," << peakValue << ").");
+            }
+        } else {
+            quote = kv.second.first;
+            TLOG("The quote on business day " << io::iso_date(expiry) << " is the off-peak value " << quote << ".");
+        }
+
+        // Add the future helper for this expiry.
+        instruments[expiry] = boost::make_shared<FuturePriceHelper>(quote, expiry);
+
     }
 }
 

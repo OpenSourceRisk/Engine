@@ -26,13 +26,39 @@ using std::vector;
 namespace ore {
 namespace data {
 
+PriceSegment::OffPeakDaily::OffPeakDaily() {}
+
+PriceSegment::OffPeakDaily::OffPeakDaily(const vector<string>& offPeakQuotes,
+    const vector<string>& peakQuotes) : offPeakQuotes_(offPeakQuotes), peakQuotes_(peakQuotes) {}
+
+void PriceSegment::OffPeakDaily::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "OffPeakDaily");
+    offPeakQuotes_ = XMLUtils::getChildrenValues(node, "OffPeakQuotes", "Quote", true);
+    peakQuotes_ = XMLUtils::getChildrenValues(node, "PeakQuotes", "Quote", true);
+}
+
+XMLNode* PriceSegment::OffPeakDaily::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("OffPeakDaily");
+    XMLUtils::addChildren(doc, node, "OffPeakQuotes", "Quote", offPeakQuotes_);
+    XMLUtils::addChildren(doc, node, "PeakQuotes", "Quote", peakQuotes_);
+
+    return node;
+}
+
 PriceSegment::PriceSegment() : empty_(true), type_(Type::Future) {}
 
 PriceSegment::PriceSegment(const string& type, const string& conventionsId, const vector<string>& quotes,
-    const boost::optional<unsigned short>& priority, const string& peakPriceCurveId, const string& peakPriceCalendar)
+    const boost::optional<unsigned short>& priority, const boost::optional<OffPeakDaily>& offPeakDaily,
+    const string& peakPriceCurveId, const string& peakPriceCalendar)
     : strType_(type), conventionsId_(conventionsId), quotes_(quotes), priority_(priority),
-      peakPriceCurveId_(peakPriceCurveId), peakPriceCalendar_(peakPriceCalendar), empty_(false),
-      type_(parsePriceSegmentType(strType_)) {}
+      offPeakDaily_(offPeakDaily), peakPriceCurveId_(peakPriceCurveId),
+      peakPriceCalendar_(peakPriceCalendar), empty_(false), type_(parsePriceSegmentType(strType_)) {
+    if (type_ == Type::OffPeakPowerDaily) {
+        QL_REQUIRE(offPeakDaily_, "When price segment type is OffPeakPowerDaily, OffPeakDaily is required.");
+        populateQuotes();
+    }
+}
 
 PriceSegment::Type PriceSegment::type() const {
     return type_;
@@ -48,6 +74,10 @@ const vector<string>& PriceSegment::quotes() const {
 
 const boost::optional<unsigned short>& PriceSegment::priority() const {
     return priority_;
+}
+
+const boost::optional<PriceSegment::OffPeakDaily>& PriceSegment::offPeakDaily() const {
+    return offPeakDaily_;
 }
 
 const string& PriceSegment::peakPriceCurveId() const {
@@ -66,18 +96,35 @@ void PriceSegment::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "PriceSegment");
     strType_ = XMLUtils::getChildValue(node, "Type", true);
+    type_ = parsePriceSegmentType(strType_);
     conventionsId_ = XMLUtils::getChildValue(node, "Conventions", true);
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
 
     if (XMLNode* n = XMLUtils::getChildNode(node, "Priority")) {
         priority_ = parseInteger(XMLUtils::getNodeValue(n));
     }
 
-    peakPriceCurveId_ = XMLUtils::getChildValue(node, "PeakPriceCurveId", false);
-    peakPriceCalendar_ = XMLUtils::getChildValue(node, "PeakPriceCalendar", false);
+    if (type_ != Type::OffPeakPowerDaily) {
+        quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+        peakPriceCurveId_ = XMLUtils::getChildValue(node, "PeakPriceCurveId", false);
+        peakPriceCalendar_ = XMLUtils::getChildValue(node, "PeakPriceCalendar", false);
+    } else {
+        XMLNode* n = XMLUtils::getChildNode(node, "OffPeakDaily");
+        QL_REQUIRE(n, "When price segment type is OffPeakPowerDaily, an OffPeakDaily node is required.");
+        offPeakDaily_ = OffPeakDaily();
+        offPeakDaily_->fromXML(n);
+        populateQuotes();
+    }
 
     empty_ = false;
-    type_ = parsePriceSegmentType(strType_);
+}
+
+void PriceSegment::populateQuotes() {
+    // Populate the quotes_ with the off-peak and peak quotes
+    const auto& opqs = offPeakDaily_->offPeakQuotes();
+    set<string> quotes{ opqs.begin(), opqs.end() };
+    const auto& pqs = offPeakDaily_->peakQuotes();
+    quotes.insert(pqs.begin(), pqs.end());
+    quotes_.assign(quotes.begin(), quotes.end());
 }
 
 XMLNode* PriceSegment::toXML(XMLDocument& doc) {
@@ -88,12 +135,18 @@ XMLNode* PriceSegment::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "Priority", *priority_);
     }
     XMLUtils::addChild(doc, node, "Conventions", conventionsId_);
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
-    if (!peakPriceCurveId_.empty()) {
-        XMLUtils::addChild(doc, node, "PeakPriceCurveId", peakPriceCurveId_);
-    }
-    if (!peakPriceCalendar_.empty()) {
-        XMLUtils::addChild(doc, node, "PeakPriceCalendar", peakPriceCalendar_);
+    
+
+    if (type_ != Type::OffPeakPowerDaily) {
+        XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
+        if (!peakPriceCurveId_.empty()) {
+            XMLUtils::addChild(doc, node, "PeakPriceCurveId", peakPriceCurveId_);
+        }
+        if (!peakPriceCalendar_.empty()) {
+            XMLUtils::addChild(doc, node, "PeakPriceCalendar", peakPriceCalendar_);
+        }
+    } else {
+        XMLUtils::appendNode(node, offPeakDaily_->toXML(doc));
     }
 
     return node;
