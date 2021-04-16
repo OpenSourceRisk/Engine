@@ -812,7 +812,16 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             if (label == "") {
                 interpolation_ = XMLUtils::getChildValue(child, "Interpolation", true);
                 yieldCurveTenors_[label] = XMLUtils::getChildrenValuesAsPeriods(child, "Tenors", true);
-                extrapolation_ = XMLUtils::getChildValueAsBool(child, "Extrapolation", false);
+                extrapolation_ = XMLUtils::getChildValue(child, "Extrapolation", false);
+                // for backwards compatibility, map a value that parses to bool to FlatFwd
+                try {
+                    parseBool(extrapolation_);
+                    WLOG("ScenarioSimMarket parameter Extrapolation should be FlatFwd or FlatZero, mapping deprecated "
+                         "boolean '"
+                         << extrapolation_ << "' to FlatFwd. Please change this in your configuration.");
+                    extrapolation_ = "FlatFwd";
+                } catch (...) {
+                }
             } else {
                 if (XMLUtils::getChildNode(child, "Interpolation")) {
                     WLOG("Only one default interpolation value is allowed for yield curves");

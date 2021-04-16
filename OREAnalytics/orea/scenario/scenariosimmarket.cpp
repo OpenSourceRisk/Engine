@@ -263,10 +263,10 @@ ScenarioSimMarket::ScenarioSimMarket(
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
 
     // check ssm parameters
-    QL_REQUIRE(
-        parameters_->extrapolation() == "" || parameters_->extrapolation() == "FlatZero" ||
-            parameters_->extrapolation() == "FlatFwd",
-        "ScenarioSimMarket: Extrapolation must be set to FlatZero, FlatFwd (empty value will default to FlatFwd)");
+    QL_REQUIRE(parameters_->extrapolation() == "" || parameters_->extrapolation() == "FlatZero" ||
+                   parameters_->extrapolation() == "FlatFwd",
+               "ScenarioSimMarket: Extrapolation ('" << parameters_->extrapolation()
+                                                     << "') must be set to 'FlatZero' or 'FlatFwd'");
 
     // Sort parameters so they get processed in correct order
     map<RiskFactorKey::KeyType, pair<bool, set<string>>> params;
