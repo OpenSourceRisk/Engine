@@ -492,7 +492,7 @@ CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector
                 if (it == quotes.end())
                     continue;
             } else {
-                if ((*wildcard).matches(q->name()))
+                if (!(*wildcard).matches(q->name()))
                     continue;
             }
 
