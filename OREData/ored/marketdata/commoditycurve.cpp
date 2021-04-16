@@ -474,6 +474,7 @@ CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
     auto wildcard = getUniqueWildcard(quotes);
+    regexQuotes_ = wildcard != boost::none;
 
     // Add the relevant forward quotes to the result vector
     vector<boost::shared_ptr<CommodityForwardQuote>> result;
