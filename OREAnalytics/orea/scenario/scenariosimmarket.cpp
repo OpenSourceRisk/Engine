@@ -264,8 +264,8 @@ ScenarioSimMarket::ScenarioSimMarket(
 
     // check ssm parameters
     QL_REQUIRE(
-        parameters_->extrapolation() == "" || parameters_->extrpolation() == "FlatZero" ||
-            parameters_->extrapolation == "FlatFwd",
+        parameters_->extrapolation() == "" || parameters_->extrapolation() == "FlatZero" ||
+            parameters_->extrapolation() == "FlatFwd",
         "ScenarioSimMarket: Extrapolation must be set to FlatZero, FlatFwd (empty value will default to FlatFwd)");
 
     // Sort parameters so they get processed in correct order
