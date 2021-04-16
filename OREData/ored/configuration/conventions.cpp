@@ -1604,7 +1604,7 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         offPeakPowerIndexData_->fromXML(n);
     }
 
-    indexName_ = XMLUtils::getChildValue(node, "IndexName", true);
+    indexName_ = XMLUtils::getChildValue(node, "IndexName", false);
 
     build();
 }
