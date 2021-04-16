@@ -43,7 +43,6 @@ using QuantExt::FuturePriceHelper;
 using QuantExt::CommodityAverageBasisPriceCurve;
 using QuantExt::CommodityBasisPriceCurve;
 using QuantExt::CommodityIndex;
-using QuantExt::CommoditySpotIndex;
 using QuantExt::CrossCurrencyPriceTermStructure;
 using QuantExt::CubicFlat;
 using QuantExt::InterpolatedPriceCurve;
