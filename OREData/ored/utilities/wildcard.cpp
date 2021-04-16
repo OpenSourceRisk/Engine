@@ -37,7 +37,7 @@ Wildcard::Wildcard(const std::string& s) : s_(s) {
     if (s_.find("*") == std::string::npos)
         return;
 
-    static std::set<std::string> specialChars = {".", "+", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|", "\\"};
+    static std::vector<std::string> specialChars = {"\\", ".", "+", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|"};
 
     for (auto const& c : specialChars) {
         boost::replace_all(s_, c, "\\" + c);
