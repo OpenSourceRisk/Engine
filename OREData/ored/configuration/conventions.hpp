@@ -1392,7 +1392,8 @@ public:
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none);
+                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const std::string& indexName = "");
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1409,7 +1410,8 @@ public:
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none);
+                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const std::string& indexName = "");
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1426,7 +1428,8 @@ public:
                               const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
-                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none);
+                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const std::string& indexName = "");
     //@}
 
     //! \name Inspectors
@@ -1461,6 +1464,7 @@ public:
     const AveragingData& averagingData() const { return averagingData_; }
     QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData() const { return offPeakPowerIndexData_; }
+    const std::string& indexName() const { return indexName_; }
     //@}
 
     //! Serialisation
@@ -1511,6 +1515,7 @@ private:
     AveragingData averagingData_;
     QuantLib::Natural hoursPerDay_;
     boost::optional<OffPeakPowerIndexData> offPeakPowerIndexData_;
+    std::string indexName_;
 
     //! Populate and check frequency.
     void populateFrequency();

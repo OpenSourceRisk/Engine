@@ -1432,7 +1432,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData)
+                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const string& indexName)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::DayOfMonth),
       strDayOfMonth_(dayOfMonth.dayOfMonth_), strContractFrequency_(contractFrequency), strCalendar_(calendar),
       strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth),
@@ -1441,7 +1442,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Day
       optionExpiryMonthLag_(optionExpiryMonthLag), optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
       optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
-      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData) {
+      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData), indexName_(indexName) {
     build();
 }
 
@@ -1459,7 +1460,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData)
+                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const string& indexName)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::NthWeekday), strNth_(nth), strWeekday_(weekday),
       strContractFrequency_(contractFrequency), strCalendar_(calendar), strExpiryCalendar_(expiryCalendar),
       expiryMonthLag_(expiryMonthLag), strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
@@ -1468,7 +1470,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const str
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
       optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
-      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData) {
+      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData), indexName_(indexName) {
     build();
 }
 
@@ -1486,7 +1488,8 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
                                                      const map<Natural, Natural>& optionContinuationMappings,
                                                      const AveragingData& averagingData,
                                                      Natural hoursPerDay,
-                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData)
+                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const string& indexName)
     : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::CalendarDaysBefore),
       strCalendarDaysBefore_(calendarDaysBefore.calendarDaysBefore_), strContractFrequency_(contractFrequency),
       strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
@@ -1496,7 +1499,7 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
       optionExpiryDay_(optionExpiryDay), strOptionBdc_(optionBdc),
       futureContinuationMappings_(futureContinuationMappings),
       optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData),
-      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData) {
+      hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData), indexName_(indexName) {
     build();
 }
 
@@ -1601,6 +1604,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         offPeakPowerIndexData_->fromXML(n);
     }
 
+    indexName_ = XMLUtils::getChildValue(node, "IndexName", true);
+
     build();
 }
 
@@ -1689,6 +1694,9 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
     if (offPeakPowerIndexData_) {
         XMLUtils::appendNode(node, offPeakPowerIndexData_->toXML(doc));
     }
+
+    if (!indexName_.empty())
+        XMLUtils::addChild(doc, node, "IndexName", indexName_);
 
     return node;
 }
