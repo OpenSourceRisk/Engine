@@ -563,10 +563,10 @@
             <xs:element name="Configuration" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:all>
-                  <xs:element type="xs:string" name="Tenors" maxOccurs="1" minOccurs="1"/>
-                  <xs:element type="ycInterpolation" name="Interpolation" maxOccurs="1" minOccurs="0"/>
-                  <xs:element type="bool" name="Extrapolation" maxOccurs="1" minOccurs="0"/>
-                  <xs:element type="dayCounter" name="DayCounter" maxOccurs="1" minOccurs="0"/>
+                  <xs:element type="xs:string" name="Tenors"/>
+                  <xs:element type="ycInterpolation" name="Interpolation" minOccurs="0"/>
+                  <xs:element type="ycExtrapolation" name="Extrapolation" minOccurs="0"/>
+                  <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
                 </xs:all>
                 <xs:attribute name="curve" type="xs:string" use="optional" />
               </xs:complexType>
@@ -1209,6 +1209,13 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="LogLinear"/>
       <xs:enumeration value="LinearZero"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ycExtrapolation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="FlatForward"/>
+      <xs:enumeration value="FlatZero"/>
     </xs:restriction>
   </xs:simpleType>
 
