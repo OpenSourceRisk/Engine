@@ -100,8 +100,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond1) { // test if bond and forwardbond comp co
     Real strikePrice = 103.0;
     boost::shared_ptr<Payoff> payoff = boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
     // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(new QuantExt::ForwardBond(
-        bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment, compensationPaymentDate));
+    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(
+        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate));
     boost::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
         discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
     fwdBond->setPricingEngine(fwdBondEngine);
@@ -172,8 +173,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond2) { // same testcase as above, but differen
     boost::shared_ptr<Payoff> payoff = boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
     // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
 
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(new QuantExt::ForwardBond(
-        bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment, compensationPaymentDate));
+    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(
+        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate));
 
     boost::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
         discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
@@ -245,8 +247,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond3) { // now true forward bond, but coupon pa
     boost::shared_ptr<Payoff> payoff = boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
     // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
 
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(new QuantExt::ForwardBond(
-        bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment, compensationPaymentDate));
+    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(
+        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate));
 
     boost::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
         discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
@@ -322,8 +325,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond4) { // now true forward bond, one coupon be
     boost::shared_ptr<Payoff> payoff = boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
     //  Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
 
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(new QuantExt::ForwardBond(
-        bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment, compensationPaymentDate));
+    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(
+        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate));
 
     boost::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
         discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
@@ -420,8 +424,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond5) { // now true forward bond, one coupon be
     boost::shared_ptr<Payoff> payoff = boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
     //  Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
 
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(new QuantExt::ForwardBond(
-        bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment, compensationPaymentDate));
+    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(
+        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate));
 
     boost::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
         discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
@@ -500,8 +505,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
     boost::shared_ptr<Payoff> payoff = boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, strikePrice);
     // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
 
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond_sh(new QuantExt::ForwardBond(
-        bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment, compensationPaymentDate));
+    boost::shared_ptr<QuantExt::ForwardBond> fwdBond_sh(
+        new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate));
 
     boost::shared_ptr<PricingEngine> fwdBondEngine_sh(new QuantExt::DiscountingForwardBondEngine(
         discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
@@ -515,8 +521,9 @@ BOOST_AUTO_TEST_CASE(testForwardBond6) { // now true forward bond, but coupon pa
         boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, strikePrice);
     // Natural settlementDays = 0; // why do we need this if we specify the value date explicitly ?
 
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(new QuantExt::ForwardBond(
-        bond, payoff_sh, fwdMaturityDate, settlementDirty, compensationPayment, compensationPaymentDate));
+    boost::shared_ptr<QuantExt::ForwardBond> fwdBond(
+        new QuantExt::ForwardBond(bond, payoff_sh, fwdMaturityDate, fwdMaturityDate, true, settlementDirty,
+                                  compensationPayment, compensationPaymentDate));
 
     boost::shared_ptr<PricingEngine> fwdBondEngine(new QuantExt::DiscountingForwardBondEngine(
         discountTS, incomeTS, yts, bondSpecificSpread, dpts, recovery, 2 * Months));
