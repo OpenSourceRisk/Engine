@@ -1216,6 +1216,20 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="FlatForward"/>
       <xs:enumeration value="FlatZero"/>
+      <!-- deprecated, for backwards compatibility only -->
+      <xs:enumeration value="Y"/>
+      <xs:enumeration value="YES"/>
+      <xs:enumeration value="TRUE"/>
+      <xs:enumeration value="True"/>
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="1"/>
+      <xs:enumeration value="N"/>
+      <xs:enumeration value="NO"/>
+      <xs:enumeration value="FALSE"/>
+      <xs:enumeration value="False"/>
+      <xs:enumeration value="false"/>
+      <xs:enumeration value="0"/>
+      <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>
 
