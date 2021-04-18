@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <map>
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 #include <ql/types.hpp>
+#include <vector>
 
 namespace ore {
 namespace data {
@@ -57,17 +57,16 @@ public:
     FXTriangulation() {}
 
     //! Add a quote to the repo
-    void addQuote(const std::string& pair, const Handle<Quote>& spot) { map_[pair] = spot; }
+    void addQuote(const std::string& pair, const Handle<Quote>& spot);
 
     //! Get a quote from the repo, this will follow the algorithm described above
     Handle<Quote> getQuote(const std::string&) const;
 
     //! Get all quotes currently stored in the triangulation
-    const std::map<std::string, Handle<Quote>>& quotes() const { return map_; }
+    const std::vector<std::pair<std::string, Handle<Quote>>>& quotes() const { return map_; }
 
 private:
-    std::map<std::string, Handle<Quote>> map_;
-    mutable std::map<std::string, Handle<Quote>> cache_;
+    mutable std::vector<std::pair<std::string, Handle<Quote>>> map_;
 };
 } // namespace data
 } // namespace ore
