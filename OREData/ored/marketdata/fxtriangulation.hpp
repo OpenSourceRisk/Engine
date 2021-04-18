@@ -66,7 +66,8 @@ public:
     const std::map<std::string, Handle<Quote>>& quotes() const { return map_; }
 
 private:
-    mutable std::map<std::string, Handle<Quote>> map_;
+    std::map<std::string, Handle<Quote>> map_;
+    mutable std::map<std::string, Handle<Quote>> cache_;
 };
 } // namespace data
 } // namespace ore

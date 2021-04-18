@@ -64,6 +64,11 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
     if (it != map_.end())
         return it->second;
 
+    // Check if we have cached the pair
+    auto it2 = cache_.find(pair);
+    if (it2 != cache_.end())
+        return it2->second;
+
     // Now we have to break the pair up and search for it.
     QL_REQUIRE(pair.size() == 6, "Invalid ccypair3 " << pair);
     string domestic = pair.substr(0, 3);
@@ -74,7 +79,7 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
     it = map_.find(reverse);
     if (it != map_.end()) {
         Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<Inverse>>(it->second, Inverse()));
-        map_[pair] = invertedQuote;
+        cache_[pair] = invertedQuote;
         return invertedQuote;
     }
 
@@ -106,15 +111,17 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
             it = map_.find(foreign + keyForeign);
             if (it != map_.end()) {
                 // Here q1 is USDEUR and it->second is JPYEUR
-                map_[pair] =
+                auto tmp =
                     Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(q1, it->second, Triangulation()));
-                return map_[pair];
+                cache_[pair] = tmp;
+                return tmp;
             }
             // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
             it = map_.find(keyForeign + foreign);
             if (it != map_.end()) {
-                map_[pair] = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(q1, it->second, Product()));
-                return map_[pair];
+                auto tmp = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(q1, it->second, Product()));
+                cache_[pair] = tmp;
+                return tmp;
             }
         }
 
@@ -122,17 +129,19 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
             // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
             it = map_.find(foreign + keyDomestic);
             if (it != map_.end()) {
-                map_[pair] =
+                auto tmp =
                     Handle<Quote>(boost::make_shared<CompositeQuote<InverseProduct>>(q1, it->second, InverseProduct()));
-                return map_[pair];
+                cache_[pair] = tmp;
+                return tmp;
             }
             // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
             it = map_.find(keyDomestic + foreign);
             if (it != map_.end()) {
                 // Here q1 is EURUSD and it->second is EURJPY
-                map_[pair] =
+                auto tmp =
                     Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(it->second, q1, Triangulation()));
-                return map_[pair];
+                cache_[pair] = tmp;
+                return tmp;
             }
         }
     }
