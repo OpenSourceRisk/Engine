@@ -1048,7 +1048,7 @@ void YieldCurve::buildFittedBondCurve() {
                 guess[1] = guess[1] * 0.10 - 0.05; // short term component
                 guess[2] = guess[2] * 0.10 - 0.05; // medium term component
                 guess[3] = guess[3] * 5.0;         // decay factor
-                DLOG("using random NelsonSiegel guess for trial #" << (i + 1) << ". " << guess);
+                DLOG("using random NelsonSiegel guess for trial #" << (i + 1) << ": " << guess);
             } else {
                 QL_FAIL("randomised optimisation seed not implemented");
             }
