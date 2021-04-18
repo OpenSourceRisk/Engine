@@ -49,6 +49,10 @@ using QuantLib::Quote;
  *  and so if these original quotes change in the future, the constructed quotes will reflect the new
  *  value
  *
+ *  Warning: The result of getQuote() can depend on previous calls to getQuote(), since newly added
+ *  pairs in 3) are candidates for bridging pairs in future calls and the bridging only uses one
+ *  intermediate currency. This state-dependent behaviour will be removed in a future release.
+ *
  *  \ingroup marketdata
  */
 class FXTriangulation {
