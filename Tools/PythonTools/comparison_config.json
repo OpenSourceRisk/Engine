@@ -25,7 +25,7 @@
             "names": [
               "Amount"
             ],
-            "abs_tol": null,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           }
         ]
@@ -46,7 +46,7 @@
               "Base NPV",
               "Delta"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -65,7 +65,7 @@
               "BaseCva",
               "Delta"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-4,
             "rel_tol": 1e-12
           }
         ]
@@ -77,7 +77,7 @@
         "column_settings": [
           {
             "names": [],
-            "abs_tol": null,
+            "abs_tol": 1e-8,
             "rel_tol": 1e-12
           }
         ]
@@ -98,7 +98,7 @@
               "Base NPV",
               "Delta"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -135,7 +135,7 @@
               "Amount",
               "AmountUSD"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -151,7 +151,7 @@
             "names": [
               "Value"
             ],
-            "abs_tol": null,
+            "abs_tol": 1E-4,
             "rel_tol": 1e-12
           }
         ]
@@ -324,7 +324,7 @@
               "Scenario NPV",
               "Sensitivity"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -338,7 +338,7 @@
         "column_settings": [
           {
             "names": [],
-            "abs_tol": null,
+            "abs_tol": 1e-6,
             "rel_tol": 1e-12
           }
         ]
@@ -357,12 +357,18 @@
           {
             "names": [
               "InitialMargin",
+            ],
+            "abs_tol": 1e-2,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
               "HistSimVaR",
               "HistSimTaylorVaR",
               "ParametricVaR",
               "LCHVaR"
             ],
-            "abs_tol": null,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           },
           {
@@ -390,7 +396,7 @@
             "names": [
               "Bound"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-8,
             "rel_tol": 1e-12
           },
           {
@@ -418,9 +424,15 @@
           {
             "names": [
               "InitialMargin",
+            ],
+            "abs_tol": 1e-2,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
               "PLAmount"
             ],
-            "abs_tol": null,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           },
           {
@@ -453,7 +465,7 @@
             "names": [
               "InitialMargin"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -471,7 +483,7 @@
               "Scenario NPV",
               "Difference"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -509,7 +521,7 @@
               "Delta",
               "Gamma"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -524,7 +536,7 @@
               "NPV",
               "NPV(Base)"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-6,
             "rel_tol": 1e-12
           }
         ]
@@ -604,7 +616,7 @@
               "FBAexAllSP",
               "FCAexAllSP"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -619,7 +631,7 @@
             "names": [
               "COLVA"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -639,7 +651,7 @@
               "BaselEE",
               "BaselEEE"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-2,
             "rel_tol": 1e-12
           }
         ]
@@ -660,7 +672,7 @@
               "BaselEE",
               "BaselEEE"
             ],
-            "abs_tol": null,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           }
         ]
@@ -735,7 +747,7 @@
               "DeltaNPV",
               "SimpleDIM"
             ],
-            "abs_tol": null,
+            "abs_tol": 1e-6,
             "rel_tol": 1e-12
           }
         ]
