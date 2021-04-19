@@ -198,8 +198,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     } else {
         instrument_ = boost::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(swaption, multiplier, additionalInstruments, additionalMultipliers));
-	// Align with ISDA AANA/GRID guidance as of November 2020
-	// maturity_ = exDate;
+        // Align with ISDA AANA/GRID guidance as of November 2020
+        // maturity_ = exDate;
         maturity_ = std::max(swap->fixedSchedule().dates().back(), swap->floatingSchedule().dates().back());
     }
 
@@ -242,108 +242,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
 
     DLOG("Swaption::Build(): Underlying Start = " << QuantLib::io::iso_date(swap->startDate()));
 
-    // build exercise: only keep a) future exercise dates and b) exercise dates that exercise into a whole
-    // accrual period of the underlying; TODO handle exercises into broken periods?
-    Date lastAccrualStartDate = Date::minDate();
-    for (Size i = 0; i < 2; ++i) {
-        for (auto const& c : swap->leg(i)) {
-            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
-                lastAccrualStartDate = std::max(lastAccrualStartDate, cpn->accrualStartDate());
-        }
-    }
-    Period noticePeriod = option_.noticePeriod().empty() ? 0 * Days : parsePeriod(option_.noticePeriod());
-    Calendar noticeCal = option_.noticeCalendar().empty() ? NullCalendar() : parseCalendar(option_.noticeCalendar());
-    BusinessDayConvention noticeBdc =
-        option_.noticeConvention().empty() ? Unadjusted : parseBusinessDayConvention(option_.noticeConvention());
-    std::vector<QuantLib::Date> sortedExerciseDates;
-    for (auto const& d : option_.exerciseDates())
-        sortedExerciseDates.push_back(parseDate(d));
-    std::sort(sortedExerciseDates.begin(), sortedExerciseDates.end());
-    std::vector<QuantLib::Date> noticeDates, exerciseDates;
-    std::vector<bool> isExerciseDateAlive(sortedExerciseDates.size(), false);
-    for (Size i = 0; i < sortedExerciseDates.size(); i++) {
-        Date noticeDate = noticeCal.advance(sortedExerciseDates[i], -noticePeriod, noticeBdc);
-        if (noticeDate > Settings::instance().evaluationDate() && noticeDate <= lastAccrualStartDate) {
-            isExerciseDateAlive[i] = true;
-            noticeDates.push_back(noticeDate);
-            exerciseDates.push_back(sortedExerciseDates[i]);
-            DLOG("Got notice date " << QuantLib::io::iso_date(noticeDate) << " using notice period " << noticePeriod
-                                    << ", convention " << noticeBdc << ", calendar " << noticeCal.name()
-                                    << " from exercise date " << exerciseDates.back());
-        }
-        if (noticeDate > lastAccrualStartDate)
-            WLOG("Remove notice date " << ore::data::to_string(noticeDate) << " (exercise date "
-                                       << sortedExerciseDates[i] << ") after last accrual start date "
-                                       << ore ::data::to_string(lastAccrualStartDate));
-    }
-    QL_REQUIRE(noticeDates.size() > 0, "Bermudan Swaption does not have any alive exercise dates");
-    maturity_ = noticeDates.back();
-    exercise_ = boost::make_shared<BermudanExercise>(noticeDates);
-
-    // check for exercise fees, if present build a rebated exercise with rebates = -fee
-    if (!option_.exerciseFees().empty()) {
-        // build an exercise date "schedule" by adding the maximum possible date at the end
-        std::vector<Date> exDatesPlusInf(sortedExerciseDates);
-        exDatesPlusInf.push_back(Date::maxDate());
-        vector<double> allRebates =
-            buildScheduledVectorNormalised(option_.exerciseFees(), option_.exerciseFeeDates(), exDatesPlusInf, 0.0);
-        // filter on alive rebates, so that we can a vector of rebates corresponding to the exerciseDates vector
-        vector<double> rebates;
-        for (Size i = 0; i < sortedExerciseDates.size(); ++i) {
-            if (isExerciseDateAlive[i])
-                rebates.push_back(allRebates[i]);
-        }
-        // flip the sign of the fee to get a rebate
-        for (auto& r : rebates)
-            r = -r;
-        vector<string> feeType = buildScheduledVectorNormalised<string>(option_.exerciseFeeTypes(),
-                                                                        option_.exerciseFeeDates(), exDatesPlusInf, "");
-        // convert relative to absolute fees if required
-        for (Size i = 0; i < rebates.size(); ++i) {
-            // default to Absolute
-            if (feeType[i].empty())
-                feeType[i] = "Absolute";
-            if (feeType[i] == "Percentage") {
-                // get next float coupon after exercise to determine relevant notional
-                Real feeNotional = Null<Real>();
-                for (auto const& c : swap->leg(1)) {
-                    if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
-                        if (feeNotional == Null<Real>() && cpn->accrualStartDate() >= exerciseDates[i])
-                            feeNotional = cpn->nominal();
-                    }
-                }
-                if (feeNotional == Null<Real>())
-                    rebates[i] = 0.0; // notional is zero
-                else {
-                    DLOG("Convert percentage rebate "
-                         << rebates[i] << " to absolute reabte " << rebates[i] * feeNotional << " using nominal "
-                         << feeNotional << " for exercise date " << QuantLib::io::iso_date(exerciseDates[i]));
-                    rebates[i] *= feeNotional; // multiply percentage fee by relevant notional
-                }
-            } else {
-                QL_REQUIRE(feeType[i] == "Absolute", "fee type must be Absolute or Relative");
-            }
-        }
-        Period feeSettlPeriod = option_.exerciseFeeSettlementPeriod().empty()
-                                    ? 0 * Days
-                                    : parsePeriod(option_.exerciseFeeSettlementPeriod());
-        Calendar feeSettlCal = option_.exerciseFeeSettlementCalendar().empty()
-                                   ? NullCalendar()
-                                   : parseCalendar(option_.exerciseFeeSettlementCalendar());
-        BusinessDayConvention feeSettlBdc = option_.exerciseFeeSettlementConvention().empty()
-                                                ? Unadjusted
-                                                : parseBusinessDayConvention(option_.exerciseFeeSettlementConvention());
-        exercise_ = boost::make_shared<QuantExt::RebatedExercise>(*exercise_, exerciseDates, rebates, feeSettlPeriod,
-                                                                  feeSettlCal, feeSettlBdc);
-        // log rebates
-        auto dbgEx = boost::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
-        for (Size i = 0; i < exerciseDates.size(); ++i) {
-            DLOG("Got rebate " << dbgEx->rebate(i) << " with payment date "
-                               << QuantLib::io::iso_date(dbgEx->rebatePaymentDate(i)) << " (exercise date="
-                               << QuantLib::io::iso_date(exerciseDates[i]) << ") using rebate settl period "
-                               << feeSettlPeriod << ", calendar " << feeSettlCal << ", convention " << feeSettlBdc);
-        }
-    }
+    ExerciseBuilder eb(option_, {swap->leg(1)});
+    QL_REQUIRE(!eb.noticeDates().empty(), "BermudanSwaption: Swaption does not have any alive exercise dates");
+    exercise_ = eb.exercise();
+    maturity_ = eb.noticeDates().back();
 
     Settlement::Type delivery = parseSettlementType(option_.settlement());
     Settlement::Method deliveryMethod =
@@ -380,32 +282,32 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         boost::dynamic_pointer_cast<BermudanSwaptionEngineBuilder>(builder);
 
     // determine strikes for calibration basket (simple approach, a la summit)
-    std::vector<Real> strikes(noticeDates.size(), Null<Real>());
+    std::vector<Real> strikes(eb.noticeDates().size(), Null<Real>());
     if (!isNonStandard) {
         Real tmp = vanillaSwap->fixedRate() - vanillaSwap->spread();
         std::fill(strikes.begin(), strikes.end(), tmp);
         DLOG("calibration strike is " << tmp << "(fixed rate " << vanillaSwap->fixedRate() << ", spread "
                                       << vanillaSwap->spread() << ")");
     } else {
-        for (Size i = 0; i < noticeDates.size(); ++i) {
+        for (Size i = 0; i < eb.noticeDates().size(); ++i) {
             const Schedule& fix = nonstandardSwap->fixedSchedule();
             const Schedule& flt = nonstandardSwap->floatingSchedule();
             Size fixIdx =
-                std::lower_bound(fix.dates().begin(), fix.dates().end(), noticeDates[i]) - fix.dates().begin();
+                std::lower_bound(fix.dates().begin(), fix.dates().end(), eb.noticeDates()[i]) - fix.dates().begin();
             Size fltIdx =
-                std::lower_bound(flt.dates().begin(), flt.dates().end(), noticeDates[i]) - flt.dates().begin();
+                std::lower_bound(flt.dates().begin(), flt.dates().end(), eb.noticeDates()[i]) - flt.dates().begin();
             // play safe
             fixIdx = std::min(fixIdx, nonstandardSwap->fixedRate().size() - 1);
             fltIdx = std::min(fltIdx, nonstandardSwap->spreads().size() - 1);
             strikes[i] = nonstandardSwap->fixedRate()[fixIdx] - nonstandardSwap->spreads()[fltIdx];
-            DLOG("calibration strike for ex date " << QuantLib::io::iso_date(noticeDates[i]) << " is " << strikes[i]
-                                                   << " (fixed rate " << nonstandardSwap->fixedRate()[fixIdx]
-                                                   << ", spread " << nonstandardSwap->spreads()[fltIdx] << ")");
+            DLOG("calibration strike for ex date "
+                 << QuantLib::io::iso_date(eb.noticeDates()[i]) << " is " << strikes[i] << " (fixed rate "
+                 << nonstandardSwap->fixedRate()[fixIdx] << ", spread " << nonstandardSwap->spreads()[fltIdx] << ")");
         }
     }
 
     boost::shared_ptr<PricingEngine> engine =
-        swaptionBuilder->engine(id(), isNonStandard, ccy_str, noticeDates, swap->maturityDate(), strikes);
+        swaptionBuilder->engine(id(), isNonStandard, ccy_str, eb.noticeDates(), swap->maturityDate(), strikes);
 
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
@@ -422,7 +324,8 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     QL_REQUIRE(swapBuilder, "No Swap Builder found for Swaption " << id());
     boost::shared_ptr<PricingEngine> swapEngine = swapBuilder->engine(currency);
 
-    std::vector<boost::shared_ptr<Instrument>> underlyingSwaps = buildUnderlyingSwaps(swapEngine, swap, noticeDates);
+    std::vector<boost::shared_ptr<Instrument>> underlyingSwaps =
+        buildUnderlyingSwaps(swapEngine, swap, eb.noticeDates());
 
     // If premium data is provided
     // 1) build the fee trade and pass it to the instrument wrapper for pricing
@@ -441,7 +344,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
-        new BermudanOptionWrapper(swaption, positionType == Position::Long ? true : false, noticeDates,
+        new BermudanOptionWrapper(swaption, positionType == Position::Long ? true : false, eb.noticeDates(),
                                   delivery == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0,
                                   additionalInstruments, additionalMultipliers));
 
@@ -668,7 +571,7 @@ QuantLib::Real Swaption::notional() const {
 
 std::string Swaption::notionalCurrency() const {
     // So far we cover single currency swaptions only,
-    // but leave this function override for the cross currency case later 
+    // but leave this function override for the cross currency case later
     return notionalCurrency_;
 }
 
