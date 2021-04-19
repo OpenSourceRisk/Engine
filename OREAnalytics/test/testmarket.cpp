@@ -401,7 +401,6 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setDefaultCurveDayCounters("", "ACT/ACT");
     simMarketData->setDefaultCurveCalendars("", "TARGET");
     simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
 
     simMarketData->setSwapVolTerms(
         "", {1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
@@ -444,7 +443,6 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
 
     simMarketData->setYieldCurveNames({"BondCurve1"});
     simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
 
     simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolExpiries(
