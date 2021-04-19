@@ -30,9 +30,9 @@
 
 #include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 #include <algorithm>
-#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -102,25 +102,13 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         Size quotesRead = 0;
 
         // in case of wild-card in config
-        bool wcFlag = false;
-        bool foundRegex = false;
-        regex reg1;
+        auto wildcard = getUniqueWildcard(config->fwdQuotes());
 
-        // check for regex string in config
-        for (Size i = 0; i < config->fwdQuotes().size(); i++) {
-            foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
-        }
         if ((config->type() == EquityCurveConfig::Type::ForwardPrice ||
              config->type() == EquityCurveConfig::Type::ForwardDividendPrice ||
              config->type() == EquityCurveConfig::Type::OptionPremium) &&
-            foundRegex) {
-            QL_REQUIRE(config->fwdQuotes().size() == 1,
-                       "wild card specified in " << config->curveID() << " but more quotes also specified.");
+            wildcard) {
             LOG("Wild card quote specified for " << config->curveID())
-            wcFlag = true;
-            string regexstr = config->fwdQuotes()[0];
-            boost::replace_all(regexstr, "*", ".*");
-            reg1 = regex(regexstr);
         } else {
             if (config->type() == EquityCurveConfig::Type::OptionPremium) {
                 oqt.resize(config->fwdQuotes().size());
@@ -154,9 +142,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 boost::shared_ptr<EquityForwardQuote> q = boost::dynamic_pointer_cast<EquityForwardQuote>(md);
 
-                if (wcFlag) {
+                if (wildcard) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof < q->expiryDate()) {
+                    if ((*wildcard).matches(q->name()) && asof < q->expiryDate()) {
                         QL_REQUIRE(find(qt.begin(), qt.end(), q) == qt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Forward Price found for quote: " << q->name());
@@ -187,9 +175,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
                 Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof);
 
-                if (wcFlag) {
+                if (wildcard) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof < expiryDate) {
+                    if ((*wildcard).matches(q->name()) && asof < expiryDate) {
                         QL_REQUIRE(find(oqt.begin(), oqt.end(), q) == oqt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Volatility Price found for quote: " << q->name());
@@ -237,7 +225,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
         QL_REQUIRE(!equitySpot.empty(), "Equity spot quote not found for " << config->curveID());
 
-        if (!wcFlag) {
+        if (!wildcard) {
             QL_REQUIRE(quotesRead == config->fwdQuotes().size(),
                        "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
         }
@@ -260,7 +248,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
 
                 // sort quotes and terms in case of wild-card
-                if (wcFlag) {
+                if (wildcard) {
                     QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
 
                         // sort

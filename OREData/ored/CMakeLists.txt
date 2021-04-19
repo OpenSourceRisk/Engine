@@ -154,6 +154,7 @@ utilities/parsers.cpp
 utilities/progressbar.cpp
 utilities/strike.cpp
 utilities/to_string.cpp
+utilities/wildcard.cpp
 utilities/xmlutils.cpp)
 
 # hpp files, this list is maintained manually
@@ -348,6 +349,7 @@ utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
+utilities/wildcard.hpp
 utilities/xmlutils.hpp
 version.hpp)
 

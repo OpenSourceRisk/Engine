@@ -18,14 +18,15 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/indexed.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
@@ -36,10 +37,9 @@
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
-#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
+#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
-#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -145,24 +145,14 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
-    bool isRegex = false;
-    for (Size i = 0; i < vcc.quotes().size(); i++) {
-        if ((isRegex = vcc.quotes()[i].find("*") != string::npos)) {
-            QL_REQUIRE(i == 0 && vcc.quotes().size() == 1,
-                       "Wild card config, " << vc.curveID() << ", should have exactly one quote.");
-            break;
-        }
-    }
+    auto wildcard = getUniqueWildcard(vcc.quotes());
 
     // curveData will be populated with the expiry dates and volatility values.
     map<Date, Real> curveData;
 
     // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
-    if (isRegex) {
-        DLOG("Have single quote with pattern " << vcc.quotes()[0]);
-
-        // Create the regular expression
-        regex regexp(boost::replace_all_copy(vcc.quotes()[0], "*", ".*"));
+    if (wildcard) {
+        DLOG("Have single quote with pattern " << (*wildcard).regex());
 
         // Loop over quotes and process commodity option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -172,7 +162,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
                 continue;
 
             auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-            if (q && regex_match(q->name(), regexp) && q->quoteType() == vc.quoteType()) {
+            if (q && (*wildcard).matches(q->name()) && q->quoteType() == vc.quoteType()) {
 
                 TLOG("The quote " << q->name() << " matched the pattern");
 
@@ -301,7 +291,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         if (strikesWc) {
             QL_REQUIRE(vssc.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");
         }
-        bool wildCard = strikesWc || expiriesWc;
+        bool wildcard = strikesWc || expiriesWc;
 
         vector<Real> callStrikes, putStrikes;
         vector<Real> callData, putData;
@@ -380,7 +370,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             callSurfaceOnly = true;
         }
         // Check loaded quotes
-        if (!wildCard) {
+        if (!wildcard) {
             Size explicitGridSize = vssc.expiries().size() * vssc.strikes().size();
             QL_REQUIRE(callQuotesAdded == explicitGridSize,
                        "EquityVolatilityCurve " << vc.curveID() << ": " << callQuotesAdded << " quotes provided but "

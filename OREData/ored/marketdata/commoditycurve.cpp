@@ -22,6 +22,7 @@
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <qle/termstructures/averagefuturepricehelper.hpp>
 #include <qle/termstructures/averageoffpeakpowerhelper.hpp>
 #include <qle/termstructures/averagespotpricehelper.hpp>
@@ -33,7 +34,6 @@
 #include <qle/termstructures/piecewisepricecurve.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/date.hpp>
-#include <regex>
 
 using QuantExt::AverageFuturePriceHelper;
 using QuantExt::AverageOffPeakPowerHelper;
@@ -53,7 +53,6 @@ using QuantExt::PriceTermStructure;
 using QuantExt::PiecewisePriceCurve;
 using QuantLib::BootstrapHelper;
 using std::map;
-using std::regex;
 using std::string;
 
 // Explicit template instantiation to avoid "error C2079: ... uses undefined class ..."
@@ -474,21 +473,8 @@ CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector
 
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
-    regexQuotes_ = false;
-    for (Size i = 0; i < quotes.size(); i++) {
-        if ((regexQuotes_ = quotes[i].find("*") != string::npos)) {
-            QL_REQUIRE(i == 0 && quotes.size() == 1,
-                       "Wild card config, " << configId << ", should have exactly one quote.");
-            DLOG("Regular expression, '" << quotes[0] << "', specified for forward quotes"
-                                         << " for commodity curve " << configId);
-            break;
-        }
-    }
-
-    // If we find a regex in forward quotes, check there is only one and initialise the regex
-    regex reg;
-    if (regexQuotes_)
-        reg = regex(boost::replace_all_copy(quotes[0], "*", ".*"));
+    auto wildcard = getUniqueWildcard(quotes);
+    regexQuotes_ = wildcard != boost::none;
 
     // Add the relevant forward quotes to the result vector
     vector<boost::shared_ptr<CommodityForwardQuote>> result;
@@ -501,13 +487,13 @@ CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector
             boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(md);
 
             // Check if the quote is requested by the config and if it isn't continue to the next quote
-            if (!regexQuotes_) {
+            if (!wildcard) {
                 vector<string>::const_iterator it =
                     find(quotes.begin(), quotes.end(), q->name());
                 if (it == quotes.end())
                     continue;
             } else {
-                if (!regex_match(q->name(), reg))
+                if (!(*wildcard).matches(q->name()))
                     continue;
             }
 

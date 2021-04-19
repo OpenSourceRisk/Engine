@@ -31,6 +31,7 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
 namespace ore {
@@ -86,7 +87,7 @@ private:
     string sourceCcy_, targetCcy_;
     std::vector<string> expiriesNoDuplicates_;
     std::vector<Period> expiries_;
-    bool expiriesRegex_;
+    boost::optional<Wildcard> expiriesWildcard_;
     Size spotDays_;
     Calendar spotCalendar_;
     QuantLib::Period switchTenor_;
