@@ -753,10 +753,10 @@ void CommodityCurve::addOffPeakPowerInstruments(const Date& asof, const Loader& 
     for (const auto& q : opqs) {
         Real value = q->quote()->value();
         Date expiry = q->expiryDate();
-        TLOG("Adding off-peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
         if (quotes.count(expiry) != 0) {
-            DLOG("Already have off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+            TLOG("Already have off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
         } else {
+            TLOG("Adding off-peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
             quotes[expiry] = make_pair(value, Null<Real>());
         }
     }
@@ -765,13 +765,13 @@ void CommodityCurve::addOffPeakPowerInstruments(const Date& asof, const Loader& 
     for (const auto& q : pqs) {
         Real value = q->quote()->value();
         Date expiry = q->expiryDate();
-        TLOG("Adding peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
         auto it = quotes.find(expiry);
         if (it == quotes.end()) {
-            DLOG("Have no off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+            TLOG("Have no off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
         } else if (it->second.second != Null<Real>()) {
-            DLOG("Already have a peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+            TLOG("Already have a peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
         } else {
+            TLOG("Adding peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
             it->second.second = value;
         }
     }
