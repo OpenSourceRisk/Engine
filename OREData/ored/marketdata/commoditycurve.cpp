@@ -69,6 +69,39 @@ template class QuantExt::PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::
 template class QuantExt::PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
 template class QuantExt::PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
 
+namespace {
+
+using ore::data::Convention;
+using ore::data::Conventions;
+using QuantLib::Date;
+using QuantLib::Error;
+using QuantLib::io::iso_date;
+using QuantLib::Real;
+
+void addMarketFixing(const string& idxConvId, const Date& expiry, Real value, const Conventions& conventions) {
+    auto p = conventions.get(idxConvId, Convention::Type::CommodityFuture);
+    if (p.first) {
+        auto idx = parseCommodityIndex(idxConvId, conventions, false);
+        idx = idx->clone(expiry);
+        if (idx->isValidFixingDate(expiry)) {
+            try {
+                idx->addFixing(expiry, value);
+                TLOG("Added fixing (" << iso_date(expiry) << "," << idx->name() << "," << value << ").");
+            } catch (const Error& e) {
+                TLOG("Failed to add fixing (" << iso_date(expiry) << "," << idx->name() << "," <<
+                    value << "): " << e.what());
+            }
+        } else {
+            TLOG("Failed to add fixing (" << iso_date(expiry) << "," << idx->name() << "," <<
+                value << ") because " << iso_date(expiry) << " is not a valid fixing date.");
+        }
+    } else {
+        TLOG("Failed to add fixing because no commodity future convention for " << idxConvId << ".");
+    }
+}
+
+}
+
 namespace ore {
 namespace data {
 
@@ -615,7 +648,11 @@ void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, cons
         const Date& expiry = quote->expiryDate();
         switch (type) {
         case PST::Future:
-            if (instruments.count(expiry) == 0) {
+            if (expiry == asof) {
+                TLOG("Quote " << quote->name() << " has expiry date " << io::iso_date(expiry) << " equal to asof" <<
+                    " so not adding to instruments. Attempt to add as fixing instead.");
+                addMarketFixing(priceSegment.conventionsId(), expiry, quote->quote()->value(), conventions);
+            } else if (instruments.count(expiry) == 0) {
                 instruments[expiry] = boost::make_shared<FuturePriceHelper>(quote->quote(), expiry);
             } else {
                 TLOG("Skipping quote, " << quote->name() << ", because its expiry date, " <<
@@ -746,6 +783,22 @@ void CommodityCurve::addOffPeakPowerInstruments(const Date& asof, const Loader& 
         const Date& expiry = kv.first;
         if (instruments.count(expiry) != 0) {
             TLOG("Skipping expiry " << io::iso_date(expiry) << " because it is already in the instrument set.");
+            continue;
+        }
+
+        // If the expiry is equal to the asof, we add fixings.
+        if (expiry == asof) {
+            TLOG("The off-peak power expiry date " << io::iso_date(expiry) << " is equal to asof" <<
+                " so not adding to instruments. Attempt to add fixing(s) instead.");
+            if (peakCalendar.isHoliday(expiry) && kv.second.second == Null<Real>()) {
+                DLOG("The peak portion of the quote on holiday " << io::iso_date(expiry) <<
+                    " is missing so can't add fixings.");
+            } else {
+                // Add the off-peak and if necessary peak fixing
+                addMarketFixing(oppIdxData->offPeakIndex(), expiry, kv.second.first, conventions);
+                if (peakCalendar.isHoliday(expiry))
+                    addMarketFixing(oppIdxData->peakIndex(), expiry, kv.second.second, conventions);
+            }
             continue;
         }
 
