@@ -977,5 +977,9 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);
 
+// build a notional leg for a given coupon leg, returns an empty Leg if not applicable
+Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requiredFixings,
+                     const boost::shared_ptr<Market>& market, const std::string& configuration);
+
 } // namespace data
 } // namespace ore
