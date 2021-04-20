@@ -67,7 +67,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setYieldCurveTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-6M"});
     parameters->interpolation() = "LogLinear";
-    parameters->extrapolate() = true;
     parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});

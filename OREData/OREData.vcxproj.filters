@@ -159,6 +159,9 @@
     <ClInclude Include="ored\utilities\strike.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\utilities\wildcard.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
     <ClInclude Include="ored\utilities\xmlutils.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
@@ -726,6 +729,9 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\strike.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\wildcard.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\xmlutils.cpp">

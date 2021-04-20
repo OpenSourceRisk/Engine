@@ -209,14 +209,22 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     boost::shared_ptr<YieldTermStructure> yieldCurve;
 
     if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
+        yieldCurve = boost::shared_ptr<YieldTermStructure>(boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
+            yieldCurveTimes, quotes, 0, TARGET(), dc,
+            parameters_->extrapolation() == "FlatZero" ? QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero
+                                                       : QuantExt::InterpolatedDiscountCurve::Extrapolation::flatFwd));
     } else {
         if (spreaded) {
             checkDayCounterConsistency(key, wrapper->dayCounter(), dc);
-            yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(wrapper, yieldCurveTimes, quotes);
+            yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(
+                wrapper, yieldCurveTimes, quotes,
+                parameters_->extrapolation() == "FlatZero" ? SpreadedDiscountCurve::Extrapolation::flatZero
+                                                           : SpreadedDiscountCurve::Extrapolation::flatFwd);
         } else {
-            yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(yieldCurveTimes, quotes, dc);
+            yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
+                yieldCurveTimes, quotes, dc,
+                parameters_->extrapolation() == "FlatZero" ? InterpolatedDiscountCurve2::Extrapolation::flatZero
+                                                           : InterpolatedDiscountCurve2::Extrapolation::flatFwd);
         }
     }
 
@@ -253,6 +261,12 @@ ScenarioSimMarket::ScenarioSimMarket(
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
+
+    // check ssm parameters
+    QL_REQUIRE(parameters_->extrapolation() == "" || parameters_->extrapolation() == "FlatZero" ||
+                   parameters_->extrapolation() == "FlatFwd",
+               "ScenarioSimMarket: Extrapolation ('" << parameters_->extrapolation()
+                                                     << "') must be set to 'FlatZero' or 'FlatFwd'");
 
     // Sort parameters so they get processed in correct order
     map<RiskFactorKey::KeyType, pair<bool, set<string>>> params;
@@ -357,16 +371,25 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::shared_ptr<YieldTermStructure> indexCurve;
                         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister &&
                             !useSpreadedTermStructures_) {
-                            indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                                yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
+                            indexCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
+                                yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc,
+                                parameters_->extrapolation() == "FlatZero"
+                                    ? QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero
+                                    : QuantExt::InterpolatedDiscountCurve::Extrapolation::flatFwd);
                         } else {
                             if (useSpreadedTermStructures_) {
                                 checkDayCounterConsistency(name, wrapperIndex->dayCounter(), dc);
-                                indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes));
+                                indexCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(
+                                    wrapperIndex, yieldCurveTimes, quotes,
+                                    parameters_->extrapolation() == "FlatZero"
+                                        ? SpreadedDiscountCurve::Extrapolation::flatZero
+                                        : SpreadedDiscountCurve::Extrapolation::flatFwd);
                             } else {
-                                indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                                indexCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
+                                    yieldCurveTimes, quotes, dc,
+                                    parameters_->extrapolation() == "FlatZero"
+                                        ? InterpolatedDiscountCurve2::Extrapolation::flatZero
+                                        : InterpolatedDiscountCurve2::Extrapolation::flatFwd);
                             }
                         }
 

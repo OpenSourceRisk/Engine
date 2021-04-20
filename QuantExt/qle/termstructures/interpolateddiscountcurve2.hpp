@@ -43,13 +43,14 @@ using namespace QuantLib;
 */
 class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject {
 public:
+    enum class Extrapolation { flatFwd, flatZero };
     //! \name Constructors
     //@{
     //! times based constructor, note that times should be consistent with day counter dc passed
-    InterpolatedDiscountCurve2(const std::vector<Time>& times, const std::vector<Handle<Quote> >& quotes,
-                               const DayCounter& dc)
-        : YieldTermStructure(dc), times_(times), quotes_(quotes), data_(times_.size(), 1.0),
-          today_(Settings::instance().evaluationDate()) {
+    InterpolatedDiscountCurve2(const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes,
+                               const DayCounter& dc, const Extrapolation extrapolation = Extrapolation::flatFwd)
+        : YieldTermStructure(dc), times_(times), quotes_(quotes), extrapolation_(extrapolation),
+          data_(times_.size(), 1.0), today_(Settings::instance().evaluationDate()) {
         for (Size i = 0; i < quotes.size(); ++i) {
             QL_REQUIRE(times_.size() > 1, "at least two times required");
             QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
@@ -61,10 +62,10 @@ public:
         registerWith(Settings::instance().evaluationDate());
     }
     //! date based constructor
-    InterpolatedDiscountCurve2(const std::vector<Date>& dates, const std::vector<Handle<Quote> >& quotes,
-                               const DayCounter& dc)
-        : YieldTermStructure(dc), times_(dates.size(), 0.0), quotes_(quotes), data_(dates.size(), 1.0),
-          today_(Settings::instance().evaluationDate()) {
+    InterpolatedDiscountCurve2(const std::vector<Date>& dates, const std::vector<Handle<Quote>>& quotes,
+                               const DayCounter& dc, const Extrapolation extrapolation = Extrapolation::flatFwd)
+        : YieldTermStructure(dc), times_(dates.size(), 0.0), quotes_(quotes), extrapolation_(extrapolation),
+          data_(dates.size(), 1.0), today_(Settings::instance().evaluationDate()) {
         for (Size i = 0; i < dates.size(); ++i)
             times_[i] = dc.yearFraction(today_, dates[i]);
         for (Size i = 0; i < quotes.size(); ++i) {
@@ -106,16 +107,20 @@ protected:
         calculate();
         if (t <= this->times_.back())
             return (*interpolation_)(t, true);
-        // flat fwd extrapolation
         Time tMax = this->times_.back();
         DiscountFactor dMax = this->data_.back();
-        Rate instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
-        return dMax * std::exp(-instFwdMax * (t - tMax));
+        if (extrapolation_ == Extrapolation::flatFwd) {
+            Rate instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
+            return dMax * std::exp(-instFwdMax * (t - tMax));
+        } else {
+            return std::pow(dMax, t / tMax);
+        }
     }
 
 private:
     std::vector<Time> times_;
-    std::vector<Handle<Quote> > quotes_;
+    std::vector<Handle<Quote>> quotes_;
+    Extrapolation extrapolation_;
     mutable std::vector<Real> data_;
     mutable Date today_;
     boost::shared_ptr<Interpolation> interpolation_;
