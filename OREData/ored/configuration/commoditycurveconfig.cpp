@@ -239,7 +239,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
         }
         processSegments(priceSegments);
 
-        dayCountId_ = XMLUtils::getChildValue(n, "DayCounter", false);
+        dayCountId_ = XMLUtils::getChildValue(node, "DayCounter", false);
         interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false);
 
         if (XMLNode* bcn = XMLUtils::getChildNode(node, "BootstrapConfig")) {
