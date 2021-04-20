@@ -35,7 +35,7 @@ using namespace QuantLib;
 //! %SEK SIOR
 /*! %SEK T/N rate
 
-\remark Using Denmark calendar.
+\remark Using Sweden calendar.
 
 \ingroup indexes
 */
