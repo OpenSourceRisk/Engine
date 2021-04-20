@@ -71,14 +71,15 @@ public:
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
+    Size rows() const { return data_[0].size(); }
     const string& header(Size i) const { return headers_[i]; }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
     Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
     const vector<ReportType>& data(Size i) const { return data_[i]; }
     
-    void toFile(const string& filename, const char sep, const bool commentCharacter, char quoteChar,
-                const string& nullString) {
+    void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
+                const string& nullString = "#N/A") {
         
         CSVFileReport cReport(filename, sep, commentCharacter, quoteChar,
                               nullString);
