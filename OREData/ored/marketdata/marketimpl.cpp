@@ -339,16 +339,25 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         QL_REQUIRE(tokens[0].size() == 3, "invalid currency code in " << swapIndex);
         QL_REQUIRE(tokens[1] == "CMS", "expected CMS as middle token in " << swapIndex);
 
-        auto di = iborIndex(discountIndex, configuration)->forwardingTermStructure();
+        Handle<YieldTermStructure> discounting, forwarding;
+        boost::shared_ptr<IborIndex> dummeyIndex;
+        if (tryParseIborIndex(discountIndex, dummeyIndex))
+            discounting = iborIndex(discountIndex, configuration)->forwardingTermStructure();
+        else
+            discounting = yieldCurve(discountIndex, configuration);
 
         auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions_.get(swapIndex));
         QL_REQUIRE(swapCon, "expected SwapIndexConvention for " << swapIndex);
         auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions_.get(swapCon->conventions()));
         QL_REQUIRE(con, "expected IRSwapConvention for " << swapCon->conventions());
+        
+        string fi = con->indexName();
+        if (isGenericIborIndex(fi))
+            forwarding = discounting;
+        else
+            forwarding = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
 
-        auto fi = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
-
-        boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, fi, di, con, swapCon);
+        boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, forwarding, discounting, con, swapCon);
         swapIndices_[make_pair(configuration, swapIndex)] = Handle<SwapIndex>(si);
     } catch (std::exception& e) {
         QL_FAIL("Failure in MarketImpl::addSwapIndex() with index " << swapIndex << " : " << e.what());
