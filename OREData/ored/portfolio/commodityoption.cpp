@@ -61,7 +61,7 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
         // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
 
-        const auto& index = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
+        auto index = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
 
         // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
         Date expiryDate;
