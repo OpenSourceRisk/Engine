@@ -246,10 +246,10 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);
-    if (dimension_ == Dimension::SmileVannaVolga || dimension_ == Dimension::SmileDelta) {
+    if (!fxForeignYieldCurveID_.empty())
         XMLUtils::addChild(doc, node, "FXForeignCurveID", fxForeignYieldCurveID_);
+    if (!fxDomesticYieldCurveID_.empty())
         XMLUtils::addChild(doc, node, "FXDomesticCurveID", fxDomesticYieldCurveID_);
-    }
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
