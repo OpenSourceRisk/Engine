@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file dkkois.hpp
-    \brief SKK T/N rate
+/*! \file seksior.hpp
+    \brief SEK T/N rate
     \ingroup indexes
 */
 
