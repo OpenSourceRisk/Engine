@@ -21,6 +21,7 @@
 #include <ql/errors.hpp>
 #include <ql/math/comparison.hpp>
 
+#include <numeric>
 #include <sstream>
 
 namespace QuantExt {
@@ -37,24 +38,33 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     QL_REQUIRE(!strikes_.empty(), "CarrMadanMarginalProbability: input moneyness is empty");
 
+    // build sort permutation for strikes
+
+    std::vector<Size> perm(strikes.size());
+    std::iota(perm.begin(), perm.end(), 0);
+    std::sort(perm.begin(), perm.end(), [this](Size a, Size b) { return strikes_[a] < strikes_[b]; });
+
+    // check strikes are different (and increasing for the found permutation)
+
     for (Size i = 1; i < strikes_.size(); ++i) {
-        QL_REQUIRE(strikes_[i] > strikes_[i - 1] && !close_enough(strikes_[i], strikes_[i - 1]),
-                   "CarrMadanMarginalProbability: strikes not increasing at index "
-                       << (i - 1) << ", " << i << ": " << strikes_[i - 1] << ", " << strikes_[i]);
+        QL_REQUIRE(strikes_[perm[i]] > strikes_[perm[i - 1]] && !close_enough(strikes_[perm[i]], strikes_[perm[i - 1]]),
+                   "CarrMadanMarginalProbability: duplicate strikes at "
+                       << perm[i - 1] << ", " << perm[i] << ": " << strikes[perm[i - 1]] << ", " << strikes[perm[i]]);
     }
 
-    QL_REQUIRE(strikes_.front() > 0.0 || close_enough(strikes_.front(), 0.0),
-               "CarrMadanMarginalProbability: all input strikes must be positive or zero, got " << strikes_.front());
+    QL_REQUIRE(strikes_[perm[0]] > 0.0 || close_enough(strikes_[perm[0]], 0.0),
+               "CarrMadanMarginalProbability: all input strikes must be positive or zero, got " << strikes_[perm[0]]);
 
     // add strike 0 and corresponding call price (= forward), if not already present
 
     bool zeroStrikeAdded = false;
-    if (!close_enough(strikes_.front(), 0.0)) {
-        strikes_.insert(strikes_.begin(), 0.0);
-        callPrices_.insert(callPrices_.begin(), forward_);
+    if (!close_enough(strikes_[perm[0]], 0.0)) {
+        strikes_.push_back(0.0);
+        callPrices_.push_back(forward_);
+        perm.insert(perm.begin(), strikes_.size() - 1);
         zeroStrikeAdded = true;
     } else {
-        QL_REQUIRE(close_enough(callPrices_.front(), forward_),
+        QL_REQUIRE(close_enough(callPrices_[perm[0]], forward_),
                    "CarrMadanMarginalProbability: call price for strike 0 ("
                        << callPrices_.front() << ") should match forward (" << forward_ << ")");
     }
@@ -68,16 +78,18 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     std::vector<Real> Q(strikes_.size() - 1);
     for (Size i = 1; i < strikes_.size(); ++i) {
-        Q[i - 1] = (callPrices_[i - 1] - callPrices_[i]) / (strikes_[i] - strikes_[i - 1]);
+        Q[i - 1] = (callPrices_[perm[i - 1]] - callPrices_[perm[i]]) / (strikes_[perm[i]] - strikes_[perm[i - 1]]);
     }
 
     // compute BS
 
     std::vector<Real> BS(strikes_.size() - 2);
     for (Size i = 1; i < strikes_.size() - 1; ++i) {
-        BS[i - 1] = callPrices_[i - 1] -
-                    (strikes_[i + 1] - strikes_[i - 1]) / (strikes_[i + 1] - strikes_[i]) * callPrices_[i] +
-                    (strikes_[i] - strikes_[i - 1]) / (strikes_[i + 1] - strikes_[i]) * callPrices_[i + 1];
+        BS[i - 1] = callPrices_[perm[i - 1]] -
+                    (strikes_[perm[i + 1]] - strikes_[perm[i - 1]]) / (strikes_[perm[i + 1]] - strikes_[perm[i]]) *
+                        callPrices_[perm[i]] +
+                    (strikes_[perm[i]] - strikes_[perm[i - 1]]) / (strikes_[perm[i + 1]] - strikes_[perm[i]]) *
+                        callPrices_[perm[i + 1]];
     }
 
     // perform the checks 1, 2 from the paper, and populate the set of arbitrage
@@ -90,8 +102,8 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     for (Size i = 0; i < Q.size(); ++i) {
         if ((Q[i] < 0.0 && !close_enough(Q[i], 0.0)) || (Q[i] > 1.0 && !close_enough(Q[i], 1.0))) {
-            callSpreadArbitrage_[i] = true;
-            callSpreadArbitrage_[i + 1] = true;
+            callSpreadArbitrage_[perm[i]] = true;
+            callSpreadArbitrage_[perm[i + 1]] = true;
             smileIsArbitrageFree_ = false;
         }
     }
@@ -100,9 +112,9 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     for (Size i = 0; i < BS.size(); ++i) {
         if (BS[i] < -1.0E-10) {
-            butterflyArbitrage_[i] = true;
-            butterflyArbitrage_[i + 1] = true;
-            butterflyArbitrage_[i + 2] = true;
+            butterflyArbitrage_[perm[i]] = true;
+            butterflyArbitrage_[perm[i + 1]] = true;
+            butterflyArbitrage_[perm[i + 2]] = true;
             smileIsArbitrageFree_ = false;
         }
     }
@@ -110,20 +122,20 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
     // compute the density q
 
     q_.resize(strikes_.size());
-    q_[0] = 1.0 - Q.front();
+    q_[perm[0]] = 1.0 - Q.front();
     for (Size i = 0; i < Q.size() - 1; ++i) {
-        q_[i + 1] = Q[i] - Q[i + 1];
+        q_[perm[i + 1]] = Q[i] - Q[i + 1];
     }
-    q_.back() = Q.back();
+    q_[perm.back()] = Q.back();
 
     // remove zero strike again, if not present from the start
 
     if (zeroStrikeAdded) {
-        strikes_.erase(strikes_.begin());
-        callPrices_.erase(callPrices_.begin());
-        callSpreadArbitrage_.erase(callSpreadArbitrage_.begin());
-        butterflyArbitrage_.erase(butterflyArbitrage_.begin());
-        q_.erase(q_.begin());
+        strikes_.erase(std::next(strikes_.end(), -1));
+        callPrices_.erase(std::next(callPrices_.end(), -1));
+        callSpreadArbitrage_.erase(std::next(callSpreadArbitrage_.begin(), perm.front()));
+        butterflyArbitrage_.erase(std::next(butterflyArbitrage_.begin(), perm.front()));
+        q_.erase(std::next(q_.begin(), perm.front()));
     }
 }
 

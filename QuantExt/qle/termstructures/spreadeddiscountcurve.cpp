@@ -23,9 +23,10 @@
 namespace QuantExt {
 
 SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve,
-                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes)
+                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes,
+                                             const Extrapolation extrapolation)
     : YieldTermStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times), quotes_(quotes),
-      data_(times_.size(), 1.0) {
+      extrapolation_(extrapolation), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedDiscountCurve: at least two times required");
     QL_REQUIRE(times_.size() == quotes.size(), "SpreadedDiscountCurve: size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "SpreadedDiscountCurve: first time must be 0, got " << times_[0]);
@@ -61,13 +62,16 @@ void SpreadedDiscountCurve::performCalculations() const {
 
 DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
     calculate();
-    if (t <= this->times_.back())
-        return referenceCurve_->discount(t) * (*interpolation_)(t, true);
-    // flat fwd extrapolation
     Time tMax = this->times_.back();
     DiscountFactor dMax = this->data_.back();
-    Rate instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
-    return referenceCurve_->discount(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+    if (t <= this->times_.back())
+        return referenceCurve_->discount(t) * (*interpolation_)(t, true);
+    if (extrapolation_ == Extrapolation::flatFwd) {
+        Rate instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
+        return referenceCurve_->discount(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+    } else {
+        return referenceCurve_->discount(t) * std::pow(dMax, t / tMax);
+    }
 }
 
 } // namespace QuantExt

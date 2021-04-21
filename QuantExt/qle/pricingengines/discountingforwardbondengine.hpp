@@ -51,7 +51,10 @@ public:
 
     void calculate() const;
     Real calculateBondNpv(Date, Date) const;
-    boost::tuple<Real, Real> calculateForwardContractPresentValue(Real, Real, Date, Date, Date, bool) const;
+    boost::tuple<Real, Real> calculateForwardContractPresentValue(Real spotValue, Real cmpPayment, Date npvDate,
+                                                                  Date computeDate, Date settlementDate,
+                                                                  bool cashSettlement, Date cmpPaymentDate,
+                                                                  bool dirty) const;
 
     const Handle<YieldTermStructure>& discountCurve() const { return discountCurve_; }
     const Handle<YieldTermStructure>& incomeCurve() const { return incomeCurve_; }

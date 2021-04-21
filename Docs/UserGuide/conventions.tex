@@ -453,7 +453,7 @@ rate on the short swap minus the fair rate on the long swap. If not provided, it
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{FX Conventions}
+\subsubsection{FX Conventions}\label{sss:fx_convention}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The
 structure of this node is shown in Listing \ref{lst:fx_conventions}.
@@ -787,7 +787,7 @@ The meaning of the elements is as follows:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-\subsubsection{FX Option Conventions} 
+\subsubsection{FX Option Conventions}\label{sss:fx_option_conv}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 A node with name \emph{FxOption} is used to store conventions for FX option quotes for a given currency pair. The 
 structure of this node is shown in Listing \ref{lst:fx_option_conventions}. 
@@ -795,14 +795,17 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
 \begin{listing}[H] 
 %\hrule\medskip 
 \begin{minted}[fontsize=\footnotesize]{xml}
-<FxOption> 
-  <Id> </Id> 
-  <AtmType> </AtmType> 
-  <DeltaType> </DeltaType> 
-  <SwitchTenor> </SwitchTenor>
-  <LongTermAtmType> </LongTermAtmType>
-  <LongTermDeltaType> </LongTermDeltaType>
-</FxOption> 
+<FxOption>
+  <Id>EUR-USD-FXOPTION</Id>
+  <FXConventionID>EUR-USD-FX</FXConventionID>
+  <AtmType>AtmDeltaNeutral</AtmType>
+  <DeltaType>Spot</DeltaType>
+  <SwitchTenor>2Y</SwitchTenor>
+  <LongTermAtmType>AtmDeltaNeutral</LongTermAtmType>
+  <LongTermDeltaType>Fwd</LongTermDeltaType>
+  <RiskReversalInFavorOf>Call</RiskReversalInFavorOf>
+  <ButterflyStyle>Broker</ButterflyStyle>
+</FxOption>
 \end{minted} 
 \caption{FX option conventions} 
 \label{lst:fx_option_conventions} 
@@ -810,17 +813,21 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
  
  
 The meanings of the various elements in this node are as follows: 
-\begin{itemize} 
+\begin{itemize}
+\item FXConventionID: The FX convention for the currency pair (see \ref{sss:fx_convention}). Optional, if not given, the
+  FX spot days default to $2$ and the advance calendar defaults to source ccy + target ccy default calendars.
 \item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd, 
 AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
 \item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 
     PaFwd}).
-\item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is > switch
-  tenor
+\item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is greater
+  or equal the switch tenor (``long term'' atm and delta type)
 \item LongTermAtmType [Mandatory if and only if SwitchTenor is given]: ATM type to use for options with tenor > switch
   point, if SwitchTenor is given
 \item LongTermDeltaType [Mandatory if and only if SwitchTenor is given]: Delta type to use for options with tenor >
   switch point, if SwitchTenor is given
+\item RiskReversalInFavorOf [Optional]: Call (default), Put. Only relevant for BF, RR market data input.
+\item ButterflyStyle [Optional]: Broker (default), Smile. Only relevant for BF, RR market data input.
 \end{itemize} 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

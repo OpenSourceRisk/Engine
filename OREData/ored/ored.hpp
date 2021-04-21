@@ -194,5 +194,6 @@
 #include <ored/utilities/timeperiod.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/vectorutils.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/version.hpp>

@@ -1024,7 +1024,23 @@ void YieldCurve::buildFittedBondCurve() {
         Array guess;
         // first guess is the default guess (empty array, will be set to a zero vector in
         // FittedBondDiscountCurve::calculate())
-        if (i > 0) {
+        if (i == 0) {
+            if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
+                // first guess will be based on the last bond yield and first bond yield
+                guess = Array(4);
+                Integer maxMaturity = static_cast<Integer>(
+                    std::distance(securityMaturityDates.begin(),
+                                  std::max_element(securityMaturityDates.begin(), securityMaturityDates.end())));
+                Integer minMaturity = static_cast<Integer>(
+                    std::distance(securityMaturityDates.begin(),
+                                  std::min_element(securityMaturityDates.begin(), securityMaturityDates.end())));
+                guess[0] = marketYields[maxMaturity];            // long term yield
+                guess[1] = marketYields[minMaturity] - guess[0]; // short term component
+                guess[2] = 0.0;
+                guess[3] = 5.0;
+                DLOG("using smart NelsonSiegel guess for trial #" << (i + 1) << ": " << guess);
+            }
+        } else {
             auto seq = halton.nextSequence();
             guess = Array(seq.value.begin(), seq.value.end());
             if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
@@ -1032,6 +1048,7 @@ void YieldCurve::buildFittedBondCurve() {
                 guess[1] = guess[1] * 0.10 - 0.05; // short term component
                 guess[2] = guess[2] * 0.10 - 0.05; // medium term component
                 guess[3] = guess[3] * 5.0;         // decay factor
+                DLOG("using random NelsonSiegel guess for trial #" << (i + 1) << ": " << guess);
             } else {
                 QL_FAIL("randomised optimisation seed not implemented");
             }

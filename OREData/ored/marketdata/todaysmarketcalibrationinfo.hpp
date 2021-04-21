@@ -102,6 +102,8 @@ struct FxEqVolCalibrationInfo {
     std::string longTermAtmType;
     std::string longTermDeltaType;
     std::string switchTenor;
+    std::string riskReversalInFavorOf;
+    std::string butterflyStyle;
     bool isArbitrageFree;
     std::vector<QuantLib::Date> expiryDates;
     std::vector<double> times;

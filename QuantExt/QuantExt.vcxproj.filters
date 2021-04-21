@@ -1083,6 +1083,12 @@
     <ClInclude Include="qle\models\normalsabrsmilesection.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfacebfrr.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackdeltautilities.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\currencies\currencycomparator.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
@@ -1882,6 +1888,12 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\offpeakpowerindex.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackdeltautilities.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

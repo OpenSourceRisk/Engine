@@ -1013,7 +1013,8 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
 AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},   {"FX", AssetClass::FX},
                                                    {"COM", AssetClass::COM}, {"IR", AssetClass::IR},
-                                                   {"INF", AssetClass::INF}, {"CR", AssetClass::CR}};
+                                                   {"INF", AssetClass::INF}, {"CR", AssetClass::CR},
+                                                   {"BOND", AssetClass::BOND} };
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -1037,6 +1038,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "INF";
     case AssetClass::CR:
         return os << "CR";
+    case AssetClass::BOND:
+        return os << "BOND";
     default:
         QL_FAIL("Unknown AssetClass");
     }
