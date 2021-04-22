@@ -598,6 +598,7 @@
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
     <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
+    <ClInclude Include="qle\indexes\offpeakpowerindex.hpp" />
     <ClInclude Include="qle\indexes\region.hpp" />
     <ClInclude Include="qle\indexes\secpi.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
@@ -908,6 +909,7 @@
     <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\sofr.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
+    <ClCompile Include="qle\indexes\offpeakpowerindex.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\brlcdiswap.cpp" />

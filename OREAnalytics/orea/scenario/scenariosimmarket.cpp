@@ -2072,7 +2072,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                         }
 
-                        Handle<PriceTermStructure> simCommodityCurve;
+                        Handle<PriceTermStructure> pts;
                         if (param.second.first && useSpreadedTermStructures_) {
                             // Created spreaded commodity price curve if we simulate commodities and spreads should be
                             // used
@@ -2084,22 +2084,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 simulationTimes.insert(simulationTimes.begin(), 0.0);
                                 quotes.insert(quotes.begin(), quotes.front());
                             }
-                            simCommodityCurve =
+                            pts =
                                 Handle<PriceTermStructure>(boost::make_shared<SpreadedPriceTermStructure>(
                                     initialCommodityCurve, simulationTimes, quotes));
                         } else {
                             // Create a commodity price curve with simulation tenors as pillars and store
                             // Hard-coded linear flat interpolation here - may need to make this more dynamic
-                            simCommodityCurve =
+                            pts =
                                 Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
                                     simulationTenors, quotes, commodityCurveDayCounter,
                                     initialCommodityCurve->currency()));
                         }
-                        simCommodityCurve->enableExtrapolation(allowsExtrapolation);
+                        pts->enableExtrapolation(allowsExtrapolation);
 
-                        commodityCurves_.emplace(piecewise_construct,
+                        Handle<CommodityIndex> commIdx(parseCommodityIndex(name, conventions_, false, pts));
+                        commodityIndices_.emplace(piecewise_construct,
                                                  forward_as_tuple(Market::defaultConfiguration, name),
-                                                 forward_as_tuple(simCommodityCurve));
+                                                 forward_as_tuple(commIdx));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name);
                     }

@@ -32,8 +32,6 @@
 
 using namespace std;
 using namespace QuantLib;
-using QuantExt::CommodityFuturesIndex;
-using QuantExt::CommoditySpotIndex;
 using QuantExt::PriceTermStructure;
 
 namespace ore {
@@ -55,16 +53,15 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
     QL_REQUIRE(strike_ > 0, "Commodity option requires a positive strike");
 
-    // Get the price curve for the commodity.
-    const boost::shared_ptr<Market>& market = engineFactory->market();
-    Handle<PriceTermStructure> priceCurve =
-        market->commodityPriceCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
-
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
+    const boost::shared_ptr<Market>& market = engineFactory->market();
+    index_ = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
     if (!isFuturePrice_ || *isFuturePrice_) {
 
         // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
+
+        auto index = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
 
         // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
         Date expiryDate;
@@ -78,11 +75,9 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
             expiryDate = parseDate(expiryDates[0]);
         }
 
-        index_ = boost::make_shared<CommodityFuturesIndex>(assetName_, expiryDate, NullCalendar(), priceCurve);
+        // Clone the index with the relevant expiry date.
+        index_ = index->clone(expiryDate);
 
-    } else {
-        // If the underlying is a commodity spot, create a spot index.
-        index_ = boost::make_shared<CommoditySpotIndex>(assetName_, NullCalendar(), priceCurve);
     }
 
     VanillaOptionTrade::build(engineFactory);

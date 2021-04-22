@@ -32,6 +32,7 @@ using std::string;
 using namespace QuantLib;
 
 using QuantExt::PriceTermStructure;
+using QuantExt::CommodityIndex;
 
 namespace ore {
 namespace data {
@@ -258,8 +259,12 @@ Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key,
 
 Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName,
                                                            const string& configuration) const {
+    return commodityIndex(commodityName, configuration)->priceCurve();
+}
+
+Handle<CommodityIndex> MarketImpl::commodityIndex(const string& commodityName, const string& configuration) const {
     require(MarketObject::CommodityCurve, commodityName, configuration);
-    return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");
+    return lookup<Handle<CommodityIndex>>(commodityIndices_, commodityName, configuration, "commodity indices");
 }
 
 Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName,
@@ -453,13 +458,12 @@ void MarketImpl::refresh(const string& configuration) {
                     it->second.insert(*y);
             }
         }
-        // for (auto& x : baseCpis_) {
-        //     if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-        //         it->second.insert(*x.second);
-        // }
-        for (auto& x : commodityCurves_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(*x.second);
+        for (auto& x : commodityIndices_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                const auto& pts = x.second->priceCurve();
+                if (!pts.empty())
+                    it->second.insert(*pts);
+            }
         }
         for (auto& x : commodityVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)

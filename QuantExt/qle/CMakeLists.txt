@@ -62,6 +62,7 @@ indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
 indexes/ibor/sofr.cpp
 indexes/inflationindexwrapper.cpp
+indexes/offpeakpowerindex.cpp
 indexes/region.cpp
 instruments/averageois.cpp
 instruments/brlcdiswap.cpp
@@ -359,6 +360,7 @@ indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
+indexes/offpeakpowerindex.hpp
 indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp

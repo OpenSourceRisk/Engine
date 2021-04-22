@@ -56,6 +56,7 @@
 using namespace std;
 using namespace QuantLib;
 
+using QuantExt::CommodityIndex;
 using QuantExt::EquityIndex;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
@@ -645,10 +646,12 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     requiredCommodityCurves_);
                 itr = requiredCommodityCurves_.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
             }
+
             DLOG("Adding CommodityCurve, " << node.name << ", with spec " << *commodityCurveSpec << " to configuration "
                                            << configuration);
-            commodityCurves_[make_pair(configuration, node.name)] =
-                Handle<PriceTermStructure>(itr->second->commodityPriceCurve());
+            Handle<PriceTermStructure> pts(itr->second->commodityPriceCurve());
+            Handle<CommodityIndex> commIdx(parseCommodityIndex(node.name, *conventions_, false, pts));
+            commodityIndices_[make_pair(configuration, node.name)] = commIdx;
             break;
         }
 

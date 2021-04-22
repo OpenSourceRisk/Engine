@@ -551,14 +551,22 @@
     </xs:all>
   </xs:complexType>
   
+  <xs:complexType name="offPeakDailyType">
+    <xs:all>
+      <xs:element type="quoteType" name="OffPeakQuotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="PeakQuotes" minOccurs="1" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+  
   <xs:complexType name="priceSegmentType">
     <xs:all>
       <xs:element type="priceSegmentTypeType" name="Type" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PeakPriceCurveId" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PeakPriceCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="offPeakDailyType" name="OffPeakDaily" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   

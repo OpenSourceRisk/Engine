@@ -820,6 +820,7 @@
       <xs:enumeration value="AveragingFuture"/>
       <xs:enumeration value="AveragingSpot"/>
       <xs:enumeration value="AveragingOffPeakPower"/>
+      <xs:enumeration value="OffPeakPowerDaily"/>
     </xs:restriction>
   </xs:simpleType>
 

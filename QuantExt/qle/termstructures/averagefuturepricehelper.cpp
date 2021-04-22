@@ -65,8 +65,7 @@ void AverageFuturePriceHelper::init(const boost::shared_ptr<CommodityIndex>& ind
 
     // Make a copy of the commodity index linked to this price helper's price term structure handle, 
     // termStructureHandle_.
-    auto indexClone = boost::make_shared<CommodityIndex>(index->underlyingName(), Date(),
-        index->fixingCalendar(), index->keepDays(), termStructureHandle_);
+    auto indexClone = index->clone(Date(), termStructureHandle_);
 
     // While bootstrapping is happening, this price helper's price term structure handle, termStructureHandle_, will 
     // be updated multiple times. We don't want the index notified each time.
