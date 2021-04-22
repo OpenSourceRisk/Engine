@@ -27,6 +27,10 @@
 #include <ored/portfolio/optionpaymentdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 
+#include <ql/cashflow.hpp>
+#include <ql/exercise.hpp>
+#include <ql/time/date.hpp>
+
 namespace ore {
 namespace data {
 
@@ -89,13 +93,9 @@ public:
 
     //! \name Setters
     //@{
-    void setExerciseDates(const std::vector<std::string>& exerciseDates) {
-        exerciseDates_ = exerciseDates;
-    }
+    void setExerciseDates(const std::vector<std::string>& exerciseDates) { exerciseDates_ = exerciseDates; }
     void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
-    void setPaymentData(const OptionPaymentData& paymentData) {
-        paymentData_ = paymentData;
-    }
+    void setPaymentData(const OptionPaymentData& paymentData) { paymentData_ = paymentData; }
     //@}
 
     //! \name Serialisation
@@ -105,9 +105,7 @@ public:
     //@}
 
     //! Automatic exercise assumed false if not explicitly provided.
-    bool isAutomaticExercise() const {
-        return automaticExercise_ ? *automaticExercise_ : false;
-    }
+    bool isAutomaticExercise() const { return automaticExercise_ ? *automaticExercise_ : false; }
 
 private:
     string longShort_;    // long or short
@@ -135,5 +133,24 @@ private:
     boost::optional<OptionExerciseData> exerciseData_;
     boost::optional<OptionPaymentData> paymentData_;
 };
+
+/* Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
+   Only future exercise dates that exercise into a whole future accrual period of the underlying are kept.
+   If no exercise dates are left, exercise() will return a nullptr. */
+
+class ExerciseBuilder {
+public:
+    ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg> legs);
+
+    boost::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
+    const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
+    const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
+
+private:
+    boost::shared_ptr<QuantLib::Exercise> exercise_;
+    std::vector<QuantLib::Date> exerciseDates_;
+    std::vector<QuantLib::Date> noticeDates_;
+};
+
 } // namespace data
 } // namespace ore

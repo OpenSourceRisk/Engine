@@ -55,6 +55,7 @@
 #include <qle/cashflows/cpicouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
@@ -66,7 +67,6 @@
 
 using namespace QuantLib;
 using namespace QuantExt;
-
 
 namespace ore {
 namespace data {
@@ -198,7 +198,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
                                                 gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
-    if(localCapFloor_)
+    if (localCapFloor_)
         XMLUtils::addChild(doc, node, "LocalCapFloor", localCapFloor_);
     return node;
 }
@@ -262,9 +262,9 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
-    if(finalFlowCap_ != Null<Real>())
+    if (finalFlowCap_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FinalFlowCap", finalFlowCap_);
-    if(finalFlowFloor_ != Null<Real>())
+    if (finalFlowFloor_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FinalFlowFloor", finalFlowFloor_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
@@ -507,7 +507,7 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     if (!initialPriceCurrency_.empty())
         XMLUtils::addChild(doc, node, "InitialPriceCurrency", initialPriceCurrency_);
     XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
-    
+
     if (valuationSchedule_.hasData()) {
         XMLNode* schedNode = valuationSchedule_.toXML(doc);
         XMLUtils::setNodeName(doc, schedNode, "ValuationSchedule");
@@ -1155,9 +1155,9 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         QL_REQUIRE(!start.empty(), "makeCPILeg(): only one schedule date, a 'StartDate' must be given.");
         cpiLeg.withStartDate(parseDate(start));
     } else if (!start.empty()) {
-        DLOG("Schedule with more than 2 dates was provided. The first schedule date " <<
-            io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " <<
-            start << " is not used.");
+        DLOG("Schedule with more than 2 dates was provided. The first schedule date "
+             << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
+             << " is not used.");
     }
 
     bool couponCap = cpiLegData->caps().size() > 0;
@@ -1567,11 +1567,9 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
             TLOG("Cannot find currency for equity " << equityCurve->name());
 
         // initial price currency must match leg or equity currency
-        QL_REQUIRE(initialPriceCurrency == dataCurrency ||
-            initialPriceCurrency == eqCurrency || eqCurrency.empty(),
-                   "initial price ccy (" << initialPriceCurrency << ") must match either leg ccy ("
-                                         << dataCurrency << ") or equity ccy (if given, got '"
-                                         << eqCurrency << "')");
+        QL_REQUIRE(initialPriceCurrency == dataCurrency || initialPriceCurrency == eqCurrency || eqCurrency.empty(),
+                   "initial price ccy (" << initialPriceCurrency << ") must match either leg ccy (" << dataCurrency
+                                         << ") or equity ccy (if given, got '" << eqCurrency << "')");
         initialPriceIsInTargetCcy = initialPriceCurrency == dataCurrency;
         // adjust for minor currency
         initialPrice = convertMinorToMajorCurrency(eqLegData->initialPriceCurrency(), initialPrice);
@@ -1712,8 +1710,7 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
         if (i > 0 && schedule[i] >= startDate && schedule[i] < endDate) {
             nominals[i] = nominals[i - 1] - amort;
             lastAmortDate = schedule[i];
-        }
-        else if (i > 0 && lastAmortDate > Date::minDate())
+        } else if (i > 0 && lastAmortDate > Date::minDate())
             nominals[i] = nominals[i - 1];
         Real dcf = dc.yearFraction(schedule[i], schedule[i + 1]);
         Real rate = i < rates.size() ? rates[i] : rates.back();
@@ -1941,7 +1938,7 @@ Leg joinLegs(const std::vector<Leg>& legs) {
     Size lastLeg = Null<Size>();
     for (Size i = 0; i < legs.size(); ++i) {
         // skip empty legs
-        if(legs[i].empty())
+        if (legs[i].empty())
             continue;
         // check if the periods of adjacent legs are consistent
         if (lastLeg != Null<Size>()) {
@@ -1960,6 +1957,90 @@ Leg joinLegs(const std::vector<Leg>& legs) {
         masterLeg.insert(masterLeg.end(), legs[i].begin(), legs[i].end());
     }
     return masterLeg;
+}
+
+Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requiredFixings,
+                     const boost::shared_ptr<Market>& market, const std::string& configuration) {
+
+    if (!data.isNotResetXCCY()) {
+        // If we have an FX resetting leg, add the notional amount at the start and end of each coupon period.
+        DLOG("Building Resetting XCCY Notional leg");
+        Real foreignNotional = data.foreignAmount();
+
+        QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
+        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration,
+                                    data.fixingCalendar(), data.fixingDays(), true);
+
+        Leg resettingLeg;
+        for (Size j = 0; j < leg.size(); j++) {
+
+            boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(leg[j]);
+            QL_REQUIRE(c, "Expected each cashflow in FX resetting leg to be of type Coupon");
+
+            // Build a pair of notional flows, one at the start and one at the end of the accrual period.
+            // They both have the same FX fixing date => same amount in this leg's currency.
+            boost::shared_ptr<CashFlow> outCf;
+            boost::shared_ptr<CashFlow> inCf;
+            Date fixingDate;
+            if (j == 0) {
+                // Two possibilities for first coupon:
+                // 1. we have not been given a domestic notional so it is an FX linked coupon
+                // 2. we have been given an explicit domestic notional so it is a simple cashflow
+                if (data.notionals().size() == 0) {
+                    fixingDate = fxIndex->fixingDate(c->accrualStartDate());
+                    if (data.notionalInitialExchange()) {
+                        outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
+                                                                     -foreignNotional, fxIndex);
+                    }
+                    inCf =
+                        boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional, fxIndex);
+                } else {
+                    if (data.notionalInitialExchange()) {
+                        outCf = boost::make_shared<SimpleCashFlow>(-c->nominal(), c->accrualStartDate());
+                    }
+                    inCf = boost::make_shared<SimpleCashFlow>(c->nominal(), c->accrualEndDate());
+                }
+            } else {
+                fixingDate = fxIndex->fixingDate(c->accrualStartDate());
+                outCf =
+                    boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional, fxIndex);
+                // we don't want a final one, unless there is notional exchange
+                if (j < leg.size() - 1 || data.notionalFinalExchange()) {
+                    inCf =
+                        boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional, fxIndex);
+                }
+            }
+
+            // Add the cashflows to the notional leg if they have been populated
+            if (outCf) {
+                resettingLeg.push_back(outCf);
+                if (fixingDate != Date())
+                    requiredFixings.addFixingDate(fixingDate, data.fxIndex(), outCf->date());
+            }
+            if (inCf) {
+                resettingLeg.push_back(inCf);
+                if (fixingDate != Date())
+                    requiredFixings.addFixingDate(fixingDate, data.fxIndex(), inCf->date());
+            }
+        }
+
+        if (data.notionalAmortizingExchange()) {
+            QL_FAIL("Cannot have an amoritizing notional with FX reset");
+        }
+
+        return resettingLeg;
+
+    } else if ((data.notionalInitialExchange() || data.notionalFinalExchange() || data.notionalAmortizingExchange()) &&
+               (data.legType() != "CPI")) {
+
+        // check for notional exchanges on non FX reseting trades
+
+        return makeNotionalLeg(leg, data.notionalInitialExchange(), data.notionalFinalExchange(),
+                               data.notionalAmortizingExchange(), parseBusinessDayConvention(data.paymentConvention()),
+                               parseCalendar(data.paymentCalendar()));
+    } else {
+        return Leg();
+    }
 }
 
 } // namespace data

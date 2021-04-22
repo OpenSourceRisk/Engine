@@ -39,10 +39,13 @@ using namespace QuantLib;
 class FXLinked {
 public:
     FXLinked(const Date& fixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex);
+    virtual ~FXLinked() {}
     Date fxFixingDate() const { return fxFixingDate_; }
     Real foreignAmount() const { return foreignAmount_; }
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     Real fxRate() const;
+
+    virtual boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) = 0;
 
 private:
     Date fxFixingDate_;
@@ -81,18 +84,23 @@ public:
 
     //! \name CashFlow interface
     //@{
-    Date date() const { return cashFlowDate_; }
-    Real amount() const { return foreignAmount() * fxRate(); }
+    Date date() const override { return cashFlowDate_; }
+    Real amount() const override { return foreignAmount() * fxRate(); }
     //@}
 
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 
     //! \name Observer interface
     //@{
-    void update() { notifyObservers(); }
+    void update() override { notifyObservers(); }
+    //@}
+
+    //! \name FXLinked interface
+    //@{
+    boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) override;
     //@}
 
 private:
