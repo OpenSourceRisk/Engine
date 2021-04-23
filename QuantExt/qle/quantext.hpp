@@ -121,6 +121,7 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/region.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
