@@ -1337,6 +1337,9 @@
     <ClCompile Include="qle\indexes\fxindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
+    <ClCompile Include="qle\indexes\genericiborindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>

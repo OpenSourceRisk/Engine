@@ -21,8 +21,7 @@
     \ingroup indexes
 */
 
-#ifndef _quantext_generic_index_hpp
-#define _quantext_generic_index_hpp
+#pragma once
 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -42,9 +41,9 @@ using namespace QuantLib;
 class GenericIborIndex : public IborIndex {
 public:
     GenericIborIndex(const Period& tenor, const Currency& ccy,
-                     const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex(ccy.code() + "-GENERIC", tenor, 2, ccy, TARGET(), Following, false, Actual360(), h) {}
+                     const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
+    Rate pastFixing(const Date& fixingDate) const override;
+    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const override;
 };
-} // namespace QuantExt
 
-#endif
+} // namespace QuantExt
