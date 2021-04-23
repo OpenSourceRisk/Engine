@@ -78,6 +78,10 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
         // Clone the index with the relevant expiry date.
         index_ = index->clone(expiryDate);
 
+        // Set the VanillaOptionTrade forwardDate_. Will possibly be used in VanillaOptionTrade::build to construct
+        // the correct engine.
+        forwardDate_ = expiryDate;
+
     }
 
     VanillaOptionTrade::build(engineFactory);
