@@ -1105,6 +1105,11 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addFxEqVolCalibrationInfo(report, "fxVol", r.first, r.second);
     }
 
+    // eq vol results
+    for (auto const& r : calibrationInfo->eqVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
+    }
+
     report.end();
     LOG("TodaysMktCalibration report written");
 }

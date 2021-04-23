@@ -588,6 +588,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     boost::make_shared<EquityVolCurve>(asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex,
                                                        requiredEquityCurves_, requiredEquityVolCurves_);
                 itr = requiredEquityVolCurves_.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
+                calibrationInfo_->eqVolCalibrationInfo[eqvolspec->name()] = eqVolCurve->calibrationInfo();
             }
             string eqName = node.name;
             DLOG("Adding EquityVol (" << eqName << ") with spec " << *eqvolspec << " to configuration "
