@@ -828,36 +828,14 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             return;
         }
 
-        bool reportOnDeltaGrid = false;
-        bool reportOnMoneynessGrid = false;
-        std::vector<Real> moneyness;
-        std::vector<std::string> deltas;
-        std::vector<Period> expiries;
+        ReportConfig rc =
+            effectiveReportConfig(curveConfigs.reportConfigFxVols(), config->reportConfig().reportOnDeltaGrid());
 
-        if (config->reportConfig().reportOnDeltaGrid())
-            reportOnDeltaGrid = *config->reportConfig().reportOnDeltaGrid();
-        else if (curveConfigs.reportConfigFxVols().reportOnDeltaGrid())
-            reportOnDeltaGrid = *curveConfigs.reportConfigFxVols().reportOnDeltaGrid();
-
-        if (config->reportConfig().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *config->reportConfig().reportOnMoneynessGrid();
-        else if (curveConfigs.reportConfigFxVols().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *curveConfigs.reportConfigFxVols().reportOnMoneynessGrid();
-
-        if (config->reportConfig().moneyness())
-            moneyness = *config->reportConfig().moneyness();
-        else if (curveConfigs.reportConfigFxVols().moneyness())
-            moneyness = *curveConfigs.reportConfigFxVols().moneyness();
-
-        if (config->reportConfig().deltas())
-            deltas = *config->reportConfig().deltas();
-        else if (curveConfigs.reportConfigFxVols().deltas())
-            deltas = *curveConfigs.reportConfigFxVols().deltas();
-
-        if (config->reportConfig().expiries())
-            expiries = *config->reportConfig().expiries();
-        else if (curveConfigs.reportConfigFxVols().expiries())
-            expiries = *curveConfigs.reportConfigFxVols().expiries();
+        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
+        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
+        std::vector<Real> moneyness = *rc.moneyness();
+        std::vector<std::string> deltas = *rc.deltas();
+        std::vector<Period> expiries = *rc.expiries();
 
         calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
 
