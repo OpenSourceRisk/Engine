@@ -90,7 +90,8 @@ public:
     void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
                               const EquityVolatilityCurveConfig& config, const Handle<QuantExt::EquityIndex>& eqIndex);
 
-    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
+    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() const { return vol_; }
+    const boost::shared_ptr<FxEqVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     EquityVolatilityCurveSpec spec_;
