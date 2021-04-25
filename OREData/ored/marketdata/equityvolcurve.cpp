@@ -1047,24 +1047,34 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
             Real maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries.back()));
+            DeltaVolQuote::AtmType at;
+            DeltaVolQuote::DeltaType dt;
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
+                at = atmType;
+                dt = deltaType;
+                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike
+                // from delta conversions: we use fwd delta always and ATM DNS
+                if (t > maxTime) {
+                    at = DeltaVolQuote::AtmDeltaNeutral;
+                    dt = DeltaVolQuote::Fwd;
+                }
                 bool validSlice = true;
                 for (Size j = 0; j < deltas.size(); ++j) {
                     DeltaString d(deltas[j]);
                     try {
                         Real strike;
                         if (d.isAtm()) {
-                            strike = QuantExt::getAtmStrike(deltaType, atmType, eqIndex->equitySpot()->value(),
-                                                            rfDisc[i], divDisc[i], vol_, t);
+                            strike = QuantExt::getAtmStrike(dt, at, eqIndex->equitySpot()->value(), rfDisc[i],
+                                                            divDisc[i], vol_, t);
                         } else if (d.isCall()) {
-                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), deltaType,
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt,
                                                                   eqIndex->equitySpot()->value(), rfDisc[i], divDisc[i],
                                                                   vol_, t);
                         } else {
-                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), deltaType,
-                                                                  eqIndex->equitySpot()->value(), rfDisc[i], divDisc[i],
-                                                                  vol_, t);
+                            strike =
+                                QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, eqIndex->equitySpot()->value(),
+                                                             rfDisc[i], divDisc[i], vol_, t);
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
