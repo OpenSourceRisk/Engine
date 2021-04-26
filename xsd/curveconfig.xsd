@@ -170,6 +170,7 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -957,6 +958,13 @@
   <xs:complexType name="globalReportConfiguration">
     <xs:all>
       <xs:element name="FXVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="EquityVolatilities" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
