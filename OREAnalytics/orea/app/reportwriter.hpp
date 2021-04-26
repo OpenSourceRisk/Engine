@@ -33,6 +33,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
+#include <ored/marketdata/loader.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/dategrid.hpp>
@@ -98,10 +99,17 @@ public:
     writeTodaysMarketCalibrationReport(ore::data::Report& report,
                                        boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
 
+    virtual void writeMarketData(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,
+        const set<string>& quoteNames, bool returnAll);
+
+    virtual void writeFixings(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader);
+
     const std::string& nullString() const { return nullString_; }
 
 protected:
     std::string nullString_;
+    void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md);
 };
+
 } // namespace analytics
 } // namespace ore

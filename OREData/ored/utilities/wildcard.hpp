@@ -28,6 +28,7 @@
 
 #include <regex>
 #include <string>
+#include <set>
 
 namespace ore {
 namespace data {
@@ -57,6 +58,11 @@ template <class C> boost::optional<Wildcard> getUniqueWildcard(const C& c) {
     }
     return boost::none;
 }
+
+// The quoteNames set can have a mix of exact RIC names and regex strings to match multiple RICs. This function splits 
+// them into two separate sets.
+void partitionQuotes(const std::set<std::string>& quoteNames, 
+    std::set<std::string>& names, std::set<std::string>& regexes);
 
 } // namespace data
 } // namespace ore
