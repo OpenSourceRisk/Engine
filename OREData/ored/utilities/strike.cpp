@@ -187,7 +187,13 @@ DeltaString::DeltaString(const std::string& s) {
     isAtm_ = s == "ATM";
     isPut_ = !s.empty() && s.back() == 'P';
     isCall_ = !s.empty() && s.back() == 'C';
-    delta_ = ore::data::parseReal(s.substr(0, s.size() - 1)) / 100.0 * (isPut_ ? -1.0 : 1.0);
+    if (isPut_ || isCall_) {
+        try {
+            delta_ = ore::data::parseReal(s.substr(0, s.size() - 1)) / 100.0 * (isPut_ ? -1.0 : 1.0);
+        } catch (const std::exception& e) {
+            QL_FAIL("DeltaString: can not convert call / put delta '" << s << "' to numeric value: " << e.what());
+        }
+    }
 }
 
 } // namespace data
