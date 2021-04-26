@@ -877,7 +877,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             DeltaVolQuote::DeltaType dt;
             DeltaVolQuote::AtmType at;
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
-            Real maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
+            Real maxTime = QL_MAX_REAL;
+            if (!expiries_.empty())
+                maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
                 if (t <= switchTime || close_enough(t, switchTime)) {
