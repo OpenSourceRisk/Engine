@@ -244,6 +244,10 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
     DLOG("Creating BlackVarianceCurve object.");
     auto tmp = boost::make_shared<BlackVarianceCurve>(asof, dates, volatilities, dayCounter_);
 
+    // set max expiry date (used in buildCalibrationInfo())
+    if (!dates.empty())
+        maxExpiry_ = dates.back();
+
     // Set the interpolation.
     if (vcc.interpolation() == "Linear") {
         DLOG("Interpolation set to Linear.");
@@ -429,6 +433,15 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             DLOG("Extrapolation is turned off for the whole surface so the time and"
                  << " strike extrapolation settings are ignored");
         }
+
+        // set max expiry date (used in buildCalibrationInfo())
+        maxExpiry_ = Date::minDate();
+        for (auto const& d : callExpiries)
+            maxExpiry_ = std::max(maxExpiry_, d);
+        for (auto const& d : putExpiries)
+            maxExpiry_ = std::max(maxExpiry_, d);
+        if (maxExpiry_ == Date::minDate())
+            maxExpiry_ = Date();
 
         bool preferOutOfTheMoney = vc.preferOutOfTheMoney() && *vc.preferOutOfTheMoney();
 
@@ -649,6 +662,10 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             vols[i].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(row.value().second[i])));
         }
     }
+
+    // set max expiry date (used in buildCalibrationInfo())
+    if (!expiryDates.empty())
+        maxExpiry_ = expiryDates.back();
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
@@ -931,6 +948,10 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
                                                                                    << "' so setting it to linear.");
     }
 
+    // set max expiry date (used in buildCalibrationInfo())
+    if (!expiryDates.empty())
+        maxExpiry_ = expiryDates.back();
+
     DLOG("Creating BlackVolatilitySurfaceDelta object");
     bool hasAtm = true;
     vol_ = boost::make_shared<BlackVolatilitySurfaceDelta>(
@@ -986,7 +1007,7 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
 
     try {
 
-        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigFxVols(), config.reportConfig());
+        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigEqVols(), config.reportConfig());
 
         bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
         bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
@@ -1046,7 +1067,13 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
             calibrationInfo_->deltaGridButterflyArbitrage =
                 std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
-            Real maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries.back()));
+            Real maxTime = QL_MAX_REAL;
+            if (maxExpiry_ != Date()) {
+                if (vol_->dayCounter().empty())
+                    maxTime = Actual365Fixed().yearFraction(asof, maxExpiry_);
+                else
+                    maxTime = vol_->timeFromReference(maxExpiry_);
+            }
             DeltaVolQuote::AtmType at;
             DeltaVolQuote::DeltaType dt;
             for (Size i = 0; i < times.size(); ++i) {

@@ -99,6 +99,7 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::Currency currency_;
     QuantLib::DayCounter dayCounter_;
+    QuantLib::Date maxExpiry_;
     boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
