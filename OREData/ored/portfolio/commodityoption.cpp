@@ -32,6 +32,7 @@
 
 using namespace std;
 using namespace QuantLib;
+using QuantExt::CommodityFuturesIndex;
 using QuantExt::PriceTermStructure;
 
 namespace ore {
@@ -78,9 +79,12 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
         // Clone the index with the relevant expiry date.
         index_ = index->clone(expiryDate);
 
-        // Set the VanillaOptionTrade forwardDate_. Will possibly be used in VanillaOptionTrade::build to construct
-        // the correct engine.
-        forwardDate_ = expiryDate;
+        // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
+        // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
+        auto et = parseExerciseType(option_.style());
+        if (et == Exercise::European && boost::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+            forwardDate_ = expiryDate;
+        }
 
     }
 
