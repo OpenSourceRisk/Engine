@@ -75,19 +75,6 @@ private:
     const ore::data::FXTriangulation& fxSpots_;
 };
 
-// parse utilities for delta string "ATM", "10P", "10C"
-void validateDelta(const std::string& s) {
-    QL_REQUIRE(!s.empty() && (s.back() == 'P' || s.back() == 'C' || s == "ATM"),
-               "invalid delta quote, expected ATM, 10P, 25C, ...");
-}
-bool isAtm(const std::string& s) { return s == "ATM"; }
-bool isPut(const std::string& s) { return !s.empty() && s.back() == 'P'; }
-bool isCall(const std::string& s) { return !s.empty() && s.back() == 'C'; }
-Real getDelta(const std::string& s) {
-    validateDelta(s);
-    return ore::data::parseReal(s.substr(0, s.size() - 1)) / 100.0 * (isPut(s) ? -1.0 : 1.0);
-};
-
 } // namespace
 
 namespace ore {
@@ -123,13 +110,13 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     bool hasATM = false;
 
     for (auto const& delta : config->deltas()) {
-        validateDelta(delta);
-        if (isAtm(delta))
+        DeltaString d(delta);
+        if (d.isAtm())
             hasATM = true;
-        else if (isPut(delta))
-            putDeltas.push_back(std::make_pair(getDelta(delta), delta));
-        else if (isCall(delta))
-            callDeltas.push_back(std::make_pair(getDelta(delta), delta));
+        else if (d.isPut())
+            putDeltas.push_back(std::make_pair(d.delta(), delta));
+        else if (d.isCall())
+            callDeltas.push_back(std::make_pair(d.delta(), delta));
     }
 
     Calendar cal = config->calendar();
@@ -828,36 +815,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             return;
         }
 
-        bool reportOnDeltaGrid = false;
-        bool reportOnMoneynessGrid = false;
-        std::vector<Real> moneyness;
-        std::vector<std::string> deltas;
-        std::vector<Period> expiries;
+        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigFxVols(), config->reportConfig());
 
-        if (config->reportConfig().reportOnDeltaGrid())
-            reportOnDeltaGrid = *config->reportConfig().reportOnDeltaGrid();
-        else if (curveConfigs.reportConfigFxVols().reportOnDeltaGrid())
-            reportOnDeltaGrid = *curveConfigs.reportConfigFxVols().reportOnDeltaGrid();
-
-        if (config->reportConfig().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *config->reportConfig().reportOnMoneynessGrid();
-        else if (curveConfigs.reportConfigFxVols().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *curveConfigs.reportConfigFxVols().reportOnMoneynessGrid();
-
-        if (config->reportConfig().moneyness())
-            moneyness = *config->reportConfig().moneyness();
-        else if (curveConfigs.reportConfigFxVols().moneyness())
-            moneyness = *curveConfigs.reportConfigFxVols().moneyness();
-
-        if (config->reportConfig().deltas())
-            deltas = *config->reportConfig().deltas();
-        else if (curveConfigs.reportConfigFxVols().deltas())
-            deltas = *curveConfigs.reportConfigFxVols().deltas();
-
-        if (config->reportConfig().expiries())
-            expiries = *config->reportConfig().expiries();
-        else if (curveConfigs.reportConfigFxVols().expiries())
-            expiries = *curveConfigs.reportConfigFxVols().expiries();
+        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
+        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
+        std::vector<Real> moneyness = *rc.moneyness();
+        std::vector<std::string> deltas = *rc.deltas();
+        std::vector<Period> expiries = *rc.expiries();
 
         calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
 
@@ -913,7 +877,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             DeltaVolQuote::DeltaType dt;
             DeltaVolQuote::AtmType at;
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
-            Real maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
+            Real maxTime = QL_MAX_REAL;
+            if (!expiries_.empty())
+                maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
                 if (t <= switchTime || close_enough(t, switchTime)) {
@@ -932,17 +898,17 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 }
                 bool validSlice = true;
                 for (Size j = 0; j < deltas.size(); ++j) {
-                    validateDelta(deltas[j]);
+                    DeltaString d(deltas[j]);
                     try {
                         Real strike;
-                        if (isAtm(deltas[j])) {
+                        if (d.isAtm()) {
                             strike = QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
-                        } else if (isCall(deltas[j])) {
-                            strike = QuantExt::getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt,
-                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
+                        } else if (d.isCall()) {
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, fxSpot_->value(),
+                                                                  domDisc[i], forDisc[i], vol_, t);
                         } else {
-                            strike = QuantExt::getStrikeFromDelta(Option::Put, getDelta(deltas[j]), dt,
-                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
+                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, fxSpot_->value(),
+                                                                  domDisc[i], forDisc[i], vol_, t);
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);

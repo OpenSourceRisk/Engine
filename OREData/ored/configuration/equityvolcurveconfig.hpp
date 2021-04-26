@@ -26,6 +26,7 @@
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
@@ -79,6 +80,7 @@ public:
     const boost::optional<bool>& preferOutOfTheMoney() const {
         return preferOutOfTheMoney_;
     }
+    const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
     //! \name Setters
@@ -97,6 +99,7 @@ private:
     string proxySurface_;
     OneDimSolverConfig solverConfig_;
     boost::optional<bool> preferOutOfTheMoney_;
+    ReportConfig reportConfig_;
 
     // Return a default solver configuration. Used by solverConfig() if solverConfig_ is empty.
     static OneDimSolverConfig defaultSolverConfig();

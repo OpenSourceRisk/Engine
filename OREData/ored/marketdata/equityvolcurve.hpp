@@ -86,7 +86,12 @@ public:
                          const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
                          const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves);
 
-    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
+    //! Build the calibration info
+    void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
+                              const EquityVolatilityCurveConfig& config, const Handle<QuantExt::EquityIndex>& eqIndex);
+
+    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() const { return vol_; }
+    const boost::shared_ptr<FxEqVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     EquityVolatilityCurveSpec spec_;
@@ -94,6 +99,8 @@ private:
     QuantLib::Calendar calendar_;
     QuantLib::Currency currency_;
     QuantLib::DayCounter dayCounter_;
+    QuantLib::Date maxExpiry_;
+    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore
