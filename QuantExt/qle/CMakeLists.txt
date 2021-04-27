@@ -56,6 +56,7 @@ indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
+indexes/genericiborindex.cpp
 indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
 indexes/ibor/ester.cpp

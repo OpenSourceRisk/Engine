@@ -32,6 +32,8 @@
 namespace ore {
 namespace data {
 
+using namespace std;
+
 Wildcard::Wildcard(const std::string& s) : s_(s) {
 
     if (s_.find("*") == std::string::npos)
@@ -59,6 +61,17 @@ bool Wildcard::matches(const std::string& s) const {
 }
 
 const std::string& Wildcard::regex() const { return s_; }
+
+void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<string>& regexes) {
+
+    for (const string& n : quoteNames) {
+        ore::data::Wildcard w(n);
+        if (w.hasWildcard())
+            regexes.insert(w.regex());
+        else
+            names.insert(n);
+    }
+}
 
 } // namespace data
 } // namespace ore
