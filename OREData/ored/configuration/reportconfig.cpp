@@ -74,5 +74,40 @@ XMLNode* ReportConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
+ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const ReportConfig& localConfig) {
+    bool reportOnDeltaGrid = false;
+    bool reportOnMoneynessGrid = false;
+    std::vector<Real> moneyness;
+    std::vector<std::string> deltas;
+    std::vector<Period> expiries;
+
+    if (localConfig.reportOnDeltaGrid())
+        reportOnDeltaGrid = *localConfig.reportOnDeltaGrid();
+    else if (globalConfig.reportOnDeltaGrid())
+        reportOnDeltaGrid = *globalConfig.reportOnDeltaGrid();
+
+    if (localConfig.reportOnMoneynessGrid())
+        reportOnMoneynessGrid = *localConfig.reportOnMoneynessGrid();
+    else if (globalConfig.reportOnMoneynessGrid())
+        reportOnMoneynessGrid = *globalConfig.reportOnMoneynessGrid();
+
+    if (localConfig.moneyness())
+        moneyness = *localConfig.moneyness();
+    else if (globalConfig.moneyness())
+        moneyness = *globalConfig.moneyness();
+
+    if (localConfig.deltas())
+        deltas = *localConfig.deltas();
+    else if (globalConfig.deltas())
+        deltas = *globalConfig.deltas();
+
+    if (localConfig.expiries())
+        expiries = *localConfig.expiries();
+    else if (globalConfig.expiries())
+        expiries = *globalConfig.expiries();
+
+    return ReportConfig(reportOnDeltaGrid, reportOnMoneynessGrid, deltas, moneyness, expiries);
+}
+
 } // namespace data
 } // namespace ore

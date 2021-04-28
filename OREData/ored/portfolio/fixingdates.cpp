@@ -27,6 +27,7 @@
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -574,24 +575,42 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                     cfc = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(kv.first));
                 }
 
+                auto commIdx = parseCommodityIndex(kv.first, conventions, false);
                 if (cfc) {
-                    if (cfc->contractFrequency() == Daily) {
+                    if (auto oppIdx = boost::dynamic_pointer_cast<OffPeakPowerIndex>(commIdx)) {
+                        DLOG("Commodity " << kv.first << " is off-peak power so adding underlying daily contracts.");
+                        const auto& opIndex = oppIdx->offPeakIndex();
+                        const auto& pIndex = oppIdx->peakIndex();
+                        for (const Date& expiry : dates) {
+                            auto tmpIdx = oppIdx->clone(expiry);
+                            auto opName = opIndex->clone(expiry)->name();
+                            TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << opName << ")");
+                            fixings[opName].insert(expiry);
+                            auto pName = pIndex->clone(expiry)->name();
+                            TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << pName << ")");
+                            fixings[pName].insert(expiry);
+                        }
+                    } else if (cfc->contractFrequency() == Daily) {
                         DLOG("Commodity " << kv.first << " has daily frequency so adding daily contracts.");
                         for (const Date& expiry : dates) {
-                            auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar(), true).name();
+                            auto indexName = commIdx->clone(expiry)->name();
                             TLOG("Adding (date, id) = (" << io::iso_date(expiry) << "," << indexName << ")");
                             fixings[indexName].insert(expiry);
                         }
                     } else {
                         DLOG("Commodity " << kv.first << " is not daily so adding the monthly contracts.");
                         for (const Date& expiry : contractExpiries) {
-                            auto indexName = CommodityFuturesIndex(kv.first, expiry, NullCalendar()).name();
+                            auto indexName = commIdx->clone(expiry)->name();
                             TLOG("Adding extra fixing dates for commodity future " << indexName);
                             fixings[indexName].insert(dates.begin(), dates.end());
                         }
                     }
                 } else {
-                    DLOG("Commodity " << kv.first << " does not have future conventions so skipping.");
+                    // Assumption here is that we have a spot index.
+                    DLOG("Commodity " << kv.first << " does not have future conventions so adding daily fixings.");
+                    auto indexName = commIdx->name();
+                    TLOG("Adding extra fixing dates for commodity spot " << indexName);
+                    fixings[indexName].insert(dates.begin(), dates.end());
                 }
             }
         }

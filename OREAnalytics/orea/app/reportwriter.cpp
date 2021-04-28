@@ -1105,8 +1105,86 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addFxEqVolCalibrationInfo(report, "fxVol", r.first, r.second);
     }
 
+    // eq vol results
+    for (auto const& r : calibrationInfo->eqVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
+    }
+
     report.end();
     LOG("TodaysMktCalibration report written");
+}
+
+void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md) {
+    report.next()
+        .add(md.asofDate())
+        .add(md.name())
+        .add(md.quote()->value());
+}
+
+void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loader>& loader, const Date& asof,
+    const set<string>& quoteNames, bool returnAll) {
+
+    LOG("Writing MarketData report");
+
+    report.addColumn("datumDate", Date())
+        .addColumn("datumId", string())
+        .addColumn("datumValue", double(), 10);
+
+    if (returnAll) {
+        for (const auto& md : loader->loadQuotes(asof)) {
+            addMarketDatum(report, *md);
+        }
+        return;
+    }
+
+    set<string> names;
+    set<string> regexStrs;
+    partitionQuotes(quoteNames, names, regexStrs);
+    
+    vector<std::regex> regexes;
+    regexes.reserve(regexStrs.size());
+    for (auto regexStr : regexStrs) {
+        regexes.push_back(regex(regexStr));
+    }
+
+    for (const auto& md : loader->loadQuotes(asof)) {
+        const auto& mdName = md->name();
+
+        if (names.find(mdName) != names.end()) {
+            addMarketDatum(report, *md);
+            continue;
+        }
+
+        // This could be slow
+        for (const auto& regex : regexes) {
+            if (regex_match(mdName, regex)) {
+                addMarketDatum(report, *md);
+                break;
+            }
+        }
+    }
+
+    report.end();
+    LOG("MarketData report written");
+}
+
+void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>& loader) {
+    
+    LOG("Writing Fixings report");
+
+    report.addColumn("fixingDate", Date())
+        .addColumn("fixingId", string())
+        .addColumn("fixingValue", double(), 10);
+
+    for (const auto& f : loader->loadFixings()) {
+        report.next()
+            .add(f.date)
+            .add(f.name)
+            .add(f.fixing);
+    }
+
+    report.end();
+    LOG("Fixings report written");
 }
 
 } // namespace analytics

@@ -226,6 +226,7 @@
     <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
     <ClInclude Include="ored\utilities\vectorutils.hpp" />
+    <ClInclude Include="ored\utilities\wildcard.hpp" />
     <ClInclude Include="ored\utilities\xmlutils.hpp" />
     <ClInclude Include="ored\version.hpp" />
   </ItemGroup>
@@ -384,6 +385,7 @@
     <ClCompile Include="ored\utilities\progressbar.cpp" />
     <ClCompile Include="ored\utilities\strike.cpp" />
     <ClCompile Include="ored\utilities\to_string.cpp" />
+    <ClCompile Include="ored\utilities\wildcard.cpp" />
     <ClCompile Include="ored\utilities\xmlutils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -20,6 +20,8 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+
 using namespace QuantExt;
 
 namespace ore {
@@ -60,6 +62,48 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index->name()] = indexName;
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+
+    // handle fx resetting Ibor leg
+
+    if (data.legType() == "Floating" && !data.isNotResetXCCY()) {
+        QL_REQUIRE(!data.fxIndex().empty(), "FloatingRateLegBuilder: need fx index for fx resetting leg");
+        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), engineFactory->market(),
+                                    configuration, data.fixingCalendar(), data.fixingDays(), true);
+
+        // If the domestic notional value is not specified, i.e. there are no notionals specified in the leg
+        // data, then all coupons including the first will be FX linked. If the first coupon's FX fixing date
+        // is in the past, a FX fixing will be used to determine the first domestic notional. If the first
+        // coupon's FX fixing date is in the future, the first coupon's domestic notional will be determined
+        // by the FX forward rate on that future fixing date.
+
+        Size j = 0;
+        if (data.notionals().size() == 0) {
+            DLOG("Building FX Resettable with unspecified domestic notional");
+        } else {
+            // First coupon a plain floating rate coupon i.e. it is not FX linked because the initial notional is
+            // known. But, we need to add it to additionalLegs_ so that we don't miss the first coupon's ibor fixing
+            LOG("Building FX Resettable with first domestic notional specified explicitly");
+            j = 1;
+        }
+
+        // Make the necessary FX linked floating rate coupons
+        for (; j < result.size(); ++j) {
+            boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(result[j]);
+
+            Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
+                                                                -static_cast<Integer>(fxIndex->fixingDays()), Days);
+            boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
+                boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(), fxIndex,
+                                                                       coupon);
+            // set the same pricer
+            fxLinkedCoupon->setPricer(coupon->pricer());
+            result[j] = fxLinkedCoupon;
+
+            // Add the FX fixing to the required fixings
+            requiredFixings.addFixingDate(fixingDate, data.fxIndex(), fxLinkedCoupon->date());
+        }
+    }
+
     return result;
 }
 
@@ -170,7 +214,7 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
         // check if it equity currency not set, use from market else check if it matches what is in market
         if (!eqCurrency.empty())
             QL_REQUIRE(eqCurve->currency() == eqCurrency,
-                "Equity Currency provided does not match currency of Equity Curve");
+                       "Equity Currency provided does not match currency of Equity Curve");
         else
             eqCurrency = eqCurve->currency();
     }
@@ -185,7 +229,7 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
         // equity curves in the market, this is required as future cashflows will be in the equity curve currency
         if (!eqCurve->currency().empty() && !eqCurrency.empty()) {
             QL_REQUIRE(eqCurve->currency() == eqCurrency,
-                "Equity Currency provided does not match currency of Equity Curve");
+                       "Equity Currency provided does not match currency of Equity Curve");
         }
 
         fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqData->eqCurrency(), engineFactory->market(),

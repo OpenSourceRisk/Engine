@@ -162,6 +162,11 @@ public:
     QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const string& commodityName, const string& configuration = Market::defaultConfiguration) const;
 
+    //! Commodity index
+    QuantLib::Handle<QuantExt::CommodityIndex> commodityIndex(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const;
+
+    //! Commodity volatility
     QuantLib::Handle<QuantLib::BlackVolTermStructure>
     commodityVolatility(const string& commodityName, const string& configuration = Market::defaultConfiguration) const;
     //@}
@@ -227,7 +232,7 @@ protected:
     mutable map<pair<string, string>, Handle<Quote>> securitySpreads_;
     mutable map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     mutable map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
-    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::CommodityIndex>> commodityIndices_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;

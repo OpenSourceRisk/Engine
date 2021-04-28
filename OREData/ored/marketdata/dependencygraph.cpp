@@ -26,6 +26,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 namespace ore {
 namespace data {
@@ -217,9 +218,11 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             QL_REQUIRE(con, "Cannot find IRSwapConventions " << swapCon->conventions());
             std::string iborIndex = con->indexName();
             std::string discountIndex = g[*v].mapping;
+            if (isGenericIborIndex(iborIndex))
+                foundIbor = true;
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                 if (*w != *v) {
-                    if (g[*w].obj == MarketObject::IndexCurve) {
+                    if (g[*w].obj == MarketObject::IndexCurve || g[*w].obj == MarketObject::YieldCurve) {
                         if (g[*w].name == discountIndex) {
                             g.add_edge(*v, *w);
                             foundDiscount = true;

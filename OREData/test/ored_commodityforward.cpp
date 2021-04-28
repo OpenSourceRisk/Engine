@@ -59,7 +59,8 @@ public:
         vector<Real> prices = {1346.0, 1348.0};
         Handle<PriceTermStructure> priceCurve(
             boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
-        commodityCurves_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = priceCurve;
+        Handle<CommodityIndex> commIdx(boost::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar(), priceCurve));
+        commodityIndices_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = commIdx;
     }
 };
 

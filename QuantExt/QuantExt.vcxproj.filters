@@ -1108,6 +1108,9 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\version.hpp" />
+    <ClInclude Include="qle\indexes\offpeakpowerindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1332,6 +1335,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\fxindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\genericiborindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp">
@@ -1882,6 +1888,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\normalsabrsmilesection.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\offpeakpowerindex.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp">
       <Filter>termstructures</Filter>

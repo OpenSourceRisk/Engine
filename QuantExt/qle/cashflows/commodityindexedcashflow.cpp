@@ -97,7 +97,7 @@ void CommodityIndexedCashFlow::init(const ext::shared_ptr<FutureExpiryCalculator
             ") for commodity " << index_->underlyingName() << " future  with contract date of " <<
             io::iso_date(contractDate) << " and with month offset of " << futureMonthOffset_ <<
             " would be on or after the pricing date (" << io::iso_date(pricingDate_) << ")");
-        index_ = boost::make_shared<CommodityFuturesIndex>(index_, expiry);
+        index_ = index_->clone(expiry);
     }
 
     registerWith(index_);

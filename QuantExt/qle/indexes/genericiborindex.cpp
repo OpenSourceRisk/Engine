@@ -16,34 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file genericiborindex.hpp
-    \brief Generic Ibor Index
-    \ingroup indexes
-*/
-
-#pragma once
-
-#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <qle/indexes/genericiborindex.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
-//! Generic Ibor Index
-/*! This Ibor Index allows you to wrap any arbitary currency in a generic index.
+GenericIborIndex::GenericIborIndex(const Period& tenor, const Currency& ccy, const Handle<YieldTermStructure>& h)
+    : IborIndex(ccy.code() + "-GENERIC", tenor, 2, ccy, TARGET(), Following, false, Actual360(), h) {}
 
-    We assume 2 settlement days, Target Calendar, ACT/360.
+Rate GenericIborIndex::pastFixing(const Date& fixingDate) const {
+    return fixing(Settings::instance().evaluationDate(), true);
+}
 
-    The name is always CCY-GENERIC so there is no risk of collision with real ibor names
-            \ingroup indexes
- */
-class GenericIborIndex : public IborIndex {
-public:
-    GenericIborIndex(const Period& tenor, const Currency& ccy,
-                     const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
-    Rate pastFixing(const Date& fixingDate) const override;
-    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const override;
-};
+boost::shared_ptr<IborIndex> GenericIborIndex::clone(const Handle<YieldTermStructure>& h) const {
+    return boost::make_shared<GenericIborIndex>(tenor(), currency(), h);
+}
 
 } // namespace QuantExt

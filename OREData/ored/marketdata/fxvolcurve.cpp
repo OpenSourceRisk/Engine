@@ -32,7 +32,6 @@
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
-#include <regex>
 #include <string.h>
 
 using namespace QuantLib;
@@ -76,19 +75,6 @@ private:
     const ore::data::FXTriangulation& fxSpots_;
 };
 
-// parse utilities for delta string "ATM", "10P", "10C"
-void validateDelta(const std::string& s) {
-    QL_REQUIRE(!s.empty() && (s.back() == 'P' || s.back() == 'C' || s == "ATM"),
-               "invalid delta quote, expected ATM, 10P, 25C, ...");
-}
-bool isAtm(const std::string& s) { return s == "ATM"; }
-bool isPut(const std::string& s) { return !s.empty() && s.back() == 'P'; }
-bool isCall(const std::string& s) { return !s.empty() && s.back() == 'C'; }
-Real getDelta(const std::string& s) {
-    validateDelta(s);
-    return ore::data::parseReal(s.substr(0, s.size() - 1)) / 100.0 * (isPut(s) ? -1.0 : 1.0);
-};
-
 } // namespace
 
 namespace ore {
@@ -124,13 +110,13 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
     bool hasATM = false;
 
     for (auto const& delta : config->deltas()) {
-        validateDelta(delta);
-        if (isAtm(delta))
+        DeltaString d(delta);
+        if (d.isAtm())
             hasATM = true;
-        else if (isPut(delta))
-            putDeltas.push_back(std::make_pair(getDelta(delta), delta));
-        else if (isCall(delta))
-            callDeltas.push_back(std::make_pair(getDelta(delta), delta));
+        else if (d.isPut())
+            putDeltas.push_back(std::make_pair(d.delta(), delta));
+        else if (d.isCall())
+            callDeltas.push_back(std::make_pair(d.delta(), delta));
     }
 
     Calendar cal = config->calendar();
@@ -157,8 +143,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
         deltaNames.push_back(d.second);
     }
 
-    if (expiriesRegex_) {
-        regex regexp(boost::replace_all_copy(expiriesNoDuplicates_[0], "*", ".*"));
+    if (expiriesWildcard_) {
 
         // we save relevant delta quotes to avoid looping twice
         std::vector<boost::shared_ptr<MarketDatum>> data;
@@ -174,7 +159,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
                     vector<string> tokens;
                     boost::split(tokens, md->name(), boost::is_any_of("/"));
                     QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-                    if (regex_match(tokens[4], regexp)) {
+                    if ((*expiriesWildcard_).matches(tokens[4])) {
                         data.push_back(md);
                         auto it = std::find(expiries_.begin(), expiries_.end(), q->expiry());
                         if (it == expiries_.end()) {
@@ -273,10 +258,6 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
     std::set<Period> expiriesTmp;
 
-    boost::optional<regex> regexp;
-    if (expiriesRegex_)
-        regexp = regex(boost::replace_all_copy(expiriesNoDuplicates_[0], "*", ".*"));
-
     std::vector<boost::shared_ptr<FXOptionQuote>> data;
     for (auto const& md : loader.loadQuotes(asof)) {
         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {
@@ -288,14 +269,14 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
                 vector<string> tokens;
                 boost::split(tokens, md->name(), boost::is_any_of("/"));
                 QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-                if (expiriesRegex_ && regex_match(tokens[4], *regexp))
+                if (expiriesWildcard_ && (*expiriesWildcard_).matches(tokens[4]))
                     expiriesTmp.insert(q->expiry());
                 data.push_back(q);
             }
         }
     }
 
-    if (!expiriesRegex_) {
+    if (!expiriesWildcard_) {
         auto tmp = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
         expiriesTmp = std::set<Period>(tmp.begin(), tmp.end());
     }
@@ -343,7 +324,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
     // if we have an explicitly configured expiry list, we require that the data is complete for all expiries
 
-    if (!expiriesRegex_) {
+    if (!expiriesWildcard_) {
         Size i = 0;
         for (auto const& e : expiriesTmp) {
             QL_REQUIRE(dataComplete[i++], "BFRR FX vol surface: incomplete data for expiry " << e);
@@ -430,19 +411,14 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     Size n = isATM ? 1 : 3; // [0] = ATM, [1] = RR, [2] = BF
     vector<vector<boost::shared_ptr<FXOptionQuote>>> quotes(n);
 
-    QL_REQUIRE(!expiriesRegex_ || isATM, "wildcards only supported for ATM, Delta, BFRR FxVol Curves");
+    QL_REQUIRE(!expiriesWildcard_ || isATM, "wildcards only supported for ATM, Delta, BFRR FxVol Curves");
 
     vector<Period> cExpiries;
     vector<vector<Period>> expiries;
     // Create the regular expression
-    regex regexp;
-    if (!expiriesRegex_) {
+    if (!expiriesWildcard_) {
         cExpiries = parseVectorOfValues<Period>(expiriesNoDuplicates_, &parsePeriod);
         expiries = vector<vector<Period>>(n, cExpiries);
-    } else {
-        string regexstr = expiriesNoDuplicates_[0];
-        regexstr = boost::replace_all_copy(regexstr, "*", ".*");
-        regexp = regex(regexstr);
     }
 
     // Load the relevant quotes
@@ -464,11 +440,11 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
 
                 // silently skip unknown strike strings
                 if ((isATM && idx == 0) || (!isATM && idx <= 2)) {
-                    if (expiriesRegex_) {
+                    if (expiriesWildcard_) {
                         vector<string> tokens;
                         boost::split(tokens, md->name(), boost::is_any_of("/"));
                         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << md->name());
-                        if (regex_match(tokens[4], regexp)) {
+                        if ((*expiriesWildcard_).matches(tokens[4])) {
                             quotes[idx].push_back(q);
                         }
                     } else {
@@ -493,7 +469,7 @@ void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec
     // Check ATM first
     // Check that we have all the expiries we need
     LOG("FXVolCurve: read " << quotes[0].size() << " ATM vols");
-    if (!expiriesRegex_) {
+    if (!expiriesWildcard_) {
         QL_REQUIRE(expiries[0].size() == 0,
                    "No ATM quote found for spec " << spec << " with expiry " << expiries[0].front());
     }
@@ -716,18 +692,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR,
                    "Unknown FX curve building dimension");
 
-        expiriesRegex_ = false;
-        for (Size i = 0; i < config->expiries().size(); i++) {
-            if ((expiriesRegex_ = config->expiries()[i].find("*") != string::npos)) {
-                QL_REQUIRE(i == 0 && config->expiries().size() == 1,
-                           "Wild card config, " << config->curveID() << ", should have exactly one regex provided.");
-                break;
-            }
-        }
+        expiriesWildcard_ = getUniqueWildcard(config->expiries());
 
         // remove expiries that would lead to duplicate expiry dates (keep the later expiry in this case)
 
-        if (!expiriesRegex_) {
+        if (!expiriesWildcard_) {
             std::vector<std::tuple<std::string, Period, Date>> tmp;
             for (auto const& e : config->expiries()) {
                 auto p = parsePeriod(e);
@@ -755,22 +724,21 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 expiriesNoDuplicates_.insert(expiriesNoDuplicates_.begin(), std::get<0>(tmp[i - 1]));
                 lastDate = std::get<2>(tmp[i - 1]);
             }
+
+            DLOG("expiries in configuration:")
+            for (auto const& e : config->expiries()) {
+                DLOG(e);
+            }
+
+            DLOG("expiries after removing duplicate expiry dates and sorting:");
+            for (auto const& e : expiriesNoDuplicates_) {
+                DLOG(e);
+            }
         } else {
-            // wildcard => we have exactly one expiry string
-            expiriesNoDuplicates_ = {config->expiries()[0]};
+            DLOG("expiry wildcard is used: " << (*expiriesWildcard_).regex());
         }
 
-        DLOG("expiries in configuration:")
-        for (auto const& e : config->expiries()) {
-            DLOG(e);
-        }
-
-        DLOG("expiries after removing duplicate expiry dates and sorting:");
-        for (auto const& e : expiriesNoDuplicates_) {
-            DLOG(e);
-        }
-
-        QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
+        QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated || expiriesWildcard_ ||
                        !expiriesNoDuplicates_.empty(),
                    "no expiries after removing duplicate expiry dates");
 
@@ -847,36 +815,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             return;
         }
 
-        bool reportOnDeltaGrid = false;
-        bool reportOnMoneynessGrid = false;
-        std::vector<Real> moneyness;
-        std::vector<std::string> deltas;
-        std::vector<Period> expiries;
+        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigFxVols(), config->reportConfig());
 
-        if (config->reportConfig().reportOnDeltaGrid())
-            reportOnDeltaGrid = *config->reportConfig().reportOnDeltaGrid();
-        else if (curveConfigs.reportConfigFxVols().reportOnDeltaGrid())
-            reportOnDeltaGrid = *curveConfigs.reportConfigFxVols().reportOnDeltaGrid();
-
-        if (config->reportConfig().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *config->reportConfig().reportOnMoneynessGrid();
-        else if (curveConfigs.reportConfigFxVols().reportOnMoneynessGrid())
-            reportOnMoneynessGrid = *curveConfigs.reportConfigFxVols().reportOnMoneynessGrid();
-
-        if (config->reportConfig().moneyness())
-            moneyness = *config->reportConfig().moneyness();
-        else if (curveConfigs.reportConfigFxVols().moneyness())
-            moneyness = *curveConfigs.reportConfigFxVols().moneyness();
-
-        if (config->reportConfig().deltas())
-            deltas = *config->reportConfig().deltas();
-        else if (curveConfigs.reportConfigFxVols().deltas())
-            deltas = *curveConfigs.reportConfigFxVols().deltas();
-
-        if (config->reportConfig().expiries())
-            expiries = *config->reportConfig().expiries();
-        else if (curveConfigs.reportConfigFxVols().expiries())
-            expiries = *curveConfigs.reportConfigFxVols().expiries();
+        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
+        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
+        std::vector<Real> moneyness = *rc.moneyness();
+        std::vector<std::string> deltas = *rc.deltas();
+        std::vector<Period> expiries = *rc.expiries();
 
         calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
 
@@ -932,7 +877,9 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             DeltaVolQuote::DeltaType dt;
             DeltaVolQuote::AtmType at;
             TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
-            Real maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
+            Real maxTime = QL_MAX_REAL;
+            if (!expiries_.empty())
+                maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
             for (Size i = 0; i < times.size(); ++i) {
                 Real t = times[i];
                 if (t <= switchTime || close_enough(t, switchTime)) {
@@ -951,17 +898,17 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 }
                 bool validSlice = true;
                 for (Size j = 0; j < deltas.size(); ++j) {
-                    validateDelta(deltas[j]);
+                    DeltaString d(deltas[j]);
                     try {
                         Real strike;
-                        if (isAtm(deltas[j])) {
+                        if (d.isAtm()) {
                             strike = QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
-                        } else if (isCall(deltas[j])) {
-                            strike = QuantExt::getStrikeFromDelta(Option::Call, getDelta(deltas[j]), dt,
-                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
+                        } else if (d.isCall()) {
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, fxSpot_->value(),
+                                                                  domDisc[i], forDisc[i], vol_, t);
                         } else {
-                            strike = QuantExt::getStrikeFromDelta(Option::Put, getDelta(deltas[j]), dt,
-                                                                  fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
+                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, fxSpot_->value(),
+                                                                  domDisc[i], forDisc[i], vol_, t);
                         }
                         Real stddev = std::sqrt(vol_->blackVariance(t, strike));
                         callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);

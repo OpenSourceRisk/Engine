@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <map>
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 #include <ql/types.hpp>
+#include <vector>
 
 namespace ore {
 namespace data {
@@ -49,6 +49,10 @@ using QuantLib::Quote;
  *  and so if these original quotes change in the future, the constructed quotes will reflect the new
  *  value
  *
+ *  Warning: The result of getQuote() can depend on previous calls to getQuote(), since newly added
+ *  pairs in 3) are candidates for bridging pairs in future calls and the bridging only uses one
+ *  intermediate currency. This state-dependent behaviour will be removed in a future release.
+ *
  *  \ingroup marketdata
  */
 class FXTriangulation {
@@ -57,16 +61,16 @@ public:
     FXTriangulation() {}
 
     //! Add a quote to the repo
-    void addQuote(const std::string& pair, const Handle<Quote>& spot) { map_[pair] = spot; }
+    void addQuote(const std::string& pair, const Handle<Quote>& spot);
 
     //! Get a quote from the repo, this will follow the algorithm described above
     Handle<Quote> getQuote(const std::string&) const;
 
     //! Get all quotes currently stored in the triangulation
-    const std::map<std::string, Handle<Quote>>& quotes() const { return map_; }
+    const std::vector<std::pair<std::string, Handle<Quote>>>& quotes() const { return map_; }
 
 private:
-    mutable std::map<std::string, Handle<Quote>> map_;
+    mutable std::vector<std::pair<std::string, Handle<Quote>>> map_;
 };
 } // namespace data
 } // namespace ore

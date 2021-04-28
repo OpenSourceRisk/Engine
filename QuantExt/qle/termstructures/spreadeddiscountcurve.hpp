@@ -38,9 +38,11 @@ using namespace QuantLib;
   date in the reference curve. */
 class SpreadedDiscountCurve : public YieldTermStructure, public LazyObject {
 public:
+    enum class Extrapolation { flatFwd, flatZero };
     //! times should be consistent with reference ts day counter
     SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve, const std::vector<Time>& times,
-                          const std::vector<Handle<Quote>>& quotes);
+                          const std::vector<Handle<Quote>>& quotes,
+                          const Extrapolation extrapolation = Extrapolation::flatFwd);
 
     Date maxDate() const override;
     void update() override;
@@ -57,6 +59,7 @@ private:
     Handle<YieldTermStructure> referenceCurve_;
     std::vector<Time> times_;
     std::vector<Handle<Quote>> quotes_;
+    Extrapolation extrapolation_;
     mutable std::vector<Real> data_;
     boost::shared_ptr<Interpolation> interpolation_;
 };

@@ -18,28 +18,31 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/indexed.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/matrix.hpp>
+#include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/models/carrmadanarbitragecheck.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
-#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
+#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
-#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -89,6 +92,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
             }
         }
         DLOG("EquityVolCurve: finished building equity volatility structure with ID " << spec.curveConfigID());
+
+        buildCalibrationInfo(asof, curveConfigs, config, eqIndex);
 
     } catch (exception& e) {
         QL_FAIL("Equity volatility curve building failed : " << e.what());
@@ -145,24 +150,14 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
-    bool isRegex = false;
-    for (Size i = 0; i < vcc.quotes().size(); i++) {
-        if ((isRegex = vcc.quotes()[i].find("*") != string::npos)) {
-            QL_REQUIRE(i == 0 && vcc.quotes().size() == 1,
-                       "Wild card config, " << vc.curveID() << ", should have exactly one quote.");
-            break;
-        }
-    }
+    auto wildcard = getUniqueWildcard(vcc.quotes());
 
     // curveData will be populated with the expiry dates and volatility values.
     map<Date, Real> curveData;
 
     // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
-    if (isRegex) {
-        DLOG("Have single quote with pattern " << vcc.quotes()[0]);
-
-        // Create the regular expression
-        regex regexp(boost::replace_all_copy(vcc.quotes()[0], "*", ".*"));
+    if (wildcard) {
+        DLOG("Have single quote with pattern " << (*wildcard).regex());
 
         // Loop over quotes and process commodity option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -172,7 +167,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
                 continue;
 
             auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-            if (q && regex_match(q->name(), regexp) && q->quoteType() == vc.quoteType()) {
+            if (q && (*wildcard).matches(q->name()) && q->quoteType() == vc.quoteType()) {
 
                 TLOG("The quote " << q->name() << " matched the pattern");
 
@@ -249,6 +244,10 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
     DLOG("Creating BlackVarianceCurve object.");
     auto tmp = boost::make_shared<BlackVarianceCurve>(asof, dates, volatilities, dayCounter_);
 
+    // set max expiry date (used in buildCalibrationInfo())
+    if (!dates.empty())
+        maxExpiry_ = dates.back();
+
     // Set the interpolation.
     if (vcc.interpolation() == "Linear") {
         DLOG("Interpolation set to Linear.");
@@ -301,7 +300,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         if (strikesWc) {
             QL_REQUIRE(vssc.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");
         }
-        bool wildCard = strikesWc || expiriesWc;
+        bool wildcard = strikesWc || expiriesWc;
 
         vector<Real> callStrikes, putStrikes;
         vector<Real> callData, putData;
@@ -380,7 +379,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             callSurfaceOnly = true;
         }
         // Check loaded quotes
-        if (!wildCard) {
+        if (!wildcard) {
             Size explicitGridSize = vssc.expiries().size() * vssc.strikes().size();
             QL_REQUIRE(callQuotesAdded == explicitGridSize,
                        "EquityVolatilityCurve " << vc.curveID() << ": " << callQuotesAdded << " quotes provided but "
@@ -434,6 +433,15 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
             DLOG("Extrapolation is turned off for the whole surface so the time and"
                  << " strike extrapolation settings are ignored");
         }
+
+        // set max expiry date (used in buildCalibrationInfo())
+        maxExpiry_ = Date::minDate();
+        for (auto const& d : callExpiries)
+            maxExpiry_ = std::max(maxExpiry_, d);
+        for (auto const& d : putExpiries)
+            maxExpiry_ = std::max(maxExpiry_, d);
+        if (maxExpiry_ == Date::minDate())
+            maxExpiry_ = Date();
 
         bool preferOutOfTheMoney = vc.preferOutOfTheMoney() && *vc.preferOutOfTheMoney();
 
@@ -655,6 +663,10 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         }
     }
 
+    // set max expiry date (used in buildCalibrationInfo())
+    if (!expiryDates.empty())
+        maxExpiry_ = expiryDates.back();
+
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness time extrapolation is hard-coded to constant in volatility.
     bool flatExtrapolation = true;
@@ -729,15 +741,16 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
     LOG("EquityVolCurve: start building 2-D volatility delta strike surface");
 
-    QL_REQUIRE(vc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "EquityVolCurve: only quote type" <<
-        " RATE_LNVOL is currently supported for a 2-D volatility delta strike surface.");
+    QL_REQUIRE(vc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL,
+               "EquityVolCurve: only quote type"
+                   << " RATE_LNVOL is currently supported for a 2-D volatility delta strike surface.");
 
     // Parse, sort and check the vector of configured put deltas
     vector<Real> putDeltas = parseVectorOfValues<Real>(vdsc.putDeltas(), &parseReal);
     sort(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
     QL_REQUIRE(adjacent_find(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
-        putDeltas.end(),
-        "The configured put deltas contain duplicates");
+                   putDeltas.end(),
+               "The configured put deltas contain duplicates");
     DLOG("Parsed " << putDeltas.size() << " unique configured put deltas");
     DLOG("Put deltas are: " << join(putDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
 
@@ -745,8 +758,8 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     vector<Real> callDeltas = parseVectorOfValues<Real>(vdsc.callDeltas(), &parseReal);
     sort(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return !close(x, y) && x > y; });
     QL_REQUIRE(adjacent_find(callDeltas.begin(), callDeltas.end(), [](Real x, Real y) { return close(x, y); }) ==
-        callDeltas.end(),
-        "The configured call deltas contain duplicates");
+                   callDeltas.end(),
+               "The configured call deltas contain duplicates");
     DLOG("Parsed " << callDeltas.size() << " unique configured call deltas");
     DLOG("Call deltas are: " << join(callDeltas | transformed([](Real d) { return ore::data::to_string(d); }), ","));
 
@@ -815,17 +828,17 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
             // Check if quote's strike is in the configured strikes.
             // It should be as we have selected from the explicitly configured quotes in the last step.
             strikeIt = find_if(strikes.begin(), strikes.end(),
-                [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
             QL_REQUIRE(strikeIt != strikes.end(),
-                "The quote '"
-                << q->name()
-                << "' is in the list of configured quotes but does not match any of the configured strikes");
+                       "The quote '"
+                           << q->name()
+                           << "' is in the list of configured quotes but does not match any of the configured strikes");
 
         } else {
 
             // Check if quote's strike is in the configured strikes and continue if it is not.
             strikeIt = find_if(strikes.begin(), strikes.end(),
-                [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
+                               [&q](boost::shared_ptr<BaseStrike> s) { return *s == *q->strike(); });
             if (strikeIt == strikes.end())
                 continue;
         }
@@ -848,13 +861,13 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
             surfaceData[eDate] = vector<Real>(numStrikes, Null<Real>());
 
         QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
-            "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
-            << " and strike " << *q->strike());
+                   "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
+                            << " and strike " << *q->strike());
         surfaceData[eDate][pos] = q->quote()->value();
         quotesAdded++;
 
         TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
-            << setprecision(9) << "," << q->quote()->value() << ")");
+                            << setprecision(9) << "," << q->quote()->value() << ")");
     }
 
     LOG("EquityVolCurve: added " << quotesAdded << " quotes in building delta strike surface.");
@@ -864,14 +877,14 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         // If expiries were configured explicitly, the number of configured quotes should equal the
         // number of quotes added.
         QL_REQUIRE(vc.quotes().size() == quotesAdded,
-            "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
+                   "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
     } else {
         // If the expiries were configured via a wildcard, check that no surfaceData element has a Null<Real>().
         for (const auto& kv : surfaceData) {
             for (Size j = 0; j < numStrikes; j++) {
                 QL_REQUIRE(kv.second[j] != Null<Real>(), "Volatility for expiry date "
-                    << io::iso_date(kv.first) << " and strike " << *strikes[j]
-                    << " not found. Cannot proceed with a sparse matrix.");
+                                                             << io::iso_date(kv.first) << " and strike " << *strikes[j]
+                                                             << " not found. Cannot proceed with a sparse matrix.");
             }
         }
     }
@@ -913,7 +926,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         }
     } else {
         DLOG("Extrapolation is turned off for the whole surface so the time and"
-            << " strike extrapolation settings are ignored");
+             << " strike extrapolation settings are ignored");
     }
 
     // Time interpolation
@@ -932,20 +945,24 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
     } else {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
         DLOG("BlackVolatilitySurfaceDelta does not support strike interpolation '" << vdsc.strikeInterpolation()
-            << "' so setting it to linear.");
+                                                                                   << "' so setting it to linear.");
     }
+
+    // set max expiry date (used in buildCalibrationInfo())
+    if (!expiryDates.empty())
+        maxExpiry_ = expiryDates.back();
 
     DLOG("Creating BlackVolatilitySurfaceDelta object");
     bool hasAtm = true;
     vol_ = boost::make_shared<BlackVolatilitySurfaceDelta>(
-        asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, eqIndex->equitySpot(), eqIndex->equityForecastCurve(),
-        eqIndex->equityDividendCurve(), deltaType, atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatExtrapolation);
+        asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, eqIndex->equitySpot(),
+        eqIndex->equityForecastCurve(), eqIndex->equityDividendCurve(), deltaType, atmType, atmDeltaType, 0 * Days,
+        deltaType, atmType, atmDeltaType, im, flatExtrapolation);
 
     DLOG("Setting BlackVolatilitySurfaceDelta extrapolation to " << to_string(vdsc.extrapolation()));
     vol_->enableExtrapolation(vdsc.extrapolation());
 
     LOG("EquityVolCurve: finished building 2-D volatility delta strike surface");
-
 }
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
@@ -980,6 +997,201 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
 
     vol_ = boost::make_shared<EquityBlackVolatilitySurfaceProxy>(
         proxyVolCurve->second->volTermStructure(), curve->second->equityIndex(), proxyCurve->second->equityIndex());
+}
+
+void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
+                                          const EquityVolatilityCurveConfig& config,
+                                          const Handle<EquityIndex>& eqIndex) {
+
+    DLOG("Building calibration info for eq vol surface");
+
+    try {
+
+        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigEqVols(), config.reportConfig());
+
+        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
+        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
+        std::vector<Real> moneyness = *rc.moneyness();
+        std::vector<std::string> deltas = *rc.deltas();
+        std::vector<Period> expiries = *rc.expiries();
+
+        calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
+
+        DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmType::AtmDeltaNeutral;
+        DeltaVolQuote::DeltaType deltaType = DeltaVolQuote::DeltaType::Fwd;
+
+        if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(config.volatilityConfig())) {
+            atmType = parseAtmType(vdsc->atmType());
+            deltaType = parseDeltaType(vdsc->deltaType());
+        }
+
+        calibrationInfo_->dayCounter = config.dayCounter().empty() ? "na" : config.dayCounter();
+        calibrationInfo_->calendar = config.calendar().empty() ? "na" : config.calendar();
+        calibrationInfo_->atmType = ore::data::to_string(atmType);
+        calibrationInfo_->deltaType = ore::data::to_string(deltaType);
+        calibrationInfo_->longTermAtmType = ore::data::to_string(atmType);
+        calibrationInfo_->longTermDeltaType = ore::data::to_string(deltaType);
+        calibrationInfo_->switchTenor = "na";
+        calibrationInfo_->riskReversalInFavorOf = "na";
+        calibrationInfo_->butterflyStyle = "na";
+
+        std::vector<Real> times, forwards, rfDisc, divDisc;
+        for (auto const& p : expiries) {
+            Date d = vol_->optionDateFromTenor(p);
+            calibrationInfo_->expiryDates.push_back(d);
+            times.push_back(vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
+                                                       : vol_->timeFromReference(d));
+            forwards.push_back(eqIndex->fixing(d));
+            rfDisc.push_back(eqIndex->equityForecastCurve()->discount(d));
+            divDisc.push_back(eqIndex->equityDividendCurve()->discount(d));
+        }
+
+        calibrationInfo_->times = times;
+        calibrationInfo_->forwards = forwards;
+
+        std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
+        std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+
+        calibrationInfo_->isArbitrageFree = true;
+
+        if (reportOnDeltaGrid) {
+            calibrationInfo_->deltas = deltas;
+            calibrationInfo_->deltaGridStrikes =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            calibrationInfo_->deltaGridProb =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            calibrationInfo_->deltaGridImpliedVolatility =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            calibrationInfo_->deltaGridCallSpreadArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+            calibrationInfo_->deltaGridButterflyArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+            TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
+            Real maxTime = QL_MAX_REAL;
+            if (maxExpiry_ != Date()) {
+                if (vol_->dayCounter().empty())
+                    maxTime = Actual365Fixed().yearFraction(asof, maxExpiry_);
+                else
+                    maxTime = vol_->timeFromReference(maxExpiry_);
+            }
+            DeltaVolQuote::AtmType at;
+            DeltaVolQuote::DeltaType dt;
+            for (Size i = 0; i < times.size(); ++i) {
+                Real t = times[i];
+                at = atmType;
+                dt = deltaType;
+                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike
+                // from delta conversions: we use fwd delta always and ATM DNS
+                if (t > maxTime) {
+                    at = DeltaVolQuote::AtmDeltaNeutral;
+                    dt = DeltaVolQuote::Fwd;
+                }
+                bool validSlice = true;
+                for (Size j = 0; j < deltas.size(); ++j) {
+                    DeltaString d(deltas[j]);
+                    try {
+                        Real strike;
+                        if (d.isAtm()) {
+                            strike = QuantExt::getAtmStrike(dt, at, eqIndex->equitySpot()->value(), rfDisc[i],
+                                                            divDisc[i], vol_, t);
+                        } else if (d.isCall()) {
+                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt,
+                                                                  eqIndex->equitySpot()->value(), rfDisc[i], divDisc[i],
+                                                                  vol_, t);
+                        } else {
+                            strike =
+                                QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, eqIndex->equitySpot()->value(),
+                                                             rfDisc[i], divDisc[i], vol_, t);
+                        }
+                        Real stddev = std::sqrt(vol_->blackVariance(t, strike));
+                        callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                        calibrationInfo_->deltaGridStrikes[i][j] = strike;
+                        calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                    } catch (const std::exception& e) {
+                        validSlice = false;
+                        TLOG("error for time " << t << " delta " << deltas[j] << ": " << e.what());
+                    }
+                }
+                if (validSlice) {
+                    try {
+                        QuantExt::CarrMadanMarginalProbability cm(calibrationInfo_->deltaGridStrikes[i], forwards[i],
+                                                                  callPricesDelta[i]);
+                        calibrationInfo_->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
+                        calibrationInfo_->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
+                        if (!cm.arbitrageFree())
+                            calibrationInfo_->isArbitrageFree = false;
+                        calibrationInfo_->deltaGridProb[i] = cm.density();
+                        TLOGGERSTREAM << arbitrageAsString(cm);
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << ": " << e.what());
+                        calibrationInfo_->isArbitrageFree = false;
+                        TLOGGERSTREAM << "..(invalid slice)..";
+                    }
+                } else {
+                    calibrationInfo_->isArbitrageFree = false;
+                    TLOGGERSTREAM << "..(invalid slice)..";
+                }
+            }
+            TLOG("Delta surface arbitrage analysis completed.");
+        }
+
+        if (reportOnMoneynessGrid) {
+            calibrationInfo_->moneyness = moneyness;
+            calibrationInfo_->moneynessGridStrikes =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            calibrationInfo_->moneynessGridProb =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            calibrationInfo_->moneynessGridImpliedVolatility =
+                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            calibrationInfo_->moneynessGridCallSpreadArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            calibrationInfo_->moneynessGridButterflyArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            calibrationInfo_->moneynessGridCalendarArbitrage =
+                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+            for (Size i = 0; i < times.size(); ++i) {
+                Real t = times[i];
+                for (Size j = 0; j < moneyness.size(); ++j) {
+                    try {
+                        Real strike = moneyness[j] * forwards[i];
+                        calibrationInfo_->moneynessGridStrikes[i][j] = strike;
+                        Real stddev = std::sqrt(vol_->blackVariance(t, strike));
+                        callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                        calibrationInfo_->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
+                    }
+                }
+            }
+            if (!times.empty() && !moneyness.empty()) {
+                try {
+                    QuantExt::CarrMadanSurface cm(times, moneyness, eqIndex->equitySpot()->value(), forwards,
+                                                  callPricesMoneyness);
+                    for (Size i = 0; i < times.size(); ++i) {
+                        calibrationInfo_->moneynessGridProb[i] = cm.timeSlices()[i].density();
+                    }
+                    calibrationInfo_->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
+                    calibrationInfo_->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
+                    calibrationInfo_->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
+                    if (!cm.arbitrageFree())
+                        calibrationInfo_->isArbitrageFree = false;
+                    TLOG("Moneyness surface Arbitrage analysis result:");
+                    TLOGGERSTREAM << arbitrageAsString(cm);
+                } catch (const std::exception& e) {
+                    TLOG("error: " << e.what());
+                    calibrationInfo_->isArbitrageFree = false;
+                }
+                TLOG("Moneyness surface Arbitrage analysis completed:");
+            }
+        }
+
+        DLOG("Building calibration info for eq vol surface completed.");
+
+    } catch (std::exception& e) {
+        QL_FAIL("eq vol curve calibration info building failed: " << e.what());
+    } catch (...) {
+        QL_FAIL("eq vol curve calibration info building failed: unknown error");
+    }
 }
 
 } // namespace data
