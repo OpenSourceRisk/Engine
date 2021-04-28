@@ -1111,6 +1111,9 @@
     <ClInclude Include="qle\indexes\offpeakpowerindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1897,6 +1900,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackdeltautilities.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

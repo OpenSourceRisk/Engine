@@ -609,6 +609,7 @@
     <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
+    <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyfixfloatswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyswap.hpp" />
     <ClInclude Include="qle\instruments\currencyswap.hpp" />
@@ -920,6 +921,7 @@
     <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
+    <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyfixfloatswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
     <ClCompile Include="qle\instruments\currencyswap.cpp" />
