@@ -88,7 +88,7 @@ public:
     Real delta() const { return delta_; }
 
 private:
-    bool isAtm_, isPut_, isCall_, isDelta_;
+    bool isAtm_, isPut_, isCall_;
     Real delta_;
 };
 
