@@ -70,7 +70,8 @@ Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, co
     // we allow for standard (i.e. not convention based) ibor index names as keys and return the index forward curve in
     // case of a match
     boost::shared_ptr<IborIndex> notUsed;
-    if (tryParseIborIndex(key, notUsed)) {
+    if (tryParseIborIndex(key, notUsed, conventions_.has(key, Convention::Type::IborIndex)
+        ? conventions_.get(key) : nullptr)) {
         return iborIndex(key, configuration)->forwardingTermStructure();
     }
     // no ibor index found under key => look for a genuine yield curve
