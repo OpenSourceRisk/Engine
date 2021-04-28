@@ -169,6 +169,10 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
 
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
+
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -196,6 +200,8 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
+
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }

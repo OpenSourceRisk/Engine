@@ -1013,7 +1013,8 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
 AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},   {"FX", AssetClass::FX},
                                                    {"COM", AssetClass::COM}, {"IR", AssetClass::IR},
-                                                   {"INF", AssetClass::INF}, {"CR", AssetClass::CR}};
+                                                   {"INF", AssetClass::INF}, {"CR", AssetClass::CR},
+                                                   {"BOND", AssetClass::BOND} };
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -1037,6 +1038,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "INF";
     case AssetClass::CR:
         return os << "CR";
+    case AssetClass::BOND:
+        return os << "BOND";
     default:
         QL_FAIL("Unknown AssetClass");
     }
@@ -1410,6 +1413,8 @@ PriceSegment::Type parsePriceSegmentType(const string& s) {
         return PST::AveragingSpot;
     } else if (s == "AveragingOffPeakPower") {
         return PST::AveragingOffPeakPower;
+    } else if (s == "OffPeakPowerDaily") {
+        return PST::OffPeakPowerDaily;
     } else {
         QL_FAIL("PriceSegment::Type '" << s << "' not known, expect " <<
             "'Future', 'AveragingFuture' or 'AveragingSpot'");
@@ -1425,6 +1430,8 @@ ostream& operator<<(ostream& os, PriceSegment::Type pst) {
         return os << "AveragingSpot";
     } else if (pst == PST::AveragingOffPeakPower) {
         return os << "AveragingOffPeakPower";
+    } else if (pst == PST::OffPeakPowerDaily) {
+        return os << "OffPeakPowerDaily";
     } else {
         QL_FAIL("Unknown PriceSegment::Type.");
     }

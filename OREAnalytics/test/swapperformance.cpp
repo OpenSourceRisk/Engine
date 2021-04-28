@@ -285,7 +285,6 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
     parameters->interpolation() = "LogLinear";
-    parameters->extrapolate() = true;
 
     parameters->setSimulateSwapVols(false);
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});

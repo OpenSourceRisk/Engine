@@ -167,7 +167,7 @@ XMLNode* FXUnderlying::toXML(XMLDocument& doc) {
     return node;
 }
 
-void IRUnderlying::fromXML(XMLNode* node) {
+void InterestRateUnderlying::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
         isBasic_ = true;
@@ -175,12 +175,12 @@ void IRUnderlying::fromXML(XMLNode* node) {
         Underlying::fromXML(node);
         isBasic_ = false;
     } else {
-        QL_FAIL("Need either a Name or Underlying node for IRUnderlying.");
+        QL_FAIL("Need either a Name or Underlying node for InterestRateUnderlying.");
     }
-    setType("IR");
+    setType("InterestRate");
 }
 
-XMLNode* IRUnderlying::toXML(XMLDocument& doc) {
+XMLNode* InterestRateUnderlying::toXML(XMLDocument& doc) {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -190,7 +190,7 @@ XMLNode* IRUnderlying::toXML(XMLDocument& doc) {
     return node;
 }
 
-void INFUnderlying::fromXML(XMLNode* node) {
+void CreditUnderlying::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
         isBasic_ = true;
@@ -198,12 +198,12 @@ void INFUnderlying::fromXML(XMLNode* node) {
         Underlying::fromXML(node);
         isBasic_ = false;
     } else {
-        QL_FAIL("Need either a Name or Underlying node for INFUnderlying.");
+        QL_FAIL("Need either a Name or Underlying node for CreditUnderlying.");
     }
-    setType("INF");
+    setType("Credit");
 }
 
-XMLNode* CRUnderlying::toXML(XMLDocument& doc) {
+XMLNode* CreditUnderlying::toXML(XMLDocument& doc) {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
@@ -213,25 +213,32 @@ XMLNode* CRUnderlying::toXML(XMLDocument& doc) {
     return node;
 }
 
-void CRUnderlying::fromXML(XMLNode* node) {
+void InflationUnderlying::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         name_ = XMLUtils::getNodeValue(node);
         isBasic_ = true;
     } else if (XMLUtils::getNodeName(node) == nodeName_) {
         Underlying::fromXML(node);
+        // optional
+        std::string interpolationString = XMLUtils::getChildValue(node, "Interpolation", false);
+        if (interpolationString != "")
+            interpolation_ = parseObservationInterpolation(interpolationString);
+        else
+            interpolation_ = QuantLib::CPI::InterpolationType::Flat;
         isBasic_ = false;
     } else {
-        QL_FAIL("Need either a Name or Underlying node for CRUnderlying.");
+        QL_FAIL("Need either a Name or Underlying node for InflationUnderlying.");
     }
-    setType("CR");
+    setType("Inflation");
 }
 
-XMLNode* INFUnderlying::toXML(XMLDocument& doc) {
+XMLNode* InflationUnderlying::toXML(XMLDocument& doc) {
     XMLNode* node;
     if (isBasic_) {
         node = doc.allocNode(basicUnderlyingNodeName_, name_);
     } else {
         node = Underlying::toXML(doc);
+        XMLUtils::addChild(doc, node, "Interpolation", std::to_string(interpolation_));
     }
     return node;
 }
@@ -247,12 +254,12 @@ void UnderlyingBuilder::fromXML(XMLNode* node) {
             underlying_ = boost::make_shared<CommodityUnderlying>();
         else if (type == "FX")
             underlying_ = boost::make_shared<FXUnderlying>();
-        else if (type == "IR")
-            underlying_ = boost::make_shared<IRUnderlying>();
-        else if (type == "INF")
-            underlying_ = boost::make_shared<INFUnderlying>();
-        else if (type == "CR")
-            underlying_ = boost::make_shared<CRUnderlying>();
+        else if (type == "InterestRate")
+            underlying_ = boost::make_shared<InterestRateUnderlying>();
+        else if (type == "Inflation")
+            underlying_ = boost::make_shared<InflationUnderlying>();
+        else if (type == "Credit")
+            underlying_ = boost::make_shared<CreditUnderlying>();
         else {
             QL_FAIL("Unknown Underlying type " << type);
         }

@@ -124,6 +124,7 @@
     <ClInclude Include="ored\model\irlgmdata.hpp" />
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
+    <ClInclude Include="ored\model\marketobserver.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
     <ClInclude Include="ored\model\modeldata.hpp" />
     <ClInclude Include="ored\model\modelparameter.hpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
+    <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
@@ -224,6 +226,7 @@
     <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
     <ClInclude Include="ored\utilities\vectorutils.hpp" />
+    <ClInclude Include="ored\utilities\wildcard.hpp" />
     <ClInclude Include="ored\utilities\xmlutils.hpp" />
     <ClInclude Include="ored\version.hpp" />
   </ItemGroup>
@@ -382,6 +385,7 @@
     <ClCompile Include="ored\utilities\progressbar.cpp" />
     <ClCompile Include="ored\utilities\strike.cpp" />
     <ClCompile Include="ored\utilities\to_string.cpp" />
+    <ClCompile Include="ored\utilities\wildcard.cpp" />
     <ClCompile Include="ored\utilities\xmlutils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -4255,6 +4255,11 @@ FX volatilities are taken to be a curve by default. To simulate an FX volatility
 For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
 If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}. 
 
+For Yield Curves there are two ways of extrapolating them beyond the last given tenor: Extrapolation = 'FlatFwd' keeps
+the instantaneous forward rate at the last tenor constant, this is also the default if the parameter is not specified.
+'FlatZero' on the other hand keeps the (average) zero rate at the last tenor constant. Extrapolation is always enabled
+in the scenario sim market, for compatibility with old configuration files a boolean value will be mapped to 'FlatFwd'.
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -4268,7 +4273,7 @@ If no day counter is specified for a given riskfactor then the default Actual365
     <Configuration>
       <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
       <Interpolation>LogLinear</Interpolation>
-      <Extrapolation>Y</Extrapolation>
+      <Extrapolation>FlatFwd</Extrapolation>
       <DayCounter>ACT/ACT</DayCounter> <!-- Sets a new default for all yieldCurves -->
     </Configuration>
   </YieldCurves>
@@ -4803,89 +4808,157 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 
 \subsubsection{FX Volatility Structures}
 
-Listing \ref{lst:fxoptionvol_configuration} shows three examples of FX volatility structure configurations.
+Listings \ref{lst:fxoptionvol_configuration_atm}, \ref{lst:fxoptionvol_configuration_smile_vv},
+\ref{lst:fxoptionvol_configuration_smile_delta}, \ref{lst:fxoptionvol_configuration_smile_bfrr},
+\ref{lst:fxoptionvol_configuration_atm_triangulated} shows examples of FX volatility structure configurations.
 
 \begin{longlisting}
-%\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<FXVolatilities>
   <FXVolatility>
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
-    <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>ATM</Dimension> 
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
-    <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
-    <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
+    <FXForeignCurveID>Yield/EUR/ERU-IN-USD</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/USD/USD1D</FXDomesticCurveID>
+    <DayCounter>A365</DayCounter>
+    <Calendar>US,TARGET<Calendar>
+    <Conventions>EUR-USD-FXOPTION</Conventions>
   </FXVolatility>
-  
+\end{minted}
+\caption{FX option volatility configuration ATM}
+\label{lst:fxoptionvol_configuration_atm}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
   <FXVolatility>
     <CurveId>USDJPY</CurveId>
     <CurveDescription />
-    <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>Smile</Dimension> 
-    <!-- VannaVolga, Delta -->
-    <SmileType>Delta</SmileType> 
-    <!-- VannaVolga1, VannaVolga2, Linear, Cubic -->
-    <SmileInterpolation>Linear</SmileInterpolation>
-    <Conventions>FX-USD-JPY-OPTION-CONVENTIONS</Conventions>
-    <Deltas>10P,20P,ATM,10C,20C</Deltas>
+    <SmileType>VannaVolga</SmileType> 
+    <SmileInterpolation>VannaVolga2</SmileInterpolation>
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <SmileDelta>25</SmileDelta>
     <FXSpotID>FX/USD/JPY</FXSpotID>
-    <FXForeignCurveID>Yield/JPY/JPY1D</FXForeignCurveID>
-    <FXDomesticCurveID>Yield/USD/USD1D</FXDomesticCurveID>
+    <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/JPY/JPY-IN-USD</FXDomesticCurveID>
+    <DayCounter>A365</DayCounter>
+    <Calendar>US,JP<Calendar>
+    <Conventions>USD-JPY-FXOPTION</Conventions>
   </FXVolatility>
+\end{minted}
+\caption{FX option volatility configuration Smile / VannaVolga}
+\label{lst:fxoptionvol_configuration_smile_vv}
+\end{longlisting}
 
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription />
+    <Dimension>Smile</Dimension> 
+    <SmileType>Delta</SmileType> 
+    <SmileInterpolation>Linear</SmileInterpolation>
+    <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <Deltas>10P,20P,30P,40P,ATM,40C,30C,20C,10C</Deltas>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/JPY/JPY-IN-USD</FXDomesticCurveID>
+    <DayCounter>A365</DayCounter>
+    <Calendar>US,JP<Calendar>
+    <Conventions>USD-JPY-FXOPTION</Conventions>
+  </FXVolatility>
+\end{minted}
+\caption{FX option volatility configuration Smile / Delta}
+\label{lst:fxoptionvol_configuration_smile_delta}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <FXVolatility>
+    <CurveId>USDJPY</CurveId>
+    <CurveDescription />
+    <Dimension>Smile</Dimension> 
+    <SmileType>BFRR</SmileType> 
+    <SmileInterpolation>Cubic</SmileInterpolation>
+    <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <SmileDelta>10,25</SmileDelta>
+    <FXSpotID>FX/USD/JPY</FXSpotID>
+    <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/JPY/JPY-IN-USD</FXDomesticCurveID>
+    <DayCounter>A365</DayCounter>
+    <Calendar>US,JP<Calendar>
+    <Conventions>USD-JPY-FXOPTION</Conventions>
+  </FXVolatility>
+\end{minted}
+\caption{FX option volatility configuration Smile / BFRR with 10 and 25 BF and RR}
+\label{lst:fxoptionvol_configuration_smile_bfrr}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
   <FXVolatility>
     <CurveId>EURJPY</CurveId>
     <CurveDescription />
-    <!-- ATM, Smile, ATMTriangulated -->
     <Dimension>ATMTriangulated</Dimension> 
     <FXSpotID>FX/EUR/JPY</FXSpotID>
+    <DayCounter>A365</DayCounter>
+    <Calendar>US,JP<Calendar>
     <BaseVolatility1>EURUSD</BaseVolatility1>
     <BaseVolatility2>USDJPY</BaseVolatility2>
   </FXVolatility>
-
-  <FXVolatility>
-    ...
-  </FXVolatility>
-</FXVolatilities>
 \end{minted}
-\caption{FX option volatility configuration}
-\label{lst:fxoptionvol_configuration}
+\caption{FX option volatility configuration ATM Triangulated}
+\label{lst:fxoptionvol_configuration_atm_triangulated}
 \end{longlisting}
 
-The meaning of each of the elements in Listing \ref{lst:fxoptionvol_configuration} is given below. 
+The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configuration_atm},
+\ref{lst:fxoptionvol_configuration_smile_vv}, \ref{lst:fxoptionvol_configuration_smile_delta},
+\ref{lst:fxoptionvol_configuration_smile_bfrr}, \ref{lst:fxoptionvol_configuration_atm_triangulated} is given below.
 
 \begin{itemize}
 \item CurveId: Unique identifier of the FX volatility structure
 \item CurveDescription: A description of the volatility structure, may be left blank.
-\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. An `ATMTriangulated' value denotes a curve triangulated from two other surfaces.\\ 
-Allowable values: {\tt ATM, Smile, ATMTriangulated}
-\item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
-Allowable values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006) and {\tt Delta}, with default value {\tt VannaVolga} if left blank.
-\item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\
-Allowable values: 
+\item Dimension: Distinguishes at-the-money volatility curves from volatility surfaces. An `ATMTriangulated' value
+  denotes a curve triangulated from two other surfaces.\\ Allowable values: {\tt ATM, Smile, ATMTriangulated}
+\item SmileType [Optional]: Required field in case of Dimension {\tt Smile}, otherwise it can be omitted. \\ Allowable
+  values: {\tt VannaVolga} as per (Castagna \& Mercurio - 2006), {\tt Delta}, {\tt BFRR}, with default value {\tt
+    VannaVolga} if left blank.
+\item SmileInterpolation [Optional]: Smile interpolation method applied, required field in case of Dimension {\tt
+  Smile}, otherwise it can be omitted. \\ Allowable values:
 \begin{itemize}
-\item {\tt VannaVolga1} or {\tt VannaVolga2} in case of SmileType {\tt VannaVolga} with default VannaVolga2 if left blank.
-VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and (eq. 14) of the reference above.
-\item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} with default {\tt Linear} if left blank
+\item {\tt VannaVolga1} or {\tt VannaVolga2} in case of SmileType {\tt VannaVolga} with default VannaVolga2 if left
+  blank.  VannaVolga1/VannaVolga2 refer to the first/second approximation in (eq. 13) and (eq. 14) of the reference
+  above.
+\item {\tt Linear} or {\tt Cubic} in case of SmileType {\tt Delta} or {\tt BFRR} with default {\tt Linear} for SmileType
+  Delta and {\tt Cubic} for SmileType BFRR if left blank
 \end{itemize}
+\item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any
+  matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt
+    ATM} or {\tt Delta} or {\tt BFRR} curves.
+\item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\ Allowable values: {\tt ATM, *P, *C},
+  see example in Listing \ref{lst:fxoptionvol_configuration_smile_delta}
+\item SmileDeltas [Optional]: Strike grid for SmileType {\tt VannaVolga} and {\tt BFRR}, defaults to 25 for VannaVolga
+  resp. 10,25 for BFRR \\ Allowable values: a list of integers, see example in Listing
+  \ref{lst:fxoptionvol_configuration_smile_bfrr}
+\item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
+\item FXForeignCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as foreign yield curve in smile curves,
+  may be omitted for ATM curves.
+\item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in smile
+  curves, may be omitted for ATM curves.
+\item DayCounter: The term structure's day counter used in date to time conversions. Optional, defaults to A365.
+\item Calendar: The term structure's calendar used in option tenor to date conversions. Optional, defaults to source ccy
+  + target ccy default calendars.
 \item Conventions [Optional]: FX conventions object ID that is used to determine the at-the-money type and delta type of
   the volatility quotes, these default to {\tt AtmDeltaNeutral} and {\tt Spot} for option tenors <= 2Y and {\tt
-    AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y  if the conventions ID is omitted or left blank
-\item Expiries: Option expiries in period form. A wildcard may also be used. In the wildcard case, it will look for any matching quotes provided in the loader, and construct the curve from these. This is currently only supported for {\tt ATM} or {\tt Delta} curves.
-\item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\
-Allowable values: {\tt ATM, *P, *C}, see example in Listing \ref{lst:fxoptionvol_configuration}
-\item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
-\item FXForeignCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as foreign yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
-\item FXDomesticCurveID [Optional]: Yield curve, in ORE format Yield/CCY/ID, used as domestic yield curve in the Delta Surface object; this is hence required for SmileType Delta only, otherwise it can be omitted
-\item DayCounter: The term structure's day counter used in date to time conversions
-\item Calendar: The term structure's calendar used in option tenor to date conversions
+    AtmDeltaNeutral} and {\tt Fwd} for option tenors > 2Y if the conventions ID is omitted or left blank. Furthermore,
+  the conventions hold information on the side of risk reversals (RiskReversalInFavorOf, defaults to {\tt Call}) and the
+  quote style of butterflies (ButterflyStyle, defaults to {\tt Broker}), these latter two are relevant for BF, RR market
+  data input. See \ref{sss:fx_option_conv} for more details.
 \item BaseVolatility1: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
 \item BaseVolatility2: For `ATMTriangulated' this denotes one of the surfaces we want to triangulate from
-
 \end{itemize}
 
 \subsubsection{Equity Curve Structures}
@@ -5685,7 +5758,7 @@ Commodity curves may also be set up using a base future price curve and a set of
 The base future is not averaging and the basis future is not averaging. The commodity curve that is built gives the outright price of the non-averaging future. An example of this is the CME Henry Hub future contract, symbol NG, and the various locational gas basis future contracts, e.g.\ ICE Waha Basis Future, symbol WAH. Listing \ref{lst:commodity_crv_config_ice_waha} demonstrates an example set-up for this curve. The curve that is built will give the ICE Waha outright price on the basis contract's expiry dates.
 
 \item
-The base future is not averaging and the basis future is averaging. The commodity curve that is built gives the outright price of the averaging future. An example of this is the CME Light Sweet Crude Oil future contract, symbol CL, and the various locational oil basis future contracts, e.g.\ CME WTI Midland (Argus) Future, symbol FF. Listing \ref{lst:commodity_crv_config_cme_ff} demonstrates an example set-up for this curve. The curve that is built will give the outright average price of WTI Midland (Argus) over the calendar month.
+The base future is not averaging and the basis future is averaging. The commodity curve that is built gives the outright price of the averaging future. In this case, if the \lstinline!AverageBase! field is \lstinline!true! the base price will be averaged from and excluding one basis future expiry to and including the next basis future expiry. An example of this is the CME Light Sweet Crude Oil future contract, symbol CL, and the various locational oil basis future contracts, e.g.\ CME WTI Midland (Argus) Future, symbol FF. Listing \ref{lst:commodity_crv_config_cme_ff} demonstrates an example set-up for this curve. The curve that is built will give the outright average price of WTI Midland (Argus) over the calendar month. If the \lstinline!AverageBase! field is \lstinline!false!, the base price is not averaged and the basis is added to the base price to give a curve that can be queried on an expiry date for an average price. An example of this is a curve built for the average of the daily prices published by Gas Daily using the ICE futures that reference the difference between the Inside FERC price and the average Gas Daily price.
 
 \item
 The base future is averaging and the basis future is averaging. The commodity curve that is built gives the outright price of the averaging future. The set-up is identical to that outlined in Listings \ref{lst:commodity_crv_config_ice_waha} and \ref{lst:commodity_crv_config_cme_ff}.
@@ -5732,6 +5805,7 @@ The base future is averaging and the basis future is not averaging. This combina
     <DayCounter>A365</DayCounter>
     <InterpolationMethod>LinearFlat</InterpolationMethod>
     <AddBasis>true</AddBasis>
+    <AverageBase>true</AverageBase>
   </BasisConfiguration>
   <Extrapolation>true</Extrapolation>
 </CommodityCurve>

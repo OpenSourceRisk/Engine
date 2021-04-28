@@ -121,6 +121,7 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/region.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
@@ -252,9 +253,11 @@
 #include <qle/termstructures/adjusteddefaultcurve.hpp>
 #include <qle/termstructures/aposurface.hpp>
 #include <qle/termstructures/averagefuturepricehelper.hpp>
+#include <qle/termstructures/averageoffpeakpowerhelper.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/averagespotpricehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
+#include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackmonotonevarvoltermstructure.hpp>
 #include <qle/termstructures/blacktriangulationatmvol.hpp>
@@ -262,12 +265,14 @@
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
+#include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
+#include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>

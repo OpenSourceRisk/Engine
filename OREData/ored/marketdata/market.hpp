@@ -40,6 +40,7 @@
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 
@@ -207,11 +208,14 @@ public:
                                          const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
-    //! \name Commodity price curves
+    //! \name Commodity price curves and indices
     //@{
     virtual QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const std::string& commodityName,
                         const std::string& configuration = Market::defaultConfiguration) const = 0;
+
+    virtual QuantLib::Handle<QuantExt::CommodityIndex> commodityIndex(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Commodity volatility

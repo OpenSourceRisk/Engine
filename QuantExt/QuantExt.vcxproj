@@ -531,6 +531,7 @@
     <ClInclude Include="qle\currencies\africa.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
+    <ClInclude Include="qle\currencies\currencycomparator.hpp" />
     <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
     <ClInclude Include="qle\currencies\configurablecurrency.hpp" />
@@ -544,6 +545,7 @@
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
+    <ClInclude Include="qle\indexes\escpi.hpp" />
     <ClInclude Include="qle\indexes\frcpi.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
@@ -580,6 +582,7 @@
     <ClInclude Include="qle\indexes\ibor\nowa.hpp" />
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
+    <ClInclude Include="qle\indexes\ibor\plnpolonia.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\primeindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
@@ -595,6 +598,7 @@
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
     <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
+    <ClInclude Include="qle\indexes\offpeakpowerindex.hpp" />
     <ClInclude Include="qle\indexes\region.hpp" />
     <ClInclude Include="qle\indexes\secpi.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
@@ -626,6 +630,7 @@
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp" />
     <ClInclude Include="qle\instruments\cashflowresults.hpp" />
     <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
+    <ClInclude Include="qle\math\covariancesalvage.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
@@ -633,6 +638,7 @@
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
+    <ClInclude Include="qle\methods\pathgeneratorfactory.hpp" />
     <ClInclude Include="qle\models\annuitymapping.hpp" />
     <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
@@ -729,12 +735,15 @@
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
     <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\blackdeltautilities.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\blacktriangulationatmvol.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp" />
+    <ClInclude Include="qle\termstructures\blackvolsurfacebfrr.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
@@ -829,13 +838,13 @@
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp" />
-    <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
     <ClInclude Include="qle\time\actual364.hpp" />
     <ClInclude Include="qle\time\futureexpirycalculator.hpp" />
     <ClInclude Include="qle\time\yearcounter.hpp" />
     <ClInclude Include="qle\utilities\inflation.hpp" />
+    <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\calendars\austria.cpp" />
@@ -894,12 +903,14 @@
     <ClCompile Include="qle\indexes\compoequityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
+    <ClCompile Include="qle\indexes\genericiborindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\boebaserate.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
     <ClCompile Include="qle\indexes\ibor\ester.cpp" />
     <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\sofr.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
+    <ClCompile Include="qle\indexes\offpeakpowerindex.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\brlcdiswap.cpp" />
@@ -1011,10 +1022,12 @@
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
+    <ClCompile Include="qle\termstructures\blackdeltautilities.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp" />
+    <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
     <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />

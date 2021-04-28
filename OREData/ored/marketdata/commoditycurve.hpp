@@ -111,10 +111,10 @@ private:
         const Conventions& conventions, const Loader& loader,
         const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
 
-    //! Get the configured quotes
+    //! Get the configured quotes. If filter is \c true, remove tenor based quotes and quotes with expiry before asof.
     std::vector<boost::shared_ptr<CommodityForwardQuote>>
     getQuotes(const QuantLib::Date& asof, const std::string& configId, const std::vector<std::string>& quotes,
-        const Loader& loader);
+        const Loader& loader, bool filter = false);
 
     //! Method for populating the price curve
     template <template <class> class CurveType, typename... Args> void populateCurve(Args... args);
@@ -124,6 +124,11 @@ private:
     void addInstruments(const QuantLib::Date& asof, const Loader& loader, const std::string& configId,
         const std::string& currency, const PriceSegment& priceSegment, const Conventions& conventions,
         const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+        std::map<QuantLib::Date, boost::shared_ptr<Helper>>& instruments);
+
+    //! Special method to add instruments when the \p priceSegment is \c OffPeakPowerDaily
+    void addOffPeakPowerInstruments(const QuantLib::Date& asof, const Loader& loader, const std::string& configId,
+        const PriceSegment& priceSegment, const Conventions& conventions,
         std::map<QuantLib::Date, boost::shared_ptr<Helper>>& instruments);
 };
 

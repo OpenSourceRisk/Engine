@@ -24,6 +24,7 @@ cube/sensitivitycube.cpp
 engine/cptycalculator.cpp
 engine/filteredsensitivitystream.cpp
 engine/mporcalculator.cpp
+engine/npvrecord.cpp
 engine/parametricvar.cpp
 engine/riskfilter.cpp
 engine/sensitivityaggregator.cpp
@@ -84,6 +85,7 @@ cube/sensitivitycube.hpp
 engine/cptycalculator.hpp
 engine/filteredsensitivitystream.hpp
 engine/mporcalculator.hpp
+engine/npvrecord.hpp
 engine/observationmode.hpp
 engine/parametricvar.hpp
 engine/riskfilter.hpp

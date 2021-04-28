@@ -138,6 +138,7 @@
       <xs:element type="xs:string" name="FXIndexTag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseVolatility1" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -169,6 +170,7 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -546,6 +548,14 @@
       <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AddBasis" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="MonthOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="AverageBase" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="offPeakDailyType">
+    <xs:all>
+      <xs:element type="quoteType" name="OffPeakQuotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="PeakQuotes" minOccurs="1" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
@@ -554,9 +564,10 @@
       <xs:element type="priceSegmentTypeType" name="Type" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PeakPriceCurveId" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PeakPriceCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="offPeakDailyType" name="OffPeakDaily" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
@@ -947,6 +958,13 @@
   <xs:complexType name="globalReportConfiguration">
     <xs:all>
       <xs:element name="FXVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="EquityVolatilities" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>

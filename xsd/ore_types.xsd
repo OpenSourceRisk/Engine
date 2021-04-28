@@ -296,7 +296,7 @@
 
   <xs:simpleType name="calendar">
     <xs:restriction base="xs:string">
-      <xs:pattern value="(JoinHolidays\(|JoinBusinessDays\()?((,)?(, )?(^)?(TGT|TARGET|CN-IB|US-FED|US-GOV|US-NERC|US-NYSE|US-SET|Australia|Canada|Denmark|Japan|Norway|Switzerland|Sweden|Belgium|Luxembourg|Spain|Austria|FRA|CATO|CHZU|JPTO|GBLO|SEST|TRIS|USNY|EUTA|BEBR|AT|AR|AU|BW|BR|CA|CL|CN|CO|CZ|DK|FI|FR|DE|HK|HU|IS|IN|ID|IL|IT|JP|MX|MY|NL|NO|NZ|PE|PH|PL|RO|RU|SG|ZA|KR|SE|CH|TW|TH|TR|UA|GB|US|BE|LU|ES|AT|ARG|AUS|ATS|BWA|BRA|CAN|CHL|CHN|COL|CZE|DNK|FIN|DEU|HKG|HUN|ISL|IND|IDN|ISR|ITA|JPN|MEX|MYS|NLD|NOR|NZL|PER|PHL|POL|ROU|RUS|SAU|SGP|ZAF|KOR|SWE|CHE|TWN|THA|TUR|UKR|GBR|USA|BEL|LUX|ESP|AUT|ARS|AUD|BWP|BRL|CAD|CLP|CNH|CNY|COP|CZK|DKK|FRF|HKD|HUF|INR|IDR|ILS|ISK|ITL|JPY|MXN|MYR|NOK|NZD|PEN|PHP|PLN|RON|RUB|SAR|SGD|ZAR|KRW|SEK|CHF|EUR|TWD|THB|TRY|UAH|GBP|USD|BEF|LUF|ATS|AED|BHD|CLF|EGP|KWD|KZT|MAD|MXV|NGN|OMR|PKR|QAR|UYU|TND|AOA|GEL|ETB|XOF|VND|GBp|GBX|ILa|ILX|ZAc|ZAC|ZAX|BVMF|XTSE|XSHG|XFRA|XETR|ECAG|EUWA|XJKT|XIDX|XTAE|XMIL|MISX|XKRX|XSWX|XLON|XLME|XNYS|DEN|Telbor|London stock exchange|LNB|New York stock exchange|NGL|NYB|SA|SS|SYB|TKB|TRB|UK|UK settlement|US settlement|US with Libor impact|WMR|ZUB|ICE_FuturesUS|ICE_FuturesUS_1|ICE_FuturesUS_2|ICE_FuturesEU|ICE_FuturesEU_1|ICE_EndexEnergy|ICE_EndexEquities|ICE_SwapTradeUS|ICE_SwapTradeUK|ICE_FuturesSingapore|CME|WeekendsOnly|UNMAPPED|NullCalendar|CUSTOM_.*))*(\))?"/>
+      <xs:pattern value="(JoinHolidays\(|JoinBusinessDays\()?((,)?(, )?(^)?(TGT|TARGET|CN-IB|US-FED|US-GOV|US-NERC|US-NYSE|US-SET|Australia|Canada|Denmark|Japan|Norway|Switzerland|Sweden|Belgium|Luxembourg|Spain|Austria|FRA|CATO|CHZU|JPTO|GBLO|SEST|TRIS|USNY|EUTA|BEBR|AT|AR|AU|BW|BR|CA|CL|CN|CO|CZ|DK|FI|FR|DE|HK|HU|IS|IN|ID|IL|IT|JP|MX|MY|NL|NO|NZ|PE|PH|PL|RO|RU|SG|ZA|KR|SE|CH|TW|TH|TR|UA|GB|US|BE|LU|ES|AT|ARG|AUS|ATS|BWA|BRA|CAN|CHL|CHN|COL|CZE|DNK|FIN|DEU|HKG|HUN|ISL|IND|IDN|ISR|ITA|JOD|JPN|KES|LKR|MEX|MUR|MYS|NLD|NOR|NZL|PER|PHL|POL|ROU|RSD|RUS|SAU|SGP|UGX|ZAF|ZMW|KOR|SWE|CHE|TWN|THA|TUR|UKR|GBR|USA|BEL|LUX|ESP|AUT|ARS|AUD|BGN|BWP|BRL|CAD|CLP|CNH|CNY|COP|CZK|DKK|FRF|GHS|HKD|HRK|HUF|INR|IDR|ILS|ISK|ITL|JPY|MXN|MYR|NOK|NZD|PEN|PHP|PLN|RON|RUB|SAR|SGD|ZAR|KRW|SEK|CHF|EUR|TWD|THB|TRY|UAH|GBP|USD|BEF|LUF|ATS|AED|BHD|CLF|EGP|KWD|KZT|MAD|MXV|NGN|OMR|PKR|QAR|UYU|TND|AOA|GEL|ETB|XOF|VND|GBp|GBX|ILa|ILX|ZAc|ZAC|ZAX|BVMF|XTSE|XSHG|XFRA|XETR|ECAG|EUWA|XJKT|XIDX|XTAE|XMIL|MISX|XKRX|XSWX|XLON|XLME|XNYS|DEN|Telbor|London stock exchange|LNB|New York stock exchange|NGL|NYB|SA|SS|SYB|TKB|TRB|UK|UK settlement|US settlement|US with Libor impact|WMR|ZUB|ICE_FuturesUS|ICE_FuturesUS_1|ICE_FuturesUS_2|ICE_FuturesEU|ICE_FuturesEU_1|ICE_EndexEnergy|ICE_EndexEquities|ICE_SwapTradeUS|ICE_SwapTradeUK|ICE_FuturesSingapore|CME|WeekendsOnly|UNMAPPED|NullCalendar|CUSTOM_.*))*(\))?"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="dayCounter">
@@ -474,6 +474,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="VannaVolga"/>
       <xs:enumeration value="Delta"/>
+      <xs:enumeration value="BFRR"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -819,6 +820,7 @@
       <xs:enumeration value="AveragingFuture"/>
       <xs:enumeration value="AveragingSpot"/>
       <xs:enumeration value="AveragingOffPeakPower"/>
+      <xs:enumeration value="OffPeakPowerDaily"/>
     </xs:restriction>
   </xs:simpleType>
 

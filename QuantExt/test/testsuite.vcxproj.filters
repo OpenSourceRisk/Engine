@@ -167,6 +167,9 @@
     <ClCompile Include="normalfreeboundarysabr.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="dategeneration.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

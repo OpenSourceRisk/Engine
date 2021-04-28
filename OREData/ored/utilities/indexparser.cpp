@@ -30,6 +30,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -92,6 +93,7 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/indexes/decpi.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -284,7 +286,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"BRL-CDI", boost::make_shared<BRLCdi>()},         {"NOK-NOWA", boost::make_shared<Nowa>()},
         {"CLP-CAMARA", boost::make_shared<CLPCamara>()},   {"NZD-OCR", boost::make_shared<Nzocr>()},
         {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}, {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()},
-	{"GBP-BOEBaseRate", boost::make_shared<BOEBaseRateIndex>()}};
+	    {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()}};
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
@@ -620,10 +622,39 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
         }
     }
 
+    // Name to use when creating the index. This may be updated if we have a commodity future convention and IndexName 
+    // is provided by the convention.
+    string indexName = commName;
+
     // Do we have a commodity future convention for the commodity.
+    pair<bool, boost::shared_ptr<Convention>> p = conventions.get(commName, Convention::Type::CommodityFuture);
     boost::shared_ptr<CommodityFutureConvention> convention;
-    if (conventions.has(commName)) {
-        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commName));
+    if (p.first) {
+
+        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
+
+        if (!convention->indexName().empty())
+            indexName = convention->indexName();
+
+        // If we have provided OffPeakPowerIndexData, we use that to construct the off peak power commodity index.
+        if (convention->offPeakPowerIndexData()) {
+
+            const auto& oppIdxData = *convention->offPeakPowerIndexData();
+
+            if (expiry == Date()) {
+                // If expiry is still not set use any date (off peak index is calendar daily)
+                expiry = Settings::instance().evaluationDate();
+            }
+            string suffix = "-" + to_string(expiry);
+
+            auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+                oppIdxData.offPeakIndex() + suffix, conventions, false));
+            auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+                oppIdxData.peakIndex() + suffix, conventions, false));
+
+            return boost::make_shared<OffPeakPowerIndex>(indexName, expiry, offPeakIndex, peakIndex,
+                oppIdxData.offPeakHours(), oppIdxData.peakCalendar(), ts);
+        }
     }
 
     // Create and return the required future index
@@ -642,7 +673,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
             cdr = convention->calendar();
         }
 
-        return boost::make_shared<CommodityFuturesIndex>(commName, expiry, cdr, keepDays, ts);
+        return boost::make_shared<CommodityFuturesIndex>(indexName, expiry, cdr, keepDays, ts);
 
     } else {
         return boost::make_shared<CommoditySpotIndex>(commName, cal, ts);

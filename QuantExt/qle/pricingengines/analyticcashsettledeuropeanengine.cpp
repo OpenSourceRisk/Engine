@@ -18,6 +18,7 @@
 
 #include <ql/event.hpp>
 #include <ql/exercise.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 
 using QuantLib::close;
@@ -122,11 +123,19 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
         // Prepare the underlying engine for the valuation.
         underlyingEngine_.reset();
-        VanillaOption::arguments* underlyingArgs =
-            dynamic_cast<VanillaOption::arguments*>(underlyingEngine_.getArguments());
+        VanillaForwardOption::arguments* underlyingArgs =
+            dynamic_cast<VanillaForwardOption::arguments*>(underlyingEngine_.getArguments());
         QL_REQUIRE(underlyingArgs, "Underlying engine expected to have vanilla option arguments.");
         underlyingArgs->exercise = arguments_.exercise;
         underlyingArgs->payoff = arguments_.payoff;
+
+        // If we have a commodity future index, set the forward date to its expiry to get the right future price 
+        // in the Black formula. If not, just use the expiry date => same result as standard QL engine.
+        if (auto cfi = boost::dynamic_pointer_cast<CommodityFuturesIndex>(arguments_.underlying)) {
+            underlyingArgs->forwardDate = cfi->expiryDate();
+        } else {
+            underlyingArgs->forwardDate = expiryDate;
+        }
         underlyingEngine_.calculate();
 
         // Discount factor from payment date back to expiry date i.e. P(t_e, t_p) when rates are deterministic.

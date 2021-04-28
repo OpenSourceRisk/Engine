@@ -25,6 +25,8 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 namespace ore {
 namespace data {
@@ -216,9 +218,11 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             QL_REQUIRE(con, "Cannot find IRSwapConventions " << swapCon->conventions());
             std::string iborIndex = con->indexName();
             std::string discountIndex = g[*v].mapping;
+            if (isGenericIborIndex(iborIndex))
+                foundIbor = true;
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                 if (*w != *v) {
-                    if (g[*w].obj == MarketObject::IndexCurve) {
+                    if (g[*w].obj == MarketObject::IndexCurve || g[*w].obj == MarketObject::YieldCurve) {
                         if (g[*w].name == discountIndex) {
                             g.add_edge(*v, *w);
                             foundDiscount = true;
@@ -245,6 +249,36 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                 buildErrors[g[*v].mapping] = "did not find required discount index " + discountIndex +
                                              " (required from " + ore::data::to_string(g[*v]) +
                                              ") in dependency graph for configuration " + configuration;
+        }
+
+        if (g[*v].obj == MarketObject::YieldCurve || g[*v].obj == MarketObject::DiscountCurve) {
+            if (curveConfigs_->hasYieldCurveConfig(g[*v].curveSpec->curveConfigID())) {
+                boost::shared_ptr<YieldCurveConfig> config = curveConfigs_->yieldCurveConfig(g[*v].curveSpec->curveConfigID());
+                vector<boost::shared_ptr<YieldCurveSegment>> segments = config->curveSegments();
+                for (auto s : segments) {
+                    if (auto ccSegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(s)) {
+                        if (ccSegment->foreignDiscountCurveID() == "") {
+                            // find the foreign ccy
+                            std::string ccy = config->currency();
+                            std::string spot = ccSegment->spotRateID();
+                            std::string foreignCcy;
+                            auto spotDatum = parseMarketDatum(Date(), spot, Real());
+                            if (auto fxq = boost::dynamic_pointer_cast<FXSpotQuote>(spotDatum)) 
+                                foreignCcy = ccy == fxq->unitCcy() ? fxq->ccy() : fxq->unitCcy();
+                            
+                            for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                                if (*w != *v) {
+                                    if (g[*w].obj == MarketObject::DiscountCurve && g[*w].name == foreignCcy) {
+                                        g.add_edge(*v, *w);
+                                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
+                                            << g[*w]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         // 5 Equity Vol depends on spot, discount, div

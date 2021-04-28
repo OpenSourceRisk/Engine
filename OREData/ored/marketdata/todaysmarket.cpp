@@ -56,6 +56,7 @@
 using namespace std;
 using namespace QuantLib;
 
+using QuantExt::CommodityIndex;
 using QuantExt::EquityIndex;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
@@ -249,7 +250,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building YieldCurve for asof " << asof_);
                 boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
                     asof_, *ycspec, *curveConfigs_, *loader_, *conventions_, requiredYieldCurves_,
-                    requiredDefaultCurves_, fxT_, referenceData_, preserveQuoteLinkage_);
+                    requiredDefaultCurves_, fxT_, referenceData_, preserveQuoteLinkage_, requiredDiscountCurves_);
                 calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
@@ -263,6 +264,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Adding DiscountCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
                                              << configuration);
                 yieldCurves_[make_tuple(configuration, YieldCurveType::Discount, node.name)] = itr->second->handle();
+                // Also add to requiredDiscountCurves
+                requiredDiscountCurves_.insert(make_pair(node.name, itr->second));
 
             } else if (node.obj == MarketObject::YieldCurve) {
                 DLOG("Adding YieldCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
@@ -585,6 +588,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     boost::make_shared<EquityVolCurve>(asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex,
                                                        requiredEquityCurves_, requiredEquityVolCurves_);
                 itr = requiredEquityVolCurves_.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
+                calibrationInfo_->eqVolCalibrationInfo[eqvolspec->name()] = eqVolCurve->calibrationInfo();
             }
             string eqName = node.name;
             DLOG("Adding EquityVol (" << eqName << ") with spec " << *eqvolspec << " to configuration "
@@ -643,10 +647,12 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     requiredCommodityCurves_);
                 itr = requiredCommodityCurves_.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
             }
+
             DLOG("Adding CommodityCurve, " << node.name << ", with spec " << *commodityCurveSpec << " to configuration "
                                            << configuration);
-            commodityCurves_[make_pair(configuration, node.name)] =
-                Handle<PriceTermStructure>(itr->second->commodityPriceCurve());
+            Handle<PriceTermStructure> pts(itr->second->commodityPriceCurve());
+            Handle<CommodityIndex> commIdx(parseCommodityIndex(node.name, *conventions_, false, pts));
+            commodityIndices_[make_pair(configuration, node.name)] = commIdx;
             break;
         }
 

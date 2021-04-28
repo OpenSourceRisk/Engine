@@ -26,9 +26,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/to_string.hpp>
 
-using QuantExt::CommodityFuturesIndex;
 using QuantExt::CommodityIndex;
-using QuantExt::CommoditySpotIndex;
 using QuantExt::PriceTermStructure;
 using namespace QuantLib;
 using namespace std;
@@ -63,15 +61,14 @@ CommodityForward::CommodityForward(const Envelope& envelope, const string& posit
 
 void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-    // Get the price curve for the commodity.
-    const boost::shared_ptr<Market>& market = engineFactory->market();
-    Handle<PriceTermStructure> priceCurve = market->commodityPriceCurve(commodityName_,
-        engineFactory->configuration(MarketContext::pricing));
-
     // Create the underlying commodity index for the forward
-    boost::shared_ptr<CommodityIndex> index;
+    const boost::shared_ptr<Market>& market = engineFactory->market();
+    auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     maturity_ = parseDate(maturityDate_);
     if (isFuturePrice_ && *isFuturePrice_) {
+
+        // Get the commodity index from the market.
+        index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
 
         // May have been given an explicit future expiry date or an offset and calendar or neither.
         Date expiryDate = maturity_;
@@ -82,10 +79,9 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
             expiryDate = cal.advance(maturity_, futureExpiryOffset_);
         }
 
-        index = boost::make_shared<CommodityFuturesIndex>(commodityName_, expiryDate,
-            NullCalendar(), true, priceCurve);
-    } else {
-        index = boost::make_shared<CommoditySpotIndex>(commodityName_, NullCalendar(), priceCurve);
+        // Clone the index with the relevant expiry date.
+        index = index->clone(expiryDate);
+
     }
 
     Date paymentDate = paymentDate_;
