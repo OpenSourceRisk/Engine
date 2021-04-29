@@ -481,6 +481,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
     <ClInclude Include="qle\calendars\belgium.hpp" />
@@ -848,6 +849,7 @@
     <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\calendars\austria.cpp" />
     <ClCompile Include="qle\calendars\belgium.cpp" />
     <ClCompile Include="qle\calendars\chile.cpp" />

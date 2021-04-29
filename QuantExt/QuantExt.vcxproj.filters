@@ -1114,6 +1114,9 @@
     <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="crossccyfixfloatmtmresetswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1903,6 +1906,9 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccyfixfloatmtmresetswaphelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

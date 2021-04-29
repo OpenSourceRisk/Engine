@@ -844,12 +844,12 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
     const string& id, const string& settlementDays, const string& settlementCalendar,
     const string& settlementConvention, const string& fixedCurrency, const string& fixedFrequency,
     const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom,
-    const Conventions* conventions, const std::string& strIsResettable)
+    const Conventions* conventions, const std::string& strIsResettable, const std::string& strFloatIndexIsResettable)
     : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
       strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom), conventions_(conventions),
-      strIsResettable_(strIsResettable) {
+      strIsResettable_(strIsResettable), strFloatIndexIsResettable_(strFloatIndexIsResettable){
 
     build();
 }
@@ -865,6 +865,8 @@ void CrossCcyFixFloatSwapConvention::build() {
     index_ =
         parseIborIndex(strIndex_, Handle<YieldTermStructure>(), getIborOrOvernightConvention(conventions_, strIndex_));
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
+    isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
+    floatIndexIsResettable_ = strFloatIndexIsResettable_.empty() ? true : parseBool(strFloatIndexIsResettable_);
 }
 
 void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
@@ -885,6 +887,7 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
+    strFloatIndexIsResettable_ = XMLUtils::getChildValue(node, "FloatIndexIsResettable", false);
 
     build();
 }
@@ -903,6 +906,7 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "EOM", strEom_);
     XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
+    XMLUtils::addChild(doc, node, "FloatIndexIsResettable", strFloatIndexIsResettable_);
 
     return node;
 }

@@ -21,8 +21,8 @@
     \ingroup instruments
 */
 
-#ifndef quantext_cross_ccy_basis_mtmreset_swap_hpp
-#define quantext_cross_ccy_basis_mtmreset_swap_hpp
+#ifndef quantext_cross_ccy_fix_float_mtmreset_swap_hpp
+#define quantext_cross_ccy_fix_float_mtmreset_swap_hpp
 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/schedule.hpp>
