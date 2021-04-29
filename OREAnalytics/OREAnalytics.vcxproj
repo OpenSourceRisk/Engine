@@ -64,6 +64,7 @@
     <ClInclude Include="orea\engine\cptycalculator.hpp" />
     <ClInclude Include="orea\engine\filteredsensitivitystream.hpp" />
     <ClInclude Include="orea\engine\mporcalculator.hpp" />
+    <ClInclude Include="orea\engine\npvrecord.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />
     <ClInclude Include="orea\engine\parametricvar.hpp" />
     <ClInclude Include="orea\engine\riskfilter.hpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="orea\engine\cptycalculator.cpp" />
     <ClCompile Include="orea\engine\filteredsensitivitystream.cpp" />
     <ClCompile Include="orea\engine\mporcalculator.cpp" />
+    <ClCompile Include="orea\engine\npvrecord.cpp" />
     <ClCompile Include="orea\engine\parametricvar.cpp" />
     <ClCompile Include="orea\engine\riskfilter.cpp" />
     <ClCompile Include="orea\engine\sensitivityaggregator.cpp" />
