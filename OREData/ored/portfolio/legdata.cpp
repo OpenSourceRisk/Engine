@@ -1271,6 +1271,13 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Period observationLag = parsePeriod(yoyLegData->observationLag());
+    Calendar paymentCalendar;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     vector<double> gearings =
         buildScheduledVectorNormalised(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule, 1.0);
     vector<double> spreads =
@@ -1283,10 +1290,11 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
 
     applyAmortization(notionals, data, schedule, false);
 
-    yoyInflationLeg yoyLeg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
+    yoyInflationLeg yoyLeg = yoyInflationLeg(schedule, paymentCalendar, index, observationLag)
                                  .withNotionals(notionals)
                                  .withPaymentDayCounter(dc)
                                  .withPaymentAdjustment(bdc)
+                                 .withPaymentCalendar(paymentCalendar)
                                  .withFixingDays(yoyLegData->fixingDays())
                                  .withGearings(gearings)
                                  .withSpreads(spreads);
