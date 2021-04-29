@@ -1483,5 +1483,6 @@ ostream& operator<<(ostream& os, Rounding::Type t) {
     }
 }
 
+
 } // namespace data
 } // namespace ore
