@@ -76,11 +76,11 @@ class BlackCdsOptionEngine : public QuantExt::CdsOption::engine, public BlackCds
 public:
     BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
                          const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol);
-    void calculate() const;
+    void calculate() const override;
 
 private:
-    virtual Real recoveryRate() const;
-    virtual Real defaultProbability(const Date& d) const;
+    virtual Real recoveryRate() const override;
+    virtual Real defaultProbability(const Date& d) const override;
     Real frontEndProtection(const Date& d) const override;
     Real expectedNotional(const Date& d) const override;
 
