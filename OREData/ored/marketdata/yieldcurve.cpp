@@ -2149,16 +2149,12 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
             } else {
                 bool resetsOnFloatLeg = swapConvention->floatIndexIsResettable();
                 // Use foreign and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
-                boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyFixFloatMtMResetSwapHelper(
-                    swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(),
-                    basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
-                    foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
-                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, foreignTenor,
-                    domesticTenor, resetsOnFloatLeg));
-                instruments.push_back(basisSwapHelper);
+                helper = boost::make_shared<CrossCcyFixFloatMtMResetSwapHelper>(
+                    swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
+                    swapConvention->settlementConvention(), swapQuote->maturity(), currency_, swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
+                    floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom(), resetsOnFloatLeg);
             }
             instruments.push_back(helper);
-
         }
     }
 }

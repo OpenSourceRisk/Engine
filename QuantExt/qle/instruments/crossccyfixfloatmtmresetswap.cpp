@@ -34,14 +34,14 @@ namespace QuantExt {
     Natural fixedPaymentLag, const Calendar& fixedPaymentCalendar, const Currency& floatCurrency,
     const Schedule& floatSchedule, const boost::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
     const BusinessDayConvention& floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar,
-    const boost::shared_ptr<FxIndex>& fxIdx, bool receiveFixed)
+    const boost::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg, bool receiveFixed)
     : CrossCcySwap(3), nominal_(nominal), fixedCurrency_(fixedCurrency),
     fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount), 
     fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
     floatCurrency_(floatCurrency), floatSchedule_(floatSchedule), floatIndex_(floatIndex),
     floatSpread_(floatSpread), fxIndex_(fxIdx), floatPaymentBdc_(floatPaymentBdc),
     floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar),
-    receiveFixed_(receiveFixed) {
+    resetsOnFloatLeg_(resetsOnFloatLeg), receiveFixed_(receiveFixed) {
 
     registerWith(floatIndex_);
     registerWith(fxIndex_);

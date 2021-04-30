@@ -118,7 +118,7 @@ void CrossCcyFixFloatMtMResetSwapHelper::setTermStructure(YieldTermStructure* t)
 }
 void CrossCcyFixFloatMtMResetSwapHelper::update() {
     // Maybe FX spot quote or spread quote changed
-    if (!close(spotFx_->value(), swap_->fixedNominal()) ||
+    if (!close(spotFx_->value(), swap_->nominal()) ||
         (!spread_.empty() && !close(spread_->value(), swap_->floatSpread()))) {
         initializeDates();
     }

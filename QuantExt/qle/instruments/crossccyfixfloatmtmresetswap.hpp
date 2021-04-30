@@ -53,7 +53,7 @@ public:
         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar, const QuantLib::Currency& floatCurrency,
         const QuantLib::Schedule& floatSchedule, const boost::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
         const QuantLib::BusinessDayConvention& floatPaymentBdc, QuantLib::Natural floatPaymentLag, const QuantLib::Calendar& floatPaymentCalendar,
-        const boost::shared_ptr<FxIndex>& fxIdx, bool receiveFixed = true);
+        const boost::shared_ptr<FxIndex>& fxIdx, bool resetsOnFloatLeg = true, bool receiveFixed = true);
 
     //@}
     //! \name Instrument interface
@@ -121,6 +121,7 @@ private:
     QuantLib::Calendar floatPaymentCalendar_;
 
     boost::shared_ptr<FxIndex> fxIndex_;
+    bool resetsOnFloatLeg_;
     bool receiveFixed_;
 
     mutable QuantLib::Spread fairSpread_;
