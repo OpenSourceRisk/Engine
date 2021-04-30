@@ -481,7 +481,6 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
     <ClInclude Include="qle\calendars\belgium.hpp" />
@@ -748,6 +747,7 @@
     <ClInclude Include="qle\termstructures\blackvolsurfacebfrr.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
+    <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
@@ -849,7 +849,6 @@
     <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\calendars\austria.cpp" />
     <ClCompile Include="qle\calendars\belgium.cpp" />
     <ClCompile Include="qle\calendars\chile.cpp" />
@@ -1033,6 +1032,7 @@
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
+    <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
