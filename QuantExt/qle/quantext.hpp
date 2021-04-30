@@ -69,6 +69,7 @@
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/escpi.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
@@ -301,6 +302,7 @@
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 #include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
+#include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
