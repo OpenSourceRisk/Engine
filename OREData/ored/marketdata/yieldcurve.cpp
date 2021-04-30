@@ -43,6 +43,7 @@
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
@@ -2148,12 +2149,12 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
             } else {
                 bool resetsOnFloatLeg = swapConvention->floatIndexIsResettable();
                 // Use foreign and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
-                boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisMtMResetSwapHelper(
+                boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyFixFloatMtMResetSwapHelper(
                     swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
                     Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, foreignTenor,
-                    domesticTenor));
+                    domesticTenor, resetsOnFloatLeg));
                 instruments.push_back(basisSwapHelper);
             }
             instruments.push_back(helper);
@@ -2161,11 +2162,6 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
         }
     }
 }
-onst Handle<Quote>& rate, const Handle<Quote>& spotFx, Natural settlementDays, const Calendar& paymentCalendar,
-BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
-Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
-const boost::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
-const Handle<Quote>& spread, bool endOfMonth
 
 boost::shared_ptr<FXSpotQuote> YieldCurve::getFxSpotQuote(string spotId) {
     // check the spot id, if like FX/RATE/CCY/CCY we go straight to the loader first

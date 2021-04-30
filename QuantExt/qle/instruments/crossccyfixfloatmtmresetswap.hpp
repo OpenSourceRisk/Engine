@@ -48,11 +48,13 @@ public:
     /*! First leg holds the pay currency cashflows and the second leg
         holds the receive currency cashflows.
     */
-    CrossCcyFixFloatMtMResetSwap(QuantLib::Real Nominal, const QuantLib::Currency& fixedCurrency, const QuantLib::Schedule& fixedSchedule,
+    CrossCcyFixFloatMtMResetSwap(QuantLib::Real nominal, const QuantLib::Currency& fixedCurrency, const QuantLib::Schedule& fixedSchedule,
         QuantLib::Rate fixedRate, const QuantLib::DayCounter& fixedDayCount, const QuantLib::BusinessDayConvention& fixedPaymentBdc,
         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar, const QuantLib::Currency& floatCurrency,
         const QuantLib::Schedule& floatSchedule, const boost::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
+        const QuantLib::BusinessDayConvention& floatPaymentBdc, QuantLib::Natural floatPaymentLag, const QuantLib::Calendar& floatPaymentCalendar,
         const boost::shared_ptr<FxIndex>& fxIdx, bool receiveFixed = true);
+
     //@}
     //! \name Instrument interface
     //@{
@@ -114,6 +116,9 @@ private:
     QuantLib::Schedule floatSchedule_;
     boost::shared_ptr<QuantLib::IborIndex> floatIndex_;
     QuantLib::Spread floatSpread_;
+    QuantLib::BusinessDayConvention floatPaymentBdc_;
+    QuantLib::Natural floatPaymentLag_;
+    QuantLib::Calendar floatPaymentCalendar_;
 
     boost::shared_ptr<FxIndex> fxIndex_;
     bool receiveFixed_;
