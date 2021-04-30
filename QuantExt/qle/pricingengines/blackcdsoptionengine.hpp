@@ -64,6 +64,8 @@ public:
 protected:
     virtual Real recoveryRate() const = 0;
     virtual Real defaultProbability(const Date& d) const = 0;
+    virtual Real frontEndProtection(const Date& d) const = 0;
+    virtual Real expectedNotional(const Date& d) const = 0;
 
     const Handle<YieldTermStructure> termStructure_;
     const Handle<BlackVolTermStructure> volatility_;
@@ -79,6 +81,8 @@ public:
 private:
     virtual Real recoveryRate() const;
     virtual Real defaultProbability(const Date& d) const;
+    Real frontEndProtection(const Date& d) const override;
+    Real expectedNotional(const Date& d) const override;
 
     const Handle<DefaultProbabilityTermStructure> probability_;
     const Real recoveryRate_;
