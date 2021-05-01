@@ -23,7 +23,11 @@
 
 #pragma once
 
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+
 #include <ql/indexes/iborindex.hpp>
+
+#include <vector>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -43,6 +47,8 @@ public:
     Real spread() const;
     const Date& switchDate() const;
     bool useRfrCurve() const;
+
+    boost::shared_ptr<OvernightIndexedCoupon> onCoupon(const Date& iborFixingDate) const;
 
 private:
     Rate forecastFixing(const Date& valueDate, const Date& endDate, Time t) const override;

@@ -23,7 +23,6 @@
 
 #include <qle/indexes/fallbackiborindex.hpp>
 
-#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/termstructures/iborfallbackcurve.hpp>
 
 namespace QuantExt {
@@ -50,6 +49,14 @@ void FallbackIborIndex::addFixing(const Date& fixingDate, Real fixing, bool forc
     }
 }
 
+boost::shared_ptr<OvernightIndexedCoupon> FallbackIborIndex::onCoupon(const Date& iborFixingDate) const {
+    Date valueDate = originalIndex_->valueDate(iborFixingDate);
+    Date maturityDate = originalIndex_->maturityDate(valueDate);
+    return boost::make_shared<OvernightIndexedCoupon>(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_, 1.0, 0.0,
+                                                      Date(), Date(), DayCounter(), true, false, 2 * Days, 0,
+                                                      Null<Size>());
+}
+
 Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     Date today = Settings::instance().evaluationDate();
     if (today < switchDate_ || fixingDate < switchDate_)
@@ -57,11 +64,7 @@ Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing
     if (fixingDate > today) {
         return IborIndex::forecastFixing(fixingDate);
     } else {
-        Date valueDate = originalIndex_->valueDate(fixingDate);
-        Date maturityDate = originalIndex_->maturityDate(valueDate);
-        OvernightIndexedCoupon oncpn(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_, 1.0, 0.0, Date(), Date(),
-                                     DayCounter(), true, false, 2 * Days, 0, Null<Size>());
-        return oncpn.rate() + spread_;
+        return onCoupon(fixingDate)->rate() + spread_;
     }
 }
 
