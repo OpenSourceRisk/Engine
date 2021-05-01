@@ -146,7 +146,7 @@ utilities/currencycheck.cpp
 utilities/currencyconfig.cpp
 utilities/dategrid.cpp
 utilities/flowanalysis.cpp
-utilities/iborreplacementconfig.cpp
+utilities/iborfallbackconfig.cpp
 utilities/indexparser.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
@@ -337,7 +337,7 @@ utilities/currencycheck.hpp
 utilities/currencyconfig.hpp
 utilities/dategrid.hpp
 utilities/flowanalysis.hpp
-utilities/iborreplacementconfig.hpp
+utilities/iborfallbackconfig.hpp
 utilities/indexparser.hpp
 utilities/log.hpp
 utilities/marketdata.hpp

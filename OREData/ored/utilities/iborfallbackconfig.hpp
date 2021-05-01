@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/iborreplacementconfig.hpp
-    \brief ibor replacement configuration
+/*! \file ored/utilities/iborfallbackconfig.hpp
+    \brief ibor fallback configuration
     \ingroup utilities
 */
 
@@ -28,24 +28,24 @@
 namespace ore {
 namespace data {
 
-class IborReplacementConfig : public XMLSerializable {
+class IborFallbackConfig : public XMLSerializable {
 public:
-    struct ReplacementData {
+    struct FallbackData {
         string rfrIndex;
         QuantLib::Real spread;
         QuantLib::Date switchDate;
     };
 
-    IborReplacementConfig();
+    IborFallbackConfig();
 
     bool useRfrCurveInTodaysMarket() const;
     bool useRfrCurveInSimulationMarket() const;
-    bool enableIborReplacements() const;
+    bool enableIborFallbacks() const;
 
-    void addIndexReplacementRule(const string& iborIndex, const ReplacementData& replacementData);
+    void addIndexFallbackRule(const string& iborIndex, const FallbackData& fallbackData);
 
     bool isIndexReplaced(const string& iborIndex, const QuantLib::Date& asof) const;
-    const ReplacementData& replacementData(const string& iborIndex) const;
+    const FallbackData& fallbackData(const string& iborIndex) const;
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -53,8 +53,8 @@ public:
 private:
     bool useRfrCurveInTodaysMarket_ = true;
     bool useRfrCurveInSimulationMarket_ = true;
-    bool enableIborReplacements_ = true;
-    std::map<std::string, ReplacementData> replacements_;
+    bool enableIborFallbacks_ = true;
+    std::map<std::string, FallbackData> fallbacks_;
 };
 
 } // namespace data
