@@ -33,7 +33,6 @@ IborFallbackCurve::IborFallbackCurve(const boost::shared_ptr<IborIndex>& origina
       rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate) {
     registerWith(originalIndex->forwardingTermStructure());
     registerWith(rfrIndex->forwardingTermStructure());
-    initLogDiscounts();
 }
 
 boost::shared_ptr<IborIndex> IborFallbackCurve::originalIndex() const { return originalIndex_; }
@@ -41,8 +40,6 @@ boost::shared_ptr<IborIndex> IborFallbackCurve::originalIndex() const { return o
 boost::shared_ptr<OvernightIndex> IborFallbackCurve::rfrIndex() const { return rfrIndex_; }
 
 Real IborFallbackCurve::spread() const { return spread_; }
-
-void IborFallbackCurve::update() { initLogDiscounts(); }
 
 const Date& IborFallbackCurve::switchDate() const { return switchDate_; }
 
@@ -63,47 +60,14 @@ Real IborFallbackCurve::discountImpl(QuantLib::Time t) const {
     if (today < switchDate_) {
         return originalIndex_->forwardingTermStructure()->discount(t);
     }
-    auto r = std::lower_bound(
-        logDiscounts_.begin(), logDiscounts_.end(), std::make_pair(t, 0.0),
-        [](const std::pair<Real, Real>& x, const std::pair<Real, Real>& y) { return x.first < y.first; });
-    if (r == logDiscounts_.end()) {
-        extendTabulation(t);
-        return discountImpl(t);
-    }
-    if (r == logDiscounts_.begin())
-        return r->second;
-    auto l = std::next(r, -1);
-    Real alpha = (t - l->first) / (r->first - l->first);
-    return std::exp(r->second * alpha + l->second * (1 - alpha));
-}
-
-void IborFallbackCurve::initLogDiscounts() {
-    Real firstValueTime = timeFromReference(originalIndex_->valueDate(referenceDate())) + 1E-6;
-    logDiscounts_ = {std::make_pair(0.0, 1.0), std::make_pair(firstValueTime, 1.0)};
-    lastComputedFixingDate_ = referenceDate() - 1;
-}
-
-void IborFallbackCurve::extendTabulation(QuantLib::Time t) const {
-    Size safeCounter = 0;
-    constexpr Size safeCounterThreshold = 100000;
-    Real t2;
-    do {
-        ++lastComputedFixingDate_;
-        Date valueDate = originalIndex_->valueDate(lastComputedFixingDate_);
-        Date maturityDate = originalIndex_->maturityDate(valueDate);
-        OvernightIndexedCoupon oncpn(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_, 1.0, 0.0, Date(), Date(),
-                                     DayCounter(), true, false, 2 * Days, 0, Null<Size>());
-        Real liborRate = oncpn.rate() + spread_;
-        Real t1 = timeFromReference(valueDate);
-        t2 = timeFromReference(maturityDate);
-        Real spanningTime = originalIndex_->dayCounter().yearFraction(valueDate, maturityDate);
-        Real disc1 = discountImpl(t1);
-        Real disc2 = disc1 / (liborRate * spanningTime + 1.0);
-        logDiscounts_.push_back(std::make_pair(t2, disc2));
-    } while (t2 < t && !close_enough(t2, t) && ++safeCounter < safeCounterThreshold);
-    QL_REQUIRE(safeCounter < safeCounterThreshold,
-               "IborFallbackCurve::extendTabulation(t=" << t << "): internal error, safeCounter exceeds "
-                                                        << safeCounterThreshold);
+    // approximately take into account 2d lookback and coupon period ignoring holidays
+    Real dt = timeFromReference(today + 2 * Days);
+    Date endDate = today + originalIndex_->tenor();
+    Real couponTime = rfrIndex_->dayCounter().yearFraction(today, endDate);
+    Real curveTime = timeFromReference(endDate);
+    Real tm = std::max(t - dt, 0.0);
+    Real s = std::log(1.0 + couponTime * spread_) / curveTime;
+    return rfrIndex_->forwardingTermStructure()->discount(tm) + std::exp(-s * tm);
 }
 
 } // namespace QuantExt

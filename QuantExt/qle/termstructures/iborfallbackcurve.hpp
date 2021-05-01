@@ -38,7 +38,6 @@ public:
     Real spread() const;
     const Date& switchDate() const;
 
-    void update() override;
     const Date& referenceDate() const override;
     Date maxDate() const override;
     Calendar calendar() const override;
@@ -46,16 +45,11 @@ public:
 
 private:
     Real discountImpl(QuantLib::Time t) const override;
-    void initLogDiscounts();
-    void extendTabulation(QuantLib::Time t) const;
 
     boost::shared_ptr<IborIndex> originalIndex_;
     boost::shared_ptr<OvernightIndex> rfrIndex_;
     Real spread_;
     Date switchDate_;
-
-    mutable std::vector<std::pair<Real, Real>> logDiscounts_;
-    mutable Date lastComputedFixingDate_;
 };
 
 } // namespace QuantExt
