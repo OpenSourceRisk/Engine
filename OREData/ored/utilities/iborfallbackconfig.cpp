@@ -96,12 +96,47 @@ XMLNode* IborFallbackConfig::toXML(XMLDocument& doc) {
 }
 
 IborFallbackConfig IborFallbackConfig::defaultConfig() {
-    // TODO, set up the list, where is that defined?
+    // https://assets.bbhub.io/professional/sites/10/IBOR-Fallbacks-LIBOR-Cessation_Announcement_20210305.pdf
+    // https://www.isda.org/2021/03/05/isda-statement-on-uk-fca-libor-announcement/
+    // https://www.fca.org.uk/publication/documents/future-cessation-loss-representativeness-libor-benchmarks.pdf
     static IborFallbackConfig c = {true,
                                    true,
                                    true,
-                                   {{"CHF-LIBOR-1M", FallbackData{"CHF-SARON", 0.0022, Date(1, Jan, 202)}},
-                                    {"CHF-LIBOR-3M", FallbackData{"CHF-SARON", 0.0022, Date(1, Jan, 2022)}}}};
+                                   {{"CHF-LIBOR-SN", FallbackData{"CHF-SARON", -0.000551, Date(1, Jan, 2022)}},
+                                    {"CHF-LIBOR-1W", FallbackData{"CHF-SARON", -0.000705, Date(1, Jan, 2022)}},
+                                    {"CHF-LIBOR-1M", FallbackData{"CHF-SARON", -0.000571, Date(1, Jan, 2022)}},
+                                    {"CHF-LIBOR-2M", FallbackData{"CHF-SARON", -0.000231, Date(1, Jan, 2022)}},
+                                    {"CHF-LIBOR-3M", FallbackData{"CHF-SARON", 0.000031, Date(1, Jan, 2022)}},
+                                    {"CHF-LIBOR-6M", FallbackData{"CHF-SARON", 0.000741, Date(1, Jan, 2022)}},
+                                    {"CHF-LIBOR-12M", FallbackData{"CHF-SARON", 0.002048, Date(1, Jan, 2022)}},
+                                    {"EUR-LIBOR-ON", FallbackData{"EUR-ESTER", 0.000017, Date(1, Jan, 2022)}},
+                                    {"EUR-LIBOR-1W", FallbackData{"EUR-ESTER", 0.000243, Date(1, Jan, 2022)}},
+                                    {"EUR-LIBOR-1M", FallbackData{"EUR-ESTER", 0.000456, Date(1, Jan, 2022)}},
+                                    {"EUR-LIBOR-2M", FallbackData{"EUR-ESTER", 0.000753, Date(1, Jan, 2022)}},
+                                    {"EUR-LIBOR-3M", FallbackData{"EUR-ESTER", 0.000962, Date(1, Jan, 2022)}},
+                                    {"EUR-LIBOR-6M", FallbackData{"EUR-ESTER", 0.001537, Date(1, Jan, 2022)}},
+                                    {"EUR-LIBOR-12M", FallbackData{"EUR-ESTER", 0.002993, Date(1, Jan, 2022)}},
+                                    {"GBP-LIBOR-ON", FallbackData{"GBP-SONIA", -0.000024, Date(1, Jan, 2022)}},
+                                    {"GBP-LIBOR-1W", FallbackData{"GBP-SONIA", 0.000168, Date(1, Jan, 2022)}},
+                                    {"GBP-LIBOR-1M", FallbackData{"GBP-SONIA", 0.000326, Date(1, Jan, 2022)}},
+                                    {"GBP-LIBOR-2M", FallbackData{"GBP-SONIA", 0.000633, Date(1, Jan, 2022)}},
+                                    {"GBP-LIBOR-3M", FallbackData{"GBP-SONIA", 0.001193, Date(1, Jan, 2022)}},
+                                    {"GBP-LIBOR-6M", FallbackData{"GBP-SONIA", 0.002766, Date(1, Jan, 2022)}},
+                                    {"GBP-LIBOR-12M", FallbackData{"GBP-SONIA", 0.004644, Date(1, Jan, 2022)}},
+                                    {"JPY-LIBOR-SN", FallbackData{"JPY-TONAR", -0.0001839, Date(1, Jan, 2022)}},
+                                    {"JPY-LIBOR-1W", FallbackData{"JPY-TONAR", -0.0001981, Date(1, Jan, 2022)}},
+                                    {"JPY-LIBOR-1M", FallbackData{"JPY-TONAR", -0.0002923, Date(1, Jan, 2022)}},
+                                    {"JPY-LIBOR-2M", FallbackData{"JPY-TONAR", -0.0000449, Date(1, Jan, 2022)}},
+                                    {"JPY-LIBOR-3M", FallbackData{"JPY-TONAR", 0.0000835, Date(1, Jan, 2022)}},
+                                    {"JPY-LIBOR-6M", FallbackData{"JPY-TONAR", 0.0005809, Date(1, Jan, 2022)}},
+                                    {"JPY-LIBOR-12M", FallbackData{"JPY-TONAR", 0.00166, Date(1, Jan, 2022)}},
+                                    {"USD-LIBOR-ON", FallbackData{"USD-SOFR", 0.0000644, Date(1, Jul, 2023)}},
+                                    {"USD-LIBOR-1W", FallbackData{"USD-SOFR", 0.0003839, Date(1, Jul, 2023)}},
+                                    {"USD-LIBOR-1M", FallbackData{"USD-SOFR", 0.0011448, Date(1, Jul, 2023)}},
+                                    {"USD-LIBOR-2M", FallbackData{"USD-SOFR", 0.0018456, Date(1, Jul, 2023)}},
+                                    {"USD-LIBOR-3M", FallbackData{"USD-SOFR", 0.0026161, Date(1, Jul, 2023)}},
+                                    {"USD-LIBOR-6M", FallbackData{"USD-SOFR", 0.0042826, Date(1, Jul, 2023)}},
+                                    {"USD-LIBOR-12M", FallbackData{"USD-SOFR", 0.0071513, Date(1, Jul, 2023)}}}};
     return c;
 }
 
