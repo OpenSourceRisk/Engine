@@ -37,6 +37,8 @@ public:
     };
 
     IborFallbackConfig();
+    IborFallbackConfig(const bool useRfrCurveInTodaysMarket, const bool useRfrCurveInSimulationMarket,
+                       const bool enableIborFallbacks, const std::map<std::string, FallbackData>& fallbacks);
 
     bool useRfrCurveInTodaysMarket() const;
     bool useRfrCurveInSimulationMarket() const;
@@ -49,6 +51,9 @@ public:
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
+
+    void clear();
+    static IborFallbackConfig defaultConfig();
 
 private:
     bool useRfrCurveInTodaysMarket_ = true;

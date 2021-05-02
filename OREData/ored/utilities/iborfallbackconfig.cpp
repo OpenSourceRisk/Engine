@@ -24,6 +24,19 @@ namespace ore {
 namespace data {
 
 IborFallbackConfig::IborFallbackConfig() {}
+IborFallbackConfig::IborFallbackConfig(const bool useRfrCurveInTodaysMarket, const bool useRfrCurveInSimulationMarket,
+                                       const bool enableIborFallbacks,
+                                       const std::map<std::string, FallbackData>& fallbacks)
+    : useRfrCurveInTodaysMarket_(useRfrCurveInTodaysMarket),
+      useRfrCurveInSimulationMarket_(useRfrCurveInSimulationMarket), enableIborFallbacks_(enableIborFallbacks),
+      fallbacks_(fallbacks) {}
+
+void IborFallbackConfig::clear() {
+    useRfrCurveInTodaysMarket_ = true;
+    useRfrCurveInSimulationMarket_ = true;
+    enableIborFallbacks_ = true;
+    fallbacks_.clear();
+}
 
 bool IborFallbackConfig::useRfrCurveInTodaysMarket() const { return useRfrCurveInTodaysMarket_; }
 bool IborFallbackConfig::useRfrCurveInSimulationMarket() const { return useRfrCurveInSimulationMarket_; }
@@ -49,6 +62,7 @@ const IborFallbackConfig::FallbackData& IborFallbackConfig::fallbackData(const s
 }
 
 void IborFallbackConfig::fromXML(XMLNode* node) {
+    clear();
     XMLUtils::checkNode(node, "IborFallbackConfig");
     if (auto global = XMLUtils::getChildNode(node, "GlobalSettings")) {
         enableIborFallbacks_ = XMLUtils::getChildValueAsBool(global, "EnableIborFallbacks", true);
@@ -79,6 +93,16 @@ XMLNode* IborFallbackConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, tmp, "SwitchDate", ore::data::to_string(r.second.switchDate));
     }
     return node;
+}
+
+IborFallbackConfig IborFallbackConfig::defaultConfig() {
+    // TODO, set up the list, where is that defined?
+    static IborFallbackConfig c = {true,
+                                   true,
+                                   true,
+                                   {{"CHF-LIBOR-1M", FallbackData{"CHF-SARON", 0.0022, Date(1, Jan, 202)}},
+                                    {"CHF-LIBOR-3M", FallbackData{"CHF-SARON", 0.0022, Date(1, Jan, 2022)}}}};
+    return c;
 }
 
 } // namespace data
