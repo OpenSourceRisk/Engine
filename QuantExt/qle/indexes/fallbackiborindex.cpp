@@ -50,6 +50,9 @@ void FallbackIborIndex::addFixing(const Date& fixingDate, Real fixing, bool forc
 }
 
 boost::shared_ptr<OvernightIndexedCoupon> FallbackIborIndex::onCoupon(const Date& iborFixingDate) const {
+    QL_REQUIRE(iborFixingDate >= switchDate_, "FallbackIborIndex: onCoupon for ibor fixing date "
+                                                  << iborFixingDate << " requested, which is before switch date "
+                                                  << switchDate_ << " for index '" << name() << "'");
     Date valueDate = originalIndex_->valueDate(iborFixingDate);
     Date maturityDate = originalIndex_->maturityDate(valueDate);
     return boost::make_shared<OvernightIndexedCoupon>(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_, 1.0, 0.0,
