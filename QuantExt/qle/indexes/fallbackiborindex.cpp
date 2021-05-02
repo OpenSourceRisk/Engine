@@ -40,7 +40,7 @@ FallbackIborIndex::FallbackIborIndex(const boost::shared_ptr<IborIndex> original
       useRfrCurve_(useRfrCurve) {}
 
 void FallbackIborIndex::addFixing(const Date& fixingDate, Real fixing, bool forceOverwrite) {
-    if (fixingDate <= switchDate_) {
+    if (fixingDate < switchDate_) {
         IborIndex::addFixing(fixingDate, fixing, forceOverwrite);
     } else {
         QL_FAIL("Can not add fixing value "
