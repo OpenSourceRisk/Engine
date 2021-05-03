@@ -494,8 +494,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 QL_REQUIRE(ts,
                            "expected zero inflation term structure for index " << node.name << ", but could not cast");
                 // index is not interpolated
-                auto tmp = parseZeroInflationIndex(node.name, false,
-                    Handle<ZeroInflationTermStructure>(ts), conventions_);
+                auto tmp =
+                    parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts), conventions_);
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
             }
 
