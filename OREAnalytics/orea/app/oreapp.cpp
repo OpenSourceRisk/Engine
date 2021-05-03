@@ -488,8 +488,9 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_);
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(),
+                                          getExtraLegBuilders(), referenceData_, iborFallbackConfig_);
 
     LOG("Engine factory built");
     MEM_LOG;
@@ -1400,8 +1401,9 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const b
         configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
         configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
         configurations[MarketContext::pricing] = params_->get("markets", "pricing");
-        boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-            engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders());
+        boost::shared_ptr<EngineFactory> factory =
+            boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(),
+                                              getExtraLegBuilders(), referenceData_, iborFallbackConfig_);
         return factory;
     }
 }

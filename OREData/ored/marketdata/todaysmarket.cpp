@@ -249,9 +249,10 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredYieldCurves_.find(ycspec->name());
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
-                boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                    asof_, *ycspec, *curveConfigs_, *loader_, *conventions_, requiredYieldCurves_,
-                    requiredDefaultCurves_, fxT_, referenceData_, preserveQuoteLinkage_, requiredDiscountCurves_);
+                boost::shared_ptr<YieldCurve> yieldCurve =
+                    boost::make_shared<YieldCurve>(asof_, *ycspec, *curveConfigs_, *loader_, *conventions_,
+                                                   requiredYieldCurves_, requiredDefaultCurves_, fxT_, referenceData_,
+                                                   iborFallbackConfig_, preserveQuoteLinkage_, requiredDiscountCurves_);
                 calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");

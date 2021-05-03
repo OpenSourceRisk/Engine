@@ -2510,6 +2510,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   <Parameter name="currencyConfiguration">../../Input/currencies.xml</Parameter>
   <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
+  <Parameter name="iborFallbackConfig">../../Input/iborFallbackConfig.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
   <Parameter name="lazyMarketBuilding">false</Parameter>
@@ -2536,8 +2537,8 @@ structures as specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the 
 them with pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y,
 today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as
 e.g. in scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt
-  conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the marketDataFile and the fixingDataFile are
-explained in the sections below.
+  conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the iborFallbackConfig, the marketDataFile and the
+fixingDataFile are explained in the sections below.
 
 \medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and
 business days to be added to specified calendars.
@@ -5977,6 +5978,8 @@ This node should hold a real number. It provides an upper bound for the search d
 \end{itemize}
 
 \include{referencedata}
+
+\include{iborfallbackconfig}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}

@@ -159,7 +159,7 @@ SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuil
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_);
+        engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_, iborFallbackConfig_);
     return factory;
 }
 

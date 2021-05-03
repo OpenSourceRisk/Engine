@@ -178,12 +178,13 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
                        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
-                       const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool preserveQuoteLinkage,
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                       const IborFallbackConfig& iborFallbackConfig, const bool preserveQuoteLinkage,
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
       requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
-      fxTriangulation_(fxTriangulation), referenceData_(referenceData), preserveQuoteLinkage_(preserveQuoteLinkage),
-      requiredDiscountCurves_(requiredDiscountCurves) {
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      preserveQuoteLinkage_(preserveQuoteLinkage), requiredDiscountCurves_(requiredDiscountCurves) {
 
     try {
 
@@ -903,7 +904,7 @@ void YieldCurve::buildFittedBondCurve() {
     auto engineFactory = boost::make_shared<EngineFactory>(
         engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, conventions_),
         std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
-        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_);
+        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_, iborFallbackConfig_);
 
     for (Size i = 0; i < quoteIDs.size(); ++i) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIDs[i], asofDate_);

@@ -27,6 +27,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -254,7 +255,14 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
         }
 
         // A3 standard case
-        fixingMap[frc->index()].insert(frc->fixingDate());
+        auto fb = boost::dynamic_pointer_cast<FallbackIborIndex>(frc->index());
+        if (fb != nullptr && frc->fixingDate() >= fb->switchDate()) {
+            // handle ibor fallback
+            return processCashflow(fb->onCoupon(frc->fixingDate()), fixingMap);
+        } else {
+            // handle other cases
+            fixingMap[frc->index()].insert(frc->fixingDate());
+        }
     }
 
     // B other coupon types
@@ -262,9 +270,8 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
         boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
     if (fc) {
-        fixingMap[fc->index()].insert(fc->fixingDate());
         fixingMap[fc->fxIndex()].insert(fc->fxFixingDate());
-        return true;
+        return processCashflow(fc->underlying(), fixingMap);
     }
 
     boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);

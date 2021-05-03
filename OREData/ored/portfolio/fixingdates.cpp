@@ -18,6 +18,7 @@
 
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
@@ -28,6 +29,7 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -334,8 +336,13 @@ void FixingDateGetter::visit(IborCoupon& c) {
         requiredFixings_.addFixingDate(bma->adjustedFixingDate(c.fixingDate()), oreIndexName(c.index()->name()),
                                        c.date(), true);
     } else {
-        // otherwise fall through to FloatingRateCoupon handling
-        visit(static_cast<FloatingRateCoupon&>(c));
+        auto fallback = boost::dynamic_pointer_cast<FallbackIborIndex>(c.index());
+        if (fallback != nullptr && c.fixingDate() >= fallback->switchDate()) {
+            requiredFixings_.addFixingDates(fallback->onCoupon(c.fixingDate())->fixingDates(),
+                                            oreIndexName(c.index()->name()), c.date());
+        } else {
+            visit(static_cast<FloatingRateCoupon&>(c));
+        }
     }
 }
 
