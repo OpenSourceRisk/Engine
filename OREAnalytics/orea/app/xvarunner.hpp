@@ -51,10 +51,12 @@ public:
               const boost::shared_ptr<ore::data::CrossAssetModelData>& crossAssetModelData,
               std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
               std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
-              const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, QuantLib::Real dimQuantile = 0.99,
-              QuantLib::Size dimHorizonCalendarDays = 14, map<string, bool> analytics = {},
-              string calculationType = "Symmetric", string dvaName = "", string fvaBorrowingCurve = "",
-              string fvaLendingCurve = "", bool fullInitialCollateralisation = true, bool storeFlows = false);
+              const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+              const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+              QuantLib::Real dimQuantile = 0.99, QuantLib::Size dimHorizonCalendarDays = 14,
+              map<string, bool> analytics = {}, string calculationType = "Symmetric", string dvaName = "",
+              string fvaBorrowingCurve = "", string fvaLendingCurve = "", bool fullInitialCollateralisation = true,
+              bool storeFlows = false);
 
     // run xva on full portfolio and build post processor
     void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
@@ -134,6 +136,7 @@ protected:
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
     QuantLib::Real dimQuantile_;
     QuantLib::Size dimHorizonCalendarDays_;
     map<string, bool> analytics_;

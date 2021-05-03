@@ -26,7 +26,7 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/utilities/iborfallbackconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/directed_graph.hpp>

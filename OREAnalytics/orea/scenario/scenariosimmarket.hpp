@@ -29,7 +29,7 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
-#include <ored/utilities/iborfallbackconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ql/quotes/all.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>

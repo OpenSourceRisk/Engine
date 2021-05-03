@@ -21,6 +21,7 @@
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/onedimsolverconfig.hpp>
@@ -181,7 +182,6 @@
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
-#include <ored/utilities/iborfallbackconfig.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>

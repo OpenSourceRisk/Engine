@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/utilities/iborfallbackconfig.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 
 #include <ored/utilities/to_string.hpp>
 

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/utilities/iborfallbackconfig.hpp
+/*! \file ored/configuration/iborfallbackconfig.hpp
     \brief ibor fallback configuration
     \ingroup utilities
 */

@@ -15,6 +15,7 @@ configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
 configuration/genericyieldvolcurveconfig.cpp
+configuration/iborfallbackconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
@@ -146,7 +147,6 @@ utilities/currencycheck.cpp
 utilities/currencyconfig.cpp
 utilities/dategrid.cpp
 utilities/flowanalysis.cpp
-utilities/iborfallbackconfig.cpp
 utilities/indexparser.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
@@ -177,6 +177,7 @@ configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
+configuration/iborfallbackconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
@@ -337,7 +338,6 @@ utilities/currencycheck.hpp
 utilities/currencyconfig.hpp
 utilities/dategrid.hpp
 utilities/flowanalysis.hpp
-utilities/iborfallbackconfig.hpp
 utilities/indexparser.hpp
 utilities/log.hpp
 utilities/marketdata.hpp

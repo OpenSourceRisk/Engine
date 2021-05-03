@@ -346,9 +346,9 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
 
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
         asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, conventions_, marketParameters,
-        simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(), referenceData,
-        dimQuantile, dimHorizonCalendarDays, analytics, calculationType, dvaName, fvaBorrowingCurve, fvaLendingCurve,
-        fullInitialCollateralisation, storeFlows);
+        simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(),
+        referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays, analytics, calculationType, dvaName,
+        fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation, storeFlows);
 
     return xva;
 }
@@ -376,6 +376,13 @@ void OREApp::readSetup() {
         string currencyConfigFile = inputPath_ + "/" + params_->get("setup", "currencyConfiguration");
         LOG("Load currency configurations from file " << currencyConfigFile);
 	currencyConfig.fromFile(currencyConfigFile);
+    }
+
+    iborFallbackConfig_ = IborFallbackConfig::defaultConfig();
+    if (params_->has("setup", "iborFallbackConfig") && params_->get("setup", "iborFallbackConfig") != "") {
+        std::string tmp = inputPath_ + "/" + params_->get("setup", "iborFallbackConfig");
+        LOG("Load iborFallbackConfig from file" << tmp);
+        iborFallbackConfig_.fromFile(tmp);
     }
 
     writeInitialReports_ = true;
@@ -681,7 +688,8 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
     return boost::make_shared<SensitivityRunner>(params_, buildTradeFactory(), getExtraEngineBuilders(),
-                                                 getExtraLegBuilders(), referenceData_, continueOnError_);
+                                                 getExtraLegBuilders(), referenceData_, iborFallbackConfig_,
+                                                 continueOnError_);
 }
 
 void OREApp::runStressTest() {
@@ -715,7 +723,8 @@ void OREApp::runStressTest() {
     string marketConfiguration = params_->get("markets", "pricing");
     boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
         portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, *conventions_, *curveConfigs_,
-        *marketParameters_, nullptr, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_, continueOnError_);
+        *marketParameters_, nullptr, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_,
+        iborFallbackConfig_, continueOnError_);
 
     string outputFile = outputPath_ + "/" + params_->get("stress", "scenarioOutputFile");
     Real threshold = parseReal(params_->get("stress", "outputThreshold"));
@@ -801,7 +810,8 @@ void OREApp::writeBaseScenario() {
     simMarketData->fromFile(marketConfigFile);
 
     auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, *conventions_, marketConfiguration,
-                                                           *curveConfigs_, *marketParameters_, continueOnError_);
+                                                           *curveConfigs_, *marketParameters_, continueOnError_, false,
+                                                           false, false, iborFallbackConfig_);
     boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
     QL_REQUIRE(scenario->asof() == today, "dates do not match");
 
@@ -913,10 +923,10 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
 
-        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, *conventions_,
-                                                           boost::make_shared<FixingManager>(asof_),
-                                                           params_->get("markets", "simulation"), *curveConfigs_,
-                                                           *marketParameters_, continueOnError_, false, true, false);
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(
+            market_, simMarketData, *conventions_, boost::make_shared<FixingManager>(asof_),
+            params_->get("markets", "simulation"), *curveConfigs_, *marketParameters_, continueOnError_, false, true,
+            false, iborFallbackConfig_);
         string groupName = "simulation";
         boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 
@@ -1362,7 +1372,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     // build market
     out_ << setw(tab_) << left << "Market... " << flush;
     market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_, conventions_,
-                                               continueOnError_, true, lazyMarketBuilding_, referenceData_);
+                                               continueOnError_, true, lazyMarketBuilding_, referenceData_, false,
+                                               iborFallbackConfig_);
     out_ << "OK" << endl;
 
     LOG("Today's market built");
