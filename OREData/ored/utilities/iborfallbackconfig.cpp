@@ -48,7 +48,7 @@ void IborFallbackConfig::addIndexFallbackRule(const string& iborIndex, const Fal
 
 bool IborFallbackConfig::isIndexReplaced(const string& iborIndex, const Date& asof) const {
     auto i = fallbacks_.find(iborIndex);
-    return i == fallbacks_.end() || i->second.switchDate > asof;
+    return !(i == fallbacks_.end() || i->second.switchDate > asof);
 }
 
 const IborFallbackConfig::FallbackData& IborFallbackConfig::fallbackData(const string& iborIndex) const {

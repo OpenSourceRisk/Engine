@@ -46,7 +46,7 @@ public:
 
     void addIndexFallbackRule(const string& iborIndex, const FallbackData& fallbackData);
 
-    bool isIndexReplaced(const string& iborIndex, const QuantLib::Date& asof) const;
+    bool isIndexReplaced(const string& iborIndex, const QuantLib::Date& asof = QuantLib::Date::maxDate()) const;
     const FallbackData& fallbackData(const string& iborIndex) const;
 
     void fromXML(XMLNode* node) override;
