@@ -45,6 +45,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -70,7 +71,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarke
                            const boost::shared_ptr<Conventions>& conventions, const bool continueOnError,
                            const bool loadFixings, const bool lazyBuild,
                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                           const bool preserveQuoteLinkage)
+                           const bool preserveQuoteLinkage, const IborFallbackConfig& iborFallbackConfig)
     : MarketImpl(conventions), params_(params), loader_(loader), curveConfigs_(curveConfigs), conventions_(conventions),
       continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
       preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData) {
@@ -281,6 +282,34 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                                            conventions_->has(node.name, Convention::Type::OvernightIndex)
                                        ? conventions_->get(node.name)
                                        : nullptr));
+                // ibor fallback handling
+                if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
+                    auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
+                    boost::shared_ptr<IborIndex> rfrIndex;
+                    auto f = iborIndices_.find(make_pair(configuration, fallbackData.rfrIndex));
+                    if (f == iborIndices_.end()) {
+                        f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
+                        QL_REQUIRE(f != iborIndices_.end(),
+                                   "Failed to build ibor fallback index '"
+                                       << node.name << "', did not find rfr index '" << fallbackData.rfrIndex
+                                       << "' in configuration '" << configuration
+                                       << "' or default - is the rfr index configuration in todays market parameters?");
+                    }
+                    auto oi = boost::dynamic_pointer_cast<OvernightIndex>(*f->second);
+                    QL_REQUIRE(oi,
+                               "Found rfr index '"
+                                   << fallbackData.rfrIndex << "' as falback for ibor index '" << node.name
+                                   << "', but this is not an overnight index. Are the fallback rules correct here?");
+                    iborIndices_[make_pair(configuration, node.name)] =
+                        Handle<IborIndex>(boost::make_shared<QuantExt::FallbackIborIndex>(
+                            *iborIndices_[make_pair(configuration, node.name)], oi, fallbackData.spread,
+                            fallbackData.switchDate, iborFallbackConfig_.useRfrCurveInTodaysMarket()));
+                    TLOG("built ibor fall back index for '" << node.name << "' in configuration " << configuration
+                                                            << " using rfr index '" << fallbackData.rfrIndex
+                                                            << "', spread " << fallbackData.spread
+                                                            << ", will use rfr curve in t0 market: " << std::boolalpha
+                                                            << iborFallbackConfig_.useRfrCurveInTodaysMarket());
+                }
             } else {
                 QL_FAIL("unexpected market object type '"
                         << node.obj << "' for yield curve, should be DiscountCurve, YieldCurve, IndexCurve");
