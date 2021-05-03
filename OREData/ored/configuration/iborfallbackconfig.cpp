@@ -69,12 +69,14 @@ void IborFallbackConfig::fromXML(XMLNode* node) {
         useRfrCurveInTodaysMarket_ = XMLUtils::getChildValueAsBool(global, "UseRfrCurveInTodaysMarket", true);
         useRfrCurveInSimulationMarket_ = XMLUtils::getChildValueAsBool(global, "UseRfrCurveInSimulationMarket", true);
     }
-    for (auto const repl : XMLUtils::getChildrenNodes(node, "Fallbacks")) {
-        XMLUtils::checkNode(repl, "Fallback");
-        string ibor = XMLUtils::getChildValue(repl, "IborIndex", true);
-        fallbacks_[ibor].rfrIndex = XMLUtils::getChildValue(repl, "RfrIndex", true);
-        fallbacks_[ibor].spread = parseReal(XMLUtils::getChildValue(repl, "Spread", true));
-        fallbacks_[ibor].switchDate = parseDate(XMLUtils::getChildValue(repl, "SwitchDate", true));
+    if (auto fallbacks = XMLUtils::getChildNode(node, "Fallbacks")) {
+        for (auto const repl : XMLUtils::getChildrenNodes(fallbacks, "Fallback")) {
+            XMLUtils::checkNode(repl, "Fallback");
+            string ibor = XMLUtils::getChildValue(repl, "IborIndex", true);
+            fallbacks_[ibor].rfrIndex = XMLUtils::getChildValue(repl, "RfrIndex", true);
+            fallbacks_[ibor].spread = parseReal(XMLUtils::getChildValue(repl, "Spread", true));
+            fallbacks_[ibor].switchDate = parseDate(XMLUtils::getChildValue(repl, "SwitchDate", true));
+        }
     }
 }
 
