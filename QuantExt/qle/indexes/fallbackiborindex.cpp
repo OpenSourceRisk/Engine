@@ -30,14 +30,23 @@ namespace QuantExt {
 FallbackIborIndex::FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
                                      const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
                                      const Date& switchDate, const bool useRfrCurve)
+    : FallbackIborIndex(originalIndex, rfrIndex, spread, switchDate,
+                        useRfrCurve ? Handle<YieldTermStructure>(boost::make_shared<IborFallbackCurve>(
+                                          originalIndex, rfrIndex, spread, switchDate))
+                                    : originalIndex->forwardingTermStructure()) {}
+
+FallbackIborIndex::FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
+                                     const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread,
+                                     const Date& switchDate, const Handle<YieldTermStructure>& forwardingCurve)
     : IborIndex(originalIndex->familyName(), originalIndex->tenor(), originalIndex->fixingDays(),
                 originalIndex->currency(), originalIndex->fixingCalendar(), originalIndex->businessDayConvention(),
-                originalIndex->endOfMonth(), originalIndex->dayCounter(),
-                useRfrCurve ? Handle<YieldTermStructure>(
-                                  boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, switchDate))
-                            : originalIndex->forwardingTermStructure()),
+                originalIndex->endOfMonth(), originalIndex->dayCounter(), forwardingCurve),
       originalIndex_(originalIndex), rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate),
-      useRfrCurve_(useRfrCurve) {}
+      useRfrCurve_(false) {
+    registerWith(originalIndex);
+    registerWith(rfrIndex);
+    registerWith(forwardingCurve);
+}
 
 void FallbackIborIndex::addFixing(const Date& fixingDate, Real fixing, bool forceOverwrite) {
     if (fixingDate < switchDate_) {
@@ -76,6 +85,10 @@ Rate FallbackIborIndex::pastFixing(const Date& fixingDate) const {
     if (today < switchDate_)
         return originalIndex_->pastFixing(fixingDate);
     return fixing(fixingDate);
+}
+
+boost::shared_ptr<IborIndex> FallbackIborIndex::clone(const Handle<YieldTermStructure>& forwarding) const {
+    return boost::make_shared<FallbackIborIndex>(originalIndex_, rfrIndex_, spread_, switchDate_, forwarding);
 }
 
 Rate FallbackIborIndex::forecastFixing(const Date& valueDate, const Date& endDate, Time t) const {

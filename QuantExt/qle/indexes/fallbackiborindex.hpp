@@ -37,10 +37,14 @@ public:
     FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
                       const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
                       const bool useRfrCurve);
+    FallbackIborIndex(const boost::shared_ptr<IborIndex> originalIndex,
+                      const boost::shared_ptr<OvernightIndex> rfrIndex, const Real spread, const Date& switchDate,
+                      const Handle<YieldTermStructure>& forwardingCurve);
 
     void addFixing(const Date& fixingDate, Real fixing, bool forceOverwrite = false) override;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     Rate pastFixing(const Date& fixingDate) const override;
+    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& forwarding) const override;
 
     boost::shared_ptr<IborIndex> originalIndex() const;
     boost::shared_ptr<OvernightIndex> rfrIndex() const;
