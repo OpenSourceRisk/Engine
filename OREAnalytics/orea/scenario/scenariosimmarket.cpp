@@ -49,6 +49,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
@@ -243,20 +244,22 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
-                                     const bool allowPartialScenarios)
+                                     const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig)
     : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
                         configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
-                        cacheSimData, allowPartialScenarios) {}
+                        cacheSimData, allowPartialScenarios, iborFallbackConfig) {}
 
 ScenarioSimMarket::ScenarioSimMarket(
     const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
     const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
     const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
     const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
-    const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios)
+    const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios,
+    const IborFallbackConfig& iborFallbackConfig)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
       filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
-      cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios) {
+      cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
+      iborFallbackConfig_(iborFallbackConfig) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -314,8 +317,28 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::IndexCurve:
-                for (const auto& name : param.second.second) {
+            case RiskFactorKey::KeyType::IndexCurve: {
+                // make sure we built overnight indices first, so that we can build ibor fallback indices
+                // that depend on them
+                std::vector<std::string> indices(param.second.second.begin(), param.second.second.end());
+                std::sort(indices.begin(), indices.end(),
+                          [&initMarket, &configuration](const std::string& a, const std::string& b) {
+                              try {
+                                  bool aIsOn = boost::dynamic_pointer_cast<OvernightIndex>(
+                                                   *initMarket->iborIndex(a, configuration)) != nullptr;
+                                  bool bIsOn = boost::dynamic_pointer_cast<OvernightIndex>(
+                                                   *initMarket->iborIndex(b, configuration)) != nullptr;
+                                  if (aIsOn && !bIsOn)
+                                      return true;
+                              } catch (...) {
+                                  // fall through for GENERIC indices or if we can't get the index from the
+                                  // init market for some other reason
+                              }
+                              // lexicographic order if both indices are ON or both are not ON
+                              return a < b;
+                          });
+                // loop over sorted indices and build them
+                for (const auto& name : indices) {
                     try {
                         LOG("building " << name << " index curve");
                         std::vector<string> indexTokens;
@@ -404,16 +427,39 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (wrapperIndex->allowsExtrapolation())
                             ich->enableExtrapolation();
 
-                        boost::shared_ptr<IborIndex> i(index->clone(ich));
-                        Handle<IborIndex> ih(i);
-                        iborIndices_.insert(pair<pair<string, string>, Handle<IborIndex>>(
-                            make_pair(Market::defaultConfiguration, name), ih));
+                        boost::shared_ptr<IborIndex> i = index->clone(ich);
+                        if (iborFallbackConfig.isIndexReplaced(name, asof_)) {
+                            // handle ibor fallback indices
+                            auto fallbackData = iborFallbackConfig_.fallbackData(name);
+                            auto f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
+                            QL_REQUIRE(f != iborIndices_.end(),
+                                       "Could not build ibor fallback index '"
+                                           << name << "', because rfr index '" << fallbackData.rfrIndex
+                                           << "' is not present in scenario sim market, is the rfr index in the "
+                                              "scenario sim market parameters?");
+                            auto rfrInd = boost::dynamic_pointer_cast<OvernightIndex>(*f->second);
+                            QL_REQUIRE(rfrInd != nullptr,
+                                       "Could not cast '"
+                                           << fallbackData.rfrIndex
+                                           << "' to overnight index when building the ibor fallback index '" << name
+                                           << "'");
+                            i = boost::make_shared<QuantExt::FallbackIborIndex>(
+                                i, rfrInd, fallbackData.spread, fallbackData.switchDate,
+                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                            DLOG("built ibor fall back index '"
+                                 << name << "' with rfr index '" << fallbackData.rfrIndex << "', spread "
+                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha
+                                 << iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                        }
+                        iborIndices_.insert(
+                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<IborIndex>(i)));
                         LOG("building " << name << " index curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name);
                     }
                 }
                 break;
+            }
 
             case RiskFactorKey::KeyType::EquitySpot:
                 for (const auto& name : param.second.second) {
