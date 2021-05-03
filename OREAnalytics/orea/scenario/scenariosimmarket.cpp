@@ -2130,23 +2130,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 simulationTimes.insert(simulationTimes.begin(), 0.0);
                                 quotes.insert(quotes.begin(), quotes.front());
                             }
-                            pts =
-                                Handle<PriceTermStructure>(boost::make_shared<SpreadedPriceTermStructure>(
-                                    initialCommodityCurve, simulationTimes, quotes));
+                            pts = Handle<PriceTermStructure>(boost::make_shared<SpreadedPriceTermStructure>(
+                                initialCommodityCurve, simulationTimes, quotes));
                         } else {
                             // Create a commodity price curve with simulation tenors as pillars and store
                             // Hard-coded linear flat interpolation here - may need to make this more dynamic
-                            pts =
-                                Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
-                                    simulationTenors, quotes, commodityCurveDayCounter,
-                                    initialCommodityCurve->currency()));
+                            pts = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
+                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency()));
                         }
                         pts->enableExtrapolation(allowsExtrapolation);
 
                         Handle<CommodityIndex> commIdx(parseCommodityIndex(name, conventions_, false, pts));
                         commodityIndices_.emplace(piecewise_construct,
-                                                 forward_as_tuple(Market::defaultConfiguration, name),
-                                                 forward_as_tuple(commIdx));
+                                                  forward_as_tuple(Market::defaultConfiguration, name),
+                                                  forward_as_tuple(commIdx));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name);
                     }
