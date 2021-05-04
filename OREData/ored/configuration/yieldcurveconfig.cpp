@@ -268,6 +268,8 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                 segment.reset(new WeightedAverageYieldCurveSegment());
             } else if (childName == "YieldPlusDefault") {
                 segment.reset(new YieldPlusDefaultYieldCurveSegment());
+            } else if(childName == "IborFallback"){
+                segment.reset(new IborFallbackCurveSegment());
             } else {
                 QL_FAIL("Yield curve segment node name '" << childName << "' not recognized.");
             }
@@ -383,22 +385,22 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     string name = XMLUtils::getNodeName(node);
 
 	// Check if curve type is valid for the given segment name
-	std::map<std::string, std::list<std::string>> validSegmentTypes = {
-		{"Direct", {"Zero", "Discount"}},
-		{"Simple", {"Deposit", "FRA", "Future", "OIS", "Swap", "BMA Basis Swap"}},
-		{"AverageOIS", {"Average OIS"}},
-		{"TenorBasis", {"Tenor Basis Swap", "Tenor Basis Two Swaps"}},
-		{"CrossCurrency", {"FX Forward", "Cross Currency Basis Swap", "Cross Currency Fix Float Swap"}},
-		{"ZeroSpread", {"Zero Spread"}},
-		{"FittedBond", {"FittedBond"}},
-		{"YieldPlusDefault", {"Yield Plus Default"}},
-		{"WeightedAverage", {"Weighted Average"}},
-		{"DiscountRatio", {"Discount Ratio"}}
-	};
+    std::map<std::string, std::list<std::string>> validSegmentTypes = {
+        {"Direct", {"Zero", "Discount"}},
+        {"Simple", {"Deposit", "FRA", "Future", "OIS", "Swap", "BMA Basis Swap"}},
+        {"AverageOIS", {"Average OIS"}},
+        {"TenorBasis", {"Tenor Basis Swap", "Tenor Basis Two Swaps"}},
+        {"CrossCurrency", {"FX Forward", "Cross Currency Basis Swap", "Cross Currency Fix Float Swap"}},
+        {"ZeroSpread", {"Zero Spread"}},
+        {"FittedBond", {"FittedBond"}},
+        {"YieldPlusDefault", {"Yield Plus Default"}},
+        {"WeightedAverage", {"Weighted Average"}},
+        {"DiscountRatio", {"Discount Ratio"}},
+        {"IborFallback", {"Ibor Fallback"}}};
 
-	std::list<std::string> validTypes = validSegmentTypes.at(name);
-	QL_REQUIRE(std::find(validTypes.begin(), validTypes.end(), typeID_) != validTypes.end(),
-		"The curve type " << typeID_ << " is not a valid " << name << " curve segment type");
+    std::list<std::string> validTypes = validSegmentTypes.at(name);
+    QL_REQUIRE(std::find(validTypes.begin(), validTypes.end(), typeID_) != validTypes.end(),
+               "The curve type " << typeID_ << " is not a valid " << name << " curve segment type");
 
     if (name == "DiscountRatio") {
     } else if (name == "AverageOIS") {
@@ -821,9 +823,9 @@ void IborFallbackCurveSegment::fromXML(XMLNode* node) {
     rfrCurve_ = XMLUtils::getChildValue(node, "RfrCurve", true);
     rfrIndex_ = boost::none;
     spread_ = boost::none;
-    if(auto n = XMLUtils::getChildNode(node,"RfrIndex"))
+    if (auto n = XMLUtils::getChildNode(node, "RfrIndex"))
         rfrIndex_ = XMLUtils::getNodeValue(n);
-    if(auto n = XMLUtils::getChildNode(node,"Spread"))
+    if (auto n = XMLUtils::getChildNode(node, "Spread"))
         spread_ = parseReal(XMLUtils::getNodeValue(n));
 }
 
