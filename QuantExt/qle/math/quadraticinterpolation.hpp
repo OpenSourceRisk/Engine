@@ -72,7 +72,7 @@ using namespace QuantLib;
       public:
         Quadratic(Real x_mul = 1, Real x_offset = 0,
                   Real y_mul = 1, Real y_offset = 0,
-                  Real skip = 0)
+                  Size skip = 0)
         : x_mul_(x_mul), x_offset_(x_offset),
           y_mul_(y_mul), y_offset_(y_offset),
           skip_(skip) {}
