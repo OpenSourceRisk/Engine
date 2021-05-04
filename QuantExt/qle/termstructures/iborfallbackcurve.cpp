@@ -67,7 +67,7 @@ Real IborFallbackCurve::discountImpl(QuantLib::Time t) const {
     Real curveTime = timeFromReference(endDate);
     Real tm = std::max(t - dt, 0.0);
     Real s = std::log(1.0 + couponTime * spread_) / curveTime;
-    return rfrIndex_->forwardingTermStructure()->discount(tm) + std::exp(-s * tm);
+    return rfrIndex_->forwardingTermStructure()->discount(tm) * std::exp(-s * tm);
 }
 
 } // namespace QuantExt
