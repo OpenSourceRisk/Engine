@@ -24,8 +24,8 @@ namespace ore {
 namespace data {
 
 IborFallbackConfig::IborFallbackConfig() { clear(); }
-IborFallbackConfig::IborFallbackConfig(const bool useRfrCurveInTodaysMarket, const bool useRfrCurveInSimulationMarket,
-                                       const bool enableIborFallbacks,
+IborFallbackConfig::IborFallbackConfig(const bool enableIborFallbacks, const bool useRfrCurveInTodaysMarket,
+                                       const bool useRfrCurveInSimulationMarket,
                                        const std::map<std::string, FallbackData>& fallbacks)
     : enableIborFallbacks_(enableIborFallbacks), useRfrCurveInTodaysMarket_(useRfrCurveInTodaysMarket),
       useRfrCurveInSimulationMarket_(useRfrCurveInSimulationMarket), fallbacks_(fallbacks) {}

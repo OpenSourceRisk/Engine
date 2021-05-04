@@ -727,6 +727,8 @@ void YieldCurve::buildIborFallbackCurve() {
     auto rfrIndex = boost::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(rfrIndexName, it->second->handle()));
     QL_REQUIRE(rfrIndex, "buidlIborFallbackCurve(): rfr index '"
                              << rfrIndexName << "' could not be cast to OvernightIndex, is this index name correct?");
+    DLOG("building ibor fallback curve for '" << segment->iborIndex() << "' with rfrIndex='" << rfrIndexName
+                                              << "' and spread=" << spread);
     p_ = boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
 }
 
