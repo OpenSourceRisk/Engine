@@ -78,7 +78,8 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
             spotFx_, floatDiscount_, termStructureHandle_);
 
    swap_ = boost::make_shared<CrossCcyFixFloatMtMResetSwap>(nominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_,
-       paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_, floatSpread, fxIdx, resetsOnFloatLeg_);
+       paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
+       paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_);
 
     // Attach engine
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
