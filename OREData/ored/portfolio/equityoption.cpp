@@ -41,12 +41,30 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // Populate the index_ in case the option is automatic exercise.
     const boost::shared_ptr<Market>& market = engineFactory->market();
     index_ = *market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
-    
+
     // check the equity currency
-    Currency equityCurrency = market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency();
-    QL_REQUIRE(!equityCurrency.empty(), "No equity currency in equityCurve for equity " << assetName_);
-    QL_REQUIRE(equityCurrency == parseCurrencyWithMinors(currency_), 
-        "EquityCurrency " << equityCurrency << " must match Option currency " << currency_ << " for trade " << id());
+    Currency equityCurrency =
+        market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency();
+    QL_REQUIRE(!equityCurrency.empty(), "No equity currency in equityCurve for equity " << assetName_ << ".");
+
+    // Set the strike currency - if we have a minor currency, convert the strike
+    if (!strikeCurrency_.empty()) {
+        QL_REQUIRE(parseCurrencyWithMinors(strikeCurrency_) == equityCurrency,
+                   "Strike currency " << strikeCurrency_ << " does not match equity currency " << equityCurrency
+                                      << " for trade " << id() << ".");
+    } else {
+        DLOG("No StrikeCurrency provided, using equity currency " << equityCurrency << ".");
+        strikeCurrency_ = equityCurrency.code();
+    }
+    strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
+
+    // If option and underlying equity currencies are not equal, then option is Quanto
+    Currency ccy = parseCurrencyWithMinors(localCurrency_);
+    currency_ = ccy.code();
+    if (equityCurrency != parseCurrencyWithMinors(currency_)) {
+        DLOG("Equity currency " << equityCurrency << " and option currency " << currency_ << " for trade "
+                                << id() << ". Applying a Quanto payoff.");
+    }
 
     // Build the trade using the shared functionality in the base class.
     VanillaOptionTrade::build(engineFactory);
@@ -56,20 +74,6 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
                                 << " and strike " << strike_ << " is "
                                 << market->equityVol(assetName_)->blackVol(expiryDate_, strike_));
-    }
-}
-
-void EquityOption::setCcyStrike() {
-    Currency ccy = parseCurrencyWithMinors(localCurrency_);
-    currency_ = ccy.code();
-    // if we have a minor currency, convert the strike
-    if (!strikeCurrency_.empty()) {
-        QL_REQUIRE(parseCurrencyWithMinors(strikeCurrency_) == ccy,
-            "Stike currency " << strikeCurrency_ << " does not match option currency " << currency_ << " for trade " << id());
-        strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
-    } else {
-        DLOG("No StrikeCurrency provided, using Option currency " << localCurrency_);
-        strike_ = convertMinorToMajorCurrency(localCurrency_, localStrike_);
     }
 }
 
@@ -86,7 +90,6 @@ void EquityOption::fromXML(XMLNode* node) {
     localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
     strikeCurrency_ = XMLUtils::getChildValue(eqNode, "StrikeCurrency", false);
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
-    setCcyStrike();
 }
 
 XMLNode* EquityOption::toXML(XMLDocument& doc) {
