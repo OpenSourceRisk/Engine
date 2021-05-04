@@ -718,7 +718,7 @@ void YieldCurve::buildIborFallbackCurve() {
         (segment->rfrIndex() && segment->spread()) || iborFallbackConfig_.isIndexReplaced(segment->iborIndex()),
         "buildIborFallbackCurve(): ibor index '"
             << segment->iborIndex()
-            << "' must be specified in ibor falback config, if RfrIndex or Spread is not specified in curve config");
+            << "' must be specified in ibor fallback config, if RfrIndex or Spread is not specified in curve config");
     std::string rfrIndexName = segment->rfrIndex() ? *segment->rfrIndex() : iborFallbackConfig_.fallbackData(segment->iborIndex()).rfrIndex;
     Real spread = segment->spread() ? *segment->spread() : iborFallbackConfig_.fallbackData(segment->iborIndex()).spread;
     // we don't support convention based indices here, this might change with ore ticket 1758

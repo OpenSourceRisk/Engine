@@ -116,7 +116,7 @@ void TodaysMarket::initialise(const Date& asof) {
     }
 
     // build the dependency graph for all configurations and  build all FX Spots
-    DependencyGraph dg(params_, curveConfigs_, conventions_, iborFallbackConfig_);
+    DependencyGraph dg(asof_, params_, curveConfigs_, conventions_, iborFallbackConfig_);
     map<string, string> buildErrors;
 
     for (const auto& configuration : params_->configurations()) {

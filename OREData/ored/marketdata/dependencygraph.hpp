@@ -82,6 +82,8 @@ class DependencyGraph {
 
 public:
     DependencyGraph(
+        //! The asof date of the T0 market instance
+        const Date& asof,
         //! Description of the market composition
         const boost::shared_ptr<TodaysMarketParameters>& params,
         //! Description of curve compositions
@@ -90,7 +92,7 @@ public:
         const boost::shared_ptr<Conventions>& conventions,
         //! Ibor fallback config
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig())
-        : params_(params), curveConfigs_(curveConfigs), conventions_(conventions),
+        : asof_(asof), params_(params), curveConfigs_(curveConfigs), conventions_(conventions),
           iborFallbackConfig_(iborFallbackConfig){};
 
     // data structure for a vertex in the graph
@@ -120,12 +122,7 @@ private:
     // the dependency graphs for each configuration
     std::map<std::string, Graph> dependencies_;
 
-    /*
-    // needed for the deprecated ctor taking references, TODO remove these
-    const TodaysMarketParameters& params_;
-    const CurveConfigurations&  curveConfigs_;
-    const Conventions& conventions_;
-    */
+    const Date asof_;
     const boost::shared_ptr<TodaysMarketParameters> params_;
     const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
     const boost::shared_ptr<Conventions> conventions_;

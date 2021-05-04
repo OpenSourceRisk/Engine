@@ -71,8 +71,9 @@ boost::shared_ptr<OvernightIndexedCoupon> FallbackIborIndex::onCoupon(const Date
 
 Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     Date today = Settings::instance().evaluationDate();
-    if (today < switchDate_ || fixingDate < switchDate_)
+    if (today < switchDate_ || fixingDate < switchDate_) {
         return originalIndex_->fixing(fixingDate, forecastTodaysFixing);
+    }
     if (fixingDate > today) {
         return IborIndex::forecastFixing(fixingDate);
     } else {
@@ -82,8 +83,9 @@ Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing
 
 Rate FallbackIborIndex::pastFixing(const Date& fixingDate) const {
     Date today = Settings::instance().evaluationDate();
-    if (today < switchDate_)
+    if (today < switchDate_) {
         return originalIndex_->pastFixing(fixingDate);
+    }
     return fixing(fixingDate);
 }
 
@@ -97,8 +99,8 @@ Rate FallbackIborIndex::forecastFixing(const Date& valueDate, const Date& endDat
         today < switchDate_ ? originalIndex_->forwardingTermStructure() : forwardingTermStructure();
     QL_REQUIRE(!curve.empty(), "FallbackIborIndex: null term structure set for " << name() << ", today=" << today
                                                                                  << ", switchDate=" << switchDate_);
-    DiscountFactor disc1 = termStructure_->discount(valueDate);
-    DiscountFactor disc2 = termStructure_->discount(endDate);
+    DiscountFactor disc1 = curve->discount(valueDate);
+    DiscountFactor disc2 = curve->discount(endDate);
     return (disc1 / disc2 - 1.0) / t;
 }
 

@@ -359,7 +359,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         // 7 Ibor fallback handling: an ibor index to replace depends on the fallback rfr index
 
         if (g[*v].obj == MarketObject::IndexCurve) {
-            if (iborFallbackConfig_.isIndexReplaced(g[*v].name)) {
+            if (iborFallbackConfig_.isIndexReplaced(g[*v].name, asof_)) {
                 bool foundRfrIndex = false;
                 for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                     if (*w != *v) {
