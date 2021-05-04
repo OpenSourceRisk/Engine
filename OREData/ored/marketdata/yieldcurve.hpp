@@ -141,6 +141,8 @@ private:
     void buildWeightedAverageCurve();
     //! Build a yield curve that uses QuantExt::YieldPlusDefaultYieldTermStructure
     void buildYieldPlusDefaultCurve();
+    //! Build a yield curve that uses QuantExt::IborFallbackCurve
+    void buildIborFallbackCurve();
 
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;

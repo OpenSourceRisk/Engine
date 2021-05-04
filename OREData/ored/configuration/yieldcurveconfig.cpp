@@ -73,6 +73,8 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
         return YieldCurveSegment::Type::YieldPlusDefault;
     else if (iequals(s, "Weighted Average"))
         return YieldCurveSegment::Type::WeightedAverage;
+    else if (iequals(s, "Ibor Fallback"))
+        return YieldCurveSegment::Type::IborFallback;
     QL_FAIL("Yield curve segment type " << s << " not recognized");
 }
 
@@ -86,7 +88,8 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<DiscountRatioYieldCurveSegment>,
                         public Visitor<FittedBondYieldCurveSegment>,
                         public Visitor<WeightedAverageYieldCurveSegment>,
-                        public Visitor<YieldPlusDefaultYieldCurveSegment> {
+                        public Visitor<YieldPlusDefaultYieldCurveSegment>,
+                        public Visitor<IborFallbackCurveSegment> {
 
 public:
     SegmentIDGetter(const string& curveID, map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
@@ -102,6 +105,7 @@ public:
     void visit(FittedBondYieldCurveSegment& s);
     void visit(WeightedAverageYieldCurveSegment& s);
     void visit(YieldPlusDefaultYieldCurveSegment& s);
+    void visit(IborFallbackCurveSegment& s);
 
 private:
     string curveID_;
@@ -188,6 +192,10 @@ void SegmentIDGetter::visit(YieldPlusDefaultYieldCurveSegment& s) {
     for (auto const& i : s.defaultCurveIDs()) {
         requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(i)->curveConfigID());
     }
+}
+
+void SegmentIDGetter::visit(IborFallbackCurveSegment& s) {
+    requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(s.rfrCurve())->curveConfigID());
 }
 
 // YieldCurveConfig
@@ -794,6 +802,45 @@ XMLNode* YieldPlusDefaultYieldCurveSegment::toXML(XMLDocument& doc) {
 
 void YieldPlusDefaultYieldCurveSegment::accept(AcyclicVisitor& v) {
     Visitor<YieldPlusDefaultYieldCurveSegment>* v1 = dynamic_cast<Visitor<YieldPlusDefaultYieldCurveSegment>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
+IborFallbackCurveSegment::IborFallbackCurveSegment(const string& typeID, const string& iborIndex,
+                                                   const string& rfrCurve, const boost::optional<string>& rfrIndex,
+                                                   const boost::optional<Real>& spread)
+    : YieldCurveSegment(typeID, "", {}), iborIndex_(iborIndex), rfrCurve_(rfrCurve), rfrIndex_(rfrIndex),
+      spread_(spread) {}
+
+void IborFallbackCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "IborFallback");
+    YieldCurveSegment::fromXML(node);
+    iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
+    rfrCurve_ = XMLUtils::getChildValue(node, "RfrCurve", true);
+    rfrIndex_ = boost::none;
+    spread_ = boost::none;
+    if(auto n = XMLUtils::getChildNode(node,"RfrIndex"))
+        rfrIndex_ = XMLUtils::getNodeValue(n);
+    if(auto n = XMLUtils::getChildNode(node,"Spread"))
+        spread_ = parseReal(XMLUtils::getNodeValue(n));
+}
+
+XMLNode* IborFallbackCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "IborFallback");
+    XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
+    XMLUtils::addChild(doc, node, "RfrCurve", rfrCurve_);
+    if (rfrIndex_)
+        XMLUtils::addChild(doc, node, "RfrIndex", *rfrIndex_);
+    if (spread_)
+        XMLUtils::addChild(doc, node, "Spread", *spread_);
+    return node;
+}
+
+void IborFallbackCurveSegment::accept(AcyclicVisitor& v) {
+    Visitor<IborFallbackCurveSegment>* v1 = dynamic_cast<Visitor<IborFallbackCurveSegment>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else

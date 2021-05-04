@@ -25,6 +25,7 @@
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/yield/bondhelpers.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/nonlinearfittingmethods.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
@@ -53,6 +54,7 @@
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
+#include <qle/termstructures/iborfallbackcurve.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
@@ -237,6 +239,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::YieldPlusDefault) {
             DLOG("Building YieldPlusDefaultCurve " << curveSpec_);
             buildYieldPlusDefaultCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::IborFallback) {
+            DLOG("Building IborFallbackCurve " << curveSpec_);
+            buildIborFallbackCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -698,6 +703,31 @@ void YieldCurve::buildYieldPlusDefaultCurve() {
     }
     p_ = boost::make_shared<YieldPlusDefaultYieldTermStructure>(it->second->handle(), defaultCurves, recRates,
                                                                 segment->weights());
+}
+
+void YieldCurve::buildIborFallbackCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1,
+               "One segment required for ibor fallback curve, got " << curveSegments_.size());
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::IborFallback,
+               "The curve segment is not of type Ibor Fallback");
+    auto segment = boost::dynamic_pointer_cast<IborFallbackCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(segment != nullptr, "expected IborFallbackCurve, internal error");
+    auto it = requiredYieldCurves_.find(segment->rfrCurve());
+    QL_REQUIRE(it != requiredYieldCurves_.end(), "Could not find rfr curve: '" << segment->rfrCurve() << "')");
+    QL_REQUIRE(
+        (segment->rfrIndex() && segment->spread()) || iborFallbackConfig_.isIndexReplaced(segment->iborIndex()),
+        "buildIborFallbackCurve(): ibor index '"
+            << segment->iborIndex()
+            << "' must be specified in ibor falback config, if RfrIndex or Spread is not specified in curve config");
+    std::string rfrIndexName = segment->rfrIndex() ? *segment->rfrIndex() : iborFallbackConfig_.fallbackData(segment->iborIndex()).rfrIndex;
+    Real spread = segment->spread() ? *segment->spread() : iborFallbackConfig_.fallbackData(segment->iborIndex()).spread;
+    // we don't support convention based indices here, this might change with ore ticket 1758
+    Handle<YieldTermStructure> dummyCurve(boost::make_shared<FlatForward>(asofDate_, 0.0, zeroDayCounter_));
+    auto originalIndex = parseIborIndex(segment->iborIndex(), dummyCurve);
+    auto rfrIndex = boost::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(rfrIndexName, it->second->handle()));
+    QL_REQUIRE(rfrIndex, "buidlIborFallbackCurve(): rfr index '"
+                             << rfrIndexName << "' could not be cast to OvernightIndex, is this index name correct?");
+    p_ = boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
 }
 
 void YieldCurve::buildDiscountCurve() {
