@@ -74,7 +74,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarke
                            const bool preserveQuoteLinkage, const IborFallbackConfig& iborFallbackConfig)
     : MarketImpl(conventions), params_(params), loader_(loader), curveConfigs_(curveConfigs), conventions_(conventions),
       continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
-      preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData) {
+      preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig) {
     QL_REQUIRE(params_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_, "TodaysMarket: CurveConfigurations are null");
@@ -115,7 +116,7 @@ void TodaysMarket::initialise(const Date& asof) {
     }
 
     // build the dependency graph for all configurations and  build all FX Spots
-    DependencyGraph dg(params_, curveConfigs_, conventions_);
+    DependencyGraph dg(params_, curveConfigs_, conventions_, iborFallbackConfig_);
     map<string, string> buildErrors;
 
     for (const auto& configuration : params_->configurations()) {
@@ -277,13 +278,12 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             } else if (node.obj == MarketObject::IndexCurve) {
                 DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration "
                                      << configuration);
-                iborIndices_[make_pair(configuration, node.name)] = Handle<IborIndex>(
-                    parseIborIndex(node.name, itr->second->handle(),
-                                   conventions_->has(node.name, Convention::Type::IborIndex) ||
-                                           conventions_->has(node.name, Convention::Type::OvernightIndex)
-                                       ? conventions_->get(node.name)
-                                       : nullptr));
                 // ibor fallback handling
+                auto tmpIndex = parseIborIndex(node.name, itr->second->handle(),
+                                               conventions_->has(node.name, Convention::Type::IborIndex) ||
+                                                       conventions_->has(node.name, Convention::Type::OvernightIndex)
+                                                   ? conventions_->get(node.name)
+                                                   : nullptr);
                 if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
                     auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
                     boost::shared_ptr<IborIndex> rfrIndex;
@@ -301,16 +301,16 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                                "Found rfr index '"
                                    << fallbackData.rfrIndex << "' as falback for ibor index '" << node.name
                                    << "', but this is not an overnight index. Are the fallback rules correct here?");
-                    iborIndices_[make_pair(configuration, node.name)] =
-                        Handle<IborIndex>(boost::make_shared<QuantExt::FallbackIborIndex>(
-                            *iborIndices_[make_pair(configuration, node.name)], oi, fallbackData.spread,
-                            fallbackData.switchDate, iborFallbackConfig_.useRfrCurveInTodaysMarket()));
+                    tmpIndex = boost::make_shared<QuantExt::FallbackIborIndex>(
+                        tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
+                        iborFallbackConfig_.useRfrCurveInTodaysMarket());
                     TLOG("built ibor fall back index for '" << node.name << "' in configuration " << configuration
                                                             << " using rfr index '" << fallbackData.rfrIndex
                                                             << "', spread " << fallbackData.spread
                                                             << ", will use rfr curve in t0 market: " << std::boolalpha
                                                             << iborFallbackConfig_.useRfrCurveInTodaysMarket());
                 }
+                iborIndices_[make_pair(configuration, node.name)] = Handle<IborIndex>(tmpIndex);
             } else {
                 QL_FAIL("unexpected market object type '"
                         << node.obj << "' for yield curve, should be DiscountCurve, YieldCurve, IndexCurve");
