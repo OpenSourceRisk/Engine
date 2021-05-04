@@ -40,9 +40,9 @@ public:
     IborFallbackConfig(const bool useRfrCurveInTodaysMarket, const bool useRfrCurveInSimulationMarket,
                        const bool enableIborFallbacks, const std::map<std::string, FallbackData>& fallbacks);
 
+    bool enableIborFallbacks() const;
     bool useRfrCurveInTodaysMarket() const;
     bool useRfrCurveInSimulationMarket() const;
-    bool enableIborFallbacks() const;
 
     void addIndexFallbackRule(const string& iborIndex, const FallbackData& fallbackData);
 
@@ -56,9 +56,9 @@ public:
     static IborFallbackConfig defaultConfig();
 
 private:
-    bool useRfrCurveInTodaysMarket_ = true;
-    bool useRfrCurveInSimulationMarket_ = true;
-    bool enableIborFallbacks_ = true;
+    bool enableIborFallbacks_;
+    bool useRfrCurveInTodaysMarket_;
+    bool useRfrCurveInSimulationMarket_;
     std::map<std::string, FallbackData> fallbacks_;
 };
 

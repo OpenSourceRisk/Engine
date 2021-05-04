@@ -23,18 +23,17 @@
 namespace ore {
 namespace data {
 
-IborFallbackConfig::IborFallbackConfig() {}
+IborFallbackConfig::IborFallbackConfig() { clear(); }
 IborFallbackConfig::IborFallbackConfig(const bool useRfrCurveInTodaysMarket, const bool useRfrCurveInSimulationMarket,
                                        const bool enableIborFallbacks,
                                        const std::map<std::string, FallbackData>& fallbacks)
-    : useRfrCurveInTodaysMarket_(useRfrCurveInTodaysMarket),
-      useRfrCurveInSimulationMarket_(useRfrCurveInSimulationMarket), enableIborFallbacks_(enableIborFallbacks),
-      fallbacks_(fallbacks) {}
+    : enableIborFallbacks_(enableIborFallbacks), useRfrCurveInTodaysMarket_(useRfrCurveInTodaysMarket),
+      useRfrCurveInSimulationMarket_(useRfrCurveInSimulationMarket), fallbacks_(fallbacks) {}
 
 void IborFallbackConfig::clear() {
+    enableIborFallbacks_ = false;
     useRfrCurveInTodaysMarket_ = true;
-    useRfrCurveInSimulationMarket_ = true;
-    enableIborFallbacks_ = true;
+    useRfrCurveInSimulationMarket_ = false;
     fallbacks_.clear();
 }
 
@@ -101,9 +100,9 @@ IborFallbackConfig IborFallbackConfig::defaultConfig() {
     // https://assets.bbhub.io/professional/sites/10/IBOR-Fallbacks-LIBOR-Cessation_Announcement_20210305.pdf
     // https://www.isda.org/2021/03/05/isda-statement-on-uk-fca-libor-announcement/
     // https://www.fca.org.uk/publication/documents/future-cessation-loss-representativeness-libor-benchmarks.pdf
-    static IborFallbackConfig c = {true,
+    static IborFallbackConfig c = {false,
                                    true,
-                                   true,
+                                   false,
                                    {{"CHF-LIBOR-SN", FallbackData{"CHF-SARON", -0.000551, Date(1, Jan, 2022)}},
                                     {"CHF-LIBOR-1W", FallbackData{"CHF-SARON", -0.000705, Date(1, Jan, 2022)}},
                                     {"CHF-LIBOR-1M", FallbackData{"CHF-SARON", -0.000571, Date(1, Jan, 2022)}},
