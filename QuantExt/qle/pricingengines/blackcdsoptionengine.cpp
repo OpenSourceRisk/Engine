@@ -46,6 +46,9 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
+#include <string>
+
+using std::string;
 
 namespace QuantExt {
 
@@ -107,6 +110,15 @@ Real BlackCdsOptionEngine::recoveryRate() const { return recoveryRate_; }
 
 Real BlackCdsOptionEngine::defaultProbability(const Date& d) const { return probability_->defaultProbability(d); }
 
+Real BlackCdsOptionEngine::frontEndProtection(const Date& d) const {
+    // Does it depend on the knocksOut argument? Main focus is index CDS options for now.
+    return 0.0;
+}
+
+Real BlackCdsOptionEngine::expectedNotional(const Date& d) const {
+    return (1 - defaultProbability(d)) * arguments_.swap->notional();
+}
+
 void BlackCdsOptionEngine::calculate() const {
     BlackCdsOptionEngineBase::calculate(*arguments_.swap, arguments_.exercise->dates().front(), arguments_.knocksOut,
                                         results_, arguments_.strike, arguments_.strikeType);
@@ -123,29 +135,49 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
     Date maturityDate = swap.coupons().back()->date();
     QL_REQUIRE(maturityDate > exerciseDate, "Underlying CDS maturity should be after the option expiry.");
 
+    // Get additional results of underlying CDS.
+    swap.NPV();
+    results.additionalResults = swap.additionalResults();
+
     Rate fairSpread = swap.fairSpread();
     Rate couponSpread = swap.runningSpread();
+    results.additionalResults["runningSpread"] = couponSpread;
 
-    // The sense of the underlying/option has to be sent this way
-    // to the Black formula, no sign.
-    results.riskyAnnuity = swapRiskyAnnuity(swap, false) * swap.notional(); // with accural
+    // Discount factor to exercise
+    DiscountFactor discToExercise = termStructure_->discount(exerciseDate);
+    results.additionalResults["discToExercise"] = discToExercise;
+
+    // The sense of the underlying/option has to be sent this way to the Black formula, no sign.
+    results.riskyAnnuity = swapRiskyAnnuity(swap, false) * swap.notional();
     Real riskyAnnuity = swapRiskyAnnuity(swap);
-    Real riskyAnnuityExp = riskyAnnuity / termStructure_->discount(exerciseDate);
+    Real riskyAnnuityExp = riskyAnnuity / discToExercise;
+    results.additionalResults["riskyAnnuityClean"] = riskyAnnuity;
 
-    Option::Type callPut = (swap.side() == Protection::Buyer) ? Option::Call : Option::Put;
-
-    results.additionalResults = swap.additionalResults();
     // TODO: accuont for defaults between option trade data evaluation date
     if (strike != Null<Real>()) {
-        Real strikeSpread = couponSpread;
-        Real adjustedForwardSpread = fairSpread;
-        Real adjustedStrikeSpread = couponSpread;
-        adjustedForwardSpread += (1 - recoveryRate()) * defaultProbability(exerciseDate) /
-                                 ((1 - defaultProbability(exerciseDate)) * riskyAnnuityExp);
-        // According to market standard, for exercise price calcualtion, risky annuity is calcualted on a credit curve
-        // that has been fitted to a flat CDS term structure with spreads equal to strike
+
+        // Expected notional at expiry.
+        Real expNtl = expectedNotional(exerciseDate);
+        results.additionalResults["expectedNotional"] = expNtl;
+
         if (strikeType == CdsOption::StrikeType::Spread) {
-            strikeSpread = strike;
+
+            // Follows ICE Credit Index Options, Sep 2018, Section 3.2
+            results.additionalResults["fairSpread"] = fairSpread;
+            results.additionalResults["strikeSpread"] = strike;
+
+            // Review the use of weighted recovery and default probability here. This original author was following 
+            // the ICE paper but we possibly have the constituent recoveries and default curves.
+            Real lgd = 1 - recoveryRate();
+            results.additionalResults["lgd"] = lgd;
+            Real dp = defaultProbability(exerciseDate);
+            results.additionalResults["defaultProbToExercise"] = dp;
+            Real sp = 1 - dp;
+
+            // F' in ICE paper
+            Real adjustedForwardSpread = fairSpread + (lgd * dp) / (sp * riskyAnnuityExp);
+            results.additionalResults["adjustedForwardSpread"] = adjustedForwardSpread;
+
             // Find the flat hazard rate
             Schedule schedule = MakeSchedule()
                                     .from(swap.protectionStartDate())
@@ -164,56 +196,62 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
                 Protection::Buyer, 1, couponSpread, schedule, Following, Actual360(), swap.settlesAccrual(),
                 swap.protectionPaymentTime(), swap.protectionStartDate(), boost::shared_ptr<Claim>(), Actual360(true));
 
-            Handle<DefaultProbabilityTermStructure> dp(boost::make_shared<FlatHazardRate>(
+            Handle<DefaultProbabilityTermStructure> dph(boost::make_shared<FlatHazardRate>(
                 termStructure_->referenceDate(), Handle<Quote>(boost::make_shared<SimpleQuote>(hz)), Actual365Fixed()));
             boost::shared_ptr<PricingEngine> swap_engine =
-                boost::make_shared<QuantExt::MidPointCdsEngine>(dp, recoveryRate(), termStructure_);
+                boost::make_shared<QuantExt::MidPointCdsEngine>(dph, recoveryRate(), termStructure_);
             swap_ra->setPricingEngine(swap_engine);
             double riskAnnuityStrike =
                 (std::fabs(swap_ra->couponLegNPV() - std::fabs(swap_ra->accrualRebateNPV()))) / couponSpread;
+            results.additionalResults["riskAnnuityStrike"] = riskAnnuityStrike;
 
-            adjustedStrikeSpread += riskAnnuityStrike * (strikeSpread - couponSpread) /
-                                    ((1 - defaultProbability(exerciseDate)) * riskyAnnuityExp);
+            // K' in the ICE paper
+            Real adjustedStrikeSpread = couponSpread +
+                riskAnnuityStrike * (strike - couponSpread) / (sp * riskyAnnuityExp);
+            results.additionalResults["adjustedStrikeSpread"] = adjustedStrikeSpread;
+
+            // Read the volatility from the volatility surface, assumed to have strike dimension in terms of spread.
+            Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, strike, true));
+            results.additionalResults["volatility"] = volatility_->blackVol(exerciseDate, strike);
+            results.additionalResults["standardDeviation"] = stdDev;
+
+            Option::Type callPut = swap.side() == Protection::Buyer ? Option::Call : Option::Put;
+            results.additionalResults["callPut"] = callPut == Option::Call ? string("Call") : string("Put");
+
+            results.value = expNtl * discToExercise;
+            results.value *= blackFormula(callPut, adjustedStrikeSpread, adjustedForwardSpread, stdDev, riskyAnnuity);
+
         } else if (strikeType == CdsOption::StrikeType::Price) {
 
-            // Use solver to find the equivalent spread quoted strike
-            Schedule schedule = MakeSchedule()
-                                    .from(swap.protectionStartDate())
-                                    .to(swap.protectionEndDate())
-                                    .withFrequency(Quarterly)
-                                    .withConvention(Following)
-                                    .withTerminationDateConvention(Unadjusted)
-                                    .withRule(DateGeneration::CDS2015);
+            // Calculate the forward price of the underlying CDS.
+            // TODO: review using the full notional in the denominator here.
+            Real forwardPrice = swap.side() == Protection::Buyer ? swap.NPV() : -swap.NPV();
+            forwardPrice /= discToExercise;
+            forwardPrice = 1 - forwardPrice / swap.notional();
+            results.additionalResults["forwardPrice"] = forwardPrice;
 
-            auto swap_coupon = boost::make_shared<QuantExt::CreditDefaultSwap>(
-                swap.side(), 1.0, couponSpread, schedule, Following, Actual360(), swap.settlesAccrual(),
-                swap.protectionPaymentTime(), swap.protectionStartDate(), boost::shared_ptr<Claim>(), Actual360(true));
+            // Calculate the front end protection adjusted forward price of the underlying CDS.
+            Real fep = frontEndProtection(exerciseDate);
+            Real fepForwardPrice = forwardPrice - fep / swap.notional();
+            results.additionalResults["frontEndProtection"] = fep;
+            results.additionalResults["fepForwardPrice"] = fepForwardPrice;
 
-            SimpleQuote spreadQuote;
-            auto hazardRateQuote = boost::make_shared<SimpleQuote>();
-            auto hazardRateQuoteHandle = Handle<Quote>(hazardRateQuote);
+            // Read the volatility from the volatility surface, assumed to have strike dimension in terms of price.
+            Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, strike));
+            results.additionalResults["strikePrice"] = strike;
+            results.additionalResults["volatility"] = volatility_->blackVol(exerciseDate, strike);
+            results.additionalResults["standardDeviation"] = stdDev;
 
-            Handle<DefaultProbabilityTermStructure> dp(boost::make_shared<FlatHazardRate>(
-                termStructure_->referenceDate(), hazardRateQuoteHandle, Actual365Fixed()));
-            boost::shared_ptr<PricingEngine> swap_engine =
-                boost::make_shared<QuantExt::MidPointCdsEngine>(dp, recoveryRate(), termStructure_);
-            swap_coupon->setPricingEngine(swap_engine);
+            // If protection buyer, put on price.
+            Option::Type cp = swap.side() == Protection::Buyer ? Option::Put : Option::Call;
+            results.additionalResults["callPut"] = cp == Option::Put ? string("Put") : string("Call");
 
-            PriceError f(schedule, swap_coupon, termStructure_, recoveryRate(), *hazardRateQuote, spreadQuote, strike);
-            Brent solver;
-            solver.setMaxEvaluations(10000);
-            strikeSpread = solver.solve(f, 1e-8, couponSpread, 0.0001, 1.0);
+            results.value = expNtl * blackFormula(cp, strike, fepForwardPrice, stdDev, discToExercise);
 
-            Real riskAnnuityStrike = ::QuantExt::swapRiskyAnnuity(*swap_coupon);
-            adjustedStrikeSpread += riskAnnuityStrike * (strikeSpread - couponSpread) /
-                                    ((1 - defaultProbability(exerciseDate)) * riskyAnnuityExp);
         } else {
             QL_FAIL("unrecognised strike type " << strikeType);
         }
-        Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, strikeSpread, true));
-        results.value =
-            swap.notional() * termStructure_->discount(exerciseDate) * (1 - defaultProbability(exerciseDate));
-        results.value *= blackFormula(callPut, adjustedStrikeSpread, adjustedForwardSpread, stdDev, riskyAnnuity);
+        
     } else {
         // old methodology
 
@@ -222,6 +260,7 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
         // If buyer and upfront NPV < 0 => paying upfront amount => should increase the pay spread
         // If seller and upfront NPV > 0 => receiving upfront amount => should increase the receive spread
         // If seller and upfront NPV < 0 => paying upfront amount => should reduce the receive spread
+        Option::Type callPut = swap.side() == Protection::Buyer ? Option::Call : Option::Put;
         if (swap.side() == Protection::Buyer) {
             couponSpread -= swap.upfrontNPV() / (riskyAnnuity * swap.notional());
         } else {
