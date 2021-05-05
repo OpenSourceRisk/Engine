@@ -33,6 +33,9 @@ IborFallbackCurve::IborFallbackCurve(const boost::shared_ptr<IborIndex>& origina
       rfrIndex_(rfrIndex), spread_(spread), switchDate_(switchDate) {
     registerWith(originalIndex->forwardingTermStructure());
     registerWith(rfrIndex->forwardingTermStructure());
+    // Always enable extrapolation: The original and rfr index forwarding curves might have different settings
+    // so we do not want to make things overly complicated here.
+    enableExtrapolation();
 }
 
 boost::shared_ptr<IborIndex> IborFallbackCurve::originalIndex() const { return originalIndex_; }
