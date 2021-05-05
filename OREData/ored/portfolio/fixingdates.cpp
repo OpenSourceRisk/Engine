@@ -339,7 +339,7 @@ void FixingDateGetter::visit(IborCoupon& c) {
         auto fallback = boost::dynamic_pointer_cast<FallbackIborIndex>(c.index());
         if (fallback != nullptr && c.fixingDate() >= fallback->switchDate()) {
             requiredFixings_.addFixingDates(fallback->onCoupon(c.fixingDate())->fixingDates(),
-                                            oreIndexName(c.index()->name()), c.date());
+                                            oreIndexName(fallback->rfrIndex()->name()), c.date());
         } else {
             visit(static_cast<FloatingRateCoupon&>(c));
         }
