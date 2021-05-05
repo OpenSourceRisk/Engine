@@ -70,6 +70,7 @@ protected:
     OptionData option_;
     string assetName_;
     string currency_;
+    string underlyingCurrency_ = "";
     double strike_;
     double quantity_;
 

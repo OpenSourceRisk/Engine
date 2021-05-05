@@ -58,13 +58,9 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     }
     strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
 
-    // If option and underlying equity currencies are not equal, then option is Quanto
-    Currency ccy = parseCurrencyWithMinors(localCurrency_);
-    currency_ = ccy.code();
-    if (equityCurrency != parseCurrencyWithMinors(currency_)) {
-        DLOG("Equity currency " << equityCurrency << " and option currency " << currency_ << " for trade "
-                                << id() << ". Applying a Quanto payoff.");
-    }
+    // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
+    currency_ = parseCurrencyWithMinors(localCurrency_).code();
+    underlyingCurrency_ = equityCurrency.code();
 
     // Build the trade using the shared functionality in the base class.
     VanillaOptionTrade::build(engineFactory);
