@@ -519,7 +519,7 @@ build a projection curve for an Ibor index based on a risk free rate and a sprea
 \begin{minted}[fontsize=\footnotesize]{xml}
 <YieldCurve>
   <CurveId>USD-LIBOR-3M</CurveId>
-  <CurveDescription>USD Libor 3M curve built from USD-SOFR curve and fallback spread</CurveDescription>
+  <CurveDescription>USD-Libor-3M built from USD-SOFR plus spread</CurveDescription>
   <Currency>USD</Currency>
   <DiscountCurve/>
   <Segments>
@@ -527,7 +527,8 @@ build a projection curve for an Ibor index based on a risk free rate and a sprea
       <Type>Ibor Fallback</Type>
       <IborIndex>USD-LIBOR-3M</IborIndex>
       <RfrCurve>Yield/USD/USD-SOFR</RfrCurve>
-      <!-- optional, if not given the rfr index and sprad are read from the ibor fallback configuration -->
+      <!-- optional, if not given the rfr index and sprad are read from the ibor
+           fallback configuration -->
       <RfrIndex>USD-SOFR</RfrIndex>
       <Spread>0.0026161</Spread>
     </IborFallback>
