@@ -237,8 +237,9 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
         // A2 indices with native fixings, but no only on the standard fixing date
         auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc);
         if (on) {
-            for (auto const& d : on->fixingDates())
+            for (auto const& d : on->fixingDates()) {
                 fixingMap[on->index()].insert(d);
+            }
             return true;
         }
         auto avon = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(frc);

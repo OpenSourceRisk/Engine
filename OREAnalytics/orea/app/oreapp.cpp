@@ -383,6 +383,8 @@ void OREApp::readSetup() {
         std::string tmp = inputPath_ + "/" + params_->get("setup", "iborFallbackConfig");
         LOG("Load iborFallbackConfig from file" << tmp);
         iborFallbackConfig_.fromFile(tmp);
+    } else {
+        LOG("Using default iborFallbackConfig");
     }
 
     writeInitialReports_ = true;

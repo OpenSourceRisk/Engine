@@ -52,7 +52,8 @@ public:
     const Date& switchDate() const;
     bool useRfrCurve() const;
 
-    boost::shared_ptr<OvernightIndexedCoupon> onCoupon(const Date& iborFixingDate) const;
+    boost::shared_ptr<OvernightIndexedCoupon> onCoupon(const Date& iborFixingDate,
+                                                       const bool telescopicValueDates = false) const;
 
 private:
     Rate forecastFixing(const Date& valueDate, const Date& endDate, Time t) const override;
