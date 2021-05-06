@@ -355,7 +355,34 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                                              ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
                                              configuration;
         }
+
+        // 7 Ibor fallback handling: an ibor index to replace depends on the fallback rfr index
+
+        if (g[*v].obj == MarketObject::IndexCurve) {
+            if (iborFallbackConfig_.isIndexReplaced(g[*v].name, asof_)) {
+                bool foundRfrIndex = false;
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v) {
+                        if (g[*w].obj == MarketObject::IndexCurve &&
+                            g[*w].name == iborFallbackConfig_.fallbackData(g[*v].name).rfrIndex) {
+                            g.add_edge(*v, *w);
+                            foundRfrIndex = true;
+                            TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
+                                                          << g[*w]);
+                        }
+                    }
+                    if (foundRfrIndex)
+                        break;
+                }
+                if (!foundRfrIndex)
+                    buildErrors[g[*v].mapping] = "did not find required rfr index '" +
+                                                 iborFallbackConfig_.fallbackData(g[*v].name).rfrIndex +
+                                                 "' for replaced ibor index '" + g[*v].name +
+                                                 "', is the rfr index configured in todays market parameters?";
+            }
+        }
     }
+
     DLOG("Dependency graph built with " << boost::num_vertices(g) << " vertices, " << boost::num_edges(g) << " edges.");
 
 } // TodaysMarket::buildDependencyGraph

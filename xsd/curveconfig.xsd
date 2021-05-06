@@ -703,6 +703,7 @@
       <!-- weightedAverageType and yieldPlusDefaultType removed by JW, but restored here -->
       <xs:element type="weightedAverageType" name="WeightedAverage"/>
       <xs:element type="yieldPlusDefaultType" name="YieldPlusDefault"/>
+      <xs:element type="iborFallbackType" name="IborFallback"/>
     </xs:choice>
   </xs:complexType>
 
@@ -880,6 +881,16 @@
       <xs:element type="xs:float" name="Weight1"/>
       <xs:element type="xs:float" name="Weight2"/>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="iborFallbackType">
+    <xs:all>
+      <xs:element type="xs:string" name="Type" fixed="Ibor Fallback"/>
+      <xs:element type="indexNameType" name="IborIndex"/>
+      <xs:element type="xs:string" name="RfrCurve"/>
+      <xs:element type="indexNameType" name="RfrIndex" minOccurs="0"/>
+      <xs:element type="xs:float" name="Spread" minOccurs="0"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="quoteType">
