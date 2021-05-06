@@ -33,6 +33,7 @@ cashflows/durationadjustedcmscoupon.cpp
 cashflows/durationadjustedcmscoupontsrpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
+cashflows/fixedratefxlinkednotionalcoupon.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
@@ -75,6 +76,7 @@ instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
 instruments/crossccybasismtmresetswap.cpp
 instruments/crossccybasisswap.cpp
+instruments/crossccyfixfloatmtmresetswap.cpp
 instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
@@ -189,6 +191,7 @@ termstructures/capfloortermvolsurface.cpp
 termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
+termstructures/crossccyfixfloatmtmresetswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
 termstructures/crosscurrencypricetermstructure.cpp
 termstructures/datedstrippedoptionlet.cpp
@@ -278,6 +281,7 @@ cashflows/durationadjustedcmscoupon.hpp
 cashflows/durationadjustedcmscoupontsrpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
+cashflows/fixedratefxlinkednotionalcoupon.hpp
 cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
@@ -374,6 +378,7 @@ instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
 instruments/crossccybasismtmresetswap.hpp
 instruments/crossccybasisswap.hpp
+instruments/crossccyfixfloatmtmresetswap.hpp
 instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
@@ -518,6 +523,7 @@ termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
+termstructures/crossccyfixfloatmtmresetswaphelper.hpp
 termstructures/crossccyfixfloatswaphelper.hpp
 termstructures/crosscurrencypricetermstructure.hpp
 termstructures/datedstrippedoptionlet.hpp
