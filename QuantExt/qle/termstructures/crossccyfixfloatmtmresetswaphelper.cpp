@@ -73,13 +73,18 @@ void CrossCcyFixFloatMtMResetSwapHelper::initializeDates() {
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
     Natural paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
-    boost::shared_ptr<FxIndex> fxIdx =
-        boost::make_shared<FxIndex>("dummy", settlementDays_, index_->currency(), fixedCurrency_, paymentCalendar_,
+    boost::shared_ptr<FxIndex> fxIdx;
+    if (resetsOnFloatLeg_) {
+        fxIdx = boost::make_shared<FxIndex>("dummy", settlementDays_, fixedCurrency_, index_->currency(),  paymentCalendar_,
+            spotFx_, termStructureHandle_, floatDiscount_);
+    } else {
+        fxIdx = boost::make_shared<FxIndex>("dummy", settlementDays_, index_->currency(), fixedCurrency_, paymentCalendar_,
             spotFx_, floatDiscount_, termStructureHandle_);
+    }
 
-   swap_ = boost::make_shared<CrossCcyFixFloatMtMResetSwap>(nominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_,
-       paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
-       paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_);
+    swap_ = boost::make_shared<CrossCcyFixFloatMtMResetSwap>(nominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_,
+        paymentLag, paymentCalendar_, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
+        paymentLag, paymentCalendar_, fxIdx, resetsOnFloatLeg_);
 
     // Attach engine
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(

@@ -18,6 +18,7 @@
 
 #include <qle/instruments/crossccyfixfloatmtmresetswap.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 
 #include <boost/make_shared.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
@@ -28,7 +29,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    CrossCcyFixFloatMtMResetSwap::CrossCcyFixFloatMtMResetSwap(
+CrossCcyFixFloatMtMResetSwap::CrossCcyFixFloatMtMResetSwap(
     Real nominal, const Currency& fixedCurrency, const Schedule& fixedSchedule,
     Rate fixedRate, const DayCounter& fixedDayCount, const BusinessDayConvention& fixedPaymentBdc,
     Natural fixedPaymentLag, const Calendar& fixedPaymentCalendar, const Currency& floatCurrency,
@@ -39,9 +40,9 @@ namespace QuantExt {
     fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount), 
     fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
     floatCurrency_(floatCurrency), floatSchedule_(floatSchedule), floatIndex_(floatIndex),
-    floatSpread_(floatSpread), fxIndex_(fxIdx), floatPaymentBdc_(floatPaymentBdc),
+    floatSpread_(floatSpread), floatPaymentBdc_(floatPaymentBdc),
     floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar),
-    resetsOnFloatLeg_(resetsOnFloatLeg), receiveFixed_(receiveFixed) {
+    fxIndex_(fxIdx), resetsOnFloatLeg_(resetsOnFloatLeg), receiveFixed_(receiveFixed) {
 
     registerWith(floatIndex_);
     registerWith(fxIndex_);
@@ -50,9 +51,15 @@ namespace QuantExt {
 
 void CrossCcyFixFloatMtMResetSwap::initialize() {
 
-    // resets on floating leg so set notional to zerp
-    Real floatNotional = 0.0;
-    Real fixedNotional = nominal_;
+    // if resets on floating leg, set notional to zero, else the fixed
+    Real floatNotional, fixedNotional;
+    if (resetsOnFloatLeg_) {
+        floatNotional = 0.0;
+        fixedNotional = nominal_;
+    } else {
+        floatNotional = nominal_;
+        fixedNotional = 0.0;
+    }
 
     // Build the float leg
     Leg floatLeg = IborLeg(floatSchedule_, floatIndex_)
@@ -66,16 +73,6 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
     for (Leg::const_iterator it = floatLeg.begin(); it < floatLeg.end(); ++it)
         registerWith(*it);
 
-    // resetting floating leg
-    for (Size j = 0; j < floatLeg.size(); ++j) {
-        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(floatLeg[j]);
-        Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
-            -static_cast<Integer>(fxIndex_->fixingDays()), Days);
-        boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
-            new FloatingRateFXLinkedNotionalCoupon(fixingDate, floatNotional, fxIndex_, coupon));
-        floatLeg[j] = fxLinkedCoupon;
-    }
-    
     // Build the fixed rate leg
     Leg fixedLeg = FixedRateLeg(fixedSchedule_)
         .withNotionals(fixedNotional)
@@ -83,17 +80,6 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
         .withPaymentAdjustment(fixedPaymentBdc_)
         .withPaymentLag(fixedPaymentLag_)
         .withPaymentCalendar(fixedPaymentCalendar_);
-
-    // Initial notional exchange
-    Date aDate = fixedSchedule_.dates().front();
-    aDate = fixedPaymentCalendar_.adjust(aDate, fixedPaymentBdc_);
-    boost::shared_ptr<CashFlow> aCashflow = boost::make_shared<SimpleCashFlow>(-fixedNotional, aDate);
-    fixedLeg.insert(fixedLeg.begin(), aCashflow);
-
-    // Final notional exchange
-    aDate = fixedLeg.back()->date();
-    aCashflow = boost::make_shared<SimpleCashFlow>(fixedNotional, aDate);
-    fixedLeg.push_back(aCashflow);
 
     // Deriving from cross currency swap where:
     //   First leg should hold the pay flows
@@ -112,22 +98,84 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
         currencies_[1] = floatCurrency_;
     }
 
-    // now build a separate leg to store the resetting notionals
-    receiveFixed_ ? payer_[2] = -1.0 : payer_[2] = +1.0;
-    currencies_[2] = floatCurrency_;
-    for (Size j = 0; j < floatLeg.size(); j++) {
-        boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(floatLeg[j]);
-        QL_REQUIRE(c, "Resetting XCCY - expected Coupon"); // TODO: fixed fx resetable?
-        // build a pair of notional flows, one at the start and one at the end of
-        // the accrual period. Both with the same FX fixing date
-        Date fixingDate = fxIndex_->fixingCalendar().advance(c->accrualStartDate(),
-            -static_cast<Integer>(fxIndex_->fixingDays()), Days);
-        legs_[2].push_back(boost::shared_ptr<CashFlow>(
-            new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -floatNotional, fxIndex_)));
-        legs_[2].push_back(boost::shared_ptr<CashFlow>(
-            new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, floatNotional, fxIndex_)));
-    }
+    if (resetsOnFloatLeg_) {
+        // Notional exchanges for fixed leg
+        // Initial notional exchange
+        Date aDate = fixedSchedule_.dates().front();
+        aDate = fixedPaymentCalendar_.adjust(aDate, fixedPaymentBdc_);
+        boost::shared_ptr<CashFlow> aCashflow = boost::make_shared<SimpleCashFlow>(-fixedNotional, aDate);
+        fixedLeg.insert(fixedLeg.begin(), aCashflow);
 
+        // Final notional exchange
+        aDate = fixedLeg.back()->date();
+        aCashflow = boost::make_shared<SimpleCashFlow>(fixedNotional, aDate);
+        fixedLeg.push_back(aCashflow);
+
+        // resetting floating leg
+        for (Size j = 0; j < floatLeg.size(); ++j) {
+            boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(floatLeg[j]);
+            Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
+                -static_cast<Integer>(fxIndex_->fixingDays()), Days);
+            boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
+                boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, fixedNotional, fxIndex_, coupon);
+            floatLeg[j] = fxLinkedCoupon;
+        }
+
+        // now build a separate leg to store the resetting notionals
+        receiveFixed_ ? payer_[2] = -1.0 : payer_[2] = +1.0;
+        currencies_[2] = floatCurrency_;
+        for (Size j = 0; j < floatLeg.size(); j++) {
+            boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(floatLeg[j]);
+            QL_REQUIRE(c, "Resetting XCCY - expected Coupon"); 
+            // build a pair of notional flows, one at the start and one at the end of
+            // the accrual period. Both with the same FX fixing date
+            Date fixingDate = fxIndex_->fixingCalendar().advance(c->accrualStartDate(),
+                -static_cast<Integer>(fxIndex_->fixingDays()), Days);
+            legs_[2].push_back(boost::shared_ptr<CashFlow>(
+                new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -fixedNotional, fxIndex_)));
+            legs_[2].push_back(boost::shared_ptr<CashFlow>(
+                new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, fixedNotional, fxIndex_)));
+        }
+    } else {
+        // Notional exchanges for fixed leg
+        // Initial notional exchange
+        Date aDate = floatSchedule_.dates().front();
+        aDate = floatPaymentCalendar_.adjust(aDate, floatPaymentBdc_);
+        boost::shared_ptr<CashFlow> aCashflow = boost::make_shared<SimpleCashFlow>(-floatNotional, aDate);
+        floatLeg.insert(fixedLeg.begin(), aCashflow);
+
+        // Final notional exchange
+        aDate = fixedLeg.back()->date();
+        aCashflow = boost::make_shared<SimpleCashFlow>(floatNotional, aDate);
+        floatLeg.push_back(aCashflow);
+
+        // resetting fixed leg
+        for (Size j = 0; j < fixedLeg.size(); ++j) {
+            boost::shared_ptr<FixedRateCoupon> coupon = boost::dynamic_pointer_cast<FixedRateCoupon>(fixedLeg[j]);
+            Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
+                -static_cast<Integer>(fxIndex_->fixingDays()), Days);
+            boost::shared_ptr<FixedRateFXLinkedNotionalCoupon> fxLinkedCoupon = 
+                boost::make_shared<FixedRateFXLinkedNotionalCoupon>(fixingDate, floatNotional, fxIndex_, coupon);
+            floatLeg[j] = fxLinkedCoupon;
+        }
+
+        // now build a separate leg to store the resetting notionals
+        receiveFixed_ ? payer_[2] = -1.0 : payer_[2] = +1.0;
+        currencies_[2] = fixedCurrency_;
+        for (Size j = 0; j < fixedLeg.size(); j++) {
+            boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(fixedLeg[j]);
+            QL_REQUIRE(c, "Resetting XCCY - expected Coupon");
+            // build a pair of notional flows, one at the start and one at the end of
+            // the accrual period. Both with the same FX fixing date
+            Date fixingDate = fxIndex_->fixingCalendar().advance(c->accrualStartDate(),
+                -static_cast<Integer>(fxIndex_->fixingDays()), Days);
+            legs_[2].push_back(boost::shared_ptr<CashFlow>(
+                new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -floatNotional, fxIndex_)));
+            legs_[2].push_back(boost::shared_ptr<CashFlow>(
+                new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, floatNotional, fxIndex_)));
+        }
+    }
+    
     // Register the instrument with all cashflows on each leg.
     for (Size legNo = 0; legNo < legs_.size(); legNo++) {
         Leg::iterator it;
@@ -137,11 +185,11 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
     }
 }
 
-void CrossCcyFixFloatMtMResetSwap::setupArguments(PricingEngine::arguments* args) const {
+void CrossCcyFixFloatMtMResetSwap::setupArguments(PricingEngine::arguments* a) const {
 
-    CrossCcySwap::setupArguments(args);
+    CrossCcySwap::setupArguments(a);
 
-    if (CrossCcyFixFloatMtMResetSwap::arguments* args = dynamic_cast<CrossCcyFixFloatMtMResetSwap::arguments*>(args)) {
+    if (CrossCcyFixFloatMtMResetSwap::arguments* args = dynamic_cast<CrossCcyFixFloatMtMResetSwap::arguments*>(a)) {
         args->fixedRate = fixedRate_;
         args->spread = floatSpread_;
     }
