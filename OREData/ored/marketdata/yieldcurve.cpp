@@ -1744,14 +1744,12 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
             QL_REQUIRE(marketQuote->quoteType() == MarketDatum::QuoteType::RATIO, "Market quote not of type ratio.");
             bmaBasisSwapQuote = boost::dynamic_pointer_cast<BMASwapQuote>(marketQuote);
 
-            // Create bma basis swap helper if we do. FIXME: Check the settlement days and calendar in the helper,
-            // we use values here that ensure that no historical fixings are required for bootstrap.
+            // Create bma basis swap helper if we do.
             boost::shared_ptr<RateHelper> bmaSwapHelper;
-            bmaSwapHelper.reset(new BMASwapRateHelper(
-                bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(),
-                std::max(bmaIndex->fixingDays(), liborIndex->fixingDays()),
-                JointCalendar(bmaIndex->fixingCalendar(), liborIndex->fixingCalendar()), bmaBasisSwapQuote->term(),
-                bmaIndex->businessDayConvention(), bmaIndex->dayCounter(), bmaIndex->bma(), liborIndex));
+            bmaSwapHelper.reset(new BMASwapRateHelper(bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(),
+                                                      bmaIndex->fixingDays(), bmaIndex->fixingCalendar(),
+                                                      bmaBasisSwapQuote->term(), bmaIndex->businessDayConvention(),
+                                                      bmaIndex->dayCounter(), bmaIndex->bma(), liborIndex));
             instruments.push_back(bmaSwapHelper);
         }
     }
