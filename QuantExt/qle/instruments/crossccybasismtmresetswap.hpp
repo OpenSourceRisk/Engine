@@ -52,7 +52,7 @@ public:
                               const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
                               const Currency& domesticCurrency, const Schedule& domesticSchedule,
                               const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-                              const boost::shared_ptr<FxIndex>& fxIdx, bool resetOnFloatLeg = true, bool receiveDomestic = true);
+                              const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic = true);
     //@}
     //! \name Instrument interface
     //@{
@@ -108,7 +108,6 @@ private:
     Spread domesticSpread_;
 
     boost::shared_ptr<FxIndex> fxIndex_;
-    bool resetOnFloatLeg_;
     bool receiveDomestic_;
 
     mutable Spread fairForeignSpread_;

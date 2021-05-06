@@ -31,12 +31,11 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
     Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
     const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
     const Schedule& domesticSchedule, const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-    const boost::shared_ptr<FxIndex>& fxIdx, bool resetOnFloatLeg, bool receiveDomestic)
+    const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic)
     : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
       foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
       domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
-      domesticSpread_(domesticSpread), fxIndex_(fxIdx), resetOnFloatLeg_(resetOnFloatLeg), 
-      receiveDomestic_(receiveDomestic) {
+      domesticSpread_(domesticSpread), fxIndex_(fxIdx), receiveDomestic_(receiveDomestic) {
 
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
