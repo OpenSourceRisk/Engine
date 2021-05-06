@@ -2000,6 +2000,15 @@ pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, con
         return make_pair(true, c->second);
 }
 
+std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type& type) const {
+    std::set<boost::shared_ptr<Convention>> result;
+    for (auto const& d : data_) {
+        if (d.second->type() == type)
+            result.insert(d.second);
+    }
+    return result;
+}
+
 bool Conventions::has(const string& id) const { return data_.count(id) == 1; }
 
 bool Conventions::has(const std::string& id, const Convention::Type& type) const {

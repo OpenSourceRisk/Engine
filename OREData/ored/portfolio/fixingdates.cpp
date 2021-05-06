@@ -471,6 +471,7 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
         LOG("Start adding market fixing dates for configuration '" << configuration << "'");
 
         // If there are ibor indices in the market parameters, add the lookback fixings
+        // IF there are SIFMA / BMA indices, add lookback fixings for the Libor basis index
         if (mktParams.hasMarketObject(MarketObject::IndexCurve)) {
 
             QL_REQUIRE(iborLookback >= 0 * Days, "Ibor lookback period must be non-negative");
@@ -490,6 +491,24 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                     }
                     TLOG("Adding extra fixing dates for overnight index " << kv.first);
                     fixings[kv.first].insert(oisDates.begin(), oisDates.end());
+                } else if (isBmaIndex(kv.first)) {
+                    if (iborDates.empty()) {
+                        TLOG("Generating fixing dates for ibor indices.");
+                        iborDates = generateLookbackDates(iborLookback, calendar);
+                    }
+                    std::set<string> liborNames;
+                    for (auto const& c : conventions.get(Convention::Type::BMABasisSwap)) {
+                        auto bma = boost::dynamic_pointer_cast<BMABasisSwapConvention>(c);
+                        QL_REQUIRE(
+                            bma, "internal error, could not cast to BMABasisSwapConvention in addMarketFixingDates()");
+                        if (bma->bmaIndexName() == kv.first) {
+                            liborNames.insert(bma->liborIndexName());
+                        }
+                    }
+                    for (auto const& l : liborNames) {
+                        TLOG("Adding extra fixing dates for libor index " << l << " from bma/sifma index " << kv.first);
+                        fixings[l].insert(iborDates.begin(), iborDates.end());
+                    }
                 } else {
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");

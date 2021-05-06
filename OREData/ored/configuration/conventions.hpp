@@ -120,6 +120,9 @@ public:
     */
     std::pair<bool, boost::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
 
+    /*! Get all conventions of a given type */
+    std::set<boost::shared_ptr<Convention>> get(const Convention::Type& type) const;
+
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
 
