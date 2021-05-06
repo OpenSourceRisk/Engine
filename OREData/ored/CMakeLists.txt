@@ -15,6 +15,7 @@ configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
 configuration/genericyieldvolcurveconfig.cpp
+configuration/iborfallbackconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
@@ -176,6 +177,7 @@ configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
+configuration/iborfallbackconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp

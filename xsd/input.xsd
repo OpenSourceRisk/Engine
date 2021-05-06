@@ -13,5 +13,6 @@
   <xs:include schemaLocation="ore.xsd"/>
   <xs:include schemaLocation="calendaradjustment.xsd"/>
   <xs:include schemaLocation="currencyconfig.xsd"/>
+  <xs:include schemaLocation="iborfallbackconfig.xsd"/>
 
 </xs:schema>

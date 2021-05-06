@@ -85,8 +85,10 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
                              const map<MarketContext, string>& configurations,
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
                              const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
-                             const boost::shared_ptr<ReferenceDataManager>& referenceData)
-    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData) {
+                             const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                             const IborFallbackConfig& iborFallbackConfig)
+    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();
