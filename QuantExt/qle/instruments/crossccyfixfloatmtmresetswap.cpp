@@ -81,23 +81,6 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
         .withPaymentLag(fixedPaymentLag_)
         .withPaymentCalendar(fixedPaymentCalendar_);
 
-    // Deriving from cross currency swap where:
-    //   First leg should hold the pay flows
-    //   Second leg should hold the receive flows
-    payer_[0] = -1.0;
-    payer_[1] = 1.0;
-    if (receiveFixed_) {
-        legs_[1] = fixedLeg;
-        currencies_[1] = fixedCurrency_;
-        legs_[0] = floatLeg;
-        currencies_[0] = floatCurrency_;
-    } else {
-        legs_[0] = fixedLeg;
-        currencies_[0] = fixedCurrency_;
-        legs_[1] = floatLeg;
-        currencies_[1] = floatCurrency_;
-    }
-
     if (resetsOnFloatLeg_) {
         // Notional exchanges for fixed leg
         // Initial notional exchange
@@ -137,7 +120,7 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
                 new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, fixedNotional, fxIndex_)));
         }
     } else {
-        // Notional exchanges for fixed leg
+        // Notional exchanges for floating leg
         // Initial notional exchange
         Date aDate = floatSchedule_.dates().front();
         aDate = floatPaymentCalendar_.adjust(aDate, floatPaymentBdc_);
@@ -174,6 +157,23 @@ void CrossCcyFixFloatMtMResetSwap::initialize() {
             legs_[2].push_back(boost::shared_ptr<CashFlow>(
                 new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, floatNotional, fxIndex_)));
         }
+    }
+
+    // Deriving from cross currency swap where:
+    //   First leg should hold the pay flows
+    //   Second leg should hold the receive flows
+    payer_[0] = -1.0;
+    payer_[1] = 1.0;
+    if (receiveFixed_) {
+        legs_[1] = fixedLeg;
+        currencies_[1] = fixedCurrency_;
+        legs_[0] = floatLeg;
+        currencies_[0] = floatCurrency_;
+    } else {
+        legs_[0] = fixedLeg;
+        currencies_[0] = fixedCurrency_;
+        legs_[1] = floatLeg;
+        currencies_[1] = floatCurrency_;
     }
     
     // Register the instrument with all cashflows on each leg.
