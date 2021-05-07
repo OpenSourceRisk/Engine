@@ -64,7 +64,9 @@ public:
                boost::shared_ptr<ScenarioFactory> scenarioFactory = {},
                std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
                std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, bool continueOnError = false);
+               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+               const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+               bool continueOnError = false);
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }

@@ -61,6 +61,12 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     std::map<std::string, std::string> qlToOREIndexNames;
     applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index->name()] = indexName;
+    if (engineFactory->iborFallbackConfig().isIndexReplaced(indexName)) {
+        auto rfrName = engineFactory->iborFallbackConfig().fallbackData(indexName).rfrIndex;
+        // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
+        qlToOREIndexNames[parseIborIndex(rfrName)->name()] = rfrName;
+    }
+
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
 
     // handle fx resetting Ibor leg
