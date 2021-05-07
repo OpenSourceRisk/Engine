@@ -56,6 +56,7 @@ indexes/bondindex.cpp
 indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/equityindex.cpp
+indexes/fallbackiborindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
 indexes/ibor/boebaserate.cpp
@@ -210,6 +211,7 @@ termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
+termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
@@ -313,6 +315,7 @@ indexes/dkcpi.hpp
 indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
 indexes/escpi.hpp
+indexes/fallbackiborindex.hpp
 indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
@@ -547,6 +550,7 @@ termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
+termstructures/iborfallbackcurve.hpp
 termstructures/immfraratehelper.hpp
 termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolatedcpivolatilitysurface.hpp

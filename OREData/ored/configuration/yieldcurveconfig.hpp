@@ -73,6 +73,7 @@ public:
         FittedBond,
         WeightedAverage,
         YieldPlusDefault,
+        IborFallback
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -543,6 +544,48 @@ private:
     map<string, string> iborIndexCurves_;
     bool extrapolateFlat_;
     Size calibrationTrials_;
+};
+
+//! Ibor Fallback yield curve segment
+/*!
+  A curve segment to build a Ibor forwarding curve from an OIS RFR index and a fallback spread
+
+  \ingroup configuration
+*/
+class IborFallbackCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    IborFallbackCurveSegment() {}
+    //! Detailed constructor
+    IborFallbackCurveSegment(const string& typeID, const string& iborIndex, const string& rfrCurve,
+                             const boost::optional<string>& rfrIndex, const boost::optional<Real>& spread);
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& iborIndex() const { return iborIndex_; }
+    const string& rfrCurve() const { return rfrCurve_; }
+    const boost::optional<string>& rfrIndex() const { return rfrIndex_; }
+    const boost::optional<Real>& spread() const { return spread_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    string iborIndex_;
+    string rfrCurve_;
+    boost::optional<string> rfrIndex_;
+    boost::optional<Real> spread_;
 };
 
 //! Yield Curve configuration

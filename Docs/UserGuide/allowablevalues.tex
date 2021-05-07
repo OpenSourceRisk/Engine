@@ -324,19 +324,31 @@ The FX- part of the string stays constant for all currency pairs. SOURCE is the 
 \centering
   \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
     \hline
-    \multicolumn{2}{|l|}{\tt Equity Name and Credit CreditCurveId} \\ \hline
+    \multicolumn{2}{|l|}{\tt Credit CreditCurveId} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
-    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
-conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  \end{tabular}  \\ \hline
     \lstinline!CreditCurveId!   for credit trades - single name and index & \begin{tabular}[l]{@{}l@{}} Any string (provided it is the ID of a single name or index \\ reference entity in the market 
 conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: \\  \emph{RED:2I65BRHH6}  (CDX N.A. High Yield, Series 13, Version 1) \\ \emph{RED:008CA0\textbar{}SNRFOR\textbar{}USD\textbar{}MR14}  (Agilent Tech Senior USD)
 \end{tabular}  \\ \hline
   \end{tabu}
-  \caption{Allowable values for equity data.}
+  \caption{Allowable values for credit \lstinline!CreditCurveId!}
   \label{tab:equity_credit_data}
 \end{table}
 
+\begin{table}[H]
+\centering
+  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+    \hline
+    \multicolumn{2}{|l|}{\tt Equity Name} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
+conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  
+\end{tabular}  \\ \hline
+  \end{tabu}
+  \caption{Allowable values for equity  \lstinline!Name!.}
+  \label{tab:equity_name}
+\end{table}
 
 \begin{table}[H]
 \centering

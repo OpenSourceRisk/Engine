@@ -42,18 +42,19 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
                      std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
                      std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-                     const boost::shared_ptr<ReferenceDataManager>& referenceData, Real dimQuantile,
-                     Size dimHorizonCalendarDays, map<string, bool> analytics, string calculationType, string dvaName,
-                     string fvaBorrowingCurve, string fvaLendingCurve, bool fullInitialCollateralisation,
-                     bool storeFlows)
+                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                     const IborFallbackConfig& iborFallbackConfig, Real dimQuantile, Size dimHorizonCalendarDays,
+                     map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
+                     string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
     : asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
       curveConfigs_(curveConfigs), conventions_(conventions), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), scenarioGeneratorData_(scenarioGeneratorData),
       crossAssetModelData_(crossAssetModelData), extraLegBuilders_(extraLegBuilders),
-      extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), dimQuantile_(dimQuantile),
-      dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics), inputCalculationType_(calculationType),
-      dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
-      fullInitialCollateralisation_(fullInitialCollateralisation), storeFlows_(storeFlows) {
+      extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics),
+      inputCalculationType_(calculationType), dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve),
+      fvaLendingCurve_(fvaLendingCurve), fullInitialCollateralisation_(fullInitialCollateralisation),
+      storeFlows_(storeFlows) {
 
     if (analytics_.size() == 0) {
         WLOG("post processor analytics not set, using defaults");
@@ -134,9 +135,9 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg =
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
-    simMarket_ =
-        boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, *conventions_, Market::defaultConfiguration,
-            *curveConfigs_, *todaysMarketParams_, true, false, true, false);
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(
+        market, projectedSsmData, *conventions_, Market::defaultConfiguration, *curveConfigs_, *todaysMarketParams_,
+        true, false, true, false, iborFallbackConfig_);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)
@@ -148,8 +149,9 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
         scenarioGeneratorData_->getGrid()->valuationDates().size(), scenarioGeneratorData_->samples());
     simMarket_->aggregationScenarioData() = scenarioData_;
 
-    simFactory_ = boost::make_shared<EngineFactory>(engineData_, simMarket_, map<MarketContext, string>(),
-        extraEngineBuilders_, extraLegBuilders_, referenceData_);
+    simFactory_ =
+        boost::make_shared<EngineFactory>(engineData_, simMarket_, map<MarketContext, string>(), extraEngineBuilders_,
+                                          extraLegBuilders_, referenceData_, iborFallbackConfig_);
 }
 
 void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
