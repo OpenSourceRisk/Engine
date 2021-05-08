@@ -44,6 +44,7 @@
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
@@ -2169,14 +2170,23 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
             boost::shared_ptr<CrossCcyFixFloatSwapQuote> swapQuote =
                 boost::dynamic_pointer_cast<CrossCcyFixFloatSwapQuote>(marketQuote);
             QL_REQUIRE(swapQuote, "Market quote should be of type 'CrossCcyFixFloatSwapQuote'");
-
-            // Create the helper
-            boost::shared_ptr<RateHelper> helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
-                swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
-                swapConvention->settlementConvention(), swapQuote->maturity(), currency_,
-                swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
-                floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
-
+            bool isResettableSwap = swapConvention->isResettable();
+            boost::shared_ptr<RateHelper> helper;
+            if (!isResettableSwap) {
+                // Create the helper
+                helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
+                    swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
+                    swapConvention->settlementConvention(), swapQuote->maturity(), currency_,
+                    swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
+                    floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
+            } else {
+                bool resetsOnFloatLeg = swapConvention->floatIndexIsResettable();
+                helper = boost::make_shared<CrossCcyFixFloatMtMResetSwapHelper>(
+                    swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
+                    swapConvention->settlementConvention(), swapQuote->maturity(), currency_, swapConvention->fixedFrequency(), 
+                    swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), floatIndex, 
+                    floatLegDisc, Handle<Quote>(), swapConvention->eom(), resetsOnFloatLeg);
+            }
             instruments.push_back(helper);
         }
     }
