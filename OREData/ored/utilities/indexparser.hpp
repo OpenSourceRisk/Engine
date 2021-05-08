@@ -182,6 +182,11 @@ boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Con
  */
 bool isOvernightIndex(const std::string& indexName, const Conventions& conventions = Conventions());
 
+//! Return true if the \p indexName is that of an bma/sifma index, otherwise false
+/*! \ingroup utilities
+ */
+bool isBmaIndex(const std::string& indexName);
+
 /*! In some cases, we allow multiple external ibor index names to represent the same QuantLib index. This function
    returns the unique index name that we use internally to represent the QuantLib index.
 
