@@ -918,7 +918,8 @@ public:
                                    const std::string& fixedCurrency, const std::string& fixedFrequency,
                                    const std::string& fixedConvention, const std::string& fixedDayCounter,
                                    const std::string& index, const std::string& eom = "",
-                                   const Conventions* conventions = nullptr);
+                                   const Conventions* conventions = nullptr, const std::string& strIsResettable = "",
+                                   const std::string& strFloatIndexIsResettable = "");
     //@}
 
     //! \name Inspectors
@@ -932,6 +933,8 @@ public:
     const QuantLib::DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const boost::shared_ptr<QuantLib::IborIndex>& index() const { return index_; }
     bool eom() const { return eom_; }
+    bool isResettable() const { return isResettable_; }
+    bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
     //@}
 
     //! \name Serialisation interface
@@ -955,6 +958,8 @@ private:
     QuantLib::DayCounter fixedDayCounter_;
     boost::shared_ptr<QuantLib::IborIndex> index_;
     bool eom_;
+    bool isResettable_;
+    bool floatIndexIsResettable_;
 
     // Strings to store the inputs
     std::string strSettlementDays_;
@@ -968,6 +973,8 @@ private:
     std::string strEom_;
 
     const Conventions* conventions_;
+    std::string strIsResettable_;
+    std::string strFloatIndexIsResettable_;
 };
 
 //! Container for storing Credit Default Swap quote conventions

@@ -266,7 +266,7 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
         } else {
             couponSpread += swap.upfrontNPV() / (riskyAnnuity * swap.notional());
         }
-        Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, 1.0, true));
+        Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, couponSpread, true));
         results.value = blackFormula(callPut, couponSpread, fairSpread, stdDev, riskyAnnuity * swap.notional());
 
         // if a non knock-out payer option, add front end protection value

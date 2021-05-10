@@ -38,6 +38,7 @@
 #include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingannuitynominal.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
@@ -135,6 +136,7 @@
 #include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
+#include <qle/instruments/crossccyfixfloatmtmresetswap.hpp>
 #include <qle/instruments/crossccyfixfloatswap.hpp>
 #include <qle/instruments/crossccyswap.hpp>
 #include <qle/instruments/currencyswap.hpp>
@@ -279,6 +281,7 @@
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/crosscurrencypricetermstructure.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
