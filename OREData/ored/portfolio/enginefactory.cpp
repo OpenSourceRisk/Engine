@@ -38,6 +38,7 @@
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
@@ -192,6 +193,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionBAWEngineBuilder>());
+
+    registerBuilder(boost::make_shared<QuantoEquityEuropeanOptionEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());

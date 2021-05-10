@@ -9,6 +9,7 @@
 */
 
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/builders/quantovanillaoption.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/currencycheck.hpp>
@@ -55,9 +56,9 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     default:
         QL_FAIL("Option Style " << option_.style() << " is not supported");
     }
-    // Create the instrument and the populate the name for the engine builder.
+    // Create the instrument and then populate the name for the engine builder.
     boost::shared_ptr<Instrument> vanilla;
-    string tradeTypeBuider = tradeType_;
+    string tradeTypeBuilder = tradeType_;
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
         // We have a European cash settled option.
@@ -117,7 +118,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
             // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by
             // appending 'EuropeanCS' to the trade type.
-            tradeTypeBuider = tradeType_ + "EuropeanCS";
+            tradeTypeBuilder = tradeType_ + "EuropeanCS";
 
             // Update the maturity date.
             maturity_ = paymentDate;
@@ -144,32 +145,42 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
         }
 
-        if (sameCcy) {
-            tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
-        } else {
+        if (sameCcy)
+            tradeTypeBuilder = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
+        else {
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European,
-                       "Quanto payoffs are only supported for European options: Trade " << id());
+                       "Quanto payoffs are only supported for European options");
             if (assetClassUnderlying_ == AssetClass::EQ)
-                tradeTypeBuider = "QuantoEquityOption";
+                tradeTypeBuilder = "QuantoEquityOption";
             else if (assetClassUnderlying_ == AssetClass::COM)
-                tradeTypeBuider = "QuantoCommodityOption";
+                tradeTypeBuilder = "QuantoCommodityOption";
             else if (assetClassUnderlying_ == AssetClass::FX)
-                tradeTypeBuider = "QuantoFxOption";
+                tradeTypeBuilder = "QuantoFxOption";
         }
     }
     // Only try to set an engine on the option instrument if it is not expired. This avoids errors in
     // engine builders that rely on the expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
     string configuration = Market::defaultConfiguration;
     if (!vanilla->isExpired()) {
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
-        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
-        boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
-            boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
+        if (sameCcy) {
+            boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
+                boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
 
-        vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
 
-        configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
+            configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
+        } else {
+            boost::shared_ptr<QuantoVanillaOptionEngineBuilder> quantoVanillaOptionBuilder =
+                boost::dynamic_pointer_cast<QuantoVanillaOptionEngineBuilder>(builder);
+
+            vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, expiryDate_));
+
+            configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
+        }
+        
     } else {
         DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
                                                        << " because it is expired.");
