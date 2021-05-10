@@ -1,0 +1,410 @@
+\subsubsection{Commodity Volatilities}
+
+The following types of commodity volatility structures are supported in ORE:
+\begin{itemize}
+\item A constant volatility structure giving the same single volatility for all expiry times and strikes.
+\item A one-dimensional expiry dependent volatility structure i.e.\ the volatility returned is dependent on the time to option expiry but does not change with option strike.
+\item A two-dimensional volatility structure with a dependence on both expiry and strike. There is support for absolute strikes, delta strikes and moneyness strikes.
+\item An average price option (APO) volatility surface. In particular, this structure returns the volatility of an average price that can then be used directly in the Black 76 formula to give the value of the APO.
+\end{itemize}
+
+Listing \ref{lst:comm_vol_const_config} outlines the configuration for a constant volatility structure.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityVolatility>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <Currency>...</Currency>
+  <Constant>
+    <Quote>...</Quote>
+  </Constant>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+</CommodityVolatility>
+\end{minted}
+\caption{Constant commodity volatility configuration}
+\label{lst:comm_vol_const_config}
+\end{longlisting}
+
+The meaning of each of the elements is as follows:
+\begin{itemize}
+\item \lstinline!CurveId!: Unique identifier for the curve.
+\item \lstinline!CurveDescription!: A description of the curve. This field may be left blank.
+\item \lstinline!Currency!: The commodity curve currency.
+\item \lstinline!Quote!: The single quote giving the constant volatility.
+\item \lstinline!DayCounter! [Optional]: The day count basis used internally by the curve to calculate the time between dates. If omitted it defaults to \lstinline!A365!.
+\item \lstinline!Calendar! [Optional]: The calendar used internally by the volatility structure to amend dates generated from option tenors i.e.\ if a volatility is requested from the surface using an expiry tenor. If omitted it defaults to \lstinline!NullCalendar! meaning there is no adjustment to the expiry on applying the option tenor.
+\end{itemize}
+
+Listing \ref{lst:comm_vol_curve_config} outlines the configuration for the one-dimensional expiry dependent volatility curve.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityVolatility>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <Currency>...</Currency>
+  <Curve>
+    <QuoteType>...</QuoteType>
+    <VolatilityType>...</VolatilityType>
+    <ExerciseType>...</ExerciseType>
+    <Quotes>
+      <Quote>...</Quote>
+      <Quote>...</Quote>
+      ...
+    </Quotes>
+    <Interpolation>...</Interpolation>
+    <Extrapolation>...</Extrapolation>
+    <EnforceMontoneVariance>...</EnforceMontoneVariance>
+  </Curve>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <FutureConventions>...</FutureConventions>
+  <OptionExpiryRollDays>...</OptionExpiryRollDays>
+</CommodityVolatility>
+\end{minted}
+\caption{Commodity volatility curve configuration}
+\label{lst:comm_vol_curve_config}
+\end{longlisting}
+
+The meaning of each of the elements is given below. Elements that were defined for the previous configuration and are common to all of the configurations are not repeated.
+\begin{itemize}
+\item \lstinline!QuoteType! [Optional]: The allowable values in general for \lstinline!QuoteType! are \lstinline!ImpliedVolatility! and \lstinline!Premium!. Currently, only \lstinline!ImpliedVolatility! is supported for commodity volatility curves. This is the default for \lstinline!QuoteType! so this node may be omitted.
+\item \lstinline!VolatilityType! [Optional]: The allowable values in general for \lstinline!VolatilityType! are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!. Currently, only \lstinline!Lognormal! is supported for commodity volatility curves. This is the default for \lstinline!VolatilityType! so this node may be omitted.
+\item \lstinline!ExerciseType! [Optional]: This node is described below in the context of surfaces. For commodity volatility curves, it is ignored and should be omitted.
+\item \lstinline!Quotes!: A list of commodity option volatility quotes with different expiries to use in the commodity curve building. The commodity option volatility quotes are explained in Section \ref{md:commodity_option_iv}. As indicated above, any quote string used here much start with \lstinline!COMMODITY_OPTION/RATE_LNVOL!. A single regular expression \lstinline!Quote! is also supported here in place of a list of explicit \lstinline!Quote! strings. Note that if a list of explicit \lstinline!Quote! strings are provided, it is an error to have a duplicated option expiry date. If a regular expression is used, the first quote found is used and subsequent qutoes with the same expiry are discarded with a warning issued.
+\item \lstinline!Interpolation!: The interpolation to use to give volatilities between option expiry times. The allowable values are \lstinline!Linear!, \lstinline!Cubic! and \lstinline!LogLinear!. Note that the interpolation here is on the variance.
+\item \lstinline!Extrapolation!: The extrapolation to use to give volatilities after the last expiry date in the variance curve. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. However, all options except \lstinline!None! yield the same extrapolation i.e.\ flat extrapolation in the volatility. \lstinline!None! disables extrapolation so that an exception is raised if the curve is queried after the last expiry for a volatility. Note that as the curve is parameterised in variance, interpolation is used to interpolate between time zero where the variance is zero and the first expiry time.
+\item \lstinline!EnforceMontoneVariance! [Optional]: Boolean parameter that should be set to \lstinline!true! to raise an exception if the implied variance curve is not montone increasing with time. It should be set to \lstinline!false! to suppress such an exception. The default value if omitted is \lstinline!true!.
+\item \lstinline!FutureConventions! [Optional]: Depending on the quotes that are provided in the \lstinline!Quotes! section, a \lstinline!CommodityFuture! convention may be needed in order to derive an option expiry date from the \textit{Expiry} portion of the commodity option quote. In particular, as outlined in Section \ref{md:commodity_option_iv}, the \textit{Expiry} portion of a commodity option quote allows for continuation expiries of the form \lstinline!cN!. The \lstinline!N! is a positive integer meaning the \lstinline!N!-th next expiry after the valuation date on which we are building the commodity volatility curve. When a continuation expiry is used in a quote, the \lstinline!FutureConventions! is needed and gives the ID of the conventions associated with the commodity for which we are trying to build the volatility curve. These conventions are used to determine the explicit expiry date for the given option quote from the continuation expiry.
+\item \lstinline!OptionExpiryRollDays! [Optional]: The \lstinline!OptionExpiryRollDays! can be any non-negative integer and may be needed when deriving an option expiry date from the \textit{Expiry} portion of the commodity option quote. If the \textit{Expiry} portion of the commodity option quote is a continuation expiry, an explicit expiry date is deduced as explained in the previous bullet point. Additionally, in some cases, the option quotes for the next option expiry may stop a number of business days before that option expiry and the \lstinline!cN! expiry in this period begins referring to the \lstinline!N+1!-th next option expiry. As an example, assume $d_v$ is the valuation date and $e_1 = d_v$ is the next option expiry date. If \lstinline!OptionExpiryRollDays! is \lstinline!0! then a commodity option quote with an \textit{Expiry} portion equal to \lstinline!c1! on $d_v$ indicates that the option quote is for an option with expiry date equal to $e_1$. However, if \lstinline!OptionExpiryRollDays! is \lstinline!1!, a commodity option quote with an \textit{Expiry} portion equal to \lstinline!c1! on $d_v$ indicates that the option quote is for an option with expiry date equal to $e_2$ where $e_2$ is the next option expiry date after $e_1$. In other words, with \lstinline!OptionExpiryRollDays! set to \lstinline!1! the option quotes for expiry date $e_1$ stopped on the business day before $e_1$. If omitted, \lstinline!OptionExpiryRollDays! defaults to \lstinline!0!.
+\end{itemize}
+
+Listing \ref{lst:comm_vol_strike_surface_config} outlines the configuration for the two-dimensional expiry and absolute strike commodity option surface.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityVolatility>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <Currency>...</Currency>
+  <StrikeSurface>
+    <QuoteType>...</QuoteType>
+    <VolatilityType>...</VolatilityType>
+    <ExerciseType>...</ExerciseType>
+    <Strikes>...</Strikes>
+    <Expiries>...</Expiries>
+    <TimeInterpolation>...</TimeInterpolation>
+    <StrikeInterpolation>...</StrikeInterpolation>
+    <Extrapolation>...</Extrapolation>
+    <TimeExtrapolation>...</TimeExtrapolation>
+    <StrikeExtrapolation>...</StrikeExtrapolation>
+  </StrikeSurface>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <FutureConventions>..</FutureConventions>
+  <OptionExpiryRollDays>...</OptionExpiryRollDays>
+  <PriceCurveId>...</PriceCurveId>
+  <YieldCurveId>...</YieldCurveId>
+  <OneDimSolverConfig>
+    <MaxEvaluations>100</MaxEvaluations>
+    <InitialGuess>0.35</InitialGuess>
+    <Accuracy>0.0001</Accuracy>
+    <MinMax>
+      <Min>0.0001</Min>
+      <Max>2.0</Max>
+    </MinMax>
+  </OneDimSolverConfig>
+  <PreferOutOfTheMoney>...</PreferOutOfTheMoney>
+  <QuoteSuffix>...</QuoteSuffix>
+</CommodityVolatility>
+\end{minted}
+\caption{Expiry and absolute strike commodity option surface configuration}
+\label{lst:comm_vol_strike_surface_config}
+\end{longlisting}
+
+The meaning of each of the elements is given below. Again, nodes explained in the previous configuration are not repeated here.
+\begin{itemize}
+\item \lstinline!QuoteType! [Optional]:
+As above, the allowable values for \lstinline!QuoteType! are \lstinline!ImpliedVolatility! and \lstinline!Premium!. If omitted, the default is \lstinline!ImpliedVolatility!. If the \lstinline!QuoteType! is \lstinline!Premium!, a volatility surface will be stripped from option premium quotes. Note that \lstinline!Premium! is only allowed if one or both of \lstinline!Strikes! or \lstinline!Expiries! below is set to the single wildcard value \lstinline!*!. In other words, if we explicitly specify all of the strikes and expiries, we can only build a volatility surface directly and the \lstinline!QuoteType! must be \lstinline!ImpliedVolatility!.
+
+\item \lstinline!VolatilityType! [Optional]:
+As above, the allowable values for \lstinline!VolatilityType! are \lstinline!Lognormal!, \lstinline!ShiftedLognormal! and \lstinline!Normal!. This is only needed if \lstinline!QuoteType! is \lstinline!ImpliedVolatility!. Currently, only \lstinline!Lognormal! is supported for commodity volatility surfaces. This is the default for \lstinline!VolatilityType! so this node may be omitted.
+
+\item \lstinline!ExerciseType! [Optional]:
+The allowable values for \lstinline!ExerciseType! are \lstinline!European! and \lstinline!American!. This is only needed if \lstinline!QuoteType! is \lstinline!Premium! and indicates if the option premium quotes are American or European exercise. If omitted the default is \lstinline!European!.
+
+\item \lstinline!Strikes!:
+This can be a single wildcard value \lstinline!*! or a comma separated list of explicit strike prices. We explain below how these strikes are combined with the other parameters in the configuration to give a list of commodity option quotes to search for in the market data.
+
+\item \lstinline!Expiries!:
+This can be a single wildcard value \lstinline!*! or a comma separated list of expiry strings. We explain below how these expiries are combined with the other parameters in the configuration to give a list of commodity option quotes to search for in the market data. Note that as outlined in Section \ref{md:commodity_option_iv}, the \textit{Expiry} portion of the commodity option quote may be an explicit expiry date, an expiry tenor or a continuation expiry of the form \lstinline!cN! explained in the volatility curve section above.
+
+\item \lstinline!TimeInterpolation!:
+Indicates the interpolation in the time direction. There are quite a number of restrictions here. If either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, the interpolation in both the time and strike direction is linear regardless of the value passed here in the \lstinline!TimeInterpolation! node. If neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, \lstinline!TimeInterpolation! may be set to \lstinline!Linear! or \lstinline!Cubic! but \lstinline!StrikeInterpolation! must have the same value. If it does not, then \lstinline!Linear! is used for both. In other words, if neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, we can configure bilinear or bicubic interpolation. Again, in all cases, the interpolation is carried out on the variance.
+
+\item \lstinline!StrikeInterpolation!:
+Indicates the interpolation in the strike direction. The requirements are exactly as outlined for the \lstinline!TimeInterpolation! node.
+
+\item \lstinline!Extrapolation!:
+A boolean value indicating if extrapolation is allowed.
+
+\item \lstinline!TimeExtrapolation!:
+Indicates the extrapolation in the time direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. If neither \lstinline!Strikes! nor \lstinline!Expiries! use the single wildcard value \lstinline!*!, the extrapolation in the time direction is flat regardless of the value passed here. If either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*!, both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the time direction whereas \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation (linear or cubic) should be continued in the time direction in order to extrapolate. \lstinline!Linear! is only allowable here for backward compatibility and \lstinline!UseInterpolator! should be preferred for clarity.
+
+\item \lstinline!StrikeExtrapolation!:
+Indicates the extrapolation in the strike direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. Both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the strike direction. \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation (linear or cubic) should be continued in the strike direction in order to extrapolate. \lstinline!Linear! is only allowable here for backward compatibility and \lstinline!UseInterpolator! should be preferred for clarity.
+
+\item \lstinline!PriceCurveId! [Optional]:
+The ID of a price curve for the commodity of the form \lstinline!Commodity/{CCY}/{NAME}!. This is needed if the \lstinline!QuoteType! is \lstinline!Premium!. It is also needed when the \lstinline!QuoteType! is \lstinline!ImpliedVolatility! if either \lstinline!Strikes! or \lstinline!Expiries! use the single wildcard value \lstinline!*! and both call and put quotes are found in the market for the same expiry and strike pair. In this case, it is needed to determine which quotes to use based on the value of the \lstinline!PreferOutOfTheMoney! node.
+
+\item \lstinline!YieldCurveId! [Optional]:
+The ID of a yield curve in the currency of the commodity of the form \lstinline!Yield/{CCY}/{NAME}!. This is needed if the \lstinline!QuoteType! is \lstinline!Premium! in the stripping of the volatilities from premia.
+
+\item \lstinline!OneDimSolverConfig! [Optional]:
+This is used if the \lstinline!QuoteType! is \lstinline!Premium!. It provides the options for the root search in the stripping of the volatilities from premia. If omitted, the default set of options shown in Listing \ref{lst:comm_vol_strike_surface_config} are used. The \lstinline!MinMax! node can be replaced with a single \lstinline!Step! node that accepts a double giving the step size to use in the root search.
+
+\item \lstinline!PreferOutOfTheMoney! [Optional]:
+A node accepting a boolean value. If set to \lstinline!true!, quotes for out of the money options are preferred where a call and a put quote are found for the same expiry strike pair. If set to \lstinline!false!, quotes for in the money options are preferred where a call and a put quote are found for the same expiry strike pair. If omitted, \lstinline!true! is assumed.
+
+\item \lstinline!PreferOutOfTheMoney! [Optional]:
+A node accepting a boolean value. If set to \lstinline!true!, quotes for out of the money options are preferred where a call and a put quote are found for the same expiry strike pair. If set to \lstinline!false!, quotes for in the money options are preferred where a call and a put quote are found for the same expiry strike pair. If omitted, \lstinline!true! is assumed.
+
+\item \lstinline!QuoteSuffix! [Optional]:
+The allowable values are \lstinline!C! and \lstinline!P! indicating \lstinline!Call! and \lstinline!Put! respectively. If given, they are used in the construction of the commodity option quote strings as explained below. They are useful in cases where the market data contains both call and put volatility quotes for the same expiry strike pair and you want to use only the calls (set \lstinline!QuoteSuffix! to \lstinline!C!) or the puts (set \lstinline!QuoteSuffix! to \lstinline!P!).
+
+\end{itemize}
+
+As mentioned above, a number of parameters from the two-dimensional expiry and absolute strike configuration are used in constructing the commodity option quote strings that are looked up in the market data. There are two cases:
+\begin{enumerate}
+\item
+Both the \lstinline!Strikes! and \lstinline!Expiries! node provide a comma separated list of values. As mentioned above, we can only use a \lstinline!QuoteType! of \lstinline!ImpliedVolatility! in this case where we have explicit expiries and strikes and the \lstinline!VolatilityType! must be \lstinline!Lognormal!. For example, assume the \lstinline!Expiries! node has the set of values \lstinline!e_1,e_2,...,e_N! and that the \lstinline!Strikes! node has the set of values \lstinline!s_1,s_2,...,s_M!. For each of the $N \times M$ expiry strike pairs $(e_n,s_m)$, a quote of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/s_m[/{S}]! is created to be looked up in the market data. \lstinline!{N}! is the value in the \lstinline!CurveId! node, \lstinline!{C}! is the value in the \lstinline!Currency! node and \lstinline!{S}! is the value in the \lstinline!QuoteSuffix! node if given. This explicit grid of volatility quotes must be present in the market for the commodity volatility surface to be constructed.
+
+\item
+One or both of the \lstinline!Strikes! and \lstinline!Expiries! node use a single wildcard value \lstinline!*!. As mentioned above, the \lstinline!QuoteType! can be \lstinline!ImpliedVolatility! or \lstinline!Premium! in this case. As above, assume the \lstinline!Expiries! node has the set of values \lstinline!e_1,e_2,...,e_N! and that the \lstinline!Strikes! node has the set of values \lstinline!s_1,s_2,...,s_M!. The additional constraint here is that $N=1$ and \lstinline!e_1! is \lstinline!*! or that $M=1$ and \lstinline!s_1! is \lstinline!*!, or both. For each of the $N \times M$ expiry strike pairs $(e_n,s_m)$, a quote of the form \lstinline!COMMODITY_OPTION/{T}/{N}/{C}/e_n/s_m[/{S}]! is created to be looked up in the market data. \lstinline!{T}! is \lstinline!PRICE! when \lstinline!QuoteType! is \lstinline!Premium! and is \lstinline!RATE_LNVOL! when \lstinline!QuoteType! is \lstinline!ImpliedVolatility!, \lstinline!{N}! is the value in the \lstinline!CurveId! node, \lstinline!{C}! is the value in the \lstinline!Currency! node and \lstinline!{S}! is the value in the \lstinline!QuoteSuffix! node if given. Any quote in the market with a name matching any of the quote strings formed in this way are then included in the commodity volatility curve building. Note that the \lstinline!QuoteSuffix! has no effect in this case and should be omitted i.e.\ it is only used in the case of an explicit grid of quotes above.
+\end{enumerate}
+
+Listing \ref{lst:comm_vol_mny_surface_config} outlines the configuration for the two-dimensional expiry and moneyness strike commodity option surface. This is similar to the absolute strike surface configuration above but currently only supports a \lstinline!QuoteType! of \lstinline!ImpliedVolatility! i.e.\ \lstinline!QuoteType! of \lstinline!Premium! is not supported. Also, the \lstinline!VolatilityType! must be \lstinline!Lognormal!. Both forward and spot moneyness is supported.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityVolatility>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <Currency>...</Currency>
+  <MoneynessSurface>
+    <QuoteType>...</QuoteType>
+    <VolatilityType>...</VolatilityType>
+    <ExerciseType>...</ExerciseType>
+    <MoneynessType>...</MoneynessType>
+    <MoneynessLevels>...</MoneynessLevels>
+    <Expiries>...</Expiries>
+    <TimeInterpolation>...</TimeInterpolation>
+    <StrikeInterpolation>...</StrikeInterpolation>
+    <Extrapolation>...</Extrapolation>
+    <TimeExtrapolation>...</TimeExtrapolation>
+    <StrikeExtrapolation>...</StrikeExtrapolation>
+    <FuturePriceCorrection>...</FuturePriceCorrection>
+  </MoneynessSurface>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <FutureConventions>..</FutureConventions>
+  <OptionExpiryRollDays>...</OptionExpiryRollDays>
+  <PriceCurveId>...</PriceCurveId>
+  <YieldCurveId>...</YieldCurveId>
+</CommodityVolatility>
+\end{minted}
+\caption{Expiry and moneyness strike commodity option surface configuration}
+\label{lst:comm_vol_mny_surface_config}
+\end{longlisting}
+
+The meaning of each of the elements is given below. Again, nodes explained in the previous configuration are not repeated here.
+\begin{itemize}
+\item \lstinline!MoneynessType!:
+The allowable values are \lstinline!Spot! for spot moneyness and \lstinline!Fwd! for forward moneyness.
+
+\item \lstinline!MoneynessLevels!:
+This can be a single wildcard value \lstinline!*! or a comma separated list of moneyness values. A moneyness value of $1$ indicates a strike equal to spot or forward depending on the value given in the \lstinline!MoneynessType! node.
+
+\item \lstinline!TimeInterpolation!:
+Only \lstinline!Linear! is currently supported here.
+
+\item \lstinline!StrikeInterpolation!:
+Only \lstinline!Linear! is currently supported here.
+
+\item \lstinline!Extrapolation!:
+A boolean value indicating if extrapolation is allowed.
+
+\item \lstinline!TimeExtrapolation!:
+Only \lstinline!Flat! is currently supported here giving flat extrapolation of the volatility.
+
+\item \lstinline!StrikeExtrapolation!:
+Indicates the extrapolation in the strike direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. Both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the strike direction. \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation (linear) should be continued in the strike direction in order to extrapolate.
+
+\item \lstinline!FuturePriceCorrection! [Optional]:
+This is a boolean flag that defaults to \lstinline!true!. In most cases, for options on futures, the option expiry date is a short period before the future expiry. If there is an arbitrary interpolation applied to the future price curve, the future price on the option expiry date may not equal the associated future price. If \lstinline!FuturePriceCorrection! is \lstinline!true!, this is corrected i.e.\ the future price on option expiry is the associated future price for the future expiry date. Note that a valid \lstinline!FutureConventions! is needed for the correction to be applied.
+
+\item \lstinline!PriceCurveId!:
+This is required for both a spot and forward moneyness surface.
+
+\item \lstinline!YieldCurveId!:
+This is required for a forward moneyness surface.
+
+\end{itemize}
+
+Note that, similar to the procedure outlined above for the absolute strike surface, quote strings of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/MNY/{T}/l_m! are created from the moneyness configuration to be looked up in the market. Here, \lstinline!l_m! are the moneyness levels for $m=1,\ldots,M$ and \lstinline!{T}! is the moneyness type i.e.\ either \lstinline!Spot! or \lstinline!Fwd!.
+
+Listing \ref{lst:comm_vol_delta_surface_config} outlines the configuration for the two-dimensional expiry and delta strike commodity option surface. Similar to the moneyness strike surface configuration above, this currently only supports a \lstinline!QuoteType! of \lstinline!ImpliedVolatility! i.e.\ \lstinline!QuoteType! of \lstinline!Premium! is not supported. Also, the \lstinline!VolatilityType! must be \lstinline!Lognormal!. Various delta and ATM types are supported.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityVolatility>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <Currency>...</Currency>
+  <DeltaSurface>
+    <QuoteType>...</QuoteType>
+    <VolatilityType>...</VolatilityType>
+    <ExerciseType>...</ExerciseType>
+    <DeltaType>...</DeltaType>
+    <AtmType>...</AtmType>
+    <AtmDeltaType>...</AtmDeltaType>
+    <PutDeltas>...</PutDeltas>
+    <CallDeltas>...</CallDeltas>
+    <Expiries>...</Expiries>
+    <TimeInterpolation>...</TimeInterpolation>
+    <StrikeInterpolation>...</StrikeInterpolation>
+    <Extrapolation>...</Extrapolation>
+    <TimeExtrapolation>...</TimeExtrapolation>
+    <StrikeExtrapolation>...</StrikeExtrapolation>
+    <FuturePriceCorrection>...</FuturePriceCorrection>
+  </DeltaSurface>
+  <DayCounter>...</DayCounter>
+  <Calendar>...</Calendar>
+  <FutureConventions>..</FutureConventions>
+  <OptionExpiryRollDays>...</OptionExpiryRollDays>
+  <PriceCurveId>...</PriceCurveId>
+  <YieldCurveId>...</YieldCurveId>
+</CommodityVolatility>
+\end{minted}
+\caption{Expiry and delta strike commodity option surface configuration}
+\label{lst:comm_vol_delta_surface_config}
+\end{longlisting}
+
+The meaning of each of the elements is given below. Again, nodes explained in the previous configuration are not repeated here.
+\begin{itemize}
+\item \lstinline!DeltaType!:
+The allowable supported values are \lstinline!Spot! for spot delta \lstinline!Fwd! for forward delta.
+
+\item \lstinline!AtmType!:
+The allowable supported values are \lstinline!AtmSpot!, \lstinline!AtmFwd! and \lstinline!AtmDeltaNeutral!.
+
+\item \lstinline!AtmDeltaType! [Optional]:
+This is only needed if the \lstinline!AtmType! is \lstinline!AtmDeltaNeutral!.
+
+\item \lstinline!PutDeltas!:
+A comma separated list of one or more put deltas to use in the volatility surface. Note that the put deltas should be given without a sign e.g.\ \lstinline!<PutDeltas>0.10,0.20,0.30,0.40</PutDeltas>! would be an example.
+
+\item \lstinline!PutDeltas!:
+A comma separated list of one or more call deltas to use in the volatility surface.
+
+\item \lstinline!TimeInterpolation!:
+Only \lstinline!Linear! is currently supported here.
+
+\item \lstinline!StrikeInterpolation!:
+Allowable values are \lstinline!Linear!, \lstinline!NaturalCubic! and \lstinline!FinancialCubic!.
+
+\item \lstinline!Extrapolation!:
+A boolean value indicating if extrapolation is allowed.
+
+\item \lstinline!TimeExtrapolation!:
+Only \lstinline!Flat! is currently supported here giving flat extrapolation of the volatility.
+
+\item \lstinline!StrikeExtrapolation!:
+Indicates the extrapolation in the strike direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. Both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the strike direction. \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation should be continued in the strike direction in order to extrapolate.
+
+\item \lstinline!PriceCurveId!:
+This is required for a delta surface.
+
+\item \lstinline!YieldCurveId!:
+This is required for a delta surface.
+
+\end{itemize}
+
+Note that, similar to the procedure outlined above for the absolute strike surface, quote strings are created from the configuration to be looked up in the market. For the put deltas, quote strings of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/DEL/{T}/Put/d_m! are created. Here, \lstinline!d_m! are the \lstinline!PutDeltas! and \lstinline!{T}! is the delta type i.e.\ either \lstinline!Spot! or \lstinline!Fwd!. Similarly for the call deltas, quote strings of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/DEL/{T}/Call/d_j! are created where \lstinline!d_j! are the \lstinline!CallDeltas!. For ATM, quote strings of the form \lstinline!COMMODITY_OPTION/RATE_LNVOL/{N}/{C}/e_n/DEL/ATM/{A}[/DEL/{T}]! are created where \lstinline!{A}! is the \lstinline!AtmType! i.e.\ \lstinline!AtmSpot!, \lstinline!AtmFwd! or \lstinline!AtmDeltaNeutral! and \lstinline!{T}! is the optional delta type.
+
+Also, it is worth adding a note here on the interpolation for a delta based surface. Assume we want the volatility at time $t$ and absolute strike $s$ i.e. at the $(t, s)$ node. For the maturity time $t$, a delta "slice" i.e. a set of (delta, vol) pairs for that time $t$, is obtained by interpolating, or extrapolating, the variance in the time direction on each delta column. Then for each (delta, vol) pair at time $t$, an absolute strike value is deduced to give a slice at time $t$ in terms of absolute strike i.e. a set of (strike, vol) pairs at time $t$. This strike versus volatility curve is then interpolated, or extrapolated, to give the vol at the $(t, s)$.
+
+Listing \ref{lst:comm_vol_apo_surface_config} outlines the configuration for the APO volatility surface. This currently only supports a \lstinline!QuoteType! of \lstinline!ImpliedVolatility! and \lstinline!VolatilityType! must be \lstinline!Lognormal!. This configuration takes a base commodity volatility surface and builds a surface that can be queried for volatilities to price APOs directly i.e.\ using the volatility directly in a Black 76 formula along with the average future price. It uses the approach described in the Section entitled \textit{Commodity Average Price Option - Future Settlement Prices} in the Product Catalogue to go from future option volatilities to APO volatilities.
+
+We describe here briefly a motivating example encountered in practice. We have commodity APOs where the underlying is WTI Midland Argus averaged over the calendar month. We do not have direct volatilities for these APO contracts. We have a price curve for the average of WTI Midland Argus over the calendar month from the futures market. We can use the volatility surface that we have for CME WTI to build an APO surface for WTI Midland Argus. Listing \ref{lst:comm_vol_apo_surface_config} shows the configuration used in this context.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityVolatility>
+  <CurveId>WTI_MIDLAND</CurveId>
+  <CurveDescription>WTI Midland (CAL) APO surface</CurveDescription>
+  <Currency>USD</Currency>
+  <ApoFutureSurface>
+    <QuoteType>ImpliedVolatility</QuoteType>
+    <VolatilityType>Lognormal</VolatilityType>
+    <MoneynessLevels>0.50,0.75,1.00,1.25,1.50</MoneynessLevels>
+    <VolatilityId>CommodityVolatility/USD/WTI</VolatilityId>
+    <PriceCurveId>Commodity/USD/WTI</PriceCurveId>
+    <FutureConventions>WTI</FutureConventions>
+    <TimeInterpolation>Linear</TimeInterpolation>
+    <StrikeInterpolation>Linear</StrikeInterpolation>
+    <Extrapolation>true</Extrapolation>
+    <TimeExtrapolation>Flat</TimeExtrapolation>
+    <StrikeExtrapolation>Flat</StrikeExtrapolation>
+    <MaxTenor>2Y</MaxTenor>
+    <Beta>0</Beta>
+  </ApoFutureSurface>
+  <DayCounter>A365</DayCounter>
+  <Calendar>CME</Calendar>
+  <FutureConventions>WTI_MIDLAND</FutureConventions>
+  <PriceCurveId>Commodity/USD/WTI_MIDLAND</PriceCurveId>
+  <YieldCurveId>Yield/USD/USD-FedFunds</YieldCurveId>
+</CommodityVolatility>
+\end{minted}
+\caption{APO surface configuration}
+\label{lst:comm_vol_apo_surface_config}
+\end{longlisting}
+
+The meaning of each of the elements is given below.
+\begin{itemize}
+\item \lstinline!MoneynessLevels!:
+A comma separated list of the moneyness levels used in the APO surface construction. Forward moneyness is assumed with a value of $1$ indicating a strike equal to the future price.
+
+\item \lstinline!VolatilityId!:
+The ID of an existing commodity option surface for options on the future settlement price referenced in the APOs used in the generation of the volatilities for this surface.
+
+\item \lstinline!PriceCurveId!:
+The ID of an existing commodity price curve for the future settlement price referenced in the APOs used in the generation of the volatilities for this surface.
+
+\item \lstinline!FutureConventions!:
+This ID of the commodity future conventions for the future settlement price referenced in the APOs used in the generation of the volatilities for this surface.
+
+\item \lstinline!TimeInterpolation!:
+Only \lstinline!Linear! is currently supported here. Note that the interpolation is in terms of variance.
+
+\item \lstinline!StrikeInterpolation!:
+Only \lstinline!Linear! is supported here. Note that the interpolation is in terms of variance.
+
+\item \lstinline!Extrapolation!:
+A boolean value indicating if extrapolation is allowed.
+
+\item \lstinline!TimeExtrapolation!:
+Only \lstinline!Flat! is currently supported here. The flat extrapolation is in terms of the volatility.
+
+\item \lstinline!StrikeExtrapolation!:
+Indicates the extrapolation in the strike direction. The allowable values are \lstinline!None!, \lstinline!UseInterpolator!, \lstinline!Linear! and \lstinline!Flat!. Both \lstinline!Flat! and \lstinline!None! give flat extrapolation in the strike direction. \lstinline!UseInterpolator! and \lstinline!Linear! indicate that the configured interpolation should be continued in the strike direction in order to extrapolate.
+
+\item \lstinline!PriceCurveId!:
+The ID of an existing commodity price curve giving the average price for the APO period.
+
+\item \lstinline!YieldCurveId!:
+This ID of a yield curve in the currency of the commodity used for discounting.
+
+\end{itemize}
