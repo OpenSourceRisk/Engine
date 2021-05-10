@@ -1117,13 +1117,13 @@
     <ClInclude Include="qle\cashflows\fixedratefxlinkednotionalcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp">
-      <Filter>instruments</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\fallbackiborindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1919,13 +1919,13 @@
     <ClCompile Include="qle\cashflows\fixedratefxlinkednotionalcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp">
-      <Filter>instruments</Filter>
-    </ClCompile>  
     <ClCompile Include="qle\indexes\fallbackiborindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
