@@ -170,7 +170,7 @@
             "names": [
               "Value"
             ],
-            "abs_tol": 0.1,
+            "abs_tol": 0.01,
             "rel_tol": null
           }
         ]
@@ -189,7 +189,7 @@
             "names": [
               "Sensitivity"
             ],
-            "abs_tol": 0.1,
+            "abs_tol": 0.01,
             "rel_tol": null
           }
         ]
