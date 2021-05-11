@@ -95,7 +95,7 @@ void BondData::initialise() {
     isPayer_ = false;
 
     if (!hasCreditRisk() && !creditCurveId().empty())
-        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing withour CreditRisk");
+        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
 
     if (!zeroBond()) {
 
