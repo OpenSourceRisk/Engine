@@ -86,7 +86,8 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
-    XMLUtils::addChild(doc, bondNode, "CreditRisk", hasCreditRisk_);
+    if (hasCreditRisk_)
+        XMLUtils::addChild(doc, bondNode, "CreditRisk", hasCreditRisk_);
     return bondNode;
 }
 
