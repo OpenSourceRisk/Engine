@@ -58,8 +58,6 @@ Date nextValidFixingDate(Date d, const boost::shared_ptr<Index>& index, Size gap
 
 FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
 
-std::set<boost::shared_ptr<FixingManager::CashflowHandler>> FixingManager::additionalCashflowHandlers_;
-
 //! Initialise the manager-
 
 void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
@@ -67,13 +65,13 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
 
     // loop over all cashflows, populate index map
 
-    auto standardCashflowHandler = boost::make_shared<StandardCashflowHandler>();
+    auto standardCashflowHandler = boost::make_shared<StandardFixingManagerCashflowHandler>();
 
     for (auto trade : portfolio->trades()) {
         for (auto leg : trade->legs()) {
             for (auto cf : leg) {
                 bool done = false;
-                for (auto& h : additionalCashflowHandlers_) {
+                for (auto& h : FixingManagerCashflowHandlerFactory::instance().handlers()) {
                     if (done)
                         break;
                     done = done || h->processCashflow(cf, fixingMap_);
@@ -193,8 +191,8 @@ void FixingManager::applyFixings(Date start, Date end) {
     }
 }
 
-bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& cf,
-                                              FixingManager::FixingMap& fixingMap) {
+bool StandardFixingManagerCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& cf,
+                                                           FixingManager::FixingMap& fixingMap) {
 
     // For any coupon type that requires fixings, it must be handled here
     // Most coupons are based off a floating rate coupon and their single index
@@ -309,6 +307,14 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
     }
 
     return true;
+}
+
+const std::set<boost::shared_ptr<FixingManagerCashflowHandler>>& FixingManagerCashflowHandlerFactory::handlers() const {
+    return handlers_;
+}
+
+void FixingManagerCashflowHandlerFactory::addHandler(const boost::shared_ptr<FixingManagerCashflowHandler>& handler) {
+    handlers_.insert(handler);
 }
 
 } // namespace analytics
