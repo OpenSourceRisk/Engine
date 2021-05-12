@@ -343,8 +343,12 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     survivalProbs.push_back(1.0);
     TLOG("Survival probabilities for CDS curve " << config.curveID() << ":");
     TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
+
+    bool gotAliveHelper = false;
+
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
+            gotAliveHelper = true;
 
             Date pillarDate = helpers[i]->pillarDate();
             Probability sp = tmp->survivalProbability(pillarDate);
@@ -364,7 +368,12 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
             TLOG(io::iso_date(pillarDate) << "," << fixed << setprecision(9) << sp);
         }
     }
-    QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
+    QL_REQUIRE(gotAliveHelper, "Need at least one alive helper to build the default curve");
+    if (dates.size() == 1) {
+        // We might have removed points above. To make the interpolation work, we need at least two points though.
+        dates.push_back(dates.back() + 1);
+        survivalProbs.push_back(survivalProbs.back());
+    }
 
     LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
     curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
