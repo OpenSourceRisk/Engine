@@ -18,8 +18,10 @@
 
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
+#include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
@@ -28,114 +30,145 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
+// Could use this to make code below more succinct but VS then gives intellisense warnings that the ctors and methods 
+// are not defined.
+// using ASI = CreditDefaultSwapOption::AuctionSettlementInformation;
+
+CreditDefaultSwapOption::AuctionSettlementInformation::AuctionSettlementInformation()
+    : auctionFinalPrice_(Null<Real>()) {}
+
+CreditDefaultSwapOption::AuctionSettlementInformation::AuctionSettlementInformation(
+    const Date& auctionSettlementDate, Real& auctionFinalPrice)
+    : auctionSettlementDate_(auctionSettlementDate), auctionFinalPrice_(auctionFinalPrice) {}
+
+const Date& CreditDefaultSwapOption::AuctionSettlementInformation::auctionSettlementDate() const {
+    return auctionSettlementDate_;
+}
+
+Real CreditDefaultSwapOption::AuctionSettlementInformation::auctionFinalPrice() const {
+    return auctionFinalPrice_;
+}
+
+void CreditDefaultSwapOption::AuctionSettlementInformation::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "AuctionSettlementInformation");
+    auctionSettlementDate_ = parseDate(XMLUtils::getChildValue(node, "AuctionSettlementDate", true));
+    auctionFinalPrice_ = XMLUtils::getChildValueAsDouble(node, "AuctionFinalPrice", true);
+}
+
+XMLNode* CreditDefaultSwapOption::AuctionSettlementInformation::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("AuctionSettlementInformation");
+    XMLUtils::addChild(doc, node, "AuctionSettlementDate", to_string(auctionSettlementDate_));
+    XMLUtils::addChild(doc, node, "AuctionFinalPrice", auctionFinalPrice_);
+    return node;
+}
+
+CreditDefaultSwapOption::CreditDefaultSwapOption()
+    : Trade("CreditDefaultSwapOption"), strike_(Null<Real>()), knockOut_(true) {}
+
+CreditDefaultSwapOption::CreditDefaultSwapOption(const Envelope& env,
+    const OptionData& option,
+    const CreditDefaultSwapData& swap,
+    Real strike,
+    const string& strikeType,
+    bool knockOut,
+    const string& term,
+    const boost::optional<AuctionSettlementInformation>& asi)
+    : Trade("CreditDefaultSwapOption", env), option_(option), swap_(swap), strike_(strike),
+      strikeType_(strikeType), knockOut_(knockOut), term_(term), asi_(asi) {}
+
 void CreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
     DLOG("CreditDefaultSwapOption::build() called for trade " << id());
 
-    const boost::shared_ptr<Market> market = engineFactory->market();
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
+    // Notionals
+    const auto& legData = swap_.leg();
+    const auto& ntls = legData.notionals();
+    QL_REQUIRE(ntls.size() == 1, "CreditDefaultSwapOption requires a single notional.");
+    notional_ = ntls.front();
+    notionalCurrency_ = legData.currency();
 
-    QL_REQUIRE(swap_.leg().legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
-    Schedule schedule = makeSchedule(swap_.leg().schedule());
-
-    BusinessDayConvention payConvention = Following;
-    if (!swap_.leg().paymentConvention().empty()) {
-        payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
+    // Type of instrument we build depends on whether the reference entity has already defaulted.
+    if (asi_) {
+        buildDefaulted(engineFactory);
+    } else {
+        buildNoDefault(engineFactory);
     }
 
-    Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
-    QL_REQUIRE(swap_.leg().notionals().size() == 1, "CreditDefaultSwap requires single notional");
-    notional_ = swap_.leg().notionals().front();
+}
 
-    DayCounter dc = Actual360(true);
-    if (!swap_.leg().dayCounter().empty()) {
-        dc = parseDayCounter(swap_.leg().dayCounter());
-    }
+const OptionData& CreditDefaultSwapOption::option() const {
+    return option_;
+}
 
-    // In general for CDS and CDS index trades, the standard day counter is Actual/360 and the final
-    // period coupon accrual includes the maturity date.
-    Actual360 standardDayCounter;
-    DayCounter lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
+const CreditDefaultSwapData& CreditDefaultSwapOption::swap() const {
+    return swap_;
+}
 
-    boost::shared_ptr<FixedLegData> fixedData =
-        boost::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
-    QL_REQUIRE(fixedData, "Wrong LegType, expected Fixed, got " << swap_.leg().legType());
+Real CreditDefaultSwapOption::strike() const {
+    return strike_;
+}
 
-    QL_REQUIRE(fixedData->rates().size() == 1, "CreditDefaultSwap requires single rate");
+const string& CreditDefaultSwapOption::strikeType() const {
+    return strikeType_;
+}
 
-    boost::shared_ptr<QuantExt::CreditDefaultSwap> cds;
+bool CreditDefaultSwapOption::knockOut() const {
+    return knockOut_;
+}
 
-    if (swap_.upfrontDate() == Null<Date>())
-        cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), boost::shared_ptr<Claim>(),
-            lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
-    else {
-        QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
-        cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
-            boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
-    }
+const string& CreditDefaultSwapOption::term() const {
+    return term_;
+}
 
-    boost::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
-        boost::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(builder);
-
-    npvCurrency_ = swap_.leg().currency();
-
-    QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
-    cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.recoveryRate()));
-
-    // Payoff
-    Option::Type type = parseOptionType(option_.callPut());
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, Null<Real>()));
-
-    QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-    QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Style exercise is supported");
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
-    maturity_ = parseDate(option_.exerciseDates().front());
-
-    // Exercise
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(maturity_);
-
-    boost::shared_ptr<QuantExt::CdsOption> cdsOption;
-    cdsOption = boost::make_shared<QuantExt::CdsOption>(cds, exercise);
-
-    builder = engineFactory->builder("CreditDefaultSwapOption");
-    boost::shared_ptr<CreditDefaultSwapOptionEngineBuilder> cdsOptionBuilder =
-        boost::dynamic_pointer_cast<CreditDefaultSwapOptionEngineBuilder>(builder);
-    QL_REQUIRE(cdsOptionBuilder, "No Builder found for CreditDefaultSwapOption: " << id());
-    cdsOption->setPricingEngine(cdsOptionBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), term_));
-
-    instrument_.reset(new VanillaInstrument(cdsOption));
-
-    legs_ = {cds->coupons()};
-    legCurrencies_ = {npvCurrency_};
-    legPayers_ = {swap_.leg().isPayer()};
-    notionalCurrency_ = swap_.leg().currency();
+using ASI = CreditDefaultSwapOption::AuctionSettlementInformation;
+const boost::optional<ASI>& CreditDefaultSwapOption::auctionSettlementInformation() const {
+    return asi_;
 }
 
 void CreditDefaultSwapOption::fromXML(XMLNode* node) {
+
     Trade::fromXML(node);
-    XMLNode* node2 = XMLUtils::getChildNode(node, "CreditDefaultSwapOptionData");
-    QL_REQUIRE(node2, "No CreditDefaultSwapOptionData Node");
-    term_ = XMLUtils::getChildValue(node2, "Term", false);
-    XMLNode* node3 = XMLUtils::getChildNode(node2, "CreditDefaultSwapData");
-    QL_REQUIRE(node3, "No CreditDefaultSwapData Node");
-    swap_.fromXML(node3);
-    XMLNode* node4 = XMLUtils::getChildNode(node2, "OptionData");
-    QL_REQUIRE(node4, "No OptionData Node");
-    option_.fromXML(node4);
+
+    XMLNode* cdsOptionData = XMLUtils::getChildNode(node, "CreditDefaultSwapOptionData");
+    QL_REQUIRE(cdsOptionData, "Expected CreditDefaultSwapOptionData node on trade " << id() << ".");
+    strike_ = XMLUtils::getChildValueAsDouble(cdsOptionData, "Strike", false, Null<Real>());
+    strikeType_ = "Spread";
+    if (auto n = XMLUtils::getChildNode(cdsOptionData, "StrikeType")) {
+        strikeType_ = XMLUtils::getNodeValue(n);
+    }
+    knockOut_ = XMLUtils::getChildValueAsBool(cdsOptionData, "KnockOut", false, true);
+    term_ = XMLUtils::getChildValue(cdsOptionData, "Term", false);
+
+    if (XMLNode* asiNode = XMLUtils::getChildNode(cdsOptionData, "AuctionSettlementInformation"))
+        asi_->fromXML(asiNode);
+
+    XMLNode* cdsData = XMLUtils::getChildNode(cdsOptionData, "CreditDefaultSwapData");
+    QL_REQUIRE(cdsData, "Expected CreditDefaultSwapData node on trade " << id() << ".");
+    swap_.fromXML(cdsData);
+
+    XMLNode* optionData = XMLUtils::getChildNode(cdsOptionData, "OptionData");
+    QL_REQUIRE(optionData, "Expected OptionData node on trade " << id() << ".");
+    option_.fromXML(optionData);
 }
 
 XMLNode* CreditDefaultSwapOption::toXML(XMLDocument& doc) {
+
     // Trade node
     XMLNode* node = Trade::toXML(doc);
 
     // CreditDefaultSwapOptionData node
     XMLNode* cdsOptionDataNode = doc.allocNode("CreditDefaultSwapOptionData");
-
+    if (strike_ != Null<Real>())
+        XMLUtils::addChild(doc, cdsOptionDataNode, "Strike", strike_);
+    if (strikeType_ != "")
+        XMLUtils::addChild(doc, cdsOptionDataNode, "StrikeType", strikeType_);
+    XMLUtils::addChild(doc, cdsOptionDataNode, "KnockOut", knockOut_);
     if (!term_.empty())
         XMLUtils::addChild(doc, cdsOptionDataNode, "Term", term_);
+
+    if (asi_)
+        XMLUtils::appendNode(cdsOptionDataNode, asi_->toXML(doc));
+
     XMLUtils::appendNode(cdsOptionDataNode, swap_.toXML(doc));
     XMLUtils::appendNode(cdsOptionDataNode, option_.toXML(doc));
 
@@ -144,5 +177,183 @@ XMLNode* CreditDefaultSwapOption::toXML(XMLDocument& doc) {
 
     return node;
 }
-} // namespace data
-} // namespace ore
+
+void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    DLOG("CreditDefaultSwapOption: building CDS option trade " << id() << " given no default.");
+
+    // Need fixed leg data with one rate. This should be the standard running coupon on the CDS e.g. 
+    // generally 100bp for IG CDS and 500bp for HY CDS. For single name CDS options, one can use this field to give 
+    // the strike spread. It may matter for the resulting valuation depending on the engine that is used - see 
+    // "A CDS Option Miscellany, Richard J. Martin, 2019, Section 2.4".
+    const auto& legData = swap_.leg();
+    QL_REQUIRE(legData.legType() == "Fixed", "CDS option " << id() << " requires fixed leg.");
+    auto fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(legData.concreteLegData());
+    QL_REQUIRE(fixedLegData->rates().size() == 1, "Index CDS option " << id() << " requires single fixed rate.");
+    auto runningCoupon = fixedLegData->rates().front();
+
+    // Payer (Receiver) swaption if the leg is paying (receiving).
+    auto side = legData.isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
+
+    // Day counter. In general for CDS, the standard day counter is Actual/360 and the final
+    // period coupon accrual includes the maturity date.
+    Actual360 standardDayCounter;
+    const std::string& strDc = legData.dayCounter();
+    DayCounter dc = strDc.empty() ? standardDayCounter : parseDayCounter(strDc);
+    DayCounter lastPeriodDayCounter = dc == standardDayCounter ? Actual360(true) : dc;
+
+    // Schedule
+    Schedule schedule = makeSchedule(legData.schedule());
+    BusinessDayConvention payConvention = legData.paymentConvention().empty() ? Following :
+        parseBusinessDayConvention(legData.paymentConvention());
+
+    // An upfront fee on the underlying CDS trade doesn't make much sense.
+    QL_REQUIRE(swap_.upfrontFee() == Null<Real>(), "Upfront fee on the CDS underlying a CDS" <<
+        " option is not supported.");
+
+    // The underlying CDS trade
+    auto cds = boost::make_shared<QuantExt::CreditDefaultSwap>(side, notional_, runningCoupon, schedule,
+        payConvention, dc, swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
+        boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
+
+    // Set engine on the underlying CDS.
+    auto cdsBuilder = boost::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(
+        engineFactory->builder("CreditDefaultSwap"));
+    QL_REQUIRE(cdsBuilder, "CreditDefaultSwapOption expected CDS engine " <<
+        " builder for underlying while building trade " << id() << ".");
+    npvCurrency_ = legData.currency();
+    auto ccy = parseCurrency(npvCurrency_);
+    cds->setPricingEngine(cdsBuilder->engine(ccy, swap_.creditCurveId(), swap_.recoveryRate()));
+
+    // Check option data
+    QL_REQUIRE(option_.style() == "European", "CreditDefaultSwapOption option style must" <<
+        " be European but got " << option_.style() << ".");
+    QL_REQUIRE(!option_.payoffAtExpiry(), "CreditDefaultSwapOption payoff must be at exercise.");
+    QL_REQUIRE(option_.exerciseFees().empty(), "CreditDefaultSwapOption cannot handle exercise fees.");
+
+    // Exercise must be European
+    const auto& exerciseDates = option_.exerciseDates();
+    QL_REQUIRE(exerciseDates.size() == 1, "CreditDefaultSwapOption expects one exercise date" <<
+        " but got " << exerciseDates.size() << " exercise dates.");
+    Date exerciseDate = parseDate(exerciseDates.front());
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
+
+    // Strike type may be Spread or Price.
+    auto strikeType = parseCdsOptionStrikeType(strikeType_);
+
+    // If the strike_ is Null, the strike is taken as the running coupon and assumed to be of type Spread.
+    Real strike = strike_;
+    if (strike == Null<Real>()) {
+        QL_REQUIRE(strikeType == QuantExt::CdsOption::Spread, "CreditDefaultSwapOption strike type should be" <<
+            " Spread if an explicit Strike is not provided.");
+        strike = runningCoupon;
+    }
+
+    // Build the option instrument
+    auto cdsOption = boost::make_shared<QuantExt::CdsOption>(cds, exercise, knockOut_, strike_, strikeType);
+
+    // Set the option engine
+    auto cdsOptionEngineBuilder = boost::dynamic_pointer_cast<CreditDefaultSwapOptionEngineBuilder>(
+        engineFactory->builder("CreditDefaultSwapOption"));
+    QL_REQUIRE(cdsOptionEngineBuilder, "CreditDefaultSwapOption expected CDS option engine " <<
+        " builder for underlying while building trade " << id() << ".");
+    cdsOption->setPricingEngine(cdsOptionEngineBuilder->engine(ccy, swap_.creditCurveId(), term_));
+
+    // Copying here what is done for the index CDS option. The comment there is:
+    // Align option product maturities with ISDA AANA/GRID guidance as of November 2020.
+    maturity_ = cds->coupons().back()->date();
+
+    // Set Trade members.
+    legs_ = { cds->coupons() };
+    legCurrencies_ = { npvCurrency_ };
+    legPayers_ = { legData.isPayer() };
+
+    // Include premium if enough information is provided
+    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    vector<Real> additionalMultipliers;
+    string marketConfig = cdsOptionEngineBuilder->configuration(MarketContext::pricing);
+    addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers);
+
+    // Instrument wrapper depends on the settlement type.
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Settlement::Type settleType = parseSettlementType(option_.settlement());
+    if (settleType == Settlement::Cash) {
+        Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+        instrument_ = boost::make_shared<VanillaInstrument>(cdsOption, indicatorLongShort,
+            additionalInstruments, additionalMultipliers);
+    } else {
+        bool isLong = positionType == Position::Long;
+        bool isPhysical = settleType == Settlement::Physical;
+        instrument_ = boost::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate,
+            isPhysical, cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
+    }
+
+}
+
+void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFactory>& engineFactory) {
+
+    DLOG("CreditDefaultSwapOption: building CDS option trade " << id() << " given default occured.");
+
+    // We add a simple payment for CDS options where the reference entity has already defaulted.
+    // If it is a knock-out CDS option, we add a dummy payment of 0.0 with date today instead of throwing.
+    const auto& legData = swap_.leg();
+    Date paymentDate = engineFactory->market()->asofDate();
+    Real amount = 0.0;
+    if (!knockOut_) {
+        paymentDate = asi_->auctionSettlementDate();
+        amount = notional_ * (1 - asi_->auctionFinalPrice());
+        // If it is a receiver option, i.e. selling protection, the FEP is paid out.
+        if (!legData.isPayer())
+            amount *= -1.0;
+    }
+
+    // Use the add payment method to add the payment.
+    string marketConfig = Market::defaultConfiguration;
+    auto ccy = parseCurrency(notionalCurrency_);
+    vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    vector<Real> additionalMultipliers;
+    addPayment(additionalInstruments, additionalMultipliers, 1.0, paymentDate, amount,
+        ccy, ccy, engineFactory, marketConfig);
+    DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
+
+    // Use the instrument added as the main instrument and clear the vectors
+    auto qlInst = additionalInstruments.back();
+    QL_REQUIRE(qlInst, "Expected a FEP payment to have been added for CDS option " << id() << ".");
+    maturity_ = paymentDate;
+    additionalInstruments.clear();
+    additionalMultipliers.clear();
+
+    // Include premium if enough information is provided
+    addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers);
+
+    // Instrument wrapper.
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+    instrument_ = boost::make_shared<VanillaInstrument>(qlInst, indicatorLongShort,
+        additionalInstruments, additionalMultipliers);
+
+}
+
+void CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>& ef,
+    const Currency& tradeCurrency,
+    const string& marketConfig,
+    vector<boost::shared_ptr<Instrument>>& additionalInstruments,
+    vector<Real>& additionalMultipliers) {
+
+    if (!option_.premiumPayDate().empty() && !option_.premiumCcy().empty()) {
+        // The premium amount is always provided as a non-negative amount. Assign the correct sign here i.e.
+        // pay the premium if long the option and recieve the premium if short the option.
+        Position::Type positionType = parsePositionType(option_.longShort());
+        Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
+        Real premiumAmount = -indicatorLongShort * option_.premium();
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount,
+            premiumCurrency, tradeCurrency, ef, marketConfig);
+        DLOG("Option premium added for CDS option " << id() << ".");
+    }
+
+}
+
+}
+}

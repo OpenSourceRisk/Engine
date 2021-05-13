@@ -1492,5 +1492,17 @@ ostream& operator<<(ostream& os, Rounding::Type t) {
     }
 }
 
+using QuantExt::CdsOption;
+CdsOption::StrikeType parseCdsOptionStrikeType(const string& s) {
+    using ST = CdsOption::StrikeType;
+    if (s == "Spread") {
+        return ST::Spread;
+    } else if (s == "Price") {
+        return ST::Spread;
+    } else {
+        QL_FAIL("CdsOption::StrikeType \"" << s << "\" not recognized");
+    }
+}
+
 } // namespace data
 } // namespace ore
