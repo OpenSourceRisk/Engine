@@ -238,16 +238,12 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     Date exerciseDate = parseDate(exerciseDates.front());
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
-    // Strike type may be Spread or Price.
+    // Limit strike type to Spread for now.
     auto strikeType = parseCdsOptionStrikeType(strikeType_);
+    QL_REQUIRE(strikeType == QuantExt::CdsOption::Spread, "CreditDefaultSwapOption strike type must be Spread.");
 
-    // If the strike_ is Null, the strike is taken as the running coupon and assumed to be of type Spread.
-    Real strike = strike_;
-    if (strike == Null<Real>()) {
-        QL_REQUIRE(strikeType == QuantExt::CdsOption::Spread, "CreditDefaultSwapOption strike type should be" <<
-            " Spread if an explicit Strike is not provided.");
-        strike = runningCoupon;
-    }
+    // If the strike_ is Null, the strike is taken as the running coupon.
+    Real strike = strike_ == Null<Real>() ? runningCoupon : strike_;
 
     // Build the option instrument
     auto cdsOption = boost::make_shared<QuantExt::CdsOption>(cds, exercise, knockOut_, strike_, strikeType);
