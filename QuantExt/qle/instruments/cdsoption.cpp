@@ -82,8 +82,8 @@ private:
 
 CdsOption::CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
                      bool knocksOut, const Real strike, const StrikeType strikeType)
-    : Option(boost::shared_ptr<Payoff>(new NullPayoff), exercise), swap_(swap), knocksOut_(knocksOut), strike_(strike),
-      strikeType_(strikeType) {
+    : Option(boost::shared_ptr<Payoff>(new NullPayoff), exercise), swap_(swap), knocksOut_(knocksOut),
+      strike_(strike == Null<Real>() ? swap_->runningSpread() : strike), strikeType_(strikeType) {
     registerWith(swap_);
 }
 
