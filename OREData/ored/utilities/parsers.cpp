@@ -1498,7 +1498,7 @@ CdsOption::StrikeType parseCdsOptionStrikeType(const string& s) {
     if (s == "Spread") {
         return ST::Spread;
     } else if (s == "Price") {
-        return ST::Spread;
+        return ST::Price;
     } else {
         QL_FAIL("CdsOption::StrikeType \"" << s << "\" not recognized");
     }
