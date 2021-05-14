@@ -73,7 +73,7 @@ void BlackCdsOptionEngine::calculate() const {
     // CDS maturity $T$. This risky PV01 does not include the non-risky accrual from the CDS premium leg coupon date 
     // immediately preceding the expiry date up to the expiry date.
     Real rpv01 = abs(cds.couponLegNPV() + cds.accrualRebateNPV()) / (cds.notional() * cds.runningSpread());
-    results_.additionalResults["riskyAnnuityClean"] = rpv01;
+    results_.additionalResults["riskyAnnuity"] = rpv01;
 
     // Read the volatility from the volatility surface, assumed to have strike dimension in terms of spread.
     const Date& exerciseDate = arguments_.exercise->dates().front();

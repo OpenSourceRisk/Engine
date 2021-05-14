@@ -44,8 +44,7 @@ namespace QuantExt {
 */
 class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
 public:
-    BlackCdsOptionEngine(
-        const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
+    BlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
         QuantLib::Real recovery,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
         const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volatility);

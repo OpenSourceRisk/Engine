@@ -246,7 +246,7 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     Real strike = strike_ == Null<Real>() ? runningCoupon : strike_;
 
     // Build the option instrument
-    auto cdsOption = boost::make_shared<QuantExt::CdsOption>(cds, exercise, knockOut_, strike_, strikeType);
+    auto cdsOption = boost::make_shared<QuantExt::CdsOption>(cds, exercise, knockOut_, strike, strikeType);
 
     // Set the option engine
     auto cdsOptionEngineBuilder = boost::dynamic_pointer_cast<CreditDefaultSwapOptionEngineBuilder>(
