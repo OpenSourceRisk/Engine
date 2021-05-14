@@ -207,9 +207,9 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     BusinessDayConvention payConvention = legData.paymentConvention().empty() ? Following :
         parseBusinessDayConvention(legData.paymentConvention());
 
-    // An upfront fee on the underlying CDS trade doesn't make much sense.
-    QL_REQUIRE(swap_.upfrontFee() == Null<Real>(), "Upfront fee on the CDS underlying a CDS" <<
-        " option is not supported.");
+    // Don't support upfront fee on the underlying CDS for the moment.
+    QL_REQUIRE(swap_.upfrontFee() == Null<Real>() || close(swap_.upfrontFee(), 0.0),
+        "Upfront fee on the CDS underlying a CDS option is not supported.");
 
     // The underlying CDS trade
     auto cds = boost::make_shared<QuantExt::CreditDefaultSwap>(side, notional_, runningCoupon, schedule,
