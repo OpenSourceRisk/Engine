@@ -191,10 +191,8 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     if (scenarioGeneratorData_->withCloseOutLag()) {
         // depth 2: NPV and close-out NPV
-        cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
-                                                                 scenarioGeneratorData_->getGrid()->valuationDates(),
-                                                                 scenarioGeneratorData_->samples(),
-                                                                 2); // depth 2: default date and close-out date NPV
+        cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->valuationDates(),
+                           scenarioGeneratorData_->samples(), 2);
         cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->getGrid());
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
@@ -205,16 +203,14 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     } else {
         if (storeFlows_) {
             // regular, depth 2: NPV and cash flow
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
-                                                                     scenarioGeneratorData_->getGrid()->dates(),
-                                                                     scenarioGeneratorData_->samples(), 2, 0.0f);
+            cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->dates(),
+                               scenarioGeneratorData_->samples(), 2);
             calculators.push_back(
                 boost::make_shared<CashflowCalculator>(baseCurrency_, asof_, scenarioGeneratorData_->getGrid(), 1));
         } else
             // regular, depth 1
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, portfolio->ids(),
-                                                                    scenarioGeneratorData_->getGrid()->dates(),
-                                                                    scenarioGeneratorData_->samples(), 0.0f);
+            cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->dates(),
+                               scenarioGeneratorData_->samples(), 1);
 
         cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
         calculators.push_back(npvCalculator);
@@ -287,6 +283,16 @@ std::vector<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Por
     for (auto const& t : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
         nettingSetIds.insert(t->envelope().nettingSetId());
     return std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
+}
+
+boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+                                                 const std::vector<Date>& dates, const Size samples,
+                                                 const Size depth) const {
+    if (depth == 1) {
+        return boost::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+    } else {
+        return boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+    }
 }
 
 } // namespace analytics
