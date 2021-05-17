@@ -19,7 +19,9 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 
+#include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/utilities/vectors.hpp>
 
@@ -31,13 +33,15 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                                                const Date& endDate,
                                                const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
                                                Spread spread, Natural rateCutoff, const DayCounter& dayCounter,
-                                               const Period& lookback, const Size fixingDays)
+                                               const Period& lookback, const Size fixingDays,
+                                               const Date& rateComputationStartDate, const Date& rateComputationEndDate)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread, Date(),
                          Date(), dayCounter, false),
-      rateCutoff_(rateCutoff), lookback_(lookback) {
+      rateCutoff_(rateCutoff), lookback_(lookback), rateComputationStartDate_(rateComputationStartDate),
+      rateComputationEndDate_(rateComputationEndDate) {
 
-    Date valueStart = startDate;
-    Date valueEnd = endDate;
+    Date valueStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
+    Date valueEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
     if (lookback != 0 * Days) {
         BusinessDayConvention bdc = lookback.length() > 0 ? Preceding : Following;
         valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback, bdc);
@@ -108,7 +112,7 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 
 AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
-      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()) {}
+      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()), inArrears_(true) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -175,6 +179,16 @@ AverageONLeg& AverageONLeg::withFixingDays(const Size fixingDays) {
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withInArrears(const bool inArrears) {
+    inArrears_ = inArrears;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+    lastRecentPeriod_ = lastRecentPeriod;
+    return *this;
+}
+
 AverageONLeg&
 AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
@@ -186,33 +200,73 @@ AverageONLeg::operator Leg() const {
     QL_REQUIRE(!notionals_.empty(), "No notional given for average overnight leg.");
 
     Leg cashflows;
-    Date startDate;
-    Date endDate;
+
+    Calendar calendar = schedule_.calendar();
+
+    Date refStart, start, refEnd, end;
     Date paymentDate;
 
-    Calendar calendar;
-    if (!paymentCalendar_.empty()) {
-        calendar = paymentCalendar_;
-    } else {
-        calendar = schedule_.calendar();
-    }
+    Size n = schedule_.size() - 1;
+    for (Size i = 0; i < n; ++i) {
+        refStart = start = schedule_.date(i);
+        refEnd = end = schedule_.date(i + 1);
+        paymentDate = paymentCalendar_.advance(end, paymentLag_, Days, paymentAdjustment_);
 
-    Size numPeriods = schedule_.size() - 1;
-    for (Size i = 0; i < numPeriods; ++i) {
-        startDate = schedule_.date(i);
-        endDate = schedule_.date(i + 1);
-        paymentDate = calendar.advance(endDate, paymentLag_, Days, paymentAdjustment_);
+        // determine refStart and refEnd
 
-        boost::shared_ptr<AverageONIndexedCoupon> cashflow(
-            new AverageONIndexedCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
-                                       overnightIndex_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
-                                       rateCutoff_, paymentDayCounter_, lookback_, fixingDays_));
+        if (i == 0 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1))
+            refStart = calendar.adjust(end - schedule_.tenor(), paymentAdjustment_);
+        if (i == n - 1 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1))
+            refEnd = calendar.adjust(start + schedule_.tenor(), paymentAdjustment_);
 
-        if (couponPricer_) {
-            cashflow->setPricer(couponPricer_);
+        // Determine the rate computation start and end date as
+        // - the coupon start and end date, if in arrears, and
+        // - the previous coupon start and end date, if in advance.
+        // In addition, adjust the start date, if a last recent period is given.
+
+        Date rateComputationStartDate, rateComputationEndDate;
+        if (!inArrears_) {
+            // in arrears fixing (i.e. the "classic" case)
+            rateComputationStartDate = start;
+            rateComputationEndDate = end;
+        } else {
+            // handle in advance fixing
+            if (i > 0) {
+                // if there is a previous period, we take that
+                rateComputationStartDate = schedule_.date(i - 1);
+                rateComputationEndDate = schedule_.date(i);
+            } else {
+                // otherwise we construct the previous period
+                rateComputationEndDate = start;
+                if (schedule_.hasTenor())
+                    rateComputationStartDate = calendar.adjust(start - schedule_.tenor(), Preceding);
+                else
+                    rateComputationStartDate = calendar.adjust(start - (end - start), Preceding);
+            }
         }
 
-        cashflows.push_back(cashflow);
+        if (lastRecentPeriod_) {
+            rateComputationStartDate = calendar.advance(rateComputationEndDate, -*lastRecentPeriod_);
+        }
+
+        // build coupon
+
+        if (close_enough(detail::get(gearings_, i, 1.0), 0.0)) {
+            // fixed coupon
+            cashflows.push_back(boost::make_shared<FixedRateCoupon>(paymentDate, detail::get(notionals_, i, 1.0),
+                                                                    detail::get(spreads_, i, 0.0), paymentDayCounter_,
+                                                                    start, end, refStart, refEnd));
+        } else {
+            // floating coupon
+            auto cpn = boost::make_shared<AverageONIndexedCoupon>(
+                paymentDate, detail::get(notionals_, i, notionals_.back()), start, end, overnightIndex_,
+                detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_,
+                lookback_, fixingDays_, rateComputationStartDate, rateComputationEndDate);
+            if (couponPricer_) {
+                cpn->setPricer(couponPricer_);
+            }
+            cashflows.push_back(cpn);
+        }
     }
     return cashflows;
 }

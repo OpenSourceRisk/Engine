@@ -182,7 +182,7 @@ public:
     //! Default constructor
     FloatingLegData()
         : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), lookback_(0 * Days), rateCutoff_(Null<Size>()),
-          isInArrears_(true), isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
+          isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
     //! Constructor
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -192,12 +192,13 @@ public:
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
-                    bool localCapFloor = false)
+                    bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none)
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
-          gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor) {
+          gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
+          lastRecentPeriod_(lastRecentPeriod) {
         indices_.insert(index_);
     }
 
@@ -207,7 +208,7 @@ public:
     QuantLib::Size fixingDays() const { return fixingDays_; }
     QuantLib::Period lookback() const { return lookback_; }
     QuantLib::Size rateCutoff() const { return rateCutoff_; }
-    bool isInArrears() const { return isInArrears_; }
+    boost::optional<bool> isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     bool hasSubPeriods() const { return hasSubPeriods_; }
     bool includeSpread() const { return includeSpread_; }
@@ -221,6 +222,7 @@ public:
     const vector<string>& gearingDates() const { return gearingDates_; }
     bool nakedOption() const { return nakedOption_; }
     bool localCapFloor() const { return localCapFloor_; }
+    const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
     //@}
 
     //! \name Modifiers
@@ -243,7 +245,7 @@ private:
     QuantLib::Size fixingDays_;
     QuantLib::Period lookback_;
     QuantLib::Size rateCutoff_;
-    bool isInArrears_;
+    boost::optional<bool> isInArrears_;
     bool isAveraged_;
     bool hasSubPeriods_;
     bool includeSpread_;
@@ -257,6 +259,7 @@ private:
     vector<string> gearingDates_;
     bool nakedOption_;
     bool localCapFloor_;
+    boost::optional<Period> lastRecentPeriod_;
 
     static LegDataRegister<FloatingLegData> reg_;
 };

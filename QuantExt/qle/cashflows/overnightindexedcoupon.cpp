@@ -190,12 +190,14 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd,
                                                const DayCounter& dayCounter, bool telescopicValueDates,
                                                bool includeSpread, const Period& lookback, const Natural rateCutoff,
-                                               const Natural fixingDays)
+                                               const Natural fixingDays, const Date& rateComputationStartDate,
+                                               const Date& rateComputationEndDate)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
                          refPeriodStart, refPeriodEnd, dayCounter, false),
-      includeSpread_(includeSpread), lookback_(lookback), rateCutoff_(rateCutoff) {
-    Date valueStart = startDate;
-    Date valueEnd = endDate;
+      includeSpread_(includeSpread), lookback_(lookback), rateCutoff_(rateCutoff),
+      rateComputationStartDate_(rateComputationStartDate), rateComputationEndDate_(rateComputationEndDate) {
+    Date valueStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
+    Date valueEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
     if (lookback != 0 * Days) {
         BusinessDayConvention bdc = lookback.length() > 0 ? Preceding : Following;
         valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback, bdc);
@@ -432,7 +434,7 @@ Handle<OptionletVolatilityStructure> CappedFlooredOvernightIndexedCouponPricer::
 OvernightLeg::OvernightLeg(const Schedule& schedule, const ext::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()), paymentAdjustment_(Following),
       paymentLag_(0), telescopicValueDates_(false), includeSpread_(false), lookback_(0 * Days), rateCutoff_(0),
-      fixingDays_(Null<Size>()), nakedOption_(false), localCapFloor_(false) {}
+      fixingDays_(Null<Size>()), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
 
 OvernightLeg& OvernightLeg::withNotionals(Real notional) {
     notionals_ = vector<Real>(1, notional);
@@ -539,13 +541,22 @@ OvernightLeg& OvernightLeg::withLocalCapFloor(const bool localCapFloor) {
     return *this;
 }
 
+OvernightLeg& OvernightLeg::withInArrears(const bool inArrears) {
+    inArrears_ = inArrears;
+    return *this;
+}
+
+OvernightLeg& OvernightLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+    lastRecentPeriod_ = lastRecentPeriod;
+    return *this;
+}
+
 OvernightLeg::operator Leg() const {
 
-    QL_REQUIRE(!notionals_.empty(), "no notional given");
+    QL_REQUIRE(!notionals_.empty(), "no notional given for compounding overnight leg");
 
     Leg cashflows;
 
-    // the following is not always correct
     Calendar calendar = schedule_.calendar();
 
     Date refStart, start, refEnd, end;
@@ -557,10 +568,45 @@ OvernightLeg::operator Leg() const {
         refEnd = end = schedule_.date(i + 1);
         paymentDate = paymentCalendar_.advance(end, paymentLag_, Days, paymentAdjustment_);
 
+        // determine refStart and refEnd
+
         if (i == 0 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1))
             refStart = calendar.adjust(end - schedule_.tenor(), paymentAdjustment_);
         if (i == n - 1 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1))
             refEnd = calendar.adjust(start + schedule_.tenor(), paymentAdjustment_);
+
+        // Determine the rate computation start and end date as
+        // - the coupon start and end date, if in arrears, and
+        // - the previous coupon start and end date, if in advance.
+        // In addition, adjust the start date, if a last recent period is given.
+
+        Date rateComputationStartDate, rateComputationEndDate;
+        if (!inArrears_) {
+            // in arrears fixing (i.e. the "classic" case)
+            rateComputationStartDate = start;
+            rateComputationEndDate = end;
+        } else {
+            // handle in advance fixing
+            if (i > 0) {
+                // if there is a previous period, we take that
+                rateComputationStartDate = schedule_.date(i - 1);
+                rateComputationEndDate = schedule_.date(i);
+            } else {
+                // otherwise we construct the previous period
+                rateComputationEndDate = start;
+                if (schedule_.hasTenor())
+                    rateComputationStartDate = calendar.adjust(start - schedule_.tenor(), Preceding);
+                else
+                    rateComputationStartDate = calendar.adjust(start - (end - start), Preceding);
+            }
+        }
+
+        if (lastRecentPeriod_) {
+            rateComputationStartDate = calendar.advance(rateComputationEndDate, -*lastRecentPeriod_);
+        }
+
+        // build coupon
+
         if (close_enough(detail::get(gearings_, i, 1.0), 0.0)) {
             // fixed coupon
             cashflows.push_back(boost::make_shared<FixedRateCoupon>(
@@ -571,7 +617,8 @@ OvernightLeg::operator Leg() const {
             auto cpn = ext::make_shared<OvernightIndexedCoupon>(
                 paymentDate, detail::get(notionals_, i, 1.0), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), refStart, refEnd, paymentDayCounter_,
-                telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_);
+                telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_, rateComputationStartDate,
+                rateComputationEndDate);
             Real cap = detail::get(caps_, i, Null<Real>());
             Real floor = detail::get(floors_, i, Null<Real>());
             if (cap == Null<Real>() && floor == Null<Real>()) {

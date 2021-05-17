@@ -50,7 +50,9 @@ public:
     AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing = 1.0,
                            Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
-                           const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>());
+                           const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
+                           const Date& rateComputationStartDate = Null<Date>(),
+                           const Date& rateComputationEndDate = Null<Date>());
     //! \name Inspectors
     //@{
     //! fixing dates for the rates to be averaged
@@ -82,6 +84,7 @@ private:
     std::vector<Time> dt_;
     Natural rateCutoff_;
     Period lookback_;
+    Date rateComputationStartDate_, rateComputationEndDate_;
 };
 
 //! helper class building a sequence of overnight coupons
@@ -103,6 +106,8 @@ public:
     AverageONLeg& withPaymentLag(Natural lag);
     AverageONLeg& withLookback(const Period& lookback);
     AverageONLeg& withFixingDays(const Size fixingDays);
+    AverageONLeg& withInArrears(const bool inArrears);
+    AverageONLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     operator Leg() const;
 
@@ -119,6 +124,8 @@ private:
     Natural rateCutoff_;
     Period lookback_;
     Natural fixingDays_;
+    bool inArrears_;
+    boost::optional<Period> lastRecentPeriod_;
     boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
 };
 
