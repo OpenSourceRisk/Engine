@@ -36,14 +36,13 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/capflooredinflationcoupon.hpp>
+#include <ql/cashflows/digitalcmscoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
-#include <ql/cashflows/digitalcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/errors.hpp>
-#include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/version.hpp>
@@ -348,6 +347,59 @@ void CMSLegData::fromXML(XMLNode* node) {
     else
         nakedOption_ = false;
 }
+
+XMLNode* DigitalCMSLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::appendNode(node, underlying_->toXML(doc));
+
+    if (callStrikes_.size() > 0) {
+        XMLUtils::addChild(doc, node, "CallPosition", to_string(callPosition_));
+        XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
+        XMLUtils::addChildren(doc, node, "CallStrikes", "Strike", callStrikes_);
+        XMLUtils::addChildren(doc, node, "CallPayoffs", "Payoff", callPayoffs_);
+    }
+
+    if (putStrikes_.size() > 0) {
+        XMLUtils::addChild(doc, node, "PutPosition", to_string(putPosition_));
+        XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
+        XMLUtils::addChildren(doc, node, "PutStrikes", "Strike", putStrikes_);
+        XMLUtils::addChildren(doc, node, "PutPayoffs", "Payoff", putPayoffs_);
+    }
+
+    return node;
+}
+
+LegDataRegister<DigitalCMSLegData> DigitalCMSLegData::reg_("DigitalCMS");
+
+void DigitalCMSLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+
+    XMLNode* underlyingNode = XMLUtils::getChildNode(node, "CMSLegData");
+    underlying_ = boost::make_shared<CMSLegData>();
+    underlying_->fromXML(underlyingNode);
+    indices_ = underlying_->indices();
+
+    callStrikes_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "CallStrikes", "Strike", "startDate",
+                                                                   callStrikeDates_, &parseReal);
+    if (callStrikes_.size() > 0) {
+        string cp = XMLUtils::getChildValue(node, "CallPosition", true);
+        callPosition_ = parsePositionType(cp);
+        isCallATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsCallATMIncluded", true);
+        callPayoffs_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "CallPayoffs", "Payoff", "startDate",
+                                                                       callPayoffDates_, &parseReal);
+    }
+
+    putStrikes_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "PutStrikes", "Strike", "startDate",
+                                                                  putStrikeDates_, &parseReal);
+    if (putStrikes_.size() > 0) {
+        string pp = XMLUtils::getChildValue(node, "PutPosition", true);
+        putPosition_ = parsePositionType(pp);
+        isPutATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsPutATMIncluded", true);
+        putPayoffs_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "PutPayoffs", "Payoff", "startDate",
+                                                                      putPayoffDates_, &parseReal);
+    }
+}
+
 
 XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
@@ -1379,6 +1431,82 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                 s->registerWith(s->underlying());
         }
     }
+    return tmpLeg;
+}
+
+Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
+                            const boost::shared_ptr<EngineFactory>& engineFactory) {
+    auto digitalCmsData = boost::dynamic_pointer_cast<DigitalCMSLegData>(data.concreteLegData());
+    QL_REQUIRE(digitalCmsData, "Wrong LegType, expected DigitalCMS");
+
+    auto cmsData = boost::dynamic_pointer_cast<CMSLegData>(digitalCmsData->underlying());
+    QL_REQUIRE(cmsData, "Incomplete DigitalCms Leg, expected CMS data");
+
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsData->spreads(),
+                                                                       cmsData->spreadDates(), schedule, 0.0);
+    vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsData->gearings(),
+                                                                        cmsData->gearingDates(), schedule, 1.0);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    double eps = 1e-4;
+    vector<double> callStrikes = ore::data::buildScheduledVector(digitalCmsData->callStrikes(),
+                                                                 digitalCmsData->callStrikeDates(), schedule);
+
+    for (Size i = 0; i < callStrikes.size(); i++) {
+        if (std::fabs(callStrikes[i]) < eps / 2) {
+            callStrikes[i] = eps / 2;
+        }
+    }
+
+    vector<double> callPayoffs = ore::data::buildScheduledVector(digitalCmsData->callPayoffs(),
+                                                                 digitalCmsData->callPayoffDates(), schedule);
+
+    vector<double> putStrikes = ore::data::buildScheduledVector(digitalCmsData->putStrikes(),
+                                                                digitalCmsData->putStrikeDates(), schedule);
+    vector<double> putPayoffs = ore::data::buildScheduledVector(digitalCmsData->putPayoffs(),
+                                                                digitalCmsData->putPayoffDates(), schedule);
+
+    Size fixingDays = cmsData->fixingDays() == Null<Size>() ? swapIndex->fixingDays() : cmsData->fixingDays();
+
+    applyAmortization(notionals, data, schedule, false);
+
+    DigitalCmsLeg digitalCmsLeg = DigitalCmsLeg(schedule, swapIndex)
+                                                  .withNotionals(notionals)
+                                                  .withSpreads(spreads)
+                                                  .withGearings(gearings)
+                                                  .withPaymentDayCounter(dc)
+                                                  .withPaymentAdjustment(bdc)
+                                                  .withFixingDays(fixingDays)
+                                                  .inArrears(cmsData->isInArrears())
+                                                  .withCallStrikes(callStrikes)
+                                                  .withLongCallOption(digitalCmsData->callPosition())
+                                                  .withCallATM(digitalCmsData->isCallATMIncluded())
+                                                  .withCallPayoffs(callPayoffs)
+                                                  .withPutStrikes(putStrikes)
+                                                  .withLongPutOption(digitalCmsData->putPosition())
+                                                  .withPutATM(digitalCmsData->isPutATMIncluded())
+                                                  .withPutPayoffs(putPayoffs)
+                                                  .withReplication(boost::make_shared<DigitalReplication>())
+                                                  .withNakedOption(cmsData->nakedOption());
+
+    if (cmsData->caps().size() > 0 || cmsData->floors().size() > 0)
+        QL_FAIL("caps/floors not supported in DigitalCMSOptions");
+
+    // Get a coupon pricer for the leg
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
+    QL_REQUIRE(builder, "No CMS builder found for CmsLeg");
+    boost::shared_ptr<CmsCouponPricerBuilder> cmsBuilder =
+        boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
+    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(swapIndex->currency()));
+    QL_REQUIRE(cmsPricer, "Expected CMS Pricer");
+
+    // Loop over the coupons in the leg and set pricer
+    Leg tmpLeg = digitalCmsLeg;
+    QuantLib::setCouponPricer(tmpLeg, cmsPricer);
+
     return tmpLeg;
 }
 
