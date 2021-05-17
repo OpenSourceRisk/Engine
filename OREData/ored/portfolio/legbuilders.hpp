@@ -80,6 +80,13 @@ public:
                  RequiredFixings& requiredFixings, const string& configuration) const override;
 };
 
+class DigitalCMSLegBuilder : public LegBuilder {
+public:
+    DigitalCMSLegBuilder() : LegBuilder("DigitalCMS") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 RequiredFixings& requiredFixings, const string& configuration) const override;
+};
+
 class CMSSpreadLegBuilder : public LegBuilder {
 public:
     CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
