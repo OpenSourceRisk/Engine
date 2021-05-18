@@ -237,21 +237,31 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
 
 \item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is
   capped at the given rate (after applying gearing and spread, if any). The mode of specification is analogous to
-  spreads, see above. Caps / Floors are supported for Ibor and compounded OIS coupons, but not for coupons with
-  subperiods or averaged OIS coupons.
+  spreads, see above. Caps / Floors are supported for Ibor and compounded / averaged OIS coupons, but not for coupons
+  with subperiods.
 
-  For compounded OIS coupons notice how the gearing $g$ and spread $s$ enter the calculation of the coupon amount $A$
-  dependent on the IncludeSpread and LocalCapFloor flags and the cap rate $C$, floor rate $F$, daily rates $f_i$, daily
-  accrual fractions $\tau_i$ and the coupon accrual fraction $\tau$:
+  For OIS coupons notice how the gearing $g$ and spread $s$ enter the calculation of the coupon amount $A$ dependent on
+  the IncludeSpread and LocalCapFloor flags and the cap rate $C$, floor rate $F$, daily rates $f_i$, daily accrual
+  fractions $\tau_i$ and the coupon accrual fraction $\tau$. Notice that the gearing must be $1$ if include spread is
+  set to true for capped / floored coupons. The cases for compounded coupons are:
   \begin{itemize}
   \item IncludeSpread = false, LocalCapFloor = false:\\
     $$ A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)$$
   \item IncludeSpread = true, LocalCapFloor = false:\\
-    $$ A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)$$
+    $$ A = \min \left( \max \left( \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)$$
   \item IncludeSpread = false, LocalCapFloor = true:\\
     $$ A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s $$
   \item IncludeSpread = true, LocalCapFloor = true:\\
-    $$ A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau} $$
+    $$ A = \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau} $$
+  \end{itemize}
+  The cases for Averaged coupons are:
+  \begin{itemize}
+  \item IncludeSpread = true or false, LocalCapFloor = false:\\
+    $$ A = \min \left( \max \left( \cdot \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)$$
+  \item IncludeSpread = false, LocalCapFloor = true:\\
+    $$ A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i , F), C))}{\tau} + s $$
+  \item IncludeSpread = true, LocalCapFloor = true:\\
+    $$ A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i + s , F), C))}{\tau} $$
   \end{itemize}
 
 \item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
@@ -266,8 +276,8 @@ If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
 \item LocalCapFloor [Optional]: Optional node, if \emph{true} a cap (floor) will be applied to the daily rates of a
-  compounded overnight coupon. If \emph{false} the effective period rate will be capped (floored). The flag is ignored
-  for coupons other than compounded overnight coupons.
+  compounded / averaged overnight coupon. If \emph{false} the effective period rate will be capped (floored). The flag
+  is ignored for coupons other than overnight coupons.
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 
