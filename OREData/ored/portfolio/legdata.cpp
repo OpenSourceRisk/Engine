@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
@@ -992,6 +993,17 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
         boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer =
             boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
+
+        boost::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> cfCouponPricer;
+        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
+            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredAverageONIndexedCouponLeg");
+            QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
+            auto pricerBuilder = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(builder);
+            cfCouponPricer = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(
+                pricerBuilder->engine(index->currency()));
+            QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
+        }
+
         QuantExt::AverageONLeg leg =
             QuantExt::AverageONLeg(schedule, index)
                 .withNotionals(notionals)
@@ -1005,7 +1017,15 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withLookback(floatData->lookback())
                 .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff())
                 .withFixingDays(floatData->fixingDays())
-                .withAverageONIndexedCouponPricer(couponPricer);
+                .withCaps(buildScheduledVectorNormalised<Real>(floatData->caps(), floatData->capDates(), schedule,
+                                                               Null<Real>()))
+                .withFloors(buildScheduledVectorNormalised<Real>(floatData->floors(), floatData->capDates(), schedule,
+                                                                 Null<Real>()))
+                .withNakedOption(floatData->nakedOption())
+                .includeSpreadInCapFloors(floatData->includeSpread())
+                .withLocalCapFloor(floatData->localCapFloor())
+                .withAverageONIndexedCouponPricer(couponPricer)
+                .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer);
 
         return leg;
 

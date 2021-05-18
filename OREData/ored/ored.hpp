@@ -105,6 +105,7 @@
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>

@@ -29,6 +29,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+// average on indexed coupon implementation
+
 AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
                                                const Date& endDate,
                                                const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
@@ -110,9 +112,114 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
     }
 }
 
+// capped floored average on coupon implementation
+
+Rate CappedFlooredAverageONIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
+
+Rate CappedFlooredAverageONIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
+
+Rate CappedFlooredAverageONIndexedCoupon::rate() const {
+    QL_REQUIRE(underlying_->pricer(), "pricer not set");
+    Rate swapletRate = nakedOption_ ? 0.0 : underlying_->rate();
+    if (floor_ != Null<Real>() || cap_ != Null<Real>())
+        pricer()->initialize(*this);
+    Rate floorletRate = 0.;
+    if (floor_ != Null<Real>())
+        floorletRate = pricer()->floorletRate(effectiveFloor());
+    Rate capletRate = 0.;
+    if (cap_ != Null<Real>())
+        capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
+    return swapletRate + floorletRate - capletRate;
+}
+
+Rate CappedFlooredAverageONIndexedCoupon::convexityAdjustment() const { return underlying_->convexityAdjustment(); }
+
+Rate CappedFlooredAverageONIndexedCoupon::effectiveCap() const {
+    if (cap_ == Null<Real>())
+        return Null<Real>();
+    /* We have four cases dependent on localCapFloor_ and includeSpread. Notation in the formulas:
+       g         gearing,
+       s         spread,
+       A         coupon amount,
+       f_i       daily fixings,
+       \tau_i    daily accrual fractions,
+       \tau      coupon accrual fraction,
+       C         cap rate
+       F         floor rate
+    */
+    if (localCapFloor_) {
+        if (includeSpread()) {
+            // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau}
+            return cap_ - underlying_->spread();
+        } else {
+            // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s
+            return cap_;
+        }
+    } else {
+        if (includeSpread()) {
+            // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)
+            return (cap_ / gearing() - underlying_->spread());
+        } else {
+            // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)
+            return (cap_ - underlying_->spread()) / gearing();
+        }
+    }
+}
+
+Rate CappedFlooredAverageONIndexedCoupon::effectiveFloor() const {
+    if (floor_ == Null<Real>())
+        return Null<Real>();
+    if (localCapFloor_) {
+        if (includeSpread()) {
+            return floor_ - underlying_->spread();
+        } else {
+            return floor_;
+        }
+    } else {
+        if (includeSpread()) {
+            return (floor_ - underlying_->spread());
+        } else {
+            return (floor_ - underlying_->spread()) / gearing();
+        }
+    }
+}
+
+void CappedFlooredAverageONIndexedCoupon::update() { notifyObservers(); }
+
+void CappedFlooredAverageONIndexedCoupon::accept(AcyclicVisitor& v) {
+    Visitor<CappedFlooredAverageONIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredAverageONIndexedCoupon>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        FloatingRateCoupon::accept(v);
+}
+
+CappedFlooredAverageONIndexedCoupon::CappedFlooredAverageONIndexedCoupon(
+    const ext::shared_ptr<AverageONIndexedCoupon>& underlying, Real cap, Real floor, bool nakedOption,
+    bool localCapFloor, bool includeSpread)
+    : FloatingRateCoupon(underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
+                         underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
+                         underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
+                         underlying->referencePeriodEnd(), underlying->dayCounter(), false),
+      underlying_(underlying), cap_(cap), floor_(floor), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
+      includeSpread_(includeSpread) {}
+
+// capped floored average on coupon pricer base class implementation
+
+CapFlooredAverageONIndexedCouponPricer::CapFlooredAverageONIndexedCouponPricer(
+    const Handle<OptionletVolatilityStructure>& v)
+    : capletVol_(v) {}
+
+Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::capletVolatility() const {
+    return capletVol_;
+}
+
+// average on leg implementation
+
 AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
-      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()), inArrears_(true) {}
+      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()),
+      includeSpread_(false), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -179,6 +286,41 @@ AverageONLeg& AverageONLeg::withFixingDays(const Size fixingDays) {
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withCaps(Rate cap) {
+    caps_ = std::vector<Rate>(1, cap);
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withCaps(const std::vector<Rate>& caps) {
+    caps_ = caps;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withFloors(Rate floor) {
+    floors_ = std::vector<Rate>(1, floor);
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withFloors(const std::vector<Rate>& floors) {
+    floors_ = floors;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::includeSpreadInCapFloors(bool includeSpread) {
+    includeSpread_ = includeSpread;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withNakedOption(const bool nakedOption) {
+    nakedOption_ = nakedOption;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withLocalCapFloor(const bool localCapFloor) {
+    localCapFloor_ = localCapFloor;
+    return *this;
+}
+
 AverageONLeg& AverageONLeg::withInArrears(const bool inArrears) {
     inArrears_ = inArrears;
     return *this;
@@ -192,6 +334,12 @@ AverageONLeg& AverageONLeg::withLastRecentPeriod(const boost::optional<Period>& 
 AverageONLeg&
 AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withCapFlooredAverageONIndexedCouponPricer(
+    const boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer) {
+    capFlooredCouponPricer_ = couponPricer;
     return *this;
 }
 
@@ -265,7 +413,18 @@ AverageONLeg::operator Leg() const {
             if (couponPricer_) {
                 cpn->setPricer(couponPricer_);
             }
-            cashflows.push_back(cpn);
+            Real cap = detail::get(caps_, i, Null<Real>());
+            Real floor = detail::get(floors_, i, Null<Real>());
+            if (cap == Null<Real>() && floor == Null<Real>()) {
+                cashflows.push_back(cpn);
+            } else {
+                auto cfCpn = ext::make_shared<CappedFlooredAverageONIndexedCoupon>(cpn, cap, floor, nakedOption_,
+                                                                                   localCapFloor_, includeSpread_);
+                if (capFlooredCouponPricer_) {
+                    cfCpn->setPricer(capFlooredCouponPricer_);
+                }
+                cashflows.push_back(cfCpn);
+            }
         }
     }
     return cashflows;
