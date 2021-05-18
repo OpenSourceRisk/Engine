@@ -196,6 +196,7 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                          refPeriodStart, refPeriodEnd, dayCounter, false),
       includeSpread_(includeSpread), lookback_(lookback), rateCutoff_(rateCutoff),
       rateComputationStartDate_(rateComputationStartDate), rateComputationEndDate_(rateComputationEndDate) {
+
     Date valueStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
     Date valueEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
     if (lookback != 0 * Days) {
@@ -318,6 +319,10 @@ CappedFlooredOvernightIndexedCoupon::CappedFlooredOvernightIndexedCoupon(
                          underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                          underlying->referencePeriodEnd(), underlying->dayCounter(), false),
       underlying_(underlying), nakedOption_(nakedOption), localCapFloor_(localCapFloor) {
+
+    QL_REQUIRE(!underlying_->includeSpread() || close_enough(underlying_->gearing(), 1.0),
+               "CappedFlooredOvernightIndexedCoupon: if include spread = true, only a gearing 1.0 is allowed - scale "
+               "the notional in this case instead.");
 
     if (!localCapFloor) {
         if (gearing_ > 0.0) {

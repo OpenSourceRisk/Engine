@@ -202,7 +202,11 @@ CappedFlooredAverageONIndexedCoupon::CappedFlooredAverageONIndexedCoupon(
                          underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                          underlying->referencePeriodEnd(), underlying->dayCounter(), false),
       underlying_(underlying), cap_(cap), floor_(floor), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
-      includeSpread_(includeSpread) {}
+      includeSpread_(includeSpread) {
+    QL_REQUIRE(!includeSpread_ || close_enough(underlying_->gearing(), 1.0),
+               "CappedFlooredAverageONIndexedCoupon: if include spread = true, only a gearing 1.0 is allowed - scale "
+               "the notional in this case instead.");
+}
 
 // capped floored average on coupon pricer base class implementation
 
