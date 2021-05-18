@@ -87,7 +87,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         bool isOnIndex = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
         bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
 
-        if (!isBmaIndex && !(isOnIndex && floatData->isAveraged()) && !floatData->hasSubPeriods()) {
+        if (!isBmaIndex && !isOnIndex && !floatData->hasSubPeriods()) {
             // For the cases where we support caps and floors in the regular way, we build a floating leg with
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
