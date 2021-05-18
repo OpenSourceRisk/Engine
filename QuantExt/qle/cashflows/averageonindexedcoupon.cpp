@@ -373,7 +373,7 @@ AverageONLeg::operator Leg() const {
         // In addition, adjust the start date, if a last recent period is given.
 
         Date rateComputationStartDate, rateComputationEndDate;
-        if (!inArrears_) {
+        if (inArrears_) {
             // in arrears fixing (i.e. the "classic" case)
             rateComputationStartDate = start;
             rateComputationEndDate = end;
