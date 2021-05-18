@@ -106,6 +106,10 @@ protected:
         return nullptr;
     };
 
+    virtual boost::shared_ptr<NPVCube> getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+                                                  const std::vector<Date>& dates, const Size samples,
+                                                  const Size depth) const;
+
     virtual boost::shared_ptr<DynamicInitialMarginCalculator>
     getDimCalculator(const boost::shared_ptr<NPVCube>& cube,
                      const boost::shared_ptr<CubeInterpretation>& cubeInterpreter,
