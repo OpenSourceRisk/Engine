@@ -558,6 +558,14 @@ OvernightLeg::operator Leg() const {
     Leg cashflows;
 
     Calendar calendar = schedule_.calendar();
+    Calendar paymentCalendar = paymentCalendar_;
+
+    if (calendar.empty())
+        calendar = paymentCalendar;
+    if (calendar.empty())
+        calendar = WeekendsOnly();
+    if (paymentCalendar.empty())
+        paymentCalendar = calendar;
 
     Date refStart, start, refEnd, end;
     Date paymentDate;
@@ -566,7 +574,7 @@ OvernightLeg::operator Leg() const {
     for (Size i = 0; i < n; ++i) {
         refStart = start = schedule_.date(i);
         refEnd = end = schedule_.date(i + 1);
-        paymentDate = paymentCalendar_.advance(end, paymentLag_, Days, paymentAdjustment_);
+        paymentDate = paymentCalendar.advance(end, paymentLag_, Days, paymentAdjustment_);
 
         // determine refStart and refEnd
 

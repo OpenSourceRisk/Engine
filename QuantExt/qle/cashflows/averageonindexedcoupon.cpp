@@ -218,7 +218,7 @@ Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::cap
 
 AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
-      paymentCalendar_(Calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()),
+      paymentCalendar_(schedule.calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()),
       includeSpread_(false), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
@@ -350,6 +350,14 @@ AverageONLeg::operator Leg() const {
     Leg cashflows;
 
     Calendar calendar = schedule_.calendar();
+    Calendar paymentCalendar = paymentCalendar_;
+
+    if (calendar.empty())
+        calendar = paymentCalendar;
+    if (calendar.empty())
+        calendar = WeekendsOnly();
+    if (paymentCalendar.empty())
+        paymentCalendar = calendar;
 
     Date refStart, start, refEnd, end;
     Date paymentDate;
@@ -358,7 +366,7 @@ AverageONLeg::operator Leg() const {
     for (Size i = 0; i < n; ++i) {
         refStart = start = schedule_.date(i);
         refEnd = end = schedule_.date(i + 1);
-        paymentDate = paymentCalendar_.advance(end, paymentLag_, Days, paymentAdjustment_);
+        paymentDate = paymentCalendar.advance(end, paymentLag_, Days, paymentAdjustment_);
 
         // determine refStart and refEnd
 
