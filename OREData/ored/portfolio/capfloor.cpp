@@ -84,7 +84,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        bool isOnIndex = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
         bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
 
         if (!isBmaIndex && !floatData->hasSubPeriods()) {
