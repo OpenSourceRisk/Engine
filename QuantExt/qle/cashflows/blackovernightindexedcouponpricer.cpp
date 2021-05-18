@@ -294,8 +294,8 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
                                             std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0);
         Real shift = capletVolatility()->displacement();
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
-        Rate fixing = shiftedLn ? blackFormula(optionType, effStrike, effectiveIndexFixing_, stdDev, 1.0, shift)
-                                : bachelierBlackFormula(optionType, effStrike, effectiveIndexFixing_, stdDev, 1.0);
+        Rate fixing = shiftedLn ? blackFormula(optionType, effStrike, swapletRate_, stdDev, 1.0, shift)
+                                : bachelierBlackFormula(optionType, effStrike, swapletRate_, stdDev, 1.0);
         return gearing_ * fixing;
     }
 }
@@ -306,6 +306,14 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
     // rawRate * tau * nominal is the amount of the coupon without capping / flooring the rate
     // We will then return the difference between rate and rawRate (with the correct sign, see below)
     // as the option component of the coupon.
+
+    // See CappedFlooredOvernightIndexedCoupon::effectiveCap(), Floor() for what is passed in as effStrike.
+    // From this we back out the absolute strike at which the
+    // - daily rate + spread (spread included) or the
+    // - daily rate (spread excluded)
+    // is capped / floored.
+
+    Real absStrike = coupon_->includeSpread() ? effStrike + coupon_->underlying()->spread() : effStrike;
 
     // This following code is inevitably quite similar to the plain ON coupon pricer code, possibly we can refactor
     // this, but as a first step it seems safer to add the full modifed code explicitly here and leave the original
@@ -323,7 +331,7 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
                                << ") must be less than number of fixings in period (" << n << ")");
     Size nCutoff = n - coupon_->underlying()->rateCutoff();
 
-    Real accumulatedRate = 1.0, accumulatedRateRaw = 0.0;
+    Real accumulatedRate = 0.0, accumulatedRateRaw = 0.0;
 
     // already fixed part
     Date today = Settings::instance().evaluationDate();
@@ -335,8 +343,8 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
         if (coupon_->includeSpread()) {
             pastFixing += coupon_->spread();
         }
-        accumulatedRate += cappedFlooredRate(pastFixing, optionType, effStrike) * dt[i];
-        accumulatedRateRaw *= 1.0 + pastFixing * dt[i];
+        accumulatedRate += cappedFlooredRate(pastFixing, optionType, absStrike) * dt[i];
+        accumulatedRateRaw += pastFixing * dt[i];
         ++i;
     }
 
@@ -349,8 +357,8 @@ Real BlackAverageONIndexedCouponPricer::optionletRateLocal(Option::Type optionTy
                 if (coupon_->includeSpread()) {
                     pastFixing += coupon_->spread();
                 }
-                accumulatedRate += cappedFlooredRate(pastFixing, optionType, effStrike) * dt[i];
-                accumulatedRateRaw *= pastFixing * dt[i];
+                accumulatedRate += cappedFlooredRate(pastFixing, optionType, absStrike) * dt[i];
+                accumulatedRateRaw += pastFixing * dt[i];
                 ++i;
             } else {
                 ; // fall through and forecast
