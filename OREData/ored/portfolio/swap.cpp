@@ -59,9 +59,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     isXCCY_ = false;
     isResetting_ = false;
 
-    // use the build time as of date to determine current notionals
-    Date asof = Settings::instance().evaluationDate();
-
     for (Size i = 0; i < numLegs; ++i) {
         // allow minor currencies for Equity legs as some exchanges trade in these, e.g LSE in pence - GBX or GBp
         // minor currencies on other legs will fail here
@@ -83,23 +80,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
         legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
-
-        string legID = to_string(i);
-        additionalData_["legDataType_" + legID] = legData_[i].legType();
-        additionalData_["notionalCurrency_" + legID] = legData_[i].currency();
-
-        for (Size j = 0; j < legs_[i].size(); ++j) {
-            boost::shared_ptr<CashFlow> flow = legs_[i][j];
-            // pick flow with earliest payment date on this leg
-            if (flow->date() > asof) {
-                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-                if (coupon)
-                    additionalData_["notional_" + legID] = coupon->nominal();
-                else
-                    additionalData_["notional_" + legID] = flow->amount();
-                break;
-            }
-        }
         
         // add notional leg, if appicable
         auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
@@ -188,6 +168,32 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             maturity_ = std::max(maturity_, l.back()->date());
     }
 
+}
+
+const std::map<std::string,boost::any>& Swap::additionalData() const {
+    Size numLegs = legData_.size();
+    // use the build time as of date to determine current notionals
+    Date asof = Settings::instance().evaluationDate();
+    for (Size i = 0; i < numLegs; ++i) {
+        string legID = to_string(i);
+        additionalData_["legDataType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
+        for (Size j = 0; j < legs_[i].size(); ++j) {
+            boost::shared_ptr<CashFlow> flow = legs_[i][j];
+            // pick flow with earliest payment date on this leg
+            if (flow->date() > asof) {
+                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+                if (coupon)
+                    additionalData_["notional[" + legID + "]"] = coupon->nominal();
+                else {
+                    WLOG("trade " << id() << " leg " << i << " does not provide coupons, report flow amount as notional");
+                    additionalData_["notional[" + legID + "]"] = flow->amount();
+                }
+                break;
+            }
+        }
+    }
+    return additionalData_;
 }
 
 QuantLib::Real Swap::notional() const {

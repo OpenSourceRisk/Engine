@@ -115,33 +115,8 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     notionalCurrency_ = legCurrencies_[equityLegIndex_];
 
+    // just underlying security, notionals and currencies are covered by the Swap class already
     additionalData_["underlyingSecurityId"] = eqLegData->eqName();
-    additionalData_["notionalTwoCurrency"] = legData_[irLegIndex_].currency();
-    additionalData_["notionalCurrency"] = legData_[equityLegIndex_].currency();
-
-    // use the build time as of date to determine current notionals
-    Date asof = Settings::instance().evaluationDate();
-    // current notional (equity leg)
-    for (Size j = 0; j < legs_[equityLegIndex_].size(); ++j) {
-        boost::shared_ptr<CashFlow> flow = legs_[equityLegIndex_][j];
-        // pick flow with earliest payment date on this leg
-        if (flow->date() > asof) {
-            additionalData_["notional"] = flow->amount();
-            break;
-        }
-    }
-    // current notional 2 (rate leg)
-    for (Size j = 0; j < legs_[irLegIndex_].size(); ++j) {
-        boost::shared_ptr<CashFlow> flow = legs_[irLegIndex_][j];
-        // pick flow with earliest payment date on this leg
-        if (flow->date() > asof) {
-            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
-            QL_REQUIRE(coupon, "equity swap rate leg flow is not a coupon");
-            additionalData_["notionalTwo"] = coupon->nominal();
-            break;
-        }
-    }
-
 }
 
 QuantLib::Real EquitySwap::notional() const {
