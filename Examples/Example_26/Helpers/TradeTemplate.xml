@@ -52,7 +52,6 @@
 		  <Spreads>
 			<Spread>0.000000</Spread>
 		  </Spreads>
-		  <IsInArrears>false</IsInArrears>
 		  <FixingDays>0</FixingDays>
 		</FloatingLegData>
 		<ScheduleData>
@@ -130,7 +129,6 @@
 		  <Spreads>
 			<Spread>0.000000</Spread>
 		  </Spreads>
-		  <IsInArrears>false</IsInArrears>
 		  <FixingDays>0</FixingDays>
 		</FloatingLegData>
 		<ScheduleData>
@@ -166,7 +164,6 @@
 		  <Spreads>
 			<Spread>0.000000</Spread>
 		  </Spreads>
-		  <IsInArrears>false</IsInArrears>
 		  <FixingDays>0</FixingDays>
 		</FloatingLegData>
 		<ScheduleData>
