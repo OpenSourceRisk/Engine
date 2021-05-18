@@ -988,19 +988,15 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
     if (floatData->isAveraged()) {
 
-        if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
-            QL_FAIL("Caps and floors are not supported for OIS averaged legs");
-
         boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer =
             boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
 
         boost::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> cfCouponPricer;
         if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
-            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredAverageONIndexedCouponLeg");
+            auto builder = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(engineFactory->builder("CapFlooredAverageONIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
-            auto pricerBuilder = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(builder);
-            cfCouponPricer = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(
-                pricerBuilder->engine(index->currency()));
+            cfCouponPricer =
+                boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(builder->engine(index->currency()));
             QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
         }
 
@@ -1026,11 +1022,9 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withLocalCapFloor(floatData->localCapFloor())
                 .withAverageONIndexedCouponPricer(couponPricer)
                 .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer);
-
         return leg;
 
     } else {
-
         Leg leg = QuantExt::OvernightLeg(schedule, index)
                       .withNotionals(notionals)
                       .withSpreads(spreads)
@@ -1059,10 +1053,10 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
         // if we have caps / floors, we need a pricer for that
         if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
-            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredOvernightIndexedCouponLeg");
+            auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
+                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
-            auto pricerBuilder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(builder);
-            boost::shared_ptr<FloatingRateCouponPricer> pricer = pricerBuilder->engine(index->currency());
+            auto pricer = builder->engine(index->currency());
             QuantExt::setCouponPricer(leg, pricer);
         }
 

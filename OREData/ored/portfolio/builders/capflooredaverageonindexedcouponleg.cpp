@@ -36,7 +36,7 @@ CapFlooredAverageONIndexedCouponLegEngineBuilder::engineImpl(const Currency& ccy
         QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
         Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(ccyCode, configuration(MarketContext::pricing));
         boost::shared_ptr<FloatingRateCouponPricer> pricer =
-            boost::make_shared<QuantExt::BlackOvernightIndexedCouponPricer>(ovs);
+            boost::make_shared<QuantExt::BlackAverageONIndexedCouponPricer>(ovs);
         engines_[ccyCode] = pricer;
     }
 
