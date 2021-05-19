@@ -76,7 +76,8 @@ public:
                            Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
                            const DayCounter& dayCounter = DayCounter(), bool telescopicValueDates = false,
                            bool includeSpread = false, const Period& lookback = 0 * Days, const Natural rateCutoff = 0,
-                           const Natural fixingDays = Null<Size>());
+                           const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Null<Date>(),
+                           const Date& rateComputationEndDate = Null<Date>());
     //! \name Inspectors
     //@{
     //! fixing dates for the rates to be compounded
@@ -118,6 +119,7 @@ private:
     bool includeSpread_;
     Period lookback_;
     Natural rateCutoff_;
+    Date rateComputationStartDate_, rateComputationEndDate_;
 };
 
 //! capped floored overnight indexed coupon
@@ -204,6 +206,8 @@ public:
     OvernightLeg& withFloors(const std::vector<Rate>& floors);
     OvernightLeg& withNakedOption(const bool nakedOption);
     OvernightLeg& withLocalCapFloor(const bool localCapFloor);
+    OvernightLeg& withInArrears(const bool inArrears);
+    OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
     operator Leg() const;
 
 private:
@@ -224,6 +228,8 @@ private:
     std::vector<Rate> caps_, floors_;
     bool nakedOption_;
     bool localCapFloor_;
+    bool inArrears_;
+    boost::optional<Period> lastRecentPeriod_;
 };
 
 } // namespace QuantExt

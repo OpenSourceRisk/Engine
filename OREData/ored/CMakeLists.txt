@@ -88,6 +88,7 @@ model/utilities.cpp
 portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
+portfolio/builders/capflooredaverageonindexedcouponleg.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/cms.cpp
@@ -261,6 +262,7 @@ portfolio/bondutils.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
+portfolio/builders/capflooredaverageonindexedcouponleg.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capflooredovernightindexedcouponleg.hpp
