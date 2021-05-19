@@ -1913,14 +1913,14 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
         recovery =
             engineFactory->market()->recoveryRate(securityId, engineFactory->configuration(MarketContext::pricing));
     } catch (...) {
-        ALOG("security specific recovery rate not found for security ID "
+        WLOG("security specific recovery rate not found for security ID "
              << securityId << ", falling back on the recovery rate for credit curve Id " << data.creditCurveId());
         if (!data.creditCurveId().empty())
             recovery = engineFactory->market()->recoveryRate(data.creditCurveId(),
                                                              engineFactory->configuration(MarketContext::pricing));
     }
 
-    Handle<Quote> spread;
+    Handle<Quote> spread(boost::make_shared<SimpleQuote>(0.0));
     try {
         spread =
             engineFactory->market()->securitySpread(securityId, engineFactory->configuration(MarketContext::pricing));

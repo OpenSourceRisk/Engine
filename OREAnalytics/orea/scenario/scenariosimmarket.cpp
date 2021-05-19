@@ -531,9 +531,9 @@ ScenarioSimMarket::ScenarioSimMarket(
 
             case RiskFactorKey::KeyType::SecuritySpread:
                 for (const auto& name : param.second.second) {
+                    // security spreads and recovery rates are optional
                     try {
                         DLOG("Adding security spread " << name << " from configuration " << configuration);
-                        // we have a security spread for each security, so no try-catch block required
                         boost::shared_ptr<SimpleQuote> spreadQuote(
                             new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
                         if (param.second.first) {
@@ -542,27 +542,25 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(
                             make_pair(Market::defaultConfiguration, name), Handle<Quote>(spreadQuote)));
-
-                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
-                        // security recovery rates are optional, so we need a try-catch block
-                        try {
-                            boost::shared_ptr<SimpleQuote> recoveryQuote(
-                                new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
-                            // TODO this comes from the default curves section in the parameters,
-                            // do we want to specify the simulation of security recovery rates separately?
-                            if (parameters->simulateRecoveryRates()) {
-                                simDataTmp.emplace(std::piecewise_construct,
-                                                   std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
-                                                   std::forward_as_tuple(recoveryQuote));
-                            }
-                            recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
-                                make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
-                        } catch (const std::exception& e) {
-                            // security recovery rates are optional, therefore we never throw
-                            ALOG("skipping this object: " << e.what());
-                        }
                     } catch (const std::exception& e) {
-                        processException(continueOnError, e, name);
+                        DLOG("skipping this object: " << e.what());
+                    }
+
+                    try {
+                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+                        boost::shared_ptr<SimpleQuote> recoveryQuote(
+                            new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+                        // TODO this comes from the default curves section in the parameters,
+                        // do we want to specify the simulation of security recovery rates separately?
+                        if (parameters->simulateRecoveryRates()) {
+                            simDataTmp.emplace(std::piecewise_construct,
+                                               std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                                               std::forward_as_tuple(recoveryQuote));
+                        }
+                        recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
+                            make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
                     }
                 }
                 break;
