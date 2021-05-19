@@ -175,8 +175,9 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < numLegs; ++i) {
-        string legID = to_string(i);
+        string legID = to_string(i+1);
         additionalData_["legDataType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
         for (Size j = 0; j < legs_[i].size(); ++j) {
             boost::shared_ptr<CashFlow> flow = legs_[i][j];
@@ -186,7 +187,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 if (coupon)
                     additionalData_["notional[" + legID + "]"] = coupon->nominal();
                 else {
-                    WLOG("trade " << id() << " leg " << i << " does not provide coupons, report flow amount as notional");
+                    WLOG("trade " << id() << " leg " << i << " does not provide coupons, reporting flow amount as notional in additional results");
                     additionalData_["notional[" + legID + "]"] = flow->amount();
                 }
                 break;
