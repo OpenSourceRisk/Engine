@@ -1157,7 +1157,7 @@ Examples:
         Quote Type & \emph{RATE\_LNVOL} & \\ \hline
         Name & String & Identifying name of the commodity \\ \hline
         Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the commodity \\ \hline
-        Expiry & Date string, or integer followed by D, W, M or Y or continuation notation c1, c2, etc & Expiry of the volatility quote, for continuation notation the number indicates number of month to expiry, e.g. c1 is next month \\ \hline
+        Expiry & Date string, or integer followed by D, W, M or Y or continuation notation c1, c2, etc & Expiry of the volatility quote, for continuation notation c1 indicates the next expiry, c2 the one after that, etc.  \\ \hline
         \makecell[tl]{Vol Quote Type, \\ or Absolute Strike}  & \makecell[tl]{{\tt DEL}, {\tt ATM} or {\tt MNY} \\ or a {\tt Real} for absolute strikes} & \makecell[tl]{{\tt DEL} is for delta quotes, i.e. the volatility is \\ for a call or put option with a given delta. \\ {\tt ATM} is for At-The-Money volatility quotes. \\ {\tt MNY} is for volatility smile quotes for given \\ relative moneyness levels. \\ Each Vol Quote Type is described further \\ in sub-tables below.\\ Note that instead of a Vol Quote Type, an \\ absolute strike level can be entered}\\ \hline
 	\end{tabular}
 	\caption{Commodity Option Implied Volatility - Root table}

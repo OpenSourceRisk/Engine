@@ -73,8 +73,9 @@ public:
         const bool nonShiftedBaseCurrencyConversion = false,
         std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
         std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, const bool continueOnError = false,
-        bool xccyDiscounting = false, bool analyticFxSensis = false);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const bool continueOnError = false, bool xccyDiscounting = false, bool analyticFxSensis = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -154,6 +155,7 @@ protected:
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)

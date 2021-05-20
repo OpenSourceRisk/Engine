@@ -84,16 +84,15 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        bool isOnIndex = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
         bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
 
-        if (!isBmaIndex && !(isOnIndex && floatData->isAveraged()) && !floatData->hasSubPeriods()) {
+        if (!isBmaIndex && !floatData->hasSubPeriods()) {
             // For the cases where we support caps and floors in the regular way, we build a floating leg with
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
             // Supported cases are
             // - Ibor coupon without sub periods (hasSubPeriods = false)
-            // - compounded ON coupon (isAveraged = false)
+            // - compounded ON coupon, averaged ON coupon
             // The other cases are handled below.
             LegData tmpLegData = legData_;
             boost::shared_ptr<FloatingLegData> tmpFloatData = boost::make_shared<FloatingLegData>(*floatData);
@@ -117,7 +116,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // index and build an QuantLib::CapFloor with associated pricing engine. These cases comprise:
             // - BMA coupons
             // - Ibor coupons with sub periods (hasSubPeriods = true)
-            // - averaged ON coupons (isAveraged = true)
 
             ALOG("CapFloor trade " << id()
                                    << " on a) BMA or b) sub periods Ibor or c) averaged ON underlying (index = '"
@@ -401,8 +399,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // add required fixings
     if (!qlIndexName.empty() && !underlyingIndex.empty()) {
-        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_,
-                                                        std::map<string, string>{{qlIndexName, underlyingIndex}});
+        std::map<string, string> indexNameMapper = {{qlIndexName, underlyingIndex}};
+        if (engineFactory->iborFallbackConfig().isIndexReplaced(underlyingIndex)) {
+            string rfrIndexName = engineFactory->iborFallbackConfig().fallbackData(underlyingIndex).rfrIndex;
+            // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
+            indexNameMapper[parseIborIndex(rfrIndexName)->name()] = rfrIndexName;
+        }
+        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_, indexNameMapper);
         for (auto const& l : legs_)
             addToRequiredFixings(l, fdg);
     }

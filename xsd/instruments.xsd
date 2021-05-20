@@ -193,6 +193,7 @@
       <xs:element type="xs:string" name="BondNotional" minOccurs="0"/>
       <xs:element type="xs:string" name="Payer" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="0"/>
+	  <xs:element type="bool" name="CreditRisk" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -272,6 +273,7 @@
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:string" name="LastRecentPeriod" minOccurs="0"/>
         <xs:element type="xs:nonNegativeInteger" name="FixingDays" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="Lookback" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:integer" name="RateCutoff" minOccurs="0" maxOccurs="1"/>
@@ -882,18 +884,30 @@
       <xs:element type="xs:nonNegativeInteger" name="CashSettlementDays" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:complexType name="auctionSettlementInformation">
+    <xs:all>
+      <xs:element type="date" name="AuctionSettlementDate"/>
+      <xs:element type="xs:float" name="AuctionFinalPrice"/>
+    </xs:all>
+  </xs:complexType>
 
   <xs:complexType name="creditDefaultSwapOptionData">
-    <xs:choice>
-      <xs:sequence>
-        <xs:element type="optionData" name="OptionData"/>
-        <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
-      </xs:sequence>
-      <xs:sequence>
-        <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
-        <xs:element type="optionData" name="OptionData"/>
-      </xs:sequence>
-    </xs:choice>
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
+      <xs:element type="xs:float" name="Strike" minOccurs="0"/>
+      <xs:element name="StrikeType" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Spread"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element type="bool" name="KnockOut" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Term" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="auctionSettlementInformation" name="AuctionSettlementInformation" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:simpleType name="tradeActionType">

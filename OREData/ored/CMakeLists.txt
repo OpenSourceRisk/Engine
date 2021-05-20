@@ -15,6 +15,7 @@ configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
 configuration/genericyieldvolcurveconfig.cpp
+configuration/iborfallbackconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
@@ -87,6 +88,7 @@ model/utilities.cpp
 portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
+portfolio/builders/capflooredaverageonindexedcouponleg.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/cms.cpp
@@ -176,6 +178,7 @@ configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
+configuration/iborfallbackconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
@@ -259,6 +262,7 @@ portfolio/bondutils.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
+portfolio/builders/capflooredaverageonindexedcouponleg.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capflooredovernightindexedcouponleg.hpp

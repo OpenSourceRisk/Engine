@@ -38,6 +38,7 @@
 #include <qle/cashflows/durationadjustedcmscoupontsrpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/fixedratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingannuitynominal.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
@@ -69,6 +70,7 @@
 #include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/escpi.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
@@ -134,6 +136,7 @@
 #include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
+#include <qle/instruments/crossccyfixfloatmtmresetswap.hpp>
 #include <qle/instruments/crossccyfixfloatswap.hpp>
 #include <qle/instruments/crossccyswap.hpp>
 #include <qle/instruments/currencyswap.hpp>
@@ -278,6 +281,7 @@
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/crosscurrencypricetermstructure.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
@@ -301,6 +305,7 @@
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 #include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
+#include <qle/termstructures/iborfallbackcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>

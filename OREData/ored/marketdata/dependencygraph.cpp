@@ -21,17 +21,17 @@
     \ingroup marketdata
 */
 
-#include <ored/marketdata/dependencygraph.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
+#include <ored/marketdata/dependencygraph.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace ore {
 namespace data {
 
- std::vector<std::string> getCorrelationTokens(const std::string& name){
+std::vector<std::string> getCorrelationTokens(const std::string& name) {
     // Look for & first as it avoids collisions with : which can be used in an index name
     // if it is not there we fall back on the old behaviour
     string delim;
@@ -47,7 +47,7 @@ namespace data {
 }
 
 void DependencyGraph::buildDependencyGraph(const std::string& configuration,
-                                            std::map<std::string, std::string>& buildErrors) {
+                                           std::map<std::string, std::string>& buildErrors) {
 
     LOG("Build dependency graph for TodaysMarket configuration " << configuration);
 
@@ -55,9 +55,9 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     IndexMap index = boost::get(boost::vertex_index, g);
 
     // add the vertices
-    std::set<MarketObject> t = getMarketObjectTypes();  //from todaysmarket parameter
+    std::set<MarketObject> t = getMarketObjectTypes(); // from todaysmarket parameter
 
-   for (auto const& o : t) {
+    for (auto const& o : t) {
         auto mapping = params_->mapping(o, configuration);
         for (auto const& m : mapping) {
             Vertex v = boost::add_vertex(g);
@@ -80,7 +80,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
         if (g[*v].curveSpec) {
             for (auto const& r :
-                curveConfigs_->requiredCurveIds(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID())) {
+                 curveConfigs_->requiredCurveIds(g[*v].curveSpec->baseType(), g[*v].curveSpec->curveConfigID())) {
                 for (auto const& cId : r.second) {
                     // avoid self reference
                     if (r.first == g[*v].curveSpec->baseType() && cId == g[*v].curveSpec->curveConfigID())
@@ -253,7 +253,8 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
         if (g[*v].obj == MarketObject::YieldCurve || g[*v].obj == MarketObject::DiscountCurve) {
             if (curveConfigs_->hasYieldCurveConfig(g[*v].curveSpec->curveConfigID())) {
-                boost::shared_ptr<YieldCurveConfig> config = curveConfigs_->yieldCurveConfig(g[*v].curveSpec->curveConfigID());
+                boost::shared_ptr<YieldCurveConfig> config =
+                    curveConfigs_->yieldCurveConfig(g[*v].curveSpec->curveConfigID());
                 vector<boost::shared_ptr<YieldCurveSegment>> segments = config->curveSegments();
                 for (auto s : segments) {
                     if (auto ccSegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(s)) {
@@ -263,15 +264,15 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                             std::string spot = ccSegment->spotRateID();
                             std::string foreignCcy;
                             auto spotDatum = parseMarketDatum(Date(), spot, Real());
-                            if (auto fxq = boost::dynamic_pointer_cast<FXSpotQuote>(spotDatum)) 
+                            if (auto fxq = boost::dynamic_pointer_cast<FXSpotQuote>(spotDatum))
                                 foreignCcy = ccy == fxq->unitCcy() ? fxq->ccy() : fxq->unitCcy();
-                            
+
                             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                                 if (*w != *v) {
                                     if (g[*w].obj == MarketObject::DiscountCurve && g[*w].name == foreignCcy) {
                                         g.add_edge(*v, *w);
-                                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
-                                            << g[*w]);
+                                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #"
+                                                                      << index[*w] << " " << g[*w]);
                                     }
                                 }
                             }
@@ -354,10 +355,37 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                                              ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
                                              configuration;
         }
+
+        // 7 Ibor fallback handling: an ibor index to replace depends on the fallback rfr index
+
+        if (g[*v].obj == MarketObject::IndexCurve) {
+            if (iborFallbackConfig_.isIndexReplaced(g[*v].name, asof_)) {
+                bool foundRfrIndex = false;
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v) {
+                        if (g[*w].obj == MarketObject::IndexCurve &&
+                            g[*w].name == iborFallbackConfig_.fallbackData(g[*v].name).rfrIndex) {
+                            g.add_edge(*v, *w);
+                            foundRfrIndex = true;
+                            TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
+                                                          << g[*w]);
+                        }
+                    }
+                    if (foundRfrIndex)
+                        break;
+                }
+                if (!foundRfrIndex)
+                    buildErrors[g[*v].mapping] = "did not find required rfr index '" +
+                                                 iborFallbackConfig_.fallbackData(g[*v].name).rfrIndex +
+                                                 "' for replaced ibor index '" + g[*v].name +
+                                                 "', is the rfr index configured in todays market parameters?";
+            }
+        }
     }
+
     DLOG("Dependency graph built with " << boost::num_vertices(g) << " vertices, " << boost::num_edges(g) << " edges.");
+
 } // TodaysMarket::buildDependencyGraph
 
-
-}//data
-}//ore
+} // namespace data
+} // namespace ore

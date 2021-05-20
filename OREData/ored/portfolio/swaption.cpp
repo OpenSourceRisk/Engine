@@ -115,9 +115,13 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // add required fixings, we add the required fixing for the underlying swap, which might be more
     // than actually required, i.e. we are conservative here
-    addToRequiredFixings(underlyingLeg_,
-                         boost::make_shared<FixingDateGetter>(
-                             requiredFixings_, std::map<string, string>{{underlyingIndexQlName_, underlyingIndex_}}));
+    std::map<string,string> indexNameMapper = {{underlyingIndexQlName_, underlyingIndex_}};
+    if (engineFactory->iborFallbackConfig().isIndexReplaced(underlyingIndex_)) {
+        string rfrIndexName = engineFactory->iborFallbackConfig().fallbackData(underlyingIndex_).rfrIndex;
+        // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
+        indexNameMapper[parseIborIndex(rfrIndexName)->name()] = rfrIndexName;
+    }
+    addToRequiredFixings(underlyingLeg_, boost::make_shared<FixingDateGetter>(requiredFixings_, indexNameMapper));
 }
 
 namespace {

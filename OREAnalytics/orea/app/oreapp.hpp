@@ -234,6 +234,7 @@ protected:
     boost::shared_ptr<Conventions> conventions_;
     boost::shared_ptr<TodaysMarketParameters> marketParameters_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
 
     boost::shared_ptr<ScenarioSimMarket> simMarket_; // sim market
     boost::shared_ptr<Portfolio> simPortfolio_;      // portfolio linked to sim market
