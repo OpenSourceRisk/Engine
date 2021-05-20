@@ -169,9 +169,7 @@ The meanings and allowable values of the elements in the \lstinline!Underlying! 
 
   \emph{Equity}: See \lstinline!Name! for equity trades in Table \ref{tab:equity_name}
 
-  \emph{FX}: A string on the form SOURCE-CCY1-CCY2, where SOURCE is \emph{ECB} (European Central Bank) for EUR pairs, \emph{TR20H} (Thomson Reuters 20H) for USD pairs and other fx-pairs,  \emph{PM} for precious metals, and \emph{OTHER} for fx-pairs not covered by \emph{ECB} or \emph{TR20H}. \\ For ECB CCY1 should always be EUR, and for \emph{TR20H} CCY1 should always be USD, except for
-  \emph{TR20H-GBP-USD}, \emph{TR20H-EUR-USD}, \emph{TR20H-AUD-USD} and \emph{TR20H-NZD-USD}. For the USD-EUR pair, \emph{TR20H} or ECB (ECB-EUR-USD) can be used. \\ See Table
-  \ref{tab:fxindex_data}, and note that the FX- prefix is not included in \lstinline!Name! as it is already included in \lstinline!Type!.
+  \emph{FX}: A string on the form SOURCE-CCY1-CCY2, where SOURCE is the FX fixing source, and the fixing is expressed as amount in CCY2 per one unit of CCY1.  See Table \ref{tab:fxindex_data}, and note that the FX- prefix is not included in \lstinline!Name! as it is already included in \lstinline!Type!.
 
  \emph{InterestRate}: Any valid interest rate index name, see Table \ref{tab:indices}
 
