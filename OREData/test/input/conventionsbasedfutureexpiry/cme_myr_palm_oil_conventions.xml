@@ -12,8 +12,8 @@
     <IsAveraging>true</IsAveraging>
     <ProhibitedExpiries>
       <Dates>
-        <Date convention="Following">2021-05-28</Date>
-        <Date convention="Following">2024-03-28</Date>
+        <Date convention="Following" forOption="false">2021-05-28</Date>
+        <Date convention="Following" forOption="false">2024-03-28</Date>
       </Dates>
     </ProhibitedExpiries>
   </CommodityFuture>
