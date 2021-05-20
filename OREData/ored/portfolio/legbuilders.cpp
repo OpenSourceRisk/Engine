@@ -212,10 +212,7 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::share
     applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index1->name()] = cmsSpreadData->swapIndex1();
     qlToOREIndexNames[index2->name()] = cmsSpreadData->swapIndex2();
-    addToRequiredFixings(result,
-                         boost::make_shared<FixingDateGetter>(
-                             requiredFixings, std::map<string, string>{{index1->name(), cmsSpreadData->swapIndex1()},
-                                                                       {index2->name(), cmsSpreadData->swapIndex2()}}));
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
 
