@@ -975,7 +975,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     Natural paymentLag = data.paymentLag();
     Calendar paymentCalendar;
     
-	if (data.paymentCalendar().empty())
+    if (data.paymentCalendar().empty())
         paymentCalendar = index->fixingCalendar();
     else
         paymentCalendar = parseCalendar(data.paymentCalendar());
@@ -989,7 +989,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     applyAmortization(notionals, data, schedule, false);
 
     if (floatData->isAveraged()) {
-		
+        
         if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
             QL_FAIL("Caps and floors are not supported for OIS averaged legs");
 
@@ -1061,6 +1061,12 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<Real> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
@@ -1071,7 +1077,8 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     AverageBMALeg leg = AverageBMALeg(schedule, index)
                             .withNotionals(notionals)
                             .withSpreads(spreads)
-                            .withPaymentDayCounter(dc) 
+                            .withPaymentDayCounter(dc)
+                            .withPaymentCalendar(paymentCalendar)
                             .withPaymentAdjustment(bdc)
                             .withGearings(gearings);
 
@@ -1345,8 +1352,14 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
     bool couponCapFloor = cmsData->caps().size() > 0 || cmsData->floors().size() > 0;
     bool nakedCapFloor = caps.size() > 0 || floors.size() > 0;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<double> spreads =
         ore::data::buildScheduledVectorNormalised(cmsData->spreads(), cmsData->spreadDates(), schedule, 0.0);
@@ -1361,6 +1374,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                         .withNotionals(notionals)
                         .withSpreads(spreads)
                         .withGearings(gearings)
+                        .withPaymentCalendar(paymentCalendar)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(bdc)
                         .withFixingDays(fixingDays)
@@ -1495,6 +1509,12 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsSpreadData->spreads(),
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);
     vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsSpreadData->gearings(),
@@ -1529,6 +1549,7 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
                                                   .withSpreads(spreads)
                                                   .withGearings(gearings)
                                                   .withPaymentDayCounter(dc)
+                                                  .withPaymentCalendar(paymentCalendar)
                                                   .withPaymentAdjustment(bdc)
                                                   .withFixingDays(fixingDays)
                                                   .inArrears(cmsSpreadData->isInArrears())
@@ -1574,6 +1595,12 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     bool isTotalReturn = eqLegData->returnType() == "Total";
     bool isAbsoluteReturn = eqLegData->returnType() == "Absolute";
     Real dividendFactor = eqLegData->dividendFactor();
@@ -1616,6 +1643,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withQuantity(eqLegData->quantity())
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
+                  .withPaymentCalendar(paymentCalendar)
                   .withPaymentLag(paymentLag)
                   .withTotalReturn(isTotalReturn)
                   .withAbsoluteReturn(isAbsoluteReturn)
