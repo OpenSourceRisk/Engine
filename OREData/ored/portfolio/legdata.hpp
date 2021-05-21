@@ -793,29 +793,38 @@ private:
 
 //! \name Utilities for building QuantLib Legs
 //@{
-Leg makeFixedLeg(const LegData& data);
-Leg makeZCFixedLeg(const LegData& data);
+Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement = Null<Date>());
+Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
-                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
+                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index,
-               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
-Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper);
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
                     const BusinessDayConvention paymentConvention, const Calendar paymentCalendar);
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
-               const boost::shared_ptr<EngineFactory>& engineFactory);
+               const boost::shared_ptr<EngineFactory>& engineFactory,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
-               const boost::shared_ptr<EngineFactory>& engineFactory);
+               const boost::shared_ptr<EngineFactory>& engineFactory,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
-               const vector<double>& floors = vector<double>(), const bool attachPricer = true);
+               const vector<double>& floors = vector<double>(), const bool attachPricer = true,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
-                     const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
+                     const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+                     const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
-                            const boost::shared_ptr<EngineFactory>& engineFactory);
+                            const boost::shared_ptr<EngineFactory>& engineFactory,
+                            const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve,
-                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
+                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+                  const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Real currentNotional(const Leg& leg);
 
 //@}
@@ -868,7 +877,8 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings);
+                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings,
+                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
 
 // template implementations
 

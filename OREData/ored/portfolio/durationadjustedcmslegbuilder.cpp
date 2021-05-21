@@ -34,14 +34,15 @@ namespace ore {
 namespace data {
 
 Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                                            RequiredFixings& requiredFixings, const string& configuration) const {
+                                            RequiredFixings& requiredFixings, const string& configuration,
+                                            const QuantLib::Date& openEndDateReplacement) const {
 
     auto cmsData = boost::dynamic_pointer_cast<DurationAdjustedCmsLegData>(data.concreteLegData());
     QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
 
     string indexName = cmsData->swapIndex();
     auto index = *engineFactory->market()->swapIndex(indexName, configuration);
-    Schedule schedule = makeSchedule(data.schedule());
+    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 

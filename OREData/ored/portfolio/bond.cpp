@@ -166,6 +166,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
+
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     Date issueDate = parseDate(bondData_.issueDate());
@@ -176,6 +178,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
+    std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", "", false, "");
+    Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
     std::vector<Leg> separateLegs;
     if (bondData_.zeroBond()) { // Zero coupon bond
@@ -186,7 +190,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
+            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+                                       openEndDateReplacement);
             separateLegs.push_back(leg);
         } // for coupons_
         Leg leg = joinLegs(separateLegs);

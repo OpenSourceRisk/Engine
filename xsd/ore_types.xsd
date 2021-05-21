@@ -767,7 +767,7 @@
         <xs:complexType>
           <xs:all>
             <xs:element type="date" name="StartDate"/>
-            <xs:element type="date" name="EndDate"/>
+            <xs:element type="date" name="EndDate" minOccurs="0"/>
             <xs:element type="xs:string" name="Tenor"/>
             <xs:element type="calendar" name="Calendar" minOccurs="0"/>
             <xs:element type="businessDayConvention" name="Convention"/>
