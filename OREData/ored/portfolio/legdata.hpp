@@ -451,6 +451,75 @@ private:
     static LegDataRegister<CMSLegData> reg_;
 };
 
+//! Serializable Digital CMS Leg Data
+/*!
+\ingroup tradedata
+*/
+class DigitalCMSLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    DigitalCMSLegData() : LegAdditionalData("DigitalCMS") {}
+    //! Constructor
+    DigitalCMSLegData(
+        const boost::shared_ptr<CMSLegData>& underlying, Position::Type callPosition = Position::Long,
+        bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+        const vector<string> callStrikeDates = vector<string>(), const vector<double> callPayoffs = vector<double>(),
+        const vector<string> callPayoffDates = vector<string>(), Position::Type putPosition = Position::Long,
+        bool isPutATMIncluded = false, const vector<double> putStrikes = vector<double>(),
+        const vector<string> putStrikeDates = vector<string>(), const vector<double> putPayoffs = vector<double>(),
+        const vector<string> putPayoffDates = vector<string>())
+        : LegAdditionalData("DigitalCMS"), underlying_(underlying), callPosition_(callPosition),
+          isCallATMIncluded_(isCallATMIncluded), callStrikes_(callStrikes), callStrikeDates_(callStrikeDates),
+          callPayoffs_(callPayoffs), callPayoffDates_(callPayoffDates), putPosition_(putPosition),
+          isPutATMIncluded_(isPutATMIncluded), putStrikes_(putStrikes), putStrikeDates_(putStrikeDates),
+          putPayoffs_(putPayoffs), putPayoffDates_(putPayoffDates) {
+        indices_ = underlying_->indices();
+    }
+
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<CMSLegData>& underlying() const { return underlying_; }
+
+    const Position::Type callPosition() const { return callPosition_; }
+    const bool isCallATMIncluded() const { return isCallATMIncluded_; }
+    const vector<double> callStrikes() const { return callStrikes_; }
+    const vector<double> callPayoffs() const { return callPayoffs_; }
+    const vector<string> callStrikeDates() const { return callStrikeDates_; }
+    const vector<string> callPayoffDates() const { return callPayoffDates_; }
+
+    const Position::Type putPosition() const { return putPosition_; }
+    const bool isPutATMIncluded() const { return isPutATMIncluded_; }
+    const vector<double> putStrikes() const { return putStrikes_; }
+    const vector<double> putPayoffs() const { return putPayoffs_; }
+    const vector<string> putStrikeDates() const { return putStrikeDates_; }
+    const vector<string> putPayoffDates() const { return putPayoffDates_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+private:
+    boost::shared_ptr<CMSLegData> underlying_;
+
+    Position::Type callPosition_;
+    bool isCallATMIncluded_;
+    vector<double> callStrikes_;
+    vector<string> callStrikeDates_;
+    vector<double> callPayoffs_;
+    vector<string> callPayoffDates_;
+
+    Position::Type putPosition_;
+    bool isPutATMIncluded_;
+    vector<double> putStrikes_;
+    vector<string> putStrikeDates_;
+    vector<double> putPayoffs_;
+    vector<string> putPayoffDates_;
+
+    static LegDataRegister<DigitalCMSLegData> reg_;
+};
+
 //! Serializable CMS Spread Leg Data
 /*!
 \ingroup tradedata
@@ -516,7 +585,7 @@ private:
     static LegDataRegister<CMSSpreadLegData> reg_;
 };
 
-//! Serializable CMS Spread Leg Data
+//! Serializable Digital CMS Spread Leg Data
 /*!
 \ingroup tradedata
 */
@@ -810,6 +879,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
                const vector<double>& floors = vector<double>(), const bool attachPricer = true);
+Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
+                      const boost::shared_ptr<EngineFactory>& engineFactory);
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
