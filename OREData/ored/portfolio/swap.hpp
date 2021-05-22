@@ -71,6 +71,8 @@ public:
     const vector<LegData>& legData() { return legData_; }
     //@}
 
+    const std::map<std::string,boost::any>& additionalData() const override;
+
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
     vector<LegData> legData_;
