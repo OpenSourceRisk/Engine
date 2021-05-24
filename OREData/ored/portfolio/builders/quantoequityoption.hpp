@@ -36,7 +36,7 @@ namespace data {
 class QuantoEquityEuropeanOptionEngineBuilder : public QuantoEuropeanOptionEngineBuilder {
 public:
     QuantoEquityEuropeanOptionEngineBuilder()
-        : QuantoEuropeanOptionEngineBuilder("BlackScholesMerton", {"QuantoEquityOption"}, AssetClass::EQ) {}
+        : QuantoEuropeanOptionEngineBuilder("BlackScholes", {"QuantoEquityOption"}, AssetClass::EQ) {}
 };
 
 } // namespace data
