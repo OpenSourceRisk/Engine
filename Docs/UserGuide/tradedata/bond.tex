@@ -12,6 +12,8 @@ bond are read from the reference data in this case using the SecurityId as a key
   Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
 \item BondNotional: The notional of the position in the reference bond, expressed in the currency of the bond\\
   Allowable Values: Any non-negative real number
+\item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. \\
+  Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.
 \end{itemize}
 
 in this case.
@@ -22,6 +24,7 @@ in this case.
     <BondData>
       <SecurityId>ISIN:XS0982710740</SecurityId>
       <BondNotional>100000000.0</BondNotional>
+      <CreditRisk>true</CreditRisk>
     </BondData>
 \end{minted}
 \caption{Bond Data}

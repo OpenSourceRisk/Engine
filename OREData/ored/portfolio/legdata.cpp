@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
@@ -36,14 +37,13 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/capflooredinflationcoupon.hpp>
+#include <ql/cashflows/digitalcmscoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
-#include <ql/cashflows/digitalcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/errors.hpp>
-#include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/version.hpp>
@@ -142,9 +142,13 @@ void FloatingLegData::fromXML(XMLNode* node) {
     // These are all optional
     spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
                                                                &parseReal);
-    isInArrears_ = isAveraged_ = hasSubPeriods_ = includeSpread_ = false;
+    isInArrears_ = boost::none;
+    lastRecentPeriod_ = boost::none;
+    isAveraged_ = hasSubPeriods_ = includeSpread_ = false;
     if (XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears"))
         isInArrears_ = parseBool(XMLUtils::getNodeValue(arrNode));
+    if (XMLNode* lrNode = XMLUtils::getChildNode(node, "LastRecentPeriod"))
+        lastRecentPeriod_ = parsePeriod(XMLUtils::getNodeValue(lrNode));
     if (XMLNode* avgNode = XMLUtils::getChildNode(node, "IsAveraged"))
         isAveraged_ = parseBool(XMLUtils::getNodeValue(avgNode));
     if (XMLNode* spNode = XMLUtils::getChildNode(node, "HasSubPeriods"))
@@ -182,7 +186,10 @@ void FloatingLegData::fromXML(XMLNode* node) {
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", index_);
-    XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
+    if (isInArrears_)
+        XMLUtils::addChild(doc, node, "IsInArrears", *isInArrears_);
+    if (lastRecentPeriod_)
+        XMLUtils::addChild(doc, node, "LastRecentPeriod", *lastRecentPeriod_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
     XMLUtils::addChild(doc, node, "HasSubPeriods", hasSubPeriods_);
     XMLUtils::addChild(doc, node, "IncludeSpread", includeSpread_);
@@ -348,6 +355,59 @@ void CMSLegData::fromXML(XMLNode* node) {
     else
         nakedOption_ = false;
 }
+
+XMLNode* DigitalCMSLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::appendNode(node, underlying_->toXML(doc));
+
+    if (callStrikes_.size() > 0) {
+        XMLUtils::addChild(doc, node, "CallPosition", to_string(callPosition_));
+        XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
+        XMLUtils::addChildren(doc, node, "CallStrikes", "Strike", callStrikes_);
+        XMLUtils::addChildren(doc, node, "CallPayoffs", "Payoff", callPayoffs_);
+    }
+
+    if (putStrikes_.size() > 0) {
+        XMLUtils::addChild(doc, node, "PutPosition", to_string(putPosition_));
+        XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
+        XMLUtils::addChildren(doc, node, "PutStrikes", "Strike", putStrikes_);
+        XMLUtils::addChildren(doc, node, "PutPayoffs", "Payoff", putPayoffs_);
+    }
+
+    return node;
+}
+
+LegDataRegister<DigitalCMSLegData> DigitalCMSLegData::reg_("DigitalCMS");
+
+void DigitalCMSLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+
+    XMLNode* underlyingNode = XMLUtils::getChildNode(node, "CMSLegData");
+    underlying_ = boost::make_shared<CMSLegData>();
+    underlying_->fromXML(underlyingNode);
+    indices_ = underlying_->indices();
+
+    callStrikes_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "CallStrikes", "Strike", "startDate",
+                                                                   callStrikeDates_, &parseReal);
+    if (callStrikes_.size() > 0) {
+        string cp = XMLUtils::getChildValue(node, "CallPosition", true);
+        callPosition_ = parsePositionType(cp);
+        isCallATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsCallATMIncluded", true);
+        callPayoffs_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "CallPayoffs", "Payoff", "startDate",
+                                                                       callPayoffDates_, &parseReal);
+    }
+
+    putStrikes_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "PutStrikes", "Strike", "startDate",
+                                                                  putStrikeDates_, &parseReal);
+    if (putStrikes_.size() > 0) {
+        string pp = XMLUtils::getChildValue(node, "PutPosition", true);
+        putPosition_ = parsePositionType(pp);
+        isPutATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsPutATMIncluded", true);
+        putPayoffs_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "PutPayoffs", "Payoff", "startDate",
+                                                                      putPayoffDates_, &parseReal);
+    }
+}
+
 
 XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
@@ -841,6 +901,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     vector<double> gearings =
         buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
     Size fixingDays = floatData->fixingDays() == Null<Size>() ? index->fixingDays() : floatData->fixingDays();
+    bool isInArrears = floatData->isInArrears() ? *floatData->isInArrears() : false;
 
     applyAmortization(notionals, data, schedule, true);
     // handle float annuity, which is not done in applyAmortization, for this we can only have one block
@@ -862,7 +923,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                     if (!floatData->hasSubPeriods()) {
                         coupon = boost::make_shared<IborCoupon>(paymentDate, notionals[i], schedule[i], schedule[i + 1],
                                                                 fixingDays, index, gearings[i], spreads[i], Date(),
-                                                                Date(), dc, floatData->isInArrears());
+                                                                Date(), dc, isInArrears);
                         coupon->setPricer(boost::make_shared<BlackIborCouponPricer>());
                     } else {
                         coupon = boost::make_shared<SubPeriodsCoupon>(
@@ -881,7 +942,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                     boost::shared_ptr<QuantExt::FloatingAnnuityCoupon> coupon =
                         boost::make_shared<QuantExt::FloatingAnnuityCoupon>(
                             annuity, underflow, coupons.back(), paymentDate, schedule[i], schedule[i + 1], fixingDays,
-                            index, gearings[i], spreads[i], Date(), Date(), dc, floatData->isInArrears());
+                            index, gearings[i], spreads[i], Date(), Date(), dc, isInArrears);
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
                 }
@@ -897,7 +958,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     if (floatData->hasSubPeriods()) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "SubPeriodsLegs does not support caps or floors");
-        QL_REQUIRE(!floatData->isInArrears(), "SubPeriodLegs do not support in aarears fixings");
+        QL_REQUIRE(!isInArrears, "SubPeriodLegs do not support in aarears fixings");
         Leg leg = SubPeriodsLeg(schedule, index)
                       .withNotionals(notionals)
                       .withPaymentDayCounter(dc)
@@ -916,12 +977,12 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                           .withPaymentDayCounter(dc)
                           .withPaymentAdjustment(bdc)
                           .withFixingDays(fixingDays)
-                          .inArrears(floatData->isInArrears())
+                          .inArrears(isInArrears)
                           .withGearings(gearings)
                           .withPaymentLag(data.paymentLag());
 
     // If no caps or floors or in arrears fixing, return the leg
-    if (!hasCapsFloors && !floatData->isInArrears())
+    if (!hasCapsFloors && !isInArrears)
         return iborLeg;
 
     // If there are caps or floors or in arrears fixing, add them and set pricer
@@ -973,16 +1034,24 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
         buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
+    bool isInArrears = floatData->isInArrears() ? *floatData->isInArrears() : true;
 
     applyAmortization(notionals, data, schedule, false);
 
     if (floatData->isAveraged()) {
 
-        if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
-            QL_FAIL("Caps and floors are not supported for OIS averaged legs");
-
         boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer =
             boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
+
+        boost::shared_ptr<QuantExt::CapFlooredAverageONIndexedCouponPricer> cfCouponPricer;
+        if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
+            auto builder = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(engineFactory->builder("CapFlooredAverageONIndexedCouponLeg"));
+            QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
+            cfCouponPricer =
+                boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(builder->engine(index->currency()));
+            QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
+        }
+
         QuantExt::AverageONLeg leg =
             QuantExt::AverageONLeg(schedule, index)
                 .withNotionals(notionals)
@@ -991,15 +1060,23 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(bdc)
                 .withPaymentLag(paymentLag)
+                .withInArrears(isInArrears)
+                .withLastRecentPeriod(floatData->lastRecentPeriod())
                 .withLookback(floatData->lookback())
                 .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff())
                 .withFixingDays(floatData->fixingDays())
-                .withAverageONIndexedCouponPricer(couponPricer);
-
+                .withCaps(buildScheduledVectorNormalised<Real>(floatData->caps(), floatData->capDates(), schedule,
+                                                               Null<Real>()))
+                .withFloors(buildScheduledVectorNormalised<Real>(floatData->floors(), floatData->capDates(), schedule,
+                                                                 Null<Real>()))
+                .withNakedOption(floatData->nakedOption())
+                .includeSpreadInCapFloors(floatData->includeSpread())
+                .withLocalCapFloor(floatData->localCapFloor())
+                .withAverageONIndexedCouponPricer(couponPricer)
+                .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer);
         return leg;
 
     } else {
-
         Leg leg = QuantExt::OvernightLeg(schedule, index)
                       .withNotionals(notionals)
                       .withSpreads(spreads)
@@ -1008,6 +1085,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                       .withPaymentCalendar(paymentCalendar)
                       .withPaymentLag(paymentLag)
                       .withGearings(gearings)
+                      .withInArrears(isInArrears)
+                      .withLastRecentPeriod(floatData->lastRecentPeriod())
                       .includeSpread(floatData->includeSpread())
                       .withLookback(floatData->lookback())
                       .withFixingDays(floatData->fixingDays())
@@ -1026,10 +1105,10 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
         // if we have caps / floors, we need a pricer for that
         if (attachPricer && (floatData->caps().size() > 0 || floatData->floors().size() > 0)) {
-            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredOvernightIndexedCouponLeg");
+            auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
+                engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
-            auto pricerBuilder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(builder);
-            boost::shared_ptr<FloatingRateCouponPricer> pricer = pricerBuilder->engine(index->currency());
+            auto pricer = builder->engine(index->currency());
             QuantExt::setCouponPricer(leg, pricer);
         }
 
@@ -1379,6 +1458,82 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                 s->registerWith(s->underlying());
         }
     }
+    return tmpLeg;
+}
+
+Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
+                            const boost::shared_ptr<EngineFactory>& engineFactory) {
+    auto digitalCmsData = boost::dynamic_pointer_cast<DigitalCMSLegData>(data.concreteLegData());
+    QL_REQUIRE(digitalCmsData, "Wrong LegType, expected DigitalCMS");
+
+    auto cmsData = boost::dynamic_pointer_cast<CMSLegData>(digitalCmsData->underlying());
+    QL_REQUIRE(cmsData, "Incomplete DigitalCms Leg, expected CMS data");
+
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsData->spreads(),
+                                                                       cmsData->spreadDates(), schedule, 0.0);
+    vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsData->gearings(),
+                                                                        cmsData->gearingDates(), schedule, 1.0);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    double eps = 1e-4;
+    vector<double> callStrikes = ore::data::buildScheduledVector(digitalCmsData->callStrikes(),
+                                                                 digitalCmsData->callStrikeDates(), schedule);
+
+    for (Size i = 0; i < callStrikes.size(); i++) {
+        if (std::fabs(callStrikes[i]) < eps / 2) {
+            callStrikes[i] = eps / 2;
+        }
+    }
+
+    vector<double> callPayoffs = ore::data::buildScheduledVector(digitalCmsData->callPayoffs(),
+                                                                 digitalCmsData->callPayoffDates(), schedule);
+
+    vector<double> putStrikes = ore::data::buildScheduledVector(digitalCmsData->putStrikes(),
+                                                                digitalCmsData->putStrikeDates(), schedule);
+    vector<double> putPayoffs = ore::data::buildScheduledVector(digitalCmsData->putPayoffs(),
+                                                                digitalCmsData->putPayoffDates(), schedule);
+
+    Size fixingDays = cmsData->fixingDays() == Null<Size>() ? swapIndex->fixingDays() : cmsData->fixingDays();
+
+    applyAmortization(notionals, data, schedule, false);
+
+    DigitalCmsLeg digitalCmsLeg = DigitalCmsLeg(schedule, swapIndex)
+                                                  .withNotionals(notionals)
+                                                  .withSpreads(spreads)
+                                                  .withGearings(gearings)
+                                                  .withPaymentDayCounter(dc)
+                                                  .withPaymentAdjustment(bdc)
+                                                  .withFixingDays(fixingDays)
+                                                  .inArrears(cmsData->isInArrears())
+                                                  .withCallStrikes(callStrikes)
+                                                  .withLongCallOption(digitalCmsData->callPosition())
+                                                  .withCallATM(digitalCmsData->isCallATMIncluded())
+                                                  .withCallPayoffs(callPayoffs)
+                                                  .withPutStrikes(putStrikes)
+                                                  .withLongPutOption(digitalCmsData->putPosition())
+                                                  .withPutATM(digitalCmsData->isPutATMIncluded())
+                                                  .withPutPayoffs(putPayoffs)
+                                                  .withReplication(boost::make_shared<DigitalReplication>())
+                                                  .withNakedOption(cmsData->nakedOption());
+
+    if (cmsData->caps().size() > 0 || cmsData->floors().size() > 0)
+        QL_FAIL("caps/floors not supported in DigitalCMSOptions");
+
+    // Get a coupon pricer for the leg
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
+    QL_REQUIRE(builder, "No CMS builder found for CmsLeg");
+    boost::shared_ptr<CmsCouponPricerBuilder> cmsBuilder =
+        boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
+    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(swapIndex->currency()));
+    QL_REQUIRE(cmsPricer, "Expected CMS Pricer");
+
+    // Loop over the coupons in the leg and set pricer
+    Leg tmpLeg = digitalCmsLeg;
+    QuantLib::setCouponPricer(tmpLeg, cmsPricer);
+
     return tmpLeg;
 }
 
@@ -1913,14 +2068,14 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
         recovery =
             engineFactory->market()->recoveryRate(securityId, engineFactory->configuration(MarketContext::pricing));
     } catch (...) {
-        ALOG("security specific recovery rate not found for security ID "
+        WLOG("security specific recovery rate not found for security ID "
              << securityId << ", falling back on the recovery rate for credit curve Id " << data.creditCurveId());
         if (!data.creditCurveId().empty())
             recovery = engineFactory->market()->recoveryRate(data.creditCurveId(),
                                                              engineFactory->configuration(MarketContext::pricing));
     }
 
-    Handle<Quote> spread;
+    Handle<Quote> spread(boost::make_shared<SimpleQuote>(0.0));
     try {
         spread =
             engineFactory->market()->securitySpread(securityId, engineFactory->configuration(MarketContext::pricing));

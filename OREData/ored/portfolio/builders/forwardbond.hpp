@@ -87,7 +87,7 @@ protected:
             recovery = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
         } catch (...) {
             // otherwise fall back on curve recovery
-            ALOG("security specific recovery rate not found for security ID "
+            WLOG("security specific recovery rate not found for security ID "
                  << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
             if (!creditCurveId.empty())
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
@@ -98,7 +98,6 @@ protected:
             // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
             bondSpread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
         } catch (...) {
-            WLOG(StructuredTradeErrorMessage(id, "ForwardBond", "no security spread is given - using 0.0"));
         }
         return boost::make_shared<QuantExt::DiscountingForwardBondEngine>(discountTS, incomeTS, yts, bondSpread, dpts,
                                                                           recovery, tsperiod);

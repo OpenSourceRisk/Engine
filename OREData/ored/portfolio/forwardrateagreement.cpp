@@ -16,9 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <iostream>
 #include <ored/portfolio/forwardrateagreement.hpp>
+
+#include <qle/indexes/fallbackiborindex.hpp>
+
 #include <ql/instruments/forwardrateagreement.hpp>
+
 using namespace QuantLib;
 using namespace std;
 
@@ -45,6 +48,11 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     notionalCurrency_ = currency_;
     // the QL instrument reads the fixing in setupExpired() (bug?), so we don't add a payment date here to be safe
     requiredFixings_.addFixingDate(fra->fixingDate(), index_);
+    // add required fixings for an Ibor fallback index
+    if (auto fallback = boost::dynamic_pointer_cast<QuantExt::FallbackIborIndex>(*index)) {
+        requiredFixings_.addFixingDates(fallback->onCoupon(fra->fixingDate())->fixingDates(),
+                                        engineFactory->iborFallbackConfig().fallbackData(index_).rfrIndex);
+    }
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {

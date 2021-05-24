@@ -40,7 +40,6 @@
             <Spread>0.000188</Spread>
           </Spreads>
           <IsAveraged>true</IsAveraged>
-          <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
@@ -112,7 +111,6 @@
             <Spread>0.000188</Spread>
           </Spreads>
           <IsAveraged>true</IsAveraged>
-          <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>

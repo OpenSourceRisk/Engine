@@ -1,0 +1,70 @@
+\subsubsection{Digital CMS Leg Data}
+\label{ss:digitalcmslegdata}
+
+Listing \ref{lst:digitalcmslegdata} shows an example for a leg of type \emph{DigitalCMS}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>DigitalCMS</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          ...
+        </ScheduleData>
+        <DigitalCMSLegData>
+          <CMSLegData>
+            <Index>EUR-CMS-10Y</Index>
+            <FixingDays>2</FixingDays>
+            <Gearings>
+              <Gearing>3.0</Gearing>
+            </Gearings>
+            <Spreads>
+              <Spread>0.0010</Spread>
+            </Spreads>
+            <NakedOption>false</NakedOption>
+          </CMSLegData>
+          <CallPosition>Long</CallPosition>
+          <IsCallATMIncluded>false</IsCallATMIncluded>
+          <CallStrikes>
+            <Strike>0.003</Strike>
+          </CallStrikes>
+          <CallPayoffs>
+            <Payoff>0.003</Payoff>
+          </CallPayoffs>
+          <PutPosition>Short</PutPosition>
+          <IsPutATMIncluded>false</IsPutATMIncluded>
+          <PutStrikes>
+            <Strike>0.05</Strike>
+          </PutStrikes>
+          <PutPayoffs>
+            <Payoff>0.05</Payoff>
+          </PutPayoffs>
+        </DigitalCMSLegData>
+      </LegData>
+\end{minted}
+\caption{Digital CMS leg data}
+\label{lst:digitalcmslegdata}
+\end{listing}
+
+The \lstinline!DigitalCMSLegData! block contains the following elements:
+
+\begin{itemize}
+\item CMSLegData: a \lstinline!CMSLegData! block describing the underlying Digital CMS leg (see \ref{ss:cmslegdata}).
+Caps and floors in the underlying CMS leg are not supported for Digital CMS Options. The \lstinline!NakedOption! flag in the
+\lstinline!CMSLegData! block is supported and can be used to separate the digital option payoff from the underlying CMS coupon.
+\item CallPosition: Specifies whether the call option position is long or short.
+\item IsCallATMIncluded: inclusion flag on the call payoff if the call option ends at-the-money
+\item CallStrikes: strike rate for the the call option
+\item CallPayoffs: digital call option payoff rate. If included the option is cash-or-nothing, if excluded the option is asset-or-nothing
+\item PutPosition: Specifies whether the put option position is long  or short.
+\item IsPutATMIncluded: inclusion flag on the put payoff if the put option ends at-the-money
+\item PutStrikes: strike rate for the the put option
+\item PutPayoffs: digital put option payoff rate. If included the option is cash-or-nothing, if excluded the option is asset-or-nothing
+\end{itemize}

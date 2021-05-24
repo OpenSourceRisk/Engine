@@ -73,11 +73,6 @@ public:
 
     using FixingMap = std::map<boost::shared_ptr<Index>, std::set<Date>, detail::IndexComparator>;
 
-    struct CashflowHandler {
-        virtual ~CashflowHandler() {}
-        virtual bool processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c, FixingMap& fixingMap) = 0;
-    };
-
 private:
     void applyFixings(Date start, Date end);
 
@@ -88,20 +83,36 @@ private:
 
     FixingMap fixingMap_;
     FixingCache fixingCache_;
+};
 
-    template <typename T> friend struct CashflowHandlerRegister;
-    static std::set<boost::shared_ptr<CashflowHandler>> additionalCashflowHandlers_;
+//! Base class for cashflow handlers
+struct FixingManagerCashflowHandler {
+    virtual ~FixingManagerCashflowHandler() {}
+    virtual bool processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c,
+                                 FixingManager::FixingMap& fixingMap) = 0;
 };
 
 //! Standard cashflow handler for ORE cashflow types
-struct StandardCashflowHandler : public FixingManager::CashflowHandler {
+struct StandardFixingManagerCashflowHandler : public FixingManagerCashflowHandler {
     virtual bool processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c,
                                  FixingManager::FixingMap& fixingMap) override;
 };
 
+//! Cashflow handler factory
+class FixingManagerCashflowHandlerFactory : public QuantLib::Singleton<FixingManagerCashflowHandlerFactory> {
+    friend class QuantLib::Singleton<FixingManagerCashflowHandlerFactory>;
+    std::set<boost::shared_ptr<FixingManagerCashflowHandler>> handlers_;
+
+public:
+    const std::set<boost::shared_ptr<FixingManagerCashflowHandler>>& handlers() const;
+    void addHandler(const boost::shared_ptr<FixingManagerCashflowHandler>& handler);
+};
+
 //! Cashflow handler register class
-template <typename T> struct CashflowHandlerRegister {
-    CashflowHandlerRegister<T>() { FixingManager::additionalCashflowHandlers_.insert(boost::make_shared<T>()); }
+template <typename T> struct FixingManagerCashflowHandlerRegister {
+    FixingManagerCashflowHandlerRegister<T>() {
+        FixingManagerCashflowHandlerFactory::instance().addHandler(boost::make_shared<T>());
+    }
 };
 
 } // namespace analytics

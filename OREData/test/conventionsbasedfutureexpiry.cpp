@@ -46,7 +46,8 @@ vector<string> commodityNames = {
     "ice_pmi",
     "ice_erh",
     "ice_hen_basis",
-    "ice_his_basis"
+    "ice_his_basis",
+    "cme_myr_palm_oil"
 };
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)

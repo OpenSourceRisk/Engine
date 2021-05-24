@@ -1111,6 +1111,21 @@
     <ClInclude Include="qle\indexes\offpeakpowerindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\fixedratefxlinkednotionalcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\fallbackiborindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1896,6 +1911,21 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackdeltautilities.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\fixedratefxlinkednotionalcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\fallbackiborindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

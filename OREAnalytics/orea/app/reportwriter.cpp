@@ -117,7 +117,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
 }
 
 void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
-                                 boost::shared_ptr<ore::data::Market> market, const std::string& configuration) {
+                                 boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                 const bool includePastCashflows) {
     Date asof = Settings::instance().evaluationDate();
     bool write_discount_factor = market ? true : false;
     LOG("Writing cashflow report for " << asof);
@@ -179,7 +180,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     for (size_t j = 0; j < leg.size(); j++) {
                         boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                         Date payDate = ptrFlow->date();
-                        if (!ptrFlow->hasOccurred(asof)) {
+                        if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
                             Real amount = ptrFlow->amount();
                             string flowType = "";
                             if (payer)
@@ -270,7 +271,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
 
                             if (write_discount_factor) {
-                                Real discountFactor = discountCurve->discount(payDate);
+                                Real discountFactor =
+                                    ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
                                 report.add(discountFactor);
                                 Real presentValue = discountFactor * effectiveAmount;
                                 report.add(presentValue);

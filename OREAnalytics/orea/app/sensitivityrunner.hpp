@@ -42,9 +42,11 @@ public:
                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
                       const boost::shared_ptr<ore::data::ReferenceDataManager>& referenceData = nullptr,
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
                       const bool continueOnError = false)
         : params_(params), tradeFactory_(tradeFactory), extraEngineBuilders_(extraEngineBuilders),
-          extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), continueOnError_(continueOnError) {}
+          extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+          continueOnError_(continueOnError) {}
 
     /*! \deprecated use other TradeFactory dependent constructor.
          Provided for backwards compatibility only
@@ -56,7 +58,7 @@ public:
                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
                       const bool continueOnError = false)
         : params_(params), extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders),
-          continueOnError_(continueOnError) {
+          iborFallbackConfig_(IborFallbackConfig::defaultConfig()), continueOnError_(continueOnError) {
         tradeFactory_ = boost::make_shared<TradeFactory>(extraTradeBuilders);
     }
 
@@ -88,6 +90,7 @@ protected:
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
     const bool continueOnError_;
 
     //! Scenario simulation market that is bumped for the sensitivity run.

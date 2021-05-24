@@ -118,15 +118,22 @@ private:
 
     Gives the name and the weight of the credit index constituent. A weight of zero indicates that there has been a
     credit event relating to the constituent. In this case, the weight of the constituent prior to the credit event
-    is supplied along with the recovery rate, i.e. final auction price.
+    is supplied along with the recovery rate, i.e. final auction price, default date, event determination date, 
+    auction date and auction cash settlement date. Not all of these fields are required by every engine in the event 
+    of default.
 */
 class CreditIndexConstituent : public XMLSerializable {
 public:
     CreditIndexConstituent();
 
-    CreditIndexConstituent(const std::string& name, QuantLib::Real weight,
+    CreditIndexConstituent(const std::string& name,
+                           QuantLib::Real weight,
                            QuantLib::Real priorWeight = QuantLib::Null<QuantLib::Real>(),
-                           QuantLib::Real recovery = QuantLib::Null<QuantLib::Real>());
+                           QuantLib::Real recovery = QuantLib::Null<QuantLib::Real>(),
+                           const QuantLib::Date& auctionDate = QuantLib::Date(),
+                           const QuantLib::Date& auctionSettlementDate = QuantLib::Date(),
+                           const QuantLib::Date& defaultDate = QuantLib::Date(),
+                           const QuantLib::Date& eventDeterminationDate = QuantLib::Date());
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
@@ -135,12 +142,20 @@ public:
     QuantLib::Real weight() const;
     QuantLib::Real priorWeight() const;
     QuantLib::Real recovery() const;
+    const QuantLib::Date& auctionDate() const;
+    const QuantLib::Date& auctionSettlementDate() const;
+    const QuantLib::Date& defaultDate() const;
+    const QuantLib::Date& eventDeterminationDate() const;
 
 private:
     std::string name_;
     QuantLib::Real weight_;
     QuantLib::Real priorWeight_;
     QuantLib::Real recovery_;
+    QuantLib::Date auctionDate_;
+    QuantLib::Date auctionSettlementDate_;
+    QuantLib::Date defaultDate_;
+    QuantLib::Date eventDeterminationDate_;
 };
 
 //! Compare CreditIndexConstituent instances using their name

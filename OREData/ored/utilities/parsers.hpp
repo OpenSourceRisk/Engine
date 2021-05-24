@@ -47,6 +47,7 @@
 #include <ql/types.hpp>
 
 #include <qle/cashflows/commoditycashflow.hpp>
+#include <qle/instruments/cdsoption.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/currencies/configurablecurrency.hpp>
@@ -422,6 +423,11 @@ QuantExt::CommodityQuantityFrequency parseCommodityQuantityFrequency(const std::
 
 //! Write QuantExt::CommodityQuantityFrequency to stream
 std::ostream& operator<<(std::ostream& os, QuantExt::CommodityQuantityFrequency cqf);
+
+/*! Convert text to QuantExt::CdsOption::StrikeType
+    \ingroup utilities
+*/
+QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
 
 } // namespace data
 } // namespace ore
