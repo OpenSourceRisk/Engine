@@ -36,23 +36,24 @@ namespace data{
     \ingroup builders
 */
 class QuantoVanillaOptionEngineBuilder
-    : public CachingOptionEngineBuilder<string, const string&, const Currency&, const AssetClass&, const Date&> {
+    : public CachingOptionEngineBuilder<string, const string&, const Currency&, const Currency&, const AssetClass&,
+                                        const Date&> {
 public:
     QuantoVanillaOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
                                      const AssetClass& assetClass, const Date& expiryDate)
-        : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass),
-                            expiryDate_(expiryDate) {}
+        : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate) {}
 
     boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& underlyingCcy,
-                                            const Date& expiryDate) {
-        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
-                                           const Date&>::engine(assetName, underlyingCcy, assetClass_, expiryDate);
+                                            const Currency& payCcy, const Date& expiryDate) {
+        return CachingPricingEngineBuilder<string, const string&, const Currency&, const Currency&, const AssetClass&,
+                                           const Date&>::engine(assetName, underlyingCcy, payCcy, assetClass_,
+                                                                expiryDate);
     }
 
 protected:
-    virtual string keyImpl(const string& assetName, const Currency& underlyingCurrency,
-                           const AssetClass& assetClassUnderlying, const Date& expiryDate) {
-        return assetName + "/" + underlyingCurrency.code() + "/" + to_string(expiryDate_);
+    virtual string keyImpl(const string& assetName, const Currency& underlyingCcy, const Currency& payCcy,
+                           const AssetClass& assetClassUnderlying, const Date& expiryDate) override {
+        return assetName + "/" + underlyingCcy.code() + "/" + payCcy.code() + "/" + to_string(expiryDate);
     }
 
     Date expiryDate_;
@@ -66,12 +67,12 @@ protected:
 class QuantoEuropeanOptionEngineBuilder : public QuantoVanillaOptionEngineBuilder {
 public:
     QuantoEuropeanOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
-        : QuantoVanillaOptionEngineBuilder(model, "QuantoEngine", tradeTypes, assetClass, Date()) {}
+        : QuantoVanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& underlyingCcy,
-                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const Currency& payCcy) {
+                                                        const Currency& payCcy, const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
