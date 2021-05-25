@@ -412,8 +412,10 @@ void FixingDateGetter::visit(AverageONIndexedCoupon& c) {
 
 void FixingDateGetter::visit(EquityCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.equityCurve()->name()), c.date());
-    if (c.fxIndex() != nullptr)
+    if (c.fxIndex() != nullptr) {
         requiredFixings_.addFixingDate(c.fixingStartDate(), oreIndexName(c.fxIndex()->name()), c.date());
+        requiredFixings_.addFixingDate(c.fixingEndDate(), oreIndexName(c.fxIndex()->name()), c.date());
+    }
 }
 
 void FixingDateGetter::visit(FloatingRateFXLinkedNotionalCoupon& c) {
