@@ -52,11 +52,20 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         QL_REQUIRE(parseCurrencyWithMinors(strikeCurrency_) == equityCurrency,
                    "Strike currency " << strikeCurrency_ << " does not match equity currency " << equityCurrency
                                       << " for trade " << id() << ".");
+        strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
     } else {
-        DLOG("No StrikeCurrency provided, using equity currency " << equityCurrency << ".");
-        strikeCurrency_ = equityCurrency.code();
+        // if payoff currency and underlying currency are equivalent (and payoff currency could be a minor currency)
+        if (parseCurrencyWithMinors(localCurrency_) == equityCurrency) {
+            strike_ = convertMinorToMajorCurrency(localCurrency_, localStrike_);
+            TLOG("Setting strike currency to payoff currency " << localCurrency_ << " for trade " << id() << ".");
+            strikeCurrency_ = localCurrency_;
+        } else {
+            // if quanto payoff, then set strike currency to underlying equity currency.
+            TLOG("Setting strike currency to underlying equity currency " << equityCurrency.code()
+                                                                          << " for trade " << id() << ".")
+            strikeCurrency_ = equityCurrency.code();
+        }
     }
-    strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
 
     // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
     currency_ = parseCurrencyWithMinors(localCurrency_).code();
