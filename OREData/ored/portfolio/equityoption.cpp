@@ -97,8 +97,12 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Currency", localCurrency_);
     XMLUtils::addChild(doc, eqNode, "Strike", localStrike_);
-    if (!strikeCurrency_.empty() && strikeCurrency_ != localCurrency_)
+
+    Currency ccy = parseCurrencyWithMinors(localCurrency_);
+    Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
+    if (!strikeCurrency_.empty() && ccy != strikeCcy)
         XMLUtils::addChild(doc, eqNode, "StrikeCurrency", strikeCurrency_);
+
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
 
     return node;
