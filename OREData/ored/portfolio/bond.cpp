@@ -227,10 +227,50 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+std::map<AssetClass, std::set<std::string>>
+Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
-    result[AssetClass::BOND] = { bondData_.securityId() };
+    result[AssetClass::BOND] = {bondData_.securityId()};
     return result;
+}
+
+boost::shared_ptr<QuantLib::Bond> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                                     const std::string& securityId) const {
+    for (auto const& b : builders_) {
+        if (referenceData->hasData(b.first, securityId))
+            return b.second->build(engineFactory, referenceData, securityId);
+    }
+
+    QL_FAIL("BondFactory: could not build bond '"
+            << securityId
+            << "': no reference data given or no suitable builder registered. Check if bond is set up in the reference "
+               "data and that there is a builder for the reference data type.");
+}
+
+void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder) {
+    builders_[referenceDataType] = builder;
+}
+
+BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
+
+boost::shared_ptr<QuantLib::Bond>
+VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                          const std::string& securityId) const {
+    BondData data(securityId, 1.0);
+    data.populateFromBondReferenceData(referenceData);
+    ore::data::Bond bond(Envelope(), data);
+    bond.build(engineFactory);
+
+    QL_REQUIRE(bond.instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
+    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+
+    QL_REQUIRE(bond.instrument() && bond.instrument()->qlInstrument(),
+               "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
+               "(either the instrument wrapper or the ql instrument is null)");
+
+    return qlBond;
 }
 
 } // namespace data
