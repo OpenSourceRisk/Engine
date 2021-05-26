@@ -77,8 +77,12 @@ protected:
             getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(underlyingCcy.code(), configuration(MarketContext::pricing));
-        Handle<BlackVolTermStructure> fxVolatility = market_->fxVol(underlyingCcy.code() + payCcy.code(),
+
+        std::string fxIndex = underlyingCcy.code() + payCcy.code();
+        Handle<BlackVolTermStructure> fxVolatility = market_->fxVol(fxIndex,
                                                                     configuration(MarketContext::pricing));
+        Handle<QuantExt::CorrelationTermStructure> corrCurve = market_->correlationCurve(fxIndex, assetName,
+                                                                               configuration(MarketContext::pricing));
         boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(0.0));
         return boost::make_shared<QuantLib::QuantoEngine<VanillaOption, AnalyticEuropeanEngine>>
                     (gbsp, discountCurve, fxVolatility, Handle<Quote>(correlation));
