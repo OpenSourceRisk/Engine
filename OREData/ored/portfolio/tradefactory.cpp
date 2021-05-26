@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -18,14 +19,17 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/commodityasianoption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
+#include <ored/portfolio/equityasianoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
+#include <ored/portfolio/fxasianoption.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
@@ -55,6 +59,9 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
+    addBuilder("EquityAsianOption", boost::make_shared<TradeBuilder<EquityAsianOption>>());
+    addBuilder("CommodityAsianOption", boost::make_shared<TradeBuilder<CommodityAsianOption>>());
+    addBuilder("FxAsianOption", boost::make_shared<TradeBuilder<FxAsianOption>>());
     if (extraBuilders.size() > 0)
         addExtraBuilders(extraBuilders);
 }
