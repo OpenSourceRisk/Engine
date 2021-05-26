@@ -606,6 +606,12 @@
     <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\iborfallbackconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1075,6 +1081,12 @@
     </ClCompile>
     <ClCompile Include="ored\configuration\reportconfig.cpp">
       <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\iborfallbackconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp">
+      <Filter>portfolio\builders</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -52,6 +52,7 @@
     <ClInclude Include="ored\configuration\fxspotconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\genericyieldvolcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\iborfallbackconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\onedimsolverconfig.hpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
+    <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.hpp" />
@@ -246,6 +248,7 @@
     <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\genericyieldvolcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\iborfallbackconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\onedimsolverconfig.cpp" />
@@ -318,6 +321,7 @@
     <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
+    <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />

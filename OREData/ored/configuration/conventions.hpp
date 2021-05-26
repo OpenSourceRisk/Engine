@@ -120,6 +120,9 @@ public:
     */
     std::pair<bool, boost::shared_ptr<Convention>> get(const std::string& id, const Convention::Type& type) const;
 
+    /*! Get all conventions of a given type */
+    std::set<boost::shared_ptr<Convention>> get(const Convention::Type& type) const;
+
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
 
@@ -915,7 +918,8 @@ public:
                                    const std::string& fixedCurrency, const std::string& fixedFrequency,
                                    const std::string& fixedConvention, const std::string& fixedDayCounter,
                                    const std::string& index, const std::string& eom = "",
-                                   const Conventions* conventions = nullptr);
+                                   const Conventions* conventions = nullptr, const std::string& strIsResettable = "",
+                                   const std::string& strFloatIndexIsResettable = "");
     //@}
 
     //! \name Inspectors
@@ -929,6 +933,8 @@ public:
     const QuantLib::DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const boost::shared_ptr<QuantLib::IborIndex>& index() const { return index_; }
     bool eom() const { return eom_; }
+    bool isResettable() const { return isResettable_; }
+    bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
     //@}
 
     //! \name Serialisation interface
@@ -952,6 +958,8 @@ private:
     QuantLib::DayCounter fixedDayCounter_;
     boost::shared_ptr<QuantLib::IborIndex> index_;
     bool eom_;
+    bool isResettable_;
+    bool floatIndexIsResettable_;
 
     // Strings to store the inputs
     std::string strSettlementDays_;
@@ -965,6 +973,8 @@ private:
     std::string strEom_;
 
     const Conventions* conventions_;
+    std::string strIsResettable_;
+    std::string strFloatIndexIsResettable_;
 };
 
 //! Container for storing Credit Default Swap quote conventions
@@ -1373,6 +1383,35 @@ public:
         QuantLib::Calendar peakCalendar_;
     };
 
+    //! Class to hold prohibited expiry information.
+    class ProhibitedExpiry : public XMLSerializable {
+    public:
+        ProhibitedExpiry();
+
+        ProhibitedExpiry(
+            const QuantLib::Date& expiry,
+            bool forFuture = true,
+            QuantLib::BusinessDayConvention futureBdc = QuantLib::Preceding,
+            bool forOption = true,
+            QuantLib::BusinessDayConvention optionBdc = QuantLib::Preceding);
+
+        const QuantLib::Date& expiry() const { return expiry_; }
+        bool forFuture() const { return forFuture_; }
+        QuantLib::BusinessDayConvention futureBdc() const { return futureBdc_; }
+        bool forOption() const { return forOption_; }
+        QuantLib::BusinessDayConvention optionBdc() const { return optionBdc_; }
+
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) override;
+
+    private:
+        QuantLib::Date expiry_;
+        bool forFuture_;
+        QuantLib::BusinessDayConvention futureBdc_;
+        bool forOption_;
+        QuantLib::BusinessDayConvention optionBdc_;
+    };
+
     //! \name Constructors
     //@{
     //! Default constructor
@@ -1385,7 +1424,7 @@ public:
                               const std::string& offsetDays = "", const std::string& bdc = "",
                               bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::map<std::string, std::string>& prohibitedExpiries = {},
+                              const std::set<ProhibitedExpiry>& prohibitedExpiries = {},
                               QuantLib::Size optionExpiryMonthLag = 0,
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
@@ -1403,7 +1442,7 @@ public:
                               const std::string& oneContractMonth = "", const std::string& offsetDays = "",
                               const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::map<std::string, std::string>& prohibitedExpiries = {},
+                              const std::set<ProhibitedExpiry>& prohibitedExpiries = {},
                               QuantLib::Size optionExpiryMonthLag = 0,
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
@@ -1421,7 +1460,7 @@ public:
                               const std::string& oneContractMonth = "", const std::string& offsetDays = "",
                               const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
                               const std::string& optionExpiryOffset = "",
-                              const std::map<std::string, std::string>& prohibitedExpiries = {},
+                              const std::set<ProhibitedExpiry>& prohibitedExpiries = {},
                               QuantLib::Size optionExpiryMonthLag = 0,
                               QuantLib::Natural optionExpiryDay = QuantLib::Null<QuantLib::Natural>(),
                               const std::string& optionBdc = "",
@@ -1450,7 +1489,7 @@ public:
     bool adjustBeforeOffset() const { return adjustBeforeOffset_; }
     bool isAveraging() const { return isAveraging_; }
     QuantLib::Natural optionExpiryOffset() const { return optionExpiryOffset_; }
-    const std::map<QuantLib::Date, QuantLib::BusinessDayConvention>& prohibitedExpiries() const {
+    const std::set<ProhibitedExpiry>& prohibitedExpiries() const {
         return prohibitedExpiries_;
     }
     QuantLib::Size optionExpiryMonthLag() const { return optionExpiryMonthLag_; }
@@ -1490,7 +1529,6 @@ private:
     QuantLib::Integer offsetDays_;
     QuantLib::BusinessDayConvention bdc_;
     QuantLib::Natural optionExpiryOffset_;
-    std::map<QuantLib::Date, QuantLib::BusinessDayConvention> prohibitedExpiries_;
 
     std::string strDayOfMonth_;
     std::string strNth_;
@@ -1506,7 +1544,7 @@ private:
     bool adjustBeforeOffset_;
     bool isAveraging_;
     std::string strOptionExpiryOffset_;
-    std::map<std::string, std::string> strProhibitedExpiries_;
+    std::set<ProhibitedExpiry> prohibitedExpiries_;
     QuantLib::Size optionExpiryMonthLag_;
     Natural optionExpiryDay_;
     QuantLib::BusinessDayConvention optionBdc_;
@@ -1520,7 +1558,14 @@ private:
 
     //! Populate and check frequency.
     void populateFrequency();
+
+    //! Validate the business day conventions in the ProhibitedExpiry
+    bool validateBdc(const ProhibitedExpiry& pe) const;
 };
+
+//! Compare two prohibited expiries.
+bool operator<(const CommodityFutureConvention::ProhibitedExpiry& lhs,
+    const CommodityFutureConvention::ProhibitedExpiry& rhs);
 
 //! Container for storing FX Option conventions
 /*! Defining a switchTenor is optional. It is set to 0 * Days if no switch tenor is defined. In this case

@@ -770,6 +770,15 @@ bool isOvernightIndex(const string& indexName, const Conventions& conventions) {
     return false;
 }
 
+bool isBmaIndex(const string& indexName) {
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(indexName, index)) {
+        // in ore a bma index is parsed to a BMAIndexWrapper instance!
+        return boost::dynamic_pointer_cast<BMAIndexWrapper>(index) != nullptr;
+    }
+    return false;
+}
+
 string internalIndexName(const string& indexName) {
 
     // Check that the indexName string is of the required form

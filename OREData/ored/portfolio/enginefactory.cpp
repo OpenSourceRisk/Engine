@@ -20,6 +20,7 @@
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
@@ -85,8 +86,10 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
                              const map<MarketContext, string>& configurations,
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
                              const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
-                             const boost::shared_ptr<ReferenceDataManager>& referenceData)
-    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData) {
+                             const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                             const IborFallbackConfig& iborFallbackConfig)
+    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();
@@ -161,6 +164,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredAverageONIndexedCouponLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredYoYLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCouponEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCashFlowEngineBuilder>());
@@ -201,6 +205,7 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<CPILegBuilder>());
     registerLegBuilder(boost::make_shared<YYLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSLegBuilder>());
+    registerLegBuilder(boost::make_shared<DigitalCMSLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<DigitalCMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<EquityLegBuilder>());

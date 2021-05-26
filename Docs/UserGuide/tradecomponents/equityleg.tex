@@ -12,13 +12,15 @@ The EquityLegData block contains the following elements:
 
   Allowable values: Any positive real number
 
-\item ReturnType: \emph{Price} indicates that the coupons on the equity leg are determined by the price movement of the underlying equity, whereas  \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends. \emph{Absolute} indicates that the absolute rather than relative price movement determines the coupon value, i.e. (FinalPrice - InitialPrice).
-
-Allowable values:  \emph{Price}, \emph{Total} or \emph{Absolute}
+\item ReturnType: \emph{Price} indicates that the coupons on the equity leg are determined by the  price movement of the underlying equity, i.e.: $Notional \cdot \frac{FinalPrice - InitialPrice} {InitialPrice}$, \\ 
+whereas  \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends, i.e.: \\
+ $Notional \cdot \frac{(FinalPrice + dividends * DividendFactor) - InitialPrice} {InitialPrice}$ 
+ 
+Allowable values:  \emph{Price}, \emph{Total} 
 
 \item Name: The identifier of the underlying equity or equity index.
 
-Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
+Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_name}. \\
 
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 

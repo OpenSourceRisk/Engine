@@ -42,18 +42,19 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      const boost::shared_ptr<CrossAssetModelData>& crossAssetModelData,
                      std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
                      std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
-                     const boost::shared_ptr<ReferenceDataManager>& referenceData, Real dimQuantile,
-                     Size dimHorizonCalendarDays, map<string, bool> analytics, string calculationType, string dvaName,
-                     string fvaBorrowingCurve, string fvaLendingCurve, bool fullInitialCollateralisation,
-                     bool storeFlows)
+                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                     const IborFallbackConfig& iborFallbackConfig, Real dimQuantile, Size dimHorizonCalendarDays,
+                     map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
+                     string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
     : asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
       curveConfigs_(curveConfigs), conventions_(conventions), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), scenarioGeneratorData_(scenarioGeneratorData),
       crossAssetModelData_(crossAssetModelData), extraLegBuilders_(extraLegBuilders),
-      extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), dimQuantile_(dimQuantile),
-      dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics), inputCalculationType_(calculationType),
-      dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
-      fullInitialCollateralisation_(fullInitialCollateralisation), storeFlows_(storeFlows) {
+      extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays), analytics_(analytics),
+      inputCalculationType_(calculationType), dvaName_(dvaName), fvaBorrowingCurve_(fvaBorrowingCurve),
+      fvaLendingCurve_(fvaLendingCurve), fullInitialCollateralisation_(fullInitialCollateralisation),
+      storeFlows_(storeFlows) {
 
     if (analytics_.size() == 0) {
         WLOG("post processor analytics not set, using defaults");
@@ -134,9 +135,9 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg =
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
-    simMarket_ =
-        boost::make_shared<ScenarioSimMarket>(market, projectedSsmData, *conventions_, Market::defaultConfiguration,
-            *curveConfigs_, *todaysMarketParams_, true, false, true, false);
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(
+        market, projectedSsmData, *conventions_, Market::defaultConfiguration, *curveConfigs_, *todaysMarketParams_,
+        true, false, true, false, iborFallbackConfig_);
     simMarket_->scenarioGenerator() = sg;
 
     for (auto b : extraEngineBuilders_)
@@ -148,8 +149,9 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
         scenarioGeneratorData_->getGrid()->valuationDates().size(), scenarioGeneratorData_->samples());
     simMarket_->aggregationScenarioData() = scenarioData_;
 
-    simFactory_ = boost::make_shared<EngineFactory>(engineData_, simMarket_, map<MarketContext, string>(),
-        extraEngineBuilders_, extraLegBuilders_, referenceData_);
+    simFactory_ =
+        boost::make_shared<EngineFactory>(engineData_, simMarket_, map<MarketContext, string>(), extraEngineBuilders_,
+                                          extraLegBuilders_, referenceData_, iborFallbackConfig_);
 }
 
 void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds, const bool continueOnErr) {
@@ -189,10 +191,8 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     boost::shared_ptr<NPVCalculator> npvCalculator = boost::make_shared<NPVCalculator>(baseCurrency_);
     if (scenarioGeneratorData_->withCloseOutLag()) {
         // depth 2: NPV and close-out NPV
-        cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
-                                                                 scenarioGeneratorData_->getGrid()->valuationDates(),
-                                                                 scenarioGeneratorData_->samples(),
-                                                                 2); // depth 2: default date and close-out date NPV
+        cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->valuationDates(),
+                           scenarioGeneratorData_->samples(), 2);
         cubeInterpreter_ = boost::make_shared<MporGridCubeInterpretation>(scenarioGeneratorData_->getGrid());
         // default date value stored at index 0, close-out value at index 1
         calculators.push_back(boost::make_shared<MPORCalculator>(npvCalculator, 0, 1));
@@ -203,16 +203,14 @@ void XvaRunner::buildCube(const boost::optional<std::set<std::string>>& tradeIds
     } else {
         if (storeFlows_) {
             // regular, depth 2: NPV and cash flow
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, portfolio->ids(),
-                                                                     scenarioGeneratorData_->getGrid()->dates(),
-                                                                     scenarioGeneratorData_->samples(), 2, 0.0f);
+            cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->dates(),
+                               scenarioGeneratorData_->samples(), 2);
             calculators.push_back(
                 boost::make_shared<CashflowCalculator>(baseCurrency_, asof_, scenarioGeneratorData_->getGrid(), 1));
         } else
             // regular, depth 1
-            cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, portfolio->ids(),
-                                                                    scenarioGeneratorData_->getGrid()->dates(),
-                                                                    scenarioGeneratorData_->samples(), 0.0f);
+            cube_ = getNpvCube(asof_, portfolio->ids(), scenarioGeneratorData_->getGrid()->dates(),
+                               scenarioGeneratorData_->samples(), 1);
 
         cubeInterpreter_ = boost::make_shared<RegularCubeInterpretation>();
         calculators.push_back(npvCalculator);
@@ -285,6 +283,16 @@ std::vector<std::string> XvaRunner::getNettingSetIds(const boost::shared_ptr<Por
     for (auto const& t : portfolio == nullptr ? portfolio_->trades() : portfolio->trades())
         nettingSetIds.insert(t->envelope().nettingSetId());
     return std::vector<std::string>(nettingSetIds.begin(), nettingSetIds.end());
+}
+
+boost::shared_ptr<NPVCube> XvaRunner::getNpvCube(const Date& asof, const std::vector<std::string>& ids,
+                                                 const std::vector<Date>& dates, const Size samples,
+                                                 const Size depth) const {
+    if (depth == 1) {
+        return boost::make_shared<SinglePrecisionInMemoryCube>(asof, ids, dates, samples, 0.0f);
+    } else {
+        return boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, ids, dates, samples, depth, 0.0f);
+    }
 }
 
 } // namespace analytics

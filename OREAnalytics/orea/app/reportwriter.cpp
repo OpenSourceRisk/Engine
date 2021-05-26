@@ -117,7 +117,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
 }
 
 void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
-                                 boost::shared_ptr<ore::data::Market> market, const std::string& configuration) {
+                                 boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                 const bool includePastCashflows) {
     Date asof = Settings::instance().evaluationDate();
     bool write_discount_factor = market ? true : false;
     LOG("Writing cashflow report for " << asof);
@@ -179,7 +180,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     for (size_t j = 0; j < leg.size(); j++) {
                         boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                         Date payDate = ptrFlow->date();
-                        if (!ptrFlow->hasOccurred(asof)) {
+                        if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
                             Real amount = ptrFlow->amount();
                             string flowType = "";
                             if (payer)
@@ -270,7 +271,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
 
                             if (write_discount_factor) {
-                                Real discountFactor = discountCurve->discount(payDate);
+                                Real discountFactor =
+                                    ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
                                 report.add(discountFactor);
                                 Real presentValue = discountFactor * effectiveAmount;
                                 report.add(presentValue);
@@ -854,17 +856,17 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             auto p = parseBoostAny(kv.second);
             report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
         }
-        // if the 'notionalTwo' has been provided convert it to base currency
-        if (additionalData.count("notionalTwo") != 0 && additionalData.count("notionalTwoCurrency") != 0) {
-            notional2 = trade->additionalDatum<Real>("notionalTwo");
-            notional2Ccy = trade->additionalDatum<string>("notionalTwoCurrency");
+        // if the 'notional[2]' has been provided convert it to base currency
+        if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
+            notional2 = trade->additionalDatum<Real>("notional[2]");
+            notional2Ccy = trade->additionalDatum<string>("notionalCurrency[2]");
         }
 
         if (trade->instrument()->qlInstrument()) {
             auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
-            if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
-                notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
-                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency");
+            if (additionalResults.count("notional[2]") != 0 && additionalResults.count("notionalCurrency[2]") != 0) {
+                notional2 = trade->instrument()->qlInstrument()->result<Real>("notional[2]");
+                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalCurrency[2]");
             }
         }
 
@@ -874,7 +876,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
             std::ostringstream oss;
             oss << std::fixed << std::setprecision(8) << notional2 * fx;
-            report.next().add(tradeId).add("notionalTwoInBaseCurrency").add("double").add(oss.str());
+            //report.next().add(tradeId).add("notionalInBaseCurrency[2]").add("double").add(oss.str());
         }
 
         // Just use the unadjusted trade ID in the additional results report for the main instrument.
@@ -904,9 +906,9 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             // Get the additional results for the current instrument.
             auto additionalResults = instrument->additionalResults();
             // Add the multiplier if there are additional results.
-            // Check on 'inst_multiplier' already existing is probably unnecessary.
-            if (!additionalResults.empty() && additionalResults.count("inst_multiplier") == 0) {
-                additionalResults["inst_multiplier"] = multipliers[i];
+            // Check on 'instMultiplier' already existing is probably unnecessary.
+            if (!additionalResults.empty() && additionalResults.count("instMultiplier") == 0) {
+                additionalResults["instMultiplier"] = multipliers[i];
             }
 
             // Write current instrument's additional results.

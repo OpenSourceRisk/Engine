@@ -95,21 +95,43 @@ XMLNode* BondReferenceDatum::toXML(XMLDocument& doc) {
 CreditIndexConstituent::CreditIndexConstituent()
     : weight_(Null<Real>()), priorWeight_(Null<Real>()), recovery_(Null<Real>()) {}
 
-CreditIndexConstituent::CreditIndexConstituent(const string& name, Real weight, Real priorWeight, Real recovery)
-    : name_(name), weight_(weight), priorWeight_(priorWeight), recovery_(recovery) {}
+CreditIndexConstituent::CreditIndexConstituent(const string& name, Real weight, Real priorWeight, Real recovery,
+    const Date& auctionDate, const Date& auctionSettlementDate, const Date& defaultDate,
+    const Date& eventDeterminationDate)
+    : name_(name), weight_(weight), priorWeight_(priorWeight), recovery_(recovery), auctionDate_(auctionDate),
+      auctionSettlementDate_(auctionSettlementDate), defaultDate_(defaultDate),
+      eventDeterminationDate_(eventDeterminationDate) {}
 
 void CreditIndexConstituent::fromXML(XMLNode* node) {
 
     name_ = XMLUtils::getChildValue(node, "Name", true);
     weight_ = XMLUtils::getChildValueAsDouble(node, "Weight", true);
 
-    priorWeight_ = Null<Real>();
-    if (auto n = XMLUtils::getChildNode(node, "PriorWeight"))
-        priorWeight_ = parseReal(XMLUtils::getNodeValue(n));
+    if (close(weight_, 0.0)) {
+        priorWeight_ = Null<Real>();
+        if (auto n = XMLUtils::getChildNode(node, "PriorWeight"))
+            priorWeight_ = parseReal(XMLUtils::getNodeValue(n));
 
-    recovery_ = Null<Real>();
-    if (auto n = XMLUtils::getChildNode(node, "RecoveryRate"))
-        recovery_ = parseReal(XMLUtils::getNodeValue(n));
+        recovery_ = Null<Real>();
+        if (auto n = XMLUtils::getChildNode(node, "RecoveryRate"))
+            recovery_ = parseReal(XMLUtils::getNodeValue(n));
+
+        auctionDate_ = Date();
+        if (auto n = XMLUtils::getChildNode(node, "AuctionDate"))
+            auctionDate_ = parseDate(XMLUtils::getNodeValue(n));
+
+        auctionSettlementDate_ = Date();
+        if (auto n = XMLUtils::getChildNode(node, "AuctionSettlementDate"))
+            auctionSettlementDate_ = parseDate(XMLUtils::getNodeValue(n));
+
+        defaultDate_ = Date();
+        if (auto n = XMLUtils::getChildNode(node, "DefaultDate"))
+            defaultDate_ = parseDate(XMLUtils::getNodeValue(n));
+
+        eventDeterminationDate_ = Date();
+        if (auto n = XMLUtils::getChildNode(node, "EventDeterminationDate"))
+            eventDeterminationDate_ = parseDate(XMLUtils::getNodeValue(n));
+    }
 }
 
 XMLNode* CreditIndexConstituent::toXML(ore::data::XMLDocument& doc) {
@@ -119,11 +141,25 @@ XMLNode* CreditIndexConstituent::toXML(ore::data::XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Name", name_);
     XMLUtils::addChild(doc, node, "Weight", weight_);
 
-    if (priorWeight_ != Null<Real>())
-        XMLUtils::addChild(doc, node, "PriorWeight", priorWeight_);
+    if (close(weight_, 0.0)) {
+        if (priorWeight_ != Null<Real>())
+            XMLUtils::addChild(doc, node, "PriorWeight", priorWeight_);
 
-    if (recovery_ != Null<Real>())
-        XMLUtils::addChild(doc, node, "RecoveryRate", recovery_);
+        if (recovery_ != Null<Real>())
+            XMLUtils::addChild(doc, node, "RecoveryRate", recovery_);
+
+        if (auctionDate_ != Date())
+            XMLUtils::addChild(doc, node, "AuctionDate", to_string(auctionDate_));
+
+        if (auctionSettlementDate_ != Date())
+            XMLUtils::addChild(doc, node, "AuctionSettlementDate", to_string(auctionSettlementDate_));
+
+        if (defaultDate_ != Date())
+            XMLUtils::addChild(doc, node, "DefaultDate", to_string(defaultDate_));
+
+        if (eventDeterminationDate_ != Date())
+            XMLUtils::addChild(doc, node, "EventDeterminationDate", to_string(eventDeterminationDate_));
+    }
 
     return node;
 }
@@ -135,6 +171,14 @@ Real CreditIndexConstituent::weight() const { return weight_; }
 Real CreditIndexConstituent::priorWeight() const { return priorWeight_; }
 
 Real CreditIndexConstituent::recovery() const { return recovery_; }
+
+const Date& CreditIndexConstituent::auctionDate() const { return auctionDate_; }
+
+const Date& CreditIndexConstituent::auctionSettlementDate() const { return auctionSettlementDate_; }
+
+const Date& CreditIndexConstituent::defaultDate() const { return defaultDate_; }
+
+const Date& CreditIndexConstituent::eventDeterminationDate() const { return eventDeterminationDate_; }
 
 bool operator<(const CreditIndexConstituent& lhs, const CreditIndexConstituent& rhs) { return lhs.name() < rhs.name(); }
 

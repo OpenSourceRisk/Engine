@@ -25,6 +25,7 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
@@ -95,6 +96,8 @@ public:
         const FXTriangulation& fxTriangulation = FXTriangulation(),
         //! optional pointer to reference data, needed to build fitted bond curves
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        //! ibor fallback config
+        const IborFallbackConfig& iborfallbackConfig = IborFallbackConfig::defaultConfig(),
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
         const bool preserveQuoteLinkage = false,
         //! Map of underlying discount curves if required
@@ -138,6 +141,8 @@ private:
     void buildWeightedAverageCurve();
     //! Build a yield curve that uses QuantExt::YieldPlusDefaultYieldTermStructure
     void buildYieldPlusDefaultCurve();
+    //! Build a yield curve that uses QuantExt::IborFallbackCurve
+    void buildIborFallbackCurve();
 
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
@@ -150,6 +155,7 @@ private:
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
     const bool preserveQuoteLinkage_;
     map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
 

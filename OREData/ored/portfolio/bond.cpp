@@ -64,6 +64,7 @@ void BondData::fromXML(XMLNode* node) {
         coupons_.push_back(ld);
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
+    hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
     initialise();
 }
 
@@ -85,12 +86,17 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
+    if (!hasCreditRisk_)
+        XMLUtils::addChild(doc, bondNode, "CreditRisk", hasCreditRisk_);
     return bondNode;
 }
 
 void BondData::initialise() {
 
     isPayer_ = false;
+
+    if (!hasCreditRisk() && !creditCurveId().empty())
+        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
 
     if (!zeroBond()) {
 
@@ -124,7 +130,7 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferen
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
                                              referenceCurveId_, proxySecurityId_, incomeCurveId_, volatilityCurveId_,
-                                             coupons_, securityId_, referenceDatum);
+                                             coupons_, securityId_, referenceDatum, hasCreditRisk_);
     initialise();
     checkData();
 }

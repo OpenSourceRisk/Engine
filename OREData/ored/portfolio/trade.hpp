@@ -140,7 +140,7 @@ public:
     //! returns any additional datum.
     template <typename T> T additionalDatum(const std::string& tag) const;
     //! returns all additional data returned by the trade once built
-    const std::map<std::string,boost::any>& additionalData() const;
+    const virtual std::map<std::string,boost::any>& additionalData() const;
 
     //@}
 

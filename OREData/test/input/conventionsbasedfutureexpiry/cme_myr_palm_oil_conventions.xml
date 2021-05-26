@@ -1,0 +1,20 @@
+<Conventions>
+  <CommodityFuture>
+    <Id>cme_myr_palm_oil</Id>
+    <AnchorDay>
+      <DayOfMonth>31</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>CME</Calendar>
+    <ExpiryCalendar>CME</ExpiryCalendar>
+    <ExpiryMonthLag>0</ExpiryMonthLag>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <IsAveraging>true</IsAveraging>
+    <ProhibitedExpiries>
+      <Dates>
+        <Date convention="Following" forOption="false">2021-05-28</Date>
+        <Date convention="Following" forOption="false">2024-03-28</Date>
+      </Dates>
+    </ProhibitedExpiries>
+  </CommodityFuture>
+</Conventions>

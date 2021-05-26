@@ -61,6 +61,12 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     std::map<std::string, std::string> qlToOREIndexNames;
     applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index->name()] = indexName;
+    if (engineFactory->iborFallbackConfig().isIndexReplaced(indexName)) {
+        auto rfrName = engineFactory->iborFallbackConfig().fallbackData(indexName).rfrIndex;
+        // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
+        qlToOREIndexNames[parseIborIndex(rfrName)->name()] = rfrName;
+    }
+
     addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
 
     // handle fx resetting Ibor leg
@@ -150,6 +156,24 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     return result;
 }
 
+Leg DigitalCMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                            RequiredFixings& requiredFixings, const string& configuration) const {
+    auto digitalCmsData = boost::dynamic_pointer_cast<DigitalCMSLegData>(data.concreteLegData());
+    QL_REQUIRE(digitalCmsData, "Wrong LegType, expected DigitalCMS");
+    
+    auto cmsData = boost::dynamic_pointer_cast<CMSLegData>(digitalCmsData->underlying());
+    QL_REQUIRE(cmsData, "Incomplete DigitalCmsLeg, expected CMSLegData");
+
+    string swapIndexName = digitalCmsData->underlying()->swapIndex();
+    auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
+    Leg result = makeDigitalCMSLeg(data, index, engineFactory);
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
+    qlToOREIndexNames[index->name()] = swapIndexName;
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    return result;
+}
+
 Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                   RequiredFixings& requiredFixings, const string& configuration) const {
     auto cmsSpreadData = boost::dynamic_pointer_cast<CMSSpreadLegData>(data.concreteLegData());
@@ -188,10 +212,7 @@ Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::share
     applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings);
     qlToOREIndexNames[index1->name()] = cmsSpreadData->swapIndex1();
     qlToOREIndexNames[index2->name()] = cmsSpreadData->swapIndex2();
-    addToRequiredFixings(result,
-                         boost::make_shared<FixingDateGetter>(
-                             requiredFixings, std::map<string, string>{{index1->name(), cmsSpreadData->swapIndex1()},
-                                                                       {index2->name(), cmsSpreadData->swapIndex2()}}));
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
 

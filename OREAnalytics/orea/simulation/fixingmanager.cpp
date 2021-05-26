@@ -27,6 +27,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -57,8 +58,6 @@ Date nextValidFixingDate(Date d, const boost::shared_ptr<Index>& index, Size gap
 
 FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
 
-std::set<boost::shared_ptr<FixingManager::CashflowHandler>> FixingManager::additionalCashflowHandlers_;
-
 //! Initialise the manager-
 
 void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
@@ -66,13 +65,13 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, co
 
     // loop over all cashflows, populate index map
 
-    auto standardCashflowHandler = boost::make_shared<StandardCashflowHandler>();
+    auto standardCashflowHandler = boost::make_shared<StandardFixingManagerCashflowHandler>();
 
     for (auto trade : portfolio->trades()) {
         for (auto leg : trade->legs()) {
             for (auto cf : leg) {
                 bool done = false;
-                for (auto& h : additionalCashflowHandlers_) {
+                for (auto& h : FixingManagerCashflowHandlerFactory::instance().handlers()) {
                     if (done)
                         break;
                     done = done || h->processCashflow(cf, fixingMap_);
@@ -192,8 +191,8 @@ void FixingManager::applyFixings(Date start, Date end) {
     }
 }
 
-bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& cf,
-                                              FixingManager::FixingMap& fixingMap) {
+bool StandardFixingManagerCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& cf,
+                                                           FixingManager::FixingMap& fixingMap) {
 
     // For any coupon type that requires fixings, it must be handled here
     // Most coupons are based off a floating rate coupon and their single index
@@ -236,8 +235,9 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
         // A2 indices with native fixings, but no only on the standard fixing date
         auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc);
         if (on) {
-            for (auto const& d : on->fixingDates())
+            for (auto const& d : on->fixingDates()) {
                 fixingMap[on->index()].insert(d);
+            }
             return true;
         }
         auto avon = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(frc);
@@ -254,7 +254,14 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
         }
 
         // A3 standard case
-        fixingMap[frc->index()].insert(frc->fixingDate());
+        auto fb = boost::dynamic_pointer_cast<FallbackIborIndex>(frc->index());
+        if (fb != nullptr && frc->fixingDate() >= fb->switchDate()) {
+            // handle ibor fallback
+            return processCashflow(fb->onCoupon(frc->fixingDate()), fixingMap);
+        } else {
+            // handle other cases
+            fixingMap[frc->index()].insert(frc->fixingDate());
+        }
     }
 
     // B other coupon types
@@ -262,9 +269,8 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
         boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
     if (fc) {
-        fixingMap[fc->index()].insert(fc->fixingDate());
         fixingMap[fc->fxIndex()].insert(fc->fxFixingDate());
-        return true;
+        return processCashflow(fc->underlying(), fixingMap);
     }
 
     boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
@@ -301,6 +307,14 @@ bool StandardCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::
     }
 
     return true;
+}
+
+const std::set<boost::shared_ptr<FixingManagerCashflowHandler>>& FixingManagerCashflowHandlerFactory::handlers() const {
+    return handlers_;
+}
+
+void FixingManagerCashflowHandlerFactory::addHandler(const boost::shared_ptr<FixingManagerCashflowHandler>& handler) {
+    handlers_.insert(handler);
 }
 
 } // namespace analytics
