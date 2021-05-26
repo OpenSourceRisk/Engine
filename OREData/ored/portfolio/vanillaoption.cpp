@@ -135,7 +135,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     // Only try to set an engine on the option instrument if it is not expired. This avoids errors in
     // engine builders that rely on the expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
     string configuration = Market::defaultConfiguration;
-    if (!vanilla->isExpired()) {
+    // We need to set the pricing engine here: The valuation date might change after build, and we get errors for the edge case valuation date = expiry date.
+    // if (!vanilla->isExpired()) {
         boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
         QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
         boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
@@ -144,11 +145,10 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
 
         configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
-
-    } else {
-        DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
-                                                       << " because it is expired.");
-    }
+    // } else {
+    //     DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
+    //                                                    << " because it is expired.");
+    // }
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = quantity_ * bsInd;
