@@ -75,15 +75,31 @@ protected:
                                                         const Date& expiryDate) override {
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, underlyingCcy, assetClassUnderlying);
+
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(underlyingCcy.code(), configuration(MarketContext::pricing));
 
-        std::string fxIndex = underlyingCcy.code() + payCcy.code();
-        Handle<BlackVolTermStructure> fxVolatility = market_->fxVol(fxIndex,
-                                                                    configuration(MarketContext::pricing));
-        Handle<QuantExt::CorrelationTermStructure> corrCurve = market_->correlationCurve(fxIndex, assetName,
+        Handle<BlackVolTermStructure> fxVolatility =
+            market_->fxVol(underlyingCcy.code() + payCcy.code(), configuration(MarketContext::pricing));
+
+        std::string fxSource = modelParameters_.at("FXSource");
+        std::string fxIndex = "FX-" + fxSource + "-" + underlyingCcy.code() + "-" + payCcy.code();
+        std::string underlyingIndex;
+        switch (assetClassUnderlying) {
+            case AssetClass::EQ:
+                underlyingIndex = "EQ-" + assetName;
+                break;
+            case AssetClass::COM:
+                underlyingIndex = "COMM-" + assetName;
+                break;
+            default:
+                QL_FAIL("Asset class " << assetClassUnderlying << " not supported for quanto vanilla option.");
+        }
+            
+        Handle<QuantExt::CorrelationTermStructure> corrCurve = market_->correlationCurve(fxIndex, underlyingIndex,
                                                                                configuration(MarketContext::pricing));
-        boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(0.0));
+        boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(corrCurve->correlation(expiryDate)));
+
         return boost::make_shared<QuantLib::QuantoEngine<VanillaOption, AnalyticEuropeanEngine>>
                     (gbsp, discountCurve, fxVolatility, Handle<Quote>(correlation));
     }
