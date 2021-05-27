@@ -89,7 +89,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
     // If the helper value is lower than mmv, replace it with a "more reasonable" helper. Here, we replace
     // the helper with a helper that has the ATM strike. There are other options here.
     static constexpr Real mmv = 1.0E-20;
-    auto mv = abs(helper->marketValue());
+    auto mv = std::abs(helper->marketValue());
     if (mv < mmv) {
         auto sd = swaptionData(helper->swaption(), yts, svts);
         strike = sd.atmForward;
@@ -102,7 +102,7 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
 
     // Switch to PriceError if helper's market value is below 1e-8
     static constexpr Real smv = 1.0E-8;
-    mv = abs(helper->marketValue());
+    mv = std::abs(helper->marketValue());
     if (errorType != BlackCalibrationHelper::PriceError && mv < smv) {
         helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, BlackCalibrationHelper::PriceError, strike,

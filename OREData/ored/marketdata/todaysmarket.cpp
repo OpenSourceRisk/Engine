@@ -643,9 +643,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
         case CurveSpec::CurveType::Security: {
             boost::shared_ptr<SecuritySpec> securityspec = boost::dynamic_pointer_cast<SecuritySpec>(spec);
             QL_REQUIRE(securityspec, "Failed to convert spec " << *spec << " to security spec");
-            // FIXME this check needs to be moved somewhere else
-            // QL_REQUIRE(requiredDefaultCurves_.find(securityspec->securityID()) == requiredDefaultCurves_.end(),
-            //            "securities cannot have the same name as a default curve");
             auto itr = requiredSecurities_.find(securityspec->securityID());
             if (itr == requiredSecurities_.end()) {
                 DLOG("Building Securities for asof " << asof_);

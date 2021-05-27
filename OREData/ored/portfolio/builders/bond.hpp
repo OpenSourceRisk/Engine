@@ -80,7 +80,7 @@ protected:
             recovery = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
         } catch (...) {
             // otherwise fall back on curve recovery
-            ALOG("security specific recovery rate not found for security ID "
+            WLOG("security specific recovery rate not found for security ID "
                  << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
             if (!creditCurveId.empty())
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));

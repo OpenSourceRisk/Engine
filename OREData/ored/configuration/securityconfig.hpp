@@ -41,7 +41,7 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    SecurityConfig(const string& curveID, const string& curveDescription, const string& spreadQuote,
+    SecurityConfig(const string& curveID, const string& curveDescription, const string& spreadQuote = "",
                    const string& recoveryQuote = "", const string& cprQuote = "", const string& priceQuote = "")
         : CurveConfig(curveID, curveDescription), spreadQuote_(spreadQuote), recoveryQuote_(recoveryQuote),
           cprQuote_(cprQuote), priceQuote_(priceQuote) {
@@ -53,10 +53,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& spreadQuote() {
-        QL_REQUIRE(spreadQuote_ != "", "Spread Quote not defined in security config");
-        return spreadQuote_;
-    }
+    const string& spreadQuote() { return spreadQuote_; }
     const string& recoveryRatesQuote() { return recoveryQuote_; }
     const string& cprQuote() { return cprQuote_; }
     const string& priceQuote() { return priceQuote_; }
@@ -67,7 +64,7 @@ public:
 
         curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
         curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-        spreadQuote_ = XMLUtils::getChildValue(node, "SpreadQuote", true);
+        spreadQuote_ = XMLUtils::getChildValue(node, "SpreadQuote", false);
         recoveryQuote_ = XMLUtils::getChildValue(node, "RecoveryRateQuote", false);
         cprQuote_ = XMLUtils::getChildValue(node, "CPRQuote", false);
         priceQuote_ = XMLUtils::getChildValue(node, "PriceQuote", false);
@@ -79,7 +76,8 @@ public:
 
         XMLUtils::addChild(doc, node, "CurveId", curveID_);
         XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-        XMLUtils::addChild(doc, node, "SpreadQuote", spreadQuote_);
+        if (!spreadQuote_.empty())
+            XMLUtils::addChild(doc, node, "SpreadQuote", spreadQuote_);
         if (!recoveryQuote_.empty())
             XMLUtils::addChild(doc, node, "RecoveryRateQuote", recoveryQuote_);
         if (!cprQuote_.empty())
@@ -92,7 +90,8 @@ public:
 private:
     void setQuotes() {
         quotes_.clear();
-        quotes_.push_back(spreadQuote_);
+        if (!spreadQuote_.empty())
+            quotes_.push_back(spreadQuote_);
         if (!recoveryQuote_.empty())
             quotes_.push_back(recoveryQuote_);
         if (!cprQuote_.empty())

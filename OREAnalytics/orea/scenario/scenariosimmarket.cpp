@@ -271,11 +271,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                "ScenarioSimMarket: Extrapolation ('" << parameters_->extrapolation()
                                                      << "') must be set to 'FlatZero' or 'FlatFwd'");
 
-    // Sort parameters so they get processed in correct order
-    map<RiskFactorKey::KeyType, pair<bool, set<string>>> params;
-    params.insert(parameters->parameters().begin(), parameters->parameters().end());
-
-    for (const auto& param : params) {
+    for (const auto& param : parameters->parameters()) {
         try {
             std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
             std::map<RiskFactorKey, Real> absoluteSimDataTmp;
@@ -320,23 +316,19 @@ ScenarioSimMarket::ScenarioSimMarket(
             case RiskFactorKey::KeyType::IndexCurve: {
                 // make sure we built overnight indices first, so that we can build ibor fallback indices
                 // that depend on them
-                std::vector<std::string> indices(param.second.second.begin(), param.second.second.end());
-                std::sort(indices.begin(), indices.end(),
-                          [&initMarket, &configuration](const std::string& a, const std::string& b) {
-                              try {
-                                  bool aIsOn = boost::dynamic_pointer_cast<OvernightIndex>(
-                                                   *initMarket->iborIndex(a, configuration)) != nullptr;
-                                  bool bIsOn = boost::dynamic_pointer_cast<OvernightIndex>(
-                                                   *initMarket->iborIndex(b, configuration)) != nullptr;
-                                  if (aIsOn && !bIsOn)
-                                      return true;
-                              } catch (...) {
-                                  // fall through for GENERIC indices or if we can't get the index from the
-                                  // init market for some other reason
-                              }
-                              // lexicographic order if both indices are ON or both are not ON
-                              return a < b;
-                          });
+                std::vector<std::string> indices;
+                for (auto const& i : param.second.second) {
+                    bool isOn = false;
+                    try {
+                        isOn = boost::dynamic_pointer_cast<OvernightIndex>(*initMarket->iborIndex(i, configuration)) !=
+                               nullptr;
+                    } catch (...) {
+                    }
+                    if (isOn)
+                        indices.insert(indices.begin(), i);
+                    else
+                        indices.push_back(i);
+                }
                 // loop over sorted indices and build them
                 for (const auto& name : indices) {
                     try {
@@ -531,9 +523,9 @@ ScenarioSimMarket::ScenarioSimMarket(
 
             case RiskFactorKey::KeyType::SecuritySpread:
                 for (const auto& name : param.second.second) {
+                    // security spreads and recovery rates are optional
                     try {
                         DLOG("Adding security spread " << name << " from configuration " << configuration);
-                        // we have a security spread for each security, so no try-catch block required
                         boost::shared_ptr<SimpleQuote> spreadQuote(
                             new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
                         if (param.second.first) {
@@ -542,27 +534,25 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(
                             make_pair(Market::defaultConfiguration, name), Handle<Quote>(spreadQuote)));
-
-                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
-                        // security recovery rates are optional, so we need a try-catch block
-                        try {
-                            boost::shared_ptr<SimpleQuote> recoveryQuote(
-                                new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
-                            // TODO this comes from the default curves section in the parameters,
-                            // do we want to specify the simulation of security recovery rates separately?
-                            if (parameters->simulateRecoveryRates()) {
-                                simDataTmp.emplace(std::piecewise_construct,
-                                                   std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
-                                                   std::forward_as_tuple(recoveryQuote));
-                            }
-                            recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
-                                make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
-                        } catch (const std::exception& e) {
-                            // security recovery rates are optional, therefore we never throw
-                            ALOG("skipping this object: " << e.what());
-                        }
                     } catch (const std::exception& e) {
-                        processException(continueOnError, e, name);
+                        DLOG("skipping this object: " << e.what());
+                    }
+
+                    try {
+                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+                        boost::shared_ptr<SimpleQuote> recoveryQuote(
+                            new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+                        // TODO this comes from the default curves section in the parameters,
+                        // do we want to specify the simulation of security recovery rates separately?
+                        if (parameters->simulateRecoveryRates()) {
+                            simDataTmp.emplace(std::piecewise_construct,
+                                               std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                                               std::forward_as_tuple(recoveryQuote));
+                        }
+                        recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
+                            make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
                     }
                 }
                 break;

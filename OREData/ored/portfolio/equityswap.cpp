@@ -114,6 +114,9 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Swap::build(engineFactory);
 
     notionalCurrency_ = legCurrencies_[equityLegIndex_];
+
+    // just underlying security, notionals and currencies are covered by the Swap class already
+    additionalData_["underlyingSecurityId"] = eqLegData->eqName();
 }
 
 QuantLib::Real EquitySwap::notional() const {

@@ -5598,7 +5598,7 @@ the form "Ccy1Ccy2".
 Listing \ref{lst:security_configuration} shows the configuration of the Securities. Each Security name is associated with
 
 \begin{itemize}
-\item a mandatory SpreadQuote
+\item an optional SpreadQuote
 \item an optional RecoveryRateQuote. Usually a pricer will fall back on the recovery rate associated to the credit curve
   involved in the pricing if no security specific recovery rate is given. If no credit curve is given either, a zero
   recovery rate will be assumed.
@@ -5808,6 +5808,7 @@ This node should hold a real number. It provides an upper bound for the search d
 \input{../../Docs/UserGuide/tradecomponents/indexings}
 \input{../../Docs/UserGuide/tradecomponents/cashflowleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsleg}
+\input{../../Docs/UserGuide/tradecomponents/digitalcmsleg}
 \input{../../Docs/UserGuide/tradecomponents/durationadjustedcmsleg}
 \input{../../Docs/UserGuide/tradecomponents/cmsspreadleg}
 \input{../../Docs/UserGuide/tradecomponents/digitalcmsspreadleg}

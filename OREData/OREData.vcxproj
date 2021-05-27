@@ -137,6 +137,7 @@
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
+    <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.hpp" />
@@ -320,6 +321,7 @@
     <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
+    <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />

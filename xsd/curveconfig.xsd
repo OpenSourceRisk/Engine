@@ -489,7 +489,7 @@
     <xs:all>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="xs:string" name="SpreadQuote"/>
+      <xs:element type="xs:string" name="SpreadQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="RecoveryRateQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="CPRQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceQuote" minOccurs="0"/>
