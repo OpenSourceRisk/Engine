@@ -158,10 +158,16 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
                 tradeTypeBuilder = "QuantoFxOption";
         }
     }
-    // Only try to set an engine on the option instrument if it is not expired. This avoids errors in
-    // engine builders that rely on the expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
+    // Generally we need to set the pricing engine here even if the option is expired at build time, since the valuation date
+    // might change after build, and we get errors for the edge case valuation date = expiry date for Europen options.
+    // We keep the previous behaviour for expired American style options for now, because of engine builders that rely on the
+    // expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
     string configuration = Market::defaultConfiguration;
-    if (!vanilla->isExpired()) {
+    bool skipEngine = (vanilla->isExpired() && exerciseType == QuantLib::Exercise::American);
+    if (skipEngine) {
+       DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
+                                                       << " because it is expired and american style.");
+    } else {
         boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
         QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
@@ -183,10 +189,6 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
             configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
         }
-        
-    } else {
-        DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
-                                                       << " because it is expired.");
     }
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);

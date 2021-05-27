@@ -80,6 +80,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
         legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
+        
         // add notional leg, if appicable
         auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
         if (!leg.empty()) {
@@ -166,6 +167,39 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (!l.empty())
             maturity_ = std::max(maturity_, l.back()->date());
     }
+
+}
+
+const std::map<std::string,boost::any>& Swap::additionalData() const {
+    Size numLegs = legData_.size();
+    // use the build time as of date to determine current notionals
+    Date asof = Settings::instance().evaluationDate();
+    for (Size i = 0; i < numLegs; ++i) {
+        string legID = to_string(i+1);
+        additionalData_["legType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
+        additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
+        for (Size j = 0; j < legs_[i].size(); ++j) {
+            boost::shared_ptr<CashFlow> flow = legs_[i][j];
+            // pick flow with earliest future payment date on this leg
+            if (flow->date() > asof) {
+                additionalData_["amount[" + legID + "]"] = flow->amount();
+                additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
+                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+                if (coupon) {
+                    additionalData_["notional[" + legID + "]"] = coupon->nominal();
+                    additionalData_["rate[" + legID + "]"] = coupon->rate();
+                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                    if (frc) {
+                        additionalData_["index[" + legID + "]"] = frc->index()->name();
+                        additionalData_["spread[" + legID + "]"] = frc->spread();                        
+                    }
+                }
+                break;
+            }
+        }
+    }
+    return additionalData_;
 }
 
 QuantLib::Real Swap::notional() const {
