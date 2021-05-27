@@ -677,7 +677,13 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(itr != sensiParams.securityShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = itr->second.shiftSize;
         if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            shiftMult = simMarket->securitySpread(keylabel, marketConfiguration)->value();
+            shiftMult = 1.0;
+            try {
+                shiftMult = simMarket->securitySpread(keylabel, marketConfiguration)->value();
+            } catch(...) {
+                // if there is no spread given for a security, we return 1.0, this is not relevant anyway,
+                // because there will be no scenario generated for this risk factor
+            }
         }
     } break;
     default:

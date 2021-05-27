@@ -672,9 +672,12 @@ void OREApp::writeInitialReports() {
      */
     out_ << setw(tab_) << left << "Cashflow Report... " << flush;
     if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
+        bool includePastCashflows = params_->has("cashflow", "includePastCashflows") &&
+                                    parseBool(params_->get("cashflow", "includePastCashflows"));
         string fileName = outputPath_ + "/" + params_->get("cashflow", "outputFileName");
         CSVFileReport cashflowReport(fileName);
-        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, params_->get("markets", "pricing"));
+        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, params_->get("markets", "pricing"),
+                                         includePastCashflows);
         out_ << "OK" << endl;
     } else {
         LOG("skip cashflow generation");

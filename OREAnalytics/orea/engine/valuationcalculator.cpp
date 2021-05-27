@@ -43,9 +43,12 @@ void NPVCalculator::calculateT0(const boost::shared_ptr<Trade>& trade, Size trad
 }
 
 Real NPVCalculator::npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket) {
+    Real npv = trade->instrument()->NPV();
+    if (close_enough(npv, 0.0))
+        return npv;
     Real fx = simMarket->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
     Real numeraire = simMarket->numeraire();
-    return trade->instrument()->NPV() * fx / numeraire;
+    return npv * fx / numeraire;
 }
 
 void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
@@ -124,11 +127,14 @@ void NPVCalculatorFXT0::calculateT0(const boost::shared_ptr<Trade>& trade, Size 
 }
 
 Real NPVCalculatorFXT0::npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket) {
+    Real npv = trade->instrument()->NPV();
+    if (close_enough(npv, 0.0))
+        return npv;
     Real fx = 1.0;
     if (trade->npvCurrency() != baseCcyCode_)
         fx = t0Market_->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
     Real numeraire = simMarket->numeraire();
-    return trade->instrument()->NPV() * fx / numeraire;
+    return npv * fx / numeraire;
 }
 
 } // namespace analytics

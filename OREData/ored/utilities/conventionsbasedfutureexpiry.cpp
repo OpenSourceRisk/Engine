@@ -133,9 +133,6 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
     // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
     expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
 
-    // If expiry date is one of the prohibited dates, move to preceding or following business day
-    expiry = avoidProhibited(expiry);
-
     // If we want the option contract expiry, do the extra work here.
     if (forOption) {
         if (convention_.optionExpiryDay() != Null<Natural>()) {
@@ -164,7 +161,11 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
                 -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
         }
 
-        expiry = avoidProhibited(expiry);
+        expiry = avoidProhibited(expiry, true);
+
+    } else {
+        // If expiry date is one of the prohibited dates, move to preceding or following business day
+        expiry = avoidProhibited(expiry, false);
     }
 
     return expiry;
@@ -175,7 +176,7 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     // If contract frequency is daily, next expiry is simply the next valid date on expiry calendar.
     if (convention_.contractFrequency() == Daily) {
         Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
-        return avoidProhibited(expiry);
+        return avoidProhibited(expiry, false);
     }
 
     // Get a contract expiry before today and increment until expiryDate is >= today
@@ -198,12 +199,22 @@ Size ConventionsBasedFutureExpiry::maxIterations() const {
     return maxIterations_;
 }
 
-Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry) const {
+Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry, bool forOption) const {
 
     // If expiry date is one of the prohibited dates, move to preceding or following business day.
+    using PE = CommodityFutureConvention::ProhibitedExpiry;
     Date result = expiry;
-    while (convention_.prohibitedExpiries().count(result) > 0) {
-        auto bdc = convention_.prohibitedExpiries().at(result);
+    const auto& pes = convention_.prohibitedExpiries();
+    auto it = pes.find(PE(result));
+
+    while (it != pes.end()) {
+
+        // If not relevant, exit.
+        if ((!forOption && !it->forFuture()) || (forOption && !it->forOption()))
+            break;
+
+        auto bdc = !forOption ? it->futureBdc() : it->optionBdc();
+
         if (bdc == Preceding || bdc == ModifiedPreceding) {
             result = convention_.calendar().advance(result, -1, Days, bdc);
         } else if (bdc == Following || bdc == ModifiedFollowing) {
@@ -212,6 +223,8 @@ Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry) const {
             QL_FAIL("Convention " << bdc << " associated with prohibited expiry " <<
                 io::iso_date(result) << " is not supported.");
         }
+
+        it = pes.find(PE(result));
     }
 
     return result;

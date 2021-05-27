@@ -329,7 +329,10 @@
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="date">
+                    <xs:attribute name="forFuture" type="bool" />
                     <xs:attribute name="convention" type="prohibitedExpiriesBdcType" />
+                    <xs:attribute name="forOption" type="bool" />
+                    <xs:attribute name="optionConvention" type="prohibitedExpiriesBdcType" />
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>

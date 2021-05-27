@@ -351,6 +351,58 @@
       </xs:choice>
     </xs:complexType>
   </xs:element>
+    <xs:element name="DigitalCMSLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element name="CMSLegData">
+          <xs:complexType>
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
+              <xs:element type="indexNameType" name="Index"/>
+              <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:string" name="CallPosition"/>
+        <xs:element type="xs:boolean" name="IsCallATMIncluded"/>
+        <xs:element name="CallStrikes">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="Strike" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="CallPayoffs">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="Payoff" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:string" name="PutPosition"/>
+        <xs:element type="xs:boolean" name="IsPutATMIncluded"/>
+        <xs:element name="PutStrikes">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="Strike" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="PutPayoffs">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="Payoff" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="DurationAdjustedCMSLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
@@ -620,6 +672,7 @@
       <xs:enumeration value="CPI"/>
       <xs:enumeration value="YY"/>
       <xs:enumeration value="CMS"/>
+      <xs:enumeration value="DigitalCMS"/>
       <xs:enumeration value="CMSSpread"/>
       <xs:enumeration value="DigitalCMSSpread"/>
       <xs:enumeration value="Cashflow"/>
