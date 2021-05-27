@@ -13,8 +13,7 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
                                    std::string& issueDate, std::string& creditCurveId, std::string& referenceCurveId,
                                    std::string& proxySecurityId, std::string& incomeCurveId,
                                    std::string& volatilityCurveId, std::vector<LegData>& coupons,
-                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData,
-                                   bool hasCreditRisk) {
+                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
     if (issuerId.empty()) {
@@ -33,7 +32,7 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
         issueDate = bondRefData->bondData().issueDate;
         TLOG("overwrite issueDate with '" << issueDate << "'");
     }
-    if (creditCurveId.empty() && hasCreditRisk) {
+    if (creditCurveId.empty()) {
         creditCurveId = bondRefData->bondData().creditCurveId;
         TLOG("overwrite creditCurveId with '" << creditCurveId << "'");
     }

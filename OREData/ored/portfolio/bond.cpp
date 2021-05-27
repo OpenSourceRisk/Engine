@@ -95,8 +95,10 @@ void BondData::initialise() {
 
     isPayer_ = false;
 
-    if (!hasCreditRisk() && !creditCurveId().empty())
+    if (!hasCreditRisk() && !creditCurveId().empty()) {
         WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
+        creditCurveId_ = "";
+    }
 
     if (!zeroBond()) {
 
@@ -130,7 +132,7 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferen
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
                                              referenceCurveId_, proxySecurityId_, incomeCurveId_, volatilityCurveId_,
-                                             coupons_, securityId_, referenceDatum, hasCreditRisk_);
+                                             coupons_, securityId_, referenceDatum);
     initialise();
     checkData();
 }
