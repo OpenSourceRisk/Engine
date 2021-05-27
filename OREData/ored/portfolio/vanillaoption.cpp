@@ -30,7 +30,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     // If underlying currency is empty, then set to payment currency by default.
     // If non-empty, then check if the currencies are different for a Quanto payoff
-    Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : parseCurrency(underlyingCurrency_);
+    Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : parseCurrencyWithMinors(underlyingCurrency_);
     bool sameCcy = underlyingCurrency == ccy;
 
     // Payoff
@@ -60,11 +60,18 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     boost::shared_ptr<Instrument> vanilla;
     string tradeTypeBuilder = tradeType_;
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
+
+    // For Quanto, check for European and Cash, except for an FX underlying
+    if (!sameCcy) {
+        QL_REQUIRE(exerciseType == Exercise::Type::European, "Option exercise must be European for a Quanto payoff.");
+        if (settlementType == Settlement::Type::Physical) {
+            QL_REQUIRE(assetClassUnderlying_ == AssetClass::FX,
+                       "Physically settled Quanto options are allowed only for an FX underlying.");
+        }
+    }
+
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
         // We have a European cash settled option.
-
-        QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for European cash-settled options: Trade "
-            << id());
 
         // Get the payment date.
         const boost::optional<OptionPaymentData>& opd = option_.paymentData();
@@ -83,6 +90,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         }
 
         if (paymentDate > expiryDate_) {
+            QL_REQUIRE(sameCcy, "Payment date must equal expiry date for a Quanto payoff. Trade: " << id() << ".");
 
             // Build a QuantExt::CashSettledEuropeanOption if payment date is strictly greater than expiry.
 
@@ -126,12 +134,23 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         } else {
             if (forwardDate_ == QuantLib::Date()) {
                 // If payment date is not greater than expiry, build QuantLib::VanillaOption.
-                vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                if (sameCcy)
+                    vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                else {
+                    vanilla = boost::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
+                    if (assetClassUnderlying_ == AssetClass::EQ)
+                        tradeTypeBuilder = "QuantoEquityOption";
+                    else if (assetClassUnderlying_ == AssetClass::COM)
+                        tradeTypeBuilder = "QuantoCommodityOption";
+                    else
+                        QL_FAIL("Option Quanto payoff not supported for " << assetClassUnderlying_ << " class.");
+                }
             } else {
                 QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
                 vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
             }
         }
+
     } else {
         if (forwardDate_ == QuantLib::Date()) {
             // If not European or not cash settled, build QuantLib::VanillaOption.
@@ -140,23 +159,14 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             else
                 vanilla = boost::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
         } else {
-            QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
         }
 
         if (sameCcy)
             tradeTypeBuilder = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
-        else {
-            QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European,
-                       "Quanto payoffs are only supported for European options");
-            if (assetClassUnderlying_ == AssetClass::EQ)
-                tradeTypeBuilder = "QuantoEquityOption";
-            else if (assetClassUnderlying_ == AssetClass::COM)
-                tradeTypeBuilder = "QuantoCommodityOption";
-            else if (assetClassUnderlying_ == AssetClass::FX)
-                tradeTypeBuilder = "QuantoFxOption";
-        }
+        else
+            tradeTypeBuilder = "QuantoFxOption";
     }
     // Generally we need to set the pricing engine here even if the option is expired at build time, since the valuation date
     // might change after build, and we get errors for the edge case valuation date = expiry date for Europen options.
