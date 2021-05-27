@@ -261,6 +261,7 @@ VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
+    bond.id() = "VanillaBondBuilder_" + securityId;
     bond.build(engineFactory);
 
     QL_REQUIRE(bond.instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
