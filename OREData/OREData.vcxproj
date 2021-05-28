@@ -158,6 +158,8 @@
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\quantoequityoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\quantovanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\vanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
     <ClInclude Include="ored\portfolio\capfloor.hpp" />

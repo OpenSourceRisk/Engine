@@ -606,6 +606,12 @@
     <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\quantovanillaoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\quantoequityoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
     <ClInclude Include="ored\configuration\iborfallbackconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>

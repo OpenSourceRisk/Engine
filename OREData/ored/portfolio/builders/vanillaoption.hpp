@@ -148,7 +148,6 @@ protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
                                                         const Date& expiryDate) override {
-        string key = keyImpl(assetName, ccy, assetClassUnderlying, expiryDate);
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
@@ -171,7 +170,6 @@ protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
                                                         const Date& expiryDate) override {
-        string key = keyImpl(assetName, ccy, assetClassUnderlying, expiryDate);
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =
@@ -192,7 +190,6 @@ protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
                                                         const Date& expiryDate) override {
-        string key = keyImpl(assetName, ccy, assetClassUnderlying, expiryDate);
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> discountCurve =

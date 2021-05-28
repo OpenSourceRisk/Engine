@@ -9,10 +9,12 @@
 */
 
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <ored/portfolio/builders/quantovanillaoption.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/currencycheck.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/instruments/quantovanillaoption.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 
@@ -25,6 +27,11 @@ namespace data {
 void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>& engineFactory) {
     Currency ccy = parseCurrencyWithMinors(currency_);
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for VanillaOption");
+
+    // If underlying currency is empty, then set to payment currency by default.
+    // If non-empty, then check if the currencies are different for a Quanto payoff
+    Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : parseCurrencyWithMinors(underlyingCurrency_);
+    bool sameCcy = underlyingCurrency == ccy;
 
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
@@ -49,10 +56,20 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     default:
         QL_FAIL("Option Style " << option_.style() << " is not supported");
     }
-    // Create the instrument and the populate the name for the engine builder.
+    // Create the instrument and then populate the name for the engine builder.
     boost::shared_ptr<Instrument> vanilla;
-    string tradeTypeBuider = tradeType_;
+    string tradeTypeBuilder = tradeType_;
     Settlement::Type settlementType = parseSettlementType(option_.settlement());
+
+    // For Quanto, check for European and Cash, except for an FX underlying
+    if (!sameCcy) {
+        QL_REQUIRE(exerciseType == Exercise::Type::European, "Option exercise must be European for a Quanto payoff.");
+        if (settlementType == Settlement::Type::Physical) {
+            QL_REQUIRE(assetClassUnderlying_ == AssetClass::FX,
+                       "Physically settled Quanto options are allowed only for an FX underlying.");
+        }
+    }
+
     if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
         // We have a European cash settled option.
 
@@ -73,6 +90,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         }
 
         if (paymentDate > expiryDate_) {
+            QL_REQUIRE(sameCcy, "Payment date must equal expiry date for a Quanto payoff. Trade: " << id() << ".");
 
             // Build a QuantExt::CashSettledEuropeanOption if payment date is strictly greater than expiry.
 
@@ -108,7 +126,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
             // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by
             // appending 'EuropeanCS' to the trade type.
-            tradeTypeBuider = tradeType_ + "EuropeanCS";
+            tradeTypeBuilder = tradeType_ + "EuropeanCS";
 
             // Update the maturity date.
             maturity_ = paymentDate;
@@ -116,8 +134,19 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
         } else {
             if (forwardDate_ == QuantLib::Date()) {
                 // If payment date is not greater than expiry, build QuantLib::VanillaOption.
-                vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                if (sameCcy)
+                    vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+                else {
+                    vanilla = boost::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
+                    if (assetClassUnderlying_ == AssetClass::EQ)
+                        tradeTypeBuilder = "QuantoEquityOption";
+                    else if (assetClassUnderlying_ == AssetClass::COM)
+                        tradeTypeBuilder = "QuantoCommodityOption";
+                    else
+                        QL_FAIL("Option Quanto payoff not supported for " << assetClassUnderlying_ << " class.");
+                }
             } else {
+                QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
                 vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
             }
         }
@@ -125,12 +154,19 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     } else {
         if (forwardDate_ == QuantLib::Date()) {
             // If not European or not cash settled, build QuantLib::VanillaOption.
-            vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+            if (sameCcy)
+                vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+            else
+                vanilla = boost::make_shared<QuantLib::QuantoVanillaOption>(payoff, exercise);
         } else {
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
         }
-        tradeTypeBuider = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
+
+        if (sameCcy)
+            tradeTypeBuilder = tradeType_ + (exerciseType == QuantLib::Exercise::Type::European ? "" : "American");
+        else
+            tradeTypeBuilder = "QuantoFxOption";
     }
     // Generally we need to set the pricing engine here even if the option is expired at build time, since the valuation date
     // might change after build, and we get errors for the edge case valuation date = expiry date for Europen options.
@@ -142,14 +178,27 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
        DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
                                                        << " because it is expired and american style.");
     } else {
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuider);
-        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuider);
-        boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
-            boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
-        vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+        if (sameCcy) {
+            boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
+                boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
+            QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
-        configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
+            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+
+            configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
+        } else {
+            boost::shared_ptr<QuantoVanillaOptionEngineBuilder> quantoVanillaOptionBuilder =
+                boost::dynamic_pointer_cast<QuantoVanillaOptionEngineBuilder>(builder);
+            QL_REQUIRE(quantoVanillaOptionBuilder != nullptr, "No (Quanto) engine builder found for trade type "
+                                                                << tradeTypeBuilder);
+
+            vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, ccy, expiryDate_));
+
+            configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
+        }
     }
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
