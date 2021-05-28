@@ -86,6 +86,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     additionalData_["underlyingSecurityId"] = name;
     additionalData_["notionalCurrency"] = ccy.code();
     additionalData_["strike"] = strike;
+    additionalData_["quantity"] = quantity_;
 }
 
 const std::map<std::string,boost::any>&
@@ -99,6 +100,8 @@ EquityForward::additionalData() const {
         additionalData_["notional[1]"] = notional_;
     }
     additionalData_["notionalCurrency[1]"] = additionalData_["notionalCurrency"];
+    additionalData_["notional[2]"] = notional_;
+    additionalData_["notionalCurrency[2]"] = notionalCurrency_;
     return additionalData_;
 }
     
