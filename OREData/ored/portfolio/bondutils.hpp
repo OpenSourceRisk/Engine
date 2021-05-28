@@ -50,7 +50,9 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
                                    std::string& issueDate, std::string& creditCurveId, std::string& referenceCurveId,
                                    std::string& proxySecurityId, std::string& incomeCurveId,
                                    std::string& volatilityCurveId, std::vector<LegData>& coupons,
-                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData,
-                                   bool hasCreditRisk = true);
+                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData);
+
+Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Calendar& calendar = NullCalendar());
+
 } // namespace data
 } // namespace ore

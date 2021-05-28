@@ -141,13 +141,14 @@ public:
     //! return model builders
     const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
-protected:
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string engineParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
                                 const std::string& defaultValue = "");
     /*! retrieve model parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string modelParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
                                const std::string& defaultValue = "");
+
+protected:
     string model_;
     string engine_;
     set<string> tradeTypes_;
@@ -259,7 +260,8 @@ public:
     LegBuilder(const string& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
-                         const string& configuration) const = 0;
+                         const string& configuration,
+                         const QuantLib::Date& openEndDateReplacement = Null<Date>()) const = 0;
     const string& legType() const { return legType_; }
 
 private:

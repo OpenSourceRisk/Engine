@@ -951,12 +951,8 @@ void YieldCurve::buildFittedBondCurve() {
                 boost::make_shared<DerivedQuote<multiply_by<Real>>>(bondQuote->quote(), multiply_by<Real>(100.0)));
             string securityID = bondQuote->securityID();
 
-            QL_REQUIRE(referenceData_ != nullptr && referenceData_->hasData("Bond", securityID),
-                       "bond reference data for '" << securityID << "' required to build fitted bond curve");
-            ore::data::Bond bond(Envelope(), BondData(securityID, 1.0));
-            bond.build(engineFactory);
-            auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
-            QL_REQUIRE(qlInstr != nullptr, "could not cast to QuantLib::Bond, this is unexpected");
+            QL_REQUIRE(referenceData_ != nullptr, "reference data required to build fitted bond curve");
+            auto qlInstr = BondFactory::instance().build(engineFactory, referenceData_, securityID);
 
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
             if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
