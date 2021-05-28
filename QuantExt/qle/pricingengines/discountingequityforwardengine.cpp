@@ -60,7 +60,7 @@ void DiscountingEquityForwardEngine::calculate() const {
         results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
 
         results_.additionalResults["forwardPrice"] = forwardPrice;
-        results_.additionalResults["notional"] = forwardPrice * strike;        
+        results_.additionalResults["currentNotional"] = forwardPrice * strike;
     }
 } // calculate
 

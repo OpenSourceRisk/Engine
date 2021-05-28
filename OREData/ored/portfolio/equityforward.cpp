@@ -88,6 +88,20 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     additionalData_["strike"] = strike;
 }
 
+const std::map<std::string,boost::any>&
+EquityForward::additionalData() const {
+    try {
+        instrument_->qlInstrument()->NPV();
+        Real ntl = instrument_->qlInstrument()->result<Real>("currentNotional");
+        additionalData_["notional[1]"] = ntl;
+    } catch (const std::exception& e) {
+        WLOG("equity forward does not provide current notional, using default strike * quantity");
+        additionalData_["notional[1]"] = notional_;
+    }
+    additionalData_["notionalCurrency[1]"] = additionalData_["notionalCurrency"];
+    return additionalData_;
+}
+    
 void EquityForward::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* eNode = XMLUtils::getChildNode(node, "EquityForwardData");
