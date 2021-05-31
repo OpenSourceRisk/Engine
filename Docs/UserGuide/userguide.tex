@@ -2263,6 +2263,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+  <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
 </Setup>
@@ -2286,7 +2287,7 @@ When ORE starts, it will initialise today's market, i.e. load market data, fixin
 specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with
 pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y, today's
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
-scenario analysis and stress testing.
+scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the marketDataFile and the fixingDataFile are explained in the sections below.
 
 \medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
@@ -2516,6 +2517,9 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     <Parameter name="fullInitialCollateralisation">true</Parameter>
+    <Parameter name="flipViewXVA">N</Parameter>
+    <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
+    <Parameter name="flipViewLendingCurvePostfix">_BORROW</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -2583,6 +2587,9 @@ sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
 date, sample) {\em after} taking collateral into account
 \item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
+\item {\tt flipViewXVA:} If set to {\tt Y}, then all xva (and exposure) calculations are done from the counterparties point of view ("flipped"). In order to do this, the default curves and recovery rates are switched (dvaName becomes Counterparty, whereas Counterparty becomes the dvaName), the funding curves are switched (fvaBorrowingCurve and fvaLendingCurve are taken from counterparty, see below) and most important: the NPVs in the exposure calculations are inverted.
+\item {\tt flipViewBorrowingCurvePostfix:} In order to fetch the borrowing curve of the counterparty for fva calculation, a yield curve with {\tt CptyName}+{\tt flipViewBorrowingCurvePostfix} needs to be set up, e.g. CPTY_A_BORROW
+\item {\tt flipViewLendingCurvePostfix:} In order to fetch the lending curve of the counterparty for fva calculation, a yield curve with {\tt CptyName}+{\tt flipViewLendingCurvePostfix} needs to be set up, e.g. CPTY_A_LEND
 \end{itemize}
 
 The two cube file outputs {\tt rawCubeOutputFile} and {\tt netCubeOutputFile} are provided for interactive analysis and visualisation purposes, see section

@@ -353,6 +353,8 @@ Dates.
 outlined in section \ref{ss:fixedleg_data}.
 \item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is
 outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
+\item CashflowData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{Cashflow} It is 
+outlined in section \ref{ss:cashflowdata}.
 \item CMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMS}. It is
   outlined in section \ref{ss:cmslegdata}.
 \item CMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMSSpread}. It is
@@ -691,7 +693,7 @@ Allowable values:  Positive integers.  Defaults to \emph{0} if left blank or omi
   a spread of 0.5\% or 50 bp.
 
 For the {\tt <Spreads>} section, the same applies as for notionals and
-rates - a list of changing spreads can be specified without or with individual starte dates as shown
+rates - a list of changing spreads can be specified without or with individual start dates as shown
 in Listing \ref{lst:spreads_dates}.
 \begin{listing}[H]
 %\hrule\medskip
@@ -799,6 +801,33 @@ Note:
   switching the amortisation type, i.e. only a  single block of {\tt
     AmortizationData}.
 \end{itemize}
+
+\subsubsection{Cashflow Leg Data}
+\label{ss:cashflowlegdata}
+
+Listing \ref{lst:cashflowdata} shows an example for a leg of type Cashflow. 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>Cashflow</LegType>
+        <CashflowData>
+           <Cashflow>
+              <Amount date="20170203">10000000</Amount>
+              <Amount date="20180203">10000000</Amount>
+           </Cashflow>
+        </CashflowData>
+      </LegData>
+\caption{Cashflow leg data}
+\label{lst:cashflowdata}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!CashflowData! node follow below.
+
+\item Cashflow: This node contains a child element of type
+  \lstinline!Cashflow!, which furthermore contains elements of type \lstinline!Amount! that contain the cashflow amount to be paid at the date given in attribute \lstinline!date! (case sensitive !).
+Allowable values for \lstinline!date!:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \subsubsection{CMS Leg Data}
 \label{ss:cmslegdata}

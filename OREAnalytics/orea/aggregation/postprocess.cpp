@@ -89,8 +89,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
                          Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation,
-                         Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle,
-                         Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight, Real kvaTheirCvaRiskWeight)
+                         Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle, Real kvaOurPdFloor, Real kvaTheirPdFloor, Real kvaOurCvaRiskWeight,
+                         Real kvaTheirCvaRiskWeight, const string& flipViewBorrowingCurvePostfix, const string& flipViewLendingCurvePostfix)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -101,7 +101,9 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
       fullInitialCollateralisation_(fullInitialCollateralisation), kvaCapitalDiscountRate_(kvaCapitalDiscountRate),
       kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment), kvaCapitalHurdle_(kvaCapitalHurdle),
       kvaOurPdFloor_(kvaOurPdFloor), kvaTheirPdFloor_(kvaTheirPdFloor), kvaOurCvaRiskWeight_(kvaOurCvaRiskWeight),
-      kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight) {
+      kvaTheirCvaRiskWeight_(kvaTheirCvaRiskWeight),
+      flipViewBorrowingCurvePostfix_(flipViewBorrowingCurvePostfix),
+      flipViewLendingCurvePostfix_(flipViewLendingCurvePostfix) {
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
@@ -121,6 +123,10 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     Size samples = cube->samples();
 
     AllocationMethod allocationMethod = parseAllocationMethod(allocMethod);
+
+    // flip the xVA point of view (take counterparties point of view)
+    flipViewXVA_ = analytics_["flipViewXVA"];
+    LOG("xVA calculated " << (flipViewXVA_ ? "from counterparties" : "banks") << " point of view ..");
 
     /***********************************************
      * Step 0: Netting as of today
@@ -148,7 +154,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         nidMap[tradeId] = trade->envelope().nettingSetId();
         cidMap[tradeId] = trade->envelope().counterparty();
         if (cidMap[tradeId] != nettingSetManager_->get(nidMap[tradeId])->counterparty()) {
-            // changed from QL_REQUIRE in Roland Kapl's original pull request to an ALERT
             ALOG("counterparty from trade (" << cidMap[tradeId]
                                              << "is not the same as counterparty from trade's netting set: "
                                              << nettingSetManager_->get(nidMap[tradeId])->counterparty());
@@ -160,8 +165,12 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         string tradeId = cube_->ids()[i];
         string nettingSetId = nidMap[tradeId];
         string cpId = cidMap[tradeId];
-        Real npv = cube_->getT0(i);
-
+        Real npv;
+        if (flipViewXVA_) {
+            npv = -cube_->getT0(i);
+        } else {
+            npv = cube_->getT0(i);
+        }
         tradeValueToday[tradeId] = npv;
         counterpartyId_[nettingSetId] = cpId;
 
@@ -259,7 +268,12 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             Date d = cube_->dates()[j];
             vector<Real> distribution(samples, 0.0);
             for (Size k = 0; k < samples; ++k) {
-                Real npv = d > nextBreakDate && exerciseNextBreak ? 0.0 : cube->get(i, j, k);
+                Real npv;
+                if (flipViewXVA_) {
+                    npv = d > nextBreakDate && exerciseNextBreak ? 0.0 : -cube->get(i, j, k);
+                } else {
+                    npv = d > nextBreakDate && exerciseNextBreak ? 0.0 : cube->get(i, j, k);
+                }
                 epe[j + 1] += max(npv, 0.0) / samples;
                 ene[j + 1] += max(-npv, 0.0) / samples;
                 nettingSetValue[nettingSetId][j][k] += npv;
@@ -380,6 +394,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> pfe(dates + 1, 0.0);
         vector<Real> colvaInc(dates + 1, 0.0);
         vector<Real> eoniaFloorInc(dates + 1, 0.0);
+        
+        // non't flip npv here if flipViewXVA_ as it was already done in Step 0
         Real npv = nettingSetValueToday[nettingSetId];
         if ((fullInitialCollateralisation_) & (netting->activeCsaFlag())) {
             // This assumes that the collateral at t=0 is the same as the npv at t=0.
@@ -609,22 +625,40 @@ void PostProcess::updateNettingSetKVA() {
 
         // PD from counterparty Dts, floored to avoid 0 ...
         // Today changed to today+1Y to get the one-year PD
-        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid, configuration_);
-        QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+        Handle<DefaultProbabilityTermStructure> cvaDts;
+        Real cvaRR; 
+        if (flipViewXVA_) {
+            cvaDts = market_->defaultCurve(dvaName_, configuration_);
+            QL_REQUIRE(!cvaDts.empty(), "Default curve missing for dva name " << dvaName_);
+            cvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+        } else {
+            cvaDts = market_->defaultCurve(cid, configuration_);
+            QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
+            cvaRR = market_->recoveryRate(cid, configuration_)->value();
+        }
+
         Real PD1 = std::max(cvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
         Real LGD1 = (1 - cvaRR);
 
         Handle<DefaultProbabilityTermStructure> dvaDts;
         Real dvaRR = 0.0;
         Real PD2 = 0;
-        if (dvaName_ != "") {
-            dvaDts = market_->defaultCurve(dvaName_, configuration_);
-            dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+        if (flipViewXVA_) {
+            dvaDts = market_->defaultCurve(cid, configuration_);
+            QL_REQUIRE(!dvaDts.empty(), "Default curve missing for counterparty " << cid);
+            dvaRR = market_->recoveryRate(cid, configuration_)->value();
             PD2 = std::max(dvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
         } else {
-            ALOG("dvaName not specified, own PD set to zero for their KVA calculation");
+            if (dvaName_ != "") {
+                // FIXME: maybe think about alert or QL_REQUIRE for missing dvaName_
+                dvaDts = market_->defaultCurve(dvaName_, configuration_);
+                dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+                PD2 = std::max(dvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
+            } else {
+                ALOG("dvaName not specified, own PD set to zero for their KVA calculation");
+            }
         }
+
         Real LGD2 = (1 - dvaRR);
 
         // Granularity adjustment, Gordy (2004):
@@ -855,26 +889,54 @@ void PostProcess::updateStandAloneXVA() {
         LOG("Update XVA for trade " << tradeId);
         string cid = portfolio_->trades()[i]->envelope().counterparty();
         string nid = portfolio_->trades()[i]->envelope().nettingSetId();
-        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid, configuration_);
-        QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+        Handle<DefaultProbabilityTermStructure> cvaDts;
+        Real cvaRR;
         Handle<DefaultProbabilityTermStructure> dvaDts;
         Real dvaRR = 0.0;
-        if (dvaName_ != "") {
-            dvaDts = market_->defaultCurve(dvaName_, configuration_);
-            dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+        if (flipViewXVA_) {
+            cvaDts = market_->defaultCurve(dvaName_, configuration_);
+            QL_REQUIRE(!cvaDts.empty(), "Default curve missing for dva name " << dvaName_);
+            cvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+            dvaDts = market_->defaultCurve(cid, configuration_);
+            QL_REQUIRE(!dvaDts.empty(), "Default curve missing for counterparty " << cid);
+            dvaRR = market_->recoveryRate(cid, configuration_)->value();
+        } else {
+            cvaDts = market_->defaultCurve(cid, configuration_);
+            QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
+            cvaRR = market_->recoveryRate(cid, configuration_)->value();
+            if (dvaName_ != "") {
+                // FIXME: maybe think about alert or QL_REQUIRE for missing dvaName_
+                dvaDts = market_->defaultCurve(dvaName_, configuration_);
+                dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+            }
         }
-        Handle<YieldTermStructure> borrowingCurve, lendingCurve;
-        if (fvaBorrowingCurve_ != "")
-            borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
-        if (fvaLendingCurve_ != "")
-            lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
 
+        Handle<YieldTermStructure> borrowingCurve, lendingCurve;
+        // for flipping XVA View, take borrowing and lending curve from specified cpty + flipViewPostfix
+        if (flipViewXVA_) {
+            borrowingCurve = market_->yieldCurve(cid + flipViewBorrowingCurvePostfix_, configuration_);
+            lendingCurve = market_->yieldCurve(cid + flipViewLendingCurvePostfix_, configuration_);
+        } else {
+            if (fvaBorrowingCurve_ != "")
+                borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
+            if (fvaLendingCurve_ != "")
+                lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
+        }
+        if (borrowingCurve.empty()) {
+            ALOG("No borrowing curve found for fva calculation!");
+        }
+        if (lendingCurve.empty()) {
+            ALOG("No lending curve found for fva calculation!");
+        }
         Handle<YieldTermStructure> oisCurve = market_->discountCurve(baseCurrency_, configuration_);
         tradeCVA_[tradeId] = 0.0;
         tradeDVA_[tradeId] = 0.0;
         tradeFBA_[tradeId] = 0.0;
+        tradeFBA_exOwnSP_[tradeId] = 0.0;
+        tradeFBA_exAllSP_[tradeId] = 0.0;
         tradeFCA_[tradeId] = 0.0;
+        tradeFCA_exOwnSP_[tradeId] = 0.0;
+        tradeFCA_exAllSP_[tradeId] = 0.0;
         tradeMVA_[tradeId] = 0.0; // FIXME: MVA is not computed at trade level yet, remains initialised at 0
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
@@ -931,27 +993,53 @@ void PostProcess::updateStandAloneXVA() {
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
         string cid = counterpartyId_[nettingSetId];
-        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid);
-        QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+        Handle<DefaultProbabilityTermStructure> cvaDts;
+        Real cvaRR;
         Handle<DefaultProbabilityTermStructure> dvaDts;
         Real dvaRR = 0.0;
-        if (dvaName_ != "") {
-            dvaDts = market_->defaultCurve(dvaName_, configuration_);
-            dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+
+        if (flipViewXVA_) {
+            cvaDts = market_->defaultCurve(dvaName_, configuration_);
+            QL_REQUIRE(!cvaDts.empty(), "Default curve missing for dva name " << dvaName_);
+            cvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+            dvaDts = market_->defaultCurve(cid, configuration_);
+            QL_REQUIRE(!dvaDts.empty(), "Default curve missing for counterparty " << cid);
+            dvaRR = market_->recoveryRate(cid, configuration_)->value();
+        } else {
+            cvaDts = market_->defaultCurve(cid);
+            QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
+            cvaRR = market_->recoveryRate(cid, configuration_)->value();
+            if (dvaName_ != "") {
+                // FIXME: maybe think about alert or QL_REQUIRE for missing dvaName_
+                dvaDts = market_->defaultCurve(dvaName_, configuration_);
+                dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+            }
         }
-
         Handle<YieldTermStructure> borrowingCurve, lendingCurve;
-        if (fvaBorrowingCurve_ != "")
-            borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
-        if (fvaLendingCurve_ != "")
-            lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
-
+        if (flipViewXVA_) {
+            borrowingCurve = market_->yieldCurve(cid + flipViewBorrowingCurvePostfix_, configuration_);
+            lendingCurve = market_->yieldCurve(cid + flipViewLendingCurvePostfix_, configuration_);
+        } else {
+            if (fvaBorrowingCurve_ != "")
+                borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
+            if (fvaLendingCurve_ != "")
+                lendingCurve = market_->yieldCurve(fvaLendingCurve_, configuration_);
+        }
+        if (borrowingCurve.empty()) {
+            ALOG("No borrowing curve found for fva calculation!");
+        }
+        if (lendingCurve.empty()) {
+            ALOG("No lending curve found for fva calculation!");
+        }
         Handle<YieldTermStructure> oisCurve = market_->discountCurve(baseCurrency_, configuration_);
         nettingSetCVA_[nettingSetId] = 0.0;
         nettingSetDVA_[nettingSetId] = 0.0;
         nettingSetFBA_[nettingSetId] = 0.0;
+        nettingSetFBA_exOwnSP_[nettingSetId] = 0.0;
+        nettingSetFBA_exAllSP_[nettingSetId] = 0.0;
         nettingSetFCA_[nettingSetId] = 0.0;
+        nettingSetFCA_exOwnSP_[nettingSetId] = 0.0;
+        nettingSetFCA_exAllSP_[nettingSetId] = 0.0;
         nettingSetMVA_[nettingSetId] = 0.0;
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
@@ -1006,15 +1094,27 @@ void PostProcess::updateAllocatedXVA() {
         string tradeId = portfolio_->trades()[i]->id();
         LOG("Update XVA for trade " << tradeId);
         string cid = portfolio_->trades()[i]->envelope().counterparty();
-        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid, configuration_);
-        QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
-        Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
+        Handle<DefaultProbabilityTermStructure> cvaDts;
+        Real cvaRR;
         Handle<DefaultProbabilityTermStructure> dvaDts;
-        Real dvaRR = 0.0;
-        if (dvaName_ != "") {
-            dvaDts = market_->defaultCurve(dvaName_, configuration_);
-            dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+        Real dvaRR; 
+        if (flipViewXVA_) {
+            cvaDts = market_->defaultCurve(dvaName_, configuration_);
+            cvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+            dvaDts = market_->defaultCurve(cid, configuration_);
+            QL_REQUIRE(!dvaDts.empty(), "Default curve missing for counterparty " << cid);
+            dvaRR = market_->recoveryRate(cid, configuration_)->value();
+        } else {
+            cvaDts = market_->defaultCurve(cid, configuration_);
+            QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
+            cvaRR = market_->recoveryRate(cid, configuration_)->value();
+            dvaRR = 0.0;
+            if (dvaName_ != "") {
+                dvaDts = market_->defaultCurve(dvaName_, configuration_);
+                dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
+            }
         }
+
         allocatedTradeCVA_[tradeId] = 0.0;
         allocatedTradeDVA_[tradeId] = 0.0;
         for (Size j = 0; j < dates; ++j) {

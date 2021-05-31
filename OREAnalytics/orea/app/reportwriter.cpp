@@ -126,7 +126,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("Accrual", double(), 10)
         .addColumn("fixingDate", Date())
         .addColumn("fixingValue", double(), 10)
-        .addColumn("Notional", double(), 4);
+        .addColumn("Notional", double(), 4)
+        .addColumn("StartDate", Date())
+        .addColumn("EndDate", Date());
 
     if (write_discount_factor) {
         report.addColumn("DiscountFactor", double(), 10);
@@ -163,15 +165,21 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         Real coupon;
                         Real accrual;
                         Real notional;
+                        Date startDate;
+                        Date endDate;
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
                             notional = ptrCoupon->nominal();
+                            startDate = ptrCoupon->accrualStartDate();
+                            endDate = ptrCoupon->accrualEndDate();
                             flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
                             notional = Null<Real>();
+                            startDate = Null<Date>();
+                            endDate = Null<Date>();
                             flowType = "Notional";
                         }
                         // This BMA part here (and below) is necessary because the fixingDay() method of
@@ -228,7 +236,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             .add(accrual)
                             .add(fixingDate)
                             .add(fixingValue)
-                            .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
+                            .add(notional * (notional == Null<Real>() ? 1.0 : multiplier))
+                            .add(startDate)
+                            .add(endDate);
 
                         if (write_discount_factor) {
                             Real discountFactor = discountCurve->discount(payDate);
