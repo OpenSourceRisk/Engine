@@ -64,6 +64,7 @@
 #include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/jpyeytibor.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
+#include <qle/indexes/ibor/hkdhonia.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/idrjibor.hpp>
@@ -286,9 +287,9 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"BRL-CDI", boost::make_shared<BRLCdi>()},         {"NOK-NOWA", boost::make_shared<Nowa>()},
         {"CLP-CAMARA", boost::make_shared<CLPCamara>()},   {"NZD-OCR", boost::make_shared<Nzocr>()},
         {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}, {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()},
-	    {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()}};
+	    {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()}, {"HKD-HONIA", boost::make_shared<HKDHonia>()}};
 
-    // Map from our _unique internal name_ to an ibor index (the period does not matter here)
+    // Map from our _unique internal name_ to an ibor index (the period does not matter here)XF
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},

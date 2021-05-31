@@ -337,6 +337,7 @@ indexes/ibor/dkkcibor.hpp
 indexes/ibor/dkkois.hpp
 indexes/ibor/ester.hpp
 indexes/ibor/hkdhibor.hpp
+indexes/ibor/hkdhonia.hpp
 indexes/ibor/hufbubor.hpp
 indexes/ibor/idridrfix.hpp
 indexes/ibor/idrjibor.hpp
