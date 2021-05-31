@@ -281,6 +281,8 @@ portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
+portfolio/builders/quantoequityoption.hpp
+portfolio/builders/quantovanillaoption.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
 portfolio/builders/vanillaoption.hpp
