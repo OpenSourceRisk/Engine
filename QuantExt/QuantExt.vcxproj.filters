@@ -36,6 +36,9 @@
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\hkdhonia.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
