@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -111,6 +112,20 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeNoDelta) {
     // Check its members
     BOOST_CHECK_EQUAL(castStrike->atmType(), inputAtmType);
     BOOST_CHECK(!castStrike->deltaType());
+}
+
+BOOST_AUTO_TEST_CASE(testAtmStrikeNoDeltaEquality) {
+
+    BOOST_TEST_MESSAGE("Testing equality operator for two ATM strikes without delta...");
+    // Checks for failure in operator== if delta type is not given
+
+    DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmFwd;
+    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
+
+    vector<boost::shared_ptr<BaseStrike>> strikes;
+    strikes.push_back(boost::make_shared<AtmStrike>(atmType, atmDeltaType));
+    strikes.push_back(boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd));
+    BOOST_CHECK(*strikes[0] == *strikes[1]);
 }
 
 BOOST_AUTO_TEST_CASE(testAtmStrikeWithDelta) {
