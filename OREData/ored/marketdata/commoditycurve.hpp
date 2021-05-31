@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -121,12 +122,17 @@ template <template <class> class CurveType, typename... Args> void CommodityCurv
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::LogLinear>>(args...);
     } else if (interpolationMethod_ == "Cubic") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::Cubic>>(args...);
+    } else if (interpolationMethod_ == "Hermite") {
+        commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::Cubic>>(
+            args..., QuantLib::Cubic(QuantLib::CubicInterpolation::Parabolic));
     } else if (interpolationMethod_ == "LinearFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::LinearFlat>>(args...);
     } else if (interpolationMethod_ == "LogLinearFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::LogLinearFlat>>(args...);
     } else if (interpolationMethod_ == "CubicFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::CubicFlat>>(args...);
+    } else if (interpolationMethod_ == "HermiteFlat") {
+        commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::HermiteFlat>>(args...);
     } else {
         QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
     }
