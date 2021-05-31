@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,33 +16,33 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file seksior.hpp
-    \brief SEK T/N rate
+/*! \file dkkcita.hpp
+    \brief DKK T/N rate
     \ingroup indexes
 */
 
-#ifndef quantext_seksior_hpp
-#define quantext_seksior_hpp
+#ifndef quantext_dkkcita_hpp
+#define quantext_dkkcita_hpp
 
 #include <ql/currencies/europe.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/sweden.hpp>
+#include <ql/time/calendars/denmark.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-//! %SEK SIOR
-/*! %SEK T/N rate
+//! %DKK CITA
+/*! %DKK Copenhagen Interbank T/N Average rate
 
-\remark Using Sweden calendar.
+\remark Using Denmark calendar.
 
 \ingroup indexes
 */
-class SEKSior : public OvernightIndex {
+class DKKCita : public OvernightIndex {
 public:
-    SEKSior(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : OvernightIndex("SEK-SIOR", 1, SEKCurrency(), Sweden(), Actual360(), h) {}
+    DKKCita(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("DKK-CITA", 1, DKKCurrency(), Denmark(), Actual360(), h) {}
 };
 } // namespace QuantExt
 

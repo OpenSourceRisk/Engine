@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file seksior.hpp
+/*! \file sekstina.hpp
     \brief SEK T/N rate
     \ingroup indexes
 */
 
-#ifndef quantext_seksior_hpp
-#define quantext_seksior_hpp
+#ifndef quantext_sekstina_hpp
+#define quantext_sekstina_hpp
 
 #include <ql/currencies/europe.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -32,17 +32,14 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! %SEK SIOR
-/*! %SEK T/N rate
+//! %SEK STINA
+/*! %SEK Stockholm T/N Interbank Average rate
 
-\remark Using Sweden calendar.
-
-\ingroup indexes
 */
-class SEKSior : public OvernightIndex {
+class SEKStina : public OvernightIndex {
 public:
-    SEKSior(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : OvernightIndex("SEK-SIOR", 1, SEKCurrency(), Sweden(), Actual360(), h) {}
+    SEKStina(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("SEK-STINA", 1, SEKCurrency(), Sweden(), Actual360(), h) {}
 };
 } // namespace QuantExt
 
