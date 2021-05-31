@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
         { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
         { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
-        { SEKStina(pd), "SEK-STINA", Sweden().name(), SEKCurrency().name() },
+        { SEKStina(), "SEK-STINA", Sweden().name(), SEKCurrency().name() },
         { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
         { SGDSibor(pd), "SGD-SIBOR", Singapore().name(), SGDCurrency().name() },
         { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
