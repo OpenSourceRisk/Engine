@@ -31,9 +31,11 @@ namespace QuantExt {
 DiscountingCurrencySwapEngine::DiscountingCurrencySwapEngine(
     const std::vector<Handle<YieldTermStructure> >& discountCurves, const std::vector<Handle<Quote> >& fxQuotes,
     const std::vector<Currency>& currencies, const Currency& npvCurrency,
-    boost::optional<bool> includeSettlementDateFlows, Date settlementDate, Date npvDate)
+    boost::optional<bool> includeSettlementDateFlows, Date settlementDate, Date npvDate,
+	const std::vector<Date>& spotFXSettleDateVec)
     : discountCurves_(discountCurves), fxQuotes_(fxQuotes), currencies_(currencies), npvCurrency_(npvCurrency),
-      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate) {
+      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate), 
+	  spotFXSettleDateVec_(spotFXSettleDateVec) {
 
     QL_REQUIRE(discountCurves_.size() == currencies_.size(), "Number of "
                                                              "currencies does not match number of discount curves.");
@@ -63,8 +65,8 @@ Handle<Quote> DiscountingCurrencySwapEngine::fetchFX(Currency ccy) const {
 }
 
 void DiscountingCurrencySwapEngine::calculate() const {
-
-    for (Size i = 0; i < arguments_.currency.size(); i++) {
+	Size numCurrencies = arguments_.currency.size();
+    for (Size i = 0; i < numCurrencies; i++) {
         Currency ccy = arguments_.currency[i];
         Handle<YieldTermStructure> yts = fetchTS(ccy);
         QL_REQUIRE(!yts.empty(), "Discounting term structure is "
@@ -103,6 +105,27 @@ void DiscountingCurrencySwapEngine::calculate() const {
                                                            << referenceDate << ")");
         results_.valuationDate = npvDate_;
     }
+
+	//check spotFXSettleDateVec_
+    std::vector<Date> spotFXSettleDateVec = spotFXSettleDateVec_;
+    if (spotFXSettleDateVec.size() == 0) {
+        spotFXSettleDateVec.resize(numCurrencies, referenceDate);
+    } else {
+		QL_REQUIRE(spotFXSettleDateVec.size() == numCurrencies, "Number of "
+														   "currencies does not match number of FX settlement dates.");
+    }
+	for (Size i = 0; i < numCurrencies; ++i) {
+		if (spotFXSettleDateVec[i] == Date()) {
+			spotFXSettleDateVec[i] = referenceDate;
+		} else {
+			Currency ccy = arguments_.currency[i];
+			QL_REQUIRE(spotFXSettleDateVec[i] >= referenceDate, "FX settlement date (" << spotFXSettleDateVec[i]
+																<< ") for currency " << ccy << 
+																" cannot be before discount curve "
+																"reference date ("
+																<< referenceDate << ")");
+		}
+	}
     results_.value = 0.0;
     results_.errorEstimate = Null<Real>();
 
@@ -134,9 +157,21 @@ void DiscountingCurrencySwapEngine::calculate() const {
 
             // Converts into base currency and adds.
             Handle<Quote> fx = fetchFX(ccy);
-            results_.legNPV[i] = results_.inCcyLegNPV[i] * fx->value();
+			Real settleFXRate = fx->value();
+			Real spotFXRate = settleFXRate;
+			if( spotFXSettleDateVec[i] != referenceDate ) {
+				//Use the parity relation between discount factors and fx rates to compute spotFXRate
+				//Generic formula: fx(T1)/fx(T2) = FwdDF_Quote(T1->T2) / FwdDF_Base(T1->T2), where fx represents the currency ratio Base/Quote
+				Real npvCcyDF = npvCcyYts->discount(spotFXSettleDateVec[i]);
+				Real ccyDF = yts->discount(spotFXSettleDateVec[i]);
+				QL_REQUIRE(ccyDF != 0.0, "Discount Factor associated with currency " << ccy
+                                                << " at maturity " << spotFXSettleDateVec[i] << " cannot be zero");
+				spotFXRate *= npvCcyDF / ccyDF;
+			}
+
+            results_.legNPV[i] = results_.inCcyLegNPV[i] * spotFXRate;
             if (results_.inCcyLegBPS[i] != Null<Real>()) {
-                results_.legBPS[i] = results_.inCcyLegBPS[i] * fx->value();
+                results_.legBPS[i] = results_.inCcyLegBPS[i] * spotFXRate;
             } else {
                 results_.legBPS[i] = Null<Real>();
             }
