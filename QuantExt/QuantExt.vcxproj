@@ -570,6 +570,7 @@
     <ClInclude Include="qle\indexes\ibor\ester.hpp" />
     <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\hkdhonia.hpp" />
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp" />
     <ClInclude Include="qle\indexes\ibor\idridrfix.hpp" />
     <ClInclude Include="qle\indexes\ibor\idrjibor.hpp" />
