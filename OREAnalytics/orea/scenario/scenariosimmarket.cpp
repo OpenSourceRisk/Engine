@@ -163,6 +163,37 @@ void checkDayCounterConsistency(const std::string& curveId, const DayCounter& in
     }
 }
 
+boost::shared_ptr<YieldTermStructure>
+makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<YieldTermStructure>& initMarketTs,
+               const std::vector<Real>& yieldCurveTimes, const std::vector<Handle<Quote>>& quotes, const DayCounter& dc,
+               const Calendar& cal, const std::string& interpolation, const std::string& extrapolation) {
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
+        return boost::shared_ptr<YieldTermStructure>(boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
+            yieldCurveTimes, quotes, 0, cal, dc,
+            interpolation == "LogLinear" ? QuantExt::InterpolatedDiscountCurve::Interpolation::logLinear
+                                         : QuantExt::InterpolatedDiscountCurve::Interpolation::linearZero,
+            extrapolation == "FlatZero" ? QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero
+                                        : QuantExt::InterpolatedDiscountCurve::Extrapolation::flatFwd));
+    } else {
+        if (spreaded) {
+            checkDayCounterConsistency(curveId, initMarketTs->dayCounter(), dc);
+            return boost::make_shared<QuantExt::SpreadedDiscountCurve>(
+                initMarketTs, yieldCurveTimes, quotes,
+                interpolation == "LogLinear" ? QuantExt::SpreadedDiscountCurve::Interpolation::logLinear
+                                             : QuantExt::SpreadedDiscountCurve::Interpolation::linearZero,
+                extrapolation == "FlatZero" ? SpreadedDiscountCurve::Extrapolation::flatZero
+                                            : SpreadedDiscountCurve::Extrapolation::flatFwd);
+        } else {
+            return boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
+                yieldCurveTimes, quotes, dc,
+                interpolation == "LogLinear" ? QuantExt::InterpolatedDiscountCurve2::Interpolation::logLinear
+                                             : QuantExt::InterpolatedDiscountCurve2::Interpolation::linearZero,
+                extrapolation == "FlatZero" ? InterpolatedDiscountCurve2::Extrapolation::flatZero
+                                            : InterpolatedDiscountCurve2::Extrapolation::flatFwd);
+        }
+    }
+}
+
 } // namespace
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
@@ -207,27 +238,9 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         }
     }
 
-    boost::shared_ptr<YieldTermStructure> yieldCurve;
-
-    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
-            yieldCurveTimes, quotes, 0, TARGET(), dc,
-            parameters_->extrapolation() == "FlatZero" ? QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero
-                                                       : QuantExt::InterpolatedDiscountCurve::Extrapolation::flatFwd));
-    } else {
-        if (spreaded) {
-            checkDayCounterConsistency(key, wrapper->dayCounter(), dc);
-            yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(
-                wrapper, yieldCurveTimes, quotes,
-                parameters_->extrapolation() == "FlatZero" ? SpreadedDiscountCurve::Extrapolation::flatZero
-                                                           : SpreadedDiscountCurve::Extrapolation::flatFwd);
-        } else {
-            yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
-                yieldCurveTimes, quotes, dc,
-                parameters_->extrapolation() == "FlatZero" ? InterpolatedDiscountCurve2::Extrapolation::flatZero
-                                                           : InterpolatedDiscountCurve2::Extrapolation::flatFwd);
-        }
-    }
+    boost::shared_ptr<YieldTermStructure> yieldCurve =
+        makeYieldCurve(key, spreaded, wrapper, yieldCurveTimes, quotes, dc, TARGET(), parameters_->interpolation(),
+                       parameters_->extrapolation());
 
     Handle<YieldTermStructure> ych(yieldCurve);
     if (wrapper->allowsExtrapolation())
@@ -266,8 +279,10 @@ ScenarioSimMarket::ScenarioSimMarket(
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
 
     // check ssm parameters
-    QL_REQUIRE(parameters_->extrapolation() == "" || parameters_->extrapolation() == "FlatZero" ||
-                   parameters_->extrapolation() == "FlatFwd",
+    QL_REQUIRE(parameters_->interpolation() == "LogLinear" || parameters_->interpolation() == "LinearZero",
+               "ScenarioSimMarket: Interpolation (" << parameters_->interpolation()
+                                                    << ") must be set to 'LogLinear' or 'LinearZero'");
+    QL_REQUIRE(parameters_->extrapolation() == "FlatZero" || parameters_->extrapolation() == "FlatFwd",
                "ScenarioSimMarket: Extrapolation ('" << parameters_->extrapolation()
                                                      << "') must be set to 'FlatZero' or 'FlatFwd'");
 
@@ -382,40 +397,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << val);
                         }
 
-                        // FIXME interpolation fixed to linear, added to xml??
-                        boost::shared_ptr<YieldTermStructure> indexCurve;
-                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister &&
-                            !useSpreadedTermStructures_) {
-                            indexCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
-                                yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc,
-                                parameters_->extrapolation() == "FlatZero"
-                                    ? QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero
-                                    : QuantExt::InterpolatedDiscountCurve::Extrapolation::flatFwd);
-                        } else {
-                            if (useSpreadedTermStructures_) {
-                                checkDayCounterConsistency(name, wrapperIndex->dayCounter(), dc);
-                                indexCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(
-                                    wrapperIndex, yieldCurveTimes, quotes,
-                                    parameters_->extrapolation() == "FlatZero"
-                                        ? SpreadedDiscountCurve::Extrapolation::flatZero
-                                        : SpreadedDiscountCurve::Extrapolation::flatFwd);
-                            } else {
-                                indexCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
-                                    yieldCurveTimes, quotes, dc,
-                                    parameters_->extrapolation() == "FlatZero"
-                                        ? InterpolatedDiscountCurve2::Extrapolation::flatZero
-                                        : InterpolatedDiscountCurve2::Extrapolation::flatFwd);
-                            }
-                        }
-
-                        // wrapped curve, is slower than a native curve
-                        // boost::shared_ptr<YieldTermStructure> correctedIndexCurve(
-                        //     new StaticallyCorrectedYieldTermStructure(
-                        //         discountCurves_[ccy], initMarket->discountCurve(ccy, configuration),
-                        //         wrapperIndex));
+                        boost::shared_ptr<YieldTermStructure> indexCurve = makeYieldCurve(
+                            name, useSpreadedTermStructures_, wrapperIndex, yieldCurveTimes, quotes, dc,
+                            index->fixingCalendar(), parameters_->interpolation(), parameters_->extrapolation());
 
                         Handle<YieldTermStructure> ich(indexCurve);
-                        // Handle<YieldTermStructure> ich(correctedIndexCurve);
                         if (wrapperIndex->allowsExtrapolation())
                             ich->enableExtrapolation();
 
