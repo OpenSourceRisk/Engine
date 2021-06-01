@@ -4975,18 +4975,29 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <!-- DividendYield, ForwardPrice, OptionPremium, ForwardDividendPrice -->
+    <!-- DividendYield, ForwardPrice, OptionPremium, NoDividends, ForwardDividendPrice -->
     <Type>DividendYield</Type> 
     <!-- Optional node, only used when Type is OptionPremium -->
     <ExerciseStyle>American</ExerciseStyle>
     <!-- Spot quote from the market data file -->
-    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
+    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote>
+    <!-- Note: do not provide Quotes if Type is NoDividends -->
     <Quotes>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
     </Quotes>
+    <!-- Optional interpolation options, default Zero and Linear -->
+    <!-- Note: do not provide DividendInterpolation if Type is NoDividends -->
+    <DividendInterpolation>
+      <!-- Zero, Discount -->
+      <InterpolationVariable>Zero</InterpolationVariable>
+      <!-- See \ref{tab:allow_interp_methods} -->
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+    </DividendInterpolation>
+    <!-- Optional node, defaults to true -->
+    <Extrapolation>True</Extrapolation>
     <DayCounter>A365</DayCounter>
   </EquityCurve>
   <EquityCurve>
