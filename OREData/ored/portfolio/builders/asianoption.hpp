@@ -207,15 +207,25 @@ protected:
                                                         const double strike) override {
         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
-        Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples"));
-        Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance"));
-        Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples"));
+        Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
+        Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", "", false, "0"));
+        Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", "", false, "0"));
         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", "", false, "123456"));
+
+        // Check if values defaulted to 0, if so replace by Null<T>().
+        if (requiredSamples == 0)
+            requiredSamples = Null<Size>();
+        if (requiredTolerance == 0)
+            requiredTolerance = Null<Real>();
+        if (maxSamples == 0)
+            maxSamples = Null<Size>();
+        QL_REQUIRE(requiredSamples != QuantLib::Null<Size>() || requiredTolerance != QuantLib::Null<Real>(),
+                   "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticASEngine.");
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getConstBlackScholesProcess(assetName, ccy, assetClassUnderlying, expiryDate, strike);
-        return boost::make_shared<MCDiscreteArithmeticASEngine<>>(gbsp, brownianBridge, antitheticVariate,
-                                                                  requiredSamples, requiredTolerance, maxSamples, seed);
+        return boost::make_shared<MCDiscreteArithmeticASEngine<LowDiscrepancy>>(
+            gbsp, brownianBridge, antitheticVariate, requiredSamples, requiredTolerance, maxSamples, seed);
     }
 };
 
@@ -254,8 +264,8 @@ protected:
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getConstBlackScholesProcess(assetName, ccy, assetClassUnderlying, expiryDate, strike);
-        return boost::make_shared<MCDiscreteGeometricAPEngine<>>(gbsp, brownianBridge, antitheticVariate,
-                                                                 requiredSamples, requiredTolerance, maxSamples, seed);
+        return boost::make_shared<MCDiscreteGeometricAPEngine<LowDiscrepancy>>(
+            gbsp, brownianBridge, antitheticVariate, requiredSamples, requiredTolerance, maxSamples, seed);
     }
 };
 
