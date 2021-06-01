@@ -317,7 +317,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 if (cf.discountFactor != Null<Real>()) {
                                     discountFactor = cf.discountFactor;
                                 } else if (!cf.currency.empty() && cf.payDate != Null<Date>()) {
-                                    discountFactor = market->discountCurve(cf.currency)->discount(cf.payDate);
+                                    discountFactor = cf.payDate < asof
+                                                         ? 0.0
+                                                         : market->discountCurve(cf.currency)->discount(cf.payDate);
                                 }
                                 Real presentValue = effectiveAmount * discountFactor;
                                 if (cf.presentValue != Null<Real>()) {
