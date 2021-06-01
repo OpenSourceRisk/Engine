@@ -160,7 +160,7 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
             boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
 
         asian->setPricingEngine(
-            asianOptionBuilder->engine(assetName_, ccy, expiryDate_, strike_));
+            asianOptionBuilder->engine(assetName_, ccy, expiryDate_));
 
         configuration = asianOptionBuilder->configuration(MarketContext::pricing);
     } else {

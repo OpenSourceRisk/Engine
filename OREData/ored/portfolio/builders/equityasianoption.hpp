@@ -29,8 +29,8 @@ namespace ore {
 namespace data {
 
 //! Discrete Monte Carlo Engine Builder for European Asian Equity Arithmetic Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
@@ -38,12 +38,12 @@ class EquityEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOptionM
 public:
     EquityEuropeanAsianOptionMCDAAPEngineBuilder()
         : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticPrice"},
-                                                 AssetClass::EQ, expiryDate_, strike_) {}
+                                                 AssetClass::EQ, expiryDate_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Equity Arithmetic Average Strike Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
@@ -51,20 +51,20 @@ class EquityEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOptionM
 public:
     EquityEuropeanAsianOptionMCDAASEngineBuilder()
         : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticStrike"},
-                                                 AssetClass::EQ, expiryDate_, strike_) {}
+                                                 AssetClass::EQ, expiryDate_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Equity Geometric Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
 class EquityEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
 public:
     EquityEuropeanAsianOptionMCDGAPEngineBuilder()
-        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionArithmeticPrice"},
-                                                 AssetClass::EQ, expiryDate_, strike_) {}
+        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"EquityAsianOptionGeometricPrice"},
+                                                 AssetClass::EQ, expiryDate_) {}
 };
 
 //! Discrete Analytic Engine Builder for European Asian Equity Geometric Average Price Options

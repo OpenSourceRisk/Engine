@@ -29,8 +29,8 @@ namespace ore {
 namespace data {
 
 //! Discrete Monte Carlo Engine Builder for European Asian Fx Arithmetic Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
@@ -38,12 +38,12 @@ class FxEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOptionMCDAA
 public:
     FxEuropeanAsianOptionMCDAAPEngineBuilder()
         : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX,
-                                                 expiryDate_, strike_) {}
+                                                 expiryDate_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Fx Arithmetic Average Strike Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
@@ -51,20 +51,20 @@ class FxEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOptionMCDAA
 public:
     FxEuropeanAsianOptionMCDAASEngineBuilder()
         : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticStrike"},
-                                                 AssetClass::FX, expiryDate_, strike_) {}
+                                                 AssetClass::FX, expiryDate_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Fx Geometric Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
 class FxEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
 public:
     FxEuropeanAsianOptionMCDGAPEngineBuilder()
-        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX,
-                                                 expiryDate_, strike_) {}
+        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"}, AssetClass::FX,
+                                                 expiryDate_) {}
 };
 
 //! Discrete Analytic Engine Builder for European Asian Fx Geometric Average Price Options
@@ -99,8 +99,8 @@ public:
 class FxEuropeanAsianOptionACGAPEngineBuilder : public EuropeanAsianOptionACGAPEngineBuilder {
 public:
     FxEuropeanAsianOptionACGAPEngineBuilder()
-        : EuropeanAsianOptionACGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"},
-                                                AssetClass::FX) {}
+        : EuropeanAsianOptionACGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
+    }
 };
 
 } // namespace data

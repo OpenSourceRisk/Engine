@@ -29,8 +29,8 @@ namespace ore {
 namespace data {
 
 //! Discrete Monte Carlo Engine Builder for European Asian Commodity Arithmetic Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
@@ -38,12 +38,12 @@ class CommodityEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOpti
 public:
     CommodityEuropeanAsianOptionMCDAAPEngineBuilder()
         : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},
-                                                 AssetClass::COM, expiryDate_, strike_) {}
+                                                 AssetClass::COM, expiryDate_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Commodity Arithmetic Average Strike Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
@@ -51,20 +51,20 @@ class CommodityEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOpti
 public:
     CommodityEuropeanAsianOptionMCDAASEngineBuilder()
         : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticStrike"},
-                                                 AssetClass::COM, expiryDate_, strike_) {}
+                                                 AssetClass::COM, expiryDate_) {}
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Commodity Geometric Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
 class CommodityEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
 public:
     CommodityEuropeanAsianOptionMCDGAPEngineBuilder()
-        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionArithmeticPrice"},
-                                                 AssetClass::COM, expiryDate_, strike_) {}
+        : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"CommodityAsianOptionGeometricPrice"},
+                                                 AssetClass::COM, expiryDate_) {}
 };
 
 //! Discrete Analytic Engine Builder for European Asian Commodity Geometric Average Price Options

@@ -41,128 +41,53 @@ namespace ore {
 namespace data {
 
 //! Abstract Engine Builder for Asian Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where 
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
-    
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
+
     \ingroup builders
  */
-class AsianOptionEngineBuilder : public CachingOptionEngineBuilder<string, const string&, const Currency&,
-                                                                   const AssetClass&, const Date&, const double> {
+class AsianOptionEngineBuilder
+    : public CachingOptionEngineBuilder<string, const string&, const Currency&, const AssetClass&, const Date&> {
 public:
     AsianOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes,
-                             const AssetClass& assetClass, const Date& expiryDate, const double strike)
-        : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate), strike_(strike) {}
+                             const AssetClass& assetClass, const Date& expiryDate)
+        : CachingOptionEngineBuilder(model, engine, tradeTypes, assetClass), expiryDate_(expiryDate) {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate,
-                                            const double strike) {
-        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&, const Date&,
-                                           const double>::engine(assetName, ccy, assetClass_, expiryDate, strike);
+    boost::shared_ptr<PricingEngine> engine(const string& assetName, const Currency& ccy, const Date& expiryDate) {
+        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
+                                           const Date&>::engine(assetName, ccy, assetClass_, expiryDate);
     }
 
-    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Date& expiryDate,
-                                            const double strike) {
-        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&, const Date&,
-                                           const double>::engine(ccy1.code(), ccy2, assetClass_, expiryDate, strike);
+    boost::shared_ptr<PricingEngine> engine(const Currency& ccy1, const Currency& ccy2, const Date& expiryDate) {
+        return CachingPricingEngineBuilder<string, const string&, const Currency&, const AssetClass&,
+                                           const Date&>::engine(ccy1.code(), ccy2, assetClass_, expiryDate);
     }
 
 protected:
     virtual string keyImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying,
-                           const Date& expiryDate, const double strike) override {
-        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate) + "/" + to_string(strike);
-    }
-
-    boost::shared_ptr<GeneralizedBlackScholesProcess>
-    getConstBlackScholesProcess(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying,
-                                const Date& expiryDate, const double strike) {
-        // Probably should change so that expiryDate_ and strike_ are populated and used instead as parameters for
-        // function call and in blackVol()-call.
-
-        string config = configuration(ore::data::MarketContext::pricing);
-
-        if (assetClassUnderlying == AssetClass::EQ) {
-            Handle<BlackVolTermStructure> vol = market_->equityVol(assetName, config);
-            Volatility constVol = vol->blackVol(expiryDate, strike, true);
-            vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
-                vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
-
-            DLOG("Configured Black const vol = " << constVol << " for asset name = " << assetName
-                                                << " with expiry date = " << expiryDate << " and strike = " << strike);
-            return boost::make_shared<GeneralizedBlackScholesProcess>(
-                market_->equitySpot(assetName, config), market_->equityDividendCurve(assetName, config),
-                market_->equityForecastCurve(assetName, config), vol);
-        } else if (assetClassUnderlying == AssetClass::FX) {
-            const string& ccyPairCode = assetName + ccy.code();
-            Handle<BlackVolTermStructure> vol = market_->fxVol(ccyPairCode, config);
-            Volatility constVol = vol->blackVol(expiryDate, strike, true);
-            vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
-                vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
-
-            return boost::make_shared<GeneralizedBlackScholesProcess>(market_->fxSpot(ccyPairCode, config),
-                                                                      market_->discountCurve(assetName, config),
-                                                                      market_->discountCurve(ccy.code(), config), vol);
-        } else if (assetClassUnderlying == AssetClass::COM) {
-            Handle<BlackVolTermStructure> vol = market_->commodityVolatility(assetName, config);
-
-            Date asof = vol->referenceDate();
-            DayCounter volDc = vol->dayCounter();
-            std::vector<Date> dates(expiryDate - asof);
-            std::vector<Volatility> volatilities(expiryDate - asof);
-
-            /*size_t index = 0;
-            for (Date d = asof + 1; d <= expiryDate; ++d) {
-                dates[index] = d;
-                volatilities[index] = vol->blackVol(dates[index], strike, true);
-                DLOG("Configured Black vol = " << volatilities[index] << " at date = " << d
-                                               << " for asset name = " << assetName
-                                               << " with expiry date = " << expiryDate << " and strike = " << strike);
-                ++index;
-            }
-            vol = Handle<BlackVolTermStructure>(
-                boost::make_shared<BlackVarianceCurve>(asof, dates, volatilities, volDc, false));
-            */
-            
-            Volatility constVol = vol->blackVol(expiryDate, strike, true);
-            vol = Handle<BlackVolTermStructure>(boost::make_shared<BlackConstantVol>(
-                vol->referenceDate(), vol->calendar(), constVol, vol->dayCounter()));
-
-            DLOG("Configured Black const vol = " << constVol << " for asset name = " << assetName
-                                                 << " with expiry date = " << expiryDate << " and strike = " << strike);
-            
-
-            // Create the commodity convenience yield curve for the process
-            Handle<QuantExt::PriceTermStructure> priceCurve = market_->commodityPriceCurve(assetName, config);
-            Handle<Quote> commoditySpot(boost::make_shared<QuantExt::DerivedPriceQuote>(priceCurve));
-            Handle<YieldTermStructure> discount = market_->discountCurve(ccy.code(), config);
-            Handle<YieldTermStructure> yield(
-                boost::make_shared<QuantExt::PriceTermStructureAdapter>(*priceCurve, *discount));
-            yield->enableExtrapolation();
-
-            return boost::make_shared<GeneralizedBlackScholesProcess>(commoditySpot, yield, discount, vol);
-        } else {
-            QL_FAIL("Asset class of " << (int)assetClassUnderlying << " not recognized.");
-        }
+                           const Date& expiryDate) override {
+        return assetName + "/" + ccy.code() + "/" + to_string(expiryDate);
     }
 
     Date expiryDate_;
-    double strike_;
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Arithmetic Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
 class EuropeanAsianOptionMCDAAPEngineBuilder : public AsianOptionEngineBuilder {
 public:
     EuropeanAsianOptionMCDAAPEngineBuilder(const string& model, const set<string>& tradeTypes,
-                                           const AssetClass& assetClass, const Date& expiryDate, const double strike)
-        : AsianOptionEngineBuilder(model, "MCDiscreteArithmeticAPEngine", tradeTypes, assetClass, expiryDate, strike) {}
+                                           const AssetClass& assetClass, const Date& expiryDate)
+        : AsianOptionEngineBuilder(model, "MCDiscreteArithmeticAPEngine", tradeTypes, assetClass, expiryDate) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const double strike) override {
+                                                        const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
         bool controlVariate = ore::data::parseBool(engineParameter("ControlVariate", "", false, "true"));
@@ -182,29 +107,29 @@ protected:
                    "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticAPEngine.");
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
-            getConstBlackScholesProcess(assetName, ccy, assetClassUnderlying, expiryDate, strike);
+            getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<MCDiscreteArithmeticAPEngine<LowDiscrepancy>>(gbsp, brownianBridge, antitheticVariate,
-                                                                  controlVariate, requiredSamples, requiredTolerance,
-                                                                  maxSamples, seed);
+                                                                                controlVariate, requiredSamples,
+                                                                                requiredTolerance, maxSamples, seed);
     }
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Arithmetic Average Strike Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
 class EuropeanAsianOptionMCDAASEngineBuilder : public AsianOptionEngineBuilder {
 public:
     EuropeanAsianOptionMCDAASEngineBuilder(const string& model, const set<string>& tradeTypes,
-                                           const AssetClass& assetClass, const Date& expiryDate, const double strike)
-        : AsianOptionEngineBuilder(model, "MCDiscreteArithmeticASEngine", tradeTypes, assetClass, expiryDate, strike) {}
+                                           const AssetClass& assetClass, const Date& expiryDate)
+        : AsianOptionEngineBuilder(model, "MCDiscreteArithmeticASEngine", tradeTypes, assetClass, expiryDate) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const double strike) override {
+                                                        const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
@@ -223,28 +148,28 @@ protected:
                    "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticASEngine.");
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
-            getConstBlackScholesProcess(assetName, ccy, assetClassUnderlying, expiryDate, strike);
+            getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<MCDiscreteArithmeticASEngine<LowDiscrepancy>>(
             gbsp, brownianBridge, antitheticVariate, requiredSamples, requiredTolerance, maxSamples, seed);
     }
 };
 
 //! Discrete Monte Carlo Engine Builder for European Asian Geometric Average Price Options
-/*! Pricing engines are cached by asset/currency/expiry/strike, where
-    expiry is null (Date()) if irrelevant and strike is 0 if irrelevant.
+/*! Pricing engines are cached by asset/currency/expiry, where
+    expiry is null (Date()) if irrelevant.
 
     \ingroup builders
  */
 class EuropeanAsianOptionMCDGAPEngineBuilder : public AsianOptionEngineBuilder {
 public:
     EuropeanAsianOptionMCDGAPEngineBuilder(const string& model, const set<string>& tradeTypes,
-                                           const AssetClass& assetClass, const Date& expiryDate, const double strike)
-        : AsianOptionEngineBuilder(model, "MCDiscreteGeometricAPEngine", tradeTypes, assetClass, expiryDate, strike) {}
+                                           const AssetClass& assetClass, const Date& expiryDate)
+        : AsianOptionEngineBuilder(model, "MCDiscreteGeometricAPEngine", tradeTypes, assetClass, expiryDate) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const double strike) override {
+                                                        const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
@@ -260,10 +185,10 @@ protected:
         if (maxSamples == 0)
             maxSamples = Null<Size>();
         QL_REQUIRE(requiredSamples != QuantLib::Null<Size>() || requiredTolerance != QuantLib::Null<Real>(),
-                   "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteArithmeticAPEngine.");
+                   "RequiredSamples or RequiredTolerance must be set for engine MCDiscreteGeometricAPEngine.");
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
-            getConstBlackScholesProcess(assetName, ccy, assetClassUnderlying, expiryDate, strike);
+            getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<MCDiscreteGeometricAPEngine<LowDiscrepancy>>(
             gbsp, brownianBridge, antitheticVariate, requiredSamples, requiredTolerance, maxSamples, seed);
     }
@@ -278,12 +203,12 @@ class EuropeanAsianOptionADGAPEngineBuilder : public AsianOptionEngineBuilder {
 public:
     EuropeanAsianOptionADGAPEngineBuilder(const string& model, const set<string>& tradeTypes,
                                           const AssetClass& assetClass)
-        : AsianOptionEngineBuilder(model, "AnalyticDiscreteGeometricAPEngine", tradeTypes, assetClass, Date(), 0) {}
+        : AsianOptionEngineBuilder(model, "AnalyticDiscreteGeometricAPEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const double strike) override {
+                                                        const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<AnalyticDiscreteGeometricAveragePriceAsianEngine>(gbsp);
@@ -299,12 +224,12 @@ class EuropeanAsianOptionADGASEngineBuilder : public AsianOptionEngineBuilder {
 public:
     EuropeanAsianOptionADGASEngineBuilder(const string& model, const set<string>& tradeTypes,
                                           const AssetClass& assetClass)
-        : AsianOptionEngineBuilder(model, "AnalyticDiscreteGeometricASEngine", tradeTypes, assetClass, Date(), 0) {}
+        : AsianOptionEngineBuilder(model, "AnalyticDiscreteGeometricASEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const double strike) override {
+                                                        const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<AnalyticDiscreteGeometricAverageStrikeAsianEngine>(gbsp);
@@ -320,12 +245,12 @@ class EuropeanAsianOptionACGAPEngineBuilder : public AsianOptionEngineBuilder {
 public:
     EuropeanAsianOptionACGAPEngineBuilder(const string& model, const set<string>& tradeTypes,
                                           const AssetClass& assetClass)
-        : AsianOptionEngineBuilder(model, "AnalyticContinuousGeometricAPEngine", tradeTypes, assetClass, Date(), 0) {}
+        : AsianOptionEngineBuilder(model, "AnalyticContinuousGeometricAPEngine", tradeTypes, assetClass, Date()) {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
-                                                        const AssetClass& assetClassUnderlying, const Date& expiryDate,
-                                                        const double strike) override {
+                                                        const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         return boost::make_shared<AnalyticContinuousGeometricAveragePriceAsianEngine>(gbsp);
