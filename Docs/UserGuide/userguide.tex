@@ -4254,12 +4254,13 @@ There are two methods in ORE for swaption volatility cube simulation:
 FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
 
 For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
-If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}. 
+If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}.
 
-For Yield Curves there are two ways of extrapolating them beyond the last given tenor: Extrapolation = 'FlatFwd' keeps
-the instantaneous forward rate at the last tenor constant, this is also the default if the parameter is not specified.
-'FlatZero' on the other hand keeps the (average) zero rate at the last tenor constant. Extrapolation is always enabled
-in the scenario sim market, for compatibility with old configuration files a boolean value will be mapped to 'FlatFwd'.
+For Yield Curves, there are several choices for the interpolation and extrapolation:
+\begin{itemize}
+\item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
+\item Extrpolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\end{itemize}
 
 \begin{longlisting}
 %\hrule\medskip
