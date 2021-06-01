@@ -185,6 +185,98 @@ BOOST_AUTO_TEST_CASE(testEquityAsianOptionTradeBuilding) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testEquityAsianOptionAverageStrikeTradeBuilding) {
+
+    BOOST_TEST_MESSAGE(
+        "Testing equity Asian option trade building with constant vol term structure with average-strike");
+
+    // Data from "Asian Option", Levy, 1997 in "Exotic Options: The State of the Art",
+    // edited by Clewlow, Strickland
+    // Tests with > 100 fixings are skipped here for speed, QL already tests these
+    std::vector<DiscreteAsianTestData> asians = {
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 0.0, 11.0 / 12.0, 2, 0.13, 1.51917595129},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 0.0, 11.0 / 12.0, 4, 0.13, 1.67940165674},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 0.0, 11.0 / 12.0, 8, 0.13, 1.75371215251},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 0.0, 11.0 / 12.0, 12, 0.13, 1.77595318693},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 0.0, 11.0 / 12.0, 26, 0.13, 1.81430536630},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 0.0, 11.0 / 12.0, 52, 0.13, 1.82269246898},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 0.0, 11.0 / 12.0, 100, 0.13, 1.83822402464},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 1.0 / 12.0, 11.0 / 12.0, 2, 0.13, 1.51154400089},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 1.0 / 12.0, 11.0 / 12.0, 4, 0.13, 1.67103508506},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 1.0 / 12.0, 11.0 / 12.0, 8, 0.13, 1.74529684070},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 1.0 / 12.0, 11.0 / 12.0, 12, 0.13, 1.76667074564},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 1.0 / 12.0, 11.0 / 12.0, 26, 0.13, 1.80528400613},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 1.0 / 12.0, 11.0 / 12.0, 52, 0.13, 1.81400883891},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 1.0 / 12.0, 11.0 / 12.0, 100, 0.13, 1.82922901451},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 3.0 / 12.0, 11.0 / 12.0, 2, 0.13, 1.49648170891},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 3.0 / 12.0, 11.0 / 12.0, 4, 0.13, 1.65443100462},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 3.0 / 12.0, 11.0 / 12.0, 8, 0.13, 1.72817806731},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 3.0 / 12.0, 11.0 / 12.0, 12, 0.13, 1.74877367895},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 3.0 / 12.0, 11.0 / 12.0, 26, 0.13, 1.78733801988},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 3.0 / 12.0, 11.0 / 12.0, 52, 0.13, 1.79624826757},
+        {Option::Call, 90.0, 87.0, 0.06, 0.025, 3.0 / 12.0, 11.0 / 12.0, 100, 0.13, 1.81114186876}};
+
+    Date asof = Date(01, Feb, 2021);
+    Envelope env("CP1");
+    boost::shared_ptr<EngineFactory> engineFactory;
+    boost::shared_ptr<Market> market;
+
+    for (const auto& a : asians) {
+        Time deltaT = a.length / (a.fixings - 1);
+        Date expiry;
+        vector<Date> fixingDates(a.fixings);
+        for (Size i = 0; i < a.fixings; ++i) {
+            fixingDates[i] = (asof + static_cast<Integer>((a.firstFixing + i * deltaT) * 360 + 0.5));
+        }
+        expiry = fixingDates[a.fixings - 1];
+
+        market = boost::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.dividendYield, a.volatility);
+        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        std::string productName = "EquityAsianOptionArithmeticStrike";
+        engineData->model(productName) = "BlackScholesMerton";
+        engineData->engine(productName) = "MCDiscreteArithmeticASEngine";
+        engineData->engineParameters(productName) = {{"ProcessType", "Discrete"},
+                                                     {"BrownianBridge", "True"},
+                                                     {"AntitheticVariate", "False"},
+                                                     {"RequiredSamples", "10000"},
+                                                     {"Seed", "3456789"}};
+        engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+
+        // Set evaluation date
+        Settings::instance().evaluationDate() = market->asofDate();
+        OptionAsianData asianData(OptionAsianData::AsianType::Strike, Average::Type::Arithmetic, fixingDates);
+
+        // Test the building of a equity Asian option doesn't throw
+        OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "", 0.0, "", "",
+                              vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
+                              "", "Asian", boost::none, boost::none, boost::none, asianData);
+
+        boost::shared_ptr<EquityAsianOption> asianOption =
+            boost::make_shared<EquityAsianOption>(env, optionData, EquityUnderlying("COMPANY"), "USD", a.strike, 1);
+        BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
+
+        // Check the underlying instrument was built as expected
+        boost::shared_ptr<Instrument> qlInstrument = asianOption->instrument()->qlInstrument();
+
+        boost::shared_ptr<DiscreteAveragingAsianOption> discreteAsian =
+            boost::dynamic_pointer_cast<DiscreteAveragingAsianOption>(qlInstrument);
+
+        BOOST_CHECK(discreteAsian);
+        BOOST_CHECK_EQUAL(discreteAsian->exercise()->type(), Exercise::Type::European);
+        BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates().size(), 1);
+        BOOST_CHECK_EQUAL(discreteAsian->exercise()->dates()[0], expiry);
+
+        boost::shared_ptr<TypePayoff> payoff = boost::dynamic_pointer_cast<TypePayoff>(discreteAsian->payoff());
+        BOOST_CHECK(payoff);
+        BOOST_CHECK_EQUAL(payoff->optionType(), a.type);
+
+        Real expectedPrice = a.expectedNPV;
+
+        // Check the price
+        BOOST_CHECK_SMALL(asianOption->instrument()->NPV() - expectedPrice, 2e-2);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(testEquityAsianOptionFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of equity Asian option trade from XML");
