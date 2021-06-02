@@ -215,7 +215,7 @@ CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationInde
       paymentDayCounter_(Thirty360()), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
       spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()),
-      startDate_(schedule_.dates().front()) {
+      startDate_(schedule_.dates().front()), subtractInflationNominalForAllCoupons_(false) {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
 
@@ -246,6 +246,11 @@ CPILeg& CPILeg::withNotionals(const std::vector<Real>& notionals) {
 
 CPILeg& CPILeg::withSubtractInflationNominal(bool growthOnly) {
     subtractInflationNominal_ = growthOnly;
+    return *this;
+}
+
+CPILeg& CPILeg::withSubtractInflationNominalForAllCoupons(bool growthOnly) {
+    subtractInflationNominalForAllCoupons_ = growthOnly;
     return *this;
 }
 
@@ -364,26 +369,47 @@ CPILeg::operator Leg() const {
                                         detail::effectiveFixedRate(spreads_, caps_, floors_, i), paymentDayCounter_,
                                         start, end, refStart, refEnd, exCouponDate)));
             } else { // zero inflation coupon
-                ext::shared_ptr<CPICoupon> coup;
+                if (!subtractInflationNominalForAllCoupons_) {
+                
+                    ext::shared_ptr<CPICoupon> coup;
 
-                coup = ext::make_shared<CPICoupon>(
-                    baseCPI_, // all have same base for ratio
-                    paymentDate, detail::get(notionals_, i, 0.0), start, end, detail::get(fixingDays_, i, 0.0), index_,
-                    observationLag_, observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
-                    detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate);
+                    coup = ext::make_shared<CPICoupon>(
+                        baseCPI_, // all have same base for ratio
+                        paymentDate, detail::get(notionals_, i, 0.0), start, end, detail::get(fixingDays_, i, 0.0), index_,
+                        observationLag_, observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
+                        detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate);
+                
+                    // set a pricer for the underlying coupon straight away because it only provides computation - not data
+                    ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer);
+                    coup->setPricer(pricer);
 
-                // set a pricer for the underlying coupon straight away because it only provides computation - not data
-                ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer);
-                coup->setPricer(pricer);
-
-                if (detail::noOption(caps_, floors_, i)) { // just swaplet
-                    leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
-                } else { // cap/floorlet
-                    ext::shared_ptr<CappedFlooredCPICoupon> cfCoup = ext::make_shared<CappedFlooredCPICoupon>(
-                        coup, startDate_, detail::get(caps_, i, Null<Rate>()), detail::get(floors_, i, Null<Rate>()));
-                    // in this case we need to set the "outer" pricer later that handles cap and floor
-                    leg.push_back(ext::dynamic_pointer_cast<CashFlow>(cfCoup));
-                }
+                    if (detail::noOption(caps_, floors_, i)) { // just swaplet
+                        leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
+                    } else { // cap/floorlet
+                        ext::shared_ptr<CappedFlooredCPICoupon> cfCoup = ext::make_shared<CappedFlooredCPICoupon>(
+                            coup, startDate_, detail::get(caps_, i, Null<Rate>()), detail::get(floors_, i, Null<Rate>()));
+                        // in this case we need to set the "outer" pricer later that handles cap and floor
+                        leg.push_back(ext::dynamic_pointer_cast<CashFlow>(cfCoup));
+                    }
+                } else {
+                    ext::shared_ptr<CPICashFlow> cf;
+                    Date fixingDate = paymentDate - observationLag_;
+                    Time tau = paymentDayCounter_.yearFraction(start, end);
+                    cf = ext::make_shared<CPICashFlow>(detail::get(notionals_, i, 0.0) * tau, index_,
+                                                       startDate_ - observationLag_, baseCPI_, fixingDate, paymentDate,
+                                                       true,
+                                                       observationInterpolation_, index_->frequency());
+                   
+                    if (detail::noOption(caps_, floors_, i)) { // just swaplet
+                        leg.push_back(ext::dynamic_pointer_cast<CashFlow>(cf));
+                    } else { // cap/floorlet
+                        // in this case we need to set the "outer" pricer later that handles cap and floor
+                        ext::shared_ptr<CappedFlooredCPICashFlow> cfcf = ext::make_shared<CappedFlooredCPICashFlow>(
+                            cf, startDate_, observationLag_, detail::get(caps_, i, Null<Rate>()),
+                            detail::get(floors_, i, Null<Rate>()));
+                        leg.push_back(cfcf);
+                    }
+                }     
             }
         }
     }

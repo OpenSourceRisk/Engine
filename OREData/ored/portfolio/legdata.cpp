@@ -232,6 +232,13 @@ void CPILegData::fromXML(XMLNode* node) {
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
     else
         subtractInflationNominal_ = false;
+    
+    XMLNode* subNomCpnsNode = XMLUtils::getChildNode(node, "SubtractInflationNotionalCoupons");
+    if (subNomCpnsNode)
+        subtractInflationNominalCoupons_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotionalCoupons", true);
+    else
+        subtractInflationNominalCoupons_ = false;
+
     rates_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Rates", "Rate", "startDate", rateDates_, &parseReal,
                                                              true);
     caps_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Caps", "Cap", "startDate", capDates_, &parseReal);
@@ -267,6 +274,7 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
+    XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominalCoupons_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     if (finalFlowCap_ != Null<Real>())
@@ -1207,6 +1215,8 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
+    
+
     boost::shared_ptr<CPILegData> cpiLegData = boost::dynamic_pointer_cast<CPILegData>(data.concreteLegData());
     QL_REQUIRE(cpiLegData, "Wrong LegType, expected CPI, got " << data.legType());
 
@@ -1227,7 +1237,8 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                                   .withPaymentCalendar(schedule.calendar())
                                   .withFixedRates(rates)
                                   .withObservationInterpolation(interpolationMethod)
-                                  .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
+                                  .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
+                                  .withSubtractInflationNominalForAllCoupons(cpiLegData->subtractInflationNominalCoupons());
 
     // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
     // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
@@ -1297,7 +1308,10 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
             boost::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
                 boost::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
-            if (cfCpiCashFlow && finalFlowCapFloor) {
+            if (cfCpiCashFlow && couponCapFloor && cpiLegData->subtractInflationNominalCoupons() && i < (leg.size()-1)) {
+                cfCpiCashFlow->setPricer(cashFlowPricer);
+            }
+            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size() - 1)) {
                 cfCpiCashFlow->setPricer(cashFlowPricer);
             }
         }
@@ -1324,6 +1338,8 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
     return leg;
 }
+
+
 
 Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
