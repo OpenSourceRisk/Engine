@@ -37,9 +37,10 @@ public:
     //! Default constructor
     EquityAsianOption() : AsianOptionTrade(AssetClass::EQ) { tradeType_ = "EquityAsianOption"; }
     //! Constructor
-    EquityAsianOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, double strike,
-                 double quantity)
-        : AsianOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity),
+    EquityAsianOption(Envelope& env, OptionData option, OptionAsianData asianData, ScheduleData scheduleData,
+                      EquityUnderlying equityUnderlying, string currency, double strike, double quantity)
+        : AsianOptionTrade(env, AssetClass::EQ, option, asianData, scheduleData, equityUnderlying.name(), currency,
+                           strike, quantity),
           equityUnderlying_(equityUnderlying) {
         tradeType_ = "EquityAsianOption";
     }

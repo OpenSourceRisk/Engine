@@ -37,10 +37,11 @@ public:
     //! Default constructor
     FxAsianOption() : AsianOptionTrade(AssetClass::FX) { tradeType_ = "FxAsianOption"; }
     //! Constructor
-    FxAsianOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
-                  double soldAmount, const std::string& fxIndex)
-        : AsianOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount,
-                           boughtAmount),
+    FxAsianOption(Envelope& env, OptionData option, OptionAsianData asianData, ScheduleData scheduleData,
+                  string boughtCurrency, double boughtAmount, string soldCurrency, double soldAmount,
+                  const std::string& fxIndex)
+        : AsianOptionTrade(env, AssetClass::FX, option, asianData, scheduleData, boughtCurrency, soldCurrency,
+                           soldAmount / boughtAmount, boughtAmount),
           fxIndex_(fxIndex) {
         tradeType_ = "FxAsianOption";
     }

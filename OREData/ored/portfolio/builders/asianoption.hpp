@@ -63,6 +63,9 @@ public:
                                            const Date&>::engine(ccy1.code(), ccy2, assetClass_, expiryDate);
     }
 
+    //! This is used in building the option to select between Discrete- and ContinuousAveragingAsianOption
+    virtual std::string processType() { return ""; }
+
 protected:
     virtual string keyImpl(const string& assetName, const Currency& ccy, const AssetClass& assetClassUnderlying,
                            const Date& expiryDate) override {
@@ -83,6 +86,8 @@ public:
     EuropeanAsianOptionMCDAAPEngineBuilder(const string& model, const set<string>& tradeTypes,
                                            const AssetClass& assetClass, const Date& expiryDate)
         : AsianOptionEngineBuilder(model, "MCDiscreteArithmeticAPEngine", tradeTypes, assetClass, expiryDate) {}
+
+    std::string processType() override { return "Discrete"; }
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
@@ -126,6 +131,8 @@ public:
                                            const AssetClass& assetClass, const Date& expiryDate)
         : AsianOptionEngineBuilder(model, "MCDiscreteArithmeticASEngine", tradeTypes, assetClass, expiryDate) {}
 
+    std::string processType() override { return "Discrete"; }
+
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
@@ -166,6 +173,8 @@ public:
                                            const AssetClass& assetClass, const Date& expiryDate)
         : AsianOptionEngineBuilder(model, "MCDiscreteGeometricAPEngine", tradeTypes, assetClass, expiryDate) {}
 
+    std::string processType() override { return "Discrete"; }
+
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
@@ -205,6 +214,8 @@ public:
                                           const AssetClass& assetClass)
         : AsianOptionEngineBuilder(model, "AnalyticDiscreteGeometricAPEngine", tradeTypes, assetClass, Date()) {}
 
+    std::string processType() override { return "Discrete"; }
+
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
@@ -226,6 +237,8 @@ public:
                                           const AssetClass& assetClass)
         : AsianOptionEngineBuilder(model, "AnalyticDiscreteGeometricASEngine", tradeTypes, assetClass, Date()) {}
 
+    std::string processType() override { return "Discrete"; }
+
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                         const AssetClass& assetClassUnderlying,
@@ -239,6 +252,8 @@ protected:
 //! Continuous Analytic Engine Builder for European Asian Geometric Average Price Options
 /*! Pricing engines are cached by asset/currency
 
+    Note that this engine disregards fixing dates, i.e. it utilizes continuous averaging and is mainly for testing.
+
     \ingroup builders
  */
 class EuropeanAsianOptionACGAPEngineBuilder : public AsianOptionEngineBuilder {
@@ -246,6 +261,8 @@ public:
     EuropeanAsianOptionACGAPEngineBuilder(const string& model, const set<string>& tradeTypes,
                                           const AssetClass& assetClass)
         : AsianOptionEngineBuilder(model, "AnalyticContinuousGeometricAPEngine", tradeTypes, assetClass, Date()) {}
+
+    std::string processType() override { return "Continuous"; }
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,

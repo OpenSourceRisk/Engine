@@ -38,11 +38,13 @@ public:
     CommodityAsianOption() : AsianOptionTrade(AssetClass::COM) { tradeType_ = "CommodityAsianOption"; }
     
     //! Detailed constructor
-    CommodityAsianOption(const Envelope& env, const OptionData& optionData, const std::string& commodityName,
-                         const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity,
+    CommodityAsianOption(const Envelope& env, const OptionData& optionData, const OptionAsianData& asianData,
+                         ScheduleData scheduleData, const std::string& commodityName, const std::string& currency,
+                         QuantLib::Real strike, QuantLib::Real quantity,
                          const boost::optional<bool>& isFuturePrice = boost::none,
                          const QuantLib::Date& futureExpiryDate = QuantLib::Date())
-        : AsianOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, strike, quantity),
+        : AsianOptionTrade(env, AssetClass::COM, optionData, asianData, scheduleData, commodityName, currency, strike,
+                           quantity),
           isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
         tradeType_ = "CommodityAsianOption";
     }

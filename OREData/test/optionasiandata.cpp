@@ -39,33 +39,16 @@ BOOST_AUTO_TEST_CASE(testOptionAsianDataDefaultConstruction) {
 
     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
-    BOOST_CHECK_EQUAL(oad.fixingDates().size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(testOptionAsianDataStringConstruction) {
 
-    BOOST_TEST_MESSAGE("Testing construction of OptionAsianData from a vector of string dates...");
+    BOOST_TEST_MESSAGE("Testing construction of OptionAsianData...");
 
-    vector<string> strDates{"2021-04-01", "2021-04-30"};
-    OptionAsianData oad(OptionAsianData::AsianType::Price, Average::Type::Arithmetic, strDates);
+    OptionAsianData oad(OptionAsianData::AsianType::Price, Average::Type::Arithmetic);
 
-    vector<Date> expDates{Date(01, Apr, 2021), Date(30, Apr, 2021)};
     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
-    BOOST_CHECK_EQUAL_COLLECTIONS(oad.fixingDates().begin(), oad.fixingDates().end(), expDates.begin(), expDates.end());
-}
-
-BOOST_AUTO_TEST_CASE(testOptionAsianDataDateConstruction) {
-
-    BOOST_TEST_MESSAGE("Testing construction of OptionAsianData from a vector of dates...");
-
-    vector<Date> dates{Date(01, Apr, 2021), Date(30, Apr, 2021)};
-    OptionAsianData oad(OptionAsianData::AsianType::Strike, Average::Type::Geometric, dates);
-
-    vector<Date> expDates{Date(01, Apr, 2021), Date(30, Apr, 2021)};
-    BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Strike);
-    BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Geometric);
-    BOOST_CHECK_EQUAL_COLLECTIONS(oad.fixingDates().begin(), oad.fixingDates().end(), expDates.begin(), expDates.end());
 }
 
 BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionFromXml) {
@@ -77,10 +60,6 @@ BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionFromXml) {
     xml.append("<AsianData>");
     xml.append("  <AsianType>Strike</AsianType>");
     xml.append("  <AverageType>Geometric</AverageType>");
-    xml.append("  <FixingDates>");
-    xml.append("    <FixingDate>2021-04-01</FixingDate>");
-    xml.append("    <FixingDate>2021-04-30</FixingDate>");
-    xml.append("  </FixingDates>");
     xml.append("</AsianData>");
 
     // Load OptionPaymentData from XML
@@ -88,10 +67,8 @@ BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionFromXml) {
     oad.fromXMLString(xml);
 
     // Check is as expected
-    vector<Date> expDates{Date(01, Apr, 2021), Date(30, Apr, 2021)};
     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Strike);
     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Geometric);
-    BOOST_CHECK_EQUAL_COLLECTIONS(oad.fixingDates().begin(), oad.fixingDates().end(), expDates.begin(), expDates.end());
 }
 
 BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionToXml) {
@@ -99,8 +76,7 @@ BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionToXml) {
     BOOST_TEST_MESSAGE("Testing contruction of OptionAsianData to/from XML...");
 
     // Construct explicitly
-    vector<Date> dates{Date(01, Apr, 2021), Date(30, Apr, 2021)};
-    OptionAsianData inoad(OptionAsianData::AsianType::Strike, Average::Type::Geometric, dates);
+    OptionAsianData inoad(OptionAsianData::AsianType::Strike, Average::Type::Geometric);
 
     // Write to XML and read the result from XML to populate new object
     OptionAsianData outoad;
@@ -108,9 +84,7 @@ BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionToXml) {
 
     // Check is as expected
     BOOST_CHECK_EQUAL(inoad.asianType(), outoad.asianType());
-    BOOST_CHECK_EQUAL(inoad.averageType(), outoad.averageType());
-    BOOST_CHECK_EQUAL_COLLECTIONS(inoad.fixingDates().begin(), inoad.fixingDates().end(), outoad.fixingDates().begin(),
-                                  outoad.fixingDates().end());
+    BOOST_CHECK_EQUAL(inoad.averageType(), outoad.averageType());;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

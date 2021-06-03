@@ -30,7 +30,7 @@
 namespace ore {
 namespace data {
 
-/*! Serializable object holding asian option data for options with payoff type Asian.
+/*! Serializable object holding Asian option data for options with payoff type Asian.
     \ingroup tradedata
 */
 class OptionAsianData : public XMLSerializable {
@@ -40,19 +40,13 @@ public:
     //! Default constructor
     OptionAsianData();
 
-    //! Constructor taking an Asian type, average type, and vector of fixing string dates.
-    OptionAsianData(const AsianType& asianType, const QuantLib::Average::Type& averageType,
-                    const std::vector<std::string>& strFixingDates);
-
-    //! Constructor taking an Asian type, average type, and vector of fixing dates.
-    OptionAsianData(const AsianType& asianType, const QuantLib::Average::Type& averageType,
-                    const std::vector<QuantLib::Date>& fixingDates);
+    //! Constructor taking an Asian type, average type
+    OptionAsianData(const AsianType& asianType, const QuantLib::Average::Type& averageType);
 
     //! \name Inspectors
     //@{
     const AsianType& asianType() const { return asianType_; }
     const QuantLib::Average::Type& averageType() const { return averageType_; }
-    const std::vector<QuantLib::Date>& fixingDates() const { return fixingDates_; }
     //@}
 
     //! \name Serialisation
@@ -62,14 +56,9 @@ public:
     //@}
 
 private:
-    std::vector<std::string> strFixingDates_;
 
     AsianType asianType_;
     QuantLib::Average::Type averageType_;
-    std::vector<QuantLib::Date> fixingDates_;
-
-    //! Initialisation
-    void init();
 
     //! Populate the value of asianType_ from string
     void populateAsianType(const std::string& s);

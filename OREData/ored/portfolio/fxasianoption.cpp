@@ -57,7 +57,12 @@ void FxAsianOption::fromXML(XMLNode* node) {
 
     option_.fromXML(XMLUtils::getChildNode(fxNode, "OptionData"));
     QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for FxAsianOption.");
+    XMLNode* asianNode = XMLUtils::getChildNode(fxNode, "AsianData");
+    asianData_.fromXML(asianNode);
     
+    XMLNode* scheduleDataNode = XMLUtils::getChildNode(fxNode, "ScheduleData");
+    scheduleData_.fromXML(scheduleDataNode);
+
     assetName_ = XMLUtils::getChildValue(fxNode, "BoughtCurrency", true);
     currency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
     double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
@@ -76,6 +81,9 @@ XMLNode* FxAsianOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, fxNode);
 
     XMLUtils::appendNode(fxNode, option_.toXML(doc));
+    XMLUtils::appendNode(fxNode, asianData_.toXML(doc));
+    XMLUtils::appendNode(fxNode, scheduleData_.toXML(doc));
+
     XMLUtils::addChild(doc, fxNode, "BoughtCurrency", boughtCurrency());
     XMLUtils::addChild(doc, fxNode, "BoughtAmount", boughtAmount());
     XMLUtils::addChild(doc, fxNode, "SoldCurrency", soldCurrency());

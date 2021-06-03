@@ -23,8 +23,9 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/optionasiandata.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/instruments/averagetype.hpp>
 
@@ -44,6 +45,8 @@ public:
     //! \name Inspectors
     //@{
     const OptionData& option() const { return option_; }
+    const OptionAsianData& asianData() const { return asianData_; }
+    const ScheduleData& scheduleData() const { return scheduleData_; }
     const string& asset() const { return assetName_; }
     const string& currency() const { return currency_; }
     double strike() const { return strike_; }
@@ -58,15 +61,17 @@ public:
 protected:
     AsianOptionTrade(AssetClass assetClassUnderlying)
         : Trade("AsianOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
-    AsianOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
-                     string currency, double strike, double quantity,
+    AsianOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, OptionAsianData asianData,
+                     ScheduleData scheduleData, string assetName, string currency, double strike, double quantity,
                      const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "")
         : Trade("AsianOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
-          assetName_(assetName), currency_(currency), strike_(strike), quantity_(quantity), index_(index),
-          indexName_(indexName) {}
+          asianData_(asianData), scheduleData_(scheduleData), assetName_(assetName), currency_(currency),
+          strike_(strike), quantity_(quantity), index_(index), indexName_(indexName) {}
 
     AssetClass assetClassUnderlying_;
     OptionData option_;
+    OptionAsianData asianData_;
+    ScheduleData scheduleData_;
     string assetName_;
     string currency_;
     double strike_;

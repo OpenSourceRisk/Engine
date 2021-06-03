@@ -11,6 +11,7 @@
 #include <ored/portfolio/builders/asianoption.hpp>
 #include <ored/portfolio/asianoption.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/instruments/asianoption.hpp>
 #include <ql/instruments/averagetype.hpp>
@@ -92,15 +93,19 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     // Create builder in advance to determine if continuous or discrete asian option.
-    Average::Type averageType = option_.asianData()->averageType();
-    OptionAsianData::AsianType asianType = option_.asianData()->asianType();
+    Average::Type averageType = asianData_.averageType();
+    OptionAsianData::AsianType asianType = asianData_.asianType();
     tradeTypeBuilder += to_string(averageType); // Add Arithmetic/Geometric
     tradeTypeBuilder += to_string(asianType);   // Add Price/Strike
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
-    // TODO: Add check for processType tag in advance?
-    std::string processType = engineFactory->engineData()->engineParameters(tradeTypeBuilder).at("ProcessType");
-    QL_REQUIRE(processType != "", "ProcessType must be configured.");
+
+    boost::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
+        boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
+    QL_REQUIRE(asianOptionBuilder, "engine builder is not an AsianOption engine builder" << tradeTypeBuilder);
+
+    std::string processType = asianOptionBuilder->processType();
+    QL_REQUIRE(processType != "", "ProcessType must be configured, this is unexpected");
 
     if (!isEuropDeferredCS) {
         // If the option is not a European deferred CS contract, i.e. the standard European/American physical/cash-settled ones. 
@@ -110,10 +115,14 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
                 runningAccumulator = 1;
             }
             Size pastFixings = 0;
-            std::vector<QuantLib::Date> fixingDates = option_.asianData()->fixingDates();
-            // Sort for the engine's sake
-            std::sort(fixingDates.begin(), fixingDates.end());
-            std::vector<QuantLib::Date> futureFixingDates;
+            
+            Schedule observationSchedule;
+            if (scheduleData_.hasData())
+                observationSchedule = makeSchedule(scheduleData_);
+            std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
+
+            // Sort for the engine's sake. Not needed - instrument also sorts...?
+            std::sort(observationDates.begin(), observationDates.end());
 
             QL_REQUIRE(index_, "Asian option trade " << id() << " needs a valid index for historical fixings.");
             // If index name has not been populated, use logic here to populate it from the index object.
@@ -123,26 +132,27 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
                 if (assetClassUnderlying_ == AssetClass::EQ)
                     indexName = "EQ-" + indexName;
             }
-            for (QuantLib::Date fixingDate : fixingDates) {
-                if (fixingDate < today ||
-                    (fixingDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
-                    requiredFixings_.addFixingDate(fixingDate, indexName);
-                    Real fixingValue = index_->fixing(fixingDate);
+            for (QuantLib::Date observationDate : observationDates) {
+                // TODO: Verify. Should today be read too? a enforcesTodaysHistoricFixings() be used? 
+                if (observationDate < today ||
+                    (observationDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
+                    requiredFixings_.addFixingDate(observationDate, indexName);
+                    Real fixingValue = index_->fixing(observationDate);
                     if (averageType == Average::Type::Geometric) {
                         runningAccumulator *= fixingValue;
                     } else if (averageType == Average::Type::Arithmetic) {
                         runningAccumulator += fixingValue;
                     }
                     ++pastFixings;
-                } else { // Only pass future dates to engine
-                    futureFixingDates.push_back(fixingDate);
                 }
             }
 
             asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(
-                averageType, runningAccumulator, pastFixings, fixingDates, payoff, exercise);
+                averageType, runningAccumulator, pastFixings, observationDates, payoff, exercise);
         } else if (processType == "Continuous") {
             asian = boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(averageType, payoff, exercise);
+        } else {
+            QL_FAIL("unexpected ProcessType, valid options are Discrete/Continuous");
         }
     } else {
         ELOG("Asian options do not support deferred cash settlement payments, "
@@ -156,9 +166,6 @@ void AsianOptionTrade::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // engine builders that rely on the expiry date being in the future.
     string configuration = Market::defaultConfiguration;
     if (!asian->isExpired()) {
-        boost::shared_ptr<AsianOptionEngineBuilder> asianOptionBuilder =
-            boost::dynamic_pointer_cast<AsianOptionEngineBuilder>(builder);
-
         asian->setPricingEngine(
             asianOptionBuilder->engine(assetName_, ccy, expiryDate_));
 

@@ -79,6 +79,11 @@ void CommodityAsianOption::fromXML(XMLNode* node) {
 
     option_.fromXML(XMLUtils::getChildNode(commodityNode, "OptionData"));
     QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for CommodityAsianOption.");
+    XMLNode* asianNode = XMLUtils::getChildNode(commodityNode, "AsianData");
+    asianData_.fromXML(asianNode);
+
+    XMLNode* scheduleDataNode = XMLUtils::getChildNode(commodityNode, "ScheduleData");
+    scheduleData_.fromXML(scheduleDataNode);
 
     assetName_ = XMLUtils::getChildValue(commodityNode, "Name", true);
     currency_ = XMLUtils::getChildValue(commodityNode, "Currency", true);
@@ -98,21 +103,23 @@ void CommodityAsianOption::fromXML(XMLNode* node) {
 XMLNode* CommodityAsianOption::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
 
-    XMLNode* eqNode = doc.allocNode("CommodityAsianOptionData");
-    XMLUtils::appendNode(node, eqNode);
+    XMLNode* comNode = doc.allocNode("CommodityAsianOptionData");
+    XMLUtils::appendNode(node, comNode);
 
-    XMLUtils::appendNode(eqNode, option_.toXML(doc));
+    XMLUtils::appendNode(comNode, option_.toXML(doc));
+    XMLUtils::appendNode(comNode, asianData_.toXML(doc));
+    XMLUtils::appendNode(comNode, scheduleData_.toXML(doc));
 
-    XMLUtils::addChild(doc, eqNode, "Name", assetName_);
-    XMLUtils::addChild(doc, eqNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eqNode, "Strike", strike_);
-    XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
+    XMLUtils::addChild(doc, comNode, "Name", assetName_);
+    XMLUtils::addChild(doc, comNode, "Currency", currency_);
+    XMLUtils::addChild(doc, comNode, "Strike", strike_);
+    XMLUtils::addChild(doc, comNode, "Quantity", quantity_);
 
     if (isFuturePrice_)
-        XMLUtils::addChild(doc, eqNode, "IsFuturePrice", *isFuturePrice_);
+        XMLUtils::addChild(doc, comNode, "IsFuturePrice", *isFuturePrice_);
 
     if (futureExpiryDate_ != Date())
-        XMLUtils::addChild(doc, eqNode, "FutureExpiryDate", to_string(futureExpiryDate_));
+        XMLUtils::addChild(doc, comNode, "FutureExpiryDate", to_string(futureExpiryDate_));
 
     return node;
 }

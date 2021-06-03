@@ -52,12 +52,20 @@ void EquityAsianOption::fromXML(XMLNode* node) {
     AsianOptionTrade::fromXML(node);
     XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityAsianOptionData");
     QL_REQUIRE(eqNode, "No EquityAsianOptionData node");
+
     option_.fromXML(XMLUtils::getChildNode(eqNode, "OptionData"));
     QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for EquityAsianOption.");
+    XMLNode* asianNode = XMLUtils::getChildNode(eqNode, "AsianData");
+    asianData_.fromXML(asianNode);
+
+    XMLNode* scheduleDataNode = XMLUtils::getChildNode(eqNode, "ScheduleData");
+    scheduleData_.fromXML(scheduleDataNode);
+
     XMLNode* tmp = XMLUtils::getChildNode(eqNode, "Underlying");
     if (!tmp)
         tmp = XMLUtils::getChildNode(eqNode, "Name");
     equityUnderlying_.fromXML(tmp);
+
     currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
     // Require explicit Strike
     strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
@@ -70,6 +78,9 @@ XMLNode* EquityAsianOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, eqNode);
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
+    XMLUtils::appendNode(eqNode, asianData_.toXML(doc));
+    XMLUtils::appendNode(eqNode, scheduleData_.toXML(doc));
+
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
     XMLUtils::addChild(doc, eqNode, "Strike", strike_);

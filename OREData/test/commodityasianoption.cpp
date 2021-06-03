@@ -142,10 +142,15 @@ BOOST_AUTO_TEST_CASE(testCommodityAsianOptionTradeBuilding) {
         Time deltaT = a.length / (a.fixings - 1);
         Date expiry;
         vector<Date> fixingDates(a.fixings);
+        vector<std::string> strFixingDates(a.fixings);
         for (Size i = 0; i < a.fixings; ++i) {
             fixingDates[i] = (asof + static_cast<Integer>((a.firstFixing + i * deltaT) * 360 + 0.5));
+            strFixingDates[i] = to_string(fixingDates[i]);
         }
         expiry = fixingDates[a.fixings - 1];
+
+        ScheduleDates scheduleDates("NullCalendar", "", "", strFixingDates);
+        ScheduleData scheduleData(scheduleDates);
 
         market = boost::make_shared<TestMarket>(a.spot, expiry, a.riskFreeRate, a.convenienceYield, a.volatility);
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -154,20 +159,20 @@ BOOST_AUTO_TEST_CASE(testCommodityAsianOptionTradeBuilding) {
         engineData->engine(productName) = "MCDiscreteArithmeticAPEngine";
         engineData->engineParameters(productName) = {{"ProcessType", "Discrete"},    {"BrownianBridge", "True"},
                                                      {"AntitheticVariate", "False"}, {"ControlVariate", "True"},
-                                                     {"RequiredSamples", "2047"},   {"Seed", "0"}};
+                                                     {"RequiredSamples", "2047"},    {"Seed", "0"}};
         engineFactory = boost::make_shared<EngineFactory>(engineData, market);
 
         // Set evaluation date
         Settings::instance().evaluationDate() = market->asofDate();
-        OptionAsianData asianData(OptionAsianData::AsianType::Price, Average::Type::Arithmetic, fixingDates);
+        OptionAsianData asianData(OptionAsianData::AsianType::Price, Average::Type::Arithmetic);
 
         // Test the building of a commodity Asian option doesn't throw
         OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "", 0.0, "", "",
                               vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
-                              "", "Asian", boost::none, boost::none, boost::none, asianData);
+                              "", "Asian", boost::none, boost::none, boost::none);
 
-        boost::shared_ptr<CommodityAsianOption> asianOption =
-            boost::make_shared<CommodityAsianOption>(env, optionData, "ALU_USD", "USD", a.strike, 1, false);
+        boost::shared_ptr<CommodityAsianOption> asianOption = boost::make_shared<CommodityAsianOption>(
+            env, optionData, asianData, scheduleData, "ALU_USD", "USD", a.strike, 1, false);
         BOOST_CHECK_NO_THROW(asianOption->build(engineFactory));
 
         // Check the underlying instrument was built as expected
@@ -218,33 +223,37 @@ BOOST_AUTO_TEST_CASE(testCommodityAsianOptionFromXml) {
     tradeXml.append("        <ExerciseDates>");
     tradeXml.append("          <ExerciseDate>2021-02-26</ExerciseDate>");
     tradeXml.append("        </ExerciseDates>");
-    tradeXml.append("        <AsianData>");
-    tradeXml.append("          <AsianType>Price</AsianType>");
-    tradeXml.append("          <AverageType>Arithmetic</AverageType>");
-    tradeXml.append("          <FixingDates>");
-    tradeXml.append("            <FixingDate>2021-02-01</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-02</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-03</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-04</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-05</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-08</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-09</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-10</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-11</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-12</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-15</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-16</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-17</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-18</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-19</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-22</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-23</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-24</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-25</FixingDate>");
-    tradeXml.append("            <FixingDate>2021-02-26</FixingDate>");
-    tradeXml.append("          </FixingDates>");
-    tradeXml.append("        </AsianData>");
     tradeXml.append("      </OptionData>");
+    tradeXml.append("      <AsianData>");
+    tradeXml.append("        <AsianType>Price</AsianType>");
+    tradeXml.append("        <AverageType>Arithmetic</AverageType>");
+    tradeXml.append("      </AsianData>");
+    tradeXml.append("      <ScheduleData>");
+    tradeXml.append("        <Dates>");
+    tradeXml.append("          <Dates>");
+    tradeXml.append("            <Date>2021-02-01</Date>");
+    tradeXml.append("            <Date>2021-02-02</Date>");
+    tradeXml.append("            <Date>2021-02-03</Date>");
+    tradeXml.append("            <Date>2021-02-04</Date>");
+    tradeXml.append("            <Date>2021-02-05</Date>");
+    tradeXml.append("            <Date>2021-02-08</Date>");
+    tradeXml.append("            <Date>2021-02-09</Date>");
+    tradeXml.append("            <Date>2021-02-10</Date>");
+    tradeXml.append("            <Date>2021-02-11</Date>");
+    tradeXml.append("            <Date>2021-02-12</Date>");
+    tradeXml.append("            <Date>2021-02-15</Date>");
+    tradeXml.append("            <Date>2021-02-16</Date>");
+    tradeXml.append("            <Date>2021-02-17</Date>");
+    tradeXml.append("            <Date>2021-02-18</Date>");
+    tradeXml.append("            <Date>2021-02-19</Date>");
+    tradeXml.append("            <Date>2021-02-22</Date>");
+    tradeXml.append("            <Date>2021-02-23</Date>");
+    tradeXml.append("            <Date>2021-02-24</Date>");
+    tradeXml.append("            <Date>2021-02-25</Date>");
+    tradeXml.append("            <Date>2021-02-26</Date>");
+    tradeXml.append("          </Dates>");
+    tradeXml.append("        </Dates>");
+    tradeXml.append("      </ScheduleData>");
     tradeXml.append("      <Name>ALU_USD</Name>");
     tradeXml.append("      <IsFuturePrice>false</IsFuturePrice>");
     tradeXml.append("      <Currency>USD</Currency>");
@@ -276,14 +285,11 @@ BOOST_AUTO_TEST_CASE(testCommodityAsianOptionFromXml) {
     BOOST_CHECK_EQUAL(option->option().style(), "European");
     BOOST_CHECK_EQUAL(option->option().exerciseDates().size(), 1);
     BOOST_CHECK_EQUAL(option->option().exerciseDates()[0], "2021-02-26");
+    BOOST_CHECK(option->scheduleData().hasData());
 
-    BOOST_REQUIRE(option->option().asianData());
-    OptionAsianData oad = *option->option().asianData();
+    OptionAsianData oad = option->asianData();
     BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);
     BOOST_CHECK_EQUAL(oad.averageType(), Average::Type::Arithmetic);
-    // Checking first and last dates only - full coverage tested in OREDataTestSuite/optionasiandata.cpp
-    BOOST_CHECK_EQUAL(oad.fixingDates().front(), Date(01, Feb, 2021));
-    BOOST_CHECK_EQUAL(oad.fixingDates().back(), Date(26, Feb, 2021));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

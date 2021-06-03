@@ -26,50 +26,24 @@ using QuantLib::Average;
 namespace ore {
 namespace data {
 
-OptionAsianData::OptionAsianData() 
-    : asianType_(AsianType::Price), averageType_(Average::Type::Arithmetic), fixingDates_(std::vector<QuantLib::Date>()), strFixingDates_(std::vector<string>()) {}
+OptionAsianData::OptionAsianData() : asianType_(AsianType::Price), averageType_(Average::Type::Arithmetic) {}
 
-OptionAsianData::OptionAsianData(const AsianType& asianType, const Average::Type& averageType,
-                                 const vector<string>& strFixingDates)
-    : asianType_(asianType), averageType_(averageType), strFixingDates_(strFixingDates) {
-    init();
-}
-
-OptionAsianData::OptionAsianData(const AsianType& asianType, const Average::Type& averageType,
-                                 const vector<QuantLib::Date>& fixingDates)
-    : asianType_(asianType), averageType_(averageType), fixingDates_(fixingDates) {
-    QL_REQUIRE(fixingDates_.size() > 0, "Expected 1 or more FixingDate for AsianData.");
-}
+OptionAsianData::OptionAsianData(const AsianType& asianType, const Average::Type& averageType)
+    : asianType_(asianType), averageType_(averageType) {}
 
 void OptionAsianData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AsianData");
     std::string strAsianType = XMLUtils::getChildValue(node, "AsianType", true);
     populateAsianType(strAsianType);
     averageType_ = parseAverageType(XMLUtils::getChildValue(node, "AverageType", true));
-    strFixingDates_ = XMLUtils::getChildrenValues(node, "FixingDates", "FixingDate", true);
-    init();
 }
 
 XMLNode* OptionAsianData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("AsianData");
     XMLUtils::addChild(doc, node, "AsianType", to_string(asianType_));
     XMLUtils::addChild(doc, node, "AverageType", to_string(averageType_));
-    if (strFixingDates_.size() == 0) {
-        // Need to populate if constructed from vector of proper dates
-        strFixingDates_.resize(fixingDates_.size());
-        std::transform(fixingDates_.begin(), fixingDates_.end(), strFixingDates_.begin(),
-                       [](QuantLib::Date date) -> std::string { return to_string(date); });
-    }
-    XMLUtils::addChildren(doc, node, "FixingDates", "FixingDate", strFixingDates_);
+
     return node;
-}
-
-void OptionAsianData::init() {
-    QL_REQUIRE(strFixingDates_.size() > 0, "Expected 1 or more FixingDate for AsianData.");
-
-    fixingDates_.resize(strFixingDates_.size());
-    std::transform(strFixingDates_.begin(), strFixingDates_.end(), fixingDates_.begin(),
-                   [](string strDate) -> QuantLib::Date { return parseDate(strDate); });
 }
 
 void OptionAsianData::populateAsianType(const std::string& s) {
