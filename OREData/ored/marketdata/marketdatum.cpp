@@ -55,6 +55,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "BASE_CORRELATION";
     case MarketDatum::QuoteType::SHIFT:
         return out << "SHIFT";
+    case MarketDatum::QuoteType::NONE:
+        return out << "NULL";
     default:
         return out << "?";
     }

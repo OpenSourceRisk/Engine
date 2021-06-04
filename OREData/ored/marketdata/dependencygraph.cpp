@@ -140,7 +140,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             curveConfigs_->hasCorrelationCurveConfig(g[*v].curveSpec->curveConfigID())) {
             auto config = curveConfigs_->correlationCurveConfig(g[*v].curveSpec->curveConfigID());
             if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread &&
-                config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
+                config->quoteType() == MarketDatum::QuoteType::PRICE) {
                 bool found1 = config->index1().empty(), found2 = config->index2().empty();
                 for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                     if (*w != *v) {

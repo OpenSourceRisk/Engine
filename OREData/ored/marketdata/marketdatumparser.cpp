@@ -104,6 +104,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
+        {"NULL", MarketDatum::QuoteType::NONE}
     };
 
     if (s == "RATE_GVOL")
