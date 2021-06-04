@@ -221,6 +221,8 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             vector<Real> times;
             // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
             if (wildcard) {
+                QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM, 
+                    "CorrelationCurve: Wildcards only supported for curve dimension ATM");
                 LOG("Have single quote with pattern " << (*wildcard).regex());
 
                 // Loop over quotes and process commodity option quotes matching pattern on asof
@@ -235,7 +237,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
 
                         TLOG("The quote " << q->name() << " matched the pattern");
 
-                        Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof, config->calendar());
+                        Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof, config->calendar(), config->businessDayConvention());
                         if (expiryDate > asof) {
                             quotes.push_back(q->quote());
                             times.push_back(config->dayCounter().yearFraction(asof, expiryDate));
@@ -270,25 +272,23 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
 
                         quotes[i] = c->quote();
 
-                        // add the expiry time
-                        Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
-                        times[i] = config->dayCounter().yearFraction(asof, d);
+                        // add the expiry time - don't need for Constant curves
+                        if (config->dimension() != CorrelationCurveConfig::Dimension::Constant) {
+                            Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
+                            times[i] = config->dayCounter().yearFraction(asof, d);
+                        }
 
-                        TLOG("CorrelationCurve: Added quotes " << c->name() << ", tenor " << optionTenors[i] << ", date " << d << ", time " << times[i]
-                            << ", value " << fixed << setprecision(9) << c->quote()->value() );
+                        TLOG("CorrelationCurve: Added quote " << c->name() << ", tenor " << optionTenors[i] << ", with value "
+                            << fixed << setprecision(9) << c->quote()->value() );
                     } else {
                         DLOGGERSTREAM << "could not find correlation quote " << q << std::endl;
                         failed = true;
                     }
                 }
-
-                if (quotes.size() == 0)
-
-
-                    // fail if any quotes missing
-                    if (failed) {
-                        QL_FAIL("could not build correlation curve");
-                    }
+                // fail if any quotes missing
+                if (failed) {
+                    QL_FAIL("could not build correlation curve");
+                }
             }
             vector<Handle<Quote>> corrs;
 
@@ -299,7 +299,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                     Handle<Quote> q(boost::make_shared<SimpleQuote>(0));
                     corrs.push_back(q);
                 }
-            }
+            }                       
 
             // build correlation termsructure
             bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
@@ -311,6 +311,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
 
                 corr->enableExtrapolation(config->extrapolate());
             } else {
+
                 corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
                     new QuantExt::InterpolatedCorrelationCurve<Linear>(times, corrs, config->dayCounter(),
                                                                        config->calendar()));
