@@ -19,7 +19,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -32,12 +32,13 @@ boost::shared_ptr<FloatingRateCouponPricer>
 CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& index1, const string& index2,
                                          const boost::shared_ptr<CmsCouponPricer>& cmsPricer) {
 
-    QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve =
-        market_->correlationCurve(index1, index2, configuration(MarketContext::pricing));
-    if (corrCurve.empty())
-        corrCurve = market_->correlationCurve(index2, index1, configuration(MarketContext::pricing));
-
-    QL_REQUIRE(!corrCurve.empty(), "no correlation curve found for " << index1 << ":" << index2);
+    QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
+        boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    try {
+        corrCurve = market_->correlationCurve(index1, index2, configuration(MarketContext::pricing));
+    } catch (...) {
+        WLOG("no correlation curve for " << index1 << ", " << index2 << " found, fall back to zero correlation.");
+    }
 
     const string& ccyCode = ccy.code();
     return boost::make_shared<QuantExt::LognormalCmsSpreadPricer>(

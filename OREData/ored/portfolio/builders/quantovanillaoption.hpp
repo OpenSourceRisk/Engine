@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 #include <ql/pricingengines/quanto/quantoengine.hpp>
 
 namespace ore {
@@ -96,12 +97,19 @@ protected:
                 QL_FAIL("Asset class " << assetClassUnderlying << " not supported for quanto vanilla option.");
         }
             
-        Handle<QuantExt::CorrelationTermStructure> corrCurve = market_->correlationCurve(fxIndex, underlyingIndex,
-                                                                               configuration(MarketContext::pricing));
-        boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(corrCurve->correlation(expiryDate)));
+    QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve(
+        boost::make_shared<QuantExt::FlatCorrelation>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    try {
+        corrCurve = market_->correlationCurve(fxIndex, underlyingIndex, configuration(MarketContext::pricing));
+    } catch (...) {
+        WLOG("no correlation curve for " << fxIndex << ", " << underlyingIndex
+                                         << " found, fall back to zero correlation");
+    }
 
-        return boost::make_shared<QuantLib::QuantoEngine<VanillaOption, AnalyticEuropeanEngine>>
-                    (gbsp, discountCurve, fxVolatility, Handle<Quote>(correlation));
+    return boost::make_shared<QuantLib::QuantoEngine<VanillaOption, AnalyticEuropeanEngine>>(
+        gbsp, discountCurve, fxVolatility,
+        Handle<Quote>(
+            boost::make_shared<QuantExt::CorrelationValue>(corrCurve, corrCurve->timeFromReference(expiryDate))));
     }
 };
 
