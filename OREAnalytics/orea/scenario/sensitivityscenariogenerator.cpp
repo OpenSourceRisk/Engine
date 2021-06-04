@@ -221,7 +221,8 @@ void SensitivityScenarioGenerator::generateScenarios() {
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
 
-    for (Size i = 0; i < scenarios_.size(); ++i) {
+    Size currentScenariosSize = scenarios_.size(); // scenarios_.size() changes inside loop!
+    for (Size i = 0; i < currentScenariosSize; ++i) {
         ScenarioDescription iDesc = scenarioDescriptions_[i];
         if (iDesc.type() != ScenarioDescription::Type::Up)
             continue;
@@ -243,18 +244,19 @@ void SensitivityScenarioGenerator::generateScenarios() {
                         findPair(iKeyName, jKeyName)) == sensitivityData_->crossGammaFilter().end())
                 continue;
 
+            // sanity checks
+            QL_REQUIRE(iDesc.key2().keytype == RiskFactorKey::KeyType::None,
+                       "Internal error: scenario '" << iDesc << "' has key2 != None (" << iDesc.key2() << ")");
+            QL_REQUIRE(jDesc.key2().keytype == RiskFactorKey::KeyType::None,
+                       "Internal error: scenario '" << jDesc << "' has key2 != None (" << jDesc.key2() << ")");
+            QL_REQUIRE(iDesc.key1() != jDesc.key1(), "Internal error: scenarios '" << iDesc << "' and '" << jDesc
+                                                                                   << "' have the same key1 ("
+                                                                                   << iDesc.key1() << ")");
+
             // build cross scenario
             boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory_->buildScenario(asof);
-
-            for (auto const& k : baseScenario_->keys()) {
-                Real v1 = scenarios_[i]->get(k);
-                Real v2 = scenarios_[j]->get(k);
-                Real b = baseScenario_->get(k);
-                if (!close_enough(v1, b) || !close_enough(v2, b))
-                    // FIXME, see ore ticket 1478
-                    crossScenario->add(k, v1 + v2 - b);
-            }
-
+            crossScenario->add(iDesc.key1(),scenarios_[i]->get(iDesc.key1()));
+            crossScenario->add(jDesc.key1(),scenarios_[j]->get(jDesc.key1()));
             scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
             crossScenario->label(to_string(scenarioDescriptions_.back()));
             scenarios_.push_back(crossScenario);
