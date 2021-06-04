@@ -125,7 +125,6 @@ public:
     CPILeg& withExCouponPeriod(const Period&, const Calendar&, BusinessDayConvention, bool endOfMonth = false);
     CPILeg& withStartDate(const Date& startDate);
     CPILeg& withObservationLag(const Period& observationLag);
-    CPILeg& withSubtractInflationNominalForAllCoupons(bool);
     operator Leg() const;
 
 private:
@@ -141,7 +140,6 @@ private:
     std::vector<Natural> fixingDays_;
     CPI::InterpolationType observationInterpolation_;
     bool subtractInflationNominal_;
-    bool subtractInflationNominalForAllCoupons_;
     std::vector<Spread> spreads_;
     std::vector<Rate> caps_, floors_;
     double finalFlowCap_, finalFlowFloor_;
