@@ -642,6 +642,7 @@
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="cds.cpp" />
     <ClCompile Include="cms.cpp" />
+    <ClCompile Include="commodityasianoption.cpp" />
     <ClCompile Include="commoditycurve.cpp" />
     <ClCompile Include="commoditycurveconfig.cpp" />
     <ClCompile Include="commodityoption.cpp" />
@@ -656,12 +657,14 @@
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="curveconfig.cpp" />
     <ClCompile Include="digitalcms.cpp" />
+    <ClCompile Include="equityasianoption.cpp" />
     <ClCompile Include="equitymarketdata.cpp" />
     <ClCompile Include="equityswap.cpp" />
     <ClCompile Include="equitytrades.cpp" />
     <ClCompile Include="expiry.cpp" />
     <ClCompile Include="fittedbondcurve.cpp" />
     <ClCompile Include="fixings.cpp" />
+    <ClCompile Include="fxasianoption.cpp" />
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
@@ -669,6 +672,7 @@
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="legdata.cpp" />
     <ClCompile Include="mxnircurves.cpp" />
+    <ClCompile Include="optionasiandata.cpp" />
     <ClCompile Include="optionpaymentdata.cpp" />
     <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="parser.cpp" />

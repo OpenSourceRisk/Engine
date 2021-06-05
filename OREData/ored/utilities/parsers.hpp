@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -29,6 +30,7 @@
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
@@ -296,6 +298,8 @@ Extrapolation parseExtrapolation(const std::string& s);
 
 //! Write Extrapolation, \p extrap, to stream.
 std::ostream& operator<<(std::ostream& os, Extrapolation extrap);
+
+QuantLib::Average::Type parseAverageType(const std::string& s);
 
 } // namespace data
 } // namespace ore
