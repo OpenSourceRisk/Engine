@@ -144,10 +144,10 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
         string dim = XMLUtils::getChildValue(node, "Dimension", true);
         QL_REQUIRE(dim == "ATM" || dim == "Constant", "Dimension " << dim << " not recognised");
 
-        if (optionTenors_.size() == 1) {
+        if (dim == "Constant") {
             dimension_ = Dimension::Constant;
+            QL_REQUIRE(optionTenors_.size() == 1, "Only one tenor should be supplied for a constant correlation termstructure");
         } else {
-            QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
             dimension_ = Dimension::ATM;
         }
 

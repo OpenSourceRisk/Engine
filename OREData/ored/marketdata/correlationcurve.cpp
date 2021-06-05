@@ -302,7 +302,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             }                       
 
             // build correlation termsructure
-            bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
+            bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant || quotes.size() == 1);
             LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
 
             if (flat) {
