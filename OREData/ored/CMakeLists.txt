@@ -85,6 +85,7 @@ model/lgmdata.cpp
 model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
+portfolio/asianoption.cpp
 portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
@@ -99,6 +100,7 @@ portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
 portfolio/commodityforward.cpp
+portfolio/commodityasianoption.cpp
 portfolio/commodityoption.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
@@ -110,12 +112,14 @@ portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equityforward.cpp
 portfolio/equityfuturesoption.cpp
+portfolio/equityasianoption.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
+portfolio/fxasianoption.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
 portfolio/indexing.cpp
@@ -124,6 +128,7 @@ portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
+portfolio/optionasiandata.cpp
 portfolio/optiondata.cpp
 portfolio/optionexercisedata.cpp
 portfolio/optionpaymentdata.cpp
@@ -257,6 +262,7 @@ model/modeldata.hpp
 model/modelparameter.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
+portfolio/asianoption.hpp
 portfolio/bond.hpp
 portfolio/bondutils.hpp
 portfolio/builders/bond.hpp
@@ -270,16 +276,19 @@ portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
+portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityoption.hpp
 portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/durationadjustedcms.hpp
 portfolio/builders/equityforward.hpp
+portfolio/builders/equityasianoption.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxforward.hpp
+portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/quantoequityoption.hpp
 portfolio/builders/quantovanillaoption.hpp
