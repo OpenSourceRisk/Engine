@@ -41,9 +41,7 @@ void OptionData::fromXML(XMLNode* node) {
     settlement_ = XMLUtils::getChildValue(node, "Settlement", false);
     settlementMethod_ = XMLUtils::getChildValue(node, "SettlementMethod", false);
     payoffAtExpiry_ = XMLUtils::getChildValueAsBool(node, "PayOffAtExpiry", false);
-    premium_ = XMLUtils::getChildValueAsDouble(node, "PremiumAmount", false);
-    premiumCcy_ = XMLUtils::getChildValue(node, "PremiumCurrency", false);
-    premiumPayDate_ = XMLUtils::getChildValue(node, "PremiumPayDate", false);
+    premiumData_.fromXML(node);
     exerciseFeeTypes_.clear();
     exerciseFeeDates_.clear();
     vector<std::reference_wrapper<vector<string>>> attrs;
@@ -93,9 +91,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     if (settlementMethod_ != "")
         XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
     XMLUtils::addChild(doc, node, "PayOffAtExpiry", payoffAtExpiry_);
-    XMLUtils::addChild(doc, node, "PremiumAmount", premium_);
-    XMLUtils::addChild(doc, node, "PremiumCurrency", premiumCcy_);
-    XMLUtils::addChild(doc, node, "PremiumPayDate", premiumPayDate_);
+    XMLUtils::appendNode(node, premiumData_.toXML(doc));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "ExerciseFees", "ExerciseFee", exerciseFees_,
                                                 {"type", "startDate"}, {exerciseFeeTypes_, exerciseFeeDates_});
     if (exerciseFeeSettlementPeriod_ != "")
