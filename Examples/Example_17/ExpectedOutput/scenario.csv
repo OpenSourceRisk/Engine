@@ -51,6 +51,12 @@ CPI_Floor,DiscountCurve/EUR/3/3Y,Up,-6314.20,-6313.07,1.13
 CPI_Floor,DiscountCurve/EUR/1/1Y,Down,-6314.20,-6314.20,0.00
 CPI_Floor,DiscountCurve/EUR/2/2Y,Down,-6314.20,-6314.71,-0.51
 CPI_Floor,DiscountCurve/EUR/3/3Y,Down,-6314.20,-6315.33,-1.13
+CPI_Floor,ZeroInflationCurve/EUHICPXT/1/1Y,Up,-6314.20,-6284.76,29.44
+CPI_Floor,ZeroInflationCurve/EUHICPXT/2/2Y,Up,-6314.20,-6247.11,67.09
+CPI_Floor,ZeroInflationCurve/EUHICPXT/3/3Y,Up,-6314.20,-6209.10,105.10
+CPI_Floor,ZeroInflationCurve/EUHICPXT/1/1Y,Down,-6314.20,-6343.76,-29.56
+CPI_Floor,ZeroInflationCurve/EUHICPXT/2/2Y,Down,-6314.20,-6381.72,-67.52
+CPI_Floor,ZeroInflationCurve/EUHICPXT/3/3Y,Down,-6314.20,-6420.01,-105.81
 CPI_Floor,ZeroInflationCapFloorVolatility/EUHICPXT/0/1Y/0.01,Up,-6314.20,-6507.33,-193.12
 CPI_Floor,ZeroInflationCapFloorVolatility/EUHICPXT/1/1Y/0.02,Up,-6314.20,-6288.08,26.12
 CPI_Floor,ZeroInflationCapFloorVolatility/EUHICPXT/2/1Y/0.03,Up,-6314.20,-6189.29,124.91
@@ -71,6 +77,8 @@ CPI_Floor,ZeroInflationCapFloorVolatility/EUHICPXT/11/3Y/0.02,Down,-6314.20,-632
 CPI_Floor,ZeroInflationCapFloorVolatility/EUHICPXT/12/3Y/0.03,Down,-6314.20,-6472.17,-157.97
 CPI_Floor_SingleFlow,DiscountCurve/EUR/3/3Y,Up,-103339.55,-103308.52,31.03
 CPI_Floor_SingleFlow,DiscountCurve/EUR/3/3Y,Down,-103339.55,-103370.59,-31.03
+CPI_Floor_SingleFlow,ZeroInflationCurve/EUHICPXT/3/3Y,Up,-103339.55,-101588.11,1751.44
+CPI_Floor_SingleFlow,ZeroInflationCurve/EUHICPXT/3/3Y,Down,-103339.55,-105108.76,-1769.21
 CPI_Floor_SingleFlow,ZeroInflationCapFloorVolatility/EUHICPXT/10/3Y/0.01,Up,-103339.55,-110397.85,-7058.30
 CPI_Floor_SingleFlow,ZeroInflationCapFloorVolatility/EUHICPXT/10/3Y/0.01,Down,-103339.55,-96302.85,7036.70
 CPI_Cap,DiscountCurve/EUR/1/1Y,Up,73285.05,73284.75,-0.30
@@ -79,6 +87,12 @@ CPI_Cap,DiscountCurve/EUR/3/3Y,Up,73285.05,73264.69,-20.36
 CPI_Cap,DiscountCurve/EUR/1/1Y,Down,73285.05,73285.35,0.30
 CPI_Cap,DiscountCurve/EUR/2/2Y,Down,73285.05,73285.55,0.50
 CPI_Cap,DiscountCurve/EUR/3/3Y,Down,73285.05,73305.42,20.37
+CPI_Cap,ZeroInflationCurve/EUHICPXT/1/1Y,Up,73285.05,73317.10,32.05
+CPI_Cap,ZeroInflationCurve/EUHICPXT/2/2Y,Up,73285.05,73331.04,45.99
+CPI_Cap,ZeroInflationCurve/EUHICPXT/3/3Y,Up,73285.05,74686.93,1401.88
+CPI_Cap,ZeroInflationCurve/EUHICPXT/1/1Y,Down,73285.05,73253.19,-31.86
+CPI_Cap,ZeroInflationCurve/EUHICPXT/2/2Y,Down,73285.05,73239.62,-45.43
+CPI_Cap,ZeroInflationCurve/EUHICPXT/3/3Y,Down,73285.05,71902.47,-1382.58
 CPI_Cap,ZeroInflationCapFloorVolatility/EUHICPXT/0/1Y/0.01,Up,73285.05,73478.17,193.12
 CPI_Cap,ZeroInflationCapFloorVolatility/EUHICPXT/5/2Y/0.01,Up,73285.05,73571.46,286.41
 CPI_Cap,ZeroInflationCapFloorVolatility/EUHICPXT/10/3Y/0.01,Up,73285.05,80696.26,7411.21
