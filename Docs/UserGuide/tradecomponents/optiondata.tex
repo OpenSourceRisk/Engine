@@ -29,9 +29,13 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
     <ExerciseDate>2019-04-20</ExerciseDate>
     <ExerciseDate>2020-04-20</ExerciseDate>
   </ExerciseDates>
-  <PremiumAmount>100000</PremiumAmount>
-  <PremiumCurrency>EUR</PremiumCurrency>
-  <PremiumPayDate>2018-05-07</PremiumPayDate>
+  <Premiums>
+    <Premium>
+      <Amount>100000</Amount>
+      <Currency>EUR</Currency>
+      <PayDate>2018-05-07</PayDate>
+    </Premium>
+  </Premiums>
   <AutomaticExercise>...</AutomaticExercise>
   <ExerciseData>
     <Date>...</Date>
@@ -185,17 +189,9 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
   style options must have two or more \lstinline!ExerciseDate! child
   elements.
 
-\item PremiumAmount [Optional]: Option premium amount paid by the option buyer to the option seller. If negative, it's paid by the option seller to the option buyer.
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
-Allowable values:  Any  real number.
-
-\item PremiumCurrency [Optional]: Currency of the option premium.
-
-Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-
-\item PremiumPayDate [Optional]: Date of the option premium payment.
-
-Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+Allowable values:  See section \ref{ss:premiums}
 
 \item AutomaticExercise [Optional]: Used if the option expiry date is on the current date or in the past, and the payment date is in the future  - so that there still is an outstanding cashflow if the option was in the money on the expiry date. In this case, if AutomaticExercise is applied, the FX / Commodity / Equity fixing on the expiry date is used to automatically determine the payoff and thus whether the option was exercised or not.\\
 \medskip
