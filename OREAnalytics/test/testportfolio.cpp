@@ -112,7 +112,7 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     legs.push_back(floatingLeg);
     // option data
     OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), cashPhysical, "",
-                      PremiumData(premium, premiumCcy, parseDate(premiumDate)));
+                      premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
@@ -164,7 +164,7 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
     legs.push_back(floatingLeg);
     // option data
     OptionData option(longShort, "Call", "Bermudan", false, exerciseDates, cashPhysical, "",
-                      PremiumData(premium, premiumCcy, parseDate(premiumDate)));
+                      premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
@@ -188,7 +188,7 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
     Envelope env("CP");
     // option data
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "",
-                      PremiumData(premium, premiumCcy, parseDate(premiumDate)));
+                      premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::FxOption(env, option, boughtCcy, boughtAmount, soldCcy, soldAmount));
     trade->id() = id;
@@ -212,7 +212,7 @@ boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string p
     Envelope env("CP");
     // option data
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", "",
-                      PremiumData(premium, premiumCcy, parseDate(premiumDate)));
+                      premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
     boost::shared_ptr<Trade> trade(
         new ore::data::EquityOption(env, option, EquityUnderlying(equityName), currency, strike, quantity));
@@ -411,7 +411,7 @@ boost::shared_ptr<Trade> buildCommodityOption(const string& id, const string& lo
 
     Envelope env("CP");
     OptionData option(longShort, putCall, "European", false, expiryDate, "Cash", "",
-                      PremiumData(premium, premiumCcy, parseDate(premiumDate)));
+                      premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     boost::shared_ptr<Trade> trade =
         boost::make_shared<ore::data::CommodityOption>(env, option, commodityName, currency, strike, quantity);
     trade->id() = id;

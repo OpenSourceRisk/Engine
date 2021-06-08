@@ -375,9 +375,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
 
-    // If premium data is provided
-    // 1) build the fee trade and pass it to the instrument wrapper for pricing
-    // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_, -multiplier,

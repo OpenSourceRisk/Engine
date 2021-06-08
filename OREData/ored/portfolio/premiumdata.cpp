@@ -59,9 +59,10 @@ void PremiumData::fromXML(XMLNode* node) {
 XMLNode* PremiumData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Premiums");
     for (auto const& d : premiumData_) {
-        XMLUtils::addChild(doc, node, "Amount", d.amount);
-        XMLUtils::addChild(doc, node, "Currency", d.ccy);
-        XMLUtils::addChild(doc, node, "PayDate", ore::data::to_string(d.payDate));
+        XMLNode* p = XMLUtils::addChild(doc, node, "Premium");
+        XMLUtils::addChild(doc, p, "Amount", d.amount);
+        XMLUtils::addChild(doc, p, "Currency", d.ccy);
+        XMLUtils::addChild(doc, p, "PayDate", ore::data::to_string(d.payDate));
     }
     return node;
 }
