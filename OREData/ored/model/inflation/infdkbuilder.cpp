@@ -39,8 +39,10 @@ namespace ore {
 namespace data {
 
 InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<InfDkData>& data,
-                           const std::string& configuration, const std::string& referenceCalibrationGrid)
-    : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid) {
+                           const std::string& configuration, const std::string& referenceCalibrationGrid,
+                           const bool dontCalibrate)
+    : market_(market), configuration_(configuration), data_(data), referenceCalibrationGrid_(referenceCalibrationGrid),
+      dontCalibrate_(dontCalibrate) {
 
     LOG("DkBuilder for " << data_->index());
 
@@ -64,7 +66,7 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
 
     // register the builder with the market observer
     registerWith(marketObserver_);
-
+    registerWith(infVol_);
     // notify observers of all market data changes, not only when not calculated
     alwaysForwardNotifications();
 
@@ -280,7 +282,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
 
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
-    Real baseCPI = inflationIndex_->fixing(baseDate);
+    Real baseCPI = dontCalibrate_ ? 100. : inflationIndex_->fixing(baseDate);
     BusinessDayConvention bdc = infVol_->businessDayConvention();
     Period lag = infVol_->observationLag();
     Handle<ZeroInflationIndex> hIndex(inflationIndex_);
@@ -306,15 +308,17 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 boost::make_shared<CPICapFloor>(capfloor, nominal, startDate, baseCPI, expiryDate, fixCalendar, bdc,
                                                 fixCalendar, bdc, strikeValue, hIndex, lag);
             cf->setPricingEngine(engine);
-            Real marketPrem = cf->NPV();
+            Real tte = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
+                                             inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
+                                             cf->fixingDate());
+
+            Real marketPrem = dontCalibrate_ || tte <= 0 ? 0.01 : cf->NPV();
             boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper =
                 boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, bdc,
                                                                 fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
-            Real tte = inflationYearFraction(inflationIndex_->frequency(), inflationIndex_->interpolated(),
-                                             inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
-                                             helper->instrument()->fixingDate());
+            
             // we might produce duplicate expiry times even if the fixing dates are all different
-            if (std::find_if(expiryTimes.begin(), expiryTimes.end(),
+            if (tte > 0 && std::find_if(expiryTimes.begin(), expiryTimes.end(),
                              [tte](Real x) { return QuantLib::close_enough(x, tte); }) == expiryTimes.end()) {
                 optionBasket_.push_back(helper);
                 helper->performCalculations();
