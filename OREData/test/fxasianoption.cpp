@@ -206,7 +206,7 @@
      tradeXml.append("        <AsianType>Price</AsianType>");
      tradeXml.append("        <AverageType>Arithmetic</AverageType>");
      tradeXml.append("      </AsianData>");
-     tradeXml.append("      <ScheduleData>");
+     tradeXml.append("      <ObservationDates>");
      tradeXml.append("        <Dates>");
      tradeXml.append("          <Dates>");
      tradeXml.append("            <Date>2021-02-01</Date>");
@@ -231,7 +231,7 @@
      tradeXml.append("            <Date>2021-02-26</Date>");
      tradeXml.append("          </Dates>");
      tradeXml.append("        </Dates>");
-     tradeXml.append("      </ScheduleData>");
+     tradeXml.append("      </ObservationDates>");
      tradeXml.append("      <BoughtCurrency>USD</BoughtCurrency>");
      tradeXml.append("      <SoldCurrency>JPY</SoldCurrency>");
      tradeXml.append("      <BoughtAmount>1</BoughtAmount>");
@@ -264,7 +264,7 @@
      BOOST_CHECK_EQUAL(option->option().style(), "European");
      BOOST_CHECK_EQUAL(option->option().exerciseDates().size(), 1);
      BOOST_CHECK_EQUAL(option->option().exerciseDates()[0], "2021-02-26");
-     BOOST_CHECK(option->scheduleData().hasData());
+     BOOST_CHECK(option->observationDates().hasData());
 
      OptionAsianData oad = option->asianData();
      BOOST_CHECK_EQUAL(oad.asianType(), OptionAsianData::AsianType::Price);

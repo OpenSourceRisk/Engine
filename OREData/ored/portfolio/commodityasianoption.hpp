@@ -74,7 +74,9 @@
          future contract settlement price and the option's expiry date does not match the future contract expiry date.
      */
      QuantLib::Date futureExpiryDate_;
- };
+
+     CommodityUnderlying commodityUnderlying_;
+};
 
  } // namespace data
  } // namespace ore

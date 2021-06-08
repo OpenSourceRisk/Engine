@@ -117,8 +117,8 @@
              Size pastFixings = 0;
 
              Schedule observationSchedule;
-             if (scheduleData_.hasData())
-                 observationSchedule = makeSchedule(scheduleData_);
+             if (observationDates_.hasData())
+                 observationSchedule = makeSchedule(observationDates_);
              std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
 
              // Sort for the engine's sake. Not needed - instrument also sorts...?

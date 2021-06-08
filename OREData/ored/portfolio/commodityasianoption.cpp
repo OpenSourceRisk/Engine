@@ -77,12 +77,18 @@
      option_.fromXML(XMLUtils::getChildNode(commodityNode, "OptionData"));
      QL_REQUIRE(option_.payoffType() == "Asian", "Expected PayoffType Asian for CommodityAsianOption.");
      XMLNode* asianNode = XMLUtils::getChildNode(commodityNode, "AsianData");
-     asianData_.fromXML(asianNode);
+     if (asianNode)
+         asianData_.fromXML(asianNode);
 
-     XMLNode* scheduleDataNode = XMLUtils::getChildNode(commodityNode, "ScheduleData");
-     scheduleData_.fromXML(scheduleDataNode);
+     XMLNode* scheduleDataNode = XMLUtils::getChildNode(commodityNode, "ObservationDates");
+     observationDates_.fromXML(scheduleDataNode);
 
-     assetName_ = XMLUtils::getChildValue(commodityNode, "Name", true);
+     XMLNode* tmp = XMLUtils::getChildNode(commodityNode, "Underlying");
+     if (!tmp) 
+         tmp = XMLUtils::getChildNode(commodityNode, "Name");
+     commodityUnderlying_.fromXML(tmp);
+     assetName_ = commodityUnderlying_.name();
+     
      currency_ = XMLUtils::getChildValue(commodityNode, "Currency", true);
      // Require explicit Strike
      strike_ = XMLUtils::getChildValueAsDouble(commodityNode, "Strike", true);
@@ -105,9 +111,11 @@
 
      XMLUtils::appendNode(comNode, option_.toXML(doc));
      XMLUtils::appendNode(comNode, asianData_.toXML(doc));
-     XMLUtils::appendNode(comNode, scheduleData_.toXML(doc));
+     auto tmp = observationDates_.toXML(doc);
+     XMLUtils::setNodeName(doc, tmp, "ObservationDates");
+     XMLUtils::appendNode(comNode, tmp);
 
-     XMLUtils::addChild(doc, comNode, "Name", assetName_);
+     XMLUtils::appendNode(comNode, commodityUnderlying_.toXML(doc));
      XMLUtils::addChild(doc, comNode, "Currency", currency_);
      XMLUtils::addChild(doc, comNode, "Strike", strike_);
      XMLUtils::addChild(doc, comNode, "Quantity", quantity_);

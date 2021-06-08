@@ -43,7 +43,7 @@
      //@{
      const OptionData& option() const { return option_; }
      const OptionAsianData& asianData() const { return asianData_; }
-     const ScheduleData& scheduleData() const { return scheduleData_; }
+     const ScheduleData& observationDates() const { return observationDates_; }
      const string& asset() const { return assetName_; }
      const string& currency() const { return currency_; }
      double strike() const { return strike_; }
@@ -59,16 +59,16 @@
      AsianOptionTrade(AssetClass assetClassUnderlying)
          : Trade("AsianOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
      AsianOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, OptionAsianData asianData,
-                      ScheduleData scheduleData, string assetName, string currency, double strike, double quantity,
+                      ScheduleData observationDates, string assetName, string currency, double strike, double quantity,
                       const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "")
          : Trade("AsianOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
-           asianData_(asianData), scheduleData_(scheduleData), assetName_(assetName), currency_(currency),
+           asianData_(asianData), observationDates_(observationDates), assetName_(assetName), currency_(currency),
            strike_(strike), quantity_(quantity), index_(index), indexName_(indexName) {}
 
      AssetClass assetClassUnderlying_;
      OptionData option_;
      OptionAsianData asianData_;
-     ScheduleData scheduleData_;
+     ScheduleData observationDates_;
      string assetName_;
      string currency_;
      double strike_;
