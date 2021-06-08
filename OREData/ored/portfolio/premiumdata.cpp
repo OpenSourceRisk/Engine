@@ -33,12 +33,20 @@ void PremiumData::fromXML(XMLNode* node) {
     auto depr_ccy_node = XMLUtils::getChildNode(node, "PremiumCurrency");
     auto depr_date_node = XMLUtils::getChildNode(node, "PremiumPayDate");
 
-    if (depr_ccy_node != nullptr && depr_date_node != nullptr) {
-        PremiumDatum d;
-        d.amount = depr_amount_node != nullptr ? parseReal(XMLUtils::getNodeValue(depr_amount_node)) : 0.0;
-        d.ccy = XMLUtils::getNodeValue(depr_ccy_node);
-        d.payDate = parseDate(XMLUtils::getNodeValue(depr_date_node));
-        premiumData_.push_back(d);
+    if (depr_amount_node != nullptr) {
+        std::string amountStr = XMLUtils::getNodeValue(depr_amount_node);
+        if (!amountStr.empty()) {
+            double amount = parseReal(amountStr);
+            if (!close_enough(amount, 0.0)) {
+                QL_REQUIRE(depr_ccy_node, "PremiumAmount (" << amount << ") given, but no PremiumCurrency");
+                QL_REQUIRE(depr_date_node, "PremiumAmount (" << amount << ") given, but no PremiumPayDate");
+                std::string ccyStr = XMLUtils::getNodeValue(depr_ccy_node);
+                std::string dateStr = XMLUtils::getNodeValue(depr_date_node);
+                QL_REQUIRE(!ccyStr.empty(), "PremiumAmount (" << amount << ") given, but no PremiumCurrency");
+                QL_REQUIRE(!dateStr.empty(), "PremiumAmount (" << amount << ") given, but no PremiumPayDate");
+                premiumData_.emplace_back(amount, ccyStr, parseDate(dateStr));
+            }
+        }
     }
 
     // standard variant, data is given in Premium nodes under Premiums root node
