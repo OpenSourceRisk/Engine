@@ -1,0 +1,52 @@
+\subsubsection{Premiums}
+\label{ss:premiums}
+
+The \lstinline!Premiums! node holds data of one or more premiums to be paid. It is used in different trade types,
+notably in caps / floors (see section \ref{ss:capfloor}) and more generally in the option data component (see section
+\ref{ss:option_data}). Listing \ref{lst:premiums} shows an example for a Premiums data block representing two premiums.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Premiums>
+  <Premium>
+    <Amount>1000</Amount>
+    <Currency>EUR</Currency>
+    <PayDate>2021-01-27</PayDate>
+  </Premium>
+  <Premium>
+    <Amount>5000</Amount>
+    <Currency>USD</Currency>
+    <PayDate>2023-01-27</PayDate>
+  </Premium>
+</Premiums>
+\end{minted}
+\caption{Premiums Node}
+\label{lst:premiums}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!Premium! node follow below.
+
+\begin{itemize}
+\item Amount: The amount to be paid\\
+  Allowable values: arbitrary number
+\item Currency: Currency of the premium to be paid\\
+  Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item PayDate: Date of the premium payment.\\
+  Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
+
+We support a deprecated schema to represent a single premium as shown in listing \ref{lst:premiums_deprecated} for
+backwards compatibility. The $3$ nodes PremiumAmount, PremiumCurrency, PremiumPayDate can be used on the same level as
+the new Premiums node to represent a single premium payment. The deprecated and new schema may not be mixed.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <PremiumAmount>1000</PremiumAmount>
+  <PremiumCurrency>EUR</PremiumCurrency>
+  <PremiumPayDate>2021-01-27</PremiumPayDate>
+\end{minted}
+\caption{Deprecated Single Premium Representation}
+\label{lst:premiums_deprecated}
+\end{listing}

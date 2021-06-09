@@ -207,6 +207,9 @@
     <ClInclude Include="ored\portfolio\portfolio.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\premiumdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\schedule.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -813,6 +816,9 @@
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\portfolio.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\premiumdata.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\schedule.cpp">

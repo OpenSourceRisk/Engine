@@ -336,8 +336,8 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionPremium) {
     Date premiumDate(21, Feb, 2018);
 
     // Create option
-    OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry, "Cash", "", premium, td.currency,
-                          "2018-02-21");
+    OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry, "Cash", "",
+                          PremiumData{premium, td.currency, Date(21, Feb, 2018)});
     boost::shared_ptr<CommodityOption> option = boost::make_shared<CommodityOption>(
         td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
 

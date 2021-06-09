@@ -845,4 +845,18 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="premiumData">
+    <xs:sequence>
+      <xs:element name="Premium" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:float" name="Amount"/>
+            <xs:element type="extendedCurrencyCode" name="Currency"/>
+            <xs:element type="date" name="PayDate"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
 </xs:schema>
