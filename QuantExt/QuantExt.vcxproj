@@ -562,6 +562,7 @@
     <ClInclude Include="qle\indexes\ibor\czkpribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\demlibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\dkkcita.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkois.hpp" />
     <ClInclude Include="qle\indexes\ibor\ester.hpp" />
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
