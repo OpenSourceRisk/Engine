@@ -1436,6 +1436,12 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsSpreadData->spreads(),
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);
     vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsSpreadData->gearings(),
@@ -1450,6 +1456,7 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
                                     .withNotionals(notionals)
                                     .withSpreads(spreads)
                                     .withGearings(gearings)
+                                    .withPaymentCalendar(paymentCalendar)
                                     .withPaymentDayCounter(dc)
                                     .withPaymentAdjustment(bdc)
                                     .withFixingDays(fixingDays)
