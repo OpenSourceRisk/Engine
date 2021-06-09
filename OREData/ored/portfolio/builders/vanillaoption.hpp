@@ -215,6 +215,8 @@ protected:
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
         Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
         bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
+        Size tGridMin = parseInteger(engineParameter("TGridMinimum", "", false, "0"));
+        tGrid = std::max(tGridMin, tGrid);
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp;
 
