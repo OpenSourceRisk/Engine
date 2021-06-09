@@ -249,7 +249,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
 
                 if (quotes.size() == 0) {
                     WLOG("CorrelationCurve: No quotes found for correlation curve: " << config->curveID() << ", continuing with zero correlation.");
-                    corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
+                    corr_ = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
                         new QuantExt::FlatCorrelation(0, config->calendar(), 0.0, config->dayCounter()));
                     return;
                 }
