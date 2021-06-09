@@ -73,13 +73,13 @@ Allowable values:  See section \ref{ss:premiums}
 	for an equity quoted in the minor currency will not correspond to a Quanto payoff.
 	\item Strike: The option strike price.\\
 	Allowable values: Any positive real number.	
+	\item StrikeCurrency [Optional]: The currency that the \lstinline!Strike! is quoted in. If
+	the option is Quanto, then this field must not be left blank, and must equal the currency
+	that the underlying equity is quoted in, up to the minor/major currency. For example, if 
 	\item StrikeCurrency [Optional]: The currency the \lstinline!Strike! is quoted in. If
 	populated, this must be the same as the underlying equity currency, up to the minor/major
-	currency. For example, if the underlying equity is quoted in GBP, then
-	\lstinline!StrikeCurrency! must be either GBP or GBp. If left blank or omitted, then this
-	defaults to either the \lstinline!Currency! if \lstinline!Currency! and the underlying equity
-	currency are the same up to the minor/major currency, or to the equity currency if they are
-	not the same (i.e.\ if we have a Quanto payoff). \\
+	currency. For example, if the underlying equity is quoted in GBP, then\lstinline!StrikeCurrency!
+	must be either \emph{GBP} or \emph{GBp}. \\
 	Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table
 	\ref{tab:allow_stand_data}.	Must be the major or minor currency of the \lstinline!Currency!
 	field above.
