@@ -275,7 +275,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                             Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
                             time = config->dayCounter().yearFraction(asof, d);
                         }
-                        quotePairs.push_back(make_pair(time, c->quote()));
+                        quotePairs[i] = make_pair(time, c->quote());
 
                         TLOG("CorrelationCurve: Added quote " << c->name() << ", tenor " << optionTenors[i] << ", with value "
                             << fixed << setprecision(9) << c->quote()->value() );
