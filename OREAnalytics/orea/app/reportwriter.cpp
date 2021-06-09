@@ -58,9 +58,16 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NotionalCurrency", string())
         .addColumn("Notional(Base)", double(), 2)
         .addColumn("NettingSet", string())
-        .addColumn("CounterParty", string());
+        .addColumn("CounterParty", string())
+        // Custom option outputs added below:
+        .addColumn("ForecastDiscountFactor", double(), 6)
+        .addColumn("DividendDiscountFactor", double(), 6)
+        .addColumn("Volatility", double(), 6) // Vanilla Options
+        .addColumn("ForwardPrice", double(), 6);
+
     for (auto trade : portfolio->trades()) {
         try {
+            DLOG("Writing npv data of trade id: " << trade->id());
             string npvCcy = trade->npvCurrency();
             Real fx = 1.0, fxNotional = 1.0;
             if (npvCcy != baseCurrency)
@@ -86,6 +93,56 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                          : trade->notional() * fxNotional)
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
+
+            //// Custom outputs below
+
+            // Option volatility output
+            boost::shared_ptr<QuantLib::VanillaOption> qlVanOpt =
+                boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trade->instrument()->qlInstrument());
+            if (qlVanOpt) {
+                Real forDisc = 0.0;
+                Real divDisc = 0.0;
+                Volatility blackVol = 0.0;
+                Real fwdPrice = 0.0;
+
+                if (trade->tradeType() == "EquityOption") {
+                    boost::shared_ptr<ore::data::EquityOption> eqoTrn =
+                        boost::dynamic_pointer_cast<ore::data::EquityOption>(trade);
+                    const std::string& assetName = eqoTrn->asset(); // or equivalently equityName()
+                    blackVol = market->equityVol(assetName)->blackVol(maturity, eqoTrn->strike());
+                    
+                    forDisc = market->equityCurve(assetName, configuration)->equityForecastCurve()->discount(maturity);
+                    divDisc = market->equityCurve(assetName, configuration)->equityDividendCurve()->discount(maturity);
+                    Real eqSpot = market->equitySpot(assetName, configuration)->value();
+
+                    fwdPrice = eqSpot * divDisc / forDisc;
+
+                    DLOG("Derived forward price " << std::setprecision(12) << std::fixed << fwdPrice << " for maturity " << maturity << ", spot " << eqSpot
+                        << ", dividend discount " << divDisc << ", and forecast discount " << forDisc << ".");
+                } else if (trade->tradeType() == "FxOption") {
+                    boost::shared_ptr<ore::data::FxOption> fxoTrn =
+                        boost::dynamic_pointer_cast<ore::data::FxOption>(trade);
+                    const std::string& ccyPair = fxoTrn->boughtCurrency() + fxoTrn->soldCurrency();
+                    blackVol = market->fxVol(ccyPair)->blackVol(maturity, fxoTrn->strike());
+                } else if (trade->tradeType() == "CommodityOption") {
+                    boost::shared_ptr<ore::data::CommodityOption> comoTrn =
+                        boost::dynamic_pointer_cast<ore::data::CommodityOption>(trade);
+                    const std::string& assetName = comoTrn->asset();
+                    blackVol =
+                        market->commodityVolatility(assetName, configuration)->blackVol(maturity, comoTrn->strike());
+                    fwdPrice = market->commodityPriceCurve(assetName, configuration)->price(maturity);
+                }
+                report.add(forDisc);
+                report.add(divDisc);
+                report.add(blackVol);
+                report.add(fwdPrice);
+            } else {
+                // Need to output something if not VanillaOption trade
+                report.add(Null<Real>());
+                report.add(Null<Real>());
+                report.add(Null<Real>());
+                report.add(Null<Real>());
+            }
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
             Date maturity = trade->maturity();
@@ -102,7 +159,10 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(nullString_)
                 .add(Null<Real>())
                 .add(nullString_)
-                .add(nullString_);
+                .add(nullString_)
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>());
         }
     }
     report.end();
@@ -312,15 +372,22 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> discountCurves = marketConfig.mapping(MarketObject::DiscountCurve, configID);
     map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
     map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
-    map<string, string> zeroInflationIndices, defaultCurves;
+    map<string, string> zeroInflationIndices, defaultCurves, EquityCurves, CommodityCurves;
     if (marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
         zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
         defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::EquityCurve))
+        EquityCurves = marketConfig.mapping(MarketObject::EquityCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::CommodityCurve))
+        CommodityCurves = marketConfig.mapping(MarketObject::CommodityCurve, configID);
+
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
     vector<Handle<DefaultProbabilityTermStructure>> probabilityCurves;
+    vector<std::tuple<Handle<YieldTermStructure>, Handle<YieldTermStructure>>> equityCurves;
+    vector<Handle<PriceTermStructure>> commodityCurves;
 
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
@@ -389,16 +456,47 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
             }
         }
     }
+    for (auto it : EquityCurves) {
+        DLOG("equity curve - " << it.first);
+        try {
+            equityCurves.push_back(std::make_tuple(market->equityCurve(it.first, configID)->equityForecastCurve(),
+                                   market->equityCurve(it.first, configID)->equityDividendCurve()));
+            report.addColumn(it.first + " Fwd", double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
+    for (auto it : CommodityCurves) {
+        DLOG("commodity curve - " << it.first);
+        try {
+            commodityCurves.push_back(market->commodityPriceCurve(it.first, configID));
+            report.addColumn(it.first + " price curve", double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+    }
 
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
         report.next().add(grid.tenors()[j]).add(date);
-        for (Size i = 0; i < yieldCurves.size(); ++i)
-            report.add(yieldCurves[i]->discount(date));
-        for (Size i = 0; i < zeroInflationFixings.size(); ++i)
-            report.add(zeroInflationFixings[i]->fixing(date));
-        for (Size i = 0; i < probabilityCurves.size(); ++i)
-            report.add(probabilityCurves[i]->survivalProbability(date));
+        for (auto yC : yieldCurves)
+            report.add(yC->discount(date));
+        for (auto zInfF : zeroInflationFixings)
+            report.add(zInfF->fixing(date));
+        for (auto prC : probabilityCurves)
+            report.add(prC->survivalProbability(date));
+        for (auto eqC : equityCurves)
+            report.add(std::get<0>(eqC)->discount(date) / std::get<1>(eqC)->discount(date));
+        for (auto comC : commodityCurves)
+            report.add(comC->price(date));
     }
     report.end();
 }

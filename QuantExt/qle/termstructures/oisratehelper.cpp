@@ -155,6 +155,13 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
 
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
+
+    // Latest Date may need to be updated due to payment lag.
+    Date date;
+    if (paymentLag_ != 0) {
+        date = overnightIndex_->fixingCalendar().advance(latestDate_, paymentLag_, Days, paymentAdjustment_, false);
+        latestDate_ = std::max(date, latestDate_);
+    }
 }
 
 void DatedOISRateHelper::setTermStructure(YieldTermStructure* t) {

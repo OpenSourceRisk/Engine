@@ -307,24 +307,47 @@ private:
 class SwapQuote : public MarketDatum {
 public:
     SwapQuote() {}
-    //! Constructor
+    //! Tenor based constructor
     SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period fwdStart,
               Period term, Period tenor)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), fwdStart_(fwdStart),
-          term_(term), tenor_(tenor) {}
+          term_(term), tenor_(tenor), tenorBased_(true) {}
+
+    //! Date based constructor
+    SwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, QuantLib::Date startDate,
+              QuantLib::Date expiryDate, Period tenor)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IR_SWAP), ccy_(ccy), startDate_(startDate),
+          expiryDate_(expiryDate), tenor_(tenor), tenorBased_(false) {}
 
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
+
+    //! The swap's forward start tenor if the quote is tenor based
     const Period& fwdStart() const { return fwdStart_; }
+
+    //! The swap's start date if the quote is date based
+    const QuantLib::Date& startDate() const { return startDate_; }
+
+    //! The swap's term if the quote is tenor based
     const Period& term() const { return term_; }
+
     const Period& tenor() const { return tenor_; }
+
+    //! The swap's expiry if the quote is date based
+    const QuantLib::Date& expiryDate() const { return expiryDate_; }
+
+    //! Returns \c true if the swap is tenor based and \c false if swap is date based
+    bool tenorBased() const { return tenorBased_; }
     //@}
 private:
     string ccy_;
     Period fwdStart_;
+    QuantLib::Date startDate_;
     Period term_;
+    QuantLib::Date expiryDate_;
     Period tenor_;
+    bool tenorBased_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version) {
@@ -1499,7 +1522,7 @@ Specific data comprise
 - Equity/Index name
 - currency
 - expiry
-- strike - can be "ATMF" or an actual strike
+- strike - can be "ATMF" (or, equivalently, "ATM/AtmFwd"), "MNY/Spot|Fwd/MONEYNESS_VALUE", or an absolute strike
 
 \ingroup marketdata
 */
@@ -1508,21 +1531,21 @@ public:
     EquityOptionQuote() {}
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-                      string expiry, string strike, bool isCall = true);
+                      string expiry, const boost::shared_ptr<BaseStrike>& strike, bool isCall = true);
 
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
-    const string& strike() const { return strike_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     bool isCall() { return isCall_; }
     //@}
 private:
     string eqName_;
     string ccy_;
     string expiry_;
-    string strike_;
+    boost::shared_ptr<BaseStrike> strike_;
     bool isCall_;
     //! Serialization
     friend class boost::serialization::access;

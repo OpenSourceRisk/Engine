@@ -1,0 +1,48 @@
+<Playlist Version="2.0">
+  <Rule Name="Includes" Match="Any">
+    <Rule Match="All">
+      <Property Name="Solution" />
+      <Rule Match="Any">
+        <Rule Match="All">
+          <Property Name="Project" Value="quantexttestsuite" />
+          <Rule Match="Any">
+            <Rule Match="All">
+              <Property Name="Namespace" Value="" />
+              <Rule Match="Any">
+                <Rule Match="All">
+                  <Property Name="Class" Value="" />
+                  <Rule Match="Any">
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="QuantExtTestSuite/BlackVolatilitySurfaceMoneyness/testVolatilitySurfaceMoneynessSpot" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="testVolatilitySurfaceMoneynessSpot" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="QuantExtTestSuite/BlackVolatilitySurfaceMoneyness/testVolatilitySurfaceMoneynessForward" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="testVolatilitySurfaceMoneynessForward" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="QuantExtTestSuite/BlackVolatilitySurfaceMoneyness/testVolatilitySurfaceMoneynessSpotExtrapConstistency" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="testVolatilitySurfaceMoneynessSpotExtrapConstistency" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="QuantExtTestSuite/BlackVolatilitySurfaceMoneyness/testVolatilitySurfaceMoneynessSpotConstistency" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="testVolatilitySurfaceMoneynessSpotConstistency" />
+                      </Rule>
+                    </Rule>
+                  </Rule>
+                </Rule>
+              </Rule>
+            </Rule>
+          </Rule>
+        </Rule>
+      </Rule>
+    </Rule>
+  </Rule>
+</Playlist>

@@ -145,6 +145,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvariancesurfacestddevs.cpp
+termstructures/blackvolatilitysurfacemoneyness.cpp
 termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
@@ -285,6 +286,7 @@ indexes/ibor/primeindex.hpp
 indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
+indexes/ibor/sekstina.hpp
 indexes/ibor/sekstibor.hpp
 indexes/ibor/sekstina.hpp
 indexes/ibor/sgdsibor.hpp
@@ -330,7 +332,9 @@ math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
+math/logquadraticinterpolation.hpp
 math/nadarayawatson.hpp
+math/quadraticinterpolation.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp

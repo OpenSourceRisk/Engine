@@ -169,6 +169,12 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">QuantExt-test-suite-mt-sgd</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">QuantExt-test-suite-x64-mt-sgd</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">
     <Midl>
       <TypeLibraryName>.\build\$(PlatformToolset)\$(Platform)\$(Configuration)\testsuite.tlb</TypeLibraryName>
@@ -641,6 +647,7 @@
     <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="blackvariancesurfacesparse.cpp" />
     <ClCompile Include="blackvariancesurfacestddevs.cpp" />
+    <ClCompile Include="blackvolatilitysurfacemoneyness.cpp" />
     <ClCompile Include="blackvolsurfacedelta.cpp" />
     <ClCompile Include="bonds.cpp" />
     <ClCompile Include="capfloortermvolcurve.cpp" />

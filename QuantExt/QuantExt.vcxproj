@@ -136,6 +136,12 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">QuantExt-mt</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">QuantExt-x64-mt</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -489,6 +495,8 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="qle\termstructures\blackvolatilitysurfacemoneyness.hpp" />
+    <ClInclude Include="indexes\ibor\dkkcita.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
     <ClInclude Include="qle\calendars\belgium.hpp" />
@@ -621,7 +629,9 @@
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
+    <ClInclude Include="qle\math\logquadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
+    <ClInclude Include="qle\math\quadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
@@ -783,6 +793,7 @@
     <ClInclude Include="qle\time\yearcounter.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="qle\termstructures\blackvolatilitysurfacemoneyness.cpp" />
     <ClCompile Include="qle\calendars\austria.cpp" />
     <ClCompile Include="qle\calendars\belgium.cpp" />
     <ClCompile Include="qle\calendars\chile.cpp" />
@@ -976,6 +987,7 @@
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
     <ClCompile Include="qle\time\actual364.cpp" />
     <ClCompile Include="qle\time\yearcounter.cpp" />
+    <ClCompile Include="test\quadraticinterpolation.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -287,10 +287,15 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                                                                                  << calls[i]->strike());
                             callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
                             putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
-                            callStrikes.push_back(parseReal(calls[i]->strike()));
-                            putStrikes.push_back(parseReal(puts[j]->strike()));
                             callPremiums.push_back(calls[i]->quote()->value());
                             putPremiums.push_back(puts[j]->quote()->value());
+
+                            boost::shared_ptr<ore::data::AbsoluteStrike> callStrike =
+                                boost::dynamic_pointer_cast<ore::data::AbsoluteStrike>(calls[i]->strike());
+                            callStrikes.push_back(callStrike->strike());
+                            boost::shared_ptr<ore::data::AbsoluteStrike> putStrike =
+                                boost::dynamic_pointer_cast<ore::data::AbsoluteStrike>(puts[j]->strike());
+                            putStrikes.push_back(putStrike->strike());
                         }
                     }
                 }

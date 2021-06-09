@@ -600,8 +600,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration.first);
 
                         boost::shared_ptr<EquityVolCurve> eqVolCurve =
-                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs, eqIndex,
-                                                               requiredEquityCurves, requiredEquityVolCurves);
+                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs, eqIndex, 
+                                                               requiredYieldCurves, requiredEquityCurves, 
+                                                               requiredEquityVolCurves);
                         itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                     }
 
