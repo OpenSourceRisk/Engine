@@ -1,6 +1,7 @@
 /*
   Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
   All rights reserved.
+
   This file is part of ORE, a free-software/open-source library
   for transparent pricing and risk analysis - http://opensourcerisk.org
   ORE is free software: you can redistribute it and/or modify it
@@ -61,14 +62,32 @@
      XMLNode* scheduleDataNode = XMLUtils::getChildNode(fxNode, "ObservationDates");
      observationDates_.fromXML(scheduleDataNode);
 
-     assetName_ = XMLUtils::getChildValue(fxNode, "BoughtCurrency", true);
-     currency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
-     double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
-     double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
-     strike_ = soldAmount / boughtAmount;
-     quantity_ = boughtAmount;
-
-     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", true);
+     XMLNode* tmpBought = XMLUtils::getChildNode(fxNode, "BoughtAmount");
+     XMLNode* tmpSold = XMLUtils::getChildNode(fxNode, "SoldAmount");
+     bool vanillaFlavour = tmpBought && tmpSold;
+     if (vanillaFlavour) {
+         LOG("Vanilla Flavour");
+         assetName_ = XMLUtils::getChildValue(fxNode, "BoughtCurrency", true);
+	 currency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
+	 double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
+	 double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
+	 strike_ = soldAmount / boughtAmount;
+	 quantity_ = boughtAmount;	 
+	 fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", true);
+     } else {
+         LOG("Scripted Flavour");
+         currency_ = XMLUtils::getChildValue(fxNode, "Currency", true);
+	 quantity_ = XMLUtils::getChildValueAsDouble(fxNode, "Quantity", true);
+	 strike_ = XMLUtils::getChildValueAsDouble(fxNode, "Strike", false);
+	 // Get fx index and asset name from the underlying node
+	 XMLNode* tmp = XMLUtils::getChildNode(fxNode, "Underlying");
+	 FXUnderlying underlying;
+	 underlying.fromXML(tmp);
+	 fxIndex_ = underlying.name();
+	 boost::shared_ptr<QuantExt::FxIndex> fxi = parseFxIndex(fxIndex_);
+	 assetName_ = fxi->sourceCurrency().code() == currency_ ?
+	     fxi->targetCurrency().code() : fxi->sourceCurrency().code();
+     }
  }
 
  XMLNode* FxAsianOption::toXML(XMLDocument& doc) {

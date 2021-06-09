@@ -166,7 +166,9 @@
          OptionAsianData asianData(OptionAsianData::AsianType::Price, Average::Type::Arithmetic);
 
          // Test the building of a commodity Asian option doesn't throw
-         OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "", 0.0, "", "",
+	 PremiumData premiumData;
+         OptionData optionData("Long", to_string(a.type), "European", true, {to_string(expiry)}, "Cash", "",
+			       premiumData,
                                vector<Real>(), vector<Real>(), "", "", "", vector<string>(), vector<string>(), "", "",
                                "", "Asian", boost::none, boost::none, boost::none);
 

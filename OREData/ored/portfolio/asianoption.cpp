@@ -184,14 +184,8 @@
      // 2) add fee payment as additional trade leg for cash flow reporting
      std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
      std::vector<Real> additionalMultipliers;
-     if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
-         Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
-         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
-         Date premiumDate = parseDate(option_.premiumPayDate());
-         addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency, ccy,
-                    engineFactory, configuration);
-         DLOG("Option premium added for asian option " << id());
-     }
+     addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), 1.0, ccy,
+		 engineFactory, configuration);
 
      // TODO: Use something like EuropeanOptionWrapper instead? After all, an asian option is not
      // a vanilla instrument. However, the available European-/AmericanOptionWrapper is not directly
