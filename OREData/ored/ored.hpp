@@ -124,6 +124,8 @@
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/quantoequityoption.hpp>
+#include <ored/portfolio/builders/quantovanillaoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/vanillaoption.hpp>
@@ -161,6 +163,7 @@
 #include <ored/portfolio/optionpaymentdata.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>

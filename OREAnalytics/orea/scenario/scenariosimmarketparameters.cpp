@@ -154,6 +154,9 @@ void ScenarioSimMarketParameters::setDefaults() {
     useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
     // Defaults for equity
     setSimulateEquityVolATMOnly(false);
+    // Default interpolation for yield curves
+    interpolation_ = "LogLinear";
+    extrapolation_ = "FlatFwd";
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -810,17 +813,20 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             // If there is no attribute "curve", this returns "" i.e. the default
             string label = XMLUtils::getAttribute(child, "curve");
             if (label == "") {
-                interpolation_ = XMLUtils::getChildValue(child, "Interpolation", true);
                 yieldCurveTenors_[label] = XMLUtils::getChildrenValuesAsPeriods(child, "Tenors", true);
-                extrapolation_ = XMLUtils::getChildValue(child, "Extrapolation", false);
-                // for backwards compatibility, map a value that parses to bool to FlatFwd
-                try {
-                    parseBool(extrapolation_);
+                if (auto n = XMLUtils::getChildNode(child, "Interpolation")) {
+                    interpolation_ = XMLUtils::getNodeValue(n);
+                }
+                if (auto n = XMLUtils::getChildNode(child, "Extrapolation")) {
+                    extrapolation_ = XMLUtils::getNodeValue(n);
+                }
+                // for backwards compatibility, map an extrapolation value that parses to bool to FlatFwd
+                bool dummy;
+                if (tryParse<bool>(extrapolation_, dummy, &parseBool)) {
                     WLOG("ScenarioSimMarket parameter Extrapolation should be FlatFwd or FlatZero, mapping deprecated "
                          "boolean '"
                          << extrapolation_ << "' to FlatFwd. Please change this in your configuration.");
                     extrapolation_ = "FlatFwd";
-                } catch (...) {
                 }
             } else {
                 if (XMLUtils::getChildNode(child, "Interpolation")) {

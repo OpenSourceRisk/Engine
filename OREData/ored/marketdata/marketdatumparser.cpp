@@ -104,6 +104,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
+        {"NULL", MarketDatum::QuoteType::NONE}
     };
 
     if (s == "RATE_GVOL")
@@ -118,13 +119,13 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
 }
 
 // calls parseDateOrPeriod and returns a Date (either the supplied date or asof+period)
-Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal) {
+Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal, QuantLib::BusinessDayConvention bdc) {
     Period term;                                           // gets populated by parseDateOrPeriod
     Date expiryDate;                                       // gets populated by parseDateOrPeriod
     bool tmpIsDate;                                        // gets populated by parseDateOrPeriod
     parseDateOrPeriod(token, expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
     if (!tmpIsDate)
-        expiryDate = cal.adjust(asof + term);
+        expiryDate = cal.adjust(asof + term, bdc);
     return expiryDate;
 }
 

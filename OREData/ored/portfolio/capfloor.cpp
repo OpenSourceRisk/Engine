@@ -375,23 +375,11 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
 
-    // If premium data is provided
-    // 1) build the fee trade and pass it to the instrument wrapper for pricing
-    // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    QL_REQUIRE((premiumPayDate_.empty() && premiumCcy_.empty() && premium_ == Null<Real>()) ||
-                   (!premiumPayDate_.empty() && !premiumCcy_.empty() && premium_ != Null<Real>()),
-               "CapFloorBuilder: incomplete premium data, expect PremiumAmount, PremiumCurrency, PremiumPayDate");
-    if (premiumPayDate_ != "" && premiumCcy_ != "" && premium_ != Null<Real>()) {
-        Real premiumAmount = -multiplier * premium_; // pay if long, receive if short
-        Currency premiumCurrency = parseCurrency(premiumCcy_);
-        Date premiumDate = parseDate(premiumPayDate_);
-        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency,
-                   parseCurrency(legData_.currency()), engineFactory,
-                   engineFactory->configuration(MarketContext::pricing));
-        DLOG("option premium added for cap/floor " << id());
-    }
+    addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_, -multiplier,
+                parseCurrency(legData_.currency()), engineFactory,
+                engineFactory->configuration(MarketContext::pricing));
 
     // set instrument
     instrument_ =
@@ -425,13 +413,7 @@ void CapFloor::fromXML(XMLNode* node) {
     legData_.fromXML(XMLUtils::getChildNode(capFloorNode, "LegData"));
     caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Caps", "Cap");
     floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Floors", "Floor");
-    if (auto c = XMLUtils::getChildNode(capFloorNode, "PremiumAmount")) {
-        premium_ = parseReal(XMLUtils::getNodeValue(c));
-    } else {
-        premium_ = Null<Real>();
-    }
-    premiumCcy_ = XMLUtils::getChildValue(capFloorNode, "PremiumCurrency", false);
-    premiumPayDate_ = XMLUtils::getChildValue(capFloorNode, "PremiumPayDate", false);
+    premiumData_.fromXML(capFloorNode);
 }
 
 XMLNode* CapFloor::toXML(XMLDocument& doc) {
@@ -442,11 +424,7 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(capFloorNode, legData_.toXML(doc));
     XMLUtils::addChildren(doc, capFloorNode, "Caps", "Cap", caps_);
     XMLUtils::addChildren(doc, capFloorNode, "Floors", "Floor", floors_);
-    if (!premiumCcy_.empty() && !premiumPayDate_.empty() && premium_ != Null<Real>()) {
-        XMLUtils::addChild(doc, capFloorNode, "PremiumAmount", premium_);
-        XMLUtils::addChild(doc, capFloorNode, "PremiumCurrency", premiumCcy_);
-        XMLUtils::addChild(doc, capFloorNode, "PremiumPayDate", premiumPayDate_);
-    }
+    XMLUtils::appendNode(capFloorNode, premiumData_.toXML(doc));
     return node;
 }
 } // namespace data

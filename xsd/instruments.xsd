@@ -1,6 +1,8 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
   xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
+  <xs:include schemaLocation="ore_types.xsd"/>
+
   <xs:element type="portfolio" name="Portfolio"/>
 
   <xs:element type="trade" name="Trade"/>
@@ -145,6 +147,7 @@
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="premiumCurrencyCode" name="PremiumCurrency" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
+      <xs:element type="premiumData" name="Premiums" minOccurs="0"/>
       <xs:element type="xs:string" name="ExercisePrices" minOccurs="0"/>
       <xs:element name="ExerciseFees" minOccurs="0">
         <xs:complexType>
@@ -201,16 +204,16 @@
     <xs:sequence>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="settlementData" name="SettlementData"/>
-      <xs:element type="premiumData" name="PremiumData" minOccurs="0"/>
+      <xs:element name="PremiumData" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Amount"/>
+            <xs:element type="xs:string" name="Date"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
     </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="premiumData">
-    <xs:all>
-      <xs:element type="xs:string" name="Amount"/>
-      <xs:element type="xs:string" name="Date"/>
-    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="settlementData">
@@ -789,6 +792,7 @@
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="premiumCurrencyCode" name="PremiumCurrency" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
+      <xs:element type="premiumData" name="Premiums" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

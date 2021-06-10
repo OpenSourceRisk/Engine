@@ -204,22 +204,11 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = quantity_ * bsInd;
 
-    // If premium data is provided
-    // 1) build the fee trade and pass it to the instrument wrapper for pricing
-    // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
-        Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
-        // Premium could be in minor currency units, convert if needed
-        Currency premiumCurrency = parseCurrencyWithMinors(option_.premiumCcy());
-        premiumAmount = convertMinorToMajorCurrency(option_.premiumCcy(), premiumAmount);
+    addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, ccy, engineFactory,
+                configuration);
 
-        Date premiumDate = parseDate(option_.premiumPayDate());
-        addPayment(additionalInstruments, additionalMultipliers, mult, premiumDate, premiumAmount, premiumCurrency, ccy,
-                   engineFactory, configuration);
-        DLOG("option premium added for vanilla option " << id());
-    }
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
     npvCurrency_ = currency_;
