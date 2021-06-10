@@ -73,7 +73,6 @@ void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(proxySurface());
         // see EquityVolCurve::buildVolatility(...) for proxy surfaces, there we require equity curves for
         // the curveID of the vol curve and the proxy vol curve implicitly
-        requiredCurveIds_[CurveSpec::CurveType::Equity].insert(curveID_);
         requiredCurveIds_[CurveSpec::CurveType::Equity].insert(proxySurface());
     }
 }
