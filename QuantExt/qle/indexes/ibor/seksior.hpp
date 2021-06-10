@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file dkkois.hpp
-    \brief SKK T/N rate
+/*! \file seksior.hpp
+    \brief SEK T/N rate
     \ingroup indexes
 */
 
@@ -35,7 +35,7 @@ using namespace QuantLib;
 //! %SEK SIOR
 /*! %SEK T/N rate
 
-\remark Using Denmark calendar.
+\remark Using Sweden calendar.
 
 \ingroup indexes
 */

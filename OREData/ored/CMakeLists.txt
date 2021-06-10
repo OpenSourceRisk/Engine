@@ -129,6 +129,7 @@ portfolio/optionexercisedata.cpp
 portfolio/optionpaymentdata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
+portfolio/premiumdata.cpp
 portfolio/referencedata.cpp
 portfolio/referencedatafactory.cpp
 portfolio/schedule.cpp
@@ -320,6 +321,7 @@ portfolio/optionexercisedata.hpp
 portfolio/optionpaymentdata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
+portfolio/premiumdata.hpp
 portfolio/referencedata.hpp
 portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp

@@ -303,13 +303,13 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
             amount *= -1.0;
     }
 
-    // Use the add payment method to add the payment.
+    // Use the add premiums method to add the payment.
     string marketConfig = Market::defaultConfiguration;
     auto ccy = parseCurrency(notionalCurrency_);
     vector<boost::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
-    addPayment(additionalInstruments, additionalMultipliers, 1.0, paymentDate, amount,
-        ccy, ccy, engineFactory, marketConfig);
+    addPremiums(additionalInstruments, additionalMultipliers, 1.0, PremiumData(amount, notionalCurrency_, paymentDate),
+                1.0, ccy, engineFactory, marketConfig);
     DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
 
     // Use the instrument added as the main instrument and clear the vectors
@@ -327,7 +327,6 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
     Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
     instrument_ = boost::make_shared<VanillaInstrument>(qlInst, indicatorLongShort,
         additionalInstruments, additionalMultipliers);
-
 }
 
 void CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>& ef,
@@ -335,20 +334,12 @@ void CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>&
     const string& marketConfig,
     vector<boost::shared_ptr<Instrument>>& additionalInstruments,
     vector<Real>& additionalMultipliers) {
-
-    if (!option_.premiumPayDate().empty() && !option_.premiumCcy().empty()) {
         // The premium amount is always provided as a non-negative amount. Assign the correct sign here i.e.
         // pay the premium if long the option and recieve the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
-        Real premiumAmount = -indicatorLongShort * option_.premium();
-        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
-        Date premiumDate = parseDate(option_.premiumPayDate());
-        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount,
-            premiumCurrency, tradeCurrency, ef, marketConfig);
-        DLOG("Option premium added for CDS option " << id() << ".");
-    }
-
+        addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), indicatorLongShort,
+                    tradeCurrency, ef, marketConfig);
 }
 
 }

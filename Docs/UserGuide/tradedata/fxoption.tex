@@ -18,9 +18,13 @@ for an FX Option is shown in Listing \ref{lst:fxoption_data}.
     <ExerciseDates>
        <ExerciseDate>2026-03-01</ExerciseDate>
      </ExerciseDates>
-     <PremiumAmount>10900</PremiumAmount>
-     <PremiumCurrency>EUR</PremiumCurrency>
-     <PremiumPayDate>2020-03-01</PremiumPayDate>
+     <Premiums>
+       <Premium>
+         <Amount>10900</Amount>
+         <Currency>EUR</Currency>
+         <PayDate>2020-03-01</PayDate>
+       </Premium>
+     </Premiums>
   </OptionData>
   <BoughtCurrency>EUR</BoughtCurrency>
   <BoughtAmount>1000000</BoughtAmount>
@@ -53,7 +57,9 @@ holder of the Put counterpart has the right to buy USD using EUR, or equivalentl
 
 \item An \lstinline!ExerciseDates! node where exactly one ExerciseDate date element must be given. For \emph{American} style FxOptions the ExerciseDate represents the Expiry date, i.e. they can be exercised up until this date. \\
 
-\item Optional \lstinline!PremiumAmount!,  \lstinline!PremiumCurrency!, and \lstinline!PremiumPayDate! fields to specify the Fx Option premium. 
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}
 

@@ -107,11 +107,11 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
 
     // build EquityOption - expiry in 1 Year
     OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
-    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
-                               exp_str);
+    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Cash", "",
+                               PremiumData{1.0, "EUR", expiry});
     OptionData putData("Short", "Put", "European", true, vector<string>(1, exp_str));
-    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
-                              exp_str);
+    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", "",
+                              PremiumData{1.0, "EUR", expiry});
     Envelope env("CP1");
     EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
     EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
@@ -173,11 +173,11 @@ BOOST_AUTO_TEST_CASE(testEquityFutureOptionPrices) {
     boost::shared_ptr<ore::data::Underlying> underlying = boost::make_shared<ore::data::EquityUnderlying>("zzzCorp");
     // build EquityOption - expiry in 1 Year
     OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
-    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Physical", "", 1.0, "EUR",
-                               exp_str);
+    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Physical", "",
+                               PremiumData(1.0, "EUR", expiry));
     OptionData putData("Short", "Put", "European", true, vector<string>(1, exp_str));
-    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Physical", "", 1.0, "EUR",
-                              exp_str);
+    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Physical", "",
+                              PremiumData(1.0, "EUR", expiry));
     Envelope env("CP1");
     EquityFutureOption eqFwdCall(env, callData, "EUR", 1.0, underlying, 95.0, expiry);
     EquityFutureOption eqFwdCallPremium(env, callDataPremium, "EUR", 1.0, underlying, 95.0, expiry);
@@ -242,11 +242,11 @@ BOOST_AUTO_TEST_CASE(testEquityFutureParity) {
     double spot = 100;
     // build EquityOption - expiry in 1 Year
     OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
-    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Physical", "", 1.0, "EUR",
-                               exp_str);
+    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Physical", "",
+                               PremiumData(1.0, "EUR", expiry));
     OptionData putData("Long", "Put", "European", true, vector<string>(1, exp_str));
-    OptionData putDataPremium("Long", "Put", "European", true, vector<string>(1, exp_str), "Physical", "", 1.0, "EUR",
-                              exp_str);
+    OptionData putDataPremium("Long", "Put", "European", true, vector<string>(1, exp_str), "Physical", "",
+                              PremiumData(1.0, "EUR", expiry));
     Envelope env("CP1");
     EquityFutureOption eqCall(env, callData, "EUR", 1.0, underlying, strike, futureExpiry);
     EquityFutureOption eqCallPremium(env, callDataPremium, "EUR", 1.0, underlying, strike, futureExpiry);

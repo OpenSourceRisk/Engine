@@ -4254,12 +4254,13 @@ There are two methods in ORE for swaption volatility cube simulation:
 FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
 
 For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
-If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}. 
+If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}.
 
-For Yield Curves there are two ways of extrapolating them beyond the last given tenor: Extrapolation = 'FlatFwd' keeps
-the instantaneous forward rate at the last tenor constant, this is also the default if the parameter is not specified.
-'FlatZero' on the other hand keeps the (average) zero rate at the last tenor constant. Extrapolation is always enabled
-in the scenario sim market, for compatibility with old configuration files a boolean value will be mapped to 'FlatFwd'.
+For Yield Curves, there are several choices for the interpolation and extrapolation:
+\begin{itemize}
+\item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
+\item Extrpolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\end{itemize}
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4975,18 +4976,29 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <!-- DividendYield, ForwardPrice, OptionPremium, ForwardDividendPrice -->
+    <!-- DividendYield, ForwardPrice, OptionPremium, NoDividends, ForwardDividendPrice -->
     <Type>DividendYield</Type> 
     <!-- Optional node, only used when Type is OptionPremium -->
     <ExerciseStyle>American</ExerciseStyle>
     <!-- Spot quote from the market data file -->
-    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
+    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote>
+    <!-- Note: do not provide Quotes if Type is NoDividends -->
     <Quotes>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
     </Quotes>
+    <!-- Optional interpolation options, default Zero and Linear -->
+    <!-- Note: do not provide DividendInterpolation if Type is NoDividends -->
+    <DividendInterpolation>
+      <!-- Zero, Discount -->
+      <InterpolationVariable>Zero</InterpolationVariable>
+      <!-- See \ref{tab:allow_interp_methods} -->
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+    </DividendInterpolation>
+    <!-- Optional node, defaults to true -->
+    <Extrapolation>True</Extrapolation>
     <DayCounter>A365</DayCounter>
   </EquityCurve>
   <EquityCurve>
@@ -5626,7 +5638,7 @@ stress analysis.
 
 \subsubsection{Correlations}
 
-Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. The Correlation type can be either CMSSpread or Generic. The former one is to configure the correlation between two CMS indexes, the latter one is to  generally configure the correlation between two indexes, e.g. between a CMS index and a IBOR index. Currently only ATM correlation curves or Flat correlation structures are supported. Correlation quotes may be loaded directly (by setting QuoteType to RATE) or calibrated from prices (set QuoteType to PRICE).  Moreover a flat zero correlation curve can be loaded (by setting  QuoteType to NULL). In this case market quotes are not needed to be provided. Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided.
+Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. The Correlation type can be either CMSSpread or Generic. The former one is to configure the correlation between two CMS indexes, the latter one is to  generally configure the correlation between two indexes, e.g. between a CMS index and a IBOR index. Currently only ATM correlation curves or Flat correlation structures are supported. Correlation quotes may be loaded directly (by setting QuoteType to RATE) or calibrated from prices (set QuoteType to PRICE).  Moreover a flat zero correlation curve can be loaded (by setting  QuoteType to NULL). In this case market quotes are not needed to be provided. Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided. OptionTenors can be a comma separaed list of periods, 1Y,2Y etc, or a \lstinline!*! to indicate a wildcard. If a wildcard is provided, all relevant market data quotes are used.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -5800,6 +5812,7 @@ This node should hold a real number. It provides an upper bound for the search d
 %\include{tradecomponents}
 \input{../../Docs/UserGuide/tradecomponents/tradecomponentsintro}
 \input{../../Docs/UserGuide/tradecomponents/optiondata}
+\input{../../Docs/UserGuide/tradecomponents/premiums}
 \input{../../Docs/UserGuide/tradecomponents/legdatanotionals}
 \input{../../Docs/UserGuide/tradecomponents/scheduledata}
 \input{../../Docs/UserGuide/tradecomponents/fixedlegdatarates}
