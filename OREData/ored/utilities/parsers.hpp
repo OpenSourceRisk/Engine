@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -32,6 +33,7 @@
 #include <ql/exercise.hpp>
 #include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
@@ -428,6 +430,11 @@ std::ostream& operator<<(std::ostream& os, QuantExt::CommodityQuantityFrequency 
     \ingroup utilities
 */
 QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
+
+/*! Convert text to QuantLib::Average::Type
+    \ingroup utilities
+*/
+QuantLib::Average::Type parseAverageType(const std::string& s);
 
 } // namespace data
 } // namespace ore

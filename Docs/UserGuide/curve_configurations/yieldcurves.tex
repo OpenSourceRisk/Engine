@@ -60,23 +60,23 @@ in section \ref{sec:bootstrap_config} are used.
 
 \begin{table}[h]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular}{|l|l|}
     \hline
-    \bfseries{Variable} & \bfseries{Description} \\
+    {\bfseries Variable} & {\bfseries Description} \\
     \hline
     Zero & The continuously compounded zero rate \\ \hline
     Discount & The discount factor \\ \hline
-    Forward & The instantaneous forward rate \\ \hline
-  \end{tabu}
+    Forward & The instantaneous forward rate \\ \hline 
+  \end{tabular}
   \caption{Allowable interpolation variables.}
   \label{tab:allow_interp_variables}
 \end{table}
 
 \begin{table}[h]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|l|p{10cm}|}
     \hline
-    \bfseries{Method} & \bfseries{Description} \\
+    {\bfseries Method} & {\bfseries Description} \\
     \hline
     Linear & Linear interpolation \\ \hline
     LogLinear & Linear interpolation on the natural log of the interpolation variable \\ \hline
@@ -87,7 +87,7 @@ in section \ref{sec:bootstrap_config} are used.
     ExponentialSplines & Exponential Spline curve fitting, for Fitted Bond Curves only \\ \hline
     NelsonSiegel & Nelson-Siegel curve fitting, for Fitted Bond Curves only \\ \hline
     Svensson & Svensson curve fitting, for Fitted Bond Curves only \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable interpolation methods.}
   \label{tab:allow_interp_methods}
 \end{table}

@@ -336,6 +336,33 @@
     <ClInclude Include="ored\portfolio\creditdefaultswapdata.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\asianoption.hpp">
+       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\optionasiandata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\equityasianoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\asianoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\fxasianoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\fxasianoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commodityasianoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\model\modelbuilder.hpp">
       <Filter>model</Filter>
     </ClInclude>
@@ -824,6 +851,8 @@
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
+
+    
     <ClCompile Include="ored\utilities\to_string.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
