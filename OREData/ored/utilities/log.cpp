@@ -186,6 +186,7 @@ LoggerStream::~LoggerStream() {
     while (getline(ss_, text)) {
         // we expand the MLOG macro here so we can overwrite __FILE__ and __LINE__
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask_)) {
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
             ore::data::Log::instance().header(mask_, filename_, lineNo_);
             ore::data::Log::instance().logStream() << text;
             ore::data::Log::instance().log(mask_);
