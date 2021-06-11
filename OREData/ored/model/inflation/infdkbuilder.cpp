@@ -312,13 +312,15 @@ void InfDkBuilder::buildCapFloorBasket() const {
                                              inflationIndex_->zeroInflationTermStructure()->dayCounter(), baseDate,
                                              cf->fixingDate());
 
-            Real marketPrem = dontCalibrate_ || tte <= 0 ? 0.01 : cf->NPV();
+            Real tteFromBase = infVol_->timeFromBase(expiryDate);
+
+            Real marketPrem = dontCalibrate_ || tte <= 0 || tteFromBase <= 0 ? 0.01 : cf->NPV();
             boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper =
                 boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, bdc,
                                                                 fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
             
             // we might produce duplicate expiry times even if the fixing dates are all different
-            if (tte > 0 && std::find_if(expiryTimes.begin(), expiryTimes.end(),
+            if (tte > 0 && tteFromBase >= 0 && std::find_if(expiryTimes.begin(), expiryTimes.end(),
                              [tte](Real x) { return QuantLib::close_enough(x, tte); }) == expiryTimes.end()) {
                 optionBasket_.push_back(helper);
                 helper->performCalculations();
