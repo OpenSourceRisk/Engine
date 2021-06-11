@@ -58,6 +58,9 @@ public:
               string fvaBorrowingCurve = "", string fvaLendingCurve = "", bool fullInitialCollateralisation = true,
               bool storeFlows = false);
 
+    // get portfolio
+    boost::shared_ptr<ore::data::Portfolio> portfolio() const { return portfolio_; }
+
     // run xva on full portfolio and build post processor
     void runXva(const boost::shared_ptr<ore::data::Market>& market, bool continueOnErr = true,
                 const std::map<std::string, QuantLib::Real>& currentIM = std::map<std::string, QuantLib::Real>());

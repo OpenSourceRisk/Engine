@@ -60,14 +60,15 @@ public:
 
     //! Return a PricingEngine or a FloatingRateCouponPricer
     boost::shared_ptr<U> engine(Args... params) {
+        // FIXME the key is not yet complete, see ORE ticket 1876
         T key = keyImpl(params...);
-        if (engines_.find(key) == engines_.end()) {
+        if (engines_.find(std::make_pair(market_.get(), key)) == engines_.end()) {
             // build first (in case it throws)
             boost::shared_ptr<U> engine = engineImpl(params...);
             // then add to map
-            engines_[key] = engine;
+            engines_[std::make_pair(market_.get(), key)] = engine;
         }
-        return engines_[key];
+        return engines_[std::make_pair(market_.get(), key)];
     }
 
     void reset() override { engines_.clear(); }
@@ -76,7 +77,7 @@ protected:
     virtual T keyImpl(Args...) = 0;
     virtual boost::shared_ptr<U> engineImpl(Args...) = 0;
 
-    map<T, boost::shared_ptr<U>> engines_;
+    map<std::pair<void*, T>, boost::shared_ptr<U>> engines_;
 };
 
 template <class T, typename... Args>
