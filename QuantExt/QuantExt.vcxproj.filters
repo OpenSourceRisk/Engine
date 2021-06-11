@@ -1135,6 +1135,9 @@
     <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1936,6 +1939,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

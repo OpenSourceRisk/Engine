@@ -63,6 +63,7 @@
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 
 using namespace QuantLib;
@@ -1360,6 +1361,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
 
     if (couponFloor)
         yoyLeg.withFloors(buildScheduledVector(yoyLegData->floors(), yoyLegData->floorDates(), schedule));
+    
+    Leg leg = yoyLeg.operator Leg();
 
     if (couponCapFloor) {
         // get a coupon pricer for the leg
@@ -1372,9 +1375,9 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
             cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
 
         // set coupon pricer for the leg
-        Leg leg = yoyLeg.operator Leg();
+        
         for (Size i = 0; i < leg.size(); i++) {
-            boost::dynamic_pointer_cast<CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
+            boost::dynamic_pointer_cast<QuantLib::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
                 boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
         }
 
@@ -1385,11 +1388,12 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
                 auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
             }
         }
-
-        return leg;
-    } else {
-        return yoyLeg;
     }
+    
+    Leg retLeg = YoYCouponLeg(leg, true).operator QuantLib::Leg();
+    
+    return retLeg;
+
 }
 
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,

@@ -529,6 +529,7 @@
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp" />
     <ClInclude Include="qle\currencies\africa.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
@@ -901,6 +902,7 @@
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp" />
     <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />
