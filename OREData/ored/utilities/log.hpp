@@ -53,8 +53,6 @@
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
 
-#include <boost/thread/shared_mutex.hpp>
-
 namespace ore {
 namespace data {
 using std::string;
@@ -227,8 +225,8 @@ private:
   </pre>
   \ingroup utilities
  */
-class Log : public QuantLib::Singleton<Log, QuantLib::B_True> {
-    friend class QuantLib::Singleton<Log, QuantLib::B_True>;
+class Log : public QuantLib::Singleton<Log> {
+    friend class QuantLib::Singleton<Log>;
 
 public:
     //! Add a new Logger.
@@ -265,17 +263,14 @@ public:
     //! macro utility function - do not use directly
     void log(unsigned m);
 
-    //! mutex to acquire locks
-    boost::shared_mutex& mutex() { return mutex_; }
-
     // Avoid a large number of warnings in VS by adding 0 !=
-    bool filter(unsigned mask) { boost::shared_lock<boost::shared_mutex> lock(mutex_); return 0 != (mask & mask_); }
-    unsigned mask() { boost::shared_lock<boost::shared_mutex> lock(mutex_); return mask_; }
-    void setMask(unsigned mask) { boost::unique_lock<boost::shared_mutex> lock(mutex_); mask_ = mask; }
+    bool filter(unsigned mask) { return 0 != (mask & mask_); }
+    unsigned mask() { return mask_; }
+    void setMask(unsigned mask) { mask_ = mask; }
 
-    bool enabled() { boost::shared_lock<boost::shared_mutex> lock(mutex_); return enabled_; }
-    void switchOn() {  boost::unique_lock<boost::shared_mutex> lock(mutex_); enabled_ = true; }
-    void switchOff() { boost::unique_lock<boost::shared_mutex> lock(mutex_); enabled_ = false; }
+    bool enabled() { return enabled_; }
+    void switchOn() { enabled_ = true; }
+    void switchOff() { enabled_ = false; }
 
     //! if a PID is set for the logger, messages are tagged with [1234] if pid = 1234
     void setPid(const int pid) { pid_ = pid; }
@@ -289,21 +284,16 @@ private:
     std::ostringstream ls_;
 
     int pid_ = 0;
-
-    mutable boost::shared_mutex mutex_;
 };
 
 /*!
   Main Logging macro, do not use this directly, use on of the below 6 macros instead
  */
 #define MLOG(mask, text)                                                                                               \
-    {                                                                                                                  \
-        if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {                         \
-            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
-            ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                               \
-            ore::data::Log::instance().logStream() << text;                                                            \
-            ore::data::Log::instance().log(mask);                                                                      \
-        }                                                                                                              \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {                             \
+        ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                                   \
+        ore::data::Log::instance().logStream() << text;                                                                \
+        ore::data::Log::instance().log(mask);                                                                          \
     }
 
 //! Logging Macro (Level = Alert)
@@ -325,14 +315,11 @@ private:
 #define MEM_LOG MEM_LOG_USING_LEVEL(ORE_MEMORY)
 
 #define MEM_LOG_USING_LEVEL(LEVEL)                                                                                     \
-    {                                                                                                                  \
-        if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                        \
-            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());                          \
-            ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                              \
-            ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|"; \
-            ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());            \
-            ore::data::Log::instance().log(LEVEL);                                                                     \
-        }                                                                                                              \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                            \
+        ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                                  \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";     \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());                \
+        ore::data::Log::instance().log(LEVEL);                                                                         \
     }
 
 //! LoggerStream class that is a std::ostream replacment that will log each line

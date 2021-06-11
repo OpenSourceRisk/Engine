@@ -29,11 +29,19 @@ namespace data {
 boost::shared_ptr<FloatingRateCouponPricer>
 CapFlooredAverageONIndexedCouponLegEngineBuilder::engineImpl(const Currency& ccy) {
 
-    auto ccyCode = ccy.code();
-    Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
-    QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
-    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(ccyCode, configuration(MarketContext::pricing));
-    return boost::make_shared<QuantExt::BlackAverageONIndexedCouponPricer>(ovs);
+    // Check if we already have a pricer for this ccy
+    const string& ccyCode = ccy.code();
+    if (engines_.find(ccyCode) == engines_.end()) {
+        Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
+        QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
+        Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(ccyCode, configuration(MarketContext::pricing));
+        boost::shared_ptr<FloatingRateCouponPricer> pricer =
+            boost::make_shared<QuantExt::BlackAverageONIndexedCouponPricer>(ovs);
+        engines_[ccyCode] = pricer;
+    }
+
+    // Return the cached pricer
+    return engines_[ccyCode];
 }
 } // namespace data
 } // namespace ore
