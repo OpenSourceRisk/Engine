@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -205,16 +206,18 @@ protected:
                                                         const AssetClass& assetClass, const Date& expiryDate) override {
         // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
         Handle<YieldTermStructure> riskFreeRate =
-            market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(), expiryDate);
         QL_REQUIRE(expiry > 0.0, "FdBlackScholesVanillaEngine expects a positive time to expiry but got "
                                      << expiry << " for an expiry date " << io::iso_date(expiryDate) << ".");
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = (Size)(ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry);
-        Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
+        Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
+        Size xGrid = parseInteger(engineParameter("XGrid"));
+        Size dampingSteps = parseInteger(engineParameter("DampingSteps"));
+        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
+        Size tGridMin = parseInteger(engineParameter("TGridMinimum", "", false, "0"));
+        tGrid = std::max(tGridMin, tGrid);
 
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp;
 
