@@ -264,7 +264,7 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
                        "Equity Currency provided does not match currency of Equity Curve");
         }
 
-        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqData->eqCurrency(), engineFactory->market(),
+        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqCurrency.code(), engineFactory->market(),
                                configuration, eqData->fxIndexCalendar(), eqData->fxIndexFixingDays());
     }
 
