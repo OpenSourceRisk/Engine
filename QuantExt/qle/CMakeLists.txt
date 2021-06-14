@@ -408,7 +408,9 @@ math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
+math/logquadraticinterpolation.hpp
 math/nadarayawatson.hpp
+math/quadraticinterpolation.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
