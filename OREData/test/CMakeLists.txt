@@ -20,6 +20,7 @@ cpiswap.cpp
 creditdefaultswapdata.cpp
 crossassetmodeldata.cpp
 curveconfig.cpp
+curvespecparser.cpp
 digitalcms.cpp
 equitymarketdata.cpp
 equityswap.cpp

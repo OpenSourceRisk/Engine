@@ -648,6 +648,7 @@
     <ClCompile Include="creditdefaultswapdata.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="curveconfig.cpp" />
+    <ClCompile Include="curvespecparser.cpp" />
     <ClCompile Include="digitalcms.cpp" />
     <ClCompile Include="equitymarketdata.cpp" />
     <ClCompile Include="equityswap.cpp" />
