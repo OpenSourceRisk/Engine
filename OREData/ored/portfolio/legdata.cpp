@@ -297,6 +297,10 @@ void YoYLegData::fromXML(XMLNode* node) {
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
+    if (XMLUtils::getChildNode(node, "addInflationNotional"))
+        addInflationNotional_ = XMLUtils::getChildValueAsBool(node, "addInflationNotional", false);
+    else
+        addInflationNotional_ = false;
 }
 
 XMLNode* YoYLegData::toXML(XMLDocument& doc) {
@@ -310,6 +314,7 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
+    XMLUtils::addChild(doc, node, "addInflationNotional", nakedOption_);
     return node;
 }
 
@@ -1345,16 +1350,18 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
     bool couponCap = yoyLegData->caps().size() > 0;
     bool couponFloor = yoyLegData->floors().size() > 0;
     bool couponCapFloor = yoyLegData->caps().size() > 0 || yoyLegData->floors().size() > 0;
+    bool addInflationNotional = yoyLegData->addInflationNotional();
 
     applyAmortization(notionals, data, schedule, false);
 
-    yoyInflationLeg yoyLeg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
-                                 .withNotionals(notionals)
-                                 .withPaymentDayCounter(dc)
-                                 .withPaymentAdjustment(bdc)
-                                 .withFixingDays(yoyLegData->fixingDays())
-                                 .withGearings(gearings)
-                                 .withSpreads(spreads);
+    QuantExt::yoyInflationLeg yoyLeg = QuantExt::yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
+                                           .withNotionals(notionals)
+                                           .withPaymentDayCounter(dc)
+                                           .withPaymentAdjustment(bdc)
+                                           .withFixingDays(yoyLegData->fixingDays())
+                                           .withGearings(gearings)
+                                           .withSpreads(spreads)
+                                           .withInflationNotional(addInflationNotional);
 
     if (couponCap)
         yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
@@ -1377,7 +1384,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
         // set coupon pricer for the leg
         
         for (Size i = 0; i < leg.size(); i++) {
-            boost::dynamic_pointer_cast<QuantLib::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
+            boost::dynamic_pointer_cast<QuantExt::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
                 boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
         }
 
@@ -1390,9 +1397,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
         }
     }
     
-    Leg retLeg = YoYCouponLeg(leg, true).operator QuantLib::Leg();
-    
-    return retLeg;
+    return leg;
 
 }
 

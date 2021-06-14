@@ -24,17 +24,13 @@
 
 namespace QuantExt {
 
-    YoYInflationCoupon::YoYInflationCoupon(const ext::shared_ptr<QuantLib::YoYInflationCoupon> underlying,
-                                       bool growthOnly = true)
-    : QuantLib::YoYInflationCoupon(underlying->date(), 
-        underlying->nominal(), underlying->accrualStartDate(),
-                                   underlying->accrualEndDate(), underlying->fixingDays() , underlying->index(),
-                                   underlying->observationLag(), underlying->dayCounter(), underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(), 
-        underlying->referencePeriodEnd()),
-      underlying_(underlying),
-        growthOnly_(growthOnly) {
-    
-        registerWith(underlying_);
+    YoYInflationCoupon::YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                       Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
+                       const Period& observationLag, const DayCounter& dayCounter, Real gearing,
+                       Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd,
+                       bool addInflationNotional)
+    : QuantLib::YoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
+                                   dayCounter, gearing, spread, refPeriodStart, refPeriodEnd), addInflationNotional_(addInflationNotional) {
     }
 
 
@@ -47,29 +43,39 @@ namespace QuantExt {
             QuantLib::YoYInflationCoupon::accept(v);
     }
 
-    void YoYInflationCoupon::setPricer(const ext::shared_ptr<YoYInflationCouponPricer>& pricer) {
-
-        QuantLib::YoYInflationCoupon::setPricer(pricer);
-        underlying_->setPricer(pricer);
+    Rate YoYInflationCoupon::rate() const { 
+        Real RateYoY = QuantLib::YoYInflationCoupon::rate();
+        if (addInflationNotional_) {
+            RateYoY =  gearing_ * ((RateYoY - spread_) / gearing_ + 1) + spread_;
+        }
+        return RateYoY;
     }
 
-    Rate YoYInflationCoupon::rate() const { 
-        if (growthOnly_) {
-            return underlying_->rate();
-        } else {
-            return gearing_ * (underlying_->adjustedFixing() + 1) + spread_;
+    CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(const ext::shared_ptr<YoYInflationCoupon>&underlying,
+        Rate cap, Rate floor, bool addInflationNotional)
+        : QuantLib::CappedFlooredYoYInflationCoupon(underlying, cap, floor), addInflationNotional_(addInflationNotional) {
+        if (addInflationNotional_) {
+            Real effectiveFloor = floor_ != Null<Real>() ? floor_ - 1 : floor_;
+            Real effectiveCap = cap_ != Null<Real>() ? cap_ - 1 : cap_;
+            setCommon(effectiveCap, effectiveFloor);
         }
     }
 
-    CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
-        const ext::shared_ptr<QuantLib::CappedFlooredYoYInflationCoupon> underlying,
-                                           bool growthOnly = true)
-        : QuantLib::CappedFlooredYoYInflationCoupon(underlying->date(), underlying->nominal(), underlying->accrualStartDate(), underlying->accrualEndDate(),
-            underlying->fixingDays(), underlying->index(), underlying->observationLag(), underlying->dayCounter(), underlying->gearing(), underlying->spread(), 
-            underlying->cap(), underlying->floor(), underlying->referencePeriodStart(), underlying->referencePeriodEnd()),
-          underlying_(underlying), growthOnly_(growthOnly) {
+    CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                                    Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
+                                    const Period& observationLag, const DayCounter& dayCounter, Real gearing,
+                                    Spread spread, const Rate cap, const Rate floor,
+                                    const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional)
+        : QuantLib::CappedFlooredYoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index,
+                                                    observationLag, dayCounter, gearing, spread, cap, floor,
+                                                    refPeriodStart, refPeriodEnd),
+          addInflationNotional_(addInflationNotional) {
 
-        registerWith(underlying_);
+        if (addInflationNotional_) {
+            Real effectiveFloor = floor_ != Null<Real>() ? floor_ - 1 : floor_;
+            Real effectiveCap = cap_ != Null<Real>() ? cap_ - 1 : cap_;
+            setCommon(effectiveCap, effectiveFloor);
+        }
     }
 
     void CappedFlooredYoYInflationCoupon::accept(AcyclicVisitor& v) {
@@ -80,43 +86,156 @@ namespace QuantExt {
             QuantLib::CappedFlooredYoYInflationCoupon::accept(v);
     }
 
-    void CappedFlooredYoYInflationCoupon::setPricer(const ext::shared_ptr<YoYInflationCouponPricer>& pricer) {
-
-        QuantLib::CappedFlooredYoYInflationCoupon::setPricer(pricer);
-        underlying_->setPricer(pricer);
-    }
-
     Rate CappedFlooredYoYInflationCoupon::rate() const {
-        if (growthOnly_) {
-            return underlying_->rate();
-        } else {
-            return gearing_ * (underlying_->adjustedFixing() + 1) + spread_;
+        Real RateYoY = QuantLib::YoYInflationCoupon::rate();
+        if (addInflationNotional_) {
+            RateYoY =  gearing_ * ((RateYoY - spread_) / gearing_ + 1) + spread_;
         }
+        return RateYoY;
     }
 
+    
 
+    yoyInflationLeg::yoyInflationLeg(const Schedule& schedule, const Calendar& paymentCalendar,
+                                     const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag)
+        : schedule_(schedule), index_(index), observationLag_(observationLag), paymentAdjustment_(ModifiedFollowing),
+          paymentCalendar_(paymentCalendar), addInflationNotional_(false) {}
 
+    yoyInflationLeg& yoyInflationLeg::withNotionals(Real notional) {
+        notionals_ = std::vector<Real>(1, notional);
+        return *this;
+    }
 
-    YoYCouponLeg::YoYCouponLeg(const Leg& underlyingLeg, bool growthOnly)
-        : underlyingLeg_(underlyingLeg), growthOnly_(growthOnly) {}
+    yoyInflationLeg& yoyInflationLeg::withNotionals(const std::vector<Real>& notionals) {
+        notionals_ = notionals;
+        return *this;
+    }
 
-    YoYCouponLeg::operator Leg() const {
-        Leg resultLeg;
-        resultLeg.reserve(underlyingLeg_.size());
-        ext::shared_ptr<QuantLib::YoYInflationCoupon> c;
-        for (Leg::const_iterator i = underlyingLeg_.begin(); i != underlyingLeg_.end(); ++i) {
-            if ((c = ext::dynamic_pointer_cast<QuantLib::YoYInflationCoupon>(*i)) != NULL) {
-                resultLeg.push_back(ext::make_shared<YoYInflationCoupon>(c, growthOnly_));
-            } else {
-                resultLeg.push_back(*i);
+    yoyInflationLeg& yoyInflationLeg::withPaymentDayCounter(const DayCounter& dayCounter) {
+        paymentDayCounter_ = dayCounter;
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withPaymentAdjustment(BusinessDayConvention convention) {
+        paymentAdjustment_ = convention;
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withFixingDays(Natural fixingDays) {
+        fixingDays_ = std::vector<Natural>(1, fixingDays);
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withFixingDays(const std::vector<Natural>& fixingDays) {
+        fixingDays_ = fixingDays;
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withGearings(Real gearing) {
+        gearings_ = std::vector<Real>(1, gearing);
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withGearings(const std::vector<Real>& gearings) {
+        gearings_ = gearings;
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withSpreads(Spread spread) {
+        spreads_ = std::vector<Spread>(1, spread);
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withSpreads(const std::vector<Spread>& spreads) {
+        spreads_ = spreads;
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withCaps(Rate cap) {
+        caps_ = std::vector<Rate>(1, cap);
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withCaps(const std::vector<Rate>& caps) {
+        caps_ = caps;
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withFloors(Rate floor) {
+        floors_ = std::vector<Rate>(1, floor);
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withFloors(const std::vector<Rate>& floors) {
+        floors_ = floors;
+        return *this;
+    }
+
+    yoyInflationLeg& yoyInflationLeg::withInflationNotional(bool addInflationNotional) {
+        addInflationNotional_ = addInflationNotional;
+        return *this;
+    }
+
+    yoyInflationLeg::operator Leg() const {
+
+        Size n = schedule_.size() - 1;
+        QL_REQUIRE(!notionals_.empty(), "no notional given");
+        QL_REQUIRE(notionals_.size() <= n,
+                   "too many nominals (" << notionals_.size() << "), only " << n << " required");
+        QL_REQUIRE(gearings_.size() <= n, "too many gearings (" << gearings_.size() << "), only " << n << " required");
+        QL_REQUIRE(spreads_.size() <= n, "too many spreads (" << spreads_.size() << "), only " << n << " required");
+        QL_REQUIRE(caps_.size() <= n, "too many caps (" << caps_.size() << "), only " << n << " required");
+        QL_REQUIRE(floors_.size() <= n, "too many floors (" << floors_.size() << "), only " << n << " required");
+
+        Leg leg;
+        leg.reserve(n);
+
+        Calendar calendar = paymentCalendar_;
+
+        Date refStart, start, refEnd, end;
+
+        for (Size i = 0; i < n; ++i) {
+            refStart = start = schedule_.date(i);
+            refEnd = end = schedule_.date(i + 1);
+            Date paymentDate = calendar.adjust(end, paymentAdjustment_);
+            if (i == 0 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1)) {
+                BusinessDayConvention bdc = schedule_.businessDayConvention();
+                refStart = schedule_.calendar().adjust(end - schedule_.tenor(), bdc);
+            }
+            if (i == n - 1 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1)) {
+                BusinessDayConvention bdc = schedule_.businessDayConvention();
+                refEnd = schedule_.calendar().adjust(start + schedule_.tenor(), bdc);
+            }
+            if (detail::get(gearings_, i, 1.0) == 0.0) { // fixed coupon
+                leg.push_back(ext::shared_ptr<CashFlow>(
+                    new FixedRateCoupon(paymentDate, detail::get(notionals_, i, 1.0),
+                                        detail::effectiveFixedRate(spreads_, caps_, floors_, i), paymentDayCounter_,
+                                        start, end, refStart, refEnd)));
+            } else {                                       // yoy inflation coupon
+                if (detail::noOption(caps_, floors_, i)) { // just swaplet
+                    ext::shared_ptr<YoYInflationCoupon> coup(new YoYInflationCoupon(
+                        paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0),
+                        index_, observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0),
+                        detail::get(spreads_, i, 0.0), refStart, refEnd, addInflationNotional_));
+
+                    // in this case you can set a pricer
+                    // straight away because it only provides computation - not data
+                    ext::shared_ptr<YoYInflationCouponPricer> pricer(new YoYInflationCouponPricer);
+                    coup->setPricer(pricer);
+                    leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
+
+                } else { // cap/floorlet
+                    leg.push_back(ext::shared_ptr<CashFlow>(new CappedFlooredYoYInflationCoupon(
+                        paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0),
+                        index_, observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0),
+                        detail::get(spreads_, i, 0.0), detail::get(caps_, i, Null<Rate>()),
+                        detail::get(floors_, i, Null<Rate>()), refStart, refEnd, addInflationNotional_)));
+                }
             }
         }
-        return resultLeg;
+
+        return leg;
     }
-
-
-
-
 
 } // namespace QuantExt
 

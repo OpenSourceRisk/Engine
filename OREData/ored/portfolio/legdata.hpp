@@ -347,10 +347,11 @@ public:
                const vector<double>& spreads = std::vector<double>(),
                const vector<string>& spreadDates = std::vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false)
+               const vector<string>& floorDates = vector<string>(), bool nakedOption = false, bool addInflationNotional = false)
         : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), fixingDays_(fixingDays),
           gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
-          capDates_(capDates), floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption) {
+          capDates_(capDates), floors_(floors), floorDates_(floorDates),
+          nakedOption_(nakedOption), addInflationNotional_(addInflationNotional) {
         indices_.insert(index_);
     }
 
@@ -368,6 +369,7 @@ public:
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
     bool nakedOption() const { return nakedOption_; }
+    bool addInflationNotional() const { return addInflationNotional_; };
     //@}
 
     //! \name Serialisation
@@ -389,6 +391,7 @@ private:
     vector<double> floors_;
     vector<string> floorDates_;
     bool nakedOption_;
+    bool addInflationNotional_;
 
     static LegDataRegister<YoYLegData> reg_;
 };

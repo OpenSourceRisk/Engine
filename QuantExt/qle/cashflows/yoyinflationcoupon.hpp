@@ -38,55 +38,88 @@ using namespace QuantLib;
 
 class YoYInflationCoupon : public QuantLib::YoYInflationCoupon {
 public:
-    explicit YoYInflationCoupon(const ext::shared_ptr<QuantLib::YoYInflationCoupon> underlying, bool growthOnly = true);
+
+    YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                       Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
+                       const Period& observationLag, const DayCounter& dayCounter, Real gearing = 1.0,
+                       Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
+                       bool addInflationNotional = false);
 
     // ! \name Coupon interface
-    Rate rate() const;
+    Rate rate() const override;
     //@}
     //@}
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
-    void setPricer(const ext::shared_ptr<YoYInflationCouponPricer>& pricer);
 
 private:
-    const ext::shared_ptr<QuantLib::YoYInflationCoupon> underlying_;
-    bool growthOnly_;
+    bool addInflationNotional_;
 };
 
 
 class CappedFlooredYoYInflationCoupon : public QuantLib::CappedFlooredYoYInflationCoupon {
 public:
-    explicit CappedFlooredYoYInflationCoupon(
-        const ext::shared_ptr<QuantLib::CappedFlooredYoYInflationCoupon> underlying,
-                                             bool growthOnly = true);
+    CappedFlooredYoYInflationCoupon(const ext::shared_ptr<YoYInflationCoupon>& underlying, Rate cap = Null<Rate>(),
+                                    Rate floor = Null<Rate>(), bool addInflationNotional = false);
+
+    CappedFlooredYoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                                    Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
+                                    const Period& observationLag, const DayCounter& dayCounter, Real gearing = 1.0,
+                                    Spread spread = 0.0, const Rate cap = Null<Rate>(), const Rate floor = Null<Rate>(),
+                                    const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
+                                    bool addInflationNotional = false);
 
     // ! \name Coupon interface
-    Rate rate() const;
+    Rate rate() const override;
     //@}
     //@}
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
-    void setPricer(const ext::shared_ptr<YoYInflationCouponPricer>& pricer);
-
 private:
-    const ext::shared_ptr<QuantLib::CappedFlooredYoYInflationCoupon> underlying_;
-    bool growthOnly_;
+    bool addInflationNotional_;
 };
 
 
-
-class YoYCouponLeg {
+//! Helper class building a sequence of capped/floored yoy inflation coupons
+//! payoff is: spread + gearing x index
+class yoyInflationLeg {
 public:
-    explicit YoYCouponLeg(const Leg& underlyingLeg, bool growthOnly = true);
+    yoyInflationLeg(const Schedule& schedule, const Calendar& cal, const ext::shared_ptr<YoYInflationIndex>& index,
+                    const Period& observationLag);
+    yoyInflationLeg& withNotionals(Real notional);
+    yoyInflationLeg& withNotionals(const std::vector<Real>& notionals);
+    yoyInflationLeg& withPaymentDayCounter(const DayCounter&);
+    yoyInflationLeg& withPaymentAdjustment(BusinessDayConvention);
+    yoyInflationLeg& withFixingDays(Natural fixingDays);
+    yoyInflationLeg& withFixingDays(const std::vector<Natural>& fixingDays);
+    yoyInflationLeg& withGearings(Real gearing);
+    yoyInflationLeg& withGearings(const std::vector<Real>& gearings);
+    yoyInflationLeg& withSpreads(Spread spread);
+    yoyInflationLeg& withSpreads(const std::vector<Spread>& spreads);
+    yoyInflationLeg& withCaps(Rate cap);
+    yoyInflationLeg& withCaps(const std::vector<Rate>& caps);
+    yoyInflationLeg& withFloors(Rate floor);
+    yoyInflationLeg& withFloors(const std::vector<Rate>& floors);
+    yoyInflationLeg& withInflationNotional(bool addInflationNotional_);
     operator Leg() const;
 
 private:
-    Leg underlyingLeg_;
-    bool growthOnly_;
+    Schedule schedule_;
+    ext::shared_ptr<YoYInflationIndex> index_;
+    Period observationLag_;
+    std::vector<Real> notionals_;
+    DayCounter paymentDayCounter_;
+    BusinessDayConvention paymentAdjustment_;
+    Calendar paymentCalendar_;
+    std::vector<Natural> fixingDays_;
+    std::vector<Real> gearings_;
+    std::vector<Spread> spreads_;
+    std::vector<Rate> caps_, floors_;
+    bool addInflationNotional_;
 };
 } // namespace QuantExt
 #endif
