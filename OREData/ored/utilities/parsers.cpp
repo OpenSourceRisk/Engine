@@ -1,5 +1,6 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2021 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -1501,6 +1502,16 @@ CdsOption::StrikeType parseCdsOptionStrikeType(const string& s) {
         return ST::Price;
     } else {
         QL_FAIL("CdsOption::StrikeType \"" << s << "\" not recognized");
+    }
+}
+
+Average::Type parseAverageType(const std::string& s) {
+    if (s == "Arithmetic") {
+        return Average::Type::Arithmetic;
+    } else if (s == "Geometric") {
+        return Average::Type::Geometric;
+    } else {
+        QL_FAIL("Average::Type '" << s << "' not recognized. Should be Arithmetic or Geometric");
     }
 }
 

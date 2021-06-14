@@ -5,7 +5,7 @@
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+  \begin{tabular} {|p{4cm}|p{11cm}|}
     \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
@@ -49,7 +49,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
 \emph{P, Preceding, PRECEDING}\\ 
 \emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
 \emph{U, Unadjusted, INDIFF }\end{tabular}  \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for standard trade data.}
   \label{tab:allow_stand_data}
 \end{table}
@@ -201,7 +201,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{6cm}|p{6cm}|}
     \hline
     %\multicolumn{2}{|l|}{\lstinline{DayCount Convention} }                             \\ \hline
     \multicolumn{2}{|l|}{\tt DayCount Convention}                          \\ \hline
@@ -220,14 +220,14 @@ Note: Currency codes must also match available currencies in the {\tt simulation
     \emph{ActActAFB, ACT/ACT.AFB, Actual/Actual (AFB)} & Actual Actual (AFB) \\ \hline
     \emph{BUS/252, Business/252} & Brazilian Bus/252 \\ \hline
     \emph{1/1} & 1/1  \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable Values for DayCount Convention}
   \label{tab:daycount}
 \end{table}
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|l|l|}
+\begin{supertabular}{|l|l|}
 \hline
 %\multicolumn{2}{|l|}{\lstinline!Index!}   \\ \hline
 \multicolumn{2}{|l|}{\tt Index}   \\ \hline
@@ -259,7 +259,7 @@ THB-THBFIX\\ THB-BIBOR\\
 NZD-BKBM \\
 \end{tabular}} \\ \hline
 TENOR                    & An integer followed by \emph{D, W, M or Y}                                                                                                                                                                                                                                                 \\ \hline
-\end{tabular}
+\end{supertabular}
   \caption{Allowable values for Index.}
   \label{tab:indices}
 \end{table}
@@ -308,21 +308,21 @@ The FX- part of the string stays constant for all currency pairs. SOURCE is the 
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|l|p{8cm}|}
     \hline
     \multicolumn{2}{|l|}{\tt Inflation CPI Index} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Index! for CPI leg & Any string (provided it is the ID of an inflation index in the market configuration) \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for CPI index.}
   \label{tab:cpiindex_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\tt Credit CreditCurveId} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
@@ -330,14 +330,14 @@ The FX- part of the string stays constant for all currency pairs. SOURCE is the 
     \lstinline!CreditCurveId!   for credit trades - single name and index & \begin{tabular}[l]{@{}l@{}} Any string (provided it is the ID of a single name or index \\ reference entity in the market 
 conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: \\  \emph{RED:2I65BRHH6}  (CDX N.A. High Yield, Series 13, Version 1) \\ \emph{RED:008CA0\textbar{}SNRFOR\textbar{}USD\textbar{}MR14}  (Agilent Tech Senior USD)
 \end{tabular}  \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for credit \lstinline!CreditCurveId!}
   \label{tab:equity_credit_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+  \begin{tabular} {|l|l|}
     \hline
     \multicolumn{2}{|l|}{\tt Equity Name} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
@@ -345,28 +345,28 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
 conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  
 \end{tabular}  \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for equity  \lstinline!Name!.}
   \label{tab:equity_name}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\tt Commodity Curve Name} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Name! for commodity trades & Any string (provided it is the ID of an commodity in the market configuration) \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for commodity data.}
   \label{tab:commodity_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\lstinline!Tier!} \\
     \hline
@@ -384,14 +384,14 @@ conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: 
     \hline
     \lstinline!PREFT1! & Preference shares or Tier 1 capital for banks \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for \lstinline!Tier!}
   \label{tab:tier_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\lstinline!DocClause!} \\
     \hline
@@ -413,28 +413,28 @@ conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: 
     \hline
     \lstinline!XR14! & No restructuring referencing the 2014 ISDA Definitions \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for \lstinline!DocClause!}
   \label{tab:docclause_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\tt Exchange} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Exchange!  & Any string, typically a MIC code (provided it is the ID of an exchange in the market configuration) \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable Values for Exchange}
   \label{tab:mic}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[1,l,m] | X[1,l,m] |}
+  \begin{tabular} {|l|l|}
     \hline
     \multicolumn{2}{|l|}{Boolean nodes} \\
     \hline
@@ -444,7 +444,7 @@ conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: 
     \hline
     \lstinline!N!, \lstinline!NO!, \lstinline!FALSE!, \lstinline!false!, \lstinline!0! & \lstinline!false! \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for boolean node}
   \label{tab:boolean_allowable}
 \end{table}
