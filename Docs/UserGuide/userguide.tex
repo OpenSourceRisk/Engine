@@ -125,13 +125,13 @@
 
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
-\author{Quaternion Risk Management}
+\author{Acadia Inc.}
 %\date{7 October 2016}
 %\date{28 April 2017}
 %\date{7 December 2017}
 %\date{28 May 2019}
 %\date{19 June 2020}
-\date{17 March 2021}
+\date{14 June 2021}
 \maketitle
 
 \newpage
@@ -149,7 +149,7 @@ Date & Author & Comment \\
 7 December 2017 & Quaternion & updates for release 3\\
 20 March 2019 & Quaternion & updates for release 4\\
 19 June 2020 & Quaternion & updates for release 5\\
-30 October 2020 & Quaternion & updates for pre-release 6\\
+14 June 2021 & Acadia & updates for release 6\\
 \hline
 \end{supertabular}
 \end{center}
@@ -188,9 +188,11 @@ aims at reaching academics and students who would like to teach or learn quantit
 available, contemporary risk application.
 
 \subsubsection*{Contributions}
-Quaternion Risk Management \cite{QRM} is committed to sponsoring the Open Source Risk project through ongoing project
+Quaternion Risk Management \cite{QRM} has been committed to sponsoring the Open Source Risk project through ongoing project
 administration, through providing an initial release and a series of subsequent releases in order to achieve a wide
-analytics, product and risk factor class coverage. The community is invited to contribute to ORE, for example through
+analytics, product and risk factor class coverage. Since Quaternion's acquisition by Acadia Inc. in February 2021, Acadia \cite{acadia} is committed to continue the sponsorship. The Open Source Risk project works will continue with former Quaternion now operating as Acadia's Quantitative Services unit. 
+
+The community is invited to contribute to ORE, for example through
 feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE
 enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
 
@@ -249,19 +251,19 @@ FX Forwards & Y & Y & Y & Y \\
 \hline
 Cross Currency Swaps & Y & Y & Y & Y \\
 \hline
-FX Options & Y & Y & Y & Y\\
+FX European and Asian Options & Y & Y & Y & Y\\
 \hline
 Equity Forwards & Y & Y & Y & Y\\
 \hline
 Equity Swaps & Y & Y & Y & N\\
 \hline
-Equity Options & Y & Y & Y & Y \\
+Equity European and Asian Options & Y & Y & Y & Y \\
 \hline
 Equity Future Options & Y & Y & Y & Y \\
 \hline
 Commodity Forwards & Y & Y & N & N\\
 \hline
-Commodity Options & Y & Y & N & N \\
+Commodity European and Asian Options & Y & Y & N & N \\
 \hline
 CPI Swaps & Y & Y & N & Y \\
 \hline
@@ -310,138 +312,120 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the high level changes between release 4 (May 2019) and 5 (June 2020).
-Further changes between releases 5 and 6 are summarised in the next subsection.
+This section summarises the high level changes between release 5 (June 2020) and 6 (June 2021).
 
 \bigskip
 INSTRUMENTS
 \begin{itemize}
-\item Add Inflation CPI and YoY Caps/Floors and capped/floored cash flows
-\item Add Forward Bond
-\item Add American Commodity Option
-\item Add reference data manager (handles Bond reference data as concrete example)
-\item Add underlying description (FX, Equity, Commodity)
-\item Add Settlement node to FX Forward, FX Swap and Swap instruments 
-\item Add lockout to overnight coupons
-\item Allow explicit payment dates for cash settled vanilla European options
-\item Extend Equity Swap: legs, equity coupon with FX adjustment, resettable feature,
-  quantity vs initial notional
-\item Extend CDS: Allow fixed recovery, front or back stub periods, protection payment
-  timing at default/period end/maturity
-\item Allow floating coupons with sub periods, i.e. several fixings per coupon period
-  that are averaged or compounded
-\item Allow Caps/Floors on BMA/SIFMA and overnight indices
-\item Allow adding new leg types via a LegDataFactory
+\item Add Equity, FX and Commodity Asian Options (thanks to Skandinaviska Enskilda Banken)
+\item Add Equity Future Option
+\item Support Quanto Equity Options
+\item Add Digital CMS Leg
+\item Add Duration Adjusted CMS Leg
+\item Allow settlement delay in FX Forwards
+\item Support separate caps/floors on inflation coupon and redemption
+\item Support caps / floors on ON index fixings, see LocalCapFloor tag in the User Guide
+\item Support local and global caps / floors on ON average coupons
+\item Reference commodity index in Commodity forwards
+\item Support strike of type yield-to-maturity in bond forwards (T-Locks etc.)
+\item Support averaging and in-advance fixing for SOFR/ON-Index linked legs
+\item Fix construction of notional amortization schedules
+\item Update CDS Option Pricing (O’Kane, 2008)
+\item Refine Cross Currency Swap pricing (thanks to Ioannis Rigopoulos) 
 \end{itemize}
 
 \bigskip
 MARKETS
 
 \begin{itemize}
-\item Currencies: 73 mapped
-\item Calendars: 88 mapped by country, city, ISO 10383 MIC, ISO 4217 currency code,
-  ISO 3166-1 Alpha 2 and 3 country codes
-\item Allow large joint calendars
-\item OIS indices: 19 mapped including USD-Prime, EUR-ESTER and USD-SOFR
-\item IBOR indices: 43 mapped using "hard coded" index names
-\item Inflation indices: 9 mapped
-\item Add IBOR and CMS indices that can be defined in conventions, so that they can be
-  added to ORE without code changes
+\item Add minor currency support (GBX, ZAC, ILA)
+\item Add various hard-coded currencies - AOA, ETB, GEL and XOF
+\item Add configurable currencies support to cover all remaining ISO currencies, see Examples/Input/currencies.xml
+\item Add configurable calendars
+\item Add various hard-coded IBOR Indices, DKK CITA and SEK STINA (thanks to Skandinaviska Enskilda Banken), AED EIBOR, GBP BoEBase, CNH HIBOR, CNY REPOFIX, HKD HONIA, JPY-Euroyen TIBOR, ZAR SABOR
+\item Add configurable, conventions based, index support for greater flexibility in adding indexes to ORE 
+\item Add LIBOR fallback support based on configurable adjustment spread, cessation date and RFR index
+\item Inflation various Inflation indices - AUCPI, FRCPI, BEHICP
+\item Add configurable, conventions based, inflation indices
+\item Fix the FX triangulation to avoid spurious small FX sensitivities
 \end{itemize}
 
 \bigskip
 TERM STRUCTURES
 
 \begin{itemize}
-\item Add fitted Bond yield curves
-\item When bootstrapping a default curve from CDS, allow for retries with widening of
-  search bounds. Avoids exceptions
-  for distressed CDS curves for example.
-\item Inflation cap/floor volatility surfaces cleaned up, inflation price surfaces removed
-  from the market interface
-\item Equity volatility surface changes, clean up and stripping from option premiums,
-  allow wildcard in strike/expiry config, allow equity volatility surface proxies
-\item Allow optional quotes in curve configurations
-\item New Equity forward curve stripper that allows a dividend yield to be determined from
-  equity option premiums
-\item ESTER/SOFR basic curve building
-\item New cap/floor optionlet stripper that uses an iterative bootstrap with configurable
-  interpolation/extrapolation
-  in expiry and strike direction.
-\item New CDS volatility configuration to allow for constant volatility, a volatility
-  curve or an expiry x strike surface
-\item Added Commodity basis price curve and average basis price curve
+\item Support 1M SOFR Futures in yield curve building
+\item Support CDS upfront quotes in default curve building
+\item Add support for delta-based Equity volatility surfaces 
+\item Improve robustness of Cap/Floor volatility surfaces to missing data
+\item Support commodity volatility surfaces built from option prices
+\item Support flat zero extrapolation on yield curves
+\item Support linear zero interpolation for yield curves (thanks to Steven van Haren)
+\item Support delta interpolated FX volatility surfaces accepting BF/RR market data
+\item Support wild cards in FX volatility surface configurations
+\item Support Hermite interpolation in commodity price curves (thanks to Skandinaviska Enskilda Banken)
+\item Arbitrage checks for Equity and FX volatility surfaces 
+\item Report to list market data points used in t0 market curve building
+\item Set up ScenarioSimMarket curves and surfaces as spreads over the t0 market
+\item Support fix-float mtm reset cross currency swaps in curve building
 \end{itemize}
 
 \bigskip
 ANALYTICS
 
 \begin{itemize}
-\item Fix volatility conversion for lognormal swaption cubes in ScenarioSimMarket
-\item Cross Asset Model refactoring to allow alternative risk factor evolution models 
-\item Bermudan Swaption LGM calibration changes (allow to continue processing when
-  tolerance is breached, allow to thin out calibration grids)
-\item Improve performance of analytic LGM swaption engine by introducing a cache
-  (speeds up LGM calibration)
-\item Add Indexed coupon class
-\item Add CDS to stress testing capability
+\item Introduce an optional close-out grid for exposure simulation and XVA, see Example 31, section \ref{example:31}
+\item Add inflation simulation for exposure and XVA using Jarrow-Yildirim, see Example 32, section \ref{example:32}
+\item Add credit simulation for exposure and XVA using Gaussian and Cox-Ingersoll-Ross models, see Examples 33 and 34, sections \ref{example:33} and \ref{example:34}
+\item Add “flipped view” XVA feature, flipping “our” perspective to “theirs” (thanks to Roland Kapl), see Example 35, section \ref{example:35}
+\item Add option to switch from the LGM measure to the Bank Account measure for exposure simulations, see Example 36, section \ref{example:36}
+\item Refactoring of the exposure and XVA post processor, separating out various classes
+\item Support one-sided Initial Margin in CSAs
+\item Fix the treatment of independent amounts in Variation Margin calculation 
+\item Export additional pricing engine and trade additional results for a range of instruments (Bonds, CDS, Swaps, Swaptions, Equity Forwards/Swaps/Options, FX Forwards and Options)
+\item Add an option to include past cashflows in the cashflow report
+\item Add accrual start/end dates and accrued amounts to the cash flow report (thanks to Roland Kapl)
+\item Fix LGM calibration with Best Fit
+\item Update trade notional/maturity in line with ISDA AANA/GRID recommendations
 \end{itemize}
 
 \bigskip
-UNIT TESTS
+TESTS
 
 \begin{itemize}
-\item QuantExt unit test cases: 180 test functions, 3749 data-driven cases
-\item OREData unit tests: 135 test functions, 368 data-driven cases 
-\item OREAnalytics unit tests: 61 test functions and cases
-i.e. 609 test functions vs 429 in the previous release.
+\item QuantExt: 203 test functions (vs 180 in the previous release)
+\item OREData: 160 test functions (vs 135 in the previous release)
+\item OREAnalytics: 65 test functions (vs 61 in the previous release) 
 \end{itemize}
-
-For example:\\
-{\tt ./quantext-test-suite} reports 3749 cases \\
-{\tt ./quantext-test-suite --list\_cases | grep test} lists 180 test functions
+with associated increases in the number of data driven test cases 
 
 \bigskip
 EXAMPLES
 
 \begin{itemize}
-\item Maintenance of inputs, ensure consistency of results with user guide
-\item Additional Prime Curve example
+\item Added Examples 31 - 36, see the first five bullet points in the ANALYTICS section above
+\item Established regression tests for Example outputs
 \end{itemize}
 
 \bigskip
 USER GUIDE
 
 \begin{itemize}
-\item Documentation of ongoing changes, new instruments, broader market coverage,
-  extended to over 250 pages
-\end{itemize}
-
-\bigskip
-BUILDING ORE
-
-\begin{itemize}
-\item Discontinue automake builds
+\item Grown from 267 to 326 pages (thanks also to Roland Kapl and Skandinaviska Enskilda Banken)
 \end{itemize}
 
 \bigskip
 LANGUAGE BINDUNGS
 
 \begin{itemize}
-\item Maintenance to ensure SWIG wrappers build with current ORE and QuantLib-SWIG 1.18,
-  rework all *.i files to use the SWIG wrapper of {\tt boost::shared\_ptr} following QuantLib-SWIG
+\item Maintenance to ensure ORE SWIG wrappers build with current ORE, QuantLib-1.22 and QuantLib-SWIG-1.22
 \end{itemize}
 
 \bigskip
 OTHER
 
 \begin{itemize}
-\item Fixing manager refactoring and bug fixes
-\item Clean up of log levels to reduce the volume of log messages
-\item Improved log messages when LGM calibration errors exceed tolerance
-\item LGM model builder bug fixes
-\item Builds with QuantLib Version 1.18
-\item Builds with Boost versions up to 1.72.0
+\item Fix the instrument schema to include ore\_types.xsd again (thanks to Tomass Wilson) 
 \end{itemize}
 
 
@@ -6892,6 +6876,8 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 \bibitem{QL} \url{http://www.quantlib.org}
  
 \bibitem{QRM} \url{http://www.quaternion.com}
+
+\bibitem{acadia} \url{http://www.acadia.inc}
 
 \bibitem{quantlib-install} \url{http://quantlib.org/install/vc10.shtml}
 
