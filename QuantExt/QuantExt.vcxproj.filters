@@ -1138,6 +1138,15 @@
     <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\nonstandardyoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\nonstandardyoyinflationcouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\nonstandardcapflooredinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1941,6 +1950,15 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\nonstandardyoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\nonstandardyoyinflationcouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\nonstandardcapflooredinflationcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
