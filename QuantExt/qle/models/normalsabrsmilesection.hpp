@@ -26,9 +26,8 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <vector>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 class NormalSabrSmileSection : public SmileSection {
 public:
