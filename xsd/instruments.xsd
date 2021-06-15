@@ -323,6 +323,7 @@
         <xs:element type="xs:float" name="FinalFlowCap" minOccurs="0"/>
         <xs:element type="xs:float" name="FinalFlowFloor" minOccurs="0"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
+		<xs:element type="xs:boolean" name="SubtractInflationNotionalAllCoupons" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
