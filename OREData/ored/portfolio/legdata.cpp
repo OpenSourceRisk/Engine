@@ -1235,116 +1235,44 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     bool finalFlowCapFloor = cpiLegData->finalFlowCap() != Null<Real>() || cpiLegData->finalFlowFloor() != Null<Real>();
 
     applyAmortization(notionals, data, schedule, false);
-    Leg leg;
-    if (!cpiLegData->subtractInflationNominalCoupons()) {
-        QuantExt::CPILeg cpiLeg = QuantExt::CPILeg(schedule, index, cpiLegData->baseCPI(), observationLag)
-                                      .withNotionals(notionals)
-                                      .withPaymentDayCounter(dc)
-                                      .withPaymentAdjustment(bdc)
-                                      .withPaymentCalendar(schedule.calendar())
-                                      .withFixedRates(rates)
-                                      .withObservationInterpolation(interpolationMethod)
-                                      .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
+   
+    QuantExt::CPILeg cpiLeg = QuantExt::CPILeg(schedule, index, cpiLegData->baseCPI(), observationLag)
+                                    .withNotionals(notionals)
+                                    .withPaymentDayCounter(dc)
+                                    .withPaymentAdjustment(bdc)
+                                    .withPaymentCalendar(schedule.calendar())
+                                    .withFixedRates(rates)
+                                    .withObservationInterpolation(interpolationMethod)
+                                    .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
+                                    .withSubtractInflationNominalAllCoupons(cpiLegData->subtractInflationNominalCoupons());
 
-        // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
-        // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
-        // start date is expected; if both the separate start date and a schedule with more than one date is given
-        const string& start = cpiLegData->startDate();
-        if (schedule.size() < 2) {
-            QL_REQUIRE(!start.empty(), "makeCPILeg(): only one schedule date, a 'StartDate' must be given.");
-            cpiLeg.withStartDate(parseDate(start));
-        } else if (!start.empty()) {
-            DLOG("Schedule with more than 2 dates was provided. The first schedule date "
-                 << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
-                 << " is not used.");
-        }
-        if (couponCap)
-            cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
+    // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
+    // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
+    // start date is expected; if both the separate start date and a schedule with more than one date is given
+    const string& start = cpiLegData->startDate();
+    if (schedule.size() < 2) {
+        QL_REQUIRE(!start.empty(), "makeCPILeg(): only one schedule date, a 'StartDate' must be given.");
+        cpiLeg.withStartDate(parseDate(start));
+    } else if (!start.empty()) {
+        DLOG("Schedule with more than 2 dates was provided. The first schedule date "
+                << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
+                << " is not used.");
+    }
+    if (couponCap)
+        cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
 
-        if (couponFloor)
-            cpiLeg.withFloors(buildScheduledVector(cpiLegData->floors(), cpiLegData->floorDates(), schedule));
+    if (couponFloor)
+        cpiLeg.withFloors(buildScheduledVector(cpiLegData->floors(), cpiLegData->floorDates(), schedule));
 
        
 
-        if (cpiLegData->finalFlowCap() != Null<Real>())
-            cpiLeg.withFinalFlowCap(cpiLegData->finalFlowCap());
+    if (cpiLegData->finalFlowCap() != Null<Real>())
+        cpiLeg.withFinalFlowCap(cpiLegData->finalFlowCap());
 
-        if (cpiLegData->finalFlowFloor() != Null<Real>())
-            cpiLeg.withFinalFlowFloor(cpiLegData->finalFlowFloor());
+    if (cpiLegData->finalFlowFloor() != Null<Real>())
+        cpiLeg.withFinalFlowFloor(cpiLegData->finalFlowFloor());
 
-        leg = cpiLeg.operator Leg();
-    } 
-    else {
-        Size n = schedule.size() - 1;
-        leg.reserve(n + 1); // +1 for notional, we always have some sort
-        Calendar paymentCalendar = schedule.calendar();
-        vector<Rate> caps;
-        vector<Rate> floors;
-        Date startDate = schedule.dates().front();
-        if (couponCap) {
-            caps = buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule);
-        }
-        if (couponFloor) {
-            floors = buildScheduledVector(cpiLegData->floors(), cpiLegData->floorDates(), schedule);
-        }
-        if (n > 0) {
-            QL_REQUIRE(!rates.empty(), "no fixedRates");
-            std::vector<Real> spreads(1, 0);
-            Date refStart, start, refEnd, end;
-            Date exCouponDate;
-            for (Size i = 0; i < n; ++i) {
-                refStart = start = schedule.date(i);
-                refEnd = end = schedule.date(i + 1);
-                Date paymentDate = paymentCalendar.adjust(end, bdc);
-
-                if (i == 0 && schedule.hasIsRegular() && !schedule.isRegular(i + 1)) {
-                    BusinessDayConvention bdc = schedule.businessDayConvention();
-                    refStart = schedule.calendar().adjust(end - schedule.tenor(), bdc);
-                }
-                if (i == n - 1 && schedule.hasIsRegular() && !schedule.isRegular(i + 1)) {
-                    BusinessDayConvention bdc = schedule.businessDayConvention();
-                    refEnd = schedule.calendar().adjust(start + schedule.tenor(), bdc);
-                }
-                if (detail::get(rates, i, 1.0) == 0.0) { // fixed coupon
-                    leg.push_back(ext::shared_ptr<CashFlow>(new FixedRateCoupon(
-                        paymentDate, detail::get(notionals, i, 0.0), detail::effectiveFixedRate(spreads, caps, floors, i),
-                        dc, start, end, refStart, refEnd, exCouponDate)));
-                } else { // zero inflation coupon
-                    ext::shared_ptr<CPICashFlow> cf;
-                    Date fixingDate = paymentDate - observationLag;
-                    Time tau = dc.yearFraction(start, end);
-                    cf = ext::make_shared<CPICashFlow>(detail::get(notionals, i, 0.0) * tau, index,
-                                                       startDate - observationLag, cpiLegData->baseCPI(), fixingDate, paymentDate, true, interpolationMethod, index->frequency());
-
-                    if (detail::noOption(caps, floors, i)) { // just swaplet
-                        leg.push_back(ext::dynamic_pointer_cast<CashFlow>(cf));
-                    } else { // cap/floorlet
-                        // in this case we need to set the "outer" pricer later that handles cap and floor
-                        ext::shared_ptr<CappedFlooredCPICashFlow> cfcf = ext::make_shared<CappedFlooredCPICashFlow>(
-                            cf, startDate, observationLag, detail::get(caps, i, Null<Rate>()),
-                            detail::get(floors, i, Null<Rate>()));
-                        leg.push_back(cfcf);
-                    }
-                }
-            }
-
-            // in CPI legs you always have a notional flow of some sort
-            Date paymentDate = paymentCalendar.adjust(schedule.date(n), bdc);
-            Date fixingDate = paymentDate - observationLag;
-
-            ext::shared_ptr<CPICashFlow> xnl = ext::make_shared<CPICashFlow>(
-                detail::get(notionals, n, 0.0), index, startDate - observationLag, cpiLegData->baseCPI(), fixingDate,
-                paymentDate, cpiLegData->subtractInflationNominal(), interpolationMethod, index->frequency());
-
-            if (cpiLegData->finalFlowCap() == Null<Real>() && cpiLegData->finalFlowFloor() == Null<Real>()) {
-                leg.push_back(xnl);
-            } else {
-                ext::shared_ptr<CappedFlooredCPICashFlow> cfxnl = ext::make_shared<CappedFlooredCPICashFlow>(
-                    xnl, startDate, observationLag, cpiLegData->finalFlowCap(), cpiLegData->finalFlowFloor());
-                leg.push_back(cfxnl);
-            }
-        }
-    }
+    Leg leg = cpiLeg.operator Leg();
     Size n = leg.size();
     QL_REQUIRE(n > 0, "Empty CPI Leg");
 
