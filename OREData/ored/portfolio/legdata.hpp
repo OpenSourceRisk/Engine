@@ -192,13 +192,14 @@ public:
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
-                    bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none)
+                    bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
+                    const std::string& lastRecentPeriodCalendar = std::string())
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
           gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
-          lastRecentPeriod_(lastRecentPeriod) {
+          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar) {
         indices_.insert(index_);
     }
 
@@ -223,6 +224,7 @@ public:
     bool nakedOption() const { return nakedOption_; }
     bool localCapFloor() const { return localCapFloor_; }
     const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
+    const std::string& lastRecentPeriodCalendar() const { return lastRecentPeriodCalendar_; }
     //@}
 
     //! \name Modifiers
@@ -260,6 +262,7 @@ private:
     bool nakedOption_;
     bool localCapFloor_;
     boost::optional<Period> lastRecentPeriod_;
+    std::string lastRecentPeriodCalendar_;
 
     static LegDataRegister<FloatingLegData> reg_;
 };

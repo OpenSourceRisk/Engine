@@ -556,6 +556,11 @@ OvernightLeg& OvernightLeg::withLastRecentPeriod(const boost::optional<Period>& 
     return *this;
 }
 
+OvernightLeg& OvernightLeg::withLastRecentPeriod(const Calendar& lastRecentPeriodCalendar) {
+    lastRecentPeriodCalendar_ = lastRecentPeriodCalendar;
+    return *this;
+}
+
 OvernightLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "no notional given for compounding overnight leg");
@@ -615,7 +620,8 @@ OvernightLeg::operator Leg() const {
         }
 
         if (lastRecentPeriod_) {
-            rateComputationStartDate = calendar.advance(rateComputationEndDate, -*lastRecentPeriod_);
+            rateComputationStartDate = (lastRecentPeriodCalendar_.empty() ? calendar : lastRecentPeriodCalendar)
+                                           .advance(rateComputationEndDate, -*lastRecentPeriod_);
         }
 
         // build coupon
