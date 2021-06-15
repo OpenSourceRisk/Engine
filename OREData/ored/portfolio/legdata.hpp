@@ -280,7 +280,7 @@ public:
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
                double finalFlowFloor = Null<Real>(), bool nakedOption = false,
-               bool subtractInflationNominalCoupons = true)
+               bool subtractInflationNominalCoupons = false)
         : LegAdditionalData("CPI"), index_(index), startDate_(startDate), baseCPI_(baseCPI),
           observationLag_(observationLag), interpolation_(interpolation), rates_(rates), rateDates_(rateDates),
           subtractInflationNominal_(subtractInflationNominal), caps_(caps), capDates_(capDates), floors_(floors),

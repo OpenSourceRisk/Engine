@@ -84,7 +84,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
     BusinessDayConvention conv = Unadjusted;                 // not used by the CPICapFloor engine
 
     if (isCapped_) {
-        Rate effectiveCap = (subtractInflationNominal_ ? cap_ - 1 : cap_);
+        Rate effectiveCap = cap_;
         cpiCap_ = boost::make_shared<CPICapFloor>(
             Option::Call, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
             cal, conv, effectiveCap, Handle<ZeroInflationIndex>(underlying_->cpiIndex()), underlying_->observationLag(),
@@ -98,7 +98,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
         // 	  << "  interpolation = " << underlying_->observationInterpolation() << std::endl;
     }
     if (isFloored_) {
-        Rate effectiveFloor = (subtractInflationNominal_ ? floor_ - 1 : floor_);
+        Rate effectiveFloor = floor_;
         cpiFloor_ = boost::make_shared<CPICapFloor>(
             Option::Put, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
             cal, conv, effectiveFloor, Handle<ZeroInflationIndex>(underlying_->cpiIndex()),

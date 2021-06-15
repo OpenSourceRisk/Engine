@@ -42,8 +42,8 @@ public:
               Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
               const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
         : QuantLib::CPICoupon(baseCPI, paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
-                              observationInterpolation, dayCounter, fixedRate, spread, referencePeriodStart,
-                              referencePeriodEnd, exCouponDate),
+                              observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart,
+                              refPeriodEnd, exCouponDate),
           subtractInflationNominal_(subtractInflationNominal){};
 
     virtual Rate rate() const override;

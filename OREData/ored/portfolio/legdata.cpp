@@ -235,9 +235,9 @@ void CPILegData::fromXML(XMLNode* node) {
     else
         subtractInflationNominal_ = false;
     
-    XMLNode* subNomCpnsNode = XMLUtils::getChildNode(node, "SubtractInflationNotionalCoupons");
+    XMLNode* subNomCpnsNode = XMLUtils::getChildNode(node, "SubtractInflationNotionalAllCoupons");
     if (subNomCpnsNode)
-        subtractInflationNominalCoupons_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotionalCoupons", true);
+        subtractInflationNominalCoupons_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotionalAllCoupons", true);
     else
         subtractInflationNominalCoupons_ = false;
 
@@ -276,7 +276,7 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
-    XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominalCoupons_);
+    XMLUtils::addChild(doc, node, "SubtractInflationNotionalAllCoupons", subtractInflationNominalCoupons_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     if (finalFlowCap_ != Null<Real>())
@@ -1309,10 +1309,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
             boost::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
                 boost::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
-            if (cfCpiCashFlow && couponCapFloor && cpiLegData->subtractInflationNominalCoupons() && i < (leg.size()-1)) {
-                cfCpiCashFlow->setPricer(cashFlowPricer);
-            }
-            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size() - 1)) {
+            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size()-1)) {
                 cfCpiCashFlow->setPricer(cashFlowPricer);
             }
         }
