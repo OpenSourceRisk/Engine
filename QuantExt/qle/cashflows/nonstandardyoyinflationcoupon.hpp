@@ -37,7 +37,7 @@ namespace QuantExt {
     class NonStandardYoYInflationCouponPricer;
 
     //! %Coupon paying a YoY-inflation type index
-    class NonStandardYoYInflationCoupon : public InflationCoupon {
+    class NonStandardYoYInflationCoupon : public QuantLib::InflationCoupon {
     public:
 
         // This Coupon uses the start and end period to
@@ -77,6 +77,8 @@ namespace QuantExt {
         virtual Rate indexFixing() const override;
         virtual Date fixingDate() const override;
         virtual Rate rate() const override;
+
+        bool addInflationNotional() const;
 
     protected:
         Date fixingDateNumerator_;

@@ -39,8 +39,8 @@ NonStandardYoYInflationCoupon::NonStandardYoYInflationCoupon(
     const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
     const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag, const DayCounter& dayCounter,
     Real gearing, Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd, bool addInflationNotional)
-    : InflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag, dayCounter,
-                      refPeriodStart, refPeriodEnd),
+    : QuantLib::InflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag, dayCounter,
+                                refPeriodStart, refPeriodEnd),
       gearing_(gearing), spread_(spread), addInflationNotional_(addInflationNotional) {
     setFixingDates(refPeriodStart, refPeriodEnd, observationLag);
 }
@@ -78,5 +78,7 @@ Rate NonStandardYoYInflationCoupon::rate() const {
     }
     return r;
 }
+
+bool NonStandardYoYInflationCoupon::addInflationNotional() const { return addInflationNotional_; };
 
 } // namespace QuantExt
