@@ -51,6 +51,7 @@ TERM STRUCTURES
 - Report to list market data points used in t0 market curve building
 - Set up ScenarioSimMarket curves and surfaces as spreads over the t0 market
 - Support fix-float mtm reset cross currency swaps in curve building
+- Extend yield curve interpolation methods (Quadratic, LogQuadratic, Hermite, Cubic Spline)  
 
 ANALYTICS
 
