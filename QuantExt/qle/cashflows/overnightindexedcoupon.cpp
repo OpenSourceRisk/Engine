@@ -556,7 +556,7 @@ OvernightLeg& OvernightLeg::withLastRecentPeriod(const boost::optional<Period>& 
     return *this;
 }
 
-OvernightLeg& OvernightLeg::withLastRecentPeriod(const Calendar& lastRecentPeriodCalendar) {
+OvernightLeg& OvernightLeg::withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar) {
     lastRecentPeriodCalendar_ = lastRecentPeriodCalendar;
     return *this;
 }
@@ -620,7 +620,7 @@ OvernightLeg::operator Leg() const {
         }
 
         if (lastRecentPeriod_) {
-            rateComputationStartDate = (lastRecentPeriodCalendar_.empty() ? calendar : lastRecentPeriodCalendar)
+            rateComputationStartDate = (lastRecentPeriodCalendar_.empty() ? calendar : lastRecentPeriodCalendar_)
                                            .advance(rateComputationEndDate, -*lastRecentPeriod_);
         }
 

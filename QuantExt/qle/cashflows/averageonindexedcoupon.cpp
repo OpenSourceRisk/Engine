@@ -411,7 +411,7 @@ AverageONLeg::operator Leg() const {
         }
 
         if (lastRecentPeriod_) {
-            rateComputationStartDate = (lastRecentPeriodCalendar_.empty() ? calendar : lastRecentPeriodCalendar)
+            rateComputationStartDate = (lastRecentPeriodCalendar_.empty() ? calendar : lastRecentPeriodCalendar_)
                                            .advance(rateComputationEndDate, -*lastRecentPeriod_);
         }
 
