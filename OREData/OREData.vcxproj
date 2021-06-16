@@ -35,6 +35,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ored\portfolio\builders\asianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\fxasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\commodityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\equityasianoption.hpp" />
     <ClInclude Include="ored\auto_link.hpp" />
     <ClInclude Include="ored\configuration\basecorrelationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\bootstrapconfig.hpp" />
@@ -110,6 +116,7 @@
     <ClInclude Include="ored\model\structuredmodelerror.hpp" />
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
+    <ClInclude Include="ored\portfolio\asianoption.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
     <ClInclude Include="ored\portfolio\bondutils.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
@@ -148,6 +155,7 @@
     <ClInclude Include="ored\portfolio\fixingdates.hpp" />
     <ClInclude Include="ored\portfolio\forwardbond.hpp" />
     <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
+    <ClInclude Include="ored\portfolio\fxasianoption.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -158,6 +166,7 @@
     <ClInclude Include="ored\portfolio\legdatafactory.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
+    <ClInclude Include="ored\portfolio\optionasiandata.hpp" />
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp" />
     <ClInclude Include="ored\portfolio\optionpaymentdata.hpp" />
@@ -265,6 +274,7 @@
     <ClCompile Include="ored\model\lgmbuilder.cpp" />
     <ClCompile Include="ored\model\lgmdata.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
+    <ClCompile Include="ored\portfolio\asianoption.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
@@ -276,6 +286,7 @@
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />
     <ClCompile Include="ored\portfolio\capfloor.cpp" />
+    <ClCompile Include="ored\portfolio\commodityasianoption.cpp" />
     <ClCompile Include="ored\portfolio\commodityforward.cpp" />
     <ClCompile Include="ored\portfolio\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswap.cpp" />
@@ -283,12 +294,14 @@
     <ClCompile Include="ored\portfolio\enginedata.cpp" />
     <ClCompile Include="ored\portfolio\enginefactory.cpp" />
     <ClCompile Include="ored\portfolio\envelope.cpp" />
+    <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
     <ClCompile Include="ored\portfolio\equityforward.cpp" />
     <ClCompile Include="ored\portfolio\equityoption.cpp" />
     <ClCompile Include="ored\portfolio\equityswap.cpp" />
     <ClCompile Include="ored\portfolio\fixingdates.cpp" />
     <ClCompile Include="ored\portfolio\forwardbond.cpp" />
     <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />
+    <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
@@ -298,6 +311,7 @@
     <ClCompile Include="ored\portfolio\legdatafactory.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
+    <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
     <ClCompile Include="ored\portfolio\optiondata.cpp" />
     <ClCompile Include="ored\portfolio\optionexercisedata.cpp" />
     <ClCompile Include="ored\portfolio\optionpaymentdata.cpp" />

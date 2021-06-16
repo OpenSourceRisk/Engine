@@ -37,7 +37,7 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     const Handle<YieldTermStructure>& flatDiscountCurve, const Handle<YieldTermStructure>& spreadDiscountCurve,
     bool eom, bool flatIsDomestic, boost::optional<Period> flatTenor, boost::optional<Period> spreadTenor,
     Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing, const Calendar& flatCalendar,
-    const Calendar& spreadCalendar)
+    const Calendar& spreadCalendar, const std::vector<Natural>& spotFXSettleDaysVec, const std::vector<Calendar>& spotFXSettleCalendarVec)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -45,7 +45,7 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
       flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()),
       spreadTenor_(spreadTenor ? *spreadTenor : spreadIndex_->tenor()), spreadOnFlatLeg_(spreadOnFlatLeg),
       flatGearing_(flatGearing), spreadGearing_(spreadGearing), flatCalendar_(flatCalendar),
-      spreadCalendar_(spreadCalendar) {
+      spreadCalendar_(spreadCalendar), spotFXSettleDaysVec_(spotFXSettleDaysVec), spotFXSettleCalendarVec_(spotFXSettleCalendarVec) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();
@@ -63,6 +63,14 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
         flatCalendar_ = settlementCalendar;
     if (spreadCalendar_.empty())
         spreadCalendar_ = settlementCalendar;
+	//check spotFXSettleDaysVec_ and spotFXSettleCalendarVec_
+    Size numSpotFXSettleDays = spotFXSettleDaysVec_.size();
+    QL_REQUIRE(numSpotFXSettleDays == spotFXSettleCalendarVec_.size(),
+               "Array size of spot fx settlement days must equal that of spot fx settlement calendars");
+	if(numSpotFXSettleDays == 0) {
+		spotFXSettleDaysVec_.resize(1,0);
+		spotFXSettleCalendarVec_.resize(1,settlementCalendar);
+	}
 
     /* Link the curve being bootstrapped to the index if the index has
        no projection curve */
@@ -99,6 +107,13 @@ void CrossCcyBasisSwapHelper::initializeDates() {
 
     Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
+	//calc spotFXSettleDate
+	Date spotFXSettleDate = refDate;
+    Size numSpotFXSettleDays = spotFXSettleDaysVec_.size();//guarranteed to be at least 1
+    for (Size i = 0; i < numSpotFXSettleDays; i++) {
+		//Guarranteed here that spotFXSettleDaysVec_ and spotFXSettleCalendarVec_ have the same size
+		spotFXSettleDate = spotFXSettleCalendarVec_[i].advance(spotFXSettleDate, spotFXSettleDaysVec_[i], Days);
+	}
 
     Schedule flatLegSchedule = MakeSchedule()
                                    .from(settlementDate)
@@ -127,15 +142,15 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     /* Arbitrarily set the spread leg as the pay leg */
     swap_ = boost::shared_ptr<CrossCcyBasisSwap>(new CrossCcyBasisSwap(
         spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_, flatLegNominal,
-        flatLegCurrency_, flatLegSchedule, flatIndex_, 0.0, flatGearing_));
+        flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_));
 
     boost::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {
         engine.reset(new CrossCcySwapEngine(flatLegCurrency_, flatDiscountRLH_, spreadLegCurrency_, spreadDiscountRLH_,
-                                            spotFX_));
+                                            spotFX_, boost::none, Date(), Date(), spotFXSettleDate));
     } else {
         engine.reset(new CrossCcySwapEngine(spreadLegCurrency_, spreadDiscountRLH_, flatLegCurrency_, flatDiscountRLH_,
-                                            spotFX_));
+                                            spotFX_, boost::none, Date(), Date(), spotFXSettleDate));
     }
     swap_->setPricingEngine(engine);
 

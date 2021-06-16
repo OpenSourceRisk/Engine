@@ -131,7 +131,7 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                                       const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
-                                      const string& dayCounter, bool simulate) {
+                                      const string& dayCounter, bool simulate, const string& interpolation) {
     Handle<YieldTermStructure> wrapper = initMarket->yieldCurve(riskFactorYieldCurve(rf), key, configuration);
     QL_REQUIRE(!wrapper.empty(), "yield curve not provided for " << key);
     QL_REQUIRE(tenors.front() > 0 * Days, "yield curve tenors must not include t=0");
@@ -144,7 +144,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     for (auto& tenor : tenors) {
         yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
         yieldCurveDates.push_back(asof_ + tenor);
-    }
+    }    
 
     vector<Handle<Quote>> quotes;
     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
@@ -168,9 +168,19 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
         yieldCurve = boost::shared_ptr<YieldTermStructure>(
             new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
-    } else {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+    } else {        
+        if (interpolation == "LinearZero") {
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurveLinearZero(yieldCurveTimes, quotes, dc));
+        } else if (interpolation == "LogLinear") {
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+        }
+        else {
+			QL_FAIL("Interpolation \"" << interpolation
+                                               << "\" in simulation not recognized. Please provide either LinearZero "
+                                                  "or LogLinear in simulation.xml");
+        }
     }
 
     Handle<YieldTermStructure> ych(yieldCurve);
@@ -237,7 +247,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         LOG("building " << name << " yield curve..");
                         vector<Period> tenors = parameters->yieldCurveTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors,
-                                      parameters->yieldCurveDayCounter(name), param.second.first);
+                                      parameters->yieldCurveDayCounter(name), param.second.first, parameters->interpolation());
                         LOG("building " << name << " yield curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e);
@@ -297,9 +307,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
                             indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
-                        } else {
-                            indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                        } else {							
+                            if (parameters->interpolation() == "LinearZero") {
+								indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::InterpolatedDiscountCurveLinearZero(yieldCurveTimes, quotes, dc));
+                            } else if (parameters->interpolation() == "LogLinear") {
+                                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                            } else {
+                                QL_FAIL("Interpolation \""
+                                        << parameters->interpolation()
+                                        << "\" in simulation not recognized. Please provide either LinearZero "
+                                           "or LogLinear in simulation.xml");
+                            }                            
                         }
 
                         // wrapped curve, is slower than a native curve

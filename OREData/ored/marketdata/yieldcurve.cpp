@@ -18,7 +18,6 @@
 */
 
 #include <ql/currencies/exchangeratemanager.hpp>
-#include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
 #include <ql/pricingengines/bond/discountingbondengine.hpp>

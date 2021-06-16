@@ -2263,6 +2263,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
   <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
+  <Parameter name="referenceDataFile">../../Input/referencedata.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
 </Setup>
@@ -2286,7 +2287,7 @@ When ORE starts, it will initialise today's market, i.e. load market data, fixin
 specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with
 pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt implyTodaysFixings} is set to Y, today's
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
-scenario analysis and stress testing.
+scenario analysis and stress testing. The curveConfigFile {\tt curveconfig.xml}, the conventionsFile {\tt conventions.xml}, the referenceDataFile {\tt referencedata.xml}, the marketDataFile and the fixingDataFile are explained in the sections below.
 
 \medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
@@ -2516,6 +2517,9 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     <Parameter name="fullInitialCollateralisation">true</Parameter>
+    <Parameter name="flipViewXVA">N</Parameter>
+    <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
+    <Parameter name="flipViewLendingCurvePostfix">_BORROW</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -2583,6 +2587,9 @@ sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
 date, sample) {\em after} taking collateral into account
 \item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
+\item {\tt flipViewXVA:} If set to {\tt Y}, then all xva (and exposure) calculations are done from the counterparties point of view ("flipped"). In order to do this, the default curves and recovery rates are switched (dvaName becomes Counterparty, whereas Counterparty becomes the dvaName), the funding curves are switched (fvaBorrowingCurve and fvaLendingCurve are taken from counterparty, see below) and most important: the NPVs in the exposure calculations are inverted.
+\item {\tt flipViewBorrowingCurvePostfix:} In order to fetch the borrowing curve of the counterparty for fva calculation, a yield curve with {\tt CptyName}+{\tt flipViewBorrowingCurvePostfix} needs to be set up, e.g. CPTY_A_BORROW
+\item {\tt flipViewLendingCurvePostfix:} In order to fetch the lending curve of the counterparty for fva calculation, a yield curve with {\tt CptyName}+{\tt flipViewLendingCurvePostfix} needs to be set up, e.g. CPTY_A_LEND
 \end{itemize}
 
 The two cube file outputs {\tt rawCubeOutputFile} and {\tt netCubeOutputFile} are provided for interactive analysis and visualisation purposes, see section
@@ -3327,7 +3334,7 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     </EngineParameters>
   </Product>
   <GlobalParameters>
-    <Parameter name="ContinueOnCalibrationError>true</Parameter>
+    <Parameter name="ContinueOnCalibrationError">true</Parameter>
   </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
@@ -4443,18 +4450,29 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <!-- DividendYield, ForwardPrice, OptionPremium, NoDividends -->
     <Type>DividendYield</Type> 
     <!-- Optional node, only used when Type is OptionPremium -->
     <ExerciseStyle>American</ExerciseStyle>
     <!-- Spot quote from the market data file -->
     <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
+    <!-- Note: do not provide Quotes if Type is NoDividends -->
     <Quotes>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
     </Quotes>
+    <!-- Optional interpolation options, default Zero and Linear -->
+    <!-- Note: do not provide DividendInterpolation if Type is NoDividends -->
+    <DividendInterpolation>
+      <!-- Zero, Discount -->
+      <InterpolationVariable>Zero</InterpolationVariable>
+      <!-- See \ref{tab:allow_interp_methods} -->
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+    </DividendInterpolation>
+    <!-- Optional node, defaults to true -->
+    <Extrapolation>True</Extrapolation>
     <DayCounter>A365</DayCounter>
   </EquityCurve>
   <EquityCurve>
@@ -5161,7 +5179,7 @@ as 'Optional', then it may be excluded or included and left blank.
 \item Quotes: forward price quotes. These can be a futures price or forward points.
 \item DayCounter: The day count basis used internally by the curve to calculate the time between dates.
 \item InterpolationMethod [Optional]: The variable on which the interpolation is performed. The allowable values are
-Linear, LogLinear, Cubic, LinearFlat, LogLinearFlat, CubicFlat. This is different to yield curves above in that Flat versions
+Linear, LogLinear, Cubic, Hermite, LinearFlat, LogLinearFlat, CubicFlat, HermiteFlat. This is different to yield curves above in that Flat versions
 of the standard methods are defined, with each of these if there is no Spot price than any extrapolation between $T_0$ and the
 first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$). 
 If the element is omitted or left blank, then it defaults to \emph{Linear}.

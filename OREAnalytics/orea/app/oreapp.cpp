@@ -885,6 +885,13 @@ void OREApp::runPostProcessor() {
     if (params_->has("xva", "fullInitialCollateralisation")) {
         fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
     }
+    analytics["flipViewXVA"] = parseBool(params_->get("xva", "flipViewXVA"));
+    string flipViewBorrowingCurvePostfix = "_BORROW";
+    string flipViewLendingCurvePostfix = "_LEND";
+    if (analytics["flipViewXVA"]) {
+        flipViewBorrowingCurvePostfix = params_->get("xva", "flipViewBorrowingCurvePostfix");
+        flipViewLendingCurvePostfix = params_->get("xva", "flipViewLendingCurvePostfix");
+    }
 
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
@@ -892,7 +899,7 @@ void OREApp::runPostProcessor() {
         fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
         dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation,
         kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor,
-        kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight);
+        kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight, flipViewBorrowingCurvePostfix, flipViewLendingCurvePostfix);
 }
 
 void OREApp::writeXVAReports() {
