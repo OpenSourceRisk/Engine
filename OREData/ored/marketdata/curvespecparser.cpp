@@ -22,6 +22,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <map>
 #include <vector>
@@ -62,8 +63,11 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
 //! function to convert a string into a curve spec
 boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
-    vector<string> tokens;
-    boost::split(tokens, s, boost::is_any_of("/"));
+
+    boost::escaped_list_separator<char> sep('\\', '/', '\"');
+    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(s, sep);
+
+    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
 
     QL_REQUIRE(tokens.size() > 1, "number of tokens too small in curve spec " << s);
 

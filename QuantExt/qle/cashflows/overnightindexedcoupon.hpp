@@ -208,6 +208,7 @@ public:
     OvernightLeg& withLocalCapFloor(const bool localCapFloor);
     OvernightLeg& withInArrears(const bool inArrears);
     OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
+    OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
     operator Leg() const;
 
 private:
@@ -230,6 +231,7 @@ private:
     bool localCapFloor_;
     bool inArrears_;
     boost::optional<Period> lastRecentPeriod_;
+    Calendar lastRecentPeriodCalendar_;
 };
 
 } // namespace QuantExt

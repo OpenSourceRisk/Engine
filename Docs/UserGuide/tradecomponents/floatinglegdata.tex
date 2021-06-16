@@ -171,9 +171,17 @@ in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
 \item LastRecentPeriod [Optional]: Only applies to OIS coupons. If given, the compounding / averaging of ON rates will
   not be done over the usual reference period derived from the accrual period and the Lookback, FixingDays and
   IsInArrears parameters, but instead over a period determined by the end date of this usual period and the
-  LastRecentPeriod parameter as [ EndDate - LastRecentPeriod, EndDate ].
+  LastRecentPeriod parameter as [ EndDate - LastRecentPeriod, EndDate ]. The calendar used to compute EndDate -
+  LastRecentPeriod is the schedule calendar unless a specific LastRecentPeriodCalendar is specified. To represent SOFR
+  30D, 90D, 180D average indices, the LastRecentPeriodCalendar should be set to NullCalendar, since these averages refer
+  to rolling averages over 30, 90, 180 calendar days. \\
 
-  Allowable values: any valid period, e.g. 1M, 3M, 6M
+  Allowable values: any valid period, e.g. 30D, 90D, 180D, 1M, 2M, 6M
+
+\item LastRecentPeriodCalendar [Optional]: The calendar used to compute the LastRecentPeriod, see this field for more
+  details. If not given, defaults to the schedule calendar. \\
+
+  Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item FixingDays [Optional]: The fixing gap. For Ibor coupons this is the number of business days before the accrual
   period's {\em reference} date to observe the index fixing. Here, the accrual period reference date is the accrual

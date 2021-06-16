@@ -176,6 +176,7 @@ public:
     AverageONLeg& withLocalCapFloor(const bool localCapFloor);
     AverageONLeg& withInArrears(const bool inArrears);
     AverageONLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
+    AverageONLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
     AverageONLeg& withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer);
     AverageONLeg& withCapFlooredAverageONIndexedCouponPricer(
         const boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer>& couponPricer);
@@ -200,6 +201,7 @@ private:
     bool localCapFloor_;
     bool inArrears_;
     boost::optional<Period> lastRecentPeriod_;
+    Calendar lastRecentPeriodCalendar_;
     boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
     boost::shared_ptr<CapFlooredAverageONIndexedCouponPricer> capFlooredCouponPricer_;
 };

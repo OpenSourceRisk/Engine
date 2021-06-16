@@ -148,6 +148,9 @@
     <ClCompile Include="fxvolcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="curvespecparser.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="commodityasianoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
