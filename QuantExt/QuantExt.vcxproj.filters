@@ -888,6 +888,12 @@
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\logquadraticinterpolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\quadraticinterpolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\sekstina.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
