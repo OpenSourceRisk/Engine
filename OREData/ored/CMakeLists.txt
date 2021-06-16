@@ -64,6 +64,7 @@ model/irlgmdata.cpp
 model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
+portfolio/asianoption.cpp
 portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
@@ -76,6 +77,7 @@ portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
 portfolio/commodityforward.cpp
+portfolio/commodityasianoption.cpp
 portfolio/commodityoption.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
@@ -83,12 +85,14 @@ portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
 portfolio/equityforward.cpp
+portfolio/equityasianoption.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
+portfolio/fxasianoption.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
 portfolio/indexing.cpp
@@ -97,6 +101,7 @@ portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
+portfolio/optionasiandata.cpp
 portfolio/optiondata.cpp
 portfolio/optionexercisedata.cpp
 portfolio/optionpaymentdata.cpp
@@ -207,8 +212,10 @@ model/marketobserver.hpp
 model/modelbuilder.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
+portfolio/asianoption.hpp
 portfolio/bond.hpp
 portfolio/bondutils.hpp
+portfolio/builders/asianoption.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
@@ -219,13 +226,16 @@ portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
+portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityoption.hpp
 portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/equityforward.hpp
+portfolio/builders/equityasianoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
 portfolio/builders/fxforward.hpp
+portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
@@ -233,6 +243,7 @@ portfolio/builders/vanillaoption.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
+portfolio/commodityasianoption.hpp
 portfolio/commodityoption.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
@@ -240,12 +251,14 @@ portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
 portfolio/equityforward.hpp
+portfolio/equityasianoption.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
+portfolio/fxasianoption.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp
 portfolio/indexing.hpp
@@ -255,6 +268,7 @@ portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
+portfolio/optionasiandata.hpp
 portfolio/optiondata.hpp
 portfolio/optionexercisedata.hpp
 portfolio/optionpaymentdata.hpp
