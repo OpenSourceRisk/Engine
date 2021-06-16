@@ -848,9 +848,9 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     // check we have a single notional and two dates in the schedule
-    int numNotionals = data.notionals().size();
-    int numRates = zcFixedLegData->rates().size();
-    int numDates = schedule.size();
+    Size numNotionals = data.notionals().size();
+    Size numRates = zcFixedLegData->rates().size();
+    Size numDates = schedule.size();
     QL_REQUIRE(numDates >= 2, "Incorrect number of schedule dates entered, expected at least 2, got " << numDates);
     QL_REQUIRE(numNotionals >= 1, "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
     QL_REQUIRE(numRates >= 1, "Incorrect number of rate values entered, expected at least 1, got " << numRates);
