@@ -32,9 +32,10 @@
 namespace QuantExt {
 
     Rate CPICoupon::rate() const {
-    Rate r = QuantLib::CPICoupon::rate() / fixedRate_ - spread_;
+    Rate r = QuantLib::CPICoupon::rate() ;
         if (subtractInflationNominal_) {
-            r = (r - 1) * fixedRate_ + spread_;
+            Rate adjusted_r = r / fixedRate_ - spread_;
+            r = (adjusted_r - 1) * fixedRate_ + spread_;
         }
         return r;
     }
@@ -226,7 +227,7 @@ CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationInde
       paymentDayCounter_(Thirty360()), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
       spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()),
-      startDate_(schedule_.dates().front()), subtractInflationNominalAllCoupons_(false) {
+      subtractInflationNominalAllCoupons_(false), startDate_(schedule_.dates().front())  {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
 
