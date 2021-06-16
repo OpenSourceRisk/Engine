@@ -3540,6 +3540,20 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="FxOptionAmerican">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>FdBlackScholesVanillaEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Scheme">Douglas</Parameter>
+      <Parameter name="TimeGridPerYear">100</Parameter>
+      <Parameter name="XGrid">100</Parameter>
+      <Parameter name="DampingSteps">0</Parameter>
+      <!-- optional, prevents too small time grids for increased
+           Greek precision when expiry is near, set to 1 if omitted -->
+      <Parameter name="TimeGridMinimumSize">1</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="EuropeanSwaption">
     <Model>BlackBachelier</Model> <!-- depends on input vol -->
     <ModelParameters/>
