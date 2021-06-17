@@ -149,6 +149,7 @@ void FloatingLegData::fromXML(XMLNode* node) {
         isInArrears_ = parseBool(XMLUtils::getNodeValue(arrNode));
     if (XMLNode* lrNode = XMLUtils::getChildNode(node, "LastRecentPeriod"))
         lastRecentPeriod_ = parsePeriod(XMLUtils::getNodeValue(lrNode));
+    lastRecentPeriodCalendar_ = XMLUtils::getChildValue(node, "LastRecentPeriodCalendar", false);
     if (XMLNode* avgNode = XMLUtils::getChildNode(node, "IsAveraged"))
         isAveraged_ = parseBool(XMLUtils::getNodeValue(avgNode));
     if (XMLNode* spNode = XMLUtils::getChildNode(node, "HasSubPeriods"))
@@ -190,6 +191,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "IsInArrears", *isInArrears_);
     if (lastRecentPeriod_)
         XMLUtils::addChild(doc, node, "LastRecentPeriod", *lastRecentPeriod_);
+    if (!lastRecentPeriodCalendar_.empty())
+        XMLUtils::addChild(doc, node, "LastRecentPeriod", lastRecentPeriodCalendar_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
     XMLUtils::addChild(doc, node, "HasSubPeriods", hasSubPeriods_);
     XMLUtils::addChild(doc, node, "IncludeSpread", includeSpread_);
@@ -1065,6 +1068,9 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withPaymentLag(paymentLag)
                 .withInArrears(isInArrears)
                 .withLastRecentPeriod(floatData->lastRecentPeriod())
+                .withLastRecentPeriodCalendar(floatData->lastRecentPeriodCalendar().empty()
+                                                  ? Calendar()
+                                                  : parseCalendar(floatData->lastRecentPeriodCalendar()))
                 .withLookback(floatData->lookback())
                 .withRateCutoff(floatData->rateCutoff() == Null<Size>() ? 0 : floatData->rateCutoff())
                 .withFixingDays(floatData->fixingDays())
@@ -1090,6 +1096,9 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                       .withGearings(gearings)
                       .withInArrears(isInArrears)
                       .withLastRecentPeriod(floatData->lastRecentPeriod())
+                      .withLastRecentPeriodCalendar(floatData->lastRecentPeriodCalendar().empty()
+                                                        ? Calendar()
+                                                        : parseCalendar(floatData->lastRecentPeriodCalendar()))
                       .includeSpread(floatData->includeSpread())
                       .withLookback(floatData->lookback())
                       .withFixingDays(floatData->fixingDays())
