@@ -282,12 +282,13 @@ public:
                bool subtractInflationNominal = true, const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
-               double finalFlowFloor = Null<Real>(), bool nakedOption = false)
+               double finalFlowFloor = Null<Real>(), bool nakedOption = false,
+               bool subtractInflationNominalCoupons = false)
         : LegAdditionalData("CPI"), index_(index), startDate_(startDate), baseCPI_(baseCPI),
           observationLag_(observationLag), interpolation_(interpolation), rates_(rates), rateDates_(rateDates),
           subtractInflationNominal_(subtractInflationNominal), caps_(caps), capDates_(capDates), floors_(floors),
           floorDates_(floorDates), finalFlowCap_(finalFlowCap), finalFlowFloor_(finalFlowFloor),
-          nakedOption_(nakedOption) {
+          nakedOption_(nakedOption), subtractInflationNominalCoupons_(subtractInflationNominalCoupons) {
         indices_.insert(index_);
     }
 
@@ -308,6 +309,7 @@ public:
     double finalFlowCap() const { return finalFlowCap_; }
     double finalFlowFloor() const { return finalFlowFloor_; }
     bool nakedOption() const { return nakedOption_; }
+    bool subtractInflationNominalCoupons() const { return subtractInflationNominalCoupons_; }
     //@}
 
     //! \name Serialisation
@@ -331,6 +333,7 @@ private:
     double finalFlowCap_;
     double finalFlowFloor_;
     bool nakedOption_;
+    bool subtractInflationNominalCoupons_;
 
     static LegDataRegister<CPILegData> reg_;
 };

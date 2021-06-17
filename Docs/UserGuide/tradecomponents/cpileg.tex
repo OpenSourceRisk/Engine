@@ -2,7 +2,7 @@
 \label{ss:cpilegdata}
 
 A CPI leg contains a series of CPI-linked coupon payments $(I(t)/I_0)\,N\,c\,\delta$ and, if \lstinline!NotionalFinalExchange! is set to \emph{true}, a final
-inflation-linked redemption $(I(t)/I_0)\,N$. The final redemption can be
+inflation-linked redemption $(I(t)/I_0)\,N$. Each coupon and the final redemption can be
 subtracting the (un-inflated) notional $N$, i.e. $(I(t)/I_0-1)\,N$,
 see below.
 
@@ -46,6 +46,13 @@ Allowable values:  \emph{Linear, Flat}
   Note that the final coupon payment is not affected by this flag. \\ 
 Final notional payment if \emph{true}: $N \,(I(T)/I_0-1)$. \\ 
 Final notional payment if  \emph{false}: $N \,I(T)/I_0$ 
+
+\item SubtractInflationNotionalAllCoupons [Optional]: A flag indicating whether
+  the non-inflation adjusted notional amount should be subtracted from
+  all coupons.
+  Note that the final redemption payment is not affected by this flag. \\ 
+Coupon payment if \emph{true}: $N \,(I(T)/I_0-1)$. \\ 
+Coupon payment if  \emph{false}: $N \,I(T)/I_0$ 
 
 Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
 \\Defaults to \emph{false}  if left blank or omitted.
@@ -147,7 +154,8 @@ Whether the leg cotains a final redemption flow at all or not depends on the
           <Floors>
           <FinalFlowCap>0.03</FinalFlowCap>
           <FinalFlowFloor>0.0</FinalFlowFloor>
-          <NakedOption>false</NakedOption>          
+          <NakedOption>false</NakedOption>
+          <SubtractInflationNotionalAllCoupons>false</SubtractInflationNotionalAllCoupons>         
         </CPILegData>
       </LegData>
 \end{minted}
@@ -189,6 +197,7 @@ Whether the leg cotains a final redemption flow at all or not depends on the
           <ObservationLag>2M</ObservationLag>
           <Interpolated>false</Interpolated>
           <SubtractInflationNotional>true</SubtractInflationNotional>
+          <SubtractInflationNotionalAllCoupons>false</SubtractInflationNotionalAllCoupons>
         </CPILegData>
       </LegData>
 \end{minted}
