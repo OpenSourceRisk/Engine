@@ -17,11 +17,12 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
  */
 
-#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
-#include <ql/cashflows/inflationcouponpricer.hpp>
-#include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/capflooredinflationcoupon.hpp>
 #include <ql/cashflows/cashflowvectors.hpp>
+#include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/cashflows/inflationcouponpricer.hpp>
+#include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
+#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 
 namespace QuantExt {
 
@@ -70,7 +71,6 @@ Rate NonStandardYoYInflationCoupon::adjustedFixing() const { return (rate() - sp
 
 Date NonStandardYoYInflationCoupon::fixingDate() const { return fixingDateNumerator_; };
 
-
 Rate NonStandardYoYInflationCoupon::rate() const {
     Rate r = InflationCoupon::rate();
     if (addInflationNotional_) {
@@ -80,5 +80,9 @@ Rate NonStandardYoYInflationCoupon::rate() const {
 }
 
 bool NonStandardYoYInflationCoupon::addInflationNotional() const { return addInflationNotional_; };
+
+ext::shared_ptr<ZeroInflationIndex> NonStandardYoYInflationCoupon::cpiIndex() const {
+    return ext::dynamic_pointer_cast<ZeroInflationIndex>(index_);
+}
 
 } // namespace QuantExt

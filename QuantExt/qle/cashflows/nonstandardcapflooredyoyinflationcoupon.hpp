@@ -27,102 +27,103 @@
     \ingroup cashflows
 */
 
-#ifndef quantext_nonstandardcappedlfooredyoycoupon_coupon_hpp
-#define quantext_nonstandardcappedlfooredyoycoupon_coupon_hpp
+#ifndef quantext_nonstandardcappedlfooredyoycoupon_hpp
+#define quantext_nonstandardcappedlfooredyoycoupon_hpp
 
+#include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 
 namespace QuantExt {
-    using namespace QuantLib;
-    //! Capped or floored inflation coupon.
-    /*! Essentially a copy of the nominal version but taking a
-        different index and a set of pricers (not just one).
+using namespace QuantLib;
+//! Capped or floored inflation coupon.
+/*! Essentially a copy of the nominal version but taking a
+    different index and a set of pricers (not just one).
 
-        The payoff \f$ P \f$ of a capped inflation-rate coupon
-        with paysWithin = true is:
+    The payoff \f$ P \f$ of a capped inflation-rate coupon
+    with paysWithin = true is:
 
-        \f[ P = N \times T \times \min(a L + b, C). \f]
+    \f[ P = N \times T \times \min(a L + b, C). \f]
 
-        where \f$ N \f$ is the notional, \f$ T \f$ is the accrual
-        time, \f$ L \f$ is the inflation rate, \f$ a \f$ is its
-        gearing, \f$ b \f$ is the spread, and \f$ C \f$ and \f$ F \f$
-        the strikes.
+    where \f$ N \f$ is the notional, \f$ T \f$ is the accrual
+    time, \f$ L \f$ is the inflation rate, \f$ a \f$ is its
+    gearing, \f$ b \f$ is the spread, and \f$ C \f$ and \f$ F \f$
+    the strikes.
 
-        The payoff of a floored inflation-rate coupon is:
+    The payoff of a floored inflation-rate coupon is:
 
-        \f[ P = N \times T \times \max(a L + b, F). \f]
+    \f[ P = N \times T \times \max(a L + b, F). \f]
 
-        The payoff of a collared inflation-rate coupon is:
+    The payoff of a collared inflation-rate coupon is:
 
-        \f[ P = N \times T \times \min(\max(a L + b, F), C). \f]
+    \f[ P = N \times T \times \min(\max(a L + b, F), C). \f]
 
-        If paysWithin = false then the inverse is returned
-        (this provides for instrument cap and caplet prices).
+    If paysWithin = false then the inverse is returned
+    (this provides for instrument cap and caplet prices).
 
-        They can be decomposed in the following manner.  Decomposition
-        of a capped floating rate coupon when paysWithin = true:
-        \f[
-        R = \min(a L + b, C) = (a L + b) + \min(C - b - \xi |a| L, 0)
-        \f]
-        where \f$ \xi = sgn(a) \f$. Then:
-        \f[
-        R = (a L + b) + |a| \min(\frac{C - b}{|a|} - \xi L, 0)
-        \f]
-     */
-    class NonStandardCappedFlooredYoYInflationCoupon : public NonStandardYoYInflationCoupon {
-    public:
-        // we may watch an underlying coupon ...
-        NonStandardCappedFlooredYoYInflationCoupon(const ext::shared_ptr<NonStandardYoYInflationCoupon>& underlying,
-                Rate cap = Null<Rate>(),
-                Rate floor = Null<Rate>());
+    They can be decomposed in the following manner.  Decomposition
+    of a capped floating rate coupon when paysWithin = true:
+    \f[
+    R = \min(a L + b, C) = (a L + b) + \min(C - b - \xi |a| L, 0)
+    \f]
+    where \f$ \xi = sgn(a) \f$. Then:
+    \f[
+    R = (a L + b) + |a| \min(\frac{C - b}{|a|} - \xi L, 0)
+    \f]
+ */
+class NonStandardCappedFlooredYoYInflationCoupon : public NonStandardYoYInflationCoupon {
+public:
+    // we may watch an underlying coupon ...
+    NonStandardCappedFlooredYoYInflationCoupon(const ext::shared_ptr<NonStandardYoYInflationCoupon>& underlying,
+                                               Rate cap = Null<Rate>(), Rate floor = Null<Rate>());
 
-        // ... or not
-        NonStandardCappedFlooredYoYInflationCoupon(
-            const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
-            const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag, const DayCounter& dayCounter,
-            Real gearing = 1.0, Spread spread = 0.0, const Rate cap = Null<Rate>(), const Rate floor = Null<Rate>(),
-            const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(), bool addInflationNotional=false);
+    // ... or not
+    NonStandardCappedFlooredYoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
+                                               const Date& endDate, Natural fixingDays,
+                                               const ext::shared_ptr<ZeroInflationIndex>& index,
+                                               const Period& observationLag, const DayCounter& dayCounter,
+                                               Real gearing = 1.0, Spread spread = 0.0, const Rate cap = Null<Rate>(),
+                                               const Rate floor = Null<Rate>(), const Date& refPeriodStart = Date(),
+                                               const Date& refPeriodEnd = Date(), bool addInflationNotional = false);
 
-        //! \name augmented Coupon interface
-        //@{
-        //! swap(let) rate
-        Rate rate() const;
-        //! cap
-        Rate cap() const;
-        //! floor
-        Rate floor() const;
-        //! effective cap of fixing
-        Rate effectiveCap() const;
-        //! effective floor of fixing
-        Rate effectiveFloor() const;
-        //@}
+    //! \name augmented Coupon interface
+    //@{
+    //! swap(let) rate
+    Rate rate() const;
+    //! cap
+    Rate cap() const;
+    //! floor
+    Rate floor() const;
+    //! effective cap of fixing
+    Rate effectiveCap() const;
+    //! effective floor of fixing
+    Rate effectiveFloor() const;
+    //@}
 
-        //! \name Observer interface
-        //@{
-        void update();
-        //@}
+    //! \name Observer interface
+    //@{
+    void update();
+    //@}
 
-        //! \name Visitability
-        //@{
-        virtual void accept(AcyclicVisitor& v);
-        //@}
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor& v);
+    //@}
 
-        bool isCapped() const { return isCapped_; }
-        bool isFloored() const { return isFloored_; }
+    bool isCapped() const { return isCapped_; }
+    bool isFloored() const { return isFloored_; }
 
-        void setPricer(const ext::shared_ptr<NonStandardYoYInflationCouponPricer>&);
+    void setPricer(const ext::shared_ptr<NonStandardYoYInflationCouponPricer>&);
 
-    protected:
-        virtual void setCommon(Rate cap, Rate floor);
+protected:
+    virtual void setCommon(Rate cap, Rate floor);
 
-        // data, we only use underlying_ if it was constructed that way,
-        // generally we use the shared_ptr conversion to boolean to test
-        ext::shared_ptr<NonStandardYoYInflationCoupon> underlying_;
-        bool isFloored_, isCapped_;
-        Rate cap_, floor_;
-    };
+    // data, we only use underlying_ if it was constructed that way,
+    // generally we use the shared_ptr conversion to boolean to test
+    ext::shared_ptr<NonStandardYoYInflationCoupon> underlying_;
+    bool isFloored_, isCapped_;
+    Rate cap_, floor_;
+};
 
-}
+} // namespace QuantExt
 
 #endif
-

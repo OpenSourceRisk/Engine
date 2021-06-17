@@ -24,10 +24,10 @@
 #ifndef quantext_yoy_inflation_coupon_hpp
 #define quantext_yoy_inflation_coupon_hpp
 
-#include <ql/cashflows/yoyinflationcoupon.hpp>
-#include <ql/cashflows/capflooredinflationcoupon.hpp>
-#include <ql/indexes/inflationindex.hpp>
 #include <ql/cashflow.hpp>
+#include <ql/cashflows/capflooredinflationcoupon.hpp>
+#include <ql/cashflows/yoyinflationcoupon.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <ql/time/schedule.hpp>
 
 namespace QuantExt {
@@ -38,7 +38,6 @@ using namespace QuantLib;
 
 class YoYInflationCoupon : public QuantLib::YoYInflationCoupon {
 public:
-
     YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                        Natural fixingDays, const ext::shared_ptr<YoYInflationIndex>& index,
                        const Period& observationLag, const DayCounter& dayCounter, Real gearing = 1.0,
@@ -51,13 +50,12 @@ public:
     //@}
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
     bool addInflationNotional_;
 };
-
 
 class CappedFlooredYoYInflationCoupon : public QuantLib::CappedFlooredYoYInflationCoupon {
 public:
@@ -82,7 +80,6 @@ public:
 private:
     bool addInflationNotional_;
 };
-
 
 //! Helper class building a sequence of capped/floored yoy inflation coupons
 //! payoff is: spread + gearing x index
@@ -123,4 +120,3 @@ private:
 };
 } // namespace QuantExt
 #endif
-

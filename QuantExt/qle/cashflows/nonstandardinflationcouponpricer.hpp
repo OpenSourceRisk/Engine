@@ -21,127 +21,110 @@
     the payoff of the coupon is:
          N * (alpha * I_t/I_s + beta)
          N * (alpha * (I_t/I_s - 1) + beta)
-    with arbitrary s < t. In the regular coupon the period between 
+    with arbitrary s < t. In the regular coupon the period between
     s and t is hardcoded to one year. This pricer ignores any convexity adjustments
     in the YoY coupon.
     \ingroup cashflows
 */
 
-#ifndef quantext_nonstandardinflation_coupon_pricer_hpp
-#define quantext_nonstandardinflation_coupon_pricer_hpp
+#ifndef quantext_nonstandard_yoy_inflation_coupon_pricer_hpp
+#define quantext_nonstandard_yoy_inflation_coupon_pricer_hpp
 
 #include <ql/cashflow.hpp>
-#include <ql/option.hpp>
-#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
+#include <ql/option.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
+#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 
 namespace QuantExt {
-    using namespace QuantLib;
-    //! base pricer for capped/floored YoY inflation coupons
-    /*! \note this pricer can already do swaplets but to get
-              volatility-dependent coupons you need the descendents.
+
+using namespace QuantLib;
+//! base pricer for capped/floored YoY inflation coupons
+/*! \note this pricer can already do swaplets but to get
+          volatility-dependent coupons you need the descendents.
+*/
+class NonStandardYoYInflationCouponPricer : public QuantLib::InflationCouponPricer {
+public:
+    NonStandardYoYInflationCouponPricer();
+    NonStandardYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
+                                        const Handle<YieldTermStructure>& nominalTermStructure);
+
+    virtual Handle<YoYOptionletVolatilitySurface> capletVolatility() const { return capletVol_; }
+
+    virtual Handle<YieldTermStructure> nominalTermStructure() const { return nominalTermStructure_; }
+
+    virtual void setCapletVolatility(const Handle<YoYOptionletVolatilitySurface>& capletVol);
+
+    //! \name InflationCouponPricer interface
+    //@{
+    virtual Real swapletPrice() const;
+    virtual Rate swapletRate() const;
+    virtual Real capletPrice(Rate effectiveCap) const;
+    virtual Rate capletRate(Rate effectiveCap) const;
+    virtual Real floorletPrice(Rate effectiveFloor) const;
+    virtual Rate floorletRate(Rate effectiveFloor) const;
+    virtual void initialize(const InflationCoupon&);
+    //@}
+
+protected:
+    virtual Real optionletPrice(Option::Type optionType, Real effStrike) const;
+    virtual Real optionletRate(Option::Type optionType, Real effStrike) const;
+
+    /*! Derived classes usually only need to implement this.
+
+        The name of the method is misleading.  This actually
+        returns the rate of the optionlet (so not discounted and
+        not accrued).
     */
-    class NonStandardYoYInflationCouponPricer : public QuantLib::InflationCouponPricer {
-      public:
-        NonStandardYoYInflationCouponPricer();
-        NonStandardYoYInflationCouponPricer(
-            const Handle<YoYOptionletVolatilitySurface>& capletVol,
-            const Handle<YieldTermStructure>& nominalTermStructure);
+    virtual Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const;
+    virtual Rate adjustedFixing(Rate fixing = Null<Rate>()) const;
 
-        virtual Handle<YoYOptionletVolatilitySurface> capletVolatility() const{
-            return capletVol_;
-        }
+    //! data
+    Handle<YoYOptionletVolatilitySurface> capletVol_;
+    Handle<YieldTermStructure> nominalTermStructure_;
+    const NonStandardYoYInflationCoupon* coupon_;
+    Real gearing_;
+    Spread spread_;
+    Real discount_;
+};
 
-        virtual Handle<YieldTermStructure> nominalTermStructure() const{
-            return nominalTermStructure_;
-        }
+//! Black-formula pricer for capped/floored yoy inflation coupons
+class NonStandardBlackYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
+public:
+    NonStandardBlackYoYInflationCouponPricer(){};
+    NonStandardBlackYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
+                                             const Handle<YieldTermStructure>& nominalTermStructure)
+        : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
 
-        virtual void setCapletVolatility(
-            const Handle<YoYOptionletVolatilitySurface>& capletVol);
+protected:
+    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const;
+};
 
-        //! \name InflationCouponPricer interface
-        //@{
-        virtual Real swapletPrice() const;
-        virtual Rate swapletRate() const;
-        virtual Real capletPrice(Rate effectiveCap) const;
-        virtual Rate capletRate(Rate effectiveCap) const;
-        virtual Real floorletPrice(Rate effectiveFloor) const;
-        virtual Rate floorletRate(Rate effectiveFloor) const;
-        virtual void initialize(const InflationCoupon&);
-        //@}
+//! Unit-Displaced-Black-formula pricer for capped/floored yoy inflation coupons
+class NonStandardUnitDisplacedBlackYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
+public:
+    NonStandardUnitDisplacedBlackYoYInflationCouponPricer(){};
+    NonStandardUnitDisplacedBlackYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
+                                                          const Handle<YieldTermStructure>& nominalTermStructure)
+        : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
 
-      protected:
-        virtual Real optionletPrice(Option::Type optionType,
-                                    Real effStrike) const;
-        virtual Real optionletRate(Option::Type optionType,
-                                   Real effStrike) const;
+protected:
+    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const;
+};
 
-        /*! Derived classes usually only need to implement this.
+//! Bachelier-formula pricer for capped/floored yoy inflation coupons
+class NonStandardBachelierYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
+public:
+    NonStandardBachelierYoYInflationCouponPricer(){};
 
-            The name of the method is misleading.  This actually
-            returns the rate of the optionlet (so not discounted and
-            not accrued).
-        */
-        virtual Real optionletPriceImp(Option::Type, Real strike,
-                                       Real forward, Real stdDev) const;
-        virtual Rate adjustedFixing(Rate fixing = Null<Rate>()) const;
+    NonStandardBachelierYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
+                                                 const Handle<YieldTermStructure>& nominalTermStructure)
+        : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
 
-        //! data
-        Handle<YoYOptionletVolatilitySurface> capletVol_;
-        Handle<YieldTermStructure> nominalTermStructure_;
-        const NonStandardYoYInflationCoupon* coupon_;
-        Real gearing_;
-        Spread spread_;
-        Real discount_;
-    };
+protected:
+    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const;
+};
 
-
-    //! Black-formula pricer for capped/floored yoy inflation coupons
-    class NonStandardBlackYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
-      public:
-        NonStandardBlackYoYInflationCouponPricer(){};
-        NonStandardBlackYoYInflationCouponPricer(
-            const Handle<YoYOptionletVolatilitySurface>& capletVol,
-            const Handle<YieldTermStructure>& nominalTermStructure)
-              : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
-      protected:
-        Real optionletPriceImp(Option::Type, Real strike,
-                               Real forward, Real stdDev) const;
-    };
-
-
-    //! Unit-Displaced-Black-formula pricer for capped/floored yoy inflation coupons
-    class NonStandardUnitDisplacedBlackYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
-      public:
-        NonStandardUnitDisplacedBlackYoYInflationCouponPricer(){};
-        NonStandardUnitDisplacedBlackYoYInflationCouponPricer(
-            const Handle<YoYOptionletVolatilitySurface>& capletVol,
-            const Handle<YieldTermStructure>& nominalTermStructure)
-            : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
-      protected:
-        Real optionletPriceImp(Option::Type, Real strike,
-                               Real forward, Real stdDev) const;
-    };
-
-
-    //! Bachelier-formula pricer for capped/floored yoy inflation coupons
-    class NonStandardBachelierYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
-      public:
-        NonStandardBachelierYoYInflationCouponPricer(){};
-        
-        NonStandardBachelierYoYInflationCouponPricer(
-            const Handle<YoYOptionletVolatilitySurface>& capletVol,
-            const Handle<YieldTermStructure>& nominalTermStructure)
-            : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
-      protected:
-        Real optionletPriceImp(Option::Type, Real strike,
-                               Real forward, Real stdDev) const;
-    };
-
-}
-
+} // namespace QuantExt
 
 #endif
-
-

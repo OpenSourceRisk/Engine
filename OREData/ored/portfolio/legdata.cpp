@@ -37,9 +37,9 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/capflooredinflationcoupon.hpp>
-#include <ql/cashflows/digitalcmscoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
+#include <ql/cashflows/digitalcmscoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
@@ -297,8 +297,8 @@ void YoYLegData::fromXML(XMLNode* node) {
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
-    if (XMLUtils::getChildNode(node, "addInflationNotional"))
-        addInflationNotional_ = XMLUtils::getChildValueAsBool(node, "addInflationNotional", false);
+    if (XMLUtils::getChildNode(node, "AddInflationNotional"))
+        addInflationNotional_ = XMLUtils::getChildValueAsBool(node, "AddInflationNotional", false);
     else
         addInflationNotional_ = false;
 }
@@ -314,7 +314,7 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
-    XMLUtils::addChild(doc, node, "addInflationNotional", nakedOption_);
+    XMLUtils::addChild(doc, node, "AddInflationNotional", nakedOption_);
     return node;
 }
 
@@ -413,7 +413,6 @@ void DigitalCMSLegData::fromXML(XMLNode* node) {
                                                                       putPayoffDates_, &parseReal);
     }
 }
-
 
 XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
@@ -1368,7 +1367,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
 
     if (couponFloor)
         yoyLeg.withFloors(buildScheduledVector(yoyLegData->floors(), yoyLegData->floorDates(), schedule));
-    
+
     Leg leg = yoyLeg.operator Leg();
 
     if (couponCapFloor) {
@@ -1382,7 +1381,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
             cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
 
         // set coupon pricer for the leg
-        
+
         for (Size i = 0; i < leg.size(); i++) {
             boost::dynamic_pointer_cast<QuantExt::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
                 boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
@@ -1396,9 +1395,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
             }
         }
     }
-    
-    return leg;
 
+    return leg;
 }
 
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
@@ -1486,15 +1484,15 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsData->spreads(),
-                                                                       cmsData->spreadDates(), schedule, 0.0);
-    vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsData->gearings(),
-                                                                        cmsData->gearingDates(), schedule, 1.0);
+    vector<double> spreads =
+        ore::data::buildScheduledVectorNormalised(cmsData->spreads(), cmsData->spreadDates(), schedule, 0.0);
+    vector<double> gearings =
+        ore::data::buildScheduledVectorNormalised(cmsData->gearings(), cmsData->gearingDates(), schedule, 1.0);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     double eps = 1e-4;
-    vector<double> callStrikes = ore::data::buildScheduledVector(digitalCmsData->callStrikes(),
-                                                                 digitalCmsData->callStrikeDates(), schedule);
+    vector<double> callStrikes =
+        ore::data::buildScheduledVector(digitalCmsData->callStrikes(), digitalCmsData->callStrikeDates(), schedule);
 
     for (Size i = 0; i < callStrikes.size(); i++) {
         if (std::fabs(callStrikes[i]) < eps / 2) {
@@ -1502,48 +1500,47 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
         }
     }
 
-    vector<double> callPayoffs = ore::data::buildScheduledVector(digitalCmsData->callPayoffs(),
-                                                                 digitalCmsData->callPayoffDates(), schedule);
+    vector<double> callPayoffs =
+        ore::data::buildScheduledVector(digitalCmsData->callPayoffs(), digitalCmsData->callPayoffDates(), schedule);
 
-    vector<double> putStrikes = ore::data::buildScheduledVector(digitalCmsData->putStrikes(),
-                                                                digitalCmsData->putStrikeDates(), schedule);
-    vector<double> putPayoffs = ore::data::buildScheduledVector(digitalCmsData->putPayoffs(),
-                                                                digitalCmsData->putPayoffDates(), schedule);
+    vector<double> putStrikes =
+        ore::data::buildScheduledVector(digitalCmsData->putStrikes(), digitalCmsData->putStrikeDates(), schedule);
+    vector<double> putPayoffs =
+        ore::data::buildScheduledVector(digitalCmsData->putPayoffs(), digitalCmsData->putPayoffDates(), schedule);
 
     Size fixingDays = cmsData->fixingDays() == Null<Size>() ? swapIndex->fixingDays() : cmsData->fixingDays();
 
     applyAmortization(notionals, data, schedule, false);
 
     DigitalCmsLeg digitalCmsLeg = DigitalCmsLeg(schedule, swapIndex)
-                                                  .withNotionals(notionals)
-                                                  .withSpreads(spreads)
-                                                  .withGearings(gearings)
-                                                  .withPaymentDayCounter(dc)
-                                                  .withPaymentAdjustment(bdc)
-                                                  .withFixingDays(fixingDays)
-                                                  .inArrears(cmsData->isInArrears())
-                                                  .withCallStrikes(callStrikes)
-                                                  .withLongCallOption(digitalCmsData->callPosition())
-                                                  .withCallATM(digitalCmsData->isCallATMIncluded())
-                                                  .withCallPayoffs(callPayoffs)
-                                                  .withPutStrikes(putStrikes)
-                                                  .withLongPutOption(digitalCmsData->putPosition())
-                                                  .withPutATM(digitalCmsData->isPutATMIncluded())
-                                                  .withPutPayoffs(putPayoffs)
-                                                  .withReplication(boost::make_shared<DigitalReplication>())
-                                                  .withNakedOption(cmsData->nakedOption());
+                                      .withNotionals(notionals)
+                                      .withSpreads(spreads)
+                                      .withGearings(gearings)
+                                      .withPaymentDayCounter(dc)
+                                      .withPaymentAdjustment(bdc)
+                                      .withFixingDays(fixingDays)
+                                      .inArrears(cmsData->isInArrears())
+                                      .withCallStrikes(callStrikes)
+                                      .withLongCallOption(digitalCmsData->callPosition())
+                                      .withCallATM(digitalCmsData->isCallATMIncluded())
+                                      .withCallPayoffs(callPayoffs)
+                                      .withPutStrikes(putStrikes)
+                                      .withLongPutOption(digitalCmsData->putPosition())
+                                      .withPutATM(digitalCmsData->isPutATMIncluded())
+                                      .withPutPayoffs(putPayoffs)
+                                      .withReplication(boost::make_shared<DigitalReplication>())
+                                      .withNakedOption(cmsData->nakedOption());
 
     if (cmsData->caps().size() > 0 || cmsData->floors().size() > 0)
         QL_FAIL("caps/floors not supported in DigitalCMSOptions");
-    
+
     if (!attachPricer)
         return digitalCmsLeg;
 
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
     QL_REQUIRE(builder, "No CMS builder found for CmsLeg");
-    boost::shared_ptr<CmsCouponPricerBuilder> cmsBuilder =
-        boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
+    boost::shared_ptr<CmsCouponPricerBuilder> cmsBuilder = boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
     auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(swapIndex->currency()));
     QL_REQUIRE(cmsPricer, "Expected CMS Pricer");
 
