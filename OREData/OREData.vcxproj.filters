@@ -337,7 +337,7 @@
       <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\asianoption.hpp">
-       <Filter>portfolio</Filter>
+      <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\optionasiandata.hpp">
       <Filter>portfolio</Filter>
@@ -851,8 +851,6 @@
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
-
-    
     <ClCompile Include="ored\utilities\to_string.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
@@ -1129,5 +1127,10 @@
     <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
+    <ClCompile Include="ored\portfolio\asianoption.cpp" />
+    <ClCompile Include="ored\portfolio\commodityasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
   </ItemGroup>
 </Project>
