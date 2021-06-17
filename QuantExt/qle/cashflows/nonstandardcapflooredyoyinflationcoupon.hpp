@@ -124,6 +124,42 @@ protected:
     Rate cap_, floor_;
 };
 
+class NonStandardYoYInflationLeg {
+public:
+    NonStandardYoYInflationLeg(const Schedule& schedule, const Calendar& cal,
+                               const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag);
+    NonStandardYoYInflationLeg& withNotionals(Real notional);
+    NonStandardYoYInflationLeg& withNotionals(const std::vector<Real>& notionals);
+    NonStandardYoYInflationLeg& withPaymentDayCounter(const DayCounter&);
+    NonStandardYoYInflationLeg& withPaymentAdjustment(BusinessDayConvention);
+    NonStandardYoYInflationLeg& withFixingDays(Natural fixingDays);
+    NonStandardYoYInflationLeg& withFixingDays(const std::vector<Natural>& fixingDays);
+    NonStandardYoYInflationLeg& withGearings(Real gearing);
+    NonStandardYoYInflationLeg& withGearings(const std::vector<Real>& gearings);
+    NonStandardYoYInflationLeg& withSpreads(Spread spread);
+    NonStandardYoYInflationLeg& withSpreads(const std::vector<Spread>& spreads);
+    NonStandardYoYInflationLeg& withCaps(Rate cap);
+    NonStandardYoYInflationLeg& withCaps(const std::vector<Rate>& caps);
+    NonStandardYoYInflationLeg& withFloors(Rate floor);
+    NonStandardYoYInflationLeg& withFloors(const std::vector<Rate>& floors);
+    NonStandardYoYInflationLeg& withInflationNotional(bool addInflationNotional_);
+    operator Leg() const;
+
+private:
+    Schedule schedule_;
+    ext::shared_ptr<ZeroInflationIndex> index_;
+    Period observationLag_;
+    std::vector<Real> notionals_;
+    DayCounter paymentDayCounter_;
+    BusinessDayConvention paymentAdjustment_;
+    Calendar paymentCalendar_;
+    std::vector<Natural> fixingDays_;
+    std::vector<Real> gearings_;
+    std::vector<Spread> spreads_;
+    std::vector<Rate> caps_, floors_;
+    bool addInflationNotional_;
+};
+
 } // namespace QuantExt
 
 #endif

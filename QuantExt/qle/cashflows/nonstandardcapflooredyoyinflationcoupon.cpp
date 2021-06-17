@@ -17,6 +17,8 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
  */
 
+#include <ql/cashflows/cashflows.hpp>
+#include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 
@@ -140,6 +142,146 @@ void NonStandardCappedFlooredYoYInflationCoupon::accept(AcyclicVisitor& v) {
         v1->visit(*this);
     else
         NonStandardYoYInflationCoupon::accept(v);
+}
+
+NonStandardYoYInflationLeg::NonStandardYoYInflationLeg(const Schedule& schedule, const Calendar& paymentCalendar,
+                                                       const ext::shared_ptr<ZeroInflationIndex>& index,
+                                                       const Period& observationLag)
+    : schedule_(schedule), index_(index), observationLag_(observationLag), paymentAdjustment_(ModifiedFollowing),
+      paymentCalendar_(paymentCalendar), addInflationNotional_(false) {}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withNotionals(Real notional) {
+    notionals_ = std::vector<Real>(1, notional);
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withNotionals(const std::vector<Real>& notionals) {
+    notionals_ = notionals;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withPaymentDayCounter(const DayCounter& dayCounter) {
+    paymentDayCounter_ = dayCounter;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withPaymentAdjustment(BusinessDayConvention convention) {
+    paymentAdjustment_ = convention;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withFixingDays(Natural fixingDays) {
+    fixingDays_ = std::vector<Natural>(1, fixingDays);
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withFixingDays(const std::vector<Natural>& fixingDays) {
+    fixingDays_ = fixingDays;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withGearings(Real gearing) {
+    gearings_ = std::vector<Real>(1, gearing);
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withGearings(const std::vector<Real>& gearings) {
+    gearings_ = gearings;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withSpreads(Spread spread) {
+    spreads_ = std::vector<Spread>(1, spread);
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withSpreads(const std::vector<Spread>& spreads) {
+    spreads_ = spreads;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withCaps(Rate cap) {
+    caps_ = std::vector<Rate>(1, cap);
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withCaps(const std::vector<Rate>& caps) {
+    caps_ = caps;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withFloors(Rate floor) {
+    floors_ = std::vector<Rate>(1, floor);
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withFloors(const std::vector<Rate>& floors) {
+    floors_ = floors;
+    return *this;
+}
+
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withInflationNotional(bool addInflationNotional) {
+    addInflationNotional_ = addInflationNotional;
+    return *this;
+}
+
+NonStandardYoYInflationLeg::operator Leg() const {
+
+    Size n = schedule_.size() - 1;
+    QL_REQUIRE(!notionals_.empty(), "no notional given");
+    QL_REQUIRE(notionals_.size() <= n, "too many nominals (" << notionals_.size() << "), only " << n << " required");
+    QL_REQUIRE(gearings_.size() <= n, "too many gearings (" << gearings_.size() << "), only " << n << " required");
+    QL_REQUIRE(spreads_.size() <= n, "too many spreads (" << spreads_.size() << "), only " << n << " required");
+    QL_REQUIRE(caps_.size() <= n, "too many caps (" << caps_.size() << "), only " << n << " required");
+    QL_REQUIRE(floors_.size() <= n, "too many floors (" << floors_.size() << "), only " << n << " required");
+
+    Leg leg;
+    leg.reserve(n);
+
+    Calendar calendar = paymentCalendar_;
+
+    Date refStart, start, refEnd, end;
+
+    for (Size i = 0; i < n; ++i) {
+        refStart = start = schedule_.date(i);
+        refEnd = end = schedule_.date(i + 1);
+        Date paymentDate = calendar.adjust(end, paymentAdjustment_);
+        if (i == 0 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1)) {
+            BusinessDayConvention bdc = schedule_.businessDayConvention();
+            refStart = schedule_.calendar().adjust(end - schedule_.tenor(), bdc);
+        }
+        if (i == n - 1 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1)) {
+            BusinessDayConvention bdc = schedule_.businessDayConvention();
+            refEnd = schedule_.calendar().adjust(start + schedule_.tenor(), bdc);
+        }
+        if (detail::get(gearings_, i, 1.0) == 0.0) { // fixed coupon
+            leg.push_back(ext::shared_ptr<CashFlow>(new FixedRateCoupon(
+                paymentDate, detail::get(notionals_, i, 1.0), detail::effectiveFixedRate(spreads_, caps_, floors_, i),
+                paymentDayCounter_, start, end, refStart, refEnd)));
+        } else {                                       // yoy inflation coupon
+            if (detail::noOption(caps_, floors_, i)) { // just swaplet
+                ext::shared_ptr<NonStandardYoYInflationCoupon> coup(new NonStandardYoYInflationCoupon(
+                    paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0), index_,
+                    observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
+                    refStart, refEnd, addInflationNotional_));
+
+                // in this case you can set a pricer
+                // straight away because it only provides computation - not data
+                ext::shared_ptr<NonStandardYoYInflationCouponPricer> pricer(new NonStandardYoYInflationCouponPricer);
+                coup->setPricer(pricer);
+                leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
+
+            } else { // cap/floorlet
+                leg.push_back(ext::shared_ptr<CashFlow>(new NonStandardCappedFlooredYoYInflationCoupon(
+                    paymentDate, detail::get(notionals_, i, 1.0), start, end, detail::get(fixingDays_, i, 0), index_,
+                    observationLag_, paymentDayCounter_, detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0),
+                    detail::get(caps_, i, Null<Rate>()), detail::get(floors_, i, Null<Rate>()), refStart, refEnd,
+                    addInflationNotional_)));
+            }
+        }
+    }
+
+    return leg;
 }
 
 } // namespace QuantExt

@@ -301,6 +301,10 @@ void YoYLegData::fromXML(XMLNode* node) {
         addInflationNotional_ = XMLUtils::getChildValueAsBool(node, "AddInflationNotional", false);
     else
         addInflationNotional_ = false;
+    if (XMLUtils::getChildNode(node, "IrregularYoY"))
+        irregularYoY_ = XMLUtils::getChildValueAsBool(node, "IrregularYoY", false);
+    else
+        irregularYoY_ = false;
 }
 
 XMLNode* YoYLegData::toXML(XMLDocument& doc) {
@@ -314,7 +318,8 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
-    XMLUtils::addChild(doc, node, "AddInflationNotional", nakedOption_);
+    XMLUtils::addChild(doc, node, "AddInflationNotional", addInflationNotional_);
+    XMLUtils::addChild(doc, node, "IrregularYoY", irregularYoY_);
     return node;
 }
 
