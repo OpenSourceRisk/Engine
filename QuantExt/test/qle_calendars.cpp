@@ -20,6 +20,7 @@
 #include <boost/test/unit_test.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/austria.hpp>
+#include <ql/time/calendars/thailand.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
@@ -31,7 +32,6 @@
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
-#include <qle/calendars/thailand.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
