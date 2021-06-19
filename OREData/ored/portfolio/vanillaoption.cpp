@@ -153,7 +153,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
                 LOG("Build VanillaForwardOption for trade " << id());
                 QL_REQUIRE(sameCcy, "Quanto payoff is not currently supported for Forward Options: Trade " << id());
                 vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
-                tradeTypeBuilder = tradeType_ + "Forward";
+                if (assetClassUnderlying_ == AssetClass::COM)
+                    tradeTypeBuilder = tradeType_ + "Forward";
             }
         }
 
@@ -171,7 +172,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European, "Only European Forward Options currently supported");
             LOG("Built VanillaForwardOption for trade " << id());
             vanilla = boost::make_shared<QuantExt::VanillaForwardOption>(payoff, exercise, forwardDate_);
-            tradeTypeBuilder = tradeType_ + "Forward";
+            if (assetClassUnderlying_ == AssetClass::COM)
+                tradeTypeBuilder = tradeType_ + "Forward";
         }
 
         // If the tradeTypeBuilder has not been modified yet..
