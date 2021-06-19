@@ -2180,13 +2180,19 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                         outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
                                                                      -foreignNotional, fxIndex);
                     }
-                    inCf =
-                        boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional, fxIndex);
+                    // if there is only one period we generate the cash flow at the period end
+                    // only if there is a final notional exchange
+                    if (leg.size() > 1 || data.notionalFinalExchange()) {
+                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
+                                                                    fxIndex);
+                    }
                 } else {
                     if (data.notionalInitialExchange()) {
                         outCf = boost::make_shared<SimpleCashFlow>(-c->nominal(), c->accrualStartDate());
                     }
-                    inCf = boost::make_shared<SimpleCashFlow>(c->nominal(), c->accrualEndDate());
+                    if (leg.size() > 1 || data.notionalFinalExchange()) {
+                        inCf = boost::make_shared<SimpleCashFlow>(c->nominal(), c->accrualEndDate());
+                    }
                 }
             } else {
                 fixingDate = fxIndex->fixingDate(c->accrualStartDate());
