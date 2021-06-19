@@ -37,7 +37,6 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
-#include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 
 using namespace QuantLib;
@@ -106,7 +105,7 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"PEN", Peru()},
                             {"PHP", Philippines()},
                             {"RON", Romania()},
-                            {"THB", QuantExt::Thailand()},
+                            {"THB", Thailand()},
                             {"CHF", QuantExt::Switzerland()},
                             {"ZA", SouthAfrica()},
                             {"MISX", Russia(Russia::MOEX)},
