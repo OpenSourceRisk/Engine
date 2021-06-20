@@ -48,7 +48,7 @@ class YoYInflationCapFloorEngine : public QuantLib::YoYInflationCapFloor::engine
 public:
     YoYInflationCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
                                const Handle<QuantLib::YoYOptionletVolatilitySurface>& vol,
-                               const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+                               const Handle<YieldTermStructure>& discountCurve);
 
     ext::shared_ptr<QuantLib::YoYInflationIndex> index() const { return index_; }
     Handle<QuantLib::YoYOptionletVolatilitySurface> volatility() const { return volatility_; }
@@ -73,7 +73,7 @@ class YoYInflationBlackCapFloorEngine : public YoYInflationCapFloorEngine {
 public:
     YoYInflationBlackCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
                                     const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
-                                    const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+                                    const Handle<YieldTermStructure>& discountCurve);
 
 protected:
     virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
@@ -84,9 +84,9 @@ protected:
 //! Unit Displaced Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
 class YoYInflationUnitDisplacedBlackCapFloorEngine : public YoYInflationCapFloorEngine {
 public:
-    YoYInflationUnitDisplacedBlackCapFloorEngine(
-        const ext::shared_ptr<QuantLib::YoYInflationIndex>&, const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
-        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+    YoYInflationUnitDisplacedBlackCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
+                                                 const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
+                                                 const Handle<YieldTermStructure>& discountCurve);
 
 protected:
     virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
@@ -99,7 +99,7 @@ class YoYInflationBachelierCapFloorEngine : public YoYInflationCapFloorEngine {
 public:
     YoYInflationBachelierCapFloorEngine(const ext::shared_ptr<QuantLib::YoYInflationIndex>&,
                                         const Handle<QuantLib::YoYOptionletVolatilitySurface>&,
-                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+                                        const Handle<YieldTermStructure>& discountCurve);
 
 protected:
     virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;

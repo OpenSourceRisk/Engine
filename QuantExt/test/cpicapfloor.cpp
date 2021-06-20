@@ -332,7 +332,7 @@ private:
 BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     CommonVars common;
 
-    Handle<YieldTermStructure> nominalTS = common.ii->zeroInflationTermStructure()->nominalTermStructure();
+    Handle<YieldTermStructure> nominalTS = common.nominalUK;
 
     // this engine is used to imply the volatility that reproduces a quoted price
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
 
     CommonVars common;
 
-    Handle<YieldTermStructure> nominalTS = common.ii->zeroInflationTermStructure()->nominalTermStructure();
+    Handle<YieldTermStructure> nominalTS = common.nominalUK;
 
     // this engine is used to imply the volatility that reproduces a quoted price
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
 BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
     CommonVars common;
 
-    Handle<YieldTermStructure> nominalTS = common.ii->zeroInflationTermStructure()->nominalTermStructure();
+    Handle<YieldTermStructure> nominalTS = common.nominalUK;
 
     // this engine is used to imply the volatility that reproduces a quoted price
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
