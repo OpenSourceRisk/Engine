@@ -559,6 +559,8 @@
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
     <ClInclude Include="qle\indexes\genericindex.hpp" />
+    <ClInclude Include="qle\indexes\ibor\ambor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\ameribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
     <ClInclude Include="qle\indexes\ibor\boebaserate.hpp" />
@@ -922,6 +924,7 @@
     <ClCompile Include="qle\indexes\fallbackiborindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\genericiborindex.cpp" />
+    <ClCompile Include="qle\indexes\ibor\ameribor.cpp" />
     <ClCompile Include="qle\indexes\ibor\boebaserate.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
     <ClCompile Include="qle\indexes\ibor\ester.cpp" />
