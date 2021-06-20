@@ -75,7 +75,7 @@ public:
         };
         boost::shared_ptr<YoYInflationTermStructure> yoyTs = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
             new PiecewiseYoYInflationCurve<Linear>(asof, TARGET(), Actual365Fixed(), Period(3, Months), Monthly,
-                                                   index->interpolated(), ratesZCII[0] / 100, nominalTs, instruments));
+                                                   index->interpolated(), ratesZCII[0] / 100, instruments));
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(

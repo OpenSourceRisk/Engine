@@ -213,7 +213,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             }
             curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
-                baseRate, nominalTs, instruments, config->tolerance()));
+                baseRate, instruments, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
@@ -276,7 +276,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
             curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
-                baseRate, nominalTs, instruments, config->tolerance()));
+                baseRate, instruments, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }

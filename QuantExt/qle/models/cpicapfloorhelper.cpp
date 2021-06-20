@@ -30,8 +30,7 @@ CpiCapFloorHelper::CpiCapFloorHelper(Option::Type type, Real baseCPI, const Date
                                      const Handle<ZeroInflationIndex>& infIndex, const Period& observationLag,
                                      Real marketPremium, CPI::InterpolationType observationInterpolation,
                                      BlackCalibrationHelper::CalibrationErrorType errorType)
-    : BlackCalibrationHelper(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), Handle<YieldTermStructure>(),
-                             errorType),
+    : BlackCalibrationHelper(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), errorType),
       // start date does not really matter ?
       instrument_(boost::shared_ptr<CPICapFloor>(new CPICapFloor(
           type, 1.0, Settings::instance().evaluationDate(), baseCPI, maturity, fixCalendar, fixConvention, payCalendar,

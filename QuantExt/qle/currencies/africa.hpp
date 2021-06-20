@@ -88,17 +88,6 @@ public:
     ZMWCurrency();
 };
 
-//! Nigerian naira
-/*! The ISO three-letter code is NGN; the numeric code is 566.
- It is divided into 100 kobo.
-
- \ingroup currencies
-*/
-class NGNCurrency : public Currency {
-public:
-    NGNCurrency();
-};
-
 //! Moroccan dirham
 /*! The ISO three-letter code is MAD; the numeric code is 504.
  It is divided into 100 santim.

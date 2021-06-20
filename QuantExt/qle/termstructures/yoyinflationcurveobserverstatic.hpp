@@ -43,8 +43,8 @@ class YoYInflationCurveObserverStatic : public YoYInflationTermStructure,
 public:
     YoYInflationCurveObserverStatic(
         const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-        Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
-        const std::vector<Date>& dates, const std::vector<Handle<Quote> >& rates,
+        Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
+        const std::vector<Handle<Quote>>& rates,
         const boost::shared_ptr<Seasonality>& seasonality = boost::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
 
@@ -89,11 +89,11 @@ protected:
 template <class Interpolator>
 YoYInflationCurveObserverStatic<Interpolator>::YoYInflationCurveObserverStatic(
     const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-    Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
-    const std::vector<Date>& dates, const std::vector<Handle<Quote> >& rates,
-    const boost::shared_ptr<Seasonality>& seasonality, const Interpolator& interpolator)
+    Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
+    const std::vector<Handle<Quote>>& rates, const boost::shared_ptr<Seasonality>& seasonality,
+    const Interpolator& interpolator)
     : YoYInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency,
-                                indexIsInterpolated, yTS, seasonality),
+                                indexIsInterpolated, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
       quotes_(rates) {
 

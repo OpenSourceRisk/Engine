@@ -390,7 +390,7 @@ CPILeg::operator Leg() const {
                     detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
 
                 // set a pricer for the underlying coupon straight away because it only provides computation - not data
-                ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer);
+                ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer(Handle<YieldTermStructure>()));
                 coup->setPricer(pricer);
 
                 if (detail::noOption(caps_, floors_, i)) { // just swaplet

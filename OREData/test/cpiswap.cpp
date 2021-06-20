@@ -153,7 +153,7 @@ public:
         Rate baseZeroRate = ratesZCII[0] / 100.0;
         boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
             asof_, UnitedKingdom(), ActualActual(), Period(2, Months), ii->frequency(), ii->interpolated(),
-            baseZeroRate, intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom()), instruments));
+            baseZeroRate, instruments));
         pCPIts->recalculate();
         cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         hUKRPI = Handle<ZeroInflationIndex>(

@@ -18,7 +18,6 @@
 */
 
 #include <ql/currencies/exchangeratemanager.hpp>
-#include <ql/experimental/futures/overnightindexfutureratehelper.hpp>
 #include <ql/math/functional.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
@@ -31,6 +30,7 @@
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
+#include <ql/termstructures/yield/overnightindexfutureratehelper.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/imm.hpp>

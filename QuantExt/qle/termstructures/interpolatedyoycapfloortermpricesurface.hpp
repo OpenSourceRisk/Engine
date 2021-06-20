@@ -316,9 +316,9 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     // we pick this as the end of the curve
     Rate baseYoYRate = atmYoYSwapRate(referenceDate()); //!
 
-    boost::shared_ptr<PiecewiseYoYInflationCurve<I1D> > pYITS(new PiecewiseYoYInflationCurve<I1D>(
+    boost::shared_ptr<PiecewiseYoYInflationCurve<I1D>> pYITS(new PiecewiseYoYInflationCurve<I1D>(
         nominalTermStructure()->referenceDate(), calendar(), dayCounter(), observationLag(), yoyIndex()->frequency(),
-        yoyIndex()->interpolated(), baseYoYRate, nominalH, YYhelpers));
+        yoyIndex()->interpolated(), baseYoYRate, YYhelpers));
     pYITS->recalculate();
     yoy_ = pYITS; // store
 

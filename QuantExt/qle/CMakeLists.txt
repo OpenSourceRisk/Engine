@@ -242,7 +242,6 @@ termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
-time/actual364.cpp
 time/yearcounter.cpp
 utilities/inflation.cpp)
 
@@ -615,7 +614,6 @@ termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
-time/actual364.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 utilities/inflation.hpp

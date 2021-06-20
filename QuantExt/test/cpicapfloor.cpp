@@ -242,9 +242,9 @@ struct CommonVars {
         // we can use historical or first ZCIIS for this
         // we know historical is WAY off market-implied, so use market implied flat.
         baseZeroRate = zciisData[0].rate / 100.0;
-        boost::shared_ptr<PiecewiseZeroInflationCurve<Linear> > pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-            evaluationDate, calendar, dcZCIIS, observationLag, ii->frequency(), ii->interpolated(), baseZeroRate,
-            Handle<YieldTermStructure>(nominalTS), helpers));
+        boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
+            new PiecewiseZeroInflationCurve<Linear>(evaluationDate, calendar, dcZCIIS, observationLag, ii->frequency(),
+                                                    ii->interpolated(), baseZeroRate, helpers));
         pCPIts->recalculate();
         cpiUK.linkTo(pCPIts);
         hii.linkTo(ii);
@@ -306,7 +306,7 @@ public:
                                    Rate zeroRate, const Period& observationLag, Frequency frequency, bool indexIsInterp,
                                    const Handle<YieldTermStructure>& ts)
         : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, zeroRate, observationLag, frequency,
-                                     indexIsInterp, ts),
+                                     indexIsInterp),
           zeroRate_(zeroRate) {}
 
     Date maxDate() const { return Date::maxDate(); }

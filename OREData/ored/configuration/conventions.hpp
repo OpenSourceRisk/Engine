@@ -25,11 +25,11 @@
 
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/schedule.hpp>
-#include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <ql/instruments/overnightindexfuture.hpp>
 #include <ql/option.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
@@ -284,13 +284,13 @@ public:
     FutureConvention(const string& id, const string& index, const Conventions* conventions = nullptr);
     //! Index based constructor taking in addition a netting type for ON indices and a date generation rule
     FutureConvention(const string& id, const string& index,
-                     const QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType,
+                     const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
                      const DateGenerationRule dateGeneration, const Conventions* conventions = nullptr);
     //@}
     //! \name Inspectors
     //@{
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
-    QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
+    QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     //@}
 
@@ -304,7 +304,7 @@ public:
 private:
     string strIndex_;
     boost::shared_ptr<IborIndex> index_;
-    QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType_;
+    QuantLib::RateAveraging::Type overnightIndexFutureNettingType_;
     DateGenerationRule dateGenerationRule_;
     const Conventions* conventions_;
 };
