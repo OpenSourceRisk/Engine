@@ -645,18 +645,24 @@ Alternatively, compile all Boost libraries directly from the source code:
 During the installation, make sure you install the Visual
 C++ support under the Programming Languages features (disabled by default).
 
-\item Since the release of Visual Studio 2019, the user property files, 'Microsoft.Cpp.Win32.user' and
+\item Configure boost paths: \\
+
+\medskip
+  Since the release of Visual Studio 2019, the user property files 'Microsoft.Cpp.Win32.user' and
   'Microsoft.Cpp.x64.user' are no longer created on installation. There are now 2 ways to configure the boost paths for Visual Studio.
   
-  1) Create and use an environment variables:
-  	- {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
-  	- {\tt \%BOOST_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14\.0} 
-	- {\tt \%BOOST_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14\.0} 
+\begin{enumerate}  
+\item Set environment variables:
+	\begin{itemize}
+  	\item  {\tt \%BOOST\%} pointing to your directory, e.g, {\tt C:{\bs}boost\_1\_72\_0} 
+  	\item {\tt \%BOOST\_LIB32\%} pointing to your Win32 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib32\-msvc\-14.0} 
+	\item  {\tt \%BOOST\_LIB64\%} pointing to your x64 lib directory, e.g, {\tt C:{\bs}boost\_1\_72\_0{\bs}lib64\-msvc\-14.0} 
+     \end{itemize}
      These are used by the ore user.props files.
-     
-  2) Create you own property file and add as a property sheet following the instructions at \url{https://docs.microsoft.com/en-us/cpp/build/create-reusable-property-configurations?view=msvc-160&viewFallbackFrom=vs-2019}
+\item Create you own property file and add as a property sheet following the instructions at \url{https://docs.microsoft.com/en-us/cpp/build/create-reusable-property-configurations?view=msvc-160&viewFallbackFrom=vs-2019}
+\end{enumerate}
 
-  Alternatively. for older versions of Visual Studio you can use the Micordoft user property files.Open any of the Visual Studio 
+  For older versions of Visual Studio you can use the Microsoft user property files. Open any of the Visual Studio 
   solution files in item 3 below and select View $\rightarrow$ Other Windows $\rightarrow$ Property Manager. It does not 
   matter which solution you open, if it is for example the Quant\-Ext solution you should see two Projects 'QuantExt' and 
   'quantexttestsuite' in the property manager. Expand any of them (e.g. QuantExt) and then one of the Win32 or x64 
