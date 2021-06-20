@@ -51,17 +51,16 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
-#include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/currencycomparator.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/actual364.hpp>
 #include <qle/time/yearcounter.hpp>
-#include <qle/currencies/currencycomparator.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <regex>
@@ -266,7 +265,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"SE", Sweden()},
         {"CH", QuantExt::Switzerland()},
         {"TW", Taiwan()},
-        {"TH", QuantExt::Thailand()},
+        {"TH", Thailand()},
         {"TR", Turkey()},
         {"UA", Ukraine()},
         {"GB", UnitedKingdom()},
@@ -316,7 +315,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"SWE", Sweden()},
         {"CHE", QuantExt::Switzerland()},
         {"TWN", Taiwan()},
-        {"THA", QuantExt::Thailand()},
+        {"THA", Thailand()},
         {"TUR", Turkey()},
         {"UKR", Ukraine()},
         {"GBR", UnitedKingdom()},
@@ -364,7 +363,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"CHF", QuantExt::Switzerland()},
         {"EUR", TARGET()},
         {"TWD", Taiwan()},
-        {"THB", QuantExt::Thailand()},
+        {"THB", Thailand()},
         {"TRY", Turkey()},
         {"UAH", Ukraine()},
         {"GBP", UnitedKingdom()},
@@ -372,15 +371,15 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"BEF", Belgium()},
         {"LUF", Luxembourg()},
         {"ATS", QuantExt::Austria()},
-         
+
         // Minor Currencies
-        { "GBp", UnitedKingdom() },
-        { "GBX", UnitedKingdom() },
-        { "ILa", QuantLib::Israel() },
-        { "ILX", QuantLib::Israel() },
-        { "ZAc", SouthAfrica() },
-        { "ZAC", SouthAfrica() },
-        { "ZAX", SouthAfrica() },
+        {"GBp", UnitedKingdom()},
+        {"GBX", UnitedKingdom()},
+        {"ILa", QuantLib::Israel()},
+        {"ILX", QuantLib::Israel()},
+        {"ZAc", SouthAfrica()},
+        {"ZAC", SouthAfrica()},
+        {"ZAX", SouthAfrica()},
 
         // fallback to WeekendsOnly for these emerging ccys
         {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
