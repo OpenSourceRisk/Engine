@@ -78,6 +78,7 @@ private:
     bool useMarketYoyCurve_;
     boost::shared_ptr<YoYInflationTermStructure> yoyTs_;
     boost::shared_ptr<Conventions> conventions_;
+    Handle<YieldTermStructure> discountCurve_;
 };
 } // namespace data
 } // namespace ore

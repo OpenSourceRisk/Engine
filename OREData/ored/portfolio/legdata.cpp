@@ -1244,16 +1244,20 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     bool finalFlowCapFloor = cpiLegData->finalFlowCap() != Null<Real>() || cpiLegData->finalFlowFloor() != Null<Real>();
 
     applyAmortization(notionals, data, schedule, false);
-   
-    QuantExt::CPILeg cpiLeg = QuantExt::CPILeg(schedule, index, cpiLegData->baseCPI(), observationLag)
-                                    .withNotionals(notionals)
-                                    .withPaymentDayCounter(dc)
-                                    .withPaymentAdjustment(bdc)
-                                    .withPaymentCalendar(schedule.calendar())
-                                    .withFixedRates(rates)
-                                    .withObservationInterpolation(interpolationMethod)
-                                    .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
-                                    .withSubtractInflationNominalAllCoupons(cpiLegData->subtractInflationNominalCoupons());
+
+    QuantExt::CPILeg cpiLeg =
+        QuantExt::CPILeg(schedule, index,
+                         engineFactory->market()->discountCurve(data.currency(),
+                                                                engineFactory->configuration(MarketContext::pricing)),
+                         cpiLegData->baseCPI(), observationLag)
+            .withNotionals(notionals)
+            .withPaymentDayCounter(dc)
+            .withPaymentAdjustment(bdc)
+            .withPaymentCalendar(schedule.calendar())
+            .withFixedRates(rates)
+            .withObservationInterpolation(interpolationMethod)
+            .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
+            .withSubtractInflationNominalAllCoupons(cpiLegData->subtractInflationNominalCoupons());
 
     // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
     // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate

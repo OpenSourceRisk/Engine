@@ -221,13 +221,13 @@ Real CappedFlooredCPICashFlow::amount() const {
     return totalAmount;
 }
 
-CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationIndex>& index, const Real baseCPI,
-               const Period& observationLag)
-    : schedule_(schedule), index_(index), baseCPI_(baseCPI), observationLag_(observationLag),
+CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationIndex>& index,
+               const Handle<YieldTermStructure>& rateCurve, const Real baseCPI, const Period& observationLag)
+    : schedule_(schedule), index_(index), rateCurve_(rateCurve), baseCPI_(baseCPI), observationLag_(observationLag),
       paymentDayCounter_(Thirty360()), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
       spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()),
-      subtractInflationNominalAllCoupons_(false), startDate_(schedule_.dates().front())  {
+      subtractInflationNominalAllCoupons_(false), startDate_(schedule_.dates().front()) {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
 
@@ -390,7 +390,7 @@ CPILeg::operator Leg() const {
                     detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
 
                 // set a pricer for the underlying coupon straight away because it only provides computation - not data
-                ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer(Handle<YieldTermStructure>()));
+                ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer(Handle<YieldTermStructure>(rateCurve_)));
                 coup->setPricer(pricer);
 
                 if (detail::noOption(caps_, floors_, i)) { // just swaplet

@@ -51,6 +51,16 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
         const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config =
             curveConfigs.inflationCapFloorVolCurveConfig(spec.curveConfigID());
 
+        auto it = yieldCurves.find(config->yieldTermStructure());
+        if (it != yieldCurves.end()) {
+            discountCurve_ = it->second->handle();
+        } else {
+            QL_FAIL("The yield term structure, " << config->yieldTermStructure()
+                                                 << ", required in the building "
+                                                    "of the curve, "
+                                                 << spec.name() << ", was not found.");
+        }
+
         switch (config->quoteType()) {
         case InflationCapFloorVolatilityCurveConfig::QuoteType::Price:
             buildFromPrices(asof, spec, loader, config, yieldCurves, inflationCurves);
@@ -76,17 +86,6 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
     map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
 
     DLOG("Build InflationCapFloorVolCurve " << spec.name() << " from vols");
-
-    Handle<YieldTermStructure> yts;
-    auto it = yieldCurves.find(config->yieldTermStructure());
-    if (it != yieldCurves.end()) {
-        yts = it->second->handle();
-    } else {
-        QL_FAIL("The nominal term structure, " << config->yieldTermStructure()
-                                               << ", required in the building "
-                                                  "of the curve, "
-                                               << spec.name() << ", was not found.");
-    }
 
     // Volatility type
     MarketDatum::QuoteType volatilityType;
@@ -199,7 +198,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
         }
 
         boost::shared_ptr<YoYInflationOptionletVolStripper> volStripper =
-            boost::make_shared<YoYInflationOptionletVolStripper>(capVol, index, yts, quoteVolatilityType);
+            boost::make_shared<YoYInflationOptionletVolStripper>(capVol, index, discountCurve_, quoteVolatilityType);
         yoyVolSurface_ = volStripper->yoyInflationCapFloorVolSurface();
 
     } else if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
@@ -256,17 +255,6 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
 
     // Required by QuantLib price surface constructores but apparently not used
     Real startRate = 0.0;
-
-    Handle<YieldTermStructure> yts;
-    auto it = yieldCurves.find(config->yieldTermStructure());
-    if (it != yieldCurves.end()) {
-        yts = it->second->handle();
-    } else {
-        QL_FAIL("The nominal term structure, " << config->yieldTermStructure()
-                                               << ", required in the building "
-                                                  "of the curve, "
-                                               << spec.name() << ", was not found.");
-    }
 
     std::vector<Period> terms = parseVectorOfValues<Period>(config->tenors(), &parsePeriod);
     std::vector<Real> capStrikes = parseVectorOfValues<Real>(config->capStrikes(), &parseReal);
@@ -404,23 +392,22 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         surface_ = boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
             new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
                 1.0, startRate, config->observationLag(), config->calendar(), config->businessDayConvention(),
-                config->dayCounter(), Handle<ZeroInflationIndex>(index), yts, capStrikes, floorStrikes, terms, cPrice,
-                fPrice));
+                config->dayCounter(), Handle<ZeroInflationIndex>(index), discountCurve_, capStrikes, floorStrikes,
+                terms, cPrice, fPrice));
 
         boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>> cpiPriceSurfacePtr =
             boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
                 1.0, startRate, config->observationLag(), config->calendar(), config->businessDayConvention(),
-                config->dayCounter(), Handle<ZeroInflationIndex>(index), yts, capStrikes, floorStrikes, terms, cPrice,
-                fPrice);
+                config->dayCounter(), Handle<ZeroInflationIndex>(index), discountCurve_, capStrikes, floorStrikes,
+                terms, cPrice, fPrice);
 
         // cast
         surface_ = cpiPriceSurfacePtr;
 
-        Handle<YieldTermStructure> nominalTS = index->zeroInflationTermStructure()->nominalTermStructure();
         boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
             boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(
-                nominalTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>()); // vol surface can be empty, will be
-                                                                                // set in the striping process
+                discountCurve_, QuantLib::Handle<QuantLib::CPIVolatilitySurface>()); // vol surface can be empty, will
+                                                                                     // be set in the striping process
 
         try {
 
@@ -469,9 +456,10 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                     boost::dynamic_pointer_cast<ZeroInflationTermStructure>(ts);
                 QL_REQUIRE(zeroTs,
                            "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
-                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(parseZeroInflationIndex(
-                    config->index(), true, Handle<ZeroInflationTermStructure>(zeroTs), conventions_), true,
-                    Handle<YoYInflationTermStructure>());
+                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                    parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>(zeroTs),
+                                            conventions_),
+                    true, Handle<YoYInflationTermStructure>());
             }
         } else {
             QL_FAIL("The inflation curve, " << config->indexCurve()
@@ -483,7 +471,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>
             yoySurface = boost::make_shared<
                 QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
-                0, config->observationLag(), index, startRate, yts, config->dayCounter(), config->calendar(),
+                0, config->observationLag(), index, startRate, discountCurve_, config->dayCounter(), config->calendar(),
                 config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice);
 
         std::vector<Period> optionletTerms = {yoySurface->maturities().front()};
@@ -509,9 +497,8 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         yoyTs_ = yoySurface->YoYTS();
         boost::shared_ptr<YoYInflationIndex> yoyIndex = index->clone(Handle<YoYInflationTermStructure>(yoyTs_));
 
-        Handle<YieldTermStructure> nominalTS = yoyIndex->yoyInflationTermStructure()->nominalTermStructure();
         boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
-            boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, nominalTS);
+            boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs, discountCurve_);
 
         yoyVolSurface_ = boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
             yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
