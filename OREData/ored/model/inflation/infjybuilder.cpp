@@ -273,7 +273,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
     // Create the engine
     auto zts = zeroInflationIndex_->zeroInflationTermStructure();
-    auto yts = zts->nominalTermStructure();
+    Handle<YieldTermStructure> yts = market_->discountCurve(zeroInflationIndex_->currency().code(), configuration_);
     auto engine = boost::make_shared<CPIBlackCapFloorEngine>(yts, cpiVolatility_);
 
     // CPI cap floor calibration instrument details. Assumed to equal those from the index and market structures.
@@ -372,7 +372,7 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
     auto yoyTs = yoyInflationIndex_->yoyInflationTermStructure();
     QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure "
                                    << "to build a year on year cap floor calibration basket.");
-    auto yts = yoyTs->nominalTermStructure();
+    Handle<YieldTermStructure> yts = market_->discountCurve(yoyInflationIndex_->currency().code(), configuration_);
     QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure "
                                  << "to build a year on year cap floor calibration basket.");
     QL_REQUIRE(!yoyVolatility_.empty(), "InfJyBuilder: need a valid year on year volatility "
@@ -491,7 +491,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     auto yoyTs = yoyInflationIndex_->yoyInflationTermStructure();
     QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure " <<
         "to build a year on year swap calibration basket.");
-    auto yts = yoyTs->nominalTermStructure();
+    Handle<YieldTermStructure> yts = market_->discountCurve(yoyInflationIndex_->currency().code(), configuration_);
     QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure " <<
         "to build a year on year swap calibration basket.");
 

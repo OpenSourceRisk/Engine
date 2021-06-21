@@ -210,7 +210,7 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
-    Handle<YieldTermStructure> nominalTS = inflationIndex_->zeroInflationTermStructure()->nominalTermStructure();
+    Handle<YieldTermStructure> nominalTS = market_->discountCurve(inflationIndex_->currency().code(), configuration_);
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
         boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS, infVol_);
 
@@ -276,7 +276,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
     if (!referenceCalibrationGrid_.empty())
         referenceCalibrationDates = DateGrid(referenceCalibrationGrid_).dates();
 
-    Handle<YieldTermStructure> nominalTS = inflationIndex_->zeroInflationTermStructure()->nominalTermStructure();
+    Handle<YieldTermStructure> nominalTS = market_->discountCurve(inflationIndex_->currency().code(), configuration_);
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
         boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS, infVol_);
 
