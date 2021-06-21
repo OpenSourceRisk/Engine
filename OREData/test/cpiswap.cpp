@@ -281,6 +281,11 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
                      .withObservationInterpolation(CPI::Flat)
                      .withPaymentDayCounter(ActualActual())
                      .withPaymentAdjustment(Following);
+    auto pricer = boost::make_shared<CPICouponPricer>(market->hGBP->forwardingTermStructure());
+    for (auto const& c : cpiLeg) {
+        if (auto cpn = boost::dynamic_pointer_cast<CPICoupon>(c))
+            cpn->setPricer(pricer);
+    }
 
     QuantLib::Swap qlSwap(floatLeg, cpiLeg);
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->hGBP->forwardingTermStructure());

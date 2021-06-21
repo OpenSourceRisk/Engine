@@ -1379,7 +1379,9 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
                                  .withPaymentAdjustment(bdc)
                                  .withFixingDays(yoyLegData->fixingDays())
                                  .withGearings(gearings)
-                                 .withSpreads(spreads);
+                                 .withSpreads(spreads)
+                                 .withRateCurve(engineFactory->market()->discountCurve(
+                                     data.currency(), engineFactory->configuration(MarketContext::pricing)));
 
     if (couponCap)
         yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
