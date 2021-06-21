@@ -102,8 +102,8 @@ void NonStandardYoYInflationCouponPricer::initialize(const InflationCoupon& coup
     spread_ = coupon_->spread();
     paymentDate_ = coupon_->date();
     rateCurve_ = !nominalTermStructure_.empty() ? nominalTermStructure_
-                                                : ext::dynamic_pointer_cast<YoYInflationIndex>(coupon.index())
-                                                      ->yoyInflationTermStructure()
+                                                : ext::dynamic_pointer_cast<ZeroInflationIndex>(coupon.index())
+                                                      ->zeroInflationTermStructure()
                                                       ->nominalTermStructure();
 
     // past or future fixing is managed in YoYInflationIndex::fixing()
