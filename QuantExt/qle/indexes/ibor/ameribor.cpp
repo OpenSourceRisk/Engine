@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016-2021 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -15,3 +15,13 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
+#include <qle/indexes/ibor/ameribor.hpp>
+
+using namespace QuantLib;
+
+namespace QuantExt {
+
+USDAmeribor::USDAmeribor(const Handle<YieldTermStructure>& h)
+  : OvernightIndex("USD-AMERIBOR", 0, USDCurrency(), UnitedStates(), Actual360(), h) {}
+} // namespace QuantExt

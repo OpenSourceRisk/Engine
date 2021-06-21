@@ -58,6 +58,7 @@ indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
+indexes/ibor/ameribor.cpp
 indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
 indexes/ibor/ester.cpp
@@ -317,6 +318,8 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
+indexes/ibor/ambor.hpp
+indexes/ibor/ameribor.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/boebaserate.hpp
 indexes/ibor/brlcdi.hpp

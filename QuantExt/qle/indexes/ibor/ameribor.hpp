@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016-2021 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -15,3 +15,30 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
+/*! \file ameribor.hpp
+    \brief AMERIBOR overnight index, https://ameribor.net
+    \ingroup indexes
+*/
+
+#ifndef quantext_ameribor_hpp
+#define quantext_ameribor_hpp
+
+#include <ql/currencies/america.hpp>
+#include <ql/indexes/iborindex.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
+#include <ql/time/daycounters/actual360.hpp>
+
+namespace QuantExt {
+using namespace QuantLib;
+
+//! AMERIBOR overnight rate
+
+class USDAmeribor : public QuantLib::OvernightIndex {
+public:
+    explicit USDAmeribor(const QuantLib::Handle<YieldTermStructure>& h = QuantLib::Handle<YieldTermStructure>());
+};
+
+} // namespace QuantExt
+
+#endif

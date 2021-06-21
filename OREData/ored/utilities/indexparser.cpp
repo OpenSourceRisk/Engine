@@ -47,6 +47,8 @@
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/ibor/ambor.hpp>
+#include <qle/indexes/ibor/ameribor.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
@@ -284,7 +286,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"GBP-SONIA", boost::make_shared<Sonia>()},        {"JPY-TONAR", boost::make_shared<Tonar>()},
         {"CHF-TOIS", boost::make_shared<CHFTois>()},       {"CHF-SARON", boost::make_shared<CHFSaron>()},
         {"USD-FedFunds", boost::make_shared<FedFunds>()},  {"USD-SOFR", boost::make_shared<Sofr>()},
-        {"USD-Prime", boost::make_shared<PrimeIndex>()},   {"AUD-AONIA", boost::make_shared<Aonia>()},
+        {"USD-Prime", boost::make_shared<PrimeIndex>()},   {"USD-AMERIBOR", boost::make_shared<USDAmeribor>()},
+        {"AUD-AONIA", boost::make_shared<Aonia>()},
         {"CAD-CORRA", boost::make_shared<CORRA>()},        {"DKK-DKKOIS", boost::make_shared<DKKOis>()},
         {"SEK-SIOR", boost::make_shared<SEKSior>()},       {"COP-IBR", boost::make_shared<COPIbr>()},
         {"BRL-CDI", boost::make_shared<BRLCdi>()},         {"NOK-NOWA", boost::make_shared<Nowa>()},
@@ -303,6 +306,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>()},
         {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},
         {"EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>()},
+        {"USD-AMBOR", boost::make_shared<IborIndexParserWithPeriod<USDAmbor>>()},
         {"USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>()},
         {"GBP-LIBOR", boost::make_shared<IborIndexParserWithPeriod<GBPLibor>>()},
         {"JPY-LIBOR", boost::make_shared<IborIndexParserWithPeriod<JPYLibor>>()},

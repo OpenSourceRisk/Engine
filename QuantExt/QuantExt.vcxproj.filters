@@ -18,6 +18,12 @@
     <ClInclude Include="qle\indexes\genericiborindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ambor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ameribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -1630,6 +1636,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\ameribor.cpp">
+      <Filter>indexes\ibor</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\ibor\boebaserate.cpp">
       <Filter>indexes\ibor</Filter>
