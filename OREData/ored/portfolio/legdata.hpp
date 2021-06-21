@@ -886,7 +886,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
-Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,

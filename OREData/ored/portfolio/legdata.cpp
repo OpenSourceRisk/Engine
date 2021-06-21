@@ -20,6 +20,7 @@
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
@@ -58,6 +59,7 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
 
+#include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
@@ -1336,7 +1338,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     return leg;
 }
 
-Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
     boost::shared_ptr<YoYLegData> yoyLegData = boost::dynamic_pointer_cast<YoYLegData>(data.concreteLegData());
     QL_REQUIRE(yoyLegData, "Wrong LegType, expected YoY, got " << data.legType());
@@ -1351,56 +1353,108 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
         buildScheduledVectorNormalised(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule, 0.0);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
+    bool irregularYoY = yoyLegData->irregularYoY();
     bool couponCap = yoyLegData->caps().size() > 0;
     bool couponFloor = yoyLegData->floors().size() > 0;
     bool couponCapFloor = yoyLegData->caps().size() > 0 || yoyLegData->floors().size() > 0;
     bool addInflationNotional = yoyLegData->addInflationNotional();
 
     applyAmortization(notionals, data, schedule, false);
+    Leg leg;
+    if (!irregularYoY) {
+        auto yoyIndex = boost::dynamic_pointer_cast<YoYInflationIndex>(index);
+        QL_REQUIRE(yoyIndex, "Need a YoY Inflation Index");
+        QuantExt::yoyInflationLeg yoyLeg =
+            QuantExt::yoyInflationLeg(schedule, schedule.calendar(), yoyIndex, observationLag)
+                .withNotionals(notionals)
+                .withPaymentDayCounter(dc)
+                .withPaymentAdjustment(bdc)
+                .withFixingDays(yoyLegData->fixingDays())
+                .withGearings(gearings)
+                .withSpreads(spreads)
+                .withInflationNotional(addInflationNotional);
 
-    QuantExt::yoyInflationLeg yoyLeg = QuantExt::yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
-                                           .withNotionals(notionals)
-                                           .withPaymentDayCounter(dc)
-                                           .withPaymentAdjustment(bdc)
-                                           .withFixingDays(yoyLegData->fixingDays())
-                                           .withGearings(gearings)
-                                           .withSpreads(spreads)
-                                           .withInflationNotional(addInflationNotional);
+        if (couponCap)
+            yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
 
-    if (couponCap)
-        yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
+        if (couponFloor)
+            yoyLeg.withFloors(buildScheduledVector(yoyLegData->floors(), yoyLegData->floorDates(), schedule));
 
-    if (couponFloor)
-        yoyLeg.withFloors(buildScheduledVector(yoyLegData->floors(), yoyLegData->floorDates(), schedule));
+        leg = yoyLeg.operator Leg();
 
-    Leg leg = yoyLeg.operator Leg();
+        if (couponCapFloor) {
+            // get a coupon pricer for the leg
+            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredYYLeg");
+            QL_REQUIRE(builder, "No builder found for CapFlooredYYLeg");
+            boost::shared_ptr<CapFlooredYoYLegEngineBuilder> cappedFlooredYoYBuilder =
+                boost::dynamic_pointer_cast<CapFlooredYoYLegEngineBuilder>(builder);
+            string indexname = yoyIndex->name();
+            boost::shared_ptr<InflationCouponPricer> couponPricer =
+                cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
 
-    if (couponCapFloor) {
-        // get a coupon pricer for the leg
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredYYLeg");
-        QL_REQUIRE(builder, "No builder found for CapFlooredYYLeg");
-        boost::shared_ptr<CapFlooredYoYLegEngineBuilder> cappedFlooredYoYBuilder =
-            boost::dynamic_pointer_cast<CapFlooredYoYLegEngineBuilder>(builder);
-        string indexname = index->name();
-        boost::shared_ptr<InflationCouponPricer> couponPricer =
-            cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
+            // set coupon pricer for the leg
 
-        // set coupon pricer for the leg
+            for (Size i = 0; i < leg.size(); i++) {
+                boost::dynamic_pointer_cast<QuantExt::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
+                    boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
+            }
 
-        for (Size i = 0; i < leg.size(); i++) {
-            boost::dynamic_pointer_cast<QuantExt::CappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
-                boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
+            // build naked option leg if required
+            if (yoyLegData->nakedOption()) {
+                leg = StrippedCappedFlooredYoYInflationCouponLeg(leg);
+                for (auto const& t : leg) {
+                    auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
+                }
+            }
         }
+    } else {
 
-        // build naked option leg if required
-        if (yoyLegData->nakedOption()) {
-            leg = StrippedCappedFlooredYoYInflationCouponLeg(leg);
-            for (auto const& t : leg) {
-                auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
+        auto zcIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
+        QL_REQUIRE(zcIndex, "Need a Zero Coupon Inflation Index");
+        QuantExt::NonStandardYoYInflationLeg yoyLeg =
+            QuantExt::NonStandardYoYInflationLeg(schedule, schedule.calendar(), zcIndex, observationLag)
+                .withNotionals(notionals)
+                .withPaymentDayCounter(dc)
+                .withPaymentAdjustment(bdc)
+                .withFixingDays(yoyLegData->fixingDays())
+                .withGearings(gearings)
+                .withSpreads(spreads)
+                .withInflationNotional(addInflationNotional);
+
+        if (couponCap)
+            yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
+
+        if (couponFloor)
+            yoyLeg.withFloors(buildScheduledVector(yoyLegData->floors(), yoyLegData->floorDates(), schedule));
+
+        leg = yoyLeg.operator Leg();
+
+        if (couponCapFloor) {
+            // get a coupon pricer for the leg
+            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredNonStdYYLeg");
+            QL_REQUIRE(builder, "No builder found for CapFlooredNonStdYYLeg");
+            boost::shared_ptr<CapFlooredNonStandardYoYLegEngineBuilder> cappedFlooredYoYBuilder =
+                boost::dynamic_pointer_cast<CapFlooredNonStandardYoYLegEngineBuilder>(builder);
+            string indexname = zcIndex->name();
+            boost::shared_ptr<InflationCouponPricer> couponPricer =
+                cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
+
+            // set coupon pricer for the leg
+
+            for (Size i = 0; i < leg.size(); i++) {
+                boost::dynamic_pointer_cast<QuantExt::NonStandardCappedFlooredYoYInflationCoupon>(leg[i])->setPricer(
+                    boost::dynamic_pointer_cast<QuantExt::NonStandardYoYInflationCouponPricer>(couponPricer));
+            }
+
+            // build naked option leg if required
+            if (yoyLegData->nakedOption()) {
+                leg = StrippedCappedFlooredYoYInflationCouponLeg(leg);
+                for (auto const& t : leg) {
+                    auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
+                }
             }
         }
     }
-
     return leg;
 }
 

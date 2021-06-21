@@ -32,6 +32,7 @@
 
 #include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
+#include <qle/cashflows/yoyinflationcoupon.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
