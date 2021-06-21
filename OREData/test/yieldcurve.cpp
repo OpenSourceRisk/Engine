@@ -234,36 +234,21 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
         boost::make_shared<YieldCurveConfig>("JPY6M", "JPY 6M curve", "JPY", "", segments);
     curveConfigs.yieldCurveConfig("JPY6M") = jpyYieldConfig;
 
+    MarketDataLoader loader;
+
+    // QL >= 1.19 should not throw, no matter if the float convention has the correct calendar
+
     Conventions conventions;
     boost::shared_ptr<Convention> convention =
         boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
     conventions.add(convention);
 
-    MarketDataLoader loader;
+    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
 
-    // Construction should fail due to missing fixing on August 28th, 2015
-    auto checker = [](const Error& ex) -> bool {
-        return string(ex.what()).find("Missing JPYLibor6M Actual/360 fixing for August 28th, 2015") != string::npos;
-    };
-    BOOST_CHECK_EXCEPTION(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions), Error, checker);
-
-    // Change calendar in conventions to Japan & London and the curve building should not throw an exception
     conventions.clear();
     convention = boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP,UK", "Semiannual", "MF", "A365",
                                                       "JPY-LIBOR-6M");
     conventions.add(convention);
-    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
-
-    // Reapply old convention but load necessary fixing and the curve building should still not throw an exception
-    conventions.clear();
-    convention =
-        boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
-    conventions.add(convention);
-
-    vector<Real> fixings{0.0013086};
-    TimeSeries<Real> fixingHistory(Date(28, August, 2015), fixings.begin(), fixings.end());
-    IndexManager::instance().setHistory("JPYLibor6M Actual/360", fixingHistory);
-
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
 }
 
