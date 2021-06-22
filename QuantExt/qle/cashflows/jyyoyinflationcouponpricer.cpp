@@ -28,7 +28,7 @@ using QuantLib::Size;
 namespace QuantExt {
 
 JyYoYInflationCouponPricer::JyYoYInflationCouponPricer(const boost::shared_ptr<CrossAssetModel>& model, Size index)
-    : YoYInflationCouponPricer(model_->irlgm1f(model_->ccyIndex(model->infjy(index)->currency()))->termStructure()),
+    : YoYInflationCouponPricer(model->irlgm1f(model->ccyIndex(model->infjy(index)->currency()))->termStructure()),
       model_(model), index_(index) {
 
     Size irIdx = model_->ccyIndex(model_->infjy(index_)->currency());

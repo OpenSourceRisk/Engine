@@ -59,10 +59,12 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     inflationIndex_ =
         boost::dynamic_pointer_cast<ZeroInflationIndex>(*market_->zeroInflationIndex(data_->index(), configuration_));
     QL_REQUIRE(inflationIndex_, "DkBuilder: requires ZeroInflationIndex, got " << data_->index());
+    rateCurve_ = market_->discountCurve(inflationIndex_->currency().code(), configuration_);
     infVol_ = market_->cpiInflationCapFloorVolatilitySurface(data_->index(), configuration_);
 
     // register with market observables except vols
     marketObserver_->registerWith(inflationIndex_);
+    marketObserver_->registerWith(rateCurve_);
 
     // register the builder with the market observer
     registerWith(marketObserver_);
@@ -210,9 +212,8 @@ Real InfDkBuilder::optionStrikeValue(const Size j) const {
 bool InfDkBuilder::volSurfaceChanged(const bool updateCache) const {
     bool hasUpdated = false;
 
-    Handle<YieldTermStructure> nominalTS = market_->discountCurve(inflationIndex_->currency().code(), configuration_);
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS, infVol_);
+        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
 
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     BusinessDayConvention bdc = infVol_->businessDayConvention();
@@ -276,9 +277,8 @@ void InfDkBuilder::buildCapFloorBasket() const {
     if (!referenceCalibrationGrid_.empty())
         referenceCalibrationDates = DateGrid(referenceCalibrationGrid_).dates();
 
-    Handle<YieldTermStructure> nominalTS = market_->discountCurve(inflationIndex_->currency().code(), configuration_);
     boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine =
-        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS, infVol_);
+        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(rateCurve_, infVol_);
 
     Calendar fixCalendar = inflationIndex_->fixingCalendar();
     Date baseDate = inflationIndex_->zeroInflationTermStructure()->baseDate();
@@ -318,10 +318,11 @@ void InfDkBuilder::buildCapFloorBasket() const {
             boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper =
                 boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, bdc,
                                                                 fixCalendar, bdc, strikeValue, hIndex, lag, marketPrem);
-            
+
             // we might produce duplicate expiry times even if the fixing dates are all different
-            if (tte > 0 && tteFromBase >= 0 && std::find_if(expiryTimes.begin(), expiryTimes.end(),
-                             [tte](Real x) { return QuantLib::close_enough(x, tte); }) == expiryTimes.end()) {
+            if (tte > 0 && tteFromBase >= 0 && std::find_if(expiryTimes.begin(), expiryTimes.end(), [tte](Real x) {
+                                                   return QuantLib::close_enough(x, tte);
+                                               }) == expiryTimes.end()) {
                 optionBasket_.push_back(helper);
                 helper->performCalculations();
                 expiryTimes.push_back(tte);
@@ -333,7 +334,7 @@ void InfDkBuilder::buildCapFloorBasket() const {
                 if (refCalDate != referenceCalibrationDates.end())
                     lastRefCalDate = *refCalDate;
             } else {
-                if(data_->ignoreDuplicateCalibrationExpiryTimes()) {
+                if (data_->ignoreDuplicateCalibrationExpiryTimes()) {
                     DLOG("Skipped InflationOptionHelper index="
                          << data_->index() << ", type=" << (capfloor == Option::Type::Call ? "Cap" : "Floor")
                          << ", expiry=" << QuantLib::io::iso_date(expiryDate) << ", baseCPI=" << baseCPI
