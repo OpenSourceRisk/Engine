@@ -233,7 +233,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             boost::shared_ptr<YoYInflationIndex> index =
                 boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, interpolatedIndex_);
             boost::shared_ptr<InflationCouponPricer> yoyCpnPricer =
-                boost::make_shared<QuantExt::YoYInflationCouponPricer2>(nominalTs);
+                boost::make_shared<YoYInflationCouponPricer>(nominalTs);
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 Date maturity = swapStart + terms[i];
                 Real effectiveQuote = quotes[i]->value();

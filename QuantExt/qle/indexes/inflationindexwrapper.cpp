@@ -92,29 +92,4 @@ Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     return (f1 - f0) / f0;
 }
 
-void YoYInflationCouponPricer2::initialize(const InflationCoupon& coupon) {
-    // duplicated logic from YoYInflationCouponPricer
-    coupon_ = dynamic_cast<const YoYInflationCoupon*>(&coupon);
-    QL_REQUIRE(coupon_, "year-on-year inflation coupon needed");
-    gearing_ = coupon_->gearing();
-    spread_ = coupon_->spread();
-    paymentDate_ = coupon_->date();
-
-    // this is different from QuantLib::YoYInflationCouponPricer
-    rateCurve_ = nominalTermStructure_;
-
-    // past or future fixing is managed in YoYInflationIndex::fixing()
-    // use yield curve from index (which sets discount)
-
-    discount_ = 1.0;
-    if (paymentDate_ > rateCurve_->referenceDate()) {
-        if (rateCurve_.empty()) {
-            // allow to extract rates, but mark the discount as invalid for prices
-            discount_ = Null<Real>();
-        } else {
-            discount_ = rateCurve_->discount(paymentDate_);
-        }
-    }
-}
-
 } // namespace QuantExt

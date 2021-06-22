@@ -74,22 +74,6 @@ private:
     const boost::shared_ptr<ZeroInflationIndex> zeroIndex_;
 };
 
-//! YY coupon pricer that takes the nominal ts directly instead of reading it from the yoy ts
-/*! This is useful if no yoy ts is given, as it might be the case of the yoy inflation index wrapper
-\ingroup indexes
-*/
-class YoYInflationCouponPricer2 : public YoYInflationCouponPricer {
-public:
-    YoYInflationCouponPricer2(const Handle<YieldTermStructure>& nominalTs,
-                              const Handle<QuantLib::YoYOptionletVolatilitySurface>& capletVol =
-                                  Handle<QuantLib::YoYOptionletVolatilitySurface>())
-        : YoYInflationCouponPricer(capletVol, nominalTs) {}
-    //! \name InflationCouponPricer interface
-    //@{
-    virtual void initialize(const InflationCoupon&);
-    //@}
-};
-
 } // namespace QuantExt
 
 #endif
