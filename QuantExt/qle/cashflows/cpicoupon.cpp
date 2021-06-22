@@ -31,6 +31,15 @@
 
 namespace QuantExt {
 
+    Rate CPICoupon::rate() const {
+    Rate r = QuantLib::CPICoupon::rate() ;
+        if (subtractInflationNominal_) {
+            Rate adjusted_r = r / fixedRate_ - spread_;
+            r = (adjusted_r - 1) * fixedRate_ + spread_;
+        }
+        return r;
+    }
+
 void CappedFlooredCPICoupon::setCommon(Rate cap, Rate floor) {
 
     isCapped_ = false;
@@ -66,7 +75,7 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
                 underlying->accrualEndDate(), underlying->fixingDays(), underlying->cpiIndex(),
                 underlying->observationLag(), underlying->observationInterpolation(), underlying->dayCounter(),
                 underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
-                underlying->referencePeriodEnd(), underlying->exCouponDate()),
+                underlying->referencePeriodEnd(), underlying->exCouponDate(), underlying->subtractInflationNotional()),
       underlying_(underlying), startDate_(startDate), isFloored_(false), isCapped_(false) {
 
     setCommon(cap, floor);
@@ -76,9 +85,10 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
     BusinessDayConvention conv = Unadjusted;                 // not used by the CPICapFloor engine
 
     if (isCapped_) {
+        Rate effectiveCap = cap_;
         cpiCap_ = boost::make_shared<CPICapFloor>(
             Option::Call, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
-            cal, conv, cap_, Handle<ZeroInflationIndex>(underlying_->cpiIndex()), underlying_->observationLag(),
+            cal, conv, effectiveCap, Handle<ZeroInflationIndex>(underlying_->cpiIndex()), underlying_->observationLag(),
             underlying_->observationInterpolation());
         // std::cout << "Capped/Floored CPI Coupon" << std::endl
         // 	  << "  nominal = " << underlying_->nominal() << std::endl
@@ -89,9 +99,11 @@ CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>&
         // 	  << "  interpolation = " << underlying_->observationInterpolation() << std::endl;
     }
     if (isFloored_) {
+        Rate effectiveFloor = floor_;
         cpiFloor_ = boost::make_shared<CPICapFloor>(
             Option::Put, underlying_->nominal(), startDate_, underlying_->baseCPI(), underlying_->date(), cal, conv,
-            cal, conv, floor_, Handle<ZeroInflationIndex>(underlying_->cpiIndex()), underlying_->observationLag(),
+            cal, conv, effectiveFloor, Handle<ZeroInflationIndex>(underlying_->cpiIndex()),
+            underlying_->observationLag(),
             underlying_->observationInterpolation());
     }
 }
@@ -215,7 +227,7 @@ CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationInde
       paymentDayCounter_(Thirty360()), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
       spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()),
-      startDate_(schedule_.dates().front()) {
+      subtractInflationNominalAllCoupons_(false), startDate_(schedule_.dates().front())  {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
 
@@ -328,6 +340,11 @@ CPILeg& CPILeg::withExCouponPeriod(const Period& period, const Calendar& cal, Bu
     return *this;
 }
 
+CPILeg& CPILeg::withSubtractInflationNominalAllCoupons(bool subtractInflationNominalAllCoupons) {
+    subtractInflationNominalAllCoupons_ = subtractInflationNominalAllCoupons;
+    return *this;
+}
+
 CPILeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "no notional given");
@@ -370,7 +387,7 @@ CPILeg::operator Leg() const {
                     baseCPI_, // all have same base for ratio
                     paymentDate, detail::get(notionals_, i, 0.0), start, end, detail::get(fixingDays_, i, 0.0), index_,
                     observationLag_, observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
-                    detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate);
+                    detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
 
                 // set a pricer for the underlying coupon straight away because it only provides computation - not data
                 ext::shared_ptr<CPICouponPricer> pricer(new CPICouponPricer);

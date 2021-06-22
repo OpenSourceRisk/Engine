@@ -277,6 +277,7 @@
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="LastRecentPeriod" minOccurs="0"/>
+        <xs:element type="calendar" name="LastRecentPeriodCalendar" minOccurs="0"/>
         <xs:element type="xs:nonNegativeInteger" name="FixingDays" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="Lookback" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:integer" name="RateCutoff" minOccurs="0" maxOccurs="1"/>
@@ -323,6 +324,7 @@
         <xs:element type="xs:float" name="FinalFlowCap" minOccurs="0"/>
         <xs:element type="xs:float" name="FinalFlowFloor" minOccurs="0"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
+		<xs:element type="xs:boolean" name="SubtractInflationNotionalAllCoupons" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>

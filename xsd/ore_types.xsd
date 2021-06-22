@@ -398,6 +398,7 @@
       <xs:enumeration value="MondayAfterThirdFriday"/>
       <xs:enumeration value="TuesdayAfterThirdFriday"/>
       <xs:enumeration value="LastWednesday"/>
+      <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -823,6 +824,27 @@
       <xs:enumeration value="OffPeakPowerDaily"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:simpleType name="averageType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Arithmetic"/>
+      <xs:enumeration value="Geometric"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="asianType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Price"/>
+      <xs:enumeration value="Strike"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="asianData">
+    <xs:all>
+       <xs:element type="averageType" name="AverageType"/>
+       <xs:element type="asianType" name="AsianType"/>
+    </xs:all>
+  </xs:complexType>
 
   <xs:complexType name="premiumData">
     <xs:sequence>

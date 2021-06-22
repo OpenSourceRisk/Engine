@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,33 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file thailand.hpp
-    \brief Thai calendar
-    TODO reconcile with QuantLib::Thailand
-*/
+#include <qle/indexes/ibor/ameribor.hpp>
 
-#ifndef quantext_thai_calendar_hpp
-#define quantext_thai_calendar_hpp
-
-#include <ql/time/calendar.hpp>
+using namespace QuantLib;
 
 namespace QuantExt {
 
-class Thailand : public QuantLib::Calendar {
-private:
-    class SetImpl : public Calendar::WesternImpl {
-    public:
-        std::string name() const { return "Stock Exchange of Thailand"; }
-        bool isBusinessDay(const QuantLib::Date&) const;
-    };
-
-public:
-    enum Market {
-        SET // Stock Exchange of Thailand
-    };
-    Thailand(Market m = SET);
-};
-
+USDAmeribor::USDAmeribor(const Handle<YieldTermStructure>& h)
+  : OvernightIndex("USD-AMERIBOR", 0, USDCurrency(), UnitedStates(), Actual360(), h) {}
 } // namespace QuantExt
-
-#endif

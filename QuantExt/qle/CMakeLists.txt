@@ -17,7 +17,6 @@ calendars/peru.cpp
 calendars/philippines.cpp
 calendars/spain.cpp
 calendars/switzerland.cpp
-calendars/thailand.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
@@ -63,6 +62,7 @@ indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
+indexes/ibor/ameribor.cpp
 indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
 indexes/ibor/ester.cpp
@@ -271,7 +271,6 @@ calendars/peru.hpp
 calendars/philippines.hpp
 calendars/spain.hpp
 calendars/switzerland.hpp
-calendars/thailand.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
@@ -328,6 +327,8 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
+indexes/ibor/ambor.hpp
+indexes/ibor/ameribor.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/boebaserate.hpp
 indexes/ibor/brlcdi.hpp
@@ -416,7 +417,9 @@ math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
+math/logquadraticinterpolation.hpp
 math/nadarayawatson.hpp
+math/quadraticinterpolation.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp

@@ -7,6 +7,7 @@ calendars.cpp
 ccyswapwithresets.cpp
 cds.cpp
 cms.cpp
+commodityasianoption.cpp
 commoditycurve.cpp
 commoditycurveconfig.cpp
 commodityoption.cpp
@@ -20,13 +21,16 @@ cpiswap.cpp
 creditdefaultswapdata.cpp
 crossassetmodeldata.cpp
 curveconfig.cpp
+curvespecparser.cpp
 digitalcms.cpp
+equityasianoption.cpp
 equitymarketdata.cpp
 equityswap.cpp
 equitytrades.cpp
 expiry.cpp
 fittedbondcurve.cpp
 fixings.cpp
+fxasianoption.cpp
 fxoption.cpp
 fxswap.cpp
 fxtriangulation.cpp
@@ -36,6 +40,7 @@ inflationcapfloor.cpp
 inflationcurve.cpp
 legdata.cpp
 mxnircurves.cpp
+optionasiandata.cpp
 optionpaymentdata.cpp
 ored_commodityforward.cpp
 parser.cpp

@@ -18,6 +18,12 @@
     <ClInclude Include="qle\indexes\genericiborindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ambor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ameribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -555,9 +561,6 @@
     <ClInclude Include="qle\calendars\philippines.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
-    <ClInclude Include="qle\calendars\thailand.hpp">
-      <Filter>time\calendars</Filter>
-    </ClInclude>
     <ClInclude Include="qle\calendars\switzerland.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
@@ -914,6 +917,12 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\logquadraticinterpolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\quadraticinterpolation.hpp">
+      <Filter>math</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\sekstina.hpp">
       <Filter>indexes\ibor</Filter>
@@ -1559,9 +1568,6 @@
     <ClCompile Include="qle\calendars\philippines.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
-    <ClCompile Include="qle\calendars\thailand.cpp">
-      <Filter>time\calendars</Filter>
-    </ClCompile>
     <ClCompile Include="qle\calendars\switzerland.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
@@ -1642,6 +1648,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\ameribor.cpp">
+      <Filter>indexes\ibor</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\ibor\boebaserate.cpp">
       <Filter>indexes\ibor</Filter>
