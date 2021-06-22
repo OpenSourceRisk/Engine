@@ -73,7 +73,10 @@ NonStandardCappedFlooredYoYInflationCoupon::NonStandardCappedFlooredYoYInflation
     bool addInflationNotional)
     : NonStandardYoYInflationCoupon(paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
                                     dayCounter, gearing, spread, refPeriodStart, refPeriodEnd, addInflationNotional),
-      isFloored_(false), isCapped_(false) {}
+      isFloored_(false), isCapped_(false) {
+
+    setCommon(cap, floor);
+}
 
 void NonStandardCappedFlooredYoYInflationCoupon::setPricer(
     const ext::shared_ptr<NonStandardYoYInflationCouponPricer>& pricer) {

@@ -71,8 +71,6 @@ public:
 
     // ! \name Coupon interface
     Rate rate() const override;
-    //@}
-    //@}
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&);

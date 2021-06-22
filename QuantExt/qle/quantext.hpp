@@ -78,6 +78,8 @@
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/genericindex.hpp>
+#include <qle/indexes/ibor/ambor.hpp>
+#include <qle/indexes/ibor/ameribor.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
