@@ -98,7 +98,9 @@ public:
         //! Optional reference data manager, needed to build fitted bond curves
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
         //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
-        const bool preserveQuoteLinkage = false);
+        const bool preserveQuoteLinkage = false,
+        //! the ibor fallback config
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
@@ -118,6 +120,7 @@ private:
     const bool lazyBuild_;
     const bool preserveQuoteLinkage_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
+    const IborFallbackConfig iborFallbackConfig_;
 
     // initialise market
     void initialise(const Date& asof);
@@ -144,6 +147,7 @@ private:
 
     // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    mutable map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
     mutable map<string, boost::shared_ptr<FXSpot>> requiredFxSpots_;
     mutable map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
     mutable map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves_;

@@ -40,7 +40,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Derive settlement date from payment data parameters
     Date payDate;
     if (payDate_.empty()) {
-        LOG("Attempting paydate advance");
+        //LOG("Attempting paydate advance");
         Period payLag = payLag_.empty() ? 0 * Days : parsePeriod(payLag_);
         Calendar payCalendar = payCalendar_.empty() ? NullCalendar() : parseCalendar(payCalendar_);
         BusinessDayConvention payConvention =
@@ -62,7 +62,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (payCurrency_.empty()) {
         // If settlement currency is not set, set it to the domestic currency.
-        LOG("Settlement currency was not specified, defaulting to " << soldCcy.code());
+        //LOG("Settlement currency was not specified, defaulting to " << soldCcy.code());
         payCcy = soldCcy;
     } else {
         payCcy = parseCurrency(payCurrency_);
@@ -76,6 +76,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Currency nonPayCcy = payCcy == boughtCcy ? soldCcy : boughtCcy;
         fxIndex = buildFxIndex(fxIndex_, payCcy.code(), nonPayCcy.code(), engineFactory->market(),
                                engineFactory->configuration(MarketContext::pricing), fxIndexCalendar_, fxIndexDays_);
+        requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
     }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
@@ -91,7 +92,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     npvCurrency_ = soldCurrency_;
     notional_ = Null<Real>(); // soldAmount_;
     notionalCurrency_ = "";   // soldCurrency_;
-    maturity_ = maturityDate;
+    maturity_ = std::max(payDate, maturityDate);
 
     // Set up Legs
     legs_ = {{boost::make_shared<SimpleCashFlow>(boughtAmount_, payDate)},

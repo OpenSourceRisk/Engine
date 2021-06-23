@@ -284,7 +284,6 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
 
     parameters->interpolation() = "LogLinear";
-    parameters->extrapolate() = true;
 
     parameters->setSimulateSwapVols(false);
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});

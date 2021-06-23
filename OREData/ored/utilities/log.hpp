@@ -312,12 +312,14 @@ private:
 #define TLOG(text) MLOG(ORE_DATA, text)
 
 //! Logging macro specifically for logging memory usage
-#define MEM_LOG                                                                                                        \
-    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(ORE_MEMORY)) {                       \
-        ore::data::Log::instance().header(ORE_MEMORY, __FILE__, __LINE__);                                             \
+#define MEM_LOG MEM_LOG_USING_LEVEL(ORE_MEMORY)
+
+#define MEM_LOG_USING_LEVEL(LEVEL)                                                                                     \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                            \
+        ore::data::Log::instance().header(LEVEL, __FILE__, __LINE__);                                                  \
         ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";     \
         ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());                \
-        ore::data::Log::instance().log(ORE_MEMORY);                                                                    \
+        ore::data::Log::instance().log(LEVEL);                                                                         \
     }
 
 //! LoggerStream class that is a std::ostream replacment that will log each line

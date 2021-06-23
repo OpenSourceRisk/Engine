@@ -78,5 +78,19 @@ bool operator==(const Strike& s1, const Strike& s2);
 */
 QuantLib::Real computeAbsoluteStrike(const Strike& s, const QuantLib::Real atm, const QuantLib::Real atmf);
 
+//! Utility class for handling delta strings ATM, 10P, 25C, ... used e.g. for FX Surfaces
+class DeltaString {
+public:
+    DeltaString(const std::string& s);
+    bool isAtm() const { return isAtm_; }
+    bool isPut() const { return isPut_; }
+    bool isCall() const { return isCall_; }
+    Real delta() const { return delta_; }
+
+private:
+    bool isAtm_, isPut_, isCall_;
+    Real delta_;
+};
+
 } // namespace data
 } // namespace ore

@@ -155,6 +155,9 @@
     <ClCompile Include="analyticcashsettledeuropeanengine.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="quadraticinterpolation.cpp">
+       <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="crcirpp.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -165,6 +168,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="normalfreeboundarysabr.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dategeneration.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

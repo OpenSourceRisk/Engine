@@ -84,16 +84,15 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        bool isOnIndex = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
         bool isBmaIndex = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index) != nullptr;
 
-        if (!isBmaIndex && !(isOnIndex && floatData->isAveraged()) && !floatData->hasSubPeriods()) {
+        if (!isBmaIndex && !floatData->hasSubPeriods()) {
             // For the cases where we support caps and floors in the regular way, we build a floating leg with
             // the nakedOption flag set to true, this avoids maintaining all features in legs with associated
             // coupon pricers and at the same time in the QuaantLib::CapFloor instrument and pricing engine.
             // Supported cases are
             // - Ibor coupon without sub periods (hasSubPeriods = false)
-            // - compounded ON coupon (isAveraged = false)
+            // - compounded ON coupon, averaged ON coupon
             // The other cases are handled below.
             LegData tmpLegData = legData_;
             boost::shared_ptr<FloatingLegData> tmpFloatData = boost::make_shared<FloatingLegData>(*floatData);
@@ -117,7 +116,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // index and build an QuantLib::CapFloor with associated pricing engine. These cases comprise:
             // - BMA coupons
             // - Ibor coupons with sub periods (hasSubPeriods = true)
-            // - averaged ON coupons (isAveraged = true)
 
             ALOG("CapFloor trade " << id()
                                    << " on a) BMA or b) sub periods Ibor or c) averaged ON underlying (index = '"
@@ -377,23 +375,11 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
 
-    // If premium data is provided
-    // 1) build the fee trade and pass it to the instrument wrapper for pricing
-    // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    QL_REQUIRE((premiumPayDate_.empty() && premiumCcy_.empty() && premium_ == Null<Real>()) ||
-                   (!premiumPayDate_.empty() && !premiumCcy_.empty() && premium_ != Null<Real>()),
-               "CapFloorBuilder: incomplete premium data, expect PremiumAmount, PremiumCurrency, PremiumPayDate");
-    if (premiumPayDate_ != "" && premiumCcy_ != "" && premium_ != Null<Real>()) {
-        Real premiumAmount = -multiplier * premium_; // pay if long, receive if short
-        Currency premiumCurrency = parseCurrency(premiumCcy_);
-        Date premiumDate = parseDate(premiumPayDate_);
-        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency,
-                   parseCurrency(legData_.currency()), engineFactory,
-                   engineFactory->configuration(MarketContext::pricing));
-        DLOG("option premium added for cap/floor " << id());
-    }
+    addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_, -multiplier,
+                parseCurrency(legData_.currency()), engineFactory,
+                engineFactory->configuration(MarketContext::pricing));
 
     // set instrument
     instrument_ =
@@ -401,8 +387,13 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // add required fixings
     if (!qlIndexName.empty() && !underlyingIndex.empty()) {
-        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_,
-                                                        std::map<string, string>{{qlIndexName, underlyingIndex}});
+        std::map<string, string> indexNameMapper = {{qlIndexName, underlyingIndex}};
+        if (engineFactory->iborFallbackConfig().isIndexReplaced(underlyingIndex)) {
+            string rfrIndexName = engineFactory->iborFallbackConfig().fallbackData(underlyingIndex).rfrIndex;
+            // we don't support convention based rfr fallback indices, with ore ticket 1758 this might change
+            indexNameMapper[parseIborIndex(rfrIndexName)->name()] = rfrIndexName;
+        }
+        auto fdg = boost::make_shared<FixingDateGetter>(requiredFixings_, indexNameMapper);
         for (auto const& l : legs_)
             addToRequiredFixings(l, fdg);
     }
@@ -422,13 +413,7 @@ void CapFloor::fromXML(XMLNode* node) {
     legData_.fromXML(XMLUtils::getChildNode(capFloorNode, "LegData"));
     caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Caps", "Cap");
     floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Floors", "Floor");
-    if (auto c = XMLUtils::getChildNode(capFloorNode, "PremiumAmount")) {
-        premium_ = parseReal(XMLUtils::getNodeValue(c));
-    } else {
-        premium_ = Null<Real>();
-    }
-    premiumCcy_ = XMLUtils::getChildValue(capFloorNode, "PremiumCurrency", false);
-    premiumPayDate_ = XMLUtils::getChildValue(capFloorNode, "PremiumPayDate", false);
+    premiumData_.fromXML(capFloorNode);
 }
 
 XMLNode* CapFloor::toXML(XMLDocument& doc) {
@@ -439,11 +424,7 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(capFloorNode, legData_.toXML(doc));
     XMLUtils::addChildren(doc, capFloorNode, "Caps", "Cap", caps_);
     XMLUtils::addChildren(doc, capFloorNode, "Floors", "Floor", floors_);
-    if (!premiumCcy_.empty() && !premiumPayDate_.empty() && premium_ != Null<Real>()) {
-        XMLUtils::addChild(doc, capFloorNode, "PremiumAmount", premium_);
-        XMLUtils::addChild(doc, capFloorNode, "PremiumCurrency", premiumCcy_);
-        XMLUtils::addChild(doc, capFloorNode, "PremiumPayDate", premiumPayDate_);
-    }
+    XMLUtils::appendNode(capFloorNode, premiumData_.toXML(doc));
     return node;
 }
 } // namespace data

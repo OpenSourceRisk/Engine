@@ -1,4 +1,5 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:include schemaLocation="ore_types.xsd"/>  
 
   <xs:element type="curveconfiguration" name="CurveConfiguration"/>
 
@@ -138,6 +139,7 @@
       <xs:element type="xs:string" name="FXIndexTag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseVolatility1" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -169,6 +171,7 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -487,7 +490,7 @@
     <xs:all>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="xs:string" name="SpreadQuote"/>
+      <xs:element type="xs:string" name="SpreadQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="RecoveryRateQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="CPRQuote" minOccurs="0"/>
       <xs:element type="xs:string" name="PriceQuote" minOccurs="0"/>
@@ -546,6 +549,14 @@
       <xs:element type="commodityInterpolationType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="AddBasis" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="MonthOffset" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="AverageBase" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="offPeakDailyType">
+    <xs:all>
+      <xs:element type="quoteType" name="OffPeakQuotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="PeakQuotes" minOccurs="1" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
@@ -554,9 +565,10 @@
       <xs:element type="priceSegmentTypeType" name="Type" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="Priority" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="quoteType" name="Quotes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PeakPriceCurveId" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="PeakPriceCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="offPeakDailyType" name="OffPeakDaily" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
@@ -692,6 +704,7 @@
       <!-- weightedAverageType and yieldPlusDefaultType removed by JW, but restored here -->
       <xs:element type="weightedAverageType" name="WeightedAverage"/>
       <xs:element type="yieldPlusDefaultType" name="YieldPlusDefault"/>
+      <xs:element type="iborFallbackType" name="IborFallback"/>
     </xs:choice>
   </xs:complexType>
 
@@ -871,6 +884,16 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="iborFallbackType">
+    <xs:all>
+      <xs:element type="xs:string" name="Type" fixed="Ibor Fallback"/>
+      <xs:element type="indexNameType" name="IborIndex"/>
+      <xs:element type="xs:string" name="RfrCurve"/>
+      <xs:element type="indexNameType" name="RfrIndex" minOccurs="0"/>
+      <xs:element type="xs:float" name="Spread" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="quoteType">
     <xs:sequence>
       <xs:element name="Quote" minOccurs="0" maxOccurs="unbounded">
@@ -947,6 +970,13 @@
   <xs:complexType name="globalReportConfiguration">
     <xs:all>
       <xs:element name="FXVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="EquityVolatilities" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>

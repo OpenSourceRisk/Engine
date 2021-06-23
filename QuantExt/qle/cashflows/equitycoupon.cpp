@@ -20,6 +20,7 @@
 #include <qle/cashflows/equitycouponpricer.hpp>
 
 #include <ql/utilities/vectors.hpp>
+#include <ql/time/calendars/jointcalendar.hpp>
 
 using namespace QuantLib;
 
@@ -39,15 +40,26 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
     QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
     QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
 
+    // set up fixing calendar as combined eq / fx calendar
+    Calendar eqCalendar = NullCalendar();
+    Calendar fxCalendar = NullCalendar();
+    if (!equityCurve_->fixingCalendar().empty()) {
+        eqCalendar = equityCurve_->fixingCalendar();
+    }
+    if (fxIndex_ && !fxIndex_->fixingCalendar().empty()) {
+        fxCalendar = fxIndex_->fixingCalendar();
+    }
+    Calendar fixingCalendar = JointCalendar(eqCalendar, fxCalendar);
+
     // If a fixing start / end date is provided, use these
     // else adjust the start/endDate by the FixingDays - defaulted to 0
     if (fixingStartDate_ == Date())
         fixingStartDate_ =
-            equityCurve_->fixingCalendar().advance(startDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
+            fixingCalendar.advance(startDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
 
     if (fixingEndDate_ == Date())
         fixingEndDate_ =
-            equityCurve_->fixingCalendar().advance(endDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
+            fixingCalendar.advance(endDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
 
     registerWith(equityCurve_);
     registerWith(fxIndex_);
@@ -120,10 +132,10 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 
 EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
-    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0),
-      paymentAdjustment_(Following), paymentCalendar_(Calendar()), isTotalReturn_(true),
-      initialPrice_(Null<Real>()), initialPriceIsInTargetCcy_(false), dividendFactor_(1.0),
-      fixingDays_(0), notionalReset_(false), quantity_(Null<Real>()) {}
+    : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0), paymentAdjustment_(Following),
+      paymentCalendar_(Calendar()), isTotalReturn_(true), absoluteReturn_(false), initialPrice_(Null<Real>()),
+      initialPriceIsInTargetCcy_(false), dividendFactor_(1.0), fixingDays_(0), notionalReset_(false),
+      quantity_(Null<Real>()) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);

@@ -86,27 +86,35 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -498,7 +506,6 @@
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
     <ClInclude Include="qle\calendars\spain.hpp" />
-    <ClInclude Include="qle\calendars\thailand.hpp" />
     <ClInclude Include="qle\calendars\switzerland.hpp" />
     <ClInclude Include="qle\calendars\wmr.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
@@ -514,6 +521,7 @@
     <ClInclude Include="qle\cashflows\durationadjustedcmscoupontsrpricer.hpp" />
     <ClInclude Include="qle\cashflows\equitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\equitycouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\fixedratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp" />
     <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp" />
     <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp" />
@@ -531,6 +539,7 @@
     <ClInclude Include="qle\currencies\africa.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
+    <ClInclude Include="qle\currencies\currencycomparator.hpp" />
     <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
     <ClInclude Include="qle\currencies\configurablecurrency.hpp" />
@@ -544,10 +553,14 @@
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\eqfxindexbase.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
+    <ClInclude Include="qle\indexes\escpi.hpp" />
+    <ClInclude Include="qle\indexes\fallbackiborindex.hpp" />
     <ClInclude Include="qle\indexes\frcpi.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
     <ClInclude Include="qle\indexes\genericindex.hpp" />
+    <ClInclude Include="qle\indexes\ibor\ambor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\ameribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
     <ClInclude Include="qle\indexes\ibor\boebaserate.hpp" />
@@ -562,10 +575,12 @@
     <ClInclude Include="qle\indexes\ibor\czkpribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\demlibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\dkkcita.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkois.hpp" />
     <ClInclude Include="qle\indexes\ibor\ester.hpp" />
     <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\hkdhonia.hpp" />
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp" />
     <ClInclude Include="qle\indexes\ibor\idridrfix.hpp" />
     <ClInclude Include="qle\indexes\ibor\idrjibor.hpp" />
@@ -580,12 +595,14 @@
     <ClInclude Include="qle\indexes\ibor\nowa.hpp" />
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
+    <ClInclude Include="qle\indexes\ibor\plnpolonia.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\primeindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
     <ClInclude Include="qle\indexes\ibor\saibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\seksior.hpp" />
     <ClInclude Include="qle\indexes\ibor\sekstibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\sekstina.hpp" />
     <ClInclude Include="qle\indexes\ibor\sgdsibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
@@ -595,6 +612,7 @@
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
     <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
+    <ClInclude Include="qle\indexes\offpeakpowerindex.hpp" />
     <ClInclude Include="qle\indexes\region.hpp" />
     <ClInclude Include="qle\indexes\secpi.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
@@ -605,6 +623,7 @@
     <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
+    <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyfixfloatswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyswap.hpp" />
     <ClInclude Include="qle\instruments\currencyswap.hpp" />
@@ -626,13 +645,17 @@
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp" />
     <ClInclude Include="qle\instruments\cashflowresults.hpp" />
     <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
+    <ClInclude Include="qle\math\covariancesalvage.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
+    <ClInclude Include="qle\math\logquadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
+    <ClInclude Include="qle\math\quadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
+    <ClInclude Include="qle\methods\pathgeneratorfactory.hpp" />
     <ClInclude Include="qle\models\annuitymapping.hpp" />
     <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
@@ -729,14 +752,18 @@
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
     <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\blackdeltautilities.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\blackmonotonevarvoltermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\blacktriangulationatmvol.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacestddevs.hpp" />
+    <ClInclude Include="qle\termstructures\blackvolsurfacebfrr.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
+    <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
@@ -756,6 +783,7 @@
     <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
+    <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp" />
@@ -829,13 +857,13 @@
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp" />
-    <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
     <ClInclude Include="qle\time\actual364.hpp" />
     <ClInclude Include="qle\time\futureexpirycalculator.hpp" />
     <ClInclude Include="qle\time\yearcounter.hpp" />
     <ClInclude Include="qle\utilities\inflation.hpp" />
+    <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\calendars\austria.cpp" />
@@ -854,7 +882,6 @@
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
     <ClCompile Include="qle\calendars\spain.cpp" />
-    <ClCompile Include="qle\calendars\thailand.cpp" />
     <ClCompile Include="qle\calendars\switzerland.cpp" />
     <ClCompile Include="qle\calendars\wmr.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
@@ -870,6 +897,7 @@
     <ClCompile Include="qle\cashflows\durationadjustedcmscoupontsrpricer.cpp" />
     <ClCompile Include="qle\cashflows\equitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\fixedratefxlinkednotionalcoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
@@ -893,13 +921,17 @@
     <ClCompile Include="qle\indexes\commodityindex.cpp" />
     <ClCompile Include="qle\indexes\compoequityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
+    <ClCompile Include="qle\indexes\fallbackiborindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
+    <ClCompile Include="qle\indexes\genericiborindex.cpp" />
+    <ClCompile Include="qle\indexes\ibor\ameribor.cpp" />
     <ClCompile Include="qle\indexes\ibor\boebaserate.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
     <ClCompile Include="qle\indexes\ibor\ester.cpp" />
     <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\sofr.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
+    <ClCompile Include="qle\indexes\offpeakpowerindex.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\brlcdiswap.cpp" />
@@ -909,6 +941,7 @@
     <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
+    <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyfixfloatswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
     <ClCompile Include="qle\instruments\currencyswap.cpp" />
@@ -1011,11 +1044,14 @@
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
+    <ClCompile Include="qle\termstructures\blackdeltautilities.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp" />
+    <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
+    <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
@@ -1038,6 +1074,7 @@
     <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
     <ClCompile Include="qle\termstructures\futurepricehelper.cpp" />
+    <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />

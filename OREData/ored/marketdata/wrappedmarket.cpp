@@ -145,6 +145,11 @@ WrappedMarket::commodityPriceCurve(const std::string& commodityName, const std::
     return market_->commodityPriceCurve(commodityName, configuration);
 }
 
+QuantLib::Handle<QuantExt::CommodityIndex> WrappedMarket::commodityIndex(const std::string& commodityName,
+    const std::string& configuration) const {
+    return market_->commodityIndex(commodityName, configuration);
+}
+
 QuantLib::Handle<QuantLib::BlackVolTermStructure>
 WrappedMarket::commodityVolatility(const std::string& commodityName, const std::string& configuration) const {
     return market_->commodityVolatility(commodityName, configuration);

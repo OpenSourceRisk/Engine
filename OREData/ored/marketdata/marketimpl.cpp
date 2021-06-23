@@ -32,6 +32,7 @@ using std::string;
 using namespace QuantLib;
 
 using QuantExt::PriceTermStructure;
+using QuantExt::CommodityIndex;
 
 namespace ore {
 namespace data {
@@ -69,7 +70,8 @@ Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, co
     // we allow for standard (i.e. not convention based) ibor index names as keys and return the index forward curve in
     // case of a match
     boost::shared_ptr<IborIndex> notUsed;
-    if (tryParseIborIndex(key, notUsed)) {
+    if (tryParseIborIndex(key, notUsed, conventions_.has(key, Convention::Type::IborIndex)
+        ? conventions_.get(key) : nullptr)) {
         return iborIndex(key, configuration)->forwardingTermStructure();
     }
     // no ibor index found under key => look for a genuine yield curve
@@ -258,8 +260,12 @@ Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key,
 
 Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName,
                                                            const string& configuration) const {
+    return commodityIndex(commodityName, configuration)->priceCurve();
+}
+
+Handle<CommodityIndex> MarketImpl::commodityIndex(const string& commodityName, const string& configuration) const {
     require(MarketObject::CommodityCurve, commodityName, configuration);
-    return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");
+    return lookup<Handle<CommodityIndex>>(commodityIndices_, commodityName, configuration, "commodity indices");
 }
 
 Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName,
@@ -339,16 +345,25 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         QL_REQUIRE(tokens[0].size() == 3, "invalid currency code in " << swapIndex);
         QL_REQUIRE(tokens[1] == "CMS", "expected CMS as middle token in " << swapIndex);
 
-        auto di = iborIndex(discountIndex, configuration)->forwardingTermStructure();
+        Handle<YieldTermStructure> discounting, forwarding;
+        boost::shared_ptr<IborIndex> dummeyIndex;
+        if (tryParseIborIndex(discountIndex, dummeyIndex))
+            discounting = iborIndex(discountIndex, configuration)->forwardingTermStructure();
+        else
+            discounting = yieldCurve(discountIndex, configuration);
 
         auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions_.get(swapIndex));
         QL_REQUIRE(swapCon, "expected SwapIndexConvention for " << swapIndex);
         auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions_.get(swapCon->conventions()));
         QL_REQUIRE(con, "expected IRSwapConvention for " << swapCon->conventions());
+        
+        string fi = con->indexName();
+        if (isGenericIborIndex(fi))
+            forwarding = discounting;
+        else
+            forwarding = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
 
-        auto fi = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
-
-        boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, fi, di, con, swapCon);
+        boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, forwarding, discounting, con, swapCon);
         swapIndices_[make_pair(configuration, swapIndex)] = Handle<SwapIndex>(si);
     } catch (std::exception& e) {
         QL_FAIL("Failure in MarketImpl::addSwapIndex() with index " << swapIndex << " : " << e.what());
@@ -444,13 +459,12 @@ void MarketImpl::refresh(const string& configuration) {
                     it->second.insert(*y);
             }
         }
-        // for (auto& x : baseCpis_) {
-        //     if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-        //         it->second.insert(*x.second);
-        // }
-        for (auto& x : commodityCurves_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(*x.second);
+        for (auto& x : commodityIndices_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                const auto& pts = x.second->priceCurve();
+                if (!pts.empty())
+                    it->second.insert(*pts);
+            }
         }
         for (auto& x : commodityVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)

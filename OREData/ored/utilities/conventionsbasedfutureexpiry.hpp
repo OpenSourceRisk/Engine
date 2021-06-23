@@ -68,6 +68,9 @@ private:
 
     //! Do the next expiry work
     QuantLib::Date nextExpiry(const QuantLib::Date& referenceDate, bool forOption) const;
+
+    //! Account for prohibited expiries
+    QuantLib::Date avoidProhibited(const QuantLib::Date& expiry, bool forOption) const;
 };
 
 } // namespace data

@@ -51,8 +51,8 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     Real kTilde = k * arguments_.baseCPI;
     Real nTilde = arguments_.nominal / arguments_.baseCPI;
 
-    Real m = baseCPI_ * std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate), t);
-
+    Real m = baseCPI_ * std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate, Period(0, Days)), t);
+    m = arguments_.infIndex->fixing(arguments_.fixDate); 
     Real Ht = Hy(index_).eval(x, t);
     Real v = Ht * Ht * zetay(index_).eval(x, t) -
              2.0 * Ht * integral(x, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +

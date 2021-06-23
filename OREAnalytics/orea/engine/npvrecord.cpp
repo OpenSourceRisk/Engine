@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,33 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file thailand.hpp
-    \brief Thai calendar
-    TODO reconcile with QuantLib::Thailand
-*/
+#include <orea/engine/npvrecord.hpp>
 
-#ifndef quantext_thai_calendar_hpp
-#define quantext_thai_calendar_hpp
+using std::ostream;
+using std::string;
 
-#include <ql/time/calendar.hpp>
+namespace ore {
+namespace analytics {
 
-namespace QuantExt {
+ostream& operator<<(ostream& out, const NpvRecord& nr) {
+    return out << "[" <<
+        nr.tradeId << ", " <<
+        nr.portfolioId << ", " <<
+        nr.valuationDate << ", " <<
+        nr.baseCurrency << ", " <<
+        nr.baseAmount << 
+    "]";
+}
 
-class Thailand : public QuantLib::Calendar {
-private:
-    class SetImpl : public Calendar::WesternImpl {
-    public:
-        std::string name() const { return "Stock Exchange of Thailand"; }
-        bool isBusinessDay(const QuantLib::Date&) const;
-    };
-
-public:
-    enum Market {
-        SET // Stock Exchange of Thailand
-    };
-    Thailand(Market m = SET);
-};
-
-} // namespace QuantExt
-
-#endif
+}
+}

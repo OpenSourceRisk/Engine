@@ -24,6 +24,7 @@
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 // #include <qle/calendars/austria.hpp>
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
@@ -36,7 +37,6 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
-#include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 
 using namespace QuantLib;
@@ -97,42 +97,15 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"UAH", Ukraine()},
                             {"HUF", Hungary()},
                             // Emerging currencies that default to WeekendsOnly
-                            {"AED", WeekendsOnly()},
-                            {"BHD", WeekendsOnly()},
-                            {"CLF", WeekendsOnly()},
+                            {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
                             {"CLP", Chile()},
                             {"COP", Colombia()},
-                            {"EGP", WeekendsOnly()},
                             {"ILS", Israel()},
-                            {"KWD", WeekendsOnly()},
-                            {"KZT", WeekendsOnly()},
-                            {"MAD", WeekendsOnly()},
-                            {"MXV", WeekendsOnly()},
                             {"MYR", Malaysia()},
-                            {"NGN", WeekendsOnly()},
-                            {"OMR", WeekendsOnly()},
                             {"PEN", Peru()},
                             {"PHP", Philippines()},
-                            {"QAR", WeekendsOnly()},
                             {"RON", Romania()},
-                            {"THB", QuantExt::Thailand()},
-                            {"TND", WeekendsOnly()},
-                            {"UYU", WeekendsOnly()},
-                            {"VND", WeekendsOnly()},
-                            {"AOA", WeekendsOnly()},
-                            {"BGN", WeekendsOnly()},
-                            {"ETB", WeekendsOnly()},
-                            {"GEL", WeekendsOnly()},
-                            {"GHS", WeekendsOnly()},
-                            {"HRK", WeekendsOnly()},
-                            {"JOD", WeekendsOnly()},
-                            {"KES", WeekendsOnly()},
-                            {"LKR", WeekendsOnly()},
-                            {"MUR", WeekendsOnly()},
-                            {"RSD", WeekendsOnly()},
-                            {"UGX", WeekendsOnly()},
-                            {"XOF", WeekendsOnly()},
-                            {"ZMW", WeekendsOnly()},
+                            {"THB", Thailand()},
                             {"CHF", QuantExt::Switzerland()},
                             {"ZA", SouthAfrica()},
                             {"MISX", Russia(Russia::MOEX)},

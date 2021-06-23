@@ -1,0 +1,220 @@
+\subsubsection{Commodity Curves}
+
+Commodity Curves are setup as price curves in ORE, meaning that they return a price for a given time $t$ rather than a rate or discount factor, these curves are common in commodities and can be populated with futures prices directly.
+
+Listing \ref{lst:commodity_curve_configuration_1} shows the configuration of Commodity curves built from futures prices, in this example WTI Oil prices, note there is no spot price in this configuration, rather we have a set of futures prices only.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>WTI_USD</CurveId>
+  <CurveDescription>WTI USD price curve</CurveDescription>
+  <Currency>USD</Currency>
+  <Quotes>
+    <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-06-30</Quote>
+    <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-07-31</Quote>
+    ...
+  </Quotes>
+  <DayCounter>A365</DayCounter>
+  <InterpolationMethod>Linear</InterpolationMethod>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity Curve Configuration for WTI Oil}
+\label{lst:commodity_curve_configuration_1}
+\end{longlisting}
+
+Listing \ref{lst:commodity_curve_configuration_2} shows the configuration for a Precious Metal curve using FX style spot and forward point quotes, note that SpotQuote is used in this case. The different interpretation of the forward quotes is controlled by the conventions.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>XAU</CurveId>
+  <CurveDescription>Gold USD price curve</CurveDescription>
+  <Currency>USD</Currency>
+  <SpotQuote>COMMODITY/PRICE/XAU/USD</SpotQuote>
+  <Quotes>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/ON</Quote>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/TN</Quote>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/SN</Quote>
+    <Quote>COMMODITY_FWD/PRICE/XAU/USD/1W</Quote>
+    ...
+  </Quotes>
+  <DayCounter>A365</DayCounter>
+  <InterpolationMethod>Linear</InterpolationMethod>
+  <Conventions>XAU</Conventions>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in USD}
+\label{lst:commodity_curve_configuration_2}
+\end{longlisting}
+
+The meaning of each of the top level elements is given below. If an element is labelled
+as 'Optional', then it may be excluded or included and left blank.
+\begin{itemize}
+\item CurveId: Unique identifier for the curve.
+\item CurveDescription: A description of the curve. This field may be left blank.
+\item Currency: The commodity curve currency.
+\item SpotQuote [Optional]: The spot price quote, if omitted then the spot value will be interpolated.
+\item Quotes: forward price quotes. These can be a futures price or forward points.
+\item DayCounter: The day count basis used internally by the curve to calculate the time between dates.
+\item InterpolationMethod [Optional]: The variable on which the interpolation is performed. The allowable values are
+Linear, LogLinear, Cubic, Hermite, LinearFlat, LogLinearFlat, CubicFlat, HermiteFlat, BackwardFlat. This is different to yield curves above in that Flat versions
+of the standard methods are defined, with each of these if there is no Spot price than any extrapolation between $T_0$ and the
+first future price will be flat (i.e. the first future price will be copied back "Flat" to $T_0$). 
+If the element is omitted or left blank, then it defaults to \emph{Linear}.
+\item Conventions [Optional]: The conventions to use, if omited it is assumed that these quotes are Outright prices.
+\item Extrapolation [Optional]: Set to \emph{True} or \emph{False} to enable or disable extrapolation respectively. If
+the element is omitted or left blank, then it defaults to \emph{True}.
+\end{itemize}
+
+
+Alternatively commodity curves can be set up as a commodity curve times the ratio of two yield curves as shown in listing
+\ref{lst:commodity_curve_configuration_3}. This can be used to setup commodity curves in different currencies, for example Gold in EUR (XAUEUR) can be built from a Gold in USD curve and then the ratio of the EUR and USD discount factors at each pillar. This is akin to crossing FX forward points to get FX forward prices for any pair.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>XAUEUR</CurveId>
+  <CurveDescription>Gold EUR price curve</CurveDescription>
+  <Currency>EUR</Currency>
+  <BasePriceCurve>XAU</BasePriceCurve>
+  <BaseYieldCurve>USD-FedFunds</BaseYieldCurve>
+  <YieldCurve>EUR-IN-USD</YieldCurve>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity Curve Configuration for Gold in EUR}
+\label{lst:commodity_curve_configuration_3}
+\end{longlisting}
+
+Commodity curves may also be set up using a base future price curve and a set of future basis quotes to give an outright price curve. There are a number of options here depending on whether the base future and basis future are averaging or not averaging. Whether or not the base future and basis future is averaging is determined from the conventions supplied in the \lstinline!BasePriceConventions! and \lstinline!BasisConventions! fields. 
+\begin{itemize}
+\item
+The base future is not averaging and the basis future is not averaging. The commodity curve that is built gives the outright price of the non-averaging future. An example of this is the CME Henry Hub future contract, symbol NG, and the various locational gas basis future contracts, e.g.\ ICE Waha Basis Future, symbol WAH. Listing \ref{lst:commodity_crv_config_ice_waha} demonstrates an example set-up for this curve. The curve that is built will give the ICE Waha outright price on the basis contract's expiry dates.
+
+\item
+The base future is not averaging and the basis future is averaging. The commodity curve that is built gives the outright price of the averaging future. In this case, if the \lstinline!AverageBase! field is \lstinline!true! the base price will be averaged from and excluding one basis future expiry to and including the next basis future expiry. An example of this is the CME Light Sweet Crude Oil future contract, symbol CL, and the various locational oil basis future contracts, e.g.\ CME WTI Midland (Argus) Future, symbol FF. Listing \ref{lst:commodity_crv_config_cme_ff} demonstrates an example set-up for this curve. The curve that is built will give the outright average price of WTI Midland (Argus) over the calendar month. If the \lstinline!AverageBase! field is \lstinline!false!, the base price is not averaged and the basis is added to the base price to give a curve that can be queried on an expiry date for an average price. An example of this is a curve built for the average of the daily prices published by Gas Daily using the ICE futures that reference the difference between the Inside FERC price and the average Gas Daily price.
+
+\item
+The base future is averaging and the basis future is averaging. The commodity curve that is built gives the outright price of the averaging future. The set-up is identical to that outlined in Listings \ref{lst:commodity_crv_config_ice_waha} and \ref{lst:commodity_crv_config_cme_ff}.
+
+\item
+The base future is averaging and the basis future is not averaging. This combination is not currently supported.
+\end{itemize}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>ICE:WAH</CurveId>
+  <Currency>USD</Currency>
+  <BasisConfiguration>
+    <BasePriceCurve>NYMEX:NG</BasePriceCurve>
+    <BasePriceConventions>NYMEX:NG</BasePriceConventions>
+    <BasisQuotes>
+      <Quote>COMMODITY_FWD/PRICE/ICE:WAH/*</Quote>
+    </BasisQuotes>
+    <BasisConventions>ICE:WAH</BasisConventions>
+    <DayCounter>A365</DayCounter>
+    <InterpolationMethod>LinearFlat</InterpolationMethod>
+    <AddBasis>true</AddBasis>
+  </BasisConfiguration>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity curve configuration for ICE Waha}
+\label{lst:commodity_crv_config_ice_waha}
+\end{longlisting}
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>NYMEX:FF</CurveId>
+  <Currency>USD</Currency>
+  <BasisConfiguration>
+    <BasePriceCurve>NYMEX:CL</BasePriceCurve>
+    <BasePriceConventions>NYMEX:CL</BasePriceConventions>
+    <BasisQuotes>
+      <Quote>COMMODITY_FWD/PRICE/NYMEX:FF/*</Quote>
+    </BasisQuotes>
+    <BasisConventions>NYMEX:FF</BasisConventions>
+    <DayCounter>A365</DayCounter>
+    <InterpolationMethod>LinearFlat</InterpolationMethod>
+    <AddBasis>true</AddBasis>
+    <AverageBase>true</AverageBase>
+  </BasisConfiguration>
+  <Extrapolation>true</Extrapolation>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity curve configuration for WTI Midland (Argus)}
+\label{lst:commodity_crv_config_cme_ff}
+\end{longlisting}
+
+The meaning of the fields in the \lstinline!BasisConfiguration! node in Listings \ref{lst:commodity_crv_config_ice_waha} and \ref{lst:commodity_crv_config_cme_ff} are as follows:
+\begin{itemize}
+\item \lstinline!BasePriceCurve!: The identifier for the base future commodity price curve.
+\item \lstinline!BasePriceConventions!: The identifier for the base future contract conventions.
+\item \lstinline!BasisQuotes!: The set of basis quotes to look for in the market. Note that this can be a single wildcard string as shown in the Listings or a list of explicit \lstinline!COMMODITY_FWD! \lstinline!PRICE! quote strings.
+\item \lstinline!BasisConventions!: The identifier for the basis future contract conventions.
+\item \lstinline!DayCounter!: Has the meaning given previously in this section.
+\item \lstinline!InterpolationMethod! [Optional]: Has the meaning given previously in this section.
+\item \lstinline!AddBasis! [Optional]: This is a boolean flag where \lstinline!true!, the default value, indicates that the basis value should be added to the base price to give the outright price and \lstinline!false! indicates that the basis value should be subtracted from the base price to give the outright price.
+\item \lstinline!MonthOffset! [Optional]: This is an optional non-negative integer value. In general, the basis contract period and the base contract period are equal, i.e.\ the value of the March basis contract for ICE Waha will be added to the value of thr March contract for CME NG. If for contracts with a monthly cycle or greater, the base contract month is $n$ months prior to the basis contract month, the \lstinline!MonthOffset! should be set to $n$. The default value if omitted is 0.
+\end{itemize}
+
+A commodity curve may also be set up as a piecewise price curve involving sets of quotes e.g. direct future price quotes, future price quotes that are the average of other future prices over a period, future price quotes that are the average of spot price over a period etc. This is particularly useful for cases where there are future contracts with different cycles. For example, in the power markets, there are daily future contracts at the short end and monthly future contracts that average the daily prices over the month at the long end. An example of such a set-up is shown in Listing \ref{lst:commodity_crv_config_ice_pdq}.
+
+\begin{longlisting}
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityCurve>
+  <CurveId>ICE:PDQ</CurveId>
+  <Currency>USD</Currency>
+  <PriceSegments>
+    <PriceSegment>
+      <Type>Future</Type>
+      <Priority>1</Priority>
+      <Conventions>ICE:PDQ</Conventions>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/ICE:PDQ/*</Quote>
+      </Quotes>
+    </PriceSegment>
+    <PriceSegment>
+      <Type>AveragingFuture</Type>
+      <Priority>2</Priority>
+      <Conventions>ICE:PMI</Conventions>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/ICE:PMI/*</Quote>
+      </Quotes>
+    </PriceSegment>
+  </PriceSegments>
+  <DayCounter>A365</DayCounter>
+  <InterpolationMethod>LinearFlat</InterpolationMethod>
+  <Extrapolation>true</Extrapolation>
+  <BootstrapConfig>...</BootstrapConfig>
+</CommodityCurve>
+\end{minted}
+\caption{Commodity curve configuration for PJM Real Time Peak}
+\label{lst:commodity_crv_config_ice_pdq}
+\end{longlisting}
+
+The \lstinline!BootstrapConfig! node is described in Section \ref{sec:bootstrap_config}. The remaining nodes in Listing \ref{lst:commodity_crv_config_ice_pdq} have been described already in this section. The meaning of each of the fields in the \lstinline!PriceSegment! node in Listing \ref{lst:commodity_crv_config_ice_pdq} is as follows:
+\begin{itemize}
+\item \lstinline!Type!:
+The type of the future contract for which quotes are being provided in the current \lstinline!PriceSegment!. The allowable values are:
+    \begin{itemize}
+    \item \lstinline!Future!: This indicates that the quote is a straight future contract price quote.
+    \item \lstinline!AveragingFuture!: This indicates that the quote is for a future contract price that is the average of other future contract prices over a given period. The averaging period for each quote and other conventions are given in the associated conventions determined by the \lstinline!Conventions! node.
+    \item \lstinline!AveragingSpot!: This indicates that the quote is for a future contract price that is the average of spot prices over a given period. The averaging period for each quote and other conventions are given in the associated conventions determined by the \lstinline!Conventions! node.
+    \end{itemize}
+
+\item \lstinline!Priority! [Optional]:
+An optional non-negative integer giving the priority of the current \lstinline!PriceSegment! relative to the other \lstinline!PriceSegment!s when there are quotes for contracts with the same expiry dates in those segments. Values closer to zero indicate higher priority i.e.\ quotes in this segment are given priority in the event of clashes. If omitted, the \lstinline!PriceSegment!s are currently read in the order that they are provided in the XML so that quotes in segments appearing earlier in the XML will be given preference in the case of clashes.
+
+\item \lstinline!Conventions!:
+The identifier for the future contract conventions associated with the quotes in the \lstinline!PriceSegment!. Details on these conventions are given in Section \ref{sec:commodity_future_conventions}.
+
+\item \lstinline!Quotes!:
+The set of future price quotes to look for in the market. Note that this can be a single wildcard string as shown in the Listing \ref{lst:commodity_crv_config_ice_pdq} or a list of explicit \lstinline!COMMODITY_FWD! \lstinline!PRICE! quote strings.
+
+\end{itemize}

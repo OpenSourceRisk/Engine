@@ -20,7 +20,6 @@
 
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
-
 namespace QuantExt {
 
 DiscountingFxForwardEngine::DiscountingFxForwardEngine(
@@ -71,17 +70,17 @@ void DiscountingFxForwardEngine::calculate() const {
     QL_REQUIRE(currency1Discountcurve_->referenceDate() == currency2Discountcurve_->referenceDate(),
                "Term structures should have the same reference date.");
 
-    QL_REQUIRE(arguments_.maturityDate >= currency1Discountcurve_->referenceDate(),
+    QL_REQUIRE(arguments_.payDate >= currency1Discountcurve_->referenceDate(),
                "FX forward maturity should exceed or equal the "
                "discount curve reference date.");
 
     results_.value = 0.0;
     results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1 / tmpNominal2); // strike rate
     results_.additionalResults["fairForwardRate"] = tmpNominal1 / tmpNominal2;
-    results_.additionalResults["ccy1"] = ccy1_.code();
-    results_.additionalResults["ccy2"] = ccy2_.code();
+    results_.additionalResults["currency[1]"] = ccy1_.code();
+    results_.additionalResults["currency[2]"] = ccy2_.code();
 
-    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+    if (!detail::simple_event(arguments_.payDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         Real disc1near = currency1Discountcurve_->discount(npvDate);
         Real disc1far = currency1Discountcurve_->discount(arguments_.payDate);
         Real disc2near = currency2Discountcurve_->discount(npvDate);
@@ -105,10 +104,8 @@ void DiscountingFxForwardEngine::calculate() const {
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
         results_.additionalResults["fairForwardRate"] = fxfwd;
         results_.additionalResults["fxSpot"] = spotFX_->value();
-        results_.additionalResults["ccy1NearDiscountFactor"] = disc1near;
-        results_.additionalResults["ccy2NearDiscountFactor"] = disc2near;
-        results_.additionalResults["ccy1FarDiscountFactor"] = disc1far;
-        results_.additionalResults["ccy2FarDiscountFactor"] = disc2far;
+        results_.additionalResults["discountFactor[1]"] = disc1far;
+        results_.additionalResults["discountFactor[2]"] = disc2far;
 
         // set notional
         if (arguments_.isPhysicallySettled) {
@@ -116,21 +113,28 @@ void DiscountingFxForwardEngine::calculate() const {
             if (tmpNominal1 > tmpNominal2 * fxfwd) {
                 results_.additionalResults["currentNotional"] = tmpNominal1;
                 results_.additionalResults["notionalCurrency"] = ccy1_.code();
-                results_.additionalResults["notionalTwo"] = tmpNominal2;
-                results_.additionalResults["notionalTwoCurrency"] = ccy2_.code();
+                results_.additionalResults["notional[1]"] = tmpNominal1;
+                results_.additionalResults["notionalCurrency[1]"] = ccy1_.code();
+                results_.additionalResults["notional[2]"] = tmpNominal2;
+                results_.additionalResults["notionalCurrency[2]"] = ccy2_.code();
             } else {
                 results_.additionalResults["currentNotional"] = tmpNominal2;
                 results_.additionalResults["notionalCurrency"] = ccy2_.code();
-                results_.additionalResults["notionalTwo"] = tmpNominal1;
-                results_.additionalResults["notionalTwoCurrency"] = ccy1_.code();
+                results_.additionalResults["notional[1]"] = tmpNominal2;
+                results_.additionalResults["notionalCurrency[1]"] = ccy2_.code();
+                results_.additionalResults["notional[2]"] = tmpNominal1;
+                results_.additionalResults["notionalCurrency[2]"] = ccy1_.code();
             }
         } else {
             // for cash settled forwards we take the notional from the settlement ccy leg
             results_.additionalResults["currentNotional"] =
                 arguments_.currency1 == arguments_.payCcy ? arguments_.nominal1 : arguments_.nominal2;
             results_.additionalResults["notionalCurrency"] = arguments_.payCcy.code();
-            results_.additionalResults["notionalTwo"] = arguments_.currency1 == arguments_.payCcy ? arguments_.nominal2 : arguments_.nominal1; 
-            results_.additionalResults["notionalTwoCurrency"] = ccy1_.code() == arguments_.payCcy.code() ? ccy2_.code() : ccy1_.code();
+            results_.additionalResults["notional[1]"] =
+                arguments_.currency1 == arguments_.payCcy ? arguments_.nominal1 : arguments_.nominal2;
+            results_.additionalResults["notionalCurrency[1]"] = arguments_.payCcy.code();
+            results_.additionalResults["notional[2]"] = arguments_.currency1 == arguments_.payCcy ? arguments_.nominal2 : arguments_.nominal1; 
+            results_.additionalResults["notionalCurrency[2]"] = ccy1_.code() == arguments_.payCcy.code() ? ccy2_.code() : ccy1_.code();
         }
     }
 

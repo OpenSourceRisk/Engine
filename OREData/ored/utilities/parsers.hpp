@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -32,6 +33,7 @@
 #include <ql/exercise.hpp>
 #include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
@@ -47,6 +49,7 @@
 #include <ql/types.hpp>
 
 #include <qle/cashflows/commoditycashflow.hpp>
+#include <qle/instruments/cdsoption.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/currencies/configurablecurrency.hpp>
@@ -281,7 +284,7 @@ QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string
 */
 QuantLib::FdmSchemeDesc parseFdmSchemeDesc(const std::string& s);
 
-enum class AssetClass { EQ, FX, COM, IR, INF, CR };
+enum class AssetClass { EQ, FX, COM, IR, INF, CR, BOND };
 
 //! Convert text to ore::data::AssetClass
 /*!
@@ -422,6 +425,16 @@ QuantExt::CommodityQuantityFrequency parseCommodityQuantityFrequency(const std::
 
 //! Write QuantExt::CommodityQuantityFrequency to stream
 std::ostream& operator<<(std::ostream& os, QuantExt::CommodityQuantityFrequency cqf);
+
+/*! Convert text to QuantExt::CdsOption::StrikeType
+    \ingroup utilities
+*/
+QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
+
+/*! Convert text to QuantLib::Average::Type
+    \ingroup utilities
+*/
+QuantLib::Average::Type parseAverageType(const std::string& s);
 
 } // namespace data
 } // namespace ore

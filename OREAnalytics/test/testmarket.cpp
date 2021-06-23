@@ -32,6 +32,8 @@
 
 #include <test/testmarket.hpp>
 
+using QuantExt::CommodityIndex;
+using QuantExt::CommoditySpotIndex;
 using QuantExt::EquityIndex;
 using QuantExt::InterpolatedPriceCurve;
 using QuantExt::PriceTermStructure;
@@ -279,15 +281,19 @@ TestMarket::TestMarket(Date asof) {
 
     // Gold curve
     vector<Real> prices = {1155.593, 1160.9, 1168.1, 1210};
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = Handle<PriceTermStructure>(
-        boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter, USDCurrency()));
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")]->enableExtrapolation();
+    Handle<PriceTermStructure> ptsGold(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        commTenors, prices, ccDayCounter, USDCurrency()));
+    ptsGold->enableExtrapolation();
+    commodityIndices_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = Handle<CommodityIndex>(
+        boost::make_shared<CommoditySpotIndex>("COMDTY_GOLD_USD", NullCalendar(), ptsGold));
 
     // WTI Oil curve
     prices = {30.89, 41.23, 44.44, 49.18};
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = Handle<PriceTermStructure>(
-        boost::make_shared<InterpolatedPriceCurve<Linear>>(commTenors, prices, ccDayCounter, USDCurrency()));
-    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")]->enableExtrapolation();
+    Handle<PriceTermStructure> ptsOil(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+        commTenors, prices, ccDayCounter, USDCurrency()));
+    ptsOil->enableExtrapolation();
+    commodityIndices_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = Handle<CommodityIndex>(
+        boost::make_shared<CommoditySpotIndex>("COMDTY_WTI_USD", NullCalendar(), ptsOil));
 
     // Commodity volatilities
     commodityVols_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = flatRateFxv(0.15);
@@ -399,7 +405,6 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setSimulateSurvivalProbabilities(true);
     simMarketData->setDefaultCurveCalendars("", "TARGET");
     simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
 
     simMarketData->setSwapVolTerms(
         "", {1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
@@ -439,7 +444,6 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
 
     simMarketData->setYieldCurveNames({"BondCurve1"});
     simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
 
     simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolExpiries(

@@ -64,11 +64,13 @@ public:
         \param npvDate
                Discount to this date. If not given the npv date
                is set to the evaluation date
+        \param spotFXSettleDate
+               FX conversion as of this date if specified explicitly
     */
     CrossCcySwapEngine(const Currency& ccy1, const Handle<YieldTermStructure>& currency1DiscountCurve,
                        const Currency& ccy2, const Handle<YieldTermStructure>& currency2DiscountCurve,
                        const Handle<Quote>& spotFX, boost::optional<bool> includeSettlementDateFlows = boost::none,
-                       const Date& settlementDate = Date(), const Date& npvDate = Date());
+                       const Date& settlementDate = Date(), const Date& npvDate = Date(), const Date& spotFXSettleDate = Date());
     //@}
 
     //! \name PricingEngine interface
@@ -96,6 +98,7 @@ private:
     boost::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_;
     Date npvDate_;
+    Date spotFXSettleDate_;
 };
 } // namespace QuantExt
 

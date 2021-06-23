@@ -24,8 +24,8 @@
 #ifndef quantext_analytic_cash_settled_european_engine_hpp
 #define quantext_analytic_cash_settled_european_engine_hpp
 
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <qle/pricingengines/analyticeuropeanforwardengine.hpp>
 #include <qle/instruments/cashsettledeuropeanoption.hpp>
 
 namespace QuantExt {
@@ -52,7 +52,7 @@ public:
 
 private:
     //! Underlying engine that does the work.
-    mutable QuantLib::AnalyticEuropeanEngine underlyingEngine_;
+    mutable QuantExt::AnalyticEuropeanForwardEngine underlyingEngine_;
     //! Underlying process
     boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> bsp_;
     //! Curve for discounting cashflows

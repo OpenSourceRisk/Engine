@@ -178,7 +178,6 @@ void simulation(string dateGridString, bool checkFixings) {
                                     {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
     parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     parameters->interpolation() = "LogLinear";
-    parameters->extrapolate() = true;
 
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});

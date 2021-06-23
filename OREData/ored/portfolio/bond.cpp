@@ -64,6 +64,7 @@ void BondData::fromXML(XMLNode* node) {
         coupons_.push_back(ld);
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
+    hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
     initialise();
 }
 
@@ -85,12 +86,19 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
+    if (!hasCreditRisk_)
+        XMLUtils::addChild(doc, bondNode, "CreditRisk", hasCreditRisk_);
     return bondNode;
 }
 
 void BondData::initialise() {
 
     isPayer_ = false;
+
+    if (!hasCreditRisk() && !creditCurveId().empty()) {
+        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
+        creditCurveId_ = "";
+    }
 
     if (!zeroBond()) {
 
@@ -160,6 +168,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
+
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     Date issueDate = parseDate(bondData_.issueDate());
@@ -170,6 +180,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
+    std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", "", false, "");
+    Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
     std::vector<Leg> separateLegs;
     if (bondData_.zeroBond()) { // Zero coupon bond
@@ -180,7 +192,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
+            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+                                       openEndDateReplacement);
             separateLegs.push_back(leg);
         } // for coupons_
         Leg leg = joinLegs(separateLegs);
@@ -215,5 +228,53 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, bondData_.toXML(doc));
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>>
+Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    std::map<AssetClass, std::set<std::string>> result;
+    result[AssetClass::BOND] = {bondData_.securityId()};
+    return result;
+}
+
+boost::shared_ptr<QuantLib::Bond> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                                     const std::string& securityId) const {
+    for (auto const& b : builders_) {
+        if (referenceData->hasData(b.first, securityId))
+            return b.second->build(engineFactory, referenceData, securityId);
+    }
+
+    QL_FAIL("BondFactory: could not build bond '"
+            << securityId
+            << "': no reference data given or no suitable builder registered. Check if bond is set up in the reference "
+               "data and that there is a builder for the reference data type.");
+}
+
+void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder) {
+    builders_[referenceDataType] = builder;
+}
+
+BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
+
+boost::shared_ptr<QuantLib::Bond>
+VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                          const std::string& securityId) const {
+    BondData data(securityId, 1.0);
+    data.populateFromBondReferenceData(referenceData);
+    ore::data::Bond bond(Envelope(), data);
+    bond.id() = "VanillaBondBuilder_" + securityId;
+    bond.build(engineFactory);
+
+    QL_REQUIRE(bond.instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
+    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+
+    QL_REQUIRE(bond.instrument() && bond.instrument()->qlInstrument(),
+               "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
+               "(either the instrument wrapper or the ql instrument is null)");
+
+    return qlBond;
+}
+
 } // namespace data
 } // namespace ore

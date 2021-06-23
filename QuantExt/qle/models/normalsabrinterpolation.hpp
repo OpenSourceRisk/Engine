@@ -30,9 +30,8 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 namespace detail {
 

@@ -20,6 +20,7 @@
 #include <boost/test/unit_test.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/austria.hpp>
+#include <ql/time/calendars/thailand.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
@@ -31,7 +32,6 @@
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
-#include <qle/calendars/thailand.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -150,10 +150,13 @@ BOOST_AUTO_TEST_CASE(testThaiCalendar) {
 
     expectedHolidays.push_back(Date(1, January, 2018));
     expectedHolidays.push_back(Date(2, January, 2018));
+    expectedHolidays.push_back(Date(1, March, 2018)); // Makha Bucha Day
     expectedHolidays.push_back(Date(6, April, 2018));
     expectedHolidays.push_back(Date(13, April, 2018));
     expectedHolidays.push_back(Date(16, April, 2018));
     expectedHolidays.push_back(Date(1, May, 2018));
+    expectedHolidays.push_back(Date(29, May, 2018));  // Wisakha Bucha Day
+    expectedHolidays.push_back(Date(27, July, 2018)); // Asarnha Bucha Day
     expectedHolidays.push_back(Date(30, July, 2018));
     expectedHolidays.push_back(Date(13, August, 2018));
     expectedHolidays.push_back(Date(15, October, 2018));

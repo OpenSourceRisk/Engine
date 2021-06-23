@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -25,6 +26,7 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
@@ -67,6 +69,10 @@ public:
         NaturalCubic,
         FinancialCubic,
         ConvexMonotone,
+        Quadratic,
+        LogQuadratic,
+        Hermite,
+        CubicSpline,
         ExponentialSplines, // fitted bond curves only
         NelsonSiegel,       // fitted bond curves only
         Svensson            // fitted bond curves only
@@ -95,8 +101,13 @@ public:
         const FXTriangulation& fxTriangulation = FXTriangulation(),
         //! optional pointer to reference data, needed to build fitted bond curves
         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        //! ibor fallback config
+        const IborFallbackConfig& iborfallbackConfig = IborFallbackConfig::defaultConfig(),
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
-        const bool preserveQuoteLinkage = false);
+        const bool preserveQuoteLinkage = false,
+        //! Map of underlying discount curves if required
+        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves =
+            map<string, boost::shared_ptr<YieldCurve>>());
 
     //! \name Inspectors
     //@{
@@ -135,6 +146,8 @@ private:
     void buildWeightedAverageCurve();
     //! Build a yield curve that uses QuantExt::YieldPlusDefaultYieldTermStructure
     void buildYieldPlusDefaultCurve();
+    //! Build a yield curve that uses QuantExt::IborFallbackCurve
+    void buildIborFallbackCurve();
 
     //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
     boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
@@ -147,7 +160,9 @@ private:
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     const FXTriangulation& fxTriangulation_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
     const bool preserveQuoteLinkage_;
+    map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments);
 

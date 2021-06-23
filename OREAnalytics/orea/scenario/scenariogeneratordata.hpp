@@ -54,16 +54,18 @@ public:
     ScenarioGeneratorData()
         : discretization_(CrossAssetStateProcess::discretization::exact), grid_(boost::make_shared<DateGrid>()),
           sequenceType_(SobolBrownianBridge), seed_(0), samples_(0), ordering_(SobolBrownianGenerator::Steps),
-          directionIntegers_(SobolRsg::JoeKuoD7) {}
+          directionIntegers_(SobolRsg::JoeKuoD7), withCloseOutLag_(false), withMporStickyDate_(false) {}
 
     //! Constructor
     ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization, boost::shared_ptr<DateGrid> dateGrid,
                           SequenceType sequenceType, long seed, Size samples,
                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
-                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7)
+                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
+                          bool withCloseOutLag = false, bool withMporStickyDate = false)
         : discretization_(discretization), sequenceType_(sequenceType), seed_(seed), samples_(samples),
-          ordering_(ordering), directionIntegers_(directionIntegers) {
-            setGrid(dateGrid);
+          ordering_(ordering), directionIntegers_(directionIntegers), withCloseOutLag_(false),
+          withMporStickyDate_(false) {
+        setGrid(dateGrid);
     }
 
     void clear();

@@ -73,7 +73,6 @@ void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(proxySurface());
         // see EquityVolCurve::buildVolatility(...) for proxy surfaces, there we require equity curves for
         // the curveID of the vol curve and the proxy vol curve implicitly
-        requiredCurveIds_[CurveSpec::CurveType::Equity].insert(curveID_);
         requiredCurveIds_[CurveSpec::CurveType::Equity].insert(proxySurface());
     }
 }
@@ -169,6 +168,10 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
 
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
+
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -196,6 +199,8 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
+
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }

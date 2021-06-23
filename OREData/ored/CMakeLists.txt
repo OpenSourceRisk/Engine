@@ -15,6 +15,7 @@ configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
 configuration/genericyieldvolcurveconfig.cpp
+configuration/iborfallbackconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
@@ -84,9 +85,11 @@ model/lgmdata.cpp
 model/modeldata.cpp
 model/modelparameter.cpp
 model/utilities.cpp
+portfolio/asianoption.cpp
 portfolio/bond.cpp
 portfolio/bondutils.cpp
 portfolio/builders/capfloor.cpp
+portfolio/builders/capflooredaverageonindexedcouponleg.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/capflooredovernightindexedcouponleg.cpp
 portfolio/builders/cms.cpp
@@ -96,6 +99,7 @@ portfolio/builders/durationadjustedcms.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
+portfolio/commodityasianoption.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
 portfolio/creditdefaultswap.cpp
@@ -106,6 +110,7 @@ portfolio/durationadjustedcmslegdata.cpp
 portfolio/enginedata.cpp
 portfolio/enginefactory.cpp
 portfolio/envelope.cpp
+portfolio/equityasianoption.cpp
 portfolio/equityforward.cpp
 portfolio/equityfuturesoption.cpp
 portfolio/equityoption.cpp
@@ -113,6 +118,7 @@ portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
+portfolio/fxasianoption.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
@@ -122,11 +128,13 @@ portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
+portfolio/optionasiandata.cpp
 portfolio/optiondata.cpp
 portfolio/optionexercisedata.cpp
 portfolio/optionpaymentdata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
+portfolio/premiumdata.cpp
 portfolio/referencedata.cpp
 portfolio/referencedatafactory.cpp
 portfolio/schedule.cpp
@@ -154,6 +162,7 @@ utilities/parsers.cpp
 utilities/progressbar.cpp
 utilities/strike.cpp
 utilities/to_string.cpp
+utilities/wildcard.cpp
 utilities/xmlutils.cpp)
 
 # hpp files, this list is maintained manually
@@ -175,6 +184,7 @@ configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
 configuration/genericyieldvolcurveconfig.hpp
+configuration/iborfallbackconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
@@ -253,34 +263,43 @@ model/modeldata.hpp
 model/modelparameter.hpp
 model/structuredmodelerror.hpp
 model/utilities.hpp
+portfolio/asianoption.hpp
 portfolio/bond.hpp
 portfolio/bondutils.hpp
+portfolio/builders/asianoption.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
+portfolio/builders/capflooredaverageonindexedcouponleg.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
 portfolio/builders/capflooredovernightindexedcouponleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
+portfolio/builders/commodityasianoption.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
 portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/durationadjustedcms.hpp
+portfolio/builders/equityasianoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/forwardbond.hpp
+portfolio/builders/fxasianoption.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
+portfolio/builders/quantoequityoption.hpp
+portfolio/builders/quantovanillaoption.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
 portfolio/builders/vanillaoption.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
+portfolio/commodityasianoption.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
 portfolio/creditdefaultswap.hpp
@@ -291,6 +310,7 @@ portfolio/durationadjustedcmslegdata.hpp
 portfolio/enginedata.hpp
 portfolio/enginefactory.hpp
 portfolio/envelope.hpp
+portfolio/equityasianoption.hpp
 portfolio/equityforward.hpp
 portfolio/equityfuturesoption.hpp
 portfolio/equityoption.hpp
@@ -298,6 +318,7 @@ portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
+portfolio/fxasianoption.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp
@@ -308,11 +329,13 @@ portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
+portfolio/optionasiandata.hpp
 portfolio/optiondata.hpp
 portfolio/optionexercisedata.hpp
 portfolio/optionpaymentdata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
+portfolio/premiumdata.hpp
 portfolio/referencedata.hpp
 portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
@@ -348,6 +371,7 @@ utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
+utilities/wildcard.hpp
 utilities/xmlutils.hpp
 version.hpp)
 

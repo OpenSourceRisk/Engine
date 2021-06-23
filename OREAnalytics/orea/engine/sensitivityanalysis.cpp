@@ -62,16 +62,16 @@ SensitivityAnalysis::SensitivityAnalysis(
     const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
-    const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool continueOnError,
-    bool xccyDiscounting, bool analyticFxSensis)
+    const boost::shared_ptr<ReferenceDataManager>& referenceData, const IborFallbackConfig& iborFallbackConfig,
+    const bool continueOnError, bool xccyDiscounting, bool analyticFxSensis)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData),
-      continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio),
-      xccyDiscounting_(xccyDiscounting), analyticFxSensis_(analyticFxSensis), initialized_(false),
-      computed_(false) {}
+      iborFallbackConfig_(iborFallbackConfig), continueOnError_(continueOnError), engineData_(engineData),
+      portfolio_(portfolio), xccyDiscounting_(xccyDiscounting), analyticFxSensis_(analyticFxSensis),
+      initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -131,9 +131,9 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
 
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
                                                                            << ")");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_,
-                                                       curveConfigs_, todaysMarketParams_, continueOnError_,
-                                                       sensitivityData_->useSpreadedTermStructures());
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(
+        market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_,
+        continueOnError_, sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
 
     LOG("Sim market initialised for sensitivity analysis");
 
@@ -159,7 +159,7 @@ SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuil
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_);
+        engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_, iborFallbackConfig_);
     return factory;
 }
 
@@ -677,7 +677,13 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(itr != sensiParams.securityShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = itr->second.shiftSize;
         if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            shiftMult = simMarket->securitySpread(keylabel, marketConfiguration)->value();
+            shiftMult = 1.0;
+            try {
+                shiftMult = simMarket->securitySpread(keylabel, marketConfiguration)->value();
+            } catch(...) {
+                // if there is no spread given for a security, we return 1.0, this is not relevant anyway,
+                // because there will be no scenario generated for this risk factor
+            }
         }
     } break;
     default:

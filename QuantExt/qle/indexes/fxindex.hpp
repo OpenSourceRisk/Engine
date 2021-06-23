@@ -105,6 +105,11 @@ public:
     virtual Real forecastFixing(const Date& fixingDate) const;
     Real pastFixing(const Date& fixingDate) const;
     // @}
+
+    //! clone the index, the clone will be linked to the provided handles
+    boost::shared_ptr<FxIndex> clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
+                                     const Handle<YieldTermStructure>& targetYts);
+
 protected:
     std::string familyName_;
     Natural fixingDays_;

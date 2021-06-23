@@ -1,5 +1,6 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2021 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -50,17 +51,16 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
-#include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/currencycomparator.hpp>
 #include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/time/actual364.hpp>
 #include <qle/time/yearcounter.hpp>
-#include <qle/currencies/currencycomparator.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <regex>
@@ -175,6 +175,15 @@ bool parseBool(const string& s) {
 }
 
 Calendar parseCalendar(const string& s, const string& newName) {
+
+    // When adding to the static map, keep in mind that the calendar name on the LHS might be used to add or remove holidays
+    // in calendaradjustmentconfig.xml. The calendar on the RHS of the mapping will then be adjusted, so this latter calendar
+    // should never be a fallback like WeekendsOnly(), because then the WeekendsOnly() calendar would unintentionally be
+    // adjusted. Instead, use a copy of the fallback calendar in these cases. For example, do not map
+    // "AED" => WeekendsOnly()
+    // but instead use the mapping
+    // "AED" => AmendedCalendar(WeekendsOnly(), "AED")
+
     static map<string, Calendar> m = {
         {"TGT", TARGET()},
         {"TARGET", TARGET()},
@@ -256,7 +265,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"SE", Sweden()},
         {"CH", QuantExt::Switzerland()},
         {"TW", Taiwan()},
-        {"TH", QuantExt::Thailand()},
+        {"TH", Thailand()},
         {"TR", Turkey()},
         {"UA", Ukraine()},
         {"GB", UnitedKingdom()},
@@ -306,7 +315,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"SWE", Sweden()},
         {"CHE", QuantExt::Switzerland()},
         {"TWN", Taiwan()},
-        {"THA", QuantExt::Thailand()},
+        {"THA", Thailand()},
         {"TUR", Turkey()},
         {"UKR", Ukraine()},
         {"GBR", UnitedKingdom()},
@@ -354,7 +363,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"CHF", QuantExt::Switzerland()},
         {"EUR", TARGET()},
         {"TWD", Taiwan()},
-        {"THB", QuantExt::Thailand()},
+        {"THB", Thailand()},
         {"TRY", Turkey()},
         {"UAH", Ukraine()},
         {"GBP", UnitedKingdom()},
@@ -362,47 +371,47 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"BEF", Belgium()},
         {"LUF", Luxembourg()},
         {"ATS", QuantExt::Austria()},
-         
+
         // Minor Currencies
-        { "GBp", UnitedKingdom() },
-        { "GBX", UnitedKingdom() },
-        { "ILa", QuantLib::Israel() },
-        { "ILX", QuantLib::Israel() },
-        { "ZAc", SouthAfrica() },
-        { "ZAC", SouthAfrica() },
-        { "ZAX", SouthAfrica() },
+        {"GBp", UnitedKingdom()},
+        {"GBX", UnitedKingdom()},
+        {"ILa", QuantLib::Israel()},
+        {"ILX", QuantLib::Israel()},
+        {"ZAc", SouthAfrica()},
+        {"ZAC", SouthAfrica()},
+        {"ZAX", SouthAfrica()},
 
         // fallback to WeekendsOnly for these emerging ccys
-        {"AED", WeekendsOnly()},
-        {"BHD", WeekendsOnly()},
-        {"CLF", WeekendsOnly()},
-        {"EGP", WeekendsOnly()},
-        {"KWD", WeekendsOnly()},
-        {"KZT", WeekendsOnly()},
-        {"MAD", WeekendsOnly()},
-        {"MXV", WeekendsOnly()},
-        {"NGN", WeekendsOnly()},
-        {"OMR", WeekendsOnly()},
-        {"PKR", WeekendsOnly()},
-        {"QAR", WeekendsOnly()},
-        {"UYU", WeekendsOnly()},
-        {"TND", WeekendsOnly()},
-        {"VND", WeekendsOnly()},
+        {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
+        {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
+        {"CLF", AmendedCalendar(WeekendsOnly(), "CLF")},
+        {"EGP", AmendedCalendar(WeekendsOnly(), "EGP")},
+        {"KWD", AmendedCalendar(WeekendsOnly(), "KWD")},
+        {"KZT", AmendedCalendar(WeekendsOnly(), "KZT")},
+        {"MAD", AmendedCalendar(WeekendsOnly(), "MAD")},
+        {"MXV", AmendedCalendar(WeekendsOnly(), "MXV")},
+        {"NGN", AmendedCalendar(WeekendsOnly(), "MGN")},
+        {"OMR", AmendedCalendar(WeekendsOnly(), "OMR")},
+        {"PKR", AmendedCalendar(WeekendsOnly(), "PKR")},
+        {"QAR", AmendedCalendar(WeekendsOnly(), "QAR")},
+        {"UYU", AmendedCalendar(WeekendsOnly(), "UYU")},
+        {"TND", AmendedCalendar(WeekendsOnly(), "TND")},
+        {"VND", AmendedCalendar(WeekendsOnly(), "VND")},
         // new GFMA currencies
-        {"AOA", WeekendsOnly()},
-        {"BGN", WeekendsOnly()},
-        {"ETB", WeekendsOnly()},
-        {"GEL", WeekendsOnly()},
-        {"GHS", WeekendsOnly()},
-        {"HRK", WeekendsOnly()},
-        {"JOD", WeekendsOnly()},
-        {"KES", WeekendsOnly()},
-        {"LKR", WeekendsOnly()},
-        {"MUR", WeekendsOnly()},
-        {"RSD", WeekendsOnly()},
-        {"UGX", WeekendsOnly()},
-        {"XOF", WeekendsOnly()},
-        {"ZMW", WeekendsOnly()},
+        {"AOA", AmendedCalendar(WeekendsOnly(), "AOA")},
+        {"BGN", AmendedCalendar(WeekendsOnly(), "BGN")},
+        {"ETB", AmendedCalendar(WeekendsOnly(), "ETB")},
+        {"GEL", AmendedCalendar(WeekendsOnly(), "GEL")},
+        {"GHS", AmendedCalendar(WeekendsOnly(), "GHS")},
+        {"HRK", AmendedCalendar(WeekendsOnly(), "HRK")},
+        {"JOD", AmendedCalendar(WeekendsOnly(), "JOD")},
+        {"KES", AmendedCalendar(WeekendsOnly(), "KES")},
+        {"LKR", AmendedCalendar(WeekendsOnly(), "LKR")},
+        {"MUR", AmendedCalendar(WeekendsOnly(), "MUR")},
+        {"RSD", AmendedCalendar(WeekendsOnly(), "RSD")},
+        {"UGX", AmendedCalendar(WeekendsOnly(), "UGX")},
+        {"XOF", AmendedCalendar(WeekendsOnly(), "XOF")},
+        {"ZMW", AmendedCalendar(WeekendsOnly(), "ZMW")},
 
         // ISO 10383 MIC Exchange
         {"BVMF", Brazil(Brazil::Exchange)},
@@ -1013,7 +1022,8 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
 AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {{"EQ", AssetClass::EQ},   {"FX", AssetClass::FX},
                                                    {"COM", AssetClass::COM}, {"IR", AssetClass::IR},
-                                                   {"INF", AssetClass::INF}, {"CR", AssetClass::CR}};
+                                                   {"INF", AssetClass::INF}, {"CR", AssetClass::CR},
+                                                   {"BOND", AssetClass::BOND} };
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -1037,6 +1047,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "INF";
     case AssetClass::CR:
         return os << "CR";
+    case AssetClass::BOND:
+        return os << "BOND";
     default:
         QL_FAIL("Unknown AssetClass");
     }
@@ -1410,6 +1422,8 @@ PriceSegment::Type parsePriceSegmentType(const string& s) {
         return PST::AveragingSpot;
     } else if (s == "AveragingOffPeakPower") {
         return PST::AveragingOffPeakPower;
+    } else if (s == "OffPeakPowerDaily") {
+        return PST::OffPeakPowerDaily;
     } else {
         QL_FAIL("PriceSegment::Type '" << s << "' not known, expect " <<
             "'Future', 'AveragingFuture' or 'AveragingSpot'");
@@ -1425,6 +1439,8 @@ ostream& operator<<(ostream& os, PriceSegment::Type pst) {
         return os << "AveragingSpot";
     } else if (pst == PST::AveragingOffPeakPower) {
         return os << "AveragingOffPeakPower";
+    } else if (pst == PST::OffPeakPowerDaily) {
+        return os << "OffPeakPowerDaily";
     } else {
         QL_FAIL("Unknown PriceSegment::Type.");
     }
@@ -1473,6 +1489,28 @@ ostream& operator<<(ostream& os, Rounding::Type t) {
         QL_FAIL("Internal error: unknown Rounding::Type - check implementation of operator<< "
                 "for this enum");
 
+    }
+}
+
+using QuantExt::CdsOption;
+CdsOption::StrikeType parseCdsOptionStrikeType(const string& s) {
+    using ST = CdsOption::StrikeType;
+    if (s == "Spread") {
+        return ST::Spread;
+    } else if (s == "Price") {
+        return ST::Price;
+    } else {
+        QL_FAIL("CdsOption::StrikeType \"" << s << "\" not recognized");
+    }
+}
+
+Average::Type parseAverageType(const std::string& s) {
+    if (s == "Arithmetic") {
+        return Average::Type::Arithmetic;
+    } else if (s == "Geometric") {
+        return Average::Type::Geometric;
+    } else {
+        QL_FAIL("Average::Type '" << s << "' not recognized. Should be Arithmetic or Geometric");
     }
 }
 

@@ -49,6 +49,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
@@ -162,6 +163,37 @@ void checkDayCounterConsistency(const std::string& curveId, const DayCounter& in
     }
 }
 
+boost::shared_ptr<YieldTermStructure>
+makeYieldCurve(const std::string& curveId, const bool spreaded, const Handle<YieldTermStructure>& initMarketTs,
+               const std::vector<Real>& yieldCurveTimes, const std::vector<Handle<Quote>>& quotes, const DayCounter& dc,
+               const Calendar& cal, const std::string& interpolation, const std::string& extrapolation) {
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
+        return boost::shared_ptr<YieldTermStructure>(boost::make_shared<QuantExt::InterpolatedDiscountCurve>(
+            yieldCurveTimes, quotes, 0, cal, dc,
+            interpolation == "LogLinear" ? QuantExt::InterpolatedDiscountCurve::Interpolation::logLinear
+                                         : QuantExt::InterpolatedDiscountCurve::Interpolation::linearZero,
+            extrapolation == "FlatZero" ? QuantExt::InterpolatedDiscountCurve::Extrapolation::flatZero
+                                        : QuantExt::InterpolatedDiscountCurve::Extrapolation::flatFwd));
+    } else {
+        if (spreaded) {
+            checkDayCounterConsistency(curveId, initMarketTs->dayCounter(), dc);
+            return boost::make_shared<QuantExt::SpreadedDiscountCurve>(
+                initMarketTs, yieldCurveTimes, quotes,
+                interpolation == "LogLinear" ? QuantExt::SpreadedDiscountCurve::Interpolation::logLinear
+                                             : QuantExt::SpreadedDiscountCurve::Interpolation::linearZero,
+                extrapolation == "FlatZero" ? SpreadedDiscountCurve::Extrapolation::flatZero
+                                            : SpreadedDiscountCurve::Extrapolation::flatFwd);
+        } else {
+            return boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(
+                yieldCurveTimes, quotes, dc,
+                interpolation == "LogLinear" ? QuantExt::InterpolatedDiscountCurve2::Interpolation::logLinear
+                                             : QuantExt::InterpolatedDiscountCurve2::Interpolation::linearZero,
+                extrapolation == "FlatZero" ? InterpolatedDiscountCurve2::Extrapolation::flatZero
+                                            : InterpolatedDiscountCurve2::Extrapolation::flatFwd);
+        }
+    }
+}
+
 } // namespace
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
@@ -206,18 +238,9 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         }
     }
 
-    boost::shared_ptr<YieldTermStructure> yieldCurve;
-
-    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister && !spreaded) {
-        yieldCurve = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), dc));
-    } else {
-        if (spreaded) {
-            yieldCurve = boost::make_shared<QuantExt::SpreadedDiscountCurve>(wrapper, yieldCurveTimes, quotes);
-        } else {
-            yieldCurve = boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(yieldCurveTimes, quotes, dc);
-        }
-    }
+    boost::shared_ptr<YieldTermStructure> yieldCurve =
+        makeYieldCurve(key, spreaded, wrapper, yieldCurveTimes, quotes, dc, TARGET(), parameters_->interpolation(),
+                       parameters_->extrapolation());
 
     Handle<YieldTermStructure> ych(yieldCurve);
     if (wrapper->allowsExtrapolation())
@@ -234,30 +257,36 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
-                                     const bool allowPartialScenarios)
+                                     const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig)
     : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
                         configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
-                        cacheSimData, allowPartialScenarios) {}
+                        cacheSimData, allowPartialScenarios, iborFallbackConfig) {}
 
 ScenarioSimMarket::ScenarioSimMarket(
     const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
     const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
     const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
     const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
-    const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios)
+    const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios,
+    const IborFallbackConfig& iborFallbackConfig)
     : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
       filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
-      cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios) {
+      cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
+      iborFallbackConfig_(iborFallbackConfig) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
 
-    // Sort parameters so they get processed in correct order
-    map<RiskFactorKey::KeyType, pair<bool, set<string>>> params;
-    params.insert(parameters->parameters().begin(), parameters->parameters().end());
+    // check ssm parameters
+    QL_REQUIRE(parameters_->interpolation() == "LogLinear" || parameters_->interpolation() == "LinearZero",
+               "ScenarioSimMarket: Interpolation (" << parameters_->interpolation()
+                                                    << ") must be set to 'LogLinear' or 'LinearZero'");
+    QL_REQUIRE(parameters_->extrapolation() == "FlatZero" || parameters_->extrapolation() == "FlatFwd",
+               "ScenarioSimMarket: Extrapolation ('" << parameters_->extrapolation()
+                                                     << "') must be set to 'FlatZero' or 'FlatFwd'");
 
-    for (const auto& param : params) {
+    for (const auto& param : parameters->parameters()) {
         try {
             std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
             std::map<RiskFactorKey, Real> absoluteSimDataTmp;
@@ -299,8 +328,24 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::IndexCurve:
-                for (const auto& name : param.second.second) {
+            case RiskFactorKey::KeyType::IndexCurve: {
+                // make sure we built overnight indices first, so that we can build ibor fallback indices
+                // that depend on them
+                std::vector<std::string> indices;
+                for (auto const& i : param.second.second) {
+                    bool isOn = false;
+                    try {
+                        isOn = boost::dynamic_pointer_cast<OvernightIndex>(*initMarket->iborIndex(i, configuration)) !=
+                               nullptr;
+                    } catch (...) {
+                    }
+                    if (isOn)
+                        indices.insert(indices.begin(), i);
+                    else
+                        indices.push_back(i);
+                }
+                // loop over sorted indices and build them
+                for (const auto& name : indices) {
                     try {
                         LOG("building " << name << " index curve");
                         std::vector<string> indexTokens;
@@ -351,43 +396,47 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << val);
                         }
 
-                        // FIXME interpolation fixed to linear, added to xml??
-                        boost::shared_ptr<YieldTermStructure> indexCurve;
-                        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister &&
-                            !useSpreadedTermStructures_) {
-                            indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                                yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
-                        } else {
-                            if (useSpreadedTermStructures_) {
-                                indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                    new QuantExt::SpreadedDiscountCurve(wrapperIndex, yieldCurveTimes, quotes));
-                            } else {
-                                indexCurve = boost::shared_ptr<YieldTermStructure>(
-                                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
-                            }
-                        }
-
-                        // wrapped curve, is slower than a native curve
-                        // boost::shared_ptr<YieldTermStructure> correctedIndexCurve(
-                        //     new StaticallyCorrectedYieldTermStructure(
-                        //         discountCurves_[ccy], initMarket->discountCurve(ccy, configuration),
-                        //         wrapperIndex));
+                        boost::shared_ptr<YieldTermStructure> indexCurve = makeYieldCurve(
+                            name, useSpreadedTermStructures_, wrapperIndex, yieldCurveTimes, quotes, dc,
+                            index->fixingCalendar(), parameters_->interpolation(), parameters_->extrapolation());
 
                         Handle<YieldTermStructure> ich(indexCurve);
-                        // Handle<YieldTermStructure> ich(correctedIndexCurve);
                         if (wrapperIndex->allowsExtrapolation())
                             ich->enableExtrapolation();
 
-                        boost::shared_ptr<IborIndex> i(index->clone(ich));
-                        Handle<IborIndex> ih(i);
-                        iborIndices_.insert(pair<pair<string, string>, Handle<IborIndex>>(
-                            make_pair(Market::defaultConfiguration, name), ih));
+                        boost::shared_ptr<IborIndex> i = index->clone(ich);
+                        if (iborFallbackConfig_.isIndexReplaced(name, asof_)) {
+                            // handle ibor fallback indices
+                            auto fallbackData = iborFallbackConfig_.fallbackData(name);
+                            auto f = iborIndices_.find(make_pair(Market::defaultConfiguration, fallbackData.rfrIndex));
+                            QL_REQUIRE(f != iborIndices_.end(),
+                                       "Could not build ibor fallback index '"
+                                           << name << "', because rfr index '" << fallbackData.rfrIndex
+                                           << "' is not present in scenario sim market, is the rfr index in the "
+                                              "scenario sim market parameters?");
+                            auto rfrInd = boost::dynamic_pointer_cast<OvernightIndex>(*f->second);
+                            QL_REQUIRE(rfrInd != nullptr,
+                                       "Could not cast '"
+                                           << fallbackData.rfrIndex
+                                           << "' to overnight index when building the ibor fallback index '" << name
+                                           << "'");
+                            i = boost::make_shared<QuantExt::FallbackIborIndex>(
+                                i, rfrInd, fallbackData.spread, fallbackData.switchDate,
+                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                            DLOG("built ibor fall back index '"
+                                 << name << "' with rfr index '" << fallbackData.rfrIndex << "', spread "
+                                 << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha
+                                 << iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                        }
+                        iborIndices_.insert(
+                            make_pair(make_pair(Market::defaultConfiguration, name), Handle<IborIndex>(i)));
                         LOG("building " << name << " index curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name);
                     }
                 }
                 break;
+            }
 
             case RiskFactorKey::KeyType::EquitySpot:
                 for (const auto& name : param.second.second) {
@@ -459,9 +508,9 @@ ScenarioSimMarket::ScenarioSimMarket(
 
             case RiskFactorKey::KeyType::SecuritySpread:
                 for (const auto& name : param.second.second) {
+                    // security spreads and recovery rates are optional
                     try {
                         DLOG("Adding security spread " << name << " from configuration " << configuration);
-                        // we have a security spread for each security, so no try-catch block required
                         boost::shared_ptr<SimpleQuote> spreadQuote(
                             new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
                         if (param.second.first) {
@@ -470,27 +519,25 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(
                             make_pair(Market::defaultConfiguration, name), Handle<Quote>(spreadQuote)));
-
-                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
-                        // security recovery rates are optional, so we need a try-catch block
-                        try {
-                            boost::shared_ptr<SimpleQuote> recoveryQuote(
-                                new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
-                            // TODO this comes from the default curves section in the parameters,
-                            // do we want to specify the simulation of security recovery rates separately?
-                            if (parameters->simulateRecoveryRates()) {
-                                simDataTmp.emplace(std::piecewise_construct,
-                                                   std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
-                                                   std::forward_as_tuple(recoveryQuote));
-                            }
-                            recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
-                                make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
-                        } catch (const std::exception& e) {
-                            // security recovery rates are optional, therefore we never throw
-                            ALOG("skipping this object: " << e.what());
-                        }
                     } catch (const std::exception& e) {
-                        processException(continueOnError, e, name);
+                        DLOG("skipping this object: " << e.what());
+                    }
+
+                    try {
+                        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+                        boost::shared_ptr<SimpleQuote> recoveryQuote(
+                            new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+                        // TODO this comes from the default curves section in the parameters,
+                        // do we want to specify the simulation of security recovery rates separately?
+                        if (parameters->simulateRecoveryRates()) {
+                            simDataTmp.emplace(std::piecewise_construct,
+                                               std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                                               std::forward_as_tuple(recoveryQuote));
+                        }
+                        recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
+                            make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
+                    } catch (const std::exception& e) {
+                        DLOG("skipping this object: " << e.what());
                     }
                 }
                 break;
@@ -2008,7 +2055,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                         }
 
-                        Handle<PriceTermStructure> simCommodityCurve;
+                        Handle<PriceTermStructure> pts;
                         if (param.second.first && useSpreadedTermStructures_) {
                             // Created spreaded commodity price curve if we simulate commodities and spreads should be
                             // used
@@ -2020,22 +2067,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 simulationTimes.insert(simulationTimes.begin(), 0.0);
                                 quotes.insert(quotes.begin(), quotes.front());
                             }
-                            simCommodityCurve =
-                                Handle<PriceTermStructure>(boost::make_shared<SpreadedPriceTermStructure>(
-                                    initialCommodityCurve, simulationTimes, quotes));
+                            pts = Handle<PriceTermStructure>(boost::make_shared<SpreadedPriceTermStructure>(
+                                initialCommodityCurve, simulationTimes, quotes));
                         } else {
                             // Create a commodity price curve with simulation tenors as pillars and store
                             // Hard-coded linear flat interpolation here - may need to make this more dynamic
-                            simCommodityCurve =
-                                Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
-                                    simulationTenors, quotes, commodityCurveDayCounter,
-                                    initialCommodityCurve->currency()));
+                            pts = Handle<PriceTermStructure>(boost::make_shared<InterpolatedPriceCurve<LinearFlat>>(
+                                simulationTenors, quotes, commodityCurveDayCounter, initialCommodityCurve->currency()));
                         }
-                        simCommodityCurve->enableExtrapolation(allowsExtrapolation);
+                        pts->enableExtrapolation(allowsExtrapolation);
 
-                        commodityCurves_.emplace(piecewise_construct,
-                                                 forward_as_tuple(Market::defaultConfiguration, name),
-                                                 forward_as_tuple(simCommodityCurve));
+                        Handle<CommodityIndex> commIdx(parseCommodityIndex(name, conventions_, false, pts));
+                        commodityIndices_.emplace(piecewise_construct,
+                                                  forward_as_tuple(Market::defaultConfiguration, name),
+                                                  forward_as_tuple(commIdx));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name);
                     }

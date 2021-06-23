@@ -48,9 +48,9 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolIsCube_({ {"", false} }), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({ {"", {0.0}} }),
-        capFloorVolAdjustOptionletPillars_(false), capFloorVolUseCapAtm_(false), cprSimulate_(false), 
-        correlationIsSurface_(false), correlationStrikes_({0.0}) {
+        : swapVolIsCube_({{"", false}}), swapVolSimulateATMOnly_(false), swapVolStrikeSpreads_({{"", {0.0}}}),
+          capFloorVolAdjustOptionletPillars_(false), capFloorVolUseCapAtm_(false), cprSimulate_(false),
+          correlationIsSurface_(false), correlationStrikes_({0.0}) {
         setDefaults();
     }
 
@@ -73,7 +73,7 @@ public:
     vector<string> indices() const { return paramsLookup(RiskFactorKey::KeyType::IndexCurve); }
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
-    bool extrapolate() const { return extrapolate_; }
+    const string& extrapolation() const { return extrapolation_; }
     const map<string, vector<Period>>& yieldCurveTenors() const { return yieldCurveTenors_; }
 
     bool simulateFxSpots() const { return paramsSimulate(RiskFactorKey::KeyType::FXSpot); }
@@ -237,7 +237,7 @@ public:
     void setIndices(vector<string> names);
     map<string, string>& swapIndices() { return swapIndices_; }
     string& interpolation() { return interpolation_; }
-    bool& extrapolate() { return extrapolate_; }
+    string& extrapolation() { return extrapolation_; }
 
     void setSimulateFxSpots(bool simulate);
     void setFxCcyPairs(vector<string> names);
@@ -393,7 +393,7 @@ private:
     map<string, vector<Period>> yieldCurveTenors_;
     map<string, string> swapIndices_;
     string interpolation_;
-    bool extrapolate_;
+    string extrapolation_;
 
     map<string, bool> swapVolIsCube_;
     bool swapVolSimulateATMOnly_;

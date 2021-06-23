@@ -58,6 +58,9 @@ void DiscountingEquityForwardEngine::calculate() const {
             equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
         DiscountFactor df = discountCurve_->discount(maturity);
         results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
+
+        results_.additionalResults["forwardPrice"] = forwardPrice;
+        results_.additionalResults["currentNotional"] = forwardPrice * strike;
     }
 } // calculate
 

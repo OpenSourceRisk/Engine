@@ -27,6 +27,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <ql/math/interpolations/bicubicsplineinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/matrix.hpp>
@@ -42,7 +43,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <regex>
 
 using namespace std;
 using namespace QuantLib;
@@ -286,25 +286,15 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
 
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
-    bool isRegex = false;
-    for (Size i = 0; i < vcc.quotes().size(); i++) {
-        if ((isRegex = vcc.quotes()[i].find("*") != string::npos)) {
-            QL_REQUIRE(i == 0 && vcc.quotes().size() == 1,
-                       "Wild card config, " << vc.curveID() << ", should have exactly one quote.");
-            break;
-        }
-    }
+    auto wildcard = getUniqueWildcard(vcc.quotes());
 
     // curveData will be populated with the expiry dates and volatility values.
     map<Date, Real> curveData;
 
     // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
-    if (isRegex) {
+    if (wildcard) {
 
-        DLOG("Have single quote with pattern " << vcc.quotes()[0]);
-
-        // Create the regular expression
-        regex regexp(boost::replace_all_copy(vcc.quotes()[0], "*", ".*"));
+        DLOG("Have single quote with pattern " << (*wildcard).regex());
 
         // Loop over quotes and process commodity option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -314,7 +304,7 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
                 continue;
 
             auto q = boost::dynamic_pointer_cast<CommodityOptionQuote>(md);
-            if (q && regex_match(q->name(), regexp)) {
+            if (q && (*wildcard).matches(q->name())) {
 
                 TLOG("The quote " << q->name() << " matched the pattern");
 

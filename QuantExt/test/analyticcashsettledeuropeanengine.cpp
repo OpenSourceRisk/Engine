@@ -23,6 +23,7 @@
 // clang-format on
 #include <ql/currencies/america.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>

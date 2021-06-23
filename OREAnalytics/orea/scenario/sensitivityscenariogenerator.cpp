@@ -252,7 +252,7 @@ void SensitivityScenarioGenerator::generateScenarios() {
                 Real v2 = scenarios_[j]->get(k);
                 Real b = baseScenario_->get(k);
                 if (!close_enough(v1, b) || !close_enough(v2, b))
-                    // FIXME, see ore ticket 1478
+                    // this is correct for both absolute and relative shifts
                     crossScenario->add(k, v1 + v2 - b);
             }
 

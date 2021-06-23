@@ -27,9 +27,13 @@ instruments is exactly opposite to \ref{ss:floatingleg_data}.
   <Caps>
     <Cap>0.05</Cap>
   </Caps>
-  <PremiumAmount>1000</PremiumAmount>
-  <PremiumCurrency>EUR</PremiumCurrency>
-  <PremiumPayDate>2021-01-27</PremiumPayDate>
+  <Premiums>
+    <Premium>
+      <Amount>1000</Amount>
+      <Currency>EUR</Currency>
+      <PayDate>2021-01-27</PayDate>
+    </Premium>
+  </Premiums>
 </CapFloorData>
 \end{minted}
 \caption{Cap/Floor data}
@@ -70,16 +74,8 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
   Allowable values for each \lstinline!Floor! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
   a rate of 5\%
 
-\item PremiumAmount [Optional]: Option premium amount paid by the option buyer to the option seller.
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
-Allowable values:  Any positive real number.
-
-\item PremiumCurrency [Optional]: Currency of the option premium.
-
-Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-
-\item PremiumPayDate [Optional]: Date of the option premium payment.
-
-Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}

@@ -33,6 +33,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
+#include <ored/marketdata/loader.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/dategrid.hpp>
@@ -59,7 +60,8 @@ public:
 
     virtual void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
                                boost::shared_ptr<ore::data::Market> market = boost::shared_ptr<ore::data::Market>(),
-                               const std::string& configuration = ore::data::Market::defaultConfiguration);
+                               const std::string& configuration = ore::data::Market::defaultConfiguration,
+                               const bool includePastCashflows = false);
 
     virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                              const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
@@ -98,10 +100,17 @@ public:
     writeTodaysMarketCalibrationReport(ore::data::Report& report,
                                        boost::shared_ptr<ore::data::TodaysMarketCalibrationInfo> calibrationInfo);
 
+    virtual void writeMarketData(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader, const QuantLib::Date& asof,
+        const set<string>& quoteNames, bool returnAll);
+
+    virtual void writeFixings(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader);
+
     const std::string& nullString() const { return nullString_; }
 
 protected:
     std::string nullString_;
+    void addMarketDatum(ore::data::Report& report, const ore::data::MarketDatum& md);
 };
+
 } // namespace analytics
 } // namespace ore
