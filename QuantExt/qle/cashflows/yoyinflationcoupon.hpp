@@ -83,8 +83,8 @@ private:
 //! payoff is: spread + gearing x index
 class yoyInflationLeg {
 public:
-    yoyInflationLeg(const Schedule& schedule, const Calendar& cal, const ext::shared_ptr<YoYInflationIndex>& index,
-                    const Period& observationLag);
+    yoyInflationLeg(const Schedule& schedule, const Calendar& paymentCalendar,
+                    const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag);
     yoyInflationLeg& withNotionals(Real notional);
     yoyInflationLeg& withNotionals(const std::vector<Real>& notionals);
     yoyInflationLeg& withPaymentDayCounter(const DayCounter&);
@@ -99,6 +99,7 @@ public:
     yoyInflationLeg& withCaps(const std::vector<Rate>& caps);
     yoyInflationLeg& withFloors(Rate floor);
     yoyInflationLeg& withFloors(const std::vector<Rate>& floors);
+    yoyInflationLeg& withRateCurve(const Handle<YieldTermStructure>& rateCurve);
     yoyInflationLeg& withInflationNotional(bool addInflationNotional_);
     operator Leg() const;
 
@@ -114,6 +115,7 @@ private:
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     std::vector<Rate> caps_, floors_;
+    Handle<YieldTermStructure> rateCurve_;
     bool addInflationNotional_;
 };
 } // namespace QuantExt

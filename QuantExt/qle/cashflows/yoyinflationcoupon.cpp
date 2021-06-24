@@ -22,7 +22,6 @@
 #include <ql/cashflows/inflationcouponpricer.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 
-
 namespace QuantExt {
 
 YoYInflationCoupon::YoYInflationCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
@@ -50,18 +49,18 @@ Rate YoYInflationCoupon::rate() const {
     return RateYoY;
 }
 
-CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(const ext::shared_ptr<QuantLib::YoYInflationCoupon>& underlying,
-                                                                 Rate cap, Rate floor, bool addInflationNotional)
+CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
+    const ext::shared_ptr<QuantLib::YoYInflationCoupon>& underlying, Rate cap, Rate floor, bool addInflationNotional)
     : QuantLib::CappedFlooredYoYInflationCoupon(underlying, cap, floor), addInflationNotional_(addInflationNotional) {
-        if(addInflationNotional_){
-            if(isCapped_){
-                cap_ = cap_ - 1;
-            }
-            if(isFloored_){
-                floor_ = floor_ - 1;
-            }
+    if (addInflationNotional_) {
+        if (isCapped_) {
+            cap_ = cap_ - 1;
+        }
+        if (isFloored_) {
+            floor_ = floor_ - 1;
         }
     }
+}
 
 CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
     const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
@@ -72,15 +71,15 @@ CappedFlooredYoYInflationCoupon::CappedFlooredYoYInflationCoupon(
                                                 observationLag, dayCounter, gearing, spread, cap, floor, refPeriodStart,
                                                 refPeriodEnd),
       addInflationNotional_(addInflationNotional) {
-          if(addInflationNotional_){
-            if(isCapped_){
-                cap_ = cap_ - 1;
-            }
-            if(isFloored_){
-                floor_ = floor_ - 1;
-            }
+    if (addInflationNotional_) {
+        if (isCapped_) {
+            cap_ = cap_ - 1;
         }
-      }
+        if (isFloored_) {
+            floor_ = floor_ - 1;
+        }
+    }
+}
 
 void CappedFlooredYoYInflationCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredYoYInflationCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredYoYInflationCoupon>*>(&v);
@@ -100,8 +99,8 @@ Rate CappedFlooredYoYInflationCoupon::rate() const {
 
 yoyInflationLeg::yoyInflationLeg(const Schedule& schedule, const Calendar& paymentCalendar,
                                  const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag)
-    : schedule_(schedule), index_(index), observationLag_(observationLag), paymentAdjustment_(ModifiedFollowing),
-      paymentCalendar_(paymentCalendar), addInflationNotional_(false) {}
+    : schedule_(std::move(schedule)), paymentCalendar_(std::move(paymentCalendar)), index_(std::move(index)),
+      observationLag_(std::move(observationLag)), addInflationNotional_(false) {}
 
 yoyInflationLeg& yoyInflationLeg::withNotionals(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -173,6 +172,11 @@ yoyInflationLeg& yoyInflationLeg::withFloors(const std::vector<Rate>& floors) {
     return *this;
 }
 
+yoyInflationLeg& yoyInflationLeg::withRateCurve(const Handle<YieldTermStructure>& rateCurve) {
+    rateCurve_ = rateCurve;
+    return *this;
+}
+
 yoyInflationLeg& yoyInflationLeg::withInflationNotional(bool addInflationNotional) {
     addInflationNotional_ = addInflationNotional;
     return *this;
@@ -220,7 +224,8 @@ yoyInflationLeg::operator Leg() const {
 
                 // in this case you can set a pricer
                 // straight away because it only provides computation - not data
-                ext::shared_ptr<YoYInflationCouponPricer> pricer(new YoYInflationCouponPricer);
+                ext::shared_ptr<YoYInflationCouponPricer> pricer =
+                    ext::make_shared<YoYInflationCouponPricer>(rateCurve_);
                 coup->setPricer(pricer);
                 leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
 

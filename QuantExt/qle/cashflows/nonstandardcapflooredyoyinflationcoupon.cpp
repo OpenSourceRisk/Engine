@@ -223,6 +223,11 @@ NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withFloors(const std::ve
     return *this;
 }
 
+NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withRateCurve(const Handle<YieldTermStructure>& rateCurve) {
+    rateCurve_ = rateCurve;
+    return *this;
+}
+
 NonStandardYoYInflationLeg& NonStandardYoYInflationLeg::withInflationNotional(bool addInflationNotional) {
     addInflationNotional_ = addInflationNotional;
     return *this;
@@ -270,7 +275,8 @@ NonStandardYoYInflationLeg::operator Leg() const {
 
                 // in this case you can set a pricer
                 // straight away because it only provides computation - not data
-                ext::shared_ptr<NonStandardYoYInflationCouponPricer> pricer(new NonStandardYoYInflationCouponPricer);
+                ext::shared_ptr<NonStandardYoYInflationCouponPricer> pricer(
+                    new NonStandardYoYInflationCouponPricer(rateCurve_));
                 coup->setPricer(pricer);
                 leg.push_back(ext::dynamic_pointer_cast<CashFlow>(coup));
 

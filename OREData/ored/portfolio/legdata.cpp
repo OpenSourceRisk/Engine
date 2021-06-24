@@ -1396,9 +1396,9 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 .withFixingDays(yoyLegData->fixingDays())
                 .withGearings(gearings)
                 .withSpreads(spreads)
-            .withInflationNotional(addInflationNotional);
-                                 .withRateCurve(engineFactory->market()->discountCurve(
-                                     data.currency(), engineFactory->configuration(MarketContext::pricing)));
+                .withInflationNotional(addInflationNotional)
+                .withRateCurve(engineFactory->market()->discountCurve(
+                    data.currency(), engineFactory->configuration(MarketContext::pricing)));
 
         if (couponCap)
             yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
@@ -1445,6 +1445,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 .withFixingDays(yoyLegData->fixingDays())
                 .withGearings(gearings)
                 .withSpreads(spreads)
+                .withRateCurve(engineFactory->market()->discountCurve(
+                    data.currency(), engineFactory->configuration(MarketContext::pricing)))
                 .withInflationNotional(addInflationNotional);
 
         if (couponCap)

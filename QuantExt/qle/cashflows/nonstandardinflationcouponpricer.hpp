@@ -45,7 +45,7 @@ using namespace QuantLib;
 */
 class NonStandardYoYInflationCouponPricer : public QuantLib::InflationCouponPricer {
 public:
-    NonStandardYoYInflationCouponPricer();
+    NonStandardYoYInflationCouponPricer(const Handle<YieldTermStructure>& nominalTermStructure);
     NonStandardYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
                                         const Handle<YieldTermStructure>& nominalTermStructure);
 
@@ -91,7 +91,8 @@ protected:
 //! Black-formula pricer for capped/floored yoy inflation coupons
 class NonStandardBlackYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
 public:
-    NonStandardBlackYoYInflationCouponPricer(){};
+    NonStandardBlackYoYInflationCouponPricer(const Handle<YieldTermStructure>& nominalTermStructure)
+        : NonStandardYoYInflationCouponPricer(nominalTermStructure){};
     NonStandardBlackYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
                                              const Handle<YieldTermStructure>& nominalTermStructure)
         : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
@@ -103,7 +104,8 @@ protected:
 //! Unit-Displaced-Black-formula pricer for capped/floored yoy inflation coupons
 class NonStandardUnitDisplacedBlackYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
 public:
-    NonStandardUnitDisplacedBlackYoYInflationCouponPricer(){};
+    NonStandardUnitDisplacedBlackYoYInflationCouponPricer(const Handle<YieldTermStructure>& nominalTermStructure)
+        : NonStandardYoYInflationCouponPricer(nominalTermStructure){};
     NonStandardUnitDisplacedBlackYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
                                                           const Handle<YieldTermStructure>& nominalTermStructure)
         : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
@@ -115,7 +117,8 @@ protected:
 //! Bachelier-formula pricer for capped/floored yoy inflation coupons
 class NonStandardBachelierYoYInflationCouponPricer : public NonStandardYoYInflationCouponPricer {
 public:
-    NonStandardBachelierYoYInflationCouponPricer(){};
+    NonStandardBachelierYoYInflationCouponPricer(const Handle<YieldTermStructure>& nominalTermStructure)
+        : NonStandardYoYInflationCouponPricer(nominalTermStructure){};
 
     NonStandardBachelierYoYInflationCouponPricer(const Handle<YoYOptionletVolatilitySurface>& capletVol,
                                                  const Handle<YieldTermStructure>& nominalTermStructure)

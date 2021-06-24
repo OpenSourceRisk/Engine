@@ -143,6 +143,7 @@ public:
     NonStandardYoYInflationLeg& withCaps(const std::vector<Rate>& caps);
     NonStandardYoYInflationLeg& withFloors(Rate floor);
     NonStandardYoYInflationLeg& withFloors(const std::vector<Rate>& floors);
+    NonStandardYoYInflationLeg& withRateCurve(const Handle<YieldTermStructure>& rateCurve);
     NonStandardYoYInflationLeg& withInflationNotional(bool addInflationNotional_);
     operator Leg() const;
 
@@ -158,6 +159,7 @@ private:
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     std::vector<Rate> caps_, floors_;
+    Handle<YieldTermStructure> rateCurve_;
     bool addInflationNotional_;
 };
 
