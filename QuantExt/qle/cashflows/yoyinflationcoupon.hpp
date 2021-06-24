@@ -105,12 +105,12 @@ public:
 
 private:
     Schedule schedule_;
+    Calendar paymentCalendar_;
     ext::shared_ptr<YoYInflationIndex> index_;
     Period observationLag_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
-    Calendar paymentCalendar_;
     std::vector<Natural> fixingDays_;
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
