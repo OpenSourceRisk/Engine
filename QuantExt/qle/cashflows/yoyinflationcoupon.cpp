@@ -97,10 +97,11 @@ Rate CappedFlooredYoYInflationCoupon::rate() const {
     return RateYoY;
 }
 
-yoyInflationLeg::yoyInflationLeg(const Schedule& schedule, const Calendar& paymentCalendar,
-                                 const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag)
-    : schedule_(std::move(schedule)), paymentCalendar_(std::move(paymentCalendar)), index_(std::move(index)),
-      observationLag_(std::move(observationLag)), addInflationNotional_(false) {}
+yoyInflationLeg::yoyInflationLeg(Schedule schedule, Calendar paymentCalendar, ext::shared_ptr<YoYInflationIndex> index,
+                                 const Period& observationLag)
+    : schedule_(std::move(schedule)), index_(std::move(index)), observationLag_(observationLag),
+      paymentAdjustment_(ModifiedFollowing), paymentCalendar_(std::move(paymentCalendar)),
+      addInflationNotional_(false) {}
 
 yoyInflationLeg& yoyInflationLeg::withNotionals(Real notional) {
     notionals_ = std::vector<Real>(1, notional);

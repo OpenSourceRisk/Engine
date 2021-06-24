@@ -83,8 +83,8 @@ private:
 //! payoff is: spread + gearing x index
 class yoyInflationLeg {
 public:
-    yoyInflationLeg(const Schedule& schedule, const Calendar& paymentCalendar,
-                    const ext::shared_ptr<YoYInflationIndex>& index, const Period& observationLag);
+    yoyInflationLeg(Schedule schedule, Calendar cal, ext::shared_ptr<YoYInflationIndex> index,
+                    const Period& observationLag);
     yoyInflationLeg& withNotionals(Real notional);
     yoyInflationLeg& withNotionals(const std::vector<Real>& notionals);
     yoyInflationLeg& withPaymentDayCounter(const DayCounter&);
@@ -105,12 +105,12 @@ public:
 
 private:
     Schedule schedule_;
-    Calendar paymentCalendar_;
     ext::shared_ptr<YoYInflationIndex> index_;
     Period observationLag_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
+    Calendar paymentCalendar_;
     std::vector<Natural> fixingDays_;
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
