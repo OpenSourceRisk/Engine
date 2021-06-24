@@ -153,7 +153,7 @@ public:
         Rate baseZeroRate = ratesZCII[0] / 100.0;
         boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
             asof_, UnitedKingdom(), ActualActual(), Period(2, Months), ii->frequency(), ii->interpolated(),
-            baseZeroRate, intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom()), instruments));
+            baseZeroRate, instruments));
         pCPIts->recalculate();
         cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         hUKRPI = Handle<ZeroInflationIndex>(
@@ -281,6 +281,11 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
                      .withObservationInterpolation(CPI::Flat)
                      .withPaymentDayCounter(ActualActual())
                      .withPaymentAdjustment(Following);
+    auto pricer = boost::make_shared<CPICouponPricer>(market->hGBP->forwardingTermStructure());
+    for (auto const& c : cpiLeg) {
+        if (auto cpn = boost::dynamic_pointer_cast<CPICoupon>(c))
+            cpn->setPricer(pricer);
+    }
 
     QuantLib::Swap qlSwap(floatLeg, cpiLeg);
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->hGBP->forwardingTermStructure());

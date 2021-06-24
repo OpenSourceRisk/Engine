@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     };
 
     Rate baseZeroRate = ratesZCII[0] / 100.0;
-    boost::shared_ptr<PiecewiseZeroInflationCurve<Linear> > pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-        asof_, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, false, baseZeroRate, nominalTs, instruments));
+    boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
+        asof_, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, false, baseZeroRate, instruments));
     pCPIts->recalculate();
     cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
 

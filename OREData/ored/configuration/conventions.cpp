@@ -206,11 +206,10 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
 }
 
 FutureConvention::FutureConvention(const string& id, const string& index, const Conventions* conventions)
-    : FutureConvention(id, index, QuantLib::OvernightIndexFuture::NettingType::Compounding, DateGenerationRule::IMM,
-                       conventions) {}
+    : FutureConvention(id, index, QuantLib::RateAveraging::Type::Compound, DateGenerationRule::IMM, conventions) {}
 
 FutureConvention::FutureConvention(const string& id, const string& index,
-                                   const QuantLib::OvernightIndexFuture::NettingType overnightIndexFutureNettingType,
+                                   const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
                                    const DateGenerationRule dateGenerationRule, const Conventions* conventions)
     : Convention(id, Type::Future), strIndex_(index),
       index_(parseIborIndex(strIndex_, Handle<YieldTermStructure>(),
@@ -225,8 +224,8 @@ void FutureConvention::fromXML(XMLNode* node) {
     index_ =
         parseIborIndex(strIndex_, Handle<YieldTermStructure>(), getIborOrOvernightConvention(conventions_, strIndex_));
     string nettingTypeStr = XMLUtils::getChildValue(node, "OvernightIndexFutureNettingType", false);
-    overnightIndexFutureNettingType_ = nettingTypeStr.empty() ? OvernightIndexFuture::NettingType::Compounding
-                                                              : parseOvernightIndexFutureNettingType(nettingTypeStr);
+    overnightIndexFutureNettingType_ =
+        nettingTypeStr.empty() ? RateAveraging::Type::Compound : parseOvernightIndexFutureNettingType(nettingTypeStr);
     string dateGenerationStr = XMLUtils::getChildValue(node, "DateGenerationRule", false);
     dateGenerationRule_ =
         dateGenerationStr.empty() ? DateGenerationRule::IMM : parseFutureDateGenerationRule(dateGenerationStr);

@@ -60,6 +60,7 @@ public:
     }
 
 private:
+    Handle<YieldTermStructure> termStructure_;
     const bool hasMaturity_;
     Period maturity_;
     mutable Date exerciseDate_;

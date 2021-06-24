@@ -19,6 +19,7 @@
 #include <qle/models/yoyswaphelper.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/time/calendars/jointcalendar.hpp>
+#include <ql/cashflows/inflationcouponpricer.hpp>
 
 using QuantLib::BusinessDayConvention;
 using QuantLib::Calendar;
@@ -35,6 +36,7 @@ using QuantLib::Real;
 using QuantLib::Schedule;
 using QuantLib::Settings;
 using QuantLib::YearOnYearInflationSwap;
+using QuantLib::YieldTermStructure;
 using QuantLib::YoYInflationIndex;
 
 namespace QuantExt {
@@ -43,6 +45,7 @@ YoYSwapHelper::YoYSwapHelper(const Handle<Quote>& rate,
     Natural settlementDays,
     const Period& tenor,
     const boost::shared_ptr<YoYInflationIndex>& yoyIndex,
+    const Handle<YieldTermStructure>& rateCurve,
     const Period& observationLag,
     const Calendar& yoyCalendar,
     BusinessDayConvention yoyConvention,
@@ -59,6 +62,7 @@ YoYSwapHelper::YoYSwapHelper(const Handle<Quote>& rate,
       settlementDays_(settlementDays),
       tenor_(tenor),
       yoyIndex_(yoyIndex),
+      rateCurve_(rateCurve),
       observationLag_(observationLag),
       yoyCalendar_(yoyCalendar),
       yoyConvention_(yoyConvention),
@@ -127,6 +131,13 @@ void YoYSwapHelper::createSwap() {
     yoySwap_ = boost::make_shared<YearOnYearInflationSwap>(YearOnYearInflationSwap::Payer, 1.0,
         fixedSchedule, 0.01, fixedDayCount_, yoySchedule, yoyIndex_, observationLag_, 0.0, yoyDayCount_,
         paymentCalendar_, paymentConvention_);
+
+    // set coupon pricer
+    auto pricer = boost::make_shared<QuantLib::YoYInflationCouponPricer>(rateCurve_);
+    for (auto& c : yoySwap_->yoyLeg()) {
+        if (auto cpn = boost::dynamic_pointer_cast<QuantLib::YoYInflationCoupon>(c))
+            cpn->setPricer(pricer);
+    }
 }
 
-}
+} // namespace QuantExt

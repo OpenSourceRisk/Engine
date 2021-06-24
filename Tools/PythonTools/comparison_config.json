@@ -594,7 +594,7 @@
           {
             "names": [],
             "abs_tol": null,
-            "rel_tol": 1e-12
+            "rel_tol": 1e-9
           }
         ]
       },
