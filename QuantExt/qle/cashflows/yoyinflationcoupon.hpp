@@ -73,7 +73,7 @@ public:
     Rate rate() const override;
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 private:
     bool addInflationNotional_;

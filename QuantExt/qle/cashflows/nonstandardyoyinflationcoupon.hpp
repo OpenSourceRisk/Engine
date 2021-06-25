@@ -77,7 +77,7 @@ protected:
     Real gearing_;
     Spread spread_;
     bool addInflationNotional_;
-    bool checkPricerImpl(const ext::shared_ptr<InflationCouponPricer>&) const;
+    bool checkPricerImpl(const ext::shared_ptr<InflationCouponPricer>&) const override;
 
 private:
     void setFixingDates(const Date& denumatorDate, const Date& numeratorDate, const Period& observationLag);
