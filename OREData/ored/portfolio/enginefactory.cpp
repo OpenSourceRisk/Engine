@@ -24,6 +24,7 @@
 #include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
@@ -177,6 +178,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredAverageONIndexedCouponLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredYoYLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredNonStandardYoYLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCouponEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCashFlowEngineBuilder>());
     registerBuilder(boost::make_shared<CmsSpreadCouponPricerBuilder>());

@@ -57,6 +57,7 @@ class FloatingRateFXLinkedNotionalCoupon;
 class FXLinkedCashFlow;
 class SubPeriodsCoupon;
 class IndexedCoupon;
+class NonStandardYoYInflationCoupon;
 } // namespace QuantExt
 
 namespace ore {
@@ -170,7 +171,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
                          public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
                          public QuantLib::Visitor<QuantExt::SubPeriodsCoupon>,
-                         public QuantLib::Visitor<QuantExt::IndexedCoupon> {
+                         public QuantLib::Visitor<QuantExt::IndexedCoupon>,
+                         public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon> {
 
 public:
     //! Constructor
@@ -190,6 +192,7 @@ public:
     void visit(QuantLib::CPICashFlow& c);
     void visit(QuantLib::CPICoupon& c);
     void visit(QuantLib::YoYInflationCoupon& c);
+    void visit(QuantExt::NonStandardYoYInflationCoupon& c);
     void visit(QuantLib::OvernightIndexedCoupon& c);
     void visit(QuantExt::OvernightIndexedCoupon& c);
     void visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c);
