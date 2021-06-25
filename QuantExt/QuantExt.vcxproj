@@ -529,6 +529,9 @@
     <ClInclude Include="qle\cashflows\indexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\jyyoyinflationcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
+    <ClInclude Include="qle\cashflows\nonstandardcapflooredyoyinflationcoupon.hpp" />
+    <ClInclude Include="qle\cashflows\nonstandardinflationcouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\nonstandardyoyinflationcoupon.hpp" />
     <ClInclude Include="qle\cashflows\overnightindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\blackovernightindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
@@ -536,6 +539,7 @@
     <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp" />
     <ClInclude Include="qle\currencies\africa.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
@@ -903,6 +907,9 @@
     <ClCompile Include="qle\cashflows\indexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\jyyoyinflationcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
+    <ClCompile Include="qle\cashflows\nonstandardcapflooredyoyinflationcoupon.cpp" />
+    <ClCompile Include="qle\cashflows\nonstandardinflationcouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\nonstandardyoyinflationcoupon.cpp" />
     <ClCompile Include="qle\cashflows\overnightindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\blackovernightindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
@@ -910,6 +917,7 @@
     <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp" />
     <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />

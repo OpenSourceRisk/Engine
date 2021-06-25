@@ -353,10 +353,12 @@ public:
                const vector<double>& spreads = std::vector<double>(),
                const vector<string>& spreadDates = std::vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false)
+               const vector<string>& floorDates = vector<string>(), bool nakedOption = false,
+               bool addInflationNotional = false, bool irregularYoY = false)
         : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), fixingDays_(fixingDays),
           gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
-          capDates_(capDates), floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption) {
+          capDates_(capDates), floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption),
+          addInflationNotional_(addInflationNotional), irregularYoY_(irregularYoY) {
         indices_.insert(index_);
     }
 
@@ -374,6 +376,8 @@ public:
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
     bool nakedOption() const { return nakedOption_; }
+    bool addInflationNotional() const { return addInflationNotional_; };
+    bool irregularYoY() const { return irregularYoY_; };
     //@}
 
     //! \name Serialisation
@@ -395,6 +399,8 @@ private:
     vector<double> floors_;
     vector<string> floorDates_;
     bool nakedOption_;
+    bool addInflationNotional_;
+    bool irregularYoY_;
 
     static LegDataRegister<YoYLegData> reg_;
 };
@@ -466,14 +472,16 @@ public:
     //! Default constructor
     DigitalCMSLegData() : LegAdditionalData("DigitalCMS") {}
     //! Constructor
-    DigitalCMSLegData(
-        const boost::shared_ptr<CMSLegData>& underlying, Position::Type callPosition = Position::Long,
-        bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
-        const vector<string> callStrikeDates = vector<string>(), const vector<double> callPayoffs = vector<double>(),
-        const vector<string> callPayoffDates = vector<string>(), Position::Type putPosition = Position::Long,
-        bool isPutATMIncluded = false, const vector<double> putStrikes = vector<double>(),
-        const vector<string> putStrikeDates = vector<string>(), const vector<double> putPayoffs = vector<double>(),
-        const vector<string> putPayoffDates = vector<string>())
+    DigitalCMSLegData(const boost::shared_ptr<CMSLegData>& underlying, Position::Type callPosition = Position::Long,
+                      bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+                      const vector<string> callStrikeDates = vector<string>(),
+                      const vector<double> callPayoffs = vector<double>(),
+                      const vector<string> callPayoffDates = vector<string>(),
+                      Position::Type putPosition = Position::Long, bool isPutATMIncluded = false,
+                      const vector<double> putStrikes = vector<double>(),
+                      const vector<string> putStrikeDates = vector<string>(),
+                      const vector<double> putPayoffs = vector<double>(),
+                      const vector<string> putPayoffDates = vector<string>())
         : LegAdditionalData("DigitalCMS"), underlying_(underlying), callPosition_(callPosition),
           isCallATMIncluded_(isCallATMIncluded), callStrikes_(callStrikes), callStrikeDates_(callStrikeDates),
           callPayoffs_(callPayoffs), callPayoffDates_(callPayoffDates), putPosition_(putPosition),
@@ -884,7 +892,7 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
-Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
