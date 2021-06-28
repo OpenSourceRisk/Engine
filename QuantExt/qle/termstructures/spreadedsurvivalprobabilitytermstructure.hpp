@@ -46,6 +46,7 @@ public:
     const Date& referenceDate() const override;
     Calendar calendar() const override;
     Natural settlementDays() const override;
+    std::vector<Time> times();
     //@}
 private:
     void performCalculations() const override;

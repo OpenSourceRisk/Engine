@@ -34,6 +34,7 @@ SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructu
     interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     interpolation_->enableExtrapolation();
     registerWith(Settings::instance().evaluationDate());
+    registerWith(referenceCurve);
 }
 
 void SpreadedSurvivalProbabilityTermStructure::update() {
@@ -74,5 +75,7 @@ const Date& SpreadedSurvivalProbabilityTermStructure::referenceDate() const { re
 Calendar SpreadedSurvivalProbabilityTermStructure::calendar() const { return referenceCurve_->calendar(); }
 
 Natural SpreadedSurvivalProbabilityTermStructure::settlementDays() const { return referenceCurve_->settlementDays(); }
+
+std::vector<Time> SpreadedSurvivalProbabilityTermStructure::times() { return times_; }
 
 } // namespace QuantExt
