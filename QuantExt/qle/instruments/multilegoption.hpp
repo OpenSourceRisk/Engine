@@ -31,7 +31,8 @@ public:
       otherwise the instrument represents the underlying itself. */
     MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer, const std::vector<Currency>& currency,
                    const boost::shared_ptr<Exercise>& exercise = boost::shared_ptr<Exercise>(),
-                   const Settlement::Type settlementType = Settlement::Physical);
+                   const Settlement::Type settlementType = Settlement::Physical,
+                   Settlement::Method settlementMethod = Settlement::PhysicalOTC);
 
     bool isExpired() const override { return Settings::instance().evaluationDate() >= maturityDate(); }
     void setupArguments(PricingEngine::arguments*) const override;
@@ -46,6 +47,7 @@ private:
     const std::vector<Currency> currency_;
     const boost::shared_ptr<Exercise> exercise_;
     const Settlement::Type settlementType_;
+    const Settlement::Method settlementMethod_;
     Date maturity_;
     // results
     mutable Real underlyingNpv_;
