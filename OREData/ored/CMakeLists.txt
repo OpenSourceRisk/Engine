@@ -273,6 +273,7 @@ portfolio/builders/capfloor.hpp
 portfolio/builders/capflooredaverageonindexedcouponleg.hpp
 portfolio/builders/capflooredcpileg.hpp
 portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capfloorednonstandardyoyleg.hpp
 portfolio/builders/capflooredovernightindexedcouponleg.hpp
 portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
