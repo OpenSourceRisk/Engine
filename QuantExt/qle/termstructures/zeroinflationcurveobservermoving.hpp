@@ -42,8 +42,8 @@ class ZeroInflationCurveObserverMoving : public ZeroInflationTermStructure,
 public:
     ZeroInflationCurveObserverMoving(
         Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-        Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
-        const std::vector<Time>& times, const std::vector<Handle<Quote> >& rates,
+        Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
+        const std::vector<Handle<Quote>>& rates,
         const boost::shared_ptr<Seasonality>& seasonality = boost::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
 
@@ -88,11 +88,11 @@ protected:
 template <class Interpolator>
 ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving(
     Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-    Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
-    const std::vector<Time>& times, const std::vector<Handle<Quote> >& rates,
-    const boost::shared_ptr<Seasonality>& seasonality, const Interpolator& interpolator)
+    Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
+    const std::vector<Handle<Quote>>& rates, const boost::shared_ptr<Seasonality>& seasonality,
+    const Interpolator& interpolator)
     : ZeroInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency,
-                                 indexIsInterpolated, yTS, seasonality),
+                                 indexIsInterpolated, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates) {
 
     QL_REQUIRE(times.size() > 1, "too few times: " << times.size());

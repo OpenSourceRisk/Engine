@@ -25,11 +25,12 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
-#include <qle/indexes/offpeakpowerindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
@@ -437,6 +438,16 @@ void FixingDateGetter::visit(IndexedCoupon& c) {
         requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.index()->name()), c.date());
     QL_REQUIRE(c.underlying(), "FixingDateGetter::visit(IndexedCoupon): underlying() is null");
     c.underlying()->accept(*this);
+}
+
+void FixingDateGetter::visit(QuantExt::NonStandardYoYInflationCoupon& c) {
+
+    requiredFixings_.addZeroInflationFixingDate(
+        c.fixingDateNumerator(), oreIndexName(c.cpiIndex()->name()), c.cpiIndex()->interpolated(),
+        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), CPI::AsIndex, c.cpiIndex()->frequency(), c.date());
+    requiredFixings_.addZeroInflationFixingDate(
+        c.fixingDateDenumerator(), oreIndexName(c.cpiIndex()->name()), c.cpiIndex()->interpolated(),
+        c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), CPI::AsIndex, c.cpiIndex()->frequency(), c.date());
 }
 
 void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter) {

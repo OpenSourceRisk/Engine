@@ -75,7 +75,7 @@ public:
         };
         boost::shared_ptr<YoYInflationTermStructure> yoyTs = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(
             new PiecewiseYoYInflationCurve<Linear>(asof, TARGET(), Actual365Fixed(), Period(3, Months), Monthly,
-                                                   index->interpolated(), ratesZCII[0] / 100, nominalTs, instruments));
+                                                   index->interpolated(), ratesZCII[0] / 100, instruments));
 
         yoyInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] =
             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
@@ -166,19 +166,17 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
 
     // check YoY cap NPV against pure QL pricing
     Schedule schedule(startDate, endDate, 1 * Years, TARGET(), Following, Following, DateGeneration::Forward, false);
+    Handle<YieldTermStructure> nominalTs = market->discountCurve("EUR");
     Leg yyLeg =
         yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months))
             .withNotionals(10000000)
             .withPaymentDayCounter(ActualActual())
-            .withPaymentAdjustment(Following);
+            .withPaymentAdjustment(Following)
+            .withRateCurve(nominalTs);
 
     boost::shared_ptr<YoYInflationCapFloor> qlCap(new YoYInflationCap(yyLeg, caps));
 
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs = market->yoyCapFloorVol("EUHICPXT");
-    // Should we get this nominalTs from the index's inflation term structure or is this going to be deprecated as well?
-    // Or should we use the market discount curve here?
-    Handle<YieldTermStructure> nominalTs =
-        market->yoyInflationIndex("EUHICPXT")->yoyInflationTermStructure()->nominalTermStructure();
     auto dscEngine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(
         market->yoyInflationIndex("EUHICPXT").currentLink(), hovs, nominalTs);
     qlCap->setPricingEngine(dscEngine);

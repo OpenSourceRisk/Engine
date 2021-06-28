@@ -123,8 +123,8 @@ protected:
 */
 class CPILeg {
 public:
-    CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationIndex>& index, const Real baseCPI,
-           const Period& observationLag);
+    CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationIndex>& index,
+           const Handle<YieldTermStructure>& rateCurve, const Real baseCPI, const Period& observationLag);
     CPILeg& withNotionals(Real notional);
     CPILeg& withNotionals(const std::vector<Real>& notionals);
     CPILeg& withFixedRates(Real fixedRate);
@@ -153,6 +153,7 @@ public:
 private:
     Schedule schedule_;
     ext::shared_ptr<ZeroInflationIndex> index_;
+    Handle<YieldTermStructure> rateCurve_;
     Real baseCPI_;
     Period observationLag_;
     std::vector<Real> notionals_;

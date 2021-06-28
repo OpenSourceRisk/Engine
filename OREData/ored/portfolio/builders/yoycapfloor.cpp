@@ -34,7 +34,7 @@ boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const stri
         market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing));
     if (ovs.empty())
         return boost::make_shared<QuantExt::YoYInflationBlackCapFloorEngine>(
-            *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>());
+            *yoyTs, Handle<QuantLib::YoYOptionletVolatilitySurface>(), discount);
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
         if (ovs->displacement() == 0.0) {

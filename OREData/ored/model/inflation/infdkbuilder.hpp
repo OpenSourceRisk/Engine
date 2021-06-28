@@ -96,6 +96,7 @@ private:
 
     // market data
     boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex_;
+    Handle<YieldTermStructure> rateCurve_;
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> infVol_;
 
     // Cache the fx volatilities

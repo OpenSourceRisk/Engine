@@ -42,8 +42,8 @@ class ZeroInflationCurveObserverStatic : public ZeroInflationTermStructure,
 public:
     ZeroInflationCurveObserverStatic(
         const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-        Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
-        const std::vector<Date>& dates, const std::vector<Handle<Quote> >& rates,
+        Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
+        const std::vector<Handle<Quote>>& rates,
         const boost::shared_ptr<Seasonality>& seasonality = boost::shared_ptr<Seasonality>(),
         const Interpolator& interpolator = Interpolator());
 
@@ -88,11 +88,11 @@ protected:
 template <class Interpolator>
 ZeroInflationCurveObserverStatic<Interpolator>::ZeroInflationCurveObserverStatic(
     const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
-    Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
-    const std::vector<Date>& dates, const std::vector<Handle<Quote> >& rates,
-    const boost::shared_ptr<Seasonality>& seasonality, const Interpolator& interpolator)
+    Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
+    const std::vector<Handle<Quote>>& rates, const boost::shared_ptr<Seasonality>& seasonality,
+    const Interpolator& interpolator)
     : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency,
-                                 indexIsInterpolated, yTS, seasonality),
+                                 indexIsInterpolated, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
       quotes_(rates) {
 

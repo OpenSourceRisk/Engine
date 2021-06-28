@@ -39,6 +39,7 @@ public:
         QuantLib::Natural settlementDays,
         const QuantLib::Period& tenor,
         const boost::shared_ptr<QuantLib::YoYInflationIndex>& yoyIndex,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve,
         const QuantLib::Period& observationLag,
         const QuantLib::Calendar& yoyCalendar,
         QuantLib::BusinessDayConvention yoyConvention,
@@ -93,6 +94,7 @@ private:
     QuantLib::Natural settlementDays_;
     QuantLib::Period tenor_;
     boost::shared_ptr<QuantLib::YoYInflationIndex> yoyIndex_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> rateCurve_;
     QuantLib::Period observationLag_;
     QuantLib::Calendar yoyCalendar_;
     QuantLib::BusinessDayConvention yoyConvention_;

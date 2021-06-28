@@ -324,7 +324,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     Rate baseZeroRate = rates[0] / 100.0;
     boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
         new PiecewiseZeroInflationCurve<Linear>(asof_, TARGET(), ActualActual(), Period(2, Months), ii->frequency(),
-                                                ii->interpolated(), baseZeroRate, yts, instruments));
+                                                ii->interpolated(), baseZeroRate, instruments));
     pCPIts->recalculate();
     cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
     cpiTS->enableExtrapolation(true);
@@ -351,7 +351,7 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     Rate baseZeroRate = rates[0] / 100.0;
     boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>> pYoYts(
         new PiecewiseYoYInflationCurve<Linear>(asof_, TARGET(), ActualActual(), Period(2, Months), ii->frequency(),
-                                               ii->interpolated(), baseZeroRate, yts, instruments));
+                                               ii->interpolated(), baseZeroRate, instruments));
     pYoYts->recalculate();
     yoyTS = boost::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
     return Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(

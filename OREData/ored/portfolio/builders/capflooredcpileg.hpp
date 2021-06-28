@@ -45,7 +45,12 @@ protected:
     virtual boost::shared_ptr<QuantLib::InflationCouponPricer> engineImpl(const string& indexName) override {
         Handle<QuantLib::CPIVolatilitySurface> vol =
             market_->cpiInflationCapFloorVolatilitySurface(indexName, configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::BlackCPICouponPricer>(vol);
+        Handle<ZeroInflationIndex> cpiIndex =
+            market_->zeroInflationIndex(indexName, configuration(MarketContext::pricing));
+        std::string ccyCode = cpiIndex->currency().code();
+        Handle<YieldTermStructure> discountCurve =
+            market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
+        return boost::make_shared<QuantExt::BlackCPICouponPricer>(vol, discountCurve);
     }
 };
 
@@ -59,7 +64,12 @@ protected:
     virtual boost::shared_ptr<QuantExt::InflationCashFlowPricer> engineImpl(const string& indexName) override {
         Handle<QuantLib::CPIVolatilitySurface> vol =
             market_->cpiInflationCapFloorVolatilitySurface(indexName, configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::BlackCPICashFlowPricer>(vol);
+        Handle<ZeroInflationIndex> cpiIndex =
+            market_->zeroInflationIndex(indexName, configuration(MarketContext::pricing));
+        std::string ccyCode = cpiIndex->currency().code();
+        Handle<YieldTermStructure> discountCurve =
+            market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
+        return boost::make_shared<QuantExt::BlackCPICashFlowPricer>(vol, discountCurve);
     }
 };
 } // namespace data

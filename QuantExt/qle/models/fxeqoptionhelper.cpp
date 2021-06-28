@@ -30,8 +30,8 @@ FxEqOptionHelper::FxEqOptionHelper(const Period& maturity, const Calendar& calen
                                    const Handle<YieldTermStructure>& domesticYield,
                                    const Handle<YieldTermStructure>& foreignYield,
                                    BlackCalibrationHelper::CalibrationErrorType errorType)
-    : BlackCalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(true), maturity_(maturity),
-      calendar_(calendar), strike_(strike), spot_(spot), foreignYield_(foreignYield) {
+    : BlackCalibrationHelper(volatility, errorType), termStructure_(domesticYield), hasMaturity_(true),
+      maturity_(maturity), calendar_(calendar), strike_(strike), spot_(spot), foreignYield_(foreignYield) {
     registerWith(spot_);
     registerWith(foreignYield_);
 }
@@ -40,8 +40,8 @@ FxEqOptionHelper::FxEqOptionHelper(const Date& exerciseDate, const Real strike, 
                                    const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
                                    const Handle<YieldTermStructure>& foreignYield,
                                    BlackCalibrationHelper::CalibrationErrorType errorType)
-    : BlackCalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(false), exerciseDate_(exerciseDate),
-      strike_(strike), spot_(spot), foreignYield_(foreignYield) {
+    : BlackCalibrationHelper(volatility, errorType), termStructure_(domesticYield), hasMaturity_(false),
+      exerciseDate_(exerciseDate), strike_(strike), spot_(spot), foreignYield_(foreignYield) {
     registerWith(spot_);
     registerWith(foreignYield_);
 }

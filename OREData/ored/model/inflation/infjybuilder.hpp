@@ -78,6 +78,9 @@ private:
     boost::shared_ptr<QuantExt::InfJyParameterization> parameterization_;
     boost::shared_ptr<MarketObserver> marketObserver_;
 
+    // The rate curve to use
+    Handle<YieldTermStructure> rateCurve_;
+
     // We always need a ZeroInflationIndex to build the JY model.
     boost::shared_ptr<QuantLib::ZeroInflationIndex> zeroInflationIndex_;
 

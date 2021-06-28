@@ -299,7 +299,8 @@ BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
     BOOST_CHECK_THROW(ore::data::parsePeriod("20170605"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parsePeriod("3X"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parsePeriod("xY"), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), QuantLib::Error);
+    // QL moved to std::stoi in its period and date parsers
+    // BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parsePeriod("3M."), QuantLib::Error);
 
     Date d;
@@ -322,8 +323,9 @@ BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
     BOOST_CHECK(!isDate && p == 20170605 * Days);
     //
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("5Y2017", d, p, isDate), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), QuantLib::Error);
+    // QL moved to std::stoi in its period and date parsers
+    // BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), QuantLib::Error);
+    // BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), QuantLib::Error);
 }

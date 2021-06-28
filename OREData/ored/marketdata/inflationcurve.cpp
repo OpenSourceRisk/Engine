@@ -213,7 +213,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             }
             curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
-                baseRate, nominalTs, instruments, config->tolerance()));
+                baseRate, instruments, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
@@ -233,7 +233,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             boost::shared_ptr<YoYInflationIndex> index =
                 boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, interpolatedIndex_);
             boost::shared_ptr<InflationCouponPricer> yoyCpnPricer =
-                boost::make_shared<QuantExt::YoYInflationCouponPricer2>(nominalTs);
+                boost::make_shared<YoYInflationCouponPricer>(nominalTs);
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 Date maturity = swapStart + terms[i];
                 Real effectiveQuote = quotes[i]->value();
@@ -276,7 +276,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
             curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
-                baseRate, nominalTs, instruments, config->tolerance()));
+                baseRate, instruments, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }

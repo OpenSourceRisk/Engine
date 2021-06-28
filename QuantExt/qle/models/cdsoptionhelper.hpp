@@ -58,6 +58,7 @@ public:
     boost::shared_ptr<QuantExt::CdsOption> option() const { return option_; }
 
 private:
+    Handle<YieldTermStructure> termStructure_;
     boost::shared_ptr<CreditDefaultSwap> cds_;
     boost::shared_ptr<QuantExt::CdsOption> option_;
     boost::shared_ptr<SimpleQuote> blackVol_;
