@@ -843,7 +843,6 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
     LOG("Writing AdditionalResults report");
 
     report.addColumn("TradeId", string())
-        .addColumn("TadeType", string())
         .addColumn("ResultId", string())
         .addColumn("ResultType", string())
         .addColumn("ResultValue", string());
@@ -859,7 +858,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
                 auto p = parseBoostAny(kv.second);
-                report.next().add(tradeId).add(tradeType).add(kv.first).add(p.first).add(p.second);
+                report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
             }
             // if the 'notional[2]' has been provided convert it to base currency
             if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
@@ -882,7 +881,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                     fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
                 std::ostringstream oss;
                 oss << std::fixed << std::setprecision(8) << notional2 * fx;
-                // report.next().add(tradeId).add(tradeType).add("notionalInBaseCurrency[2]").add("double").add(oss.str());
+                // report.next().add(tradeId).add("notionalInBaseCurrency[2]").add("double").add(oss.str());
             }
 
             // Just use the unadjusted trade ID in the additional results report for the main instrument.
@@ -928,7 +927,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
                         auto p = parseBoostAny(kv.second);
-                        report.next().add(tradeId).add(tradeType).add(kv.first).add(p.first).add(p.second);
+                        report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
                     }
                 }
             }
