@@ -60,8 +60,6 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
-    const std::map<std::string,boost::any>& additionalData() const override;
-
 private:
     string longShort_;
     EquityUnderlying equityUnderlying_;

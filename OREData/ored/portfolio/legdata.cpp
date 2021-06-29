@@ -1877,7 +1877,6 @@ Real currentNotional(const Leg& leg) {
 }
 
 Real originalNotional(const Leg& leg) {
-    Date today = Settings::instance().evaluationDate();
     // assume the leg is sorted
     // We just take the first coupon::nominal we find, otherwise return 0
     if (leg.size() > 0) {

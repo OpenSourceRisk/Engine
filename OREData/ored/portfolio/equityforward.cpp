@@ -84,29 +84,9 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     notionalCurrency_ = ccy.code();
 
     additionalData_["underlyingSecurityId"] = name;
-    // Can we remove this?
-     additionalData_["notionalCurrency"] = ccy.code();
     additionalData_["strike"] = strike;
     additionalData_["strikeCurrency"] = strikeCurrency_;
     additionalData_["quantity"] = quantity_;
-}
-
-const std::map<std::string,boost::any>&
-EquityForward::additionalData() const {
-    // Can we remove this?
-    try {
-        instrument_->qlInstrument()->NPV();
-        Real ntl = instrument_->qlInstrument()->result<Real>("currentNotional");
-        additionalData_["notional[1]"] = ntl;
-    } catch (const std::exception& e) {
-        WLOG("equity forward does not provide current notional, using default strike * quantity");
-        additionalData_["notional[1]"] = notional_;
-    }
-    additionalData_["notionalCurrency[1]"] = additionalData_["notionalCurrency"];
-    additionalData_["notional[2]"] = notional_;
-    additionalData_["notionalCurrency[2]"] = notionalCurrency_;
-
-    return additionalData_;
 }
     
 void EquityForward::fromXML(XMLNode* node) {
