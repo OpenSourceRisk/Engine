@@ -125,6 +125,10 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // notional_ = strike_ * quantity_;
     notional_ = Null<Real>(); // is handled by override of notional()
     notionalCurrency_ = currency_;
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_;
+    additionalData_["strikeCurrency"] = currency_;    
 }
 
 Real CommodityForward::notional() const {

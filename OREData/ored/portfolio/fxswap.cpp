@@ -92,6 +92,11 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legPayers_[2] = false;
     legPayers_[3] = true;
 
+    additionalData_["soldCurrency"] = nearBoughtCurrency_;
+    additionalData_["boughtCurrency"] = nearSoldCurrency_;
+    additionalData_["soldAmount"] = farSoldAmount_;
+    additionalData_["boughtAmount"] = farBoughtAmount_;
+
     DLOG("FxSwap leg 0: " << nearDate_ << " " << legs_[0][0]->amount());
     DLOG("FxSwap leg 1: " << nearDate_ << " " << legs_[1][0]->amount());
     DLOG("FxSwap leg 2: " << farDate_ << " " << legs_[2][0]->amount());
