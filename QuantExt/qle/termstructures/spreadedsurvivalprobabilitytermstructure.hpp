@@ -47,7 +47,7 @@ public:
     Calendar calendar() const override;
     Natural settlementDays() const override;
     std::vector<Time> times();
-    const Handle<DefaultProbabilityTermStructure>& referenceCurve() const;
+    Handle<DefaultProbabilityTermStructure> referenceCurve() const;
     //@}
 private:
     void performCalculations() const override;

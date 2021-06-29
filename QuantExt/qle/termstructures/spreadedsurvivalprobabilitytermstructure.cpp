@@ -78,7 +78,7 @@ Natural SpreadedSurvivalProbabilityTermStructure::settlementDays() const { retur
 
 std::vector<Time> SpreadedSurvivalProbabilityTermStructure::times() { return times_; }
 
-const Handle<DefaultProbabilityTermStructure>& SpreadedSurvivalProbabilityTermStructure::referenceCurve() const {
+Handle<DefaultProbabilityTermStructure> SpreadedSurvivalProbabilityTermStructure::referenceCurve() const {
     return referenceCurve_;
 }
 } // namespace QuantExt
