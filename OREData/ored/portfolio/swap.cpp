@@ -187,6 +187,8 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
                 boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
                 if (coupon) {
+                    // Can we remove this following line ?
+                    additionalData_["notional[" + legID + "]"] = coupon->nominal();
                     additionalData_["currentNotional[" + legID + "]"] = coupon->nominal();
                     additionalData_["rate[" + legID + "]"] = coupon->rate();
                     boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
