@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -463,19 +464,40 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::EQUITY_OPTION: {
-        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7, "6 or 7 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 6 || tokens.size() == 7 || tokens.size() == 8,
+                   "6 to 8 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL || quoteType == MarketDatum::QuoteType::PRICE,
                    "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
         string expiryString = tokens[4];
-        const string& strike = tokens[5];
+        string& strStrike = tokens[5];
         bool isCall = true;
-        if (tokens.size() == 7) {
-            QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P",
-                       "excepted C or P for Call or Put at position 7 in " << datumName);
-            isCall = tokens[6] == "C";
+
+        double temp = 0;
+        if (tryParseReal(strStrike, temp)) { // Should be absolute strike
+            // Check if Call/Put is specified
+            if (tokens.size() == 7) {
+                QL_REQUIRE(tokens[6] == "C" || tokens[6] == "P",
+                           "expected C or P for Call or Put at position 7 in " << datumName);
+                isCall = tokens[6] == "C";
+            }
+        } else if (strStrike == "ATMF") {                      // Is ATM forward quote
+            strStrike = "ATM/AtmFwd";                          // We force it for parseBaseStrike() to use AtmStrike
+        } else if (strStrike == "ATM" && tokens.size() == 7) { // Should be ATM forward quote, needs 7th token
+            QL_REQUIRE(tokens[6] == "AtmFwd",
+                       "Expected ATM type AtmFwd at position 7, given ATM at position 6, in " << datumName);
+            strStrike = "ATM/AtmFwd";
+        } else if (tokens.size() == 8) { // Else, if 8, should be moneyness strike
+            QL_REQUIRE(tokens[5] == "MNY",
+                       "Expected MNY at position 6 in "
+                           << datumName << " for moneyness surface. MNY/Spot|Fwd");
+            strStrike = boost::algorithm::join(boost::make_iterator_range(tokens.begin() + 5, tokens.begin() + 8), "/");
+        } else {
+            QL_FAIL("unknown equity option quote string. Use ATM/AtmFwd, MNY/Spot|Fwd, or absolute strike 123[/C|P]");
         }
+        boost::shared_ptr<BaseStrike> strike = parseBaseStrike(strStrike);
+
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in
         // the vol curve-config.
         return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString,

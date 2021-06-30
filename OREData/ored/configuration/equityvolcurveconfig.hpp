@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -50,7 +51,8 @@ public:
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-                                const string& dayCounter = "A365", const string& calendar = "NullCalendar");
+                                const string& dayCounter = "A365", const string& calendar = "NullCalendar",
+                                const std::string& equityCurveId = "", const std::string& yieldCurveId = "");
     //@}
 
     //! \name Serialisation
@@ -71,6 +73,8 @@ public:
     const string quoteStem() const;
     void populateQuotes();
     bool isProxySurface() { return !proxySurface_.empty(); };
+    const std::string& equityCurveId() const { return equityCurveId_; };
+    const std::string& yieldCurveId() const { return yieldCurveId_; };
     //@}
 
     //! \name Setters
@@ -85,6 +89,8 @@ private:
     string dayCounter_;
     string calendar_;
     string proxySurface_;
+    std::string equityCurveId_;
+    std::string yieldCurveId_;
 };
 } // namespace data
 } // namespace ore

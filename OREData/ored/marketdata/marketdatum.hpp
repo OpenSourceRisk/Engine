@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -1499,7 +1500,7 @@ Specific data comprise
 - Equity/Index name
 - currency
 - expiry
-- strike - can be "ATMF" or an actual strike
+- strike - can be "ATMF" (or, equivalently, "ATM/AtmFwd"), "MNY/Spot|Fwd/MONEYNESS_VALUE", or an absolute strike
 
 \ingroup marketdata
 */
@@ -1508,21 +1509,21 @@ public:
     EquityOptionQuote() {}
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-                      string expiry, string strike, bool isCall = true);
+                      string expiry, const boost::shared_ptr<BaseStrike>& strike, bool isCall = true);
 
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
-    const string& strike() const { return strike_; }
+    const boost::shared_ptr<BaseStrike>& strike() const { return strike_; }
     bool isCall() { return isCall_; }
     //@}
 private:
     string eqName_;
     string ccy_;
     string expiry_;
-    string strike_;
+    boost::shared_ptr<BaseStrike> strike_;
     bool isCall_;
     //! Serialization
     friend class boost::serialization::access;
