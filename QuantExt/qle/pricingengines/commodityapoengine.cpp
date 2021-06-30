@@ -152,6 +152,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     vector<Date> futureExpiries;
     map<Date, Real> futureVols;
     vector<Real> spotVars;
+    vector<Real> futureVolsVec, spotVolsVec; // additional results only
     auto m = arguments_.flow->indices().size();
     for (const auto& p : arguments_.flow->indices()) {
         if (p.first > today) {
@@ -165,6 +166,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
                 }
             } else {
                 spotVars.push_back(volStructure_->blackVariance(times.back(), effectiveStrike));
+                spotVolsVec.push_back(std::sqrt(spotVars.back() / times.back()));
             }
             EA += forwards.back();
         }
@@ -180,12 +182,14 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             Date e_i = futureExpiries[i];
             Volatility v_i = futureVols.at(e_i);
             EA2 += forwards[i] * forwards[i] * exp(v_i * v_i * times[i]);
+            futureVolsVec.push_back(v_i);
             for (Size j = 0; j < i; ++j) {
                 Date e_j = futureExpiries[j];
                 Volatility v_j = futureVols.at(e_j);
                 EA2 += 2 * forwards[i] * forwards[j] * exp(rho(e_i, e_j) * v_i * v_j * times[j]);
             }
         }
+        mp["futureVols"] = futureVolsVec;
     } else {
         // References spot prices
         for (Size i = 0; i < n; ++i) {
@@ -194,6 +198,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
                 EA2 += 2 * forwards[i] * forwards[j] * exp(spotVars[j]);
             }
         }
+        mp["spotVols"] = spotVolsVec;
     }
     EA2 /= m * m;
 
@@ -213,6 +218,9 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     mp["tte"] = tn;
     mp["sigma"] = sigma;
     mp["npv"] = results_.value;
+    mp["times"] = times;
+    mp["forwards"] = forwards;
+    mp["beta"] = beta_;
 }
 
 void CommodityAveragePriceOptionMonteCarloEngine::calculate() const {
