@@ -912,6 +912,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityI
                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Real currentNotional(const Leg& leg);
+Real originalNotional(const Leg& leg);
 
 //@}
 
