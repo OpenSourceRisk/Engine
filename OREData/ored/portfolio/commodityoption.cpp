@@ -96,6 +96,10 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
                                 << " and strike " << strike_ << " is "
                                 << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_));
     }
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_;
+    additionalData_["strikeCurrency"] = currency_;    
 }
 
 std::map<AssetClass, std::set<std::string>>

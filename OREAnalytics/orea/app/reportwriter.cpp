@@ -851,6 +851,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
         try {
             // we first add any additional trade data.
             string tradeId = trade->id();
+            string tradeType = trade->tradeType();
             Real notional2 = Null<Real>();
             string notional2Ccy = "";
             // Get the additional data for the current instrument.

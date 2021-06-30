@@ -1876,6 +1876,17 @@ Real currentNotional(const Leg& leg) {
     return 0;
 }
 
+Real originalNotional(const Leg& leg) {
+    // assume the leg is sorted
+    // We just take the first coupon::nominal we find, otherwise return 0
+    if (leg.size() > 0) {
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(leg.front());
+        if (coupon)
+            return coupon->nominal();
+    }
+    return 0;
+}
+
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
                                                     const AmortizationData& data) {
     LOG("Build fixed amortization notional schedule");
