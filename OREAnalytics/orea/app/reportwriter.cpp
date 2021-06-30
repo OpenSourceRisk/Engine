@@ -1039,6 +1039,8 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
     addRowMktCalReport(report, type, id, "riskReversalInFavorOf", "", "", "", info->riskReversalInFavorOf);
     addRowMktCalReport(report, type, id, "butterflyStyle", "", "", "", info->butterflyStyle);
     addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+    for (Size i = 0; i < info->messages.size(); ++i)
+        addRowMktCalReport(report, type, id, "message_" + std::to_string(i), "", "", "", info->messages[i]);
 
     for (Size i = 0; i < info->times.size(); ++i) {
         std::string tStr = std::to_string(info->times.at(i));
@@ -1125,20 +1127,15 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
 }
 
 void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md) {
-    report.next()
-        .add(md.asofDate())
-        .add(md.name())
-        .add(md.quote()->value());
+    report.next().add(md.asofDate()).add(md.name()).add(md.quote()->value());
 }
 
 void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loader>& loader, const Date& asof,
-    const set<string>& quoteNames, bool returnAll) {
+                                   const set<string>& quoteNames, bool returnAll) {
 
     LOG("Writing MarketData report");
 
-    report.addColumn("datumDate", Date())
-        .addColumn("datumId", string())
-        .addColumn("datumValue", double(), 10);
+    report.addColumn("datumDate", Date()).addColumn("datumId", string()).addColumn("datumValue", double(), 10);
 
     if (returnAll) {
         for (const auto& md : loader->loadQuotes(asof)) {
@@ -1150,7 +1147,7 @@ void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loade
     set<string> names;
     set<string> regexStrs;
     partitionQuotes(quoteNames, names, regexStrs);
-    
+
     vector<std::regex> regexes;
     regexes.reserve(regexStrs.size());
     for (auto regexStr : regexStrs) {
@@ -1179,18 +1176,13 @@ void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loade
 }
 
 void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>& loader) {
-    
+
     LOG("Writing Fixings report");
 
-    report.addColumn("fixingDate", Date())
-        .addColumn("fixingId", string())
-        .addColumn("fixingValue", double(), 10);
+    report.addColumn("fixingDate", Date()).addColumn("fixingId", string()).addColumn("fixingValue", double(), 10);
 
     for (const auto& f : loader->loadFixings()) {
-        report.next()
-            .add(f.date)
-            .add(f.name)
-            .add(f.fixing);
+        report.next().add(f.date).add(f.name).add(f.fixing);
     }
 
     report.end();
