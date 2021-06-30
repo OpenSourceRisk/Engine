@@ -410,7 +410,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
         QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F",
-                   "excepted C or F for Cap or Floor at position 5 in " << datumName);
+                   "expected C or F for Cap or Floor at position 5 in " << datumName);
         bool isCap = tokens[4] == "C";
         string strike = tokens[5];
         return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
@@ -422,7 +422,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
         QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F",
-                   "excepted C or F for Cap or Floor at position 5 in " << datumName);
+                   "expected C or F for Cap or Floor at position 5 in " << datumName);
         bool isCap = tokens[4] == "C";
         string strike = tokens[5];
         return boost::make_shared<YyInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,

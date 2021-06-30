@@ -167,7 +167,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
         // Create the regular expression
         regex regexp(boost::replace_all_copy(vcc.quotes()[0], "*", ".*"));
 
-        // Loop over quotes and process commodity option quotes matching pattern on asof
+        // Loop over quotes and process equity option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
             // Go to next quote if the market data point's date does not equal our asof
@@ -200,7 +200,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
         DLOG("Have " << vcc.quotes().size() << " explicit quotes");
 
-        // Loop over quotes and process commodity option quotes that are explicitly specified in the config
+        // Loop over quotes and process equity option quotes that are explicitly specified in the config
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
             // Go to next quote if the market data point's date does not equal our asof
             if (md->asofDate() != asof)
@@ -287,8 +287,9 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConfig& vc,
                                      const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
                                      const QuantLib::Handle<EquityIndex>& eqIndex) {
-    try {
+    LOG("EquityVolCurve: start building 2-D volatility absolute strike surface");
 
+    try {
         QL_REQUIRE(vssc.expiries().size() > 0, "No expiries defined");
         QL_REQUIRE(vssc.strikes().size() > 0, "No strikes defined");
 
@@ -396,15 +397,15 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                            "Call and Put quotes must match for explicitly defined surface, "
                                << callQuotesAdded << " call quotes, and " << putQuotesAdded << " put quotes");
                 DLOG("EquityVolatilityCurve " << vc.curveID() << ": Complete set of " << callQuotesAdded
-                                              << ", call and put quotes found.");
+                                              << " call and put quotes found.");
             }
         }
 
         QL_REQUIRE(callStrikes.size() == callData.size() && callData.size() == callExpiries.size(),
-                   "Quotes loaded don't produce strike,vol,expiry vectors of equal length.");
+                   "Quotes loaded don't produce strike, vol, expiry vectors of equal length.");
         QL_REQUIRE(putStrikes.size() == putData.size() && putData.size() == putExpiries.size(),
-                   "Quotes loaded don't produce strike,vol,expiry vectors of equal length.");
-        DLOG("EquityVolatilityCurve " << vc.curveID() << ": Found " << callQuotesAdded << ", call quotes and "
+                   "Quotes loaded don't produce strike, vol, expiry vectors of equal length.");
+        DLOG("EquityVolatilityCurve " << vc.curveID() << ": Found " << callQuotesAdded << " call quotes and "
                                       << putQuotesAdded << " put quotes using wildcard.");
 
         // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
@@ -494,6 +495,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         DLOG("Setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
         vol_->enableExtrapolation(vssc.extrapolation());
 
+        LOG("EquityVolCurve: finished building 2-D volatility absolute strike surface");
     } catch (std::exception& e) {
         QL_FAIL("equity vol curve building failed :" << e.what());
     } catch (...) {

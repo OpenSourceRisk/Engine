@@ -71,7 +71,6 @@ public:
     const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; };
     const string& proxySurface() const { return proxySurface_; }
     const string quoteStem() const;
-    void populateQuotes();
     bool isProxySurface() { return !proxySurface_.empty(); };
     const std::string& equityCurveId() const { return equityCurveId_; };
     const std::string& yieldCurveId() const { return yieldCurveId_; };
@@ -91,6 +90,9 @@ private:
     string proxySurface_;
     std::string equityCurveId_;
     std::string yieldCurveId_;
+
+    //! Populate CurveConfig::quotes_ with the required quotes.
+    void populateQuotes();
 };
 } // namespace data
 } // namespace ore
