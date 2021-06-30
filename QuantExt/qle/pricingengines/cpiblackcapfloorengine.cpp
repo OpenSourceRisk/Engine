@@ -54,7 +54,8 @@ void CPIBlackCapFloorEngine::calculate() const {
     DiscountFactor d = arguments_.nominal * discountCurve_->discount(maturity);
 
     Date effectiveMaturity = arguments_.payDate - arguments_.observationLag - lagDiff;
-    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex) {
+    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
+        arguments_.observationInterpolation == QuantLib::CPI::Flat) {
         std::pair<Date, Date> ipm = inflationPeriod(effectiveMaturity, arguments_.infIndex->frequency());
         effectiveMaturity = ipm.first;
     }
@@ -63,7 +64,8 @@ void CPIBlackCapFloorEngine::calculate() const {
     Real baseFixing = indexFixing(baseDate);
 
     Date effectiveStart = arguments_.startDate - arguments_.observationLag;
-    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex) {
+    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
+        arguments_.observationInterpolation == QuantLib::CPI::Flat) {
         std::pair<Date, Date> ips = inflationPeriod(effectiveStart, arguments_.infIndex->frequency());
         effectiveStart = ips.first;
     }
