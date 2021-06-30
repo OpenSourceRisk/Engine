@@ -75,6 +75,8 @@ public:
     bool butterflyIsBrokerStyle() const { return butterflyIsBrokerStyle_; }
     SmileInterpolation smileInterpolation() const { return smileInterpolation_; }
 
+    const std::vector<bool>& smileHasError() const { return smileHasError_; }
+
 private:
     Volatility blackVolImpl(Time t, Real strike) const override;
     void update() override;
@@ -105,6 +107,7 @@ private:
 
     mutable std::vector<boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> smiles_;
     mutable std::map<Real, boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> cachedInterpolatedSmiles_;
+    mutable std::vector<bool> smileHasError_;
 };
 
 namespace detail {
