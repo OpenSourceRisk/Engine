@@ -29,14 +29,8 @@ namespace QuantExt {
 
 namespace detail {
 
-// Real transformVol(const Real v) { return std::log(vol); }
-// Real untransformVol(const Real w) { return std::exp(w); }
-
-static const Real minVol = 1E-4;
-static const Real maxVol = 1.0;
-
-Real transformVol(const Real v) { return std::tan(std::max(v - minVol, 0.0) * M_PI / (maxVol - minVol) - M_PI_2); }
-Real untransformVol(const Real w) { return minVol + (maxVol - minVol) * (std::atan(w) + M_PI_2) / M_PI; }
+Real transformVol(const Real v) { return std::log(v); }
+Real untransformVol(const Real w) { return std::exp(w); }
 
 SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     const Real spot, const Real domDisc, const Real forDisc, const Real expiryTime, const std::vector<Real>& deltas,
@@ -58,8 +52,7 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
 
     for (Size i = 0; i < deltas_.size(); ++i) {
         try {
-            BlackDeltaCalculator c(Option::Put, dt_, spot_, domDisc_, forDisc_,
-                                   std::max(putVols_[i], minVol) * std::sqrt(expiryTime_));
+            BlackDeltaCalculator c(Option::Put, dt_, spot_, domDisc_, forDisc_, putVols_[i] * std::sqrt(expiryTime_));
             x.push_back(simpleDeltaFromStrike(c.strikeFromDelta(-deltas[i])));
         } catch (const std::exception& e) {
             QL_FAIL("SimpleDeltaInterpolatedSmile: strikeFromDelta("
@@ -72,8 +65,7 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     }
 
     try {
-        BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_,
-                               std::max(atmVol, minVol) * std::sqrt(expiryTime_));
+        BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_, atmVol * std::sqrt(expiryTime_));
         x.push_back(simpleDeltaFromStrike(c.atmStrike(at_)));
     } catch (const std::exception& e) {
         QL_FAIL("SimpleDeltaIinterpolatedSmile: atmStrike could not be computed for spot="
@@ -86,7 +78,7 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
     for (Size i = deltas_.size(); i > 0; --i) {
         try {
             BlackDeltaCalculator c(Option::Call, dt_, spot_, domDisc_, forDisc_,
-                                   std::max(callVols_[i - 1], minVol) * std::sqrt(expiryTime_));
+                                   callVols_[i - 1] * std::sqrt(expiryTime_));
             x.push_back(simpleDeltaFromStrike(c.strikeFromDelta(deltas[i - 1])));
             y.push_back(transformVol(callVols_[i - 1]));
         } catch (const std::exception& e) {
