@@ -1007,13 +1007,11 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     }
                 }
                 if (noErrors > 0) {
-                    calibrationInfo_->messages.push_back(
-                        "Invalid smiles during vols surface building for " + spec.name() + ". " +
-                        std::to_string(noErrors) + " smile(s) out of " + std::to_string(bfrr->dates().size()) +
-                        " smile(s) are invalid. If there is at least one valid smile left, the surface will inter- "
-                        "and extrapolate using the valid smiles. Extreme or bad market data or also the choice "
-                        "of interpolation might cause invalid smiles. Affected expiries: " +
-                        os.str());
+                    calibrationInfo_->messages.push_back(std::to_string(noErrors) + " smile(s) out of " +
+                                                         std::to_string(bfrr->dates().size()) +
+                                                         " smile(s) are invalid. The surface will interpolate and "
+                                                         "extrapolate using the valid smiles. Affected expiries: " +
+                                                         os.str());
                 }
             }
         }
