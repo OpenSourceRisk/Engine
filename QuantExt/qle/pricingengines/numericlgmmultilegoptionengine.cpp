@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2020 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  All rights reserved.
 */
 
@@ -10,6 +10,15 @@
 #include <ql/payoff.hpp>
 
 namespace QuantExt {
+
+namespace {
+// return simulation date for cashflow c or null if c is not relevant (pay date <= today)
+Date getSimulationDate(const Date& today, const boost::shared_ptr<CashFlow>& c) {}
+
+// true if cashflow is part of the exercise right
+bool isCashflowRelevantForExercise(const Date& today, const Date& exercise, const boost::shared_ptr<CashFlow>& c) {}
+
+} // namespace
 
 NumericLgmMultiLegOptionEnginePlus::NumericLgmMultiLegOptionEnginePlus(
     const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx, const Size nx,
@@ -26,6 +35,10 @@ Real NumericLgmMultiLegOptionEnginePlus::calculate() const {
     // the reference date of the valuation
 
     Date refDate = model()->parametrization()->termStructure()->referenceDate();
+
+    // we might have to handle an exercise with rebate
+
+    auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
 
     /* check that the engine can handle the instrument, i.e. that there is a unique pay currency and all interest rate
        indices are in this same currency */
@@ -48,105 +61,97 @@ Real NumericLgmMultiLegOptionEnginePlus::calculate() const {
         }
     }
 
-    // initialise the index of the current exercise date
+    /* map an option date to the set of relevant cashflows to exercise into, the set will not contain cashflows
+       that are relevant for later option dates */
 
-    int optionIndex = static_cast<int>(exercise_->dates().size()) - 1;
+    std::map<Date, std::set<std::pair<Size, Size>>> optionDates;
 
-    // the minimum relevant exercise index
+    for (Size i = 0; i < arguments_.legs.size(); ++i) {
+        for (Size j = 0; j < arguments_.legs[i].size(); ++j) {
+            for (Size k = exercise_->dates().size(); k > 0; --k) {
+                Date exerciseDate = arguments_.exercise_->dates()[k - 1];
+                if (cashflowIsRelevantForExercise(arguments_.legs[i][j], exerciseDate))
+                    optionDates[exerciseDates].insert(std::make_pair(i, j));
+                break;
+            }
+        }
+    }
 
-    int minOptionIndexAlive = static_cast<int>(
-        std::upper_bound(exercise_->dates().begin(), exercise_->dates().end(), refDate) - exercise_->dates().begin());
+    /* map a simulation date => cashflows that are determined on that date */
 
-    // setup the vectorised LGM model which we use for the calculations below
+    std::map<Date, std::set<std::pair<Size, Size>>> cashflowDates;
+
+    /* Each underlying coupon has a date on which we can efficiently calculate its amount. We have to approximate
+       certain coupon amounts due to the 1d backward pricing approach, which
+       - does not allow to access relevant fixing values before the option date
+       - can not handle path-dependent payoffs
+       In this step we associate a simulation date to each coupon. */
+
+    for (Size i = 0; i < arguments_.legs.size(); ++i) {
+        for (Size j = 0; j < arguments_.legs[i].size(); ++j) {
+            Date d = getSimulationDate(refDate, arguments_.legs[i][j]);
+            if (d != Null<Date>())
+                cashflowDates[d].insert(std::make_pair(i, j));
+        }
+    }
+
+    /* Compile the list of simulation dates */
+
+    std::set<Date> simulationDates;
+
+    for (auto const& d : optionDates)
+        simluationDates.insert(d.first);
+
+    for (auto const& d : couponSimulationDates)
+        simulationDates.insert(d.first);
+
+    /* Step backwards through simulation dates and compute the option npv */
 
     LgmVectorised lgm(model()->parametrization());
 
-    // the npv of all coupons we have handled so far
-    RandomVariable underlyingNpv(gridSize(), 0.0);
+    RandomVariable optionNpv(gridSize(), 0.0);
+    RandomVariable underlyingNpv1(gridSize(), 0.0);
+    std::map<std::pair<Size, Size>> underlyingNpv2(gridSize(), 0.0);
 
-    // the current option value
-    RandomVariable optionValue(gridSize(), 0.0);
+    for (auto it = simulationDates.rbegin(); it != simulationDates.rend(); ++it) {
 
-    // we might have to handle an exercise with rebate
-    auto rebatedExercise = boost::dynamic_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+        auto option = optionDates.find(*it);
+        auto cashflow = cashflowDates.find(*it);
 
-    while (optionIndex >= minOptionIndexAlive) {
+        // collect cashflow amounts on simulation date
 
-        // compute conditional PV of coupons as seen from the current exercise date that are
-        // a) part of the current exercise into right (i.e. the coupon accrual start dates >= exercise date)
-        // b) are not part of future exercise into rights (those are incorporated into underlyingNpv already)
-
-        // current exercise time
-        Real t = model()->parametrization()->termStructure()->timeFromReference(exercise_->dates()[optionIndex]);
-
-        // state grid at the exercise time
-        RandomVariable x = stateGrid(t);
-
-        // rebate value for this exercise
-        RandomVariable rebateValue(x.size(), 0.0);
-        if (rebatedExercise) {
-            Real T = model()->parametrization()->termStructure()->timeFromReference(
-                rebatedExercise->rebatePaymentDate(optionIndex));
-            rebateValue =
-                RandomVariable(gridSize(), rebatedExercise->rebate(optionIndex)) * lgm.reducedDiscountBond(t, T, x);
+        if (cashflow != cashflowDates.end()) {
+            for (auto const& cf : cashflow->second) {
+                underlyingNpv2[cf.first] = getUnderlyingCashflowAmount(cf.first);
+            }
         }
 
-        // npv of the coupons we are handling for this exercise date
-        RandomVariable currentCouponNpv(x.size(), 0.0);
+        // handle option date
 
-        // handle floating coupons (as received at this point)
-        while (floatingCouponIndex >= 0 &&
-               floatingResetDates_[floatingCouponIndex] >= exercise_->dates()[optionIndex]) {
-            Real T =
-                model()->parametrization()->termStructure()->timeFromReference(floatingPayDates_[floatingCouponIndex]);
-            // the floating fixing date might fall before the exericse date, in this case we apply the modelling
-            // assumption that the original fixing can be approximated by the fixing on the exercise date
-            Date effectiveFixingDate = iborIndex_->fixingCalendar().adjust(
-                std::max(floatingFixingDates_[floatingCouponIndex], exercise_->dates()[optionIndex]));
-            currentCouponNpv += RandomVariable(x.size(), floatingNominal_[floatingCouponIndex] *
-                                                             floatingAccrualTimes_[floatingCouponIndex]) *
-                                (RandomVariable(x.size(), floatingSpreads_[floatingCouponIndex]) +
-                                 lgm.fixing(iborIndex_, effectiveFixingDate, t, x)) *
-                                lgm.reducedDiscountBond(t, T, x, discountCurve_);
-            --floatingCouponIndex;
+        if (option != optionDates.end()) {
+
+            // transfer relevant cashflow amounts to exercise into npv
+
+            for (auto const& cf : option->second) {
+                underlyingNpv1 += underlyingNpv2[cf.first];
+                underyingNpv2.erase(cf.first);
+            }
+
+            // update the option value
+
+            optionNpv = max(optionNpv, underlyingNpv1);
         }
 
-        // handle fixed coupons (as paid at this point)
-        while (fixedCouponIndex >= 0 && fixedResetDates_[fixedCouponIndex] >= exercise_->dates()[optionIndex]) {
-            Real T = model()->parametrization()->termStructure()->timeFromReference(fixedPayDates_[fixedCouponIndex]);
-            currentCouponNpv -= RandomVariable(x.size(), fixedCoupons_[fixedCouponIndex]) *
-                                lgm.reducedDiscountBond(t, T, x, discountCurve_);
-            --fixedCouponIndex;
-        }
+        // rollback
 
-        // roll back
-        // a) previously computed coupon npvs (if any) from the next exercise date to the current one
-        // b) the current option value
-        if (optionIndex < static_cast<int>(exercise_->dates().size()) - 1) {
-            Real t_from =
-                model()->parametrization()->termStructure()->timeFromReference(exercise_->dates()[optionIndex + 1]);
-            underlyingNpv = rollback(underlyingNpv, t_from, t);
-            optionValue = rollback(optionValue, t_from, t);
-        }
-
-        // add the npv of the newly added coupons for this exercise date
-        underlyingNpv += currentCouponNpv;
-
-        // update the option value (exercise or continue)
-        optionValue =
-            max(optionValue,
-                RandomVariable(x.size(), swapType_ == VanillaSwap::Payer ? 1.0 : -1.0) * underlyingNpv + rebateValue);
-
-        // go to next option date (back in time)
-        --optionIndex;
+        underlyingNpv = rollback(underlyingNpv, t_from, t);
+        optionValue = rollback(optionValue, t_from, t);
     }
 
-    // last roll back from first alive exercise date to the reference date
-    Real t = model()->parametrization()->termStructure()->timeFromReference(exercise_->dates()[minOptionIndexAlive]);
-    optionValue = rollback(optionValue, t, 0.0);
+    /* Set the results */
 
-    // return the result
-    return optionValue[0];
-} // NumericLgmSwaptionEngineBase::calculate
+    results_.value = optionNpv;
+
+} // calculate()
 
 } // namespace QuantExt
