@@ -26,7 +26,7 @@ namespace QuantExt {
 
 namespace {
 // return simulation date for cashflow c or null if c is not relevant (pay date <= today)
-Date getSimulationDate(const Date& today, const boost::shared_ptr<CashFlow>& c) {}
+Date getSimulationDate(const Date& today, const Date& latestOptionDate, const boost::shared_ptr<CashFlow>& c) {}
 
 // true if cashflow is part of the exercise right
 bool isCashflowRelevantForExercise(const Date& today, const Date& exercise, const boost::shared_ptr<CashFlow>& c) {}
@@ -102,7 +102,12 @@ Real NumericLgmMultiLegOptionEnginePlus::calculate() const {
 
     for (Size i = 0; i < arguments_.legs.size(); ++i) {
         for (Size j = 0; j < arguments_.legs[i].size(); ++j) {
-            Date d = getSimulationDate(refDate, arguments_.legs[i][j]);
+            Date latestOptionDate = Date::minDate();
+            for (auto const& d : optionDates) {
+                if (d->second.find(std::make_pair(i, j)) != d->second.end())
+                    latestOptionDate = std::max(latestOptionDate, d->first);
+            }
+            Date d = getSimulationDate(refDate, latestOptionDate, arguments_.legs[i][j]);
             if (d != Null<Date>())
                 cashflowDates[d].insert(std::make_pair(i, j));
         }
