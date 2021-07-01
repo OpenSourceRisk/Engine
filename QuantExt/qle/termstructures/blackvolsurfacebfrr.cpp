@@ -168,6 +168,10 @@ Real SimpleDeltaInterpolatedSmile::atmStrike(const DeltaVolQuote::DeltaType dt, 
     return result;
 }
 
+Real SimpleDeltaInterpolatedSmile::volatilityAtSimpleDelta(const Real tnp) {
+    return untransformVol((*interpolation_)(tnp));
+}
+
 Real SimpleDeltaInterpolatedSmile::volatility(const Real strike) {
     Real tmp = untransformVol((*interpolation_)(simpleDeltaFromStrike(strike)));
     if (!std::isfinite(tmp)) {
@@ -184,6 +188,8 @@ Real SimpleDeltaInterpolatedSmile::volatility(const Real strike) {
 }
 
 Real SimpleDeltaInterpolatedSmile::simpleDeltaFromStrike(const Real strike) const {
+    if (close_enough(strike, 0.0))
+        return 0.0;
     CumulativeNormalDistribution Phi;
     return Phi(std::log(strike / forward_) / (atmVol_ * std::sqrt(expiryTime_)));
 }
@@ -411,6 +417,7 @@ void BlackVolatilitySurfaceBFRR::init() {
 
     smiles_.resize(expiryTimes_.size());
     smileHasError_.resize(expiryTimes_.size());
+    smileErrorMessage_.resize(expiryTimes_.size());
 
     // calculate discount factors for spot settlement date and the settlement lag
 
@@ -423,6 +430,7 @@ void BlackVolatilitySurfaceBFRR::init() {
 
     std::fill(smiles_.begin(), smiles_.end(), nullptr);
     std::fill(smileHasError_.begin(), smileHasError_.end(), false);
+    std::fill(smileErrorMessage_.begin(), smileErrorMessage_.end(), std::string());
     cachedInterpolatedSmiles_.clear();
 }
 
@@ -488,8 +496,9 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
                 foreignTS_->discount(settlementDates_[index_m]) / settlForDisc_, expiryTimes_[index_m], deltas_,
                 bfQuotes_[index_m], rrQuotes_[index_m], atmQuotes_[index_m], dt, at, riskReversalInFavorOf_,
                 butterflyIsBrokerStyle_, smileInterpolation_);
-        } catch (...) {
+        } catch (const std::exception& e) {
             smileHasError_[index_m] = true;
+            smileErrorMessage_[index_m] = e.what();
             return blackVolImpl(t, strike);
         }
     }
@@ -510,8 +519,9 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
                 foreignTS_->discount(settlementDates_[index_p]) / settlForDisc_, expiryTimes_[index_p], deltas_,
                 bfQuotes_[index_p], rrQuotes_[index_p], atmQuotes_[index_p], dt, at, riskReversalInFavorOf_,
                 butterflyIsBrokerStyle_, smileInterpolation_);
-        } catch (...) {
+        } catch (const std::exception& e) {
             smileHasError_[index_p] = true;
+            smileErrorMessage_[index_p] = e.what();
             return blackVolImpl(t, strike);
         }
     }
@@ -530,20 +540,34 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
     std::vector<Real> putVols_m, callVols_m, putVols_p, callVols_p;
 
     if (index_m != Null<Size>()) {
-        atmVol_m = smiles_[index_m]->volatility(smiles_[index_m]->atmStrike(dt_c, at_c));
-        for (auto const& d : deltas_) {
-            putVols_m.push_back(smiles_[index_m]->volatility(smiles_[index_m]->strikeFromDelta(Option::Put, d, dt_c)));
-            callVols_m.push_back(
-                smiles_[index_m]->volatility(smiles_[index_m]->strikeFromDelta(Option::Call, d, dt_c)));
+        try {
+            atmVol_m = smiles_[index_m]->volatility(smiles_[index_m]->atmStrike(dt_c, at_c));
+            for (auto const& d : deltas_) {
+                putVols_m.push_back(
+                    smiles_[index_m]->volatility(smiles_[index_m]->strikeFromDelta(Option::Put, d, dt_c)));
+                callVols_m.push_back(
+                    smiles_[index_m]->volatility(smiles_[index_m]->strikeFromDelta(Option::Call, d, dt_c)));
+            }
+        } catch (const std::exception& e) {
+            smileHasError_[index_m] = true;
+            smileErrorMessage_[index_m] = e.what();
+            return blackVolImpl(t, strike);
         }
     }
 
     if (index_p != Null<Size>()) {
-        atmVol_p = smiles_[index_p]->volatility(smiles_[index_p]->atmStrike(dt_c, at_c));
-        for (auto const& d : deltas_) {
-            putVols_p.push_back(smiles_[index_p]->volatility(smiles_[index_p]->strikeFromDelta(Option::Put, d, dt_c)));
-            callVols_p.push_back(
-                smiles_[index_p]->volatility(smiles_[index_p]->strikeFromDelta(Option::Call, d, dt_c)));
+        try {
+            atmVol_p = smiles_[index_p]->volatility(smiles_[index_p]->atmStrike(dt_c, at_c));
+            for (auto const& d : deltas_) {
+                putVols_p.push_back(
+                    smiles_[index_p]->volatility(smiles_[index_p]->strikeFromDelta(Option::Put, d, dt_c)));
+                callVols_p.push_back(
+                    smiles_[index_p]->volatility(smiles_[index_p]->strikeFromDelta(Option::Call, d, dt_c)));
+            }
+        } catch (const std::exception& e) {
+            smileHasError_[index_p] = true;
+            smileErrorMessage_[index_p] = e.what();
+            return blackVolImpl(t, strike);
         }
     }
 
