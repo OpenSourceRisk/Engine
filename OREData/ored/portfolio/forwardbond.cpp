@@ -146,6 +146,10 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.securityId(),
                                                      bondData_.referenceCurveId(), bondData_.incomeCurveId()));
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
+
+    additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
+    additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
+    additionalData_["currency"] = currency_;
 }
 
 void ForwardBond::fromXML(XMLNode* node) {

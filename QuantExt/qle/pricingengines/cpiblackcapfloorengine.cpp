@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016,2021 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -41,12 +41,10 @@ CPIBlackCapFloorEngine::CPIBlackCapFloorEngine(const Handle<YieldTermStructure>&
 
 void CPIBlackCapFloorEngine::calculate() const {
 
-    QL_REQUIRE(
-        arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
-            (arguments_.observationInterpolation == QuantLib::CPI::Flat && !arguments_.infIndex->interpolated()) ||
-            (arguments_.observationInterpolation == QuantLib::CPI::Linear && arguments_.infIndex->interpolated()),
-        "observation interpolation as index required");
-
+    QL_REQUIRE(arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
+                   arguments_.observationInterpolation == QuantLib::CPI::Flat ||
+                   arguments_.observationInterpolation == QuantLib::CPI::Linear,
+               "observation interpolation as index required");
     // Maturity adjustment for lag difference as in the QuantLib engine
     Period lagDiff = arguments_.observationLag - volatilitySurface_->observationLag();
     QL_REQUIRE(lagDiff >= Period(0, Months), "CPIBlackCapFloorEngine: "
@@ -56,16 +54,18 @@ void CPIBlackCapFloorEngine::calculate() const {
     DiscountFactor d = arguments_.nominal * discountCurve_->discount(maturity);
 
     Date effectiveMaturity = arguments_.payDate - arguments_.observationLag - lagDiff;
-    if (!arguments_.infIndex->interpolated()) {
+    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
+        arguments_.observationInterpolation == QuantLib::CPI::Flat) {
         std::pair<Date, Date> ipm = inflationPeriod(effectiveMaturity, arguments_.infIndex->frequency());
         effectiveMaturity = ipm.first;
     }
 
     Date baseDate = arguments_.infIndex->zeroInflationTermStructure()->baseDate();
-    Real baseFixing = arguments_.infIndex->fixing(baseDate);
+    Real baseFixing = indexFixing(baseDate);
 
     Date effectiveStart = arguments_.startDate - arguments_.observationLag;
-    if (!arguments_.infIndex->interpolated()) {
+    if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
+        arguments_.observationInterpolation == QuantLib::CPI::Flat) {
         std::pair<Date, Date> ips = inflationPeriod(effectiveStart, arguments_.infIndex->frequency());
         effectiveStart = ips.first;
     }
@@ -75,7 +75,7 @@ void CPIBlackCapFloorEngine::calculate() const {
     Real timeFromBase =
         arguments_.infIndex->zeroInflationTermStructure()->dayCounter().yearFraction(baseDate, effectiveMaturity);
     Real K = pow(1.0 + arguments_.strike, timeFromStart);
-    Real F = arguments_.infIndex->fixing(effectiveMaturity) / arguments_.baseCPI;
+    Real F = indexFixing(effectiveMaturity) / arguments_.baseCPI;
 
     // For reading volatility in the current market volatiltiy structure
     // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t), solve
@@ -99,6 +99,33 @@ void CPIBlackCapFloorEngine::calculate() const {
     // 	      << "F             = " << F << std::endl
     // 	      << "stdDev        = " << stdDev << std::endl
     // 	      << "value         = " <<  results_.value << std::endl;
+}
+
+Rate CPIBlackCapFloorEngine::indexFixing(const Date& d) const {
+    // you may want to modify the interpolation of the index
+    // this gives you the chance
+
+    Rate I1;
+    // what interpolation do we use? Index / flat / linear
+    if (arguments_.observationInterpolation == CPI::AsIndex) {
+        I1 = arguments_.infIndex->fixing(d);
+
+    } else {
+        // work out what it should be
+        std::pair<Date, Date> dd = inflationPeriod(d, arguments_.infIndex->frequency());
+        Real indexStart = arguments_.infIndex->fixing(dd.first);
+        if (arguments_.observationInterpolation == CPI::Linear) {
+            Real indexEnd = arguments_.infIndex->fixing(dd.second + Period(1, Days));
+            // linear interpolation
+            I1 = indexStart + (indexEnd - indexStart) * (d - dd.first) /
+                                  (Real)((dd.second + Period(1, Days)) -
+                                         dd.first); // can't get to next period's value within current period
+        } else {
+            // no interpolation, i.e. flat = constant, so use start-of-period value
+            I1 = indexStart;
+        }
+    }
+    return I1;
 }
 
 } // namespace QuantExt

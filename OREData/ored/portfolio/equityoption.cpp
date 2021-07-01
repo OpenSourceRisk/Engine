@@ -79,6 +79,10 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                                 << " and strike " << strike_ << " is "
                                 << market->equityVol(assetName_)->blackVol(expiryDate_, strike_));
     }
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = localStrike_;
+    additionalData_["strikeCurrency"] = strikeCurrency_;
 }
 
 void EquityOption::fromXML(XMLNode* node) {
