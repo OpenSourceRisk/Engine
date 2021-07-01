@@ -408,6 +408,8 @@ void BlackVolatilitySurfaceBFRR::init() {
 
     // calculate times associated to expiry dates
 
+    expiryTimes_.clear();
+    settlementDates_.clear();
     for (auto const& d : dates_) {
         expiryTimes_.push_back(timeFromReference(d));
         settlementDates_.push_back(spotCalendar_.advance(d, spotDays_ * Days));
