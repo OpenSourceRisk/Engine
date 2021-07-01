@@ -997,7 +997,6 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         if (reportOnDeltaGrid || reportOnMoneynessGrid) {
             if (auto bfrr = boost::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
                 std::ostringstream os;
-                Size noErrors = 0;
                 for (Size i = 0; i < bfrr->dates().size(); ++i) {
                     if (bfrr->smileHasError()[i]) {
                         calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +
