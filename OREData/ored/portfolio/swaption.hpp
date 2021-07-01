@@ -66,6 +66,8 @@ public:
     bool hasCashflows() const override { return false; }
     //@}
 
+    const std::map<std::string,boost::any>& additionalData() const override;
+
 private:
     OptionData option_;
     vector<LegData> swap_;
