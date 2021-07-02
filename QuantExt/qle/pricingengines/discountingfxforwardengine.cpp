@@ -113,28 +113,15 @@ void DiscountingFxForwardEngine::calculate() const {
             if (tmpNominal1 > tmpNominal2 * fxfwd) {
                 results_.additionalResults["currentNotional"] = tmpNominal1;
                 results_.additionalResults["notionalCurrency"] = ccy1_.code();
-                results_.additionalResults["notional[1]"] = tmpNominal1;
-                results_.additionalResults["notionalCurrency[1]"] = ccy1_.code();
-                results_.additionalResults["notional[2]"] = tmpNominal2;
-                results_.additionalResults["notionalCurrency[2]"] = ccy2_.code();
             } else {
                 results_.additionalResults["currentNotional"] = tmpNominal2;
                 results_.additionalResults["notionalCurrency"] = ccy2_.code();
-                results_.additionalResults["notional[1]"] = tmpNominal2;
-                results_.additionalResults["notionalCurrency[1]"] = ccy2_.code();
-                results_.additionalResults["notional[2]"] = tmpNominal1;
-                results_.additionalResults["notionalCurrency[2]"] = ccy1_.code();
             }
         } else {
             // for cash settled forwards we take the notional from the settlement ccy leg
             results_.additionalResults["currentNotional"] =
                 arguments_.currency1 == arguments_.payCcy ? arguments_.nominal1 : arguments_.nominal2;
             results_.additionalResults["notionalCurrency"] = arguments_.payCcy.code();
-            results_.additionalResults["notional[1]"] =
-                arguments_.currency1 == arguments_.payCcy ? arguments_.nominal1 : arguments_.nominal2;
-            results_.additionalResults["notionalCurrency[1]"] = arguments_.payCcy.code();
-            results_.additionalResults["notional[2]"] = arguments_.currency1 == arguments_.payCcy ? arguments_.nominal2 : arguments_.nominal1; 
-            results_.additionalResults["notionalCurrency[2]"] = ccy1_.code() == arguments_.payCcy.code() ? ccy2_.code() : ccy1_.code();
         }
     }
 

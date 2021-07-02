@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <ored/marketdata/fxvolcurve.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -988,6 +989,21 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                     calibrationInfo_->isArbitrageFree = false;
                 }
                 TLOG("Moneyness surface Arbitrage analysis completed:");
+            }
+        }
+
+        // the bfrr surface provides info on smiles with error, which we report here
+
+        if (reportOnDeltaGrid || reportOnMoneynessGrid) {
+            if (auto bfrr = boost::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
+                std::ostringstream os;
+                for (Size i = 0; i < bfrr->dates().size(); ++i) {
+                    if (bfrr->smileHasError()[i]) {
+                        calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +
+                                                             ore::data::to_string(bfrr->dates()[i]) + ": " +
+                                                             bfrr->smileErrorMessage()[i]);
+                    }
+                }
             }
         }
 
