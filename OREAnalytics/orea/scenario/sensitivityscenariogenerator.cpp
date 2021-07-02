@@ -423,8 +423,12 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
-        DayCounter dc = simMarket_->discountCurve(ccy)->dayCounter(); 
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->discountCurve(ccy)->dayCounter();
+        } catch(std::exception& e)  {
+            WLOG("Day counter lookup in simulation market failed for discount curve " << ccy << ", using default A365");
+        }
 
         Real quote = 0.0;
         bool valid = true;
@@ -515,9 +519,13 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         SensitivityScenarioData::CurveShiftData data = *idx.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
-        //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
-        DayCounter dc = simMarket_->iborIndex(indexName)->forwardingTermStructure()->dayCounter();
-
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->iborIndex(indexName)->forwardingTermStructure()->dayCounter();
+        } catch(std::exception& e)  {
+            WLOG("Day counter lookup in simulation market failed for index " << indexName << ", using default A365");
+        }
+        
         Real quote = 0.0;
         bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
@@ -602,9 +610,12 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = *y.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-
-        //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
-        DayCounter dc = simMarket_->yieldCurve(name)->dayCounter();
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->yieldCurve(name)->dayCounter();
+        } catch(std::exception& e)  {
+            WLOG("Day counter lookup in simulation market failed for yield curve " << name << ", using default A365");
+        }
 
         Real quote = 0.0;
         bool valid = true;
@@ -689,9 +700,12 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-
-        //DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
-        DayCounter dc = simMarket_->equityDividendCurve(name)->dayCounter();
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->equityDividendCurve(name)->dayCounter();
+        } catch(std::exception& e)  {
+            WLOG("Day counter lookup in simulation market failed for dividend yield curve " << name << ", using default A365");
+        }
 
         Real quote = 0.0;
         bool valid = true;
@@ -1923,8 +1937,14 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         string name = c.first;
         // Tenors for this name in simulation market
         vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(name);
-        //DayCounter curveDayCounter = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
-        DayCounter curveDayCounter = simMarket_->commodityPriceCurve(name)->dayCounter();
+        DayCounter curveDayCounter = Actual365Fixed();
+        try {
+            curveDayCounter = simMarket_->commodityPriceCurve(name)->dayCounter();
+        } catch(std::exception& e)  {
+            WLOG("Day counter lookup in simulation market failed for commodity price curve " << name << ", using default A365");
+        }
+
+
         vector<Real> times(simMarketTenors.size());
         vector<Real> basePrices(times.size());
         vector<Real> shiftedPrices(times.size());
