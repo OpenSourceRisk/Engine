@@ -52,6 +52,14 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
     QL_REQUIRE(simMarket_, "ValuationEngine: Error, Null SimMarket");
 }
 
+void ValuationEngine::recalibrateModels() {
+    for (auto const& b : modelBuilders_) {
+        if (om == ObservationMode::Mode::Disable)
+            b.second->forceRecalculate();
+        b.second->recalibrate();
+    }
+}
+
 void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfolio,
                                 boost::shared_ptr<analytics::NPVCube> outputCube,
                                 vector<boost::shared_ptr<ValuationCalculator>> calculators, bool mporStickyDate,
@@ -105,6 +113,8 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
         DLOG("Initialise wrapper for trade " << trades[i]->id());
         trades[i]->instrument()->initialise(dates);
+
+        recalibrateModels();
 
         // T0 values
         try {
@@ -170,12 +180,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 scenarioUpdated = true;
                 simMarket_->postUpdate(d, !mporStickyDate); // with fixings only if not sticky
 
-                // recalibrate models
-                for (auto const& b : modelBuilders_) {
-                    if (om == ObservationMode::Mode::Disable)
-                        b.second->forceRecalculate();
-                    b.second->recalibrate();
-                }
+                recalibrateModels();
 
                 timer.stop();
                 updateTime += timer.elapsed().wall * 1e-9;
@@ -212,7 +217,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 // Aggregation scenario data update on valuation dates only
                 simMarket_->updateAsd(d);
 
-                // recalibrate models
+                recalibrateModels();
                 for (auto const& b : modelBuilders_) {
                     if (om == ObservationMode::Mode::Disable)
                         b.second->forceRecalculate();
