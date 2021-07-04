@@ -53,6 +53,7 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
 }
 
 void ValuationEngine::recalibrateModels() {
+    ObservationMode::Mode om = ObservationMode::instance().mode();
     for (auto const& b : modelBuilders_) {
         if (om == ObservationMode::Mode::Disable)
             b.second->forceRecalculate();
@@ -218,11 +219,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 simMarket_->updateAsd(d);
 
                 recalibrateModels();
-                for (auto const& b : modelBuilders_) {
-                    if (om == ObservationMode::Mode::Disable)
-                        b.second->forceRecalculate();
-                    b.second->recalibrate();
-                }
 
                 timer.stop();
                 updateTime += timer.elapsed().wall * 1e-9;
