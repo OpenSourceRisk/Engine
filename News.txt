@@ -13,26 +13,28 @@ INSTRUMENTS
 - Add Duration Adjusted CMS Leg
 - Allow settlement delay in FX Forwards
 - Support separate caps/floors on inflation coupon and redemption
+- CPI and YoY coupons can now pay the inflation ratio or the inflation rate = inflation ratio - 1 
 - Support caps / floors on ON index fixings, see LocalCapFloor tag in the User Guide
 - Support local and global caps / floors on ON average coupons
 - Reference commodity index in Commodity forwards
 - Support strike of type yield-to-maturity in bond forwards (T-Locks etc.)
 - Support averaging and in-advance fixing for SOFR/ON-Index linked legs
+- Add LastRecentPeriodCalendar to handle SOFR30A, 90A, 180A 
 - Fix construction of notional amortization schedules
 - Update CDS Option Pricing (O’Kane, 2008)
-- Refine Cross Currency Swap pricing (thanks to Ioannis Rigopoulos) 
+- Refine Cross Currency Swap pricing (thanks to Ioannis Rigopoulos)
+- Allow for more than one premium, introduce new premium node
 
 MARKETS
 
 - Add minor currency support (GBX, ZAC, ILA)
-- Add various hard-coded currencies - AOA, ETB, GEL and XOF
+- Add currencies - AOA, ETB, GEL and XOF
 - Add configurable currencies support to cover all remaining ISO currencies, see Examples/Input/currencies.xml
 - Add configurable calendars
 - Add various hard-coded IBOR Indices, DKK CITA and SEK STINA (thanks to Skandinaviska Enskilda Banken), AED EIBOR, GBP BoEBase, CNH HIBOR, CNY REPOFIX, HKD HONIA, JPY-Euroyen TIBOR, ZAR SABOR
-- Add configurable, conventions based, index support for greater flexibility in adding indexes to ORE 
+- Add Inflation indices - AUCPI, FRCPI, BEHICP
+- Add configurable, conventions based, IR/INF index support for greater flexibility in adding indexes to ORE 
 - Add LIBOR fallback support based on configurable adjustment spread, cessation date and RFR index
-- Inflation various Inflation indices - AUCPI, FRCPI, BEHICP
-- Add configurable, conventions based, inflation indices
 - Fix the FX triangulation to avoid spurious small FX sensitivities
 
 TERM STRUCTURES

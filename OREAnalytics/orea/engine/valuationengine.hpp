@@ -87,6 +87,7 @@ public:
         std::vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators = {});
 
 private:
+    void recalibrateModels();
     void runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
                         std::vector<bool>& tradeHasError,
                         const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
