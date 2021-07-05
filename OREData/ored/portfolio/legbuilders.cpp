@@ -141,10 +141,21 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFa
     auto yyData = boost::dynamic_pointer_cast<YoYLegData>(data.concreteLegData());
     QL_REQUIRE(yyData, "Wrong LegType, expected YY");
     string inflationIndexName = yyData->index();
-    auto index = *engineFactory->market()->yoyInflationIndex(inflationIndexName, configuration);
-    Leg result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
-    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
-                                     requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
+    bool irregularYoY = yyData->irregularYoY();
+    Leg result;
+    if (!irregularYoY) {
+        auto index = *engineFactory->market()->yoyInflationIndex(inflationIndexName, configuration);
+        result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
+        addToRequiredFixings(result,
+                             boost::make_shared<FixingDateGetter>(
+                                 requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
+    } else {
+        auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
+        result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
+        addToRequiredFixings(result,
+                             boost::make_shared<FixingDateGetter>(
+                                 requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
+    }
     return result;
 }
 
@@ -264,7 +275,7 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
                        "Equity Currency provided does not match currency of Equity Curve");
         }
 
-        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqData->eqCurrency(), engineFactory->market(),
+        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqCurrency.code(), engineFactory->market(),
                                configuration, eqData->fxIndexCalendar(), eqData->fxIndexFixingDays());
     }
 

@@ -26,17 +26,13 @@ using QuantLib::Time;
 
 namespace QuantExt {
 
-YoYInflationModelTermStructure::YoYInflationModelTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
+YoYInflationModelTermStructure::YoYInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+                                                               Size index)
     : YoYInflationTermStructure(
-        inflationTermStructure(model, index)->dayCounter(),
-        inflationTermStructure(model, index)->baseRate(),
-        inflationTermStructure(model, index)->observationLag(),
-        inflationTermStructure(model, index)->frequency(),
-        inflationTermStructure(model, index)->indexIsInterpolated(),
-        inflationTermStructure(model, index)->nominalTermStructure()),
-      model_(model), index_(index),
-      referenceDate_(inflationTermStructure(model_, index_)->referenceDate()),
+          inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),
+          inflationTermStructure(model, index)->observationLag(), inflationTermStructure(model, index)->frequency(),
+          inflationTermStructure(model, index)->indexIsInterpolated()),
+      model_(model), index_(index), referenceDate_(inflationTermStructure(model_, index_)->referenceDate()),
       relativeTime_(0.0) {
     registerWith(model_);
     update();

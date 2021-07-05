@@ -275,7 +275,9 @@ void CrossAssetModelBuilder::buildModel() const {
         DLOG("Inflation parameterisation (" << i << ") for index " << imData->index());
         if (auto dkData = boost::dynamic_pointer_cast<InfDkData>(imData)) {
             boost::shared_ptr<InfDkBuilder> builder = boost::make_shared<InfDkBuilder>(
-                market_, dkData, configurationInfCalibration_, referenceCalibrationGrid_);
+                market_, dkData, configurationInfCalibration_, referenceCalibrationGrid_, dontCalibrate_);
+            if (dontCalibrate_)
+                builder->freeze();
             infParameterizations.push_back(builder->parametrization());
             subBuilders_[CT::INF][i] = builder;
             processInfo[CT::INF].emplace_back(dkData->index(), 1);
@@ -607,7 +609,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
 
     Handle<ZeroInflationIndex> zInfIndex =
         market_->zeroInflationIndex(model_->infdk(modelIdx)->name(), configurationInfCalibration_);
-    Real baseCPI = zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
+    Real baseCPI = dontCalibrate_ ? 100. : zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
     auto engine = boost::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(*model_, modelIdx, baseCPI);
     for (Size j = 0; j < cb.size(); j++)
         cb[j]->setPricingEngine(engine);

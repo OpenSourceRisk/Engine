@@ -147,6 +147,7 @@
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="premiumCurrencyCode" name="PremiumCurrency" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
+      <xs:element type="premiumData" name="Premiums" minOccurs="0"/>
       <xs:element type="xs:string" name="ExercisePrices" minOccurs="0"/>
       <xs:element name="ExerciseFees" minOccurs="0">
         <xs:complexType>
@@ -203,16 +204,16 @@
     <xs:sequence>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="settlementData" name="SettlementData"/>
-      <xs:element type="premiumData" name="PremiumData" minOccurs="0"/>
+      <xs:element name="PremiumData" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Amount"/>
+            <xs:element type="xs:string" name="Date"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="xs:string" name="LongInForward"/>
     </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="premiumData">
-    <xs:all>
-      <xs:element type="xs:string" name="Amount"/>
-      <xs:element type="xs:string" name="Date"/>
-    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="settlementData">
@@ -276,6 +277,7 @@
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="LastRecentPeriod" minOccurs="0"/>
+        <xs:element type="calendar" name="LastRecentPeriodCalendar" minOccurs="0"/>
         <xs:element type="xs:nonNegativeInteger" name="FixingDays" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:string" name="Lookback" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:integer" name="RateCutoff" minOccurs="0" maxOccurs="1"/>
@@ -322,6 +324,7 @@
         <xs:element type="xs:float" name="FinalFlowCap" minOccurs="0"/>
         <xs:element type="xs:float" name="FinalFlowFloor" minOccurs="0"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
+		<xs:element type="xs:boolean" name="SubtractInflationNotionalAllCoupons" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -335,7 +338,10 @@
         <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="AddInflationNotional" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IrregularYoY" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -791,6 +797,7 @@
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="premiumCurrencyCode" name="PremiumCurrency" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
+      <xs:element type="premiumData" name="Premiums" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

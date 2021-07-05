@@ -1744,8 +1744,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             zeroCurve = boost::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
-                                inflationTs->frequency(), inflationTs->indexIsInterpolated(), nominalTs, zeroCurveTimes,
-                                quotes, inflationTs->seasonality());
+                                inflationTs->frequency(), inflationTs->indexIsInterpolated(), zeroCurveTimes, quotes,
+                                inflationTs->seasonality());
                         }
 
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
@@ -1945,8 +1945,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             yoyCurve = boost::make_shared<YoYInflationCurveObserverMoving<Linear>>(
                                 0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-                                yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), nominalTs,
-                                yoyCurveTimes, quotes, yoyInflationTs->seasonality());
+                                yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yoyCurveTimes,
+                                quotes, yoyInflationTs->seasonality());
                         }
 
                         Handle<YoYInflationTermStructure> its(yoyCurve);

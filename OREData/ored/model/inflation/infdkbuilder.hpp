@@ -49,12 +49,14 @@ public:
         \param data                     Dodgson-Kainth inflation model description
         \param configuration            Market configuration to use
         \param referenceCalibrationGrid The reference calibration grid
+        \param dontCalibrate            Flag to use a dummy basecpi for the dependency market run
     */
     InfDkBuilder(
         const boost::shared_ptr<ore::data::Market>& market,
         const boost::shared_ptr<InfDkData>& data,
         const std::string& configuration = Market::defaultConfiguration,
-        const std::string& referenceCalibrationGrid = "");
+        const std::string& referenceCalibrationGrid = "", 
+        const bool dontCalibrate = false);
 
     //! \name Inspectors
     //@{
@@ -94,6 +96,7 @@ private:
 
     // market data
     boost::shared_ptr<QuantLib::ZeroInflationIndex> inflationIndex_;
+    Handle<YieldTermStructure> rateCurve_;
     QuantLib::Handle<QuantLib::CPIVolatilitySurface> infVol_;
 
     // Cache the fx volatilities
@@ -101,6 +104,9 @@ private:
 
     // helper flag to process forRecalculate()
     bool forceCalibration_ = false;
+
+    // helper flag for process the DependencyMarket 
+    bool dontCalibrate_ = false;
 
     // market observer
     boost::shared_ptr<MarketObserver> marketObserver_;

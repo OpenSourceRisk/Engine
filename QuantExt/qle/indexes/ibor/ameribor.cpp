@@ -1,7 +1,5 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2020 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -18,17 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/time/actual364.hpp>
+#include <qle/indexes/ibor/ameribor.hpp>
 
-using QuantLib::Date;
-using QuantLib::Time;
+using namespace QuantLib;
 
 namespace QuantExt {
 
-Date::serial_type Actual364::Impl::dayCount(const Date& d1, const Date& d2) const { return d2 - d1; }
-
-Time Actual364::Impl::yearFraction(const Date& d1, const Date& d2, const Date&, const Date&) const {
-    return daysBetween(d1, d2) / 364.0;
-}
-
+USDAmeribor::USDAmeribor(const Handle<YieldTermStructure>& h)
+  : OvernightIndex("USD-AMERIBOR", 0, USDCurrency(), UnitedStates(), Actual360(), h) {}
 } // namespace QuantExt

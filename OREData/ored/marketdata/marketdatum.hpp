@@ -133,7 +133,8 @@ public:
         RATE_NVOL,
         RATE_SLNVOL,
         BASE_CORRELATION,
-        SHIFT
+        SHIFT,
+        NONE
     };
 
     //! Constructor

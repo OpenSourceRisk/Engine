@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,33 +16,34 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file thailand.hpp
-    \brief Thai calendar
-    TODO reconcile with QuantLib::Thailand
+/*! \file ambor.hpp
+    \brief USD-AMBOR index for 30D and 90D terms
+    \ingroup indexes
 */
 
-#ifndef quantext_thai_calendar_hpp
-#define quantext_thai_calendar_hpp
+#ifndef quantext_ambor_hpp
+#define quantext_ambor_hpp
 
-#include <ql/time/calendar.hpp>
+#include <ql/currencies/america.hpp>
+#include <ql/indexes/iborindex.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 namespace QuantExt {
+using namespace QuantLib;
 
-class Thailand : public QuantLib::Calendar {
-private:
-    class SetImpl : public Calendar::WesternImpl {
-    public:
-        std::string name() const { return "Stock Exchange of Thailand"; }
-        bool isBusinessDay(const QuantLib::Date&) const;
-    };
+//! USD-AMBOR index
+/*! USD-AMBOR index for 30D and 90D terms
 
+    See <https://ameribor.net
+
+    \ingroup indexes
+*/
+class USDAmbor : public IborIndex {
 public:
-    enum Market {
-        SET // Stock Exchange of Thailand
-    };
-    Thailand(Market m = SET);
+    USDAmbor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("USD-AMBOR", tenor, 2, USDCurrency(), UnitedStates(), ModifiedFollowing, false, Actual360(), h) {}
 };
-
 } // namespace QuantExt
 
 #endif

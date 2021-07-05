@@ -27,9 +27,13 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
           <ExerciseDate>2027-03-02</ExerciseDate>
         </ExerciseDates>
         ...
-        <PremiumAmount>807000</PremiumAmount>
-        <PremiumCurrency>GBP</PremiumCurrency>
-        <PremiumPayDate>2021-06-15</PremiumPayDate>
+        <Premiums>
+          <Premium>
+            <Amount>807000</Amount>
+            <Currency>GBP</Currency>
+            <PayDate>2021-06-15</PayDate>
+          </Premium>
+        </Premiums>
     </OptionData>
     <LegData>
         <LegType>Fixed</LegType>
@@ -51,7 +55,7 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
 
 \begin{table}[H]
 \centering
-\begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+\begin{tabular} {|l|p{10cm}|}
     \hline
         & \bfseries{A  Swaption requires:} \\  \hline
     \lstinline!OptionData! & One \lstinline!OptionData! sub-node  \\  \hline
@@ -65,7 +69,7 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
 %    \lstinline!Spreads! &  A constant spread. The floating rate node should have exactly one \lstinline!Spread! child element.\\ \hline
 %    \bfseries{ScheduleData} &   \\ \hline   
 %    \lstinline!IsRuleBased! & Must be \emph{true} for both nodes. TBC: Fixed by Henning?\\ \hline      
-  \end{tabu}
+  \end{tabular}
   \caption{Requirements for Swaptions}
   \label{tab:swaption_requirements}
 \end{table}
@@ -78,13 +82,13 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 \begin{table}[H]
 \centering
-\begin{tabu} {| c | c | c | c |}    \hline
+\begin{tabular} {| c | c | c | c |}    \hline
         \lstinline!LongShort! & \makecell{\lstinline!Payer! for Fixed leg \\ on underlying Swap} & \makecell{\lstinline!Payer! for Floating leg \\ on underlying Swap} & Resulting Set Up and Flows \\  \hline
    \emph{Long} & \emph{true} & \emph{false} & \makecell[l]{The Party to the trade buys an \\ option to enter a swap where the \\ Party pays fixed and receives \\ floating}  \\  \hline
     \emph{Short} & \emph{true} & \emph{false} & \makecell[l]{The Party to the trade sells an \\ option to the Counterparty to enter \\ a swap where the Counterparty \\ pays fixed and receives floating}  \\  \hline
     \emph{Long} & \emph{false} & \emph{true} & \makecell[l]{The Party to the trade buys an \\ option to enter a swap where the \\ Party receives fixed and pays \\ floating}  \\  \hline
     \emph{Short} & \emph{false} & \emph{true} & \makecell[l]{The Party to the trade sells an \\ option to the Counterparty to enter \\ a swap where the Counterparty \\ receives fixed and pays floating}  \\  \hline        
-  \end{tabu}
+  \end{tabular}
   \caption{Swaption set up and resulting flows}
   \label{tab:swaption_setup}
 \end{table}
@@ -145,13 +149,9 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 \item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given for \emph{European} style swaptions, and for \emph{Bermudan} style swaptions  at least two \lstinline!ExerciseDate! date elements must be given. \\
 
-\item \lstinline!PremiumAmount![Optional]: Option premium amount paid by the swaption buyer to the swaption seller. Allowable values:  Any positive real number.
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
-\item \lstinline!PremiumCurrency![Optional]: Currency of the swaption premium. Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-
-\item \lstinline!PremiumPayDate![Optional]: Date of the swaption premium payment. Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-
-%\item Optional \lstinline!PremiumAmount!,  \lstinline!PremiumCurrency!, and \lstinline!PremiumPayDate! fields to specify the Swaption premium. 
+Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}
 

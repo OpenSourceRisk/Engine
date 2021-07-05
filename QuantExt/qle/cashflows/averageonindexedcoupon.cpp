@@ -335,6 +335,11 @@ AverageONLeg& AverageONLeg::withLastRecentPeriod(const boost::optional<Period>& 
     return *this;
 }
 
+AverageONLeg& AverageONLeg::withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar) {
+    lastRecentPeriodCalendar_ = lastRecentPeriodCalendar;
+    return *this;
+}
+
 AverageONLeg&
 AverageONLeg::withAverageONIndexedCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& couponPricer) {
     couponPricer_ = couponPricer;
@@ -406,7 +411,8 @@ AverageONLeg::operator Leg() const {
         }
 
         if (lastRecentPeriod_) {
-            rateComputationStartDate = calendar.advance(rateComputationEndDate, -*lastRecentPeriod_);
+            rateComputationStartDate = (lastRecentPeriodCalendar_.empty() ? calendar : lastRecentPeriodCalendar_)
+                                           .advance(rateComputationEndDate, -*lastRecentPeriod_);
         }
 
         // build coupon

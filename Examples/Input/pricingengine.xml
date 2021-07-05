@@ -33,6 +33,7 @@
       <Parameter name="TimeGridPerYear">100</Parameter>
       <Parameter name="XGrid">100</Parameter>
       <Parameter name="DampingSteps">0</Parameter>
+      <Parameter name="TimeGridMinimumSize">1</Parameter>
     </EngineParameters>
   </Product>
   <Product type="EuropeanSwaption">

@@ -52,7 +52,8 @@ void YoYInflationCapFloorEngine::calculate() const {
     YoYInflationCapFloor::Type type = arguments_.type;
 
     Handle<YoYInflationTermStructure> yoyTS = index()->yoyInflationTermStructure();
-    Handle<YieldTermStructure> discountTS = discountCurve_.empty() ? yoyTS->nominalTermStructure() : discountCurve_;
+    Handle<YieldTermStructure> discountTS = discountCurve_;
+    QL_REQUIRE(!discountTS.empty(), "YoYInflationCapFloorEngine: No discount curve given.");
     Date settlement = discountTS->referenceDate();
 
     for (Size i = 0; i < optionlets; ++i) {

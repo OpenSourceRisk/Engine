@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -30,11 +31,12 @@
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
-#include <ql/experimental/futures/overnightindexfuture.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
+#include <ql/instruments/overnightindexfuture.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
@@ -379,16 +381,16 @@ QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s
 */
 std::pair<string, string> parseBoostAny(const boost::any& anyType);
 
-//! Convert text to QuantLib::OvernightIndexFuture::NettingType
-QuantLib::OvernightIndexFuture::NettingType parseOvernightIndexFutureNettingType(const std::string& s);
+//! Convert text to QuantLib::RateAveraging::Type
+QuantLib::RateAveraging::Type parseOvernightIndexFutureNettingType(const std::string& s);
 
-//! Write QuantLib::OvernightIndexFuture::NettingType to stream
-std::ostream& operator<<(std::ostream& os, QuantLib::OvernightIndexFuture::NettingType t);
+//! Write QuantLib::RateAveraging::Type to stream
+std::ostream& operator<<(std::ostream& os, QuantLib::RateAveraging::Type t);
 
 //! Convert text to FutureConvention::DateGeneration
 FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::string& s);
 
-//! Write QuantLib::OvernightIndexFuture::NettingType to stream
+//! Write QuantLib::RateAveraging::Type to stream
 std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t);
 
 //! Convert text to InflationSwapConvention::PublicationRoll
@@ -428,6 +430,11 @@ std::ostream& operator<<(std::ostream& os, QuantExt::CommodityQuantityFrequency 
     \ingroup utilities
 */
 QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
+
+/*! Convert text to QuantLib::Average::Type
+    \ingroup utilities
+*/
+QuantLib::Average::Type parseAverageType(const std::string& s);
 
 } // namespace data
 } // namespace ore

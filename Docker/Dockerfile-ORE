@@ -1,4 +1,4 @@
-ARG quantlib_version=latest
+ARG quantlib_version=${QL_TAG}
 FROM env_quantlib:${quantlib_version}
 
 MAINTAINER Quaternion Risk Management

@@ -75,6 +75,9 @@ public:
     bool butterflyIsBrokerStyle() const { return butterflyIsBrokerStyle_; }
     SmileInterpolation smileInterpolation() const { return smileInterpolation_; }
 
+    const std::vector<bool>& smileHasError() const { return smileHasError_; }
+    const std::vector<std::string>& smileErrorMessage() const { return smileErrorMessage_; }
+
 private:
     Volatility blackVolImpl(Time t, Real strike) const override;
     void update() override;
@@ -105,6 +108,8 @@ private:
 
     mutable std::vector<boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> smiles_;
     mutable std::map<Real, boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> cachedInterpolatedSmiles_;
+    mutable std::vector<bool> smileHasError_;
+    mutable std::vector<std::string> smileErrorMessage_;
 };
 
 namespace detail {
@@ -118,6 +123,7 @@ public:
                                  const BlackVolatilitySurfaceBFRR::SmileInterpolation smileInterpolation,
                                  const Real accuracy = 1E-6, const Size maxIterations = 1000);
 
+    Real volatilityAtSimpleDelta(const Real tnp);
     Real volatility(const Real strike);
     Real strikeFromDelta(const Option::Type type, const Real delta, const DeltaVolQuote::DeltaType dt);
     Real atmStrike(const DeltaVolQuote::DeltaType dt, const DeltaVolQuote::AtmType at);

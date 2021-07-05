@@ -54,16 +54,15 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                                       << " for trade " << id() << ".");
         strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
     } else {
-        // if payoff currency and underlying currency are equivalent (and payoff currency could be a minor currency)
+        // If payoff currency and underlying currency are equivalent (and payoff currency could be a minor currency)
         if (parseCurrencyWithMinors(localCurrency_) == equityCurrency) {
             strike_ = convertMinorToMajorCurrency(localCurrency_, localStrike_);
             TLOG("Setting strike currency to payoff currency " << localCurrency_ << " for trade " << id() << ".");
             strikeCurrency_ = localCurrency_;
         } else {
-            // if quanto payoff, then set strike currency to underlying equity currency.
-            TLOG("Setting strike currency to underlying equity currency " << equityCurrency.code()
-                                                                          << " for trade " << id() << ".")
-            strikeCurrency_ = equityCurrency.code();
+            // If quanto payoff, then strike currency must be populated to avoid confusion over what the
+            // currency of the strike payoff is: can be either underlying currency or payoff currency
+            QL_FAIL("Strike currency must be specified for a quanto payoff for trade " << id() << ".");
         }
     }
 
@@ -80,6 +79,10 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                                 << " and strike " << strike_ << " is "
                                 << market->equityVol(assetName_)->blackVol(expiryDate_, strike_));
     }
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = localStrike_;
+    additionalData_["strikeCurrency"] = strikeCurrency_;
 }
 
 void EquityOption::fromXML(XMLNode* node) {

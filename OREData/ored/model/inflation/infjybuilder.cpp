@@ -87,8 +87,12 @@ InfJyBuilder::InfJyBuilder(
 
     LOG("InfJyBuilder: building model for inflation index " << data_->index());
 
+    // Get rate curve
+    rateCurve_ = market_->discountCurve(zeroInflationIndex_->currency().code(), configuration_);
+
     // Register with market observables except volatilities
     marketObserver_->registerWith(zeroInflationIndex_);
+    marketObserver_->registerWith(rateCurve_);
     initialiseMarket();
 
     // Register the model builder with the market observer
@@ -273,8 +277,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
     // Create the engine
     auto zts = zeroInflationIndex_->zeroInflationTermStructure();
-    auto yts = zts->nominalTermStructure();
-    auto engine = boost::make_shared<CPIBlackCapFloorEngine>(yts, cpiVolatility_);
+    auto engine = boost::make_shared<CPIBlackCapFloorEngine>(rateCurve_, cpiVolatility_);
 
     // CPI cap floor calibration instrument details. Assumed to equal those from the index and market structures.
     // Some of these should possibly come from conventions.
@@ -372,9 +375,6 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
     auto yoyTs = yoyInflationIndex_->yoyInflationTermStructure();
     QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure "
                                    << "to build a year on year cap floor calibration basket.");
-    auto yts = yoyTs->nominalTermStructure();
-    QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure "
-                                 << "to build a year on year cap floor calibration basket.");
     QL_REQUIRE(!yoyVolatility_.empty(), "InfJyBuilder: need a valid year on year volatility "
                                             << "structure to build a year on year cap floor calibration basket.");
 
@@ -388,12 +388,12 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
     boost::shared_ptr<PricingEngine> engine;
     auto ovsType = yoyVolatility_->volatilityType();
     if (ovsType == Normal)
-        engine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, yts);
+        engine = boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, rateCurve_);
     else if (ovsType == ShiftedLognormal && close(yoyVolatility_->displacement(), 0.0))
-        engine = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, yts);
+        engine = boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, rateCurve_);
     else if (ovsType == ShiftedLognormal)
         engine =
-            boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, yts);
+            boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyInflationIndex_, yoyVolatility_, rateCurve_);
     else
         QL_FAIL("InfJyBuilder: can't create engine with yoy volatility type, " << ovsType << ".");
 
@@ -491,9 +491,6 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     auto yoyTs = yoyInflationIndex_->yoyInflationTermStructure();
     QL_REQUIRE(!yoyTs.empty(), "InfJyBuilder: need a valid year on year term structure " <<
         "to build a year on year swap calibration basket.");
-    auto yts = yoyTs->nominalTermStructure();
-    QL_REQUIRE(!yts.empty(), "InfJyBuilder: need a valid nominal term structure " <<
-        "to build a year on year swap calibration basket.");
 
     // Procedure is to create a YoY cap floor as described by each instrument in the calibration basket. We then value 
     // each of the YoY cap floor instruments using market data and an engine and pass the NPV as the market premium to 
@@ -502,7 +499,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     Helpers helpers;
 
     // Create the engine
-    auto engine = boost::make_shared<DiscountingSwapEngine>(yts);
+    auto engine = boost::make_shared<DiscountingSwapEngine>(rateCurve_);
 
     // YoY swap calibration instrument details. Assumed to equal those from the index and market structures.
     // Some of these should possibly come from conventions. Hardcoded some common values here.
@@ -531,7 +528,8 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
         // Build the YoY helper.
         auto quote = boost::make_shared<SimpleQuote>(0.01);
         auto helper = boost::make_shared<YoYSwapHelper>(Handle<Quote>(quote), settlementDays, yoySwap->tenor(),
-            yoyInflationIndex_, obsLag, calendar, bdc, dc, calendar, bdc, dc, calendar, bdc);
+                                                        yoyInflationIndex_, rateCurve_, obsLag, calendar, bdc, dc,
+                                                        calendar, bdc, dc, calendar, bdc);
 
         // Deal with reference calibration date grid stuff based on maturity of helper instrument.
         auto helperInst = helper->yoySwap();

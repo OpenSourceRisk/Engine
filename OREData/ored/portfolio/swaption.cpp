@@ -173,19 +173,10 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     // Build Swaption
     boost::shared_ptr<QuantLib::Swaption> swaption(new QuantLib::Swaption(swap, exercise_, settleType, settleMethod));
 
-    // If premium data is provided
-    // 1) build the fee trade and pass it to the instrument wrapper for pricing
-    // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
-        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
-        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
-        Date premiumDate = parseDate(option_.premiumPayDate());
-        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency,
-                   currency, engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
-        DLOG("option premium added for european swaption " << id());
-    }
+    addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), -multiplier, currency,
+                engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
     // Set the engine.
     swaption->setPricingEngine(swaptionBuilder->engine(currency));
@@ -336,15 +327,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
-        Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
-        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
-        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
-        Date premiumDate = parseDate(option_.premiumPayDate());
-        addPayment(additionalInstruments, additionalMultipliers, 1.0, premiumDate, premiumAmount, premiumCurrency,
-                   currency, engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
-        DLOG("option premium added for bermudan swaption " << id());
-    }
+    Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
+    addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), -multiplier, currency,
+                engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
@@ -577,6 +562,43 @@ std::string Swaption::notionalCurrency() const {
     // So far we cover single currency swaptions only,
     // but leave this function override for the cross currency case later
     return notionalCurrency_;
+}
+
+const std::map<std::string,boost::any>& Swaption::additionalData() const {
+    Size numLegs = swap_.size();
+    // use the build time as of date to determine current notionals
+    Date asof = Settings::instance().evaluationDate();
+    for (Size i = 0; i < numLegs; ++i) {
+        string legID = to_string(i+1);
+        additionalData_["legType[" + legID + "]"] = swap_[i].legType();
+        additionalData_["isPayer[" + legID + "]"] = swap_[i].isPayer();
+        additionalData_["notionalCurrency[" + legID + "]"] = swap_[i].currency();
+        for (Size j = 0; j < legs_[i].size(); ++j) {
+            boost::shared_ptr<CashFlow> flow = legs_[i][j];
+            // pick flow with earliest future payment date on this leg
+            if (flow->date() > asof) {
+                additionalData_["amount[" + legID + "]"] = flow->amount();
+                additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
+                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+                if (coupon) {
+                    additionalData_["currentNotional[" + legID + "]"] = coupon->nominal();
+                    additionalData_["rate[" + legID + "]"] = coupon->rate();
+                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                    if (frc) {
+                        additionalData_["index[" + legID + "]"] = frc->index()->name();
+                        additionalData_["spread[" + legID + "]"] = frc->spread();                        
+                    }
+                }
+                break;
+            }
+        }
+        if (legs_[i].size() > 0) {
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
+            if (coupon)
+                additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
+        }
+    }
+    return additionalData_;
 }
 
 void Swaption::fromXML(XMLNode* node) {

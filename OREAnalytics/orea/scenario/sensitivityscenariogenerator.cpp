@@ -1288,7 +1288,8 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
             valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, prob, continueOnError_);
-            hazardRates[j] = -std::log(prob) / times[j];
+	    // ensure we have a valid value, if prob = 0 we need to avoid nan to generate valid scenarios
+            hazardRates[j] = -std::log(std::max(prob, 1E-8)) / times[j];
         }
         if (!valid)
             continue;

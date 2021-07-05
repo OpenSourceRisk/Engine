@@ -22,7 +22,6 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
-#include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
@@ -46,12 +45,16 @@
 #include <qle/cashflows/indexedcoupon.hpp>
 #include <qle/cashflows/jyyoyinflationcouponpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
+#include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
+#include <qle/cashflows/nonstandardinflationcouponpricer.hpp>
+#include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 #include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -75,6 +78,8 @@
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/genericindex.hpp>
+#include <qle/indexes/ibor/ambor.hpp>
+#include <qle/indexes/ibor/ameribor.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
@@ -163,7 +168,9 @@
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/nadarayawatson.hpp>
+#include <qle/math/quadraticinterpolation.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
@@ -370,7 +377,6 @@
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
-#include <qle/time/actual364.hpp>
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/inflation.hpp>

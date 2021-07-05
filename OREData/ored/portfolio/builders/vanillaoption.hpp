@@ -232,11 +232,13 @@ protected:
                                      << expiry << " for an expiry date " << io::iso_date(expiryDate) << ".");
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = std::max((Size)(ore::data::parseInteger(engineParameter("TimeGridPerYear")) * expiry), Size(1.0));
-        Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = ore::data::parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
-
+        Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
+        Size xGrid = parseInteger(engineParameter("XGrid"));
+        Size dampingSteps = parseInteger(engineParameter("DampingSteps"));
+        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
+        Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", "", false, "1"));
+        tGrid = std::max(tGridMin, tGrid);
+        
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;
 
         if (monotoneVar) {

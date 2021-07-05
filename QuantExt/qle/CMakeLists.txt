@@ -17,7 +17,6 @@ calendars/peru.cpp
 calendars/philippines.cpp
 calendars/spain.cpp
 calendars/switzerland.cpp
-calendars/thailand.cpp
 calendars/wmr.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
@@ -40,12 +39,16 @@ cashflows/fxlinkedcashflow.cpp
 cashflows/indexedcoupon.cpp
 cashflows/jyyoyinflationcouponpricer.cpp
 cashflows/lognormalcmsspreadpricer.cpp
+cashflows/nonstandardcapflooredyoyinflationcoupon.cpp
+cashflows/nonstandardinflationcouponpricer.cpp
+cashflows/nonstandardyoyinflationcoupon.cpp
 cashflows/overnightindexedcoupon.cpp
 cashflows/quantocouponpricer.cpp
 cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
+cashflows/yoyinflationcoupon.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
@@ -59,6 +62,7 @@ indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
+indexes/ibor/ameribor.cpp
 indexes/ibor/boebaserate.cpp
 indexes/ibor/brlcdi.cpp
 indexes/ibor/ester.cpp
@@ -243,7 +247,6 @@ termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
-time/actual364.cpp
 time/yearcounter.cpp
 utilities/inflation.cpp)
 
@@ -267,7 +270,6 @@ calendars/peru.hpp
 calendars/philippines.hpp
 calendars/spain.hpp
 calendars/switzerland.hpp
-calendars/thailand.hpp
 calendars/wmr.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
@@ -291,12 +293,16 @@ cashflows/fxlinkedcashflow.hpp
 cashflows/indexedcoupon.hpp
 cashflows/jyyoyinflationcouponpricer.hpp
 cashflows/lognormalcmsspreadpricer.hpp
+cashflows/nonstandardcapflooredyoyinflationcoupon.hpp
+cashflows/nonstandardinflationcouponpricer.hpp
+cashflows/nonstandardyoyinflationcoupon.hpp
 cashflows/overnightindexedcoupon.hpp
 cashflows/quantocouponpricer.hpp
 cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
+cashflows/yoyinflationcoupon.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
@@ -320,6 +326,8 @@ indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/genericindex.hpp
+indexes/ibor/ambor.hpp
+indexes/ibor/ameribor.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/boebaserate.hpp
 indexes/ibor/brlcdi.hpp
@@ -408,7 +416,9 @@ math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
+math/logquadraticinterpolation.hpp
 math/nadarayawatson.hpp
+math/quadraticinterpolation.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
@@ -615,7 +625,6 @@ termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
-time/actual364.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 utilities/inflation.hpp

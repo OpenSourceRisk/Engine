@@ -44,7 +44,6 @@ static CcyTestData currencyData[] = {
     // African cuurencies
     { TNDCurrency(), "Tunisian dinar", "TND", 788 },
     { EGPCurrency(), "Egyptian pound", "EGP", 818 },
-    { NGNCurrency(), "Nigerian naira", "NGN", 566 },
     { MADCurrency(), "Moroccan dirham", "MAD", 504 },
     // American currencies
     { MXVCurrency(), "Mexican Unidad de Inversion", "MXV", 979 },
