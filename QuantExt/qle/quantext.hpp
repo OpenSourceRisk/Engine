@@ -260,7 +260,7 @@
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
-#include <qle/pricingengines/numericlgmswaptionengine.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>

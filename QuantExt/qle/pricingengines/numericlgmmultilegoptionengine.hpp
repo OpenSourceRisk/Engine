@@ -18,26 +18,64 @@
 
 #pragma once
 
+#include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/instruments/swaption.hpp>
+#include <qle/instruments/multilegoption.hpp>
 #include <qle/models/lgmconvolutionsolver2.hpp>
 #include <qle/models/lgmvectorised.hpp>
 
-#include <ql/instruments/nonstandardswaption.hpp>
-#include <ql/instruments/swaption.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
 
 namespace QuantExt {
 
-class NumericLgmMultilegOptionEngine
-    : public public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,
-      protected LgmConvolutionSolver2 {
+class NumericLgmMultiLegOptionEngineBase : public Observer, public Observable, protected LgmConvolutionSolver2 {
+public:
+    NumericLgmMultiLegOptionEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+                                       const Size ny, const Real sx, const Size nx,
+                                       const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
+
 protected:
-    NumericLgmMultilegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
-                                   const Real sx, const Size nx, const Handle<YieldTermStructure>& discountCurve);
+    void calculate() const;
+    void update() { notifyObservers(); }
 
-    Real calculate() const override;
-    std::map<std::string, boost::any> additionalResults() const;
+    Handle<YieldTermStructure> discountCurve_;
 
-    const Handle<YieldTermStructure> discountCurve_;
+    // inputs set by derived classes
+    mutable std::vector<Leg> legs_;
+    mutable std::vector<Real> payer_;
+    mutable std::vector<Currency> currency_;
+    mutable boost::shared_ptr<Exercise> exercise_;
+    mutable Settlement::Type settlementType_;
+    mutable Settlement::Method settlementMethod_;
+
+    // outputs
+    mutable Real npv_, underlyingNpv_;
+    mutable std::map<std::string, boost::any> additionalResults_;
+};
+
+class NumericLgmMultiLegOptionEngine
+    : public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,
+      public NumericLgmMultiLegOptionEngineBase {
+public:
+    using NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase;
+
+    void calculate() const override;
+};
+
+class NumericLgmSwaptionEngine : public QuantLib::GenericEngine<Swaption::arguments, Swaption::results>,
+                                 public NumericLgmMultiLegOptionEngineBase {
+public:
+    using NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase;
+
+    void calculate() const override;
+};
+
+class NumericLgmNonstandardSwaptionEngine : public QuantLib::GenericEngine<Swaption::arguments, Swaption::results>,
+                                            public NumericLgmMultiLegOptionEngineBase {
+public:
+    using NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase;
+
+    void calculate() const override;
 };
 
 } // namespace QuantExt

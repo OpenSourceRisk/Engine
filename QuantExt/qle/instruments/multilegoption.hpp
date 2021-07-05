@@ -73,6 +73,7 @@ public:
     std::vector<Currency> currency;
     boost::shared_ptr<Exercise> exercise;
     Settlement::Type settlementType;
+    Settlement::Method settlementMethod;
     void validate() const {}
 };
 

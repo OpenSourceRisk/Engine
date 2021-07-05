@@ -24,9 +24,9 @@ namespace QuantExt {
 
 MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer,
                                const std::vector<Currency>& currency, const boost::shared_ptr<Exercise>& exercise,
-                               const Settlement::Type settlementType,
-                               Settlement::Method settlementMethod = Settlement::PhysicalOTC)
-    : legs_(legs), payer_(payer), currency_(currency), exercise_(exercise), settlementType_(settlementType) {
+                               const Settlement::Type settlementType, Settlement::Method settlementMethod)
+    : legs_(legs), payer_(payer), currency_(currency), exercise_(exercise), settlementType_(settlementType),
+      settlementMethod_(settlementMethod) {
 
     QL_REQUIRE(legs_.size() > 0, "MultiLegOption: No legs are given");
     QL_REQUIRE(payer_.size() == legs_.size(),
@@ -60,6 +60,7 @@ void MultiLegOption::setupArguments(PricingEngine::arguments* args) const {
     tmp->currency = currency_;
     tmp->exercise = exercise_;
     tmp->settlementType = settlementType_;
+    tmp->settlementMethod = settlementMethod_;
 }
 
 void MultiLegOption::fetchResults(const PricingEngine::results* r) const {

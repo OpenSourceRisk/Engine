@@ -23,7 +23,6 @@
 
 #pragma once
 
-
 #include <qle/math/randomvariable.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
@@ -37,6 +36,8 @@ using namespace QuantExt;
 class LgmVectorised {
 public:
     LgmVectorised(const boost::shared_ptr<IrLgm1fParametrization>& p) : p_(p) {}
+
+    boost::shared_ptr<IrLgm1fParametrization> parametrization() const { return p_; }
 
     RandomVariable numeraire(const Time t, const RandomVariable& x,
                              const Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;

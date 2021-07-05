@@ -174,7 +174,7 @@ pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/lgmconvolutionsolver.cpp
 pricingengines/midpointcdsengine.cpp
-pricingengines/numericlgmswaptionengine.cpp
+pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 processes/crcirppstateprocess.cpp
@@ -513,7 +513,7 @@ pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/lgmconvolutionsolver.hpp
 pricingengines/midpointcdsengine.hpp
-pricingengines/numericlgmswaptionengine.hpp
+pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 processes/crcirppstateprocess.hpp
