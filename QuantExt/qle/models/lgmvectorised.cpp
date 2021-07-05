@@ -63,6 +63,12 @@ RandomVariable LgmVectorised::reducedDiscountBond(const Time t, const Time T, co
 RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate,
                                      const Time t, const RandomVariable& x) const {
 
+    // handle case where fixing is deterministic
+    Date today = Settings::instance().evaluationDate();
+    if (fixingDate <= today)
+        return RandomVariable(x.size(), index->fixing(today));
+
+    // handle stochastic fixing
     if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {
         Date d1 = ibor->valueDate(fixingDate);
         Date d2 = ibor->maturityDate(d1);

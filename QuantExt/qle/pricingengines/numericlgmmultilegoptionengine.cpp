@@ -48,10 +48,10 @@ std::tuple<Date, Date, Date> getSimulationDates(const Date& today, const Date& l
         if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(c)) {
             /* Handle Ibor coupon */
             Date fixingDate = ibor->fixingDate();
-            return std::make_tuple(fixingDate, fixingDate, std::max(latestOptionDate, fixingDate));
+            return std::make_tuple(latestOptionDate, fixingDate, std::max(today, latestOptionDate));
         } else if (auto fix = boost::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
             /* Handle Fixed Rate coupon */
-            return std::make_tuple(today, fix->date(), latestOptionDate);
+            return std::make_tuple(today, fix->date(), std::max(today, latestOptionDate));
         } else {
             /* Other coupons are not supported at the moment */
             QL_FAIL("NumericLgmMultiLegOptionEngine: coupon type not handled, supported are Ibor and Fixed coupons");
@@ -87,7 +87,8 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
         if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(c)) {
             /* Handle Ibor coupon */
-            return lgm.fixing(ibor->index(), ibor->fixingDate(), t, x) *
+            return (RandomVariable(x.size(), ibor->gearing()) * lgm.fixing(ibor->index(), ibor->fixingDate(), t, x) +
+                    RandomVariable(x.size(), ibor->spread())) *
                    RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto fix = boost::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
@@ -226,10 +227,12 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     // cashflow npvs that are estimated, but not yet part of the latest exercise into option
     std::map<std::pair<Size, Size>, RandomVariable> underlyingNpv2;
 
-    for (auto it = simulationDates.rbegin(); it != std::next(simulationDates.rend(), -1); ++it) {
+    for (auto it = simulationDates.rbegin(); it != simulationDates.rend(); ++it) {
 
         Real t_from = model()->parametrization()->termStructure()->timeFromReference(*it);
-        Real t_to = model()->parametrization()->termStructure()->timeFromReference(*std::next(it, 1));
+        Real t_to = (it != simulationDates.rend())
+                        ? model()->parametrization()->termStructure()->timeFromReference(*std::next(it, 1))
+                        : t_from;
 
         RandomVariable state = stateGrid(t_from);
 
@@ -271,11 +274,13 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
         // rollback
 
-        underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
-        for (auto& c : underlyingNpv2) {
-            c.second = rollback(c.second, t_from, t_to);
+        if (t_from != t_to) {
+            underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
+            for (auto& c : underlyingNpv2) {
+                c.second = rollback(c.second, t_from, t_to);
+            }
+            optionNpv = rollback(optionNpv, t_from, t_to);
         }
-        optionNpv = rollback(optionNpv, t_from, t_to);
     }
 
     /* Set the results */
