@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -54,7 +55,9 @@ std::vector<std::string> getMarketDataStrings() {
         ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/20170226/ATMF 0.25")
         ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/365D/ATMF 0.25")
         ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/1678W5D/ATMF 0.25")
-        ("20160226 EQUITY_OPTION/RATE_LNVOL/Lufthansa/EUR/1Y1M/ATMF 0.13");
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/Lufthansa/EUR/1Y1M/ATMF 0.13")
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/Lufthansa/EUR/1Y1M/ATM/AtmFwd 0.13")
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/Lufthansa/EUR/1Y1M/MNY/Fwd/1.0 0.13");
 }
 
 std::vector<std::string> getBadMarketDataStrings() {

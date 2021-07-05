@@ -158,6 +158,9 @@
     <ClCompile Include="quadraticinterpolation.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="blackvolatilitysurfacemoneyness.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

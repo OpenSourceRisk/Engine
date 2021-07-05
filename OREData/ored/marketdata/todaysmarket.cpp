@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -600,8 +601,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration.first);
 
                         boost::shared_ptr<EquityVolCurve> eqVolCurve =
-                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs, eqIndex,
-                                                               requiredEquityCurves, requiredEquityVolCurves);
+                            boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs, eqIndex, 
+                                                               requiredYieldCurves, requiredEquityCurves, 
+                                                               requiredEquityVolCurves);
                         itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                     }
 

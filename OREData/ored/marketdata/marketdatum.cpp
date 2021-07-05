@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -56,7 +57,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
 }
 
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
-                                     string equityName, string ccy, string expiry, string strike, bool isCall)
+                                     string equityName, string ccy, string expiry,
+                                     const boost::shared_ptr<BaseStrike>& strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
       expiry_(expiry), strike_(strike), isCall_(isCall) {
 

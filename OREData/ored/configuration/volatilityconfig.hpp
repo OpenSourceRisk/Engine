@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -267,6 +268,12 @@ private:
  */
 class VolatilityMoneynessSurfaceConfig : public VolatilitySurfaceConfig {
 public:
+    // TODO: Ideally this enum and tag reader should be in Volatility(Surface)Config
+    // to allow toggling of interpolation on variance vs volatility for all applicable
+    // curve/surface types. Only added here now as we only have support for vol 
+    // interpolation in the case of moneyness surfaces.
+    enum class InterpolationVariable {Variance, Volatility};
+
     //! Default constructor
     VolatilityMoneynessSurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
                                      QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
@@ -278,7 +285,8 @@ public:
                                      const std::string& timeExtrapolation, const std::string& strikeExtrapolation,
                                      bool futurePriceCorrection = true,
                                      MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
-                                     QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European);
+                                     QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+                                     InterpolationVariable interpolationVariable = InterpolationVariable::Variance);
 
     //! \name Inspectors
     //@{
@@ -286,6 +294,7 @@ public:
     const std::vector<std::string>& moneynessLevels() const;
     const std::vector<std::string>& expiries() const;
     bool futurePriceCorrection() const;
+    InterpolationVariable interpolationVariable() const;
     //@}
 
     //! \name VolatilitySurfaceConfig
@@ -304,6 +313,9 @@ private:
     std::vector<std::string> moneynessLevels_;
     std::vector<std::string> expiries_;
     bool futurePriceCorrection_;
+    InterpolationVariable interpolationVariable_;
+
+    InterpolationVariable parseInterpolationVariable(const std::string& interpolationVariable) const;
 };
 
 /*! Volatility configuration for an average future price option (APO) surface.
