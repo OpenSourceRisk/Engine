@@ -502,6 +502,8 @@ checking out the source code from the github repository as described in section 
 ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example
 cases and documentation. Release archives will be provided at \url{https://github.com/opensourcerisk/engine/releases}.
 
+The release contains the QuantLib source version that ORE depends on. This is the latest QuantLib release that precedes the ORE release including a small number of patches.
+
 \medskip
 The release consists of a single archive in zip format
 \begin{itemize}
@@ -520,6 +522,7 @@ When unpacked, it creates a directory {\tt ORE-<VERSION>} with the following fil
 \item {\tt OREData/}
 \item {\tt ORETest/}
 \item {\tt QuantExt/}
+\item {\tt QuantLib/}
 \item {\tt ThirdPartyLibs/}
 \item {\tt tools/}
 \item {\tt xsd/}
@@ -536,13 +539,10 @@ executables:
 \end{itemize}
 
 \medskip
-The release bundle does contain the ORE source code, which is sufficient to build ORE from sources manually as follows (if you build ORE for development purposes, we recommend using git though, see section \ref{sec:build_ore}):
+The release bundle contains the ORE source code, which is sufficient to build ORE from sources as follows (if you build ORE for development purposes, we recommend using git though, see section \ref{sec:build_ore}):
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
-\item Set up QuantLib 1.18 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
-  installed; QuantLib needs to be located in this project directory {\tt ORE-<VERSION>}. Alternatively, you can create a
-  symbolic link named QuantLib here that points to the actual QuantLib directory
-\item Build QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
+\item Build QuantLib, QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
 \item Note that ThirdPartyLibs does not need to be built, it contains RapidXml, header only code for reading and
   writing XML files
 \item Move on to section \ref{sec:python} and the examples in section \ref{sec:examples}.
@@ -680,93 +680,10 @@ C++ support under the Programming Languages features (disabled by default).
   the previous step for 'Microsoft.Cpp. Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration
   just close the property manager window.
 
-%\item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OREData, OREAnalytics
-%  and App. For each project, do the following:
-%
-%\begin{itemize}
-%\item Switch to the correct platform (i.e. Win32 or x64) from the Configuration Manager. The selection should match the
-%  pre-compiled version of Boost. Trying to compile using a mixed configuration (e.g. Boost 64-bit and 32-bit QuantLib)
-%  will fail.
-%\item Compile the project: Build $\rightarrow$ Build Solution
-%\item Once the compilation is complete, run the test suite.
-%\end{itemize}
 \item Open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
 
 \subsubsection*{Unix}
-
-%\begin{enumerate}
-%
-%\item Build QuantLib as usual.
-%
-%{\tt\footnotesize
-%\% cd QuantLib \\
-%\% ./autogen.sh \\
-%\% ./configure --with-boost-include=\$BOOST --with-boost-lib=\$BOOST/stage/lib \\
-%\% make -j4 
-%}
-%
-%\item Build QuantExt
-%
-%{\tt\footnotesize
-%\% cd QuantExt \\
-%\% ./autogen.sh \\
-%\% ./configure \\
-%\% make -j4
-%}
-%
-%This will build both the QuantExt library and test suite.
-%
-%\item Run the test suite
-%
-%{\tt\footnotesize
-%\% ./test/quantext-test-suite 
-%}
-%
-%\item  Build OREData, OREAnalytics and their test suites. 
-%
-%Follow the same steps as for QuantExt.
-%To run the unit test suites, do 
-%
-%{\tt\footnotesize
-%\% ./test/ored-test-suite 
-%}
-%
-%and 
-%
-%{\tt\footnotesize
-%\% ./test/orea-test-suite 
-%}
-%
-%in the respective library directories.
-%
-%\item Build App/ore
-%
-%{\tt\footnotesize
-%\% cd App \\
-%\% ./autogen.sh \\
-%\% ./configure \\
-%\% make -j4
-%}
-
-%Note: On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we
-%recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
-%
-%{\tt\footnotesize
-%\% export LC\_NUMERIC=C
-%}
-%
-%before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to
-%strings.
-%
-%\item Run Examples (see section \ref{sec:examples})
-%
-%{\tt\footnotesize
-%\% cd Examples/Example\_1 \\
-%\% python run.py 
-%}
-%
-%\end{enumerate}
 
 With the 5th release we have discontinued automake support so that ORE can only be built with CMake on Unix systems, as follows.
 
