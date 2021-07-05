@@ -83,22 +83,23 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
                                        const Handle<YieldTermStructure>& discountCurve,
                                        const std::tuple<Date, Date, Date>& simulationDates,
                                        const boost::shared_ptr<CashFlow>& c) {
+    Real T = lgm.parametrization()->termStructure()->timeFromReference(c->date());
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
         if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(c)) {
             /* Handle Ibor coupon */
             return lgm.fixing(ibor->index(), ibor->fixingDate(), t, x) *
-                   RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) /
-                   lgm.numeraire(t, x, discountCurve);
+                   RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) *
+                   lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto fix = boost::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
             /* Handle Fixed Rate coupon */
-            return RandomVariable(x.size(), fix->amount()) / lgm.numeraire(t, x, discountCurve);
+            return RandomVariable(x.size(), fix->amount()) * lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else {
             /* Other coupons are not supported at the moment */
             QL_FAIL("NumericLgmMultiLegOptionEngine: coupon type not handled, supported are Ibor and Fixed coupons");
         }
     } else {
         /* Handle non-coupon, i.e. a cashflow */
-        return RandomVariable(x.size(), c->amount()) / lgm.numeraire(t, x, discountCurve);
+        return RandomVariable(x.size(), c->amount()) * lgm.reducedDiscountBond(t, T, x, discountCurve);
     }
 }
 
@@ -172,9 +173,10 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         for (Size j = 0; j < legs_[i].size(); ++j) {
             for (Size k = exercise_->dates().size(); k > 0; --k) {
                 Date exerciseDate = exercise_->dates()[k - 1];
-                if (isCashflowRelevantForExercise(refDate, exerciseDate, legs_[i][j]))
+                if (isCashflowRelevantForExercise(refDate, exerciseDate, legs_[i][j])) {
                     optionDates[exerciseDate].insert(std::make_pair(i, j));
-                break;
+                    break;
+                }
             }
         }
     }
@@ -240,8 +242,13 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
             Size i, j;
             for (auto const& cf : cashflow->second) {
                 std::tie(i, j) = cf.first;
-                underlyingNpv2[cf.first] =
-                    getUnderlyingCashflowPv(lgm, t_from, state, discountCurve_, cf.second, legs_[i][j]);
+                auto tmp = getUnderlyingCashflowPv(lgm, t_from, state, discountCurve_, cf.second, legs_[i][j]) *
+                           RandomVariable(gridSize(), payer_[i]);
+                auto it = underlyingNpv2.find(cf.first);
+                if (it != underlyingNpv2.end())
+                    it->second += tmp;
+                else
+                    underlyingNpv2[cf.first] = tmp;
             }
         }
 
@@ -265,6 +272,9 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // rollback
 
         underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
+        for (auto& c : underlyingNpv2) {
+            c.second = rollback(c.second, t_from, t_to);
+        }
         optionNpv = rollback(optionNpv, t_from, t_to);
     }
 
@@ -272,6 +282,9 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     npv_ = optionNpv.at(0);
     underlyingNpv_ = underlyingNpv1.at(0);
+    for (auto& c : underlyingNpv2) {
+        underlyingNpv_ += c.second.at(0);
+    }
 
     additionalResults_ = getAdditionalResultsMap(model()->getCalibrationInfo());
 
