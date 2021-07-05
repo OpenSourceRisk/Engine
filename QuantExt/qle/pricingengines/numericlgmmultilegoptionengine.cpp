@@ -124,10 +124,7 @@ RandomVariable getRebatePv(const LgmVectorised& lgm, const Real t, const RandomV
 NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase(
     const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx, const Size nx,
     const Handle<YieldTermStructure>& discountCurve)
-    : LgmConvolutionSolver2(model, sy, ny, sx, nx), discountCurve_(discountCurve) {
-    registerWith(LgmConvolutionSolver2::model());
-    registerWith(discountCurve_);
-}
+    : LgmConvolutionSolver2(model, sy, ny, sx, nx), discountCurve_(discountCurve) {}
 
 void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
@@ -295,6 +292,15 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
 } // NumericLgmMultiLegOptionEngineBase::calculate()
 
+NumericLgmMultiLegOptionEngine::NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                                               const Real sy, const Size ny, const Real sx,
+                                                               const Size nx,
+                                                               const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
+    registerWith(LgmConvolutionSolver2::model());
+    registerWith(discountCurve_);
+}
+
 void NumericLgmMultiLegOptionEngine::calculate() const {
     legs_ = arguments_.legs;
     payer_ = arguments_.payer;
@@ -311,6 +317,14 @@ void NumericLgmMultiLegOptionEngine::calculate() const {
     results_.additionalResults["underlyingNpv"] = underlyingNpv_;
 } // NumericLgmSwaptionEngine::calculate
 
+NumericLgmSwaptionEngine::NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                                   const Real sy, const Size ny, const Real sx, const Size nx,
+                                                   const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
+    registerWith(LgmConvolutionSolver2::model());
+    registerWith(discountCurve_);
+}
+
 void NumericLgmSwaptionEngine::calculate() const {
     legs_ = arguments_.legs;
     payer_ = arguments_.payer;
@@ -325,6 +339,14 @@ void NumericLgmSwaptionEngine::calculate() const {
     results_.additionalResults = additionalResults_;
     results_.additionalResults["underlyingNpv"] = underlyingNpv_;
 } // NumericLgmSwaptionEngine::calculate
+
+NumericLgmNonstandardSwaptionEngine::NumericLgmNonstandardSwaptionEngine(
+    const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny, const Real sx, const Size nx,
+    const Handle<YieldTermStructure>& discountCurve)
+    : NumericLgmMultiLegOptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
+    registerWith(LgmConvolutionSolver2::model());
+    registerWith(discountCurve_);
+}
 
 void NumericLgmNonstandardSwaptionEngine::calculate() const {
     legs_ = arguments_.legs;

@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-class NumericLgmMultiLegOptionEngineBase : public Observer, public Observable, protected LgmConvolutionSolver2 {
+class NumericLgmMultiLegOptionEngineBase : protected LgmConvolutionSolver2 {
 public:
     NumericLgmMultiLegOptionEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
                                        const Size ny, const Real sx, const Size nx,
@@ -36,7 +36,6 @@ public:
 
 protected:
     void calculate() const;
-    void update() { notifyObservers(); }
 
     Handle<YieldTermStructure> discountCurve_;
 
@@ -57,7 +56,9 @@ class NumericLgmMultiLegOptionEngine
     : public QuantLib::GenericEngine<MultiLegOption::arguments, MultiLegOption::results>,
       public NumericLgmMultiLegOptionEngineBase {
 public:
-    using NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase;
+    NumericLgmMultiLegOptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+                                   const Real sx, const Size nx,
+                                   const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     void calculate() const override;
 };
@@ -65,7 +66,9 @@ public:
 class NumericLgmSwaptionEngine : public QuantLib::GenericEngine<Swaption::arguments, Swaption::results>,
                                  public NumericLgmMultiLegOptionEngineBase {
 public:
-    using NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase;
+    NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+                             const Real sx, const Size nx,
+                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     void calculate() const override;
 };
@@ -73,7 +76,9 @@ public:
 class NumericLgmNonstandardSwaptionEngine : public QuantLib::GenericEngine<Swaption::arguments, Swaption::results>,
                                             public NumericLgmMultiLegOptionEngineBase {
 public:
-    using NumericLgmMultiLegOptionEngineBase::NumericLgmMultiLegOptionEngineBase;
+    NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+                                        const Size ny, const Real sx, const Size nx,
+                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>());
 
     void calculate() const override;
 };
