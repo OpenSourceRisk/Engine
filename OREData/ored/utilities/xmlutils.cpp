@@ -51,7 +51,7 @@ string convertToString(const Real value) {
     // scientific notation, so we check for really small numbers here and explicitly set
     // to 16 decimal places
     string result;
-    if (abs(value) < 1.0e-6) {
+    if (std::abs(value) < 1.0e-6) {
         std::ostringstream obj1;
         obj1.precision(16);
         obj1 << std::fixed << value;

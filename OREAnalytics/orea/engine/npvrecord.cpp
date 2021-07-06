@@ -1,5 +1,3 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
  Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
@@ -18,17 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/time/actual364.hpp>
+#include <orea/engine/npvrecord.hpp>
 
-using QuantLib::Date;
-using QuantLib::Time;
+using std::ostream;
+using std::string;
 
-namespace QuantExt {
+namespace ore {
+namespace analytics {
 
-Date::serial_type Actual364::Impl::dayCount(const Date& d1, const Date& d2) const { return d2 - d1; }
-
-Time Actual364::Impl::yearFraction(const Date& d1, const Date& d2, const Date&, const Date&) const {
-    return daysBetween(d1, d2) / 364.0;
+ostream& operator<<(ostream& out, const NpvRecord& nr) {
+    return out << "[" <<
+        nr.tradeId << ", " <<
+        nr.portfolioId << ", " <<
+        nr.valuationDate << ", " <<
+        nr.baseCurrency << ", " <<
+        nr.baseAmount << 
+    "]";
 }
 
-} // namespace QuantExt
+}
+}

@@ -251,7 +251,7 @@ void SensitivityScenarioGenerator::generateScenarios() {
                 Real v2 = scenarios_[j]->get(k);
                 Real b = baseScenario_->get(k);
                 if (!close_enough(v1, b) || !close_enough(v2, b))
-                    // FIXME, see ore ticket 1478
+                    // this is correct for both absolute and relative shifts
                     crossScenario->add(k, v1 + v2 - b);
             }
 
@@ -1288,7 +1288,8 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
             valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, prob, continueOnError_);
-            hazardRates[j] = -std::log(prob) / times[j];
+	    // ensure we have a valid value, if prob = 0 we need to avoid nan to generate valid scenarios
+            hazardRates[j] = -std::log(std::max(prob, 1E-8)) / times[j];
         }
         if (!valid)
             continue;

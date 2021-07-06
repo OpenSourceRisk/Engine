@@ -26,6 +26,7 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/directed_graph.hpp>
@@ -74,23 +75,25 @@ template <typename Vertex> struct DfsVisitor : public boost::default_dfs_visitor
 
 } // namespace
 
-
 //! Helper function to get the two tokens in a correlation name Index2:Index1
 std::vector<std::string> getCorrelationTokens(const std::string& name);
-
 
 class DependencyGraph {
 
 public:
-
     DependencyGraph(
+        //! The asof date of the T0 market instance
+        const Date& asof,
         //! Description of the market composition
         const boost::shared_ptr<TodaysMarketParameters>& params,
         //! Description of curve compositions
         const boost::shared_ptr<const CurveConfigurations>& curveConfigs,
         //! Repository of market conventions
-        const boost::shared_ptr<Conventions>& conventions
-    ) : params_(params), curveConfigs_(curveConfigs), conventions_(conventions) {};
+        const boost::shared_ptr<Conventions>& conventions,
+        //! Ibor fallback config
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig())
+        : asof_(asof), params_(params), curveConfigs_(curveConfigs), conventions_(conventions),
+          iborFallbackConfig_(iborFallbackConfig){};
 
     // data structure for a vertex in the graph
     struct Node {
@@ -100,7 +103,6 @@ public:
         boost::shared_ptr<CurveSpec> curveSpec; // the parsed curve spec, if applicable, null otherwise
         bool built;                             // true if we have built this node
     };
-
 
     // some typedefs for graph related data types
     using Graph = boost::directed_graph<Node>;
@@ -115,23 +117,17 @@ public:
     std::map<std::string, Graph> dependencies() { return dependencies_; }
 
 private:
-
     friend std::ostream& operator<<(std::ostream& o, const Node& n);
 
     // the dependency graphs for each configuration
     std::map<std::string, Graph> dependencies_;
 
-    /*
-    // needed for the deprecated ctor taking references, TODO remove these
-    const TodaysMarketParameters& params_;
-    const CurveConfigurations&  curveConfigs_;
-    const Conventions& conventions_;
-    */
+    const Date asof_;
     const boost::shared_ptr<TodaysMarketParameters> params_;
     const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
     const boost::shared_ptr<Conventions> conventions_;
-
+    const IborFallbackConfig iborFallbackConfig_;
 };
 
-}//data
-}//ore
+} // namespace data
+} // namespace ore

@@ -453,7 +453,7 @@ rate on the short swap minus the fair rate on the long swap. If not provided, it
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{FX Conventions}
+\subsubsection{FX Conventions}\label{sss:fx_convention}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The
 structure of this node is shown in Listing \ref{lst:fx_conventions}.
@@ -787,7 +787,7 @@ The meaning of the elements is as follows:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-\subsubsection{FX Option Conventions} 
+\subsubsection{FX Option Conventions}\label{sss:fx_option_conv}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 A node with name \emph{FxOption} is used to store conventions for FX option quotes for a given currency pair. The 
 structure of this node is shown in Listing \ref{lst:fx_option_conventions}. 
@@ -795,14 +795,17 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
 \begin{listing}[H] 
 %\hrule\medskip 
 \begin{minted}[fontsize=\footnotesize]{xml}
-<FxOption> 
-  <Id> </Id> 
-  <AtmType> </AtmType> 
-  <DeltaType> </DeltaType> 
-  <SwitchTenor> </SwitchTenor>
-  <LongTermAtmType> </LongTermAtmType>
-  <LongTermDeltaType> </LongTermDeltaType>
-</FxOption> 
+<FxOption>
+  <Id>EUR-USD-FXOPTION</Id>
+  <FXConventionID>EUR-USD-FX</FXConventionID>
+  <AtmType>AtmDeltaNeutral</AtmType>
+  <DeltaType>Spot</DeltaType>
+  <SwitchTenor>2Y</SwitchTenor>
+  <LongTermAtmType>AtmDeltaNeutral</LongTermAtmType>
+  <LongTermDeltaType>Fwd</LongTermDeltaType>
+  <RiskReversalInFavorOf>Call</RiskReversalInFavorOf>
+  <ButterflyStyle>Broker</ButterflyStyle>
+</FxOption>
 \end{minted} 
 \caption{FX option conventions} 
 \label{lst:fx_option_conventions} 
@@ -810,17 +813,21 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
  
  
 The meanings of the various elements in this node are as follows: 
-\begin{itemize} 
+\begin{itemize}
+\item FXConventionID: The FX convention for the currency pair (see \ref{sss:fx_convention}). Optional, if not given, the
+  FX spot days default to $2$ and the advance calendar defaults to source ccy + target ccy default calendars.
 \item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd, 
 AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
 \item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 
     PaFwd}).
-\item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is > switch
-  tenor
+\item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is greater
+  or equal the switch tenor (``long term'' atm and delta type)
 \item LongTermAtmType [Mandatory if and only if SwitchTenor is given]: ATM type to use for options with tenor > switch
   point, if SwitchTenor is given
 \item LongTermDeltaType [Mandatory if and only if SwitchTenor is given]: Delta type to use for options with tenor >
   switch point, if SwitchTenor is given
+\item RiskReversalInFavorOf [Optional]: Call (default), Put. Only relevant for BF, RR market data input.
+\item ButterflyStyle [Optional]: Broker (default), Smile. Only relevant for BF, RR market data input.
 \end{itemize} 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -861,7 +868,7 @@ The meanings of the various elements in this node are as follows:
 A node with name \lstinline!CommodityFuture! is used to store conventions for commodity future contracts and options on them. These conventions are used in commodity derivative trades and commodity curve construction to calculate contract expiry dates. The structure of this node is shown in Listing \ref{lst:commodity_future_conventions}.
 
 \begin{listing}[h!]
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\footnotesize,breaklines]{xml}
 <CommodityFuture>
   <Id>...</Id>
   <AnchorDay>
@@ -879,7 +886,7 @@ A node with name \lstinline!CommodityFuture! is used to store conventions for co
   <OptionExpiryOffset>...</OptionExpiryOffset>
   <ProhibitedExpiries>
     <Dates>
-      <Date>...</Date>
+      <Date forFuture="true" convention="Preceding" forOption="true" optionConvention="Preceding">...</Date>
         ...
     </Dates>
   </ProhibitedExpiries>
@@ -929,7 +936,7 @@ The meanings of the various elements in this node are as follows:
 \item \lstinline!AdjustBeforeOffset! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, if the base date implied by the \lstinline!AnchorDay! node above is not a good business day according to the calendar provided in the \lstinline!Calendar! node, this date is adjusted before the offset specified in the \lstinline!OffsetDays! is applied. If \lstinline!false!, this adjustment does not happen. If omitted, it defaults to \lstinline!true!. 
 \item \lstinline!IsAveraging! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. This node indicates if the future contract is based on the average commodity price of the contract period. If omitted, it defaults to \lstinline!false!.
 \item \lstinline!OptionExpiryOffset! [Optional]: The number of business days that the option expiry date is before the future expiry date. Any non-negative integer is allowed here. If omitted, this takes a default value of zero and the expiry date of an option on the future contract is assumed to equal the expiry date of the future contract.
-\item \lstinline!ProhibitedExpiries! [Optional]: This node can be used to specify explicit dates which are not allowed as future contract expiry dates or as option expiry dates. A useful example of this is the ICE Brent contract which has the following constraint on expiry dates: \emph{If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or (ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day}. Each \lstinline!Date! node can take an optional \lstinline!convention! attribute that accepts a valid business day convention in the list \lstinline!Preceding!, \lstinline!ModifiedPreceding!, \lstinline!Following! and \lstinline!ModifiedFollowing!. This \lstinline!convention! indicates how the expiry date should be adjusted if it lands on one of the prohibited expiry \lstinline!Date!s. If ommitted, the default is \lstinline!Preceding!. Both \lstinline!Preceding! and \lstinline!ModifiedPreceding! indicate that the next available business day before the date is tested. \lstinline!Following! and \lstinline!ModifiedFollowing! indicate that the next available business day after the date is tested.
+\item \lstinline!ProhibitedExpiries! [Optional]: This node can be used to specify explicit dates which are not allowed as future contract expiry dates or as option expiry dates. A useful example of this is the ICE Brent contract which has the following constraint on expiry dates: \emph{If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or (ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day}. Each \lstinline!Date! node can take optional attributes. The default values of these attributes is shown in Listing \ref{lst:commodity_future_conventions}. The \lstinline!convention! attribute accepts a valid business day convention in the list \lstinline!Preceding!, \lstinline!ModifiedPreceding!, \lstinline!Following! and \lstinline!ModifiedFollowing!. This \lstinline!convention! indicates how the future expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. If ommitted, the default is \lstinline!Preceding!. Both \lstinline!Preceding! and \lstinline!ModifiedPreceding! indicate that the next available business day before the date is tested. \lstinline!Following! and \lstinline!ModifiedFollowing! indicate that the next available business day after the date is tested. The \lstinline!optionConvention! attribute allows the same values and behaves in the same way to determine how the option expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. The \lstinline!forFuture! and \lstinline!forOption! boolean attributes enable the prohibited expiry to apply only for the future expiry date or the option expiry date respectively by setting the value to \lstinline!false!.
 \item \lstinline!OptionExpiryMonthLag! [Optional]: The allowable values are any integer. This value indicates the number of months from the month containing the option expiry date to the month containing the expiry date. If 0, the commodity future option contract expiry date is anchored in the same month as the commodity future contract expiry date. If the value of \lstinline!OptionExpiryMonthLag! is $n > 0$, the commodity option future contract expires in the $n$-th month prior to the commodity future contract expiry month. If the value of \lstinline!OptionExpiryMonthLag! is $n < 0$, the commodity option future contract expires in the $n$-th month after the the commodity future contract expiry month. The value of \lstinline!OptionExpiryMonthLag! should be equal to \lstinline!ExpiryMonthLag! when \lstinline!OptionExpiryOffset! is used. The \lstinline!OptionExpiryMonthLag! is rarely used. An example is the Crude Palm Oil contract \lstinline!XKLS:FCPO! where the future contract expiry is in the delivery month and the option expiry is in the month that is 2 months prior to this. In this case, \lstinline!OptionExpiryMonthLag! is 2. If omitted, \lstinline!OptionExpiryMonthLag! defaults to 0.
 \item \lstinline!OptionExpiryDay! [Optional]: This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month on which an option expiry date is anchored. A value of 31 will guarantee that the last day in the month is used a base date. If omitted, this is not used. Setting this field takes precedence over \lstinline!OptionExpiryOffset!.
 \item \lstinline!OptionBusinessDayConvention! [Optional]: The business day convention used to adjust the option expiry date to a good business day if \lstinline!OptionExpiryDay! is used.

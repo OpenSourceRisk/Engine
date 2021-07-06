@@ -117,8 +117,8 @@ XMLNode* OneDimSolverConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "Step", accuracy_);
     } else {
         XMLNode* minMaxNode = doc.allocNode("MinMax");
-        XMLUtils::addChild(doc, node, "Min", minMax_.first);
-        XMLUtils::addChild(doc, node, "Max", minMax_.second);
+        XMLUtils::addChild(doc, minMaxNode, "Min", minMax_.first);
+        XMLUtils::addChild(doc, minMaxNode, "Max", minMax_.second);
         XMLUtils::appendNode(node, minMaxNode);
     }
 

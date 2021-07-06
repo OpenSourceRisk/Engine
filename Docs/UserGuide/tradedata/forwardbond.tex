@@ -1,8 +1,19 @@
 \subsubsection{Forward Bond}
 \label{ss:forwardbond}
 
-A Forward Bond is set up using a {\tt ForwardBondData} block as shown below. The specific elements
-are
+A Forward Bond (or Bond Forward) is a contract that establishes an agreement to buy or sell (determined by
+\lstinline!LongInForward!) an underlying bond at a future point in time (the {\tt ForwardMaturityDate}) at an agreed
+price (the settlement {\tt Amount}).
+
+A T-Lock is a Forward Bond with a US Treasury Bond as underlying, whereas a J-Lock is a Forward Bond with a Japanese
+Government Bond as underlying. T-Locks can be specified in terms of a lock-in yield rather then a settlement
+amount. The cash settlement amount is given by (bond yield at maturity - lock rate) x DV01 in this case.
+
+Listing \ref{lst:forward_bond} shows an example for a physically settled forward bond. Listing
+\ref{lst:forward_bond_tlock} shows an example for a cash settled T-Lock transaction specified by a lock-in yield.
+
+A Forward Bond is set up using a {\tt ForwardBondData} block as shown below and the trade type is
+\emph{ForwardBond}. The specific elements are
 
 \begin{itemize}
    \item BondData: A {\tt BondData} block specifying the underlying bond as described in section~\ref{ss:bond}. A long
@@ -15,28 +26,55 @@ are
      \end{itemize}
    \item SettlementData: The entity defining the terms of settlement:
    \begin{itemize}
-       \item ForwardMaturityDate: The date of maturity of the forward contract.
-       \item Amount: The settlement amount transferred at forward maturity in return for the bond.
-       \item SettlementDirty: A flag that determines whether  the settlement amount {({\tt Amount})} reflects a clean ({\tt false}) or dirty ({\tt true}) price.
+       \item ForwardMaturityDate: The date of maturity of the forward contract. \\
+         Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+       \item Settlement [Optional]: Cash or Physical. Option, defaults to Physcial, except in case the settlement is
+         defined by LockRate, in which case it defaults to Cash. \\
+         Allowable values: Cash, Physical
+       \item Amount [Optional]: The settlement amount (also called strike) transferred at forward maturity in return for
+         the bond (physical delivery) or a cash amount equal to the dirty price of the bond (cash settlement). This is
+         transferred from the party that is long to the party that is short (determined by \lstinline!LongInForward!)
+         and cannot be a negative amount. It is assumed to be in the same currency as the underlying bond. Exactly one
+         of the fields Amount, LockRate must be given. \\
+         Allowable values: Any non-negative real number.
+       \item LockRate [Optional]: The payoff is given by (yield at forward maturity - LockRate) x DV01 (LongInForward =
+         true). Exactly one of the fields Amount, LockRate must be given. In case the LockRate is given, the Settlement
+         must be set to Cash. If Settlement is not given, it defaults to Cash in this case. \\
+         Allowable values: Any non-negative real number.
+       \item LockRateDayCounter [Optional]: The day counter w.r.t. which the lock rate is expressed. Optional, defaults to A360. \\
+         Allowable values: see table \ref{tab:daycount}
+       \item SettlementDirty [Optional]: A flag that determines whether the settlement amount {({\tt Amount})} reflects
+         a clean (\emph{false}) or dirty (\emph{true}) price. In either case, the dirty amount is actually paid on the
+         forward maturity date, i.e. if SettlementDirty = \emph{false}, the (forward) accruals are computed internally
+         and added to the given amount to get the actual settlement amount. Optional, defaults to true. \\
+         Allowable values: \emph{true}, \emph{false}
    \end{itemize}
-   % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
    \item PremiumData: The entity defining the terms of a potential premium payment. This node is optional. If left out it is assumed that no premium is paid.
    \begin{itemize}
-       \item Date: The date when a premium is paid.
-       \item Amount: The amount transferred as a premium.
+       \item Date: The date when a premium is paid. \\
+       Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+       \item Amount: The amount transferred as a premium. This is transferred from the party that is long to the party
+         that is short (determined by \lstinline!LongInForward!) and cannot be a negative amount. It is assumed to be in
+         the same currency as the underlying bond.\\
+       Allowable values: Any non-negative real number.
    \end{itemize}
-   \item LongInForward: A flag that determines whether the forward contract is entered in long ({\tt true}) or short ({\tt false}) position.
+   \item LongInForward: A flag that determines whether the forward contract is entered in long (\emph{true}) or short
+     (\emph{false}) position. \\
+       Allowable values: \emph{true}, \emph{false}
  \end{itemize}
 
-   \begin{minted}[fontsize=\small]{xml}
+\begin{listing}[H]
+  \begin{minted}[fontsize=\small]{xml}
    <ForwardBondData>
      <BondData>
       ...
       <IncomeCurveId>BENCHMARKINCOME-EUR<IncomeCurveId>
      </BondData>
      <SettlementData>
-       <Amount>1000000.00</Amount>
        <ForwardMaturityDate>20160808</ForwardMaturityDate>
+       <Settlement>Physcial</Settlement>
+       <ForwardSettlementDate>20160810</ForwardSettlementDate>
+       <Amount>1000000.00</Amount>
        <SettlementDirty>true</SettlementDirty>
      </SettlementData>
      <PremiumData>
@@ -45,9 +83,28 @@ are
      </PremiumData>
      <LongInForward>true</LongInForward>
    </ForwardBondData>
-   \end{minted}
+  \end{minted}
+\caption{Forward Bond Data}
+\label{lst:forward_bond}
+\end{listing}
 
-%incomeCurveId_ = XMLUtils::getChildValue(fwdBondNode, "IncomeCurveId", false);
+\begin{listing}[H]
+   \begin{minted}[fontsize=\small]{xml}
+   <ForwardBondData>
+     <BondData>
+      ...
+     </BondData>
+     <SettlementData>
+       <ForwardMaturityDate>20160808</ForwardMaturityDate>
+       <ForwardSettlementDate>20160810</ForwardSettlementDate>
+       <LockRate>0.02365</LockRate>
+     </SettlementData>
+     <LongInForward>true</LongInForward>
+   </ForwardBondData>
+\end{minted}
+\caption{Forward Bond Date (T-Lock)}
+\label{lst:forward_bond_tlock}
+\end{listing}
 
 As for the ordinary bond the forward bond pricing requires a recovery rate that can be specified in ORE per SecurityId.
 

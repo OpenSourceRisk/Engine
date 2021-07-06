@@ -23,17 +23,22 @@
 namespace QuantExt {
 
 SpreadedDiscountCurve::SpreadedDiscountCurve(const Handle<YieldTermStructure>& referenceCurve,
-                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes)
+                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes,
+                                             const Interpolation interpolation, const Extrapolation extrapolation)
     : YieldTermStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times), quotes_(quotes),
-      data_(times_.size(), 1.0) {
+      interpolation_(interpolation), extrapolation_(extrapolation), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedDiscountCurve: at least two times required");
     QL_REQUIRE(times_.size() == quotes.size(), "SpreadedDiscountCurve: size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "SpreadedDiscountCurve: first time must be 0, got " << times_[0]);
     for (Size i = 0; i < quotes.size(); ++i) {
         registerWith(quotes_[i]);
     }
-    interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
-    interpolation_->enableExtrapolation();
+    if (interpolation_ == Interpolation::logLinear) {
+        dataInterpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    } else {
+        dataInterpolation_ = boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+    }
+    dataInterpolation_->enableExtrapolation();
     registerWith(referenceCurve_);
 }
 
@@ -55,19 +60,31 @@ void SpreadedDiscountCurve::performCalculations() const {
         QL_REQUIRE(!quotes_[i].empty(), "SpreadedDiscountCurve: quote at index " << i << " is empty");
         data_[i] = quotes_[i]->value();
         QL_REQUIRE(data_[i] > 0, "SpreadedDiscountCurve: invalid value " << data_[i] << " at index " << i);
+        if (interpolation_ == Interpolation::linearZero) {
+            data_[i] = -std::log(data_[std::max<Size>(i, 1)]) / times_[std::max<Size>(i, 1)];
+        }
     }
-    interpolation_->update();
+    dataInterpolation_->update();
 }
 
 DiscountFactor SpreadedDiscountCurve::discountImpl(Time t) const {
     calculate();
-    if (t <= this->times_.back())
-        return referenceCurve_->discount(t) * (*interpolation_)(t, true);
-    // flat fwd extrapolation
     Time tMax = this->times_.back();
-    DiscountFactor dMax = this->data_.back();
-    Rate instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
-    return referenceCurve_->discount(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+    DiscountFactor dMax =
+        interpolation_ == Interpolation::logLinear ? this->data_.back() : std::exp(-this->data_.back() * tMax);
+    if (t <= this->times_.back()) {
+        Real tmp = (*dataInterpolation_)(t, true);
+        if (interpolation_ == Interpolation::logLinear)
+            return referenceCurve_->discount(t) * tmp;
+        else
+            return referenceCurve_->discount(t) * std::exp(-tmp * t);
+    }
+    if (extrapolation_ == Extrapolation::flatFwd) {
+        Rate instFwdMax = -(*dataInterpolation_).derivative(tMax) / dMax;
+        return referenceCurve_->discount(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+    } else {
+        return referenceCurve_->discount(t) * std::pow(dMax, t / tMax);
+    }
 }
 
 } // namespace QuantExt

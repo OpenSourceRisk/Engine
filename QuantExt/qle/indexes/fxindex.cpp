@@ -157,4 +157,10 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     return forward;
 }
 
+boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
+                                          const Handle<YieldTermStructure>& targetYts) {
+    return boost::make_shared<FxIndex>(familyName_, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_,
+                                       fxQuote, sourceYts, targetYts, inverseIndex_);
+}
+
 } // namespace QuantExt

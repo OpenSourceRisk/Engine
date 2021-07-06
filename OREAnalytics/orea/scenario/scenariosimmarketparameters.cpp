@@ -154,6 +154,9 @@ void ScenarioSimMarketParameters::setDefaults() {
     useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
     // Defaults for equity
     setSimulateEquityVolATMOnly(false);
+    // Default interpolation for yield curves
+    interpolation_ = "LogLinear";
+    extrapolation_ = "FlatFwd";
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -726,7 +729,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
         yieldCurveDayCounters_ != rhs.yieldCurveDayCounters_ || yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ ||
         yieldCurveTenors_ != rhs.yieldCurveTenors_ || swapIndices_ != rhs.swapIndices_ ||
-        interpolation_ != rhs.interpolation_ || extrapolate_ != rhs.extrapolate_ ||
+        interpolation_ != rhs.interpolation_ || extrapolation_ != rhs.extrapolation_ ||
         swapVolTerms_ != rhs.swapVolTerms_ || swapVolDayCounters_ != rhs.swapVolDayCounters_ ||
         swapVolIsCube_ != rhs.swapVolIsCube_ || swapVolSimulateATMOnly_ != rhs.swapVolSimulateATMOnly_ ||
         swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ ||
@@ -810,14 +813,26 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             // If there is no attribute "curve", this returns "" i.e. the default
             string label = XMLUtils::getAttribute(child, "curve");
             if (label == "") {
-                interpolation_ = XMLUtils::getChildValue(child, "Interpolation", true);
-                extrapolate_ = XMLUtils::getChildValueAsBool(child, "Extrapolate");
                 yieldCurveTenors_[label] = XMLUtils::getChildrenValuesAsPeriods(child, "Tenors", true);
+                if (auto n = XMLUtils::getChildNode(child, "Interpolation")) {
+                    interpolation_ = XMLUtils::getNodeValue(n);
+                }
+                if (auto n = XMLUtils::getChildNode(child, "Extrapolation")) {
+                    extrapolation_ = XMLUtils::getNodeValue(n);
+                }
+                // for backwards compatibility, map an extrapolation value that parses to bool to FlatFwd
+                bool dummy;
+                if (tryParse<bool>(extrapolation_, dummy, &parseBool)) {
+                    WLOG("ScenarioSimMarket parameter Extrapolation should be FlatFwd or FlatZero, mapping deprecated "
+                         "boolean '"
+                         << extrapolation_ << "' to FlatFwd. Please change this in your configuration.");
+                    extrapolation_ = "FlatFwd";
+                }
             } else {
                 if (XMLUtils::getChildNode(child, "Interpolation")) {
                     WLOG("Only one default interpolation value is allowed for yield curves");
                 }
-                if (XMLUtils::getChildNode(child, "Extrapolate")) {
+                if (XMLUtils::getChildNode(child, "Extrapolation")) {
                     WLOG("Only one default extrapolation value is allowed for yield curves");
                 }
                 if (XMLUtils::getChildNode(child, "Tenors")) {
@@ -1635,7 +1650,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
         if (key == "") {
             XMLUtils::addChild(doc, configNode, "Interpolation", interpolation_);
-            XMLUtils::addChild(doc, configNode, "Extrapolation", extrapolate_);
+            XMLUtils::addChild(doc, configNode, "Extrapolation", extrapolation_);
         }
         if (yieldCurveDayCounters_.count(key) > 0) {
             XMLUtils::addChild(doc, configNode, "DayCounter", yieldCurveDayCounters_.at(key));

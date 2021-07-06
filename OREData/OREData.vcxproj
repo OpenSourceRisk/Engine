@@ -52,6 +52,7 @@
     <ClInclude Include="ored\configuration\fxspotconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\genericyieldvolcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\iborfallbackconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\onedimsolverconfig.hpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
+    <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.hpp" />
@@ -156,6 +158,8 @@
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\quantoequityoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\quantovanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\vanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
     <ClInclude Include="ored\portfolio\capfloor.hpp" />
@@ -191,6 +195,7 @@
     <ClInclude Include="ored\portfolio\optionpaymentdata.hpp" />
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
+    <ClInclude Include="ored\portfolio\premiumdata.hpp" />
     <ClInclude Include="ored\portfolio\referencedata.hpp" />
     <ClInclude Include="ored\portfolio\referencedatafactory.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
@@ -202,6 +207,15 @@
     <ClInclude Include="ored\portfolio\tradefactory.hpp" />
     <ClInclude Include="ored\portfolio\underlying.hpp" />
     <ClInclude Include="ored\portfolio\vanillaoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\asianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\fxasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\commodityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\equityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\asianoption.hpp" />
+    <ClInclude Include="ored\portfolio\fxasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\optionasiandata.hpp" />
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
@@ -226,6 +240,7 @@
     <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
     <ClInclude Include="ored\utilities\vectorutils.hpp" />
+    <ClInclude Include="ored\utilities\wildcard.hpp" />
     <ClInclude Include="ored\utilities\xmlutils.hpp" />
     <ClInclude Include="ored\version.hpp" />
   </ItemGroup>
@@ -245,6 +260,7 @@
     <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\genericyieldvolcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\iborfallbackconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\onedimsolverconfig.cpp" />
@@ -317,6 +333,7 @@
     <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
+    <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
@@ -357,6 +374,7 @@
     <ClCompile Include="ored\portfolio\optionpaymentdata.cpp" />
     <ClCompile Include="ored\portfolio\optionwrapper.cpp" />
     <ClCompile Include="ored\portfolio\portfolio.cpp" />
+    <ClCompile Include="ored\portfolio\premiumdata.cpp" />
     <ClCompile Include="ored\portfolio\referencedata.cpp" />
     <ClCompile Include="ored\portfolio\referencedatafactory.cpp" />
     <ClCompile Include="ored\portfolio\schedule.cpp" />
@@ -367,6 +385,11 @@
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
     <ClCompile Include="ored\portfolio\underlying.cpp" />
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
+    <ClCompile Include="ored\portfolio\asianoption.cpp" />
+    <ClCompile Include="ored\portfolio\commodityasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
     <ClCompile Include="ored\utilities\conventionsbasedfutureexpiry.cpp" />
@@ -384,6 +407,7 @@
     <ClCompile Include="ored\utilities\progressbar.cpp" />
     <ClCompile Include="ored\utilities\strike.cpp" />
     <ClCompile Include="ored\utilities\to_string.cpp" />
+    <ClCompile Include="ored\utilities\wildcard.cpp" />
     <ClCompile Include="ored\utilities\xmlutils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -438,27 +462,35 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>

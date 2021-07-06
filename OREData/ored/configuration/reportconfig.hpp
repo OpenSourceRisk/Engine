@@ -58,5 +58,7 @@ private:
     boost::optional<std::vector<Period>> expiries_;
 };
 
+ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const ReportConfig& localConfig);
+
 } // namespace data
 } // namespace ore

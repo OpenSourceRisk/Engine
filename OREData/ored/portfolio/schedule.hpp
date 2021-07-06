@@ -48,6 +48,7 @@ public:
     //! \name Inspectors
     //@{
     const string& startDate() const { return startDate_; }
+    // might be empty, indicating a perpetual schedule
     const string& endDate() const { return endDate_; }
     const string& tenor() const { return tenor_; }
     const string& calendar() const { return calendar_; }
@@ -149,8 +150,10 @@ private:
 };
 
 //! Functions
-QuantLib::Schedule makeSchedule(const ScheduleData& data);
+QuantLib::Schedule makeSchedule(const ScheduleData& data,
+                                const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>());
 QuantLib::Schedule makeSchedule(const ScheduleDates& dates);
-QuantLib::Schedule makeSchedule(const ScheduleRules& rules);
+QuantLib::Schedule makeSchedule(const ScheduleRules& rules,
+                                const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>());
 } // namespace data
 } // namespace ore

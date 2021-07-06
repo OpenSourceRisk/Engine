@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -17,19 +18,19 @@
 */
 
 #include <ql/currencies/exchangeratemanager.hpp>
-#include <ql/experimental/futures/overnightindexfutureratehelper.hpp>
-#include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/math/functional.hpp>
 #include <ql/math/randomnumbers/haltonrsg.hpp>
 #include <ql/pricingengines/bond/bondfunctions.hpp>
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/termstructures/yield/bondhelpers.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/nonlinearfittingmethods.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/piecewisezerospreadedtermstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
+#include <ql/termstructures/yield/overnightindexfutureratehelper.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/imm.hpp>
@@ -38,11 +39,14 @@
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
+#include <qle/math/logquadraticinterpolation.hpp>
+#include <qle/math/quadraticinterpolation.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
@@ -53,6 +57,7 @@
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
+#include <qle/termstructures/iborfallbackcurve.hpp>
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
@@ -115,6 +120,22 @@ boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates,
     case YieldCurve::InterpolationMethod::ConvexMonotone:
         yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter));
         break;
+    case YieldCurve::InterpolationMethod::Quadratic:
+         yieldts.reset(new CurveType<QuantExt::Quadratic>(dates, rates, dayCounter, QuantExt::Quadratic(1, 0, 1, 0, 1)));
+         break;
+     case YieldCurve::InterpolationMethod::LogQuadratic:
+         yieldts.reset(
+             new CurveType<QuantExt::LogQuadratic>(dates, rates, dayCounter, QuantExt::LogQuadratic(1, 0, -1, 0, 1)));
+         break;
+     case YieldCurve::InterpolationMethod::Hermite:
+         yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter, Cubic(CubicInterpolation::Parabolic)));
+         break;
+     case YieldCurve::InterpolationMethod::CubicSpline:
+         yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter,
+                                                      Cubic(CubicInterpolation::Spline, false,
+                                                            CubicInterpolation::SecondDerivative, 0.0,
+                                                            CubicInterpolation::SecondDerivative, 0.0)));
+         break;
     default:
         QL_FAIL("Interpolation method not recognised.");
     }
@@ -154,6 +175,14 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::ConvexMonotone;
     else if (s == "ExponentialSplines")
         return YieldCurve::InterpolationMethod::ExponentialSplines;
+    else if (s == "Quadratic")
+        return YieldCurve::InterpolationMethod::Quadratic;
+    else if (s == "LogQuadratic")
+        return YieldCurve::InterpolationMethod::LogQuadratic;
+    else if (s == "Hermite")
+        return YieldCurve::InterpolationMethod::Hermite;
+    else if (s == "CubicSpline")
+        return YieldCurve::InterpolationMethod::CubicSpline;
     else if (s == "NelsonSiegel")
         return YieldCurve::InterpolationMethod::NelsonSiegel;
     else if (s == "Svensson")
@@ -178,12 +207,13 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
                        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
-                       const boost::shared_ptr<ReferenceDataManager>& referenceData, const bool preserveQuoteLinkage,
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                       const IborFallbackConfig& iborFallbackConfig, const bool preserveQuoteLinkage,
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
       requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
-      fxTriangulation_(fxTriangulation), referenceData_(referenceData), preserveQuoteLinkage_(preserveQuoteLinkage),
-      requiredDiscountCurves_(requiredDiscountCurves) {
+      fxTriangulation_(fxTriangulation), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      preserveQuoteLinkage_(preserveQuoteLinkage), requiredDiscountCurves_(requiredDiscountCurves) {
 
     try {
 
@@ -236,6 +266,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::YieldPlusDefault) {
             DLOG("Building YieldPlusDefaultCurve " << curveSpec_);
             buildYieldPlusDefaultCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::IborFallback) {
+            DLOG("Building IborFallbackCurve " << curveSpec_);
+            buildIborFallbackCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -341,6 +374,40 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
+        case InterpolationMethod::Hermite: {
+             typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Parabolic),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::CubicSpline: {
+             typedef PiecewiseYieldCurve<ZeroYield, Cubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0, CubicInterpolation::SecondDerivative, 0.0),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::Quadratic: {
+             typedef PiecewiseYieldCurve<ZeroYield, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts =
+                 boost::make_shared<my_curve>(
+ 					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
+ 					QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+ 														   minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogQuadratic: {
+             typedef PiecewiseYieldCurve<ZeroYield, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
             QL_FAIL("Interpolation method not recognised.");
         }
@@ -389,6 +456,41 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
+        case InterpolationMethod::Hermite: {
+             typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Parabolic),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::CubicSpline: {
+             typedef PiecewiseYieldCurve<Discount, Cubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::Quadratic: {
+             typedef PiecewiseYieldCurve<Discount, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts =
+                 boost::make_shared<my_curve>(
+ 					asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
+ 					QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+ 														   minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogQuadratic: {
+             typedef PiecewiseYieldCurve<Discount, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
             QL_FAIL("Interpolation method not recognised.");
         }
@@ -437,6 +539,40 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
                                                        minFactor, dontThrowSteps));
         } break;
+        case InterpolationMethod::Hermite: {
+             typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, Cubic(CubicInterpolation::Parabolic),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::CubicSpline: {
+             typedef PiecewiseYieldCurve<ForwardRate, Cubic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_,
+                 Cubic(CubicInterpolation::Spline, false, CubicInterpolation::SecondDerivative, 0.0,
+                       CubicInterpolation::SecondDerivative, 0.0),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::Quadratic: {
+             typedef PiecewiseYieldCurve<ForwardRate, QuantExt::Quadratic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, QuantExt::Quadratic(1, 0, 1, 0, 1),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
+         case InterpolationMethod::LogQuadratic: {
+             typedef PiecewiseYieldCurve<ForwardRate, QuantExt::LogQuadratic, QuantExt::IterativeBootstrap> my_curve;
+             ATTR_UNUSED typedef my_curve::traits_type dummy;
+             yieldts = boost::make_shared<my_curve>(
+                 asofDate_, instruments, zeroDayCounter_, QuantExt::LogQuadratic(1, 0, -1, 0, 1),
+                 QuantExt::IterativeBootstrap<my_curve>(accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor,
+                                                        minFactor, dontThrowSteps));
+         } break;
         default:
             QL_FAIL("Interpolation method not recognised.");
         }
@@ -699,6 +835,33 @@ void YieldCurve::buildYieldPlusDefaultCurve() {
                                                                 segment->weights());
 }
 
+void YieldCurve::buildIborFallbackCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1,
+               "One segment required for ibor fallback curve, got " << curveSegments_.size());
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::IborFallback,
+               "The curve segment is not of type Ibor Fallback");
+    auto segment = boost::dynamic_pointer_cast<IborFallbackCurveSegment>(curveSegments_[0]);
+    QL_REQUIRE(segment != nullptr, "expected IborFallbackCurve, internal error");
+    auto it = requiredYieldCurves_.find(segment->rfrCurve());
+    QL_REQUIRE(it != requiredYieldCurves_.end(), "Could not find rfr curve: '" << segment->rfrCurve() << "')");
+    QL_REQUIRE(
+        (segment->rfrIndex() && segment->spread()) || iborFallbackConfig_.isIndexReplaced(segment->iborIndex()),
+        "buildIborFallbackCurve(): ibor index '"
+            << segment->iborIndex()
+            << "' must be specified in ibor fallback config, if RfrIndex or Spread is not specified in curve config");
+    std::string rfrIndexName = segment->rfrIndex() ? *segment->rfrIndex() : iborFallbackConfig_.fallbackData(segment->iborIndex()).rfrIndex;
+    Real spread = segment->spread() ? *segment->spread() : iborFallbackConfig_.fallbackData(segment->iborIndex()).spread;
+    // we don't support convention based indices here, this might change with ore ticket 1758
+    Handle<YieldTermStructure> dummyCurve(boost::make_shared<FlatForward>(asofDate_, 0.0, zeroDayCounter_));
+    auto originalIndex = parseIborIndex(segment->iborIndex(), dummyCurve);
+    auto rfrIndex = boost::dynamic_pointer_cast<OvernightIndex>(parseIborIndex(rfrIndexName, it->second->handle()));
+    QL_REQUIRE(rfrIndex, "buidlIborFallbackCurve(): rfr index '"
+                             << rfrIndexName << "' could not be cast to OvernightIndex, is this index name correct?");
+    DLOG("building ibor fallback curve for '" << segment->iborIndex() << "' with rfrIndex='" << rfrIndexName
+                                              << "' and spread=" << spread);
+    p_ = boost::make_shared<IborFallbackCurve>(originalIndex, rfrIndex, spread, Date::minDate());
+}
+
 void YieldCurve::buildDiscountCurve() {
 
     QL_REQUIRE(curveSegments_.size() <= 1, "More than one discount curve "
@@ -903,7 +1066,7 @@ void YieldCurve::buildFittedBondCurve() {
     auto engineFactory = boost::make_shared<EngineFactory>(
         engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, conventions_),
         std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
-        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_);
+        std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_, iborFallbackConfig_);
 
     for (Size i = 0; i < quoteIDs.size(); ++i) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIDs[i], asofDate_);
@@ -917,12 +1080,8 @@ void YieldCurve::buildFittedBondCurve() {
                 boost::make_shared<DerivedQuote<multiply_by<Real>>>(bondQuote->quote(), multiply_by<Real>(100.0)));
             string securityID = bondQuote->securityID();
 
-            QL_REQUIRE(referenceData_ != nullptr && referenceData_->hasData("Bond", securityID),
-                       "bond reference data for '" << securityID << "' required to build fitted bond curve");
-            ore::data::Bond bond(Envelope(), BondData(securityID, 1.0));
-            bond.build(engineFactory);
-            auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
-            QL_REQUIRE(qlInstr != nullptr, "could not cast to QuantLib::Bond, this is unexpected");
+            QL_REQUIRE(referenceData_ != nullptr, "reference data required to build fitted bond curve");
+            auto qlInstr = BondFactory::instance().build(engineFactory, referenceData_, securityID);
 
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
             if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
@@ -1024,7 +1183,23 @@ void YieldCurve::buildFittedBondCurve() {
         Array guess;
         // first guess is the default guess (empty array, will be set to a zero vector in
         // FittedBondDiscountCurve::calculate())
-        if (i > 0) {
+        if (i == 0) {
+            if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
+                // first guess will be based on the last bond yield and first bond yield
+                guess = Array(4);
+                Integer maxMaturity = static_cast<Integer>(
+                    std::distance(securityMaturityDates.begin(),
+                                  std::max_element(securityMaturityDates.begin(), securityMaturityDates.end())));
+                Integer minMaturity = static_cast<Integer>(
+                    std::distance(securityMaturityDates.begin(),
+                                  std::min_element(securityMaturityDates.begin(), securityMaturityDates.end())));
+                guess[0] = marketYields[maxMaturity];            // long term yield
+                guess[1] = marketYields[minMaturity] - guess[0]; // short term component
+                guess[2] = 0.0;
+                guess[3] = 5.0;
+                DLOG("using smart NelsonSiegel guess for trial #" << (i + 1) << ": " << guess);
+            }
+        } else {
             auto seq = halton.nextSequence();
             guess = Array(seq.value.begin(), seq.value.end());
             if (interpolationMethod_ == InterpolationMethod::NelsonSiegel) {
@@ -1032,6 +1207,7 @@ void YieldCurve::buildFittedBondCurve() {
                 guess[1] = guess[1] * 0.10 - 0.05; // short term component
                 guess[2] = guess[2] * 0.10 - 0.05; // medium term component
                 guess[3] = guess[3] * 5.0;         // decay factor
+                DLOG("using random NelsonSiegel guess for trial #" << (i + 1) << ": " << guess);
             } else {
                 QL_FAIL("randomised optimisation seed not implemented");
             }
@@ -2119,14 +2295,23 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
             boost::shared_ptr<CrossCcyFixFloatSwapQuote> swapQuote =
                 boost::dynamic_pointer_cast<CrossCcyFixFloatSwapQuote>(marketQuote);
             QL_REQUIRE(swapQuote, "Market quote should be of type 'CrossCcyFixFloatSwapQuote'");
-
-            // Create the helper
-            boost::shared_ptr<RateHelper> helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
-                swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
-                swapConvention->settlementConvention(), swapQuote->maturity(), currency_,
-                swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
-                floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
-
+            bool isResettableSwap = swapConvention->isResettable();
+            boost::shared_ptr<RateHelper> helper;
+            if (!isResettableSwap) {
+                // Create the helper
+                helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
+                    swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
+                    swapConvention->settlementConvention(), swapQuote->maturity(), currency_,
+                    swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
+                    floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
+            } else {
+                bool resetsOnFloatLeg = swapConvention->floatIndexIsResettable();
+                helper = boost::make_shared<CrossCcyFixFloatMtMResetSwapHelper>(
+                    swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
+                    swapConvention->settlementConvention(), swapQuote->maturity(), currency_, swapConvention->fixedFrequency(), 
+                    swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), floatIndex, 
+                    floatLegDisc, Handle<Quote>(), swapConvention->eom(), resetsOnFloatLeg);
+            }
             instruments.push_back(helper);
         }
     }

@@ -211,6 +211,8 @@
       <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IsResettable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="FloatIndexIsResettable" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -327,7 +329,10 @@
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="date">
+                    <xs:attribute name="forFuture" type="bool" />
                     <xs:attribute name="convention" type="prohibitedExpiriesBdcType" />
+                    <xs:attribute name="forOption" type="bool" />
+                    <xs:attribute name="optionConvention" type="prohibitedExpiriesBdcType" />
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>
@@ -363,6 +368,22 @@
       <xs:element type="xs:nonNegativeInteger" name="DailyExpiryOffset" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
+  
+  <xs:complexType name="offPeakPowerIndexDataType">
+    <xs:all>
+      <xs:element type="xs:string" name="OffPeakIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PeakIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="OffPeakHours" minOccurs="1" maxOccurs="1">
+        <xs:simpleType>
+          <xs:restriction base="xs:decimal">
+            <xs:minExclusive value="0"/>
+            <xs:maxExclusive value="24"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element type="xs:string" name="PeakCalendar" minOccurs="1" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
 
   <xs:complexType name="commodityFutureType">
     <xs:all>
@@ -394,17 +415,22 @@
       <xs:element type="continuationMappingsType" name="OptionContinuationMappings" minOccurs="0" maxOccurs="1"/>
       <xs:element type="averagingDataType" name="AveragingData" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="HoursPerDay" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="offPeakPowerIndexDataType" name="OffPeakPowerIndexData" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="IndexName" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxOption">
     <xs:all>
       <xs:element type="xs:string" name="Id"/>
+      <xs:element type="xs:string" name="FXConventionID" minOccurs="0"/>
       <xs:element type="xs:string" name="AtmType"/>
       <xs:element type="xs:string" name="DeltaType"/>
       <xs:element type="xs:string" name="SwitchTenor" minOccurs="0"/>
       <xs:element type="xs:string" name="LongTermAtmType" minOccurs="0"/>
       <xs:element type="xs:string" name="LongTermDeltaType" minOccurs="0"/>
+      <xs:element type="xs:string" name="RiskReversalInFavorOf" minOccurs="0"/>
+      <xs:element type="xs:string" name="ButterflyStyle" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

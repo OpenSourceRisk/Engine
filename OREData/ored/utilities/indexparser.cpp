@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -30,6 +31,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -45,6 +47,8 @@
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/ibor/ambor.hpp>
+#include <qle/indexes/ibor/ameribor.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/boebaserate.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
@@ -59,10 +63,12 @@
 #include <qle/indexes/ibor/czkpribor.hpp>
 #include <qle/indexes/ibor/demlibor.hpp>
 #include <qle/indexes/ibor/dkkcibor.hpp>
+#include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
 #include <qle/indexes/ibor/ester.hpp>
 #include <qle/indexes/ibor/jpyeytibor.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
+#include <qle/indexes/ibor/hkdhonia.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/idrjibor.hpp>
@@ -84,6 +90,7 @@
 #include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
+#include <qle/indexes/ibor/sekstina.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
@@ -92,6 +99,7 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/indexes/decpi.hpp>
+#include <qle/indexes/offpeakpowerindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -278,15 +286,17 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"GBP-SONIA", boost::make_shared<Sonia>()},        {"JPY-TONAR", boost::make_shared<Tonar>()},
         {"CHF-TOIS", boost::make_shared<CHFTois>()},       {"CHF-SARON", boost::make_shared<CHFSaron>()},
         {"USD-FedFunds", boost::make_shared<FedFunds>()},  {"USD-SOFR", boost::make_shared<Sofr>()},
-        {"USD-Prime", boost::make_shared<PrimeIndex>()},   {"AUD-AONIA", boost::make_shared<Aonia>()},
+        {"USD-Prime", boost::make_shared<PrimeIndex>()},   {"USD-AMERIBOR", boost::make_shared<USDAmeribor>()},
+        {"AUD-AONIA", boost::make_shared<Aonia>()},
         {"CAD-CORRA", boost::make_shared<CORRA>()},        {"DKK-DKKOIS", boost::make_shared<DKKOis>()},
         {"SEK-SIOR", boost::make_shared<SEKSior>()},       {"COP-IBR", boost::make_shared<COPIbr>()},
         {"BRL-CDI", boost::make_shared<BRLCdi>()},         {"NOK-NOWA", boost::make_shared<Nowa>()},
         {"CLP-CAMARA", boost::make_shared<CLPCamara>()},   {"NZD-OCR", boost::make_shared<Nzocr>()},
         {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}, {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()},
-	    {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()}};
+	    {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()}, {"HKD-HONIA", boost::make_shared<HKDHonia>()},
+        {"SEK-STINA", boost::make_shared<SEKStina>()},     {"DKK-CITA", boost::make_shared<DKKCita>()}};
 
-    // Map from our _unique internal name_ to an ibor index (the period does not matter here)
+    // Map from our _unique internal name_ to an ibor index (the period does not matter here)XF
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
@@ -296,6 +306,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>()},
         {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},
         {"EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>()},
+        {"USD-AMBOR", boost::make_shared<IborIndexParserWithPeriod<USDAmbor>>()},
         {"USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>()},
         {"GBP-LIBOR", boost::make_shared<IborIndexParserWithPeriod<GBPLibor>>()},
         {"JPY-LIBOR", boost::make_shared<IborIndexParserWithPeriod<JPYLibor>>()},
@@ -620,10 +631,39 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
         }
     }
 
+    // Name to use when creating the index. This may be updated if we have a commodity future convention and IndexName 
+    // is provided by the convention.
+    string indexName = commName;
+
     // Do we have a commodity future convention for the commodity.
+    pair<bool, boost::shared_ptr<Convention>> p = conventions.get(commName, Convention::Type::CommodityFuture);
     boost::shared_ptr<CommodityFutureConvention> convention;
-    if (conventions.has(commName)) {
-        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(commName));
+    if (p.first) {
+
+        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
+
+        if (!convention->indexName().empty())
+            indexName = convention->indexName();
+
+        // If we have provided OffPeakPowerIndexData, we use that to construct the off peak power commodity index.
+        if (convention->offPeakPowerIndexData()) {
+
+            const auto& oppIdxData = *convention->offPeakPowerIndexData();
+
+            if (expiry == Date()) {
+                // If expiry is still not set use any date (off peak index is calendar daily)
+                expiry = Settings::instance().evaluationDate();
+            }
+            string suffix = "-" + to_string(expiry);
+
+            auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+                oppIdxData.offPeakIndex() + suffix, conventions, false));
+            auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
+                oppIdxData.peakIndex() + suffix, conventions, false));
+
+            return boost::make_shared<OffPeakPowerIndex>(indexName, expiry, offPeakIndex, peakIndex,
+                oppIdxData.offPeakHours(), oppIdxData.peakCalendar(), ts);
+        }
     }
 
     // Create and return the required future index
@@ -642,7 +682,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
             cdr = convention->calendar();
         }
 
-        return boost::make_shared<CommodityFuturesIndex>(commName, expiry, cdr, keepDays, ts);
+        return boost::make_shared<CommodityFuturesIndex>(indexName, expiry, cdr, keepDays, ts);
 
     } else {
         return boost::make_shared<CommoditySpotIndex>(commName, cal, ts);
@@ -736,6 +776,15 @@ bool isOvernightIndex(const string& indexName, const Conventions& conventions) {
             return true;
     }
 
+    return false;
+}
+
+bool isBmaIndex(const string& indexName) {
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(indexName, index)) {
+        // in ore a bma index is parsed to a BMAIndexWrapper instance!
+        return boost::dynamic_pointer_cast<BMAIndexWrapper>(index) != nullptr;
+    }
     return false;
 }
 

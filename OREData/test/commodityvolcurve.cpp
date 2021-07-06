@@ -565,7 +565,7 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
 
         // Check that the expected grid strike is one of the smile section strikes.
         auto itStrike =
-            find_if(iss->strikes().begin(), iss->strikes().end(), [&](Real s) { return abs(s - strike) < tol; });
+            find_if(iss->strikes().begin(), iss->strikes().end(), [&](Real s) { return std::abs(s - strike) < tol; });
         BOOST_REQUIRE(itStrike != iss->strikes().end());
 
         // Check that the expected volatility is equal to that at the grid strike

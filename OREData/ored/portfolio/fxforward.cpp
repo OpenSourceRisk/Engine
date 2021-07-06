@@ -40,7 +40,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Derive settlement date from payment data parameters
     Date payDate;
     if (payDate_.empty()) {
-        LOG("Attempting paydate advance");
+        //LOG("Attempting paydate advance");
         Period payLag = payLag_.empty() ? 0 * Days : parsePeriod(payLag_);
         Calendar payCalendar = payCalendar_.empty() ? NullCalendar() : parseCalendar(payCalendar_);
         BusinessDayConvention payConvention =
@@ -62,7 +62,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (payCurrency_.empty()) {
         // If settlement currency is not set, set it to the domestic currency.
-        LOG("Settlement currency was not specified, defaulting to " << soldCcy.code());
+        //LOG("Settlement currency was not specified, defaulting to " << soldCcy.code());
         payCcy = soldCcy;
     } else {
         payCcy = parseCurrency(payCurrency_);
@@ -110,6 +110,11 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("FxForward leg 0: " << legs_[0][0]->date() << " " << legs_[0][0]->amount());
     DLOG("FxForward leg 1: " << legs_[1][0]->date() << " " << legs_[1][0]->amount());
+
+    additionalData_["soldCurrency"] = soldCurrency_;
+    additionalData_["boughtCurrency"] = boughtCurrency_;
+    additionalData_["soldAmount"] = soldAmount_;
+    additionalData_["boughtAmount"] = boughtAmount_;
 }
 
 QuantLib::Real FxForward::notional() const {

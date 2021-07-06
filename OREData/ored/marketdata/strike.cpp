@@ -1,5 +1,6 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2019, 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -143,8 +144,8 @@ string AtmStrike::toString() const {
 
 bool AtmStrike::equal_to(const BaseStrike& other) const {
     if (const AtmStrike* p = dynamic_cast<const AtmStrike*>(&other)) {
-        return !(atmType_ != p->atmType() || (deltaType_ && !p->deltaType()) || (!deltaType_ && p->deltaType()) ||
-                 *deltaType_ != *p->deltaType());
+        return (atmType_ == p->atmType()) &&
+            ((!deltaType_ && !p->deltaType()) || (deltaType_ && p->deltaType() && (*deltaType_ == *p->deltaType())));
     } else {
         return false;
     }

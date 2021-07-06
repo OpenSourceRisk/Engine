@@ -40,19 +40,27 @@ using namespace QuantLib;
     */
 class InterpolatedDiscountCurve : public YieldTermStructure {
 public:
+    enum class Interpolation { logLinear, linearZero };
+    enum class Extrapolation { flatFwd, flatZero };
     //! \name Constructors
     //@{
     //! default constructor
-    InterpolatedDiscountCurve(const std::vector<Time>& times, const std::vector<Handle<Quote> >& quotes,
-                              const Natural settlementDays, const Calendar& cal, const DayCounter& dc)
-        : YieldTermStructure(settlementDays, cal, dc), times_(times) {
+    InterpolatedDiscountCurve(const std::vector<Time>& times, const std::vector<Handle<Quote>>& quotes,
+                              const Natural settlementDays, const Calendar& cal, const DayCounter& dc,
+                              const Interpolation interpolation = Interpolation::logLinear,
+                              const Extrapolation extrapolation = Extrapolation::flatFwd)
+        : YieldTermStructure(settlementDays, cal, dc), times_(times), interpolation_(interpolation),
+          extrapolation_(extrapolation) {
         initalise(quotes);
     }
 
     //! constructor that takes a vector of dates
-    InterpolatedDiscountCurve(const std::vector<Date>& dates, const std::vector<Handle<Quote> >& quotes,
-                              const Natural settlementDays, const Calendar& cal, const DayCounter& dc)
-        : YieldTermStructure(settlementDays, cal, dc), times_(dates.size()) {
+    InterpolatedDiscountCurve(const std::vector<Date>& dates, const std::vector<Handle<Quote>>& quotes,
+                              const Natural settlementDays, const Calendar& cal, const DayCounter& dc,
+                              const Interpolation interpolation = Interpolation::logLinear,
+                              const Extrapolation extrapolation = Extrapolation::flatFwd)
+        : YieldTermStructure(settlementDays, cal, dc), times_(dates.size()), interpolation_(interpolation),
+          extrapolation_(extrapolation) {
         for (Size i = 0; i < dates.size(); ++i)
             times_[i] = timeFromReference(dates[i]);
         initalise(quotes);
@@ -60,12 +68,13 @@ public:
     //@}
 
 private:
-    void initalise(const std::vector<Handle<Quote> >& quotes) {
+    void initalise(const std::vector<Handle<Quote>>& quotes) {
         QL_REQUIRE(times_.size() > 1, "at least two times required");
         QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]); // or date=asof
         QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
-        for (Size i = 0; i < quotes.size(); ++i)
+        for (Size i = 0; i < quotes.size(); ++i) {
             quotes_.push_back(boost::make_shared<LogQuote>(quotes[i]));
+        }
         for (Size i = 0; i < times_.size() - 1; ++i)
             timeDiffs_.push_back(times_[i + 1] - times_[i]);
     }
@@ -77,19 +86,33 @@ private:
 
 protected:
     DiscountFactor discountImpl(Time t) const {
+        if (t > this->times_.back() && extrapolation_ == Extrapolation::flatZero) {
+            Real tMax = this->times_.back();
+            Real dMax = std::exp(quotes_.back()->value());
+            return std::pow(dMax, t / tMax);
+        }
         std::vector<Time>::const_iterator it = std::upper_bound(times_.begin(), times_.end(), t);
         Size i = std::min<Size>(it - times_.begin(), times_.size() - 1);
         Real weight = (times_[i] - t) / timeDiffs_[i - 1];
-        // this handles extrapolation (t > times.back()) as well
-        Real value = (1.0 - weight) * quotes_[i]->value() + weight * quotes_[i - 1]->value();
-        return ::exp(value);
+        if (interpolation_ == Interpolation::logLinear || t > this->times_.back()) {
+            // this handles flat fwd extrapolation (t > times.back()) as well
+            Real value = (1.0 - weight) * quotes_[i]->value() + weight * quotes_[i - 1]->value();
+            return ::exp(value);
+        } else {
+            Real value =
+                (1.0 - weight) * quotes_[i]->value() / times_[i] + weight * quotes_[i - 1]->value() / times_[i - 1];
+            return ::exp(t * value);
+        }
     }
 
 private:
     std::vector<Time> times_;
     std::vector<Time> timeDiffs_;
-    std::vector<boost::shared_ptr<Quote> > quotes_;
+    std::vector<boost::shared_ptr<Quote>> quotes_;
+    Interpolation interpolation_;
+    Extrapolation extrapolation_;
 };
+
 } // namespace QuantExt
 
 #endif

@@ -56,13 +56,6 @@ ZMWCurrency::ZMWCurrency() {
     data_ = zmwData;
 }
 
-// Nigerian naira
-NGNCurrency::NGNCurrency() {
-    static boost::shared_ptr<Data> ngnData(
-        new Data("Nigerian naira", "NGN", 566, "NGN", "", 100, Rounding(), "1$.2f %3%"));
-    data_ = ngnData;
-}
-
 // Moroccan dirham
 MADCurrency::MADCurrency() {
     static boost::shared_ptr<Data> madData(

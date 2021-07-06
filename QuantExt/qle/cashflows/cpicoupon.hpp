@@ -32,6 +32,28 @@ using namespace QuantLib;
 
 class InflationCashFlowPricer;
 
+class CPICoupon : public QuantLib::CPICoupon {
+public:
+    CPICoupon(Real baseCPI, // user provided, could be arbitrary
+              const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
+              const ext::shared_ptr<ZeroInflationIndex>& index, const Period& observationLag,
+              CPI::InterpolationType observationInterpolation, const DayCounter& dayCounter,
+              Real fixedRate, // aka gearing
+              Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
+              const Date& exCouponDate = Date(), bool subtractInflationNominal = false)
+        : QuantLib::CPICoupon(baseCPI, paymentDate, nominal, startDate, endDate, fixingDays, index, observationLag,
+                              observationInterpolation, dayCounter, fixedRate, spread, refPeriodStart,
+                              refPeriodEnd, exCouponDate),
+          subtractInflationNominal_(subtractInflationNominal){};
+
+    virtual Rate rate() const override;
+    bool subtractInflationNotional() { return subtractInflationNominal_; };
+
+protected:
+    bool subtractInflationNominal_;
+};
+
+
 //! Capped or floored CPI cashflow.
 /*! Extended QuantLib::CPICashFlow
  */
@@ -101,8 +123,8 @@ protected:
 */
 class CPILeg {
 public:
-    CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationIndex>& index, const Real baseCPI,
-           const Period& observationLag);
+    CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationIndex>& index,
+           const Handle<YieldTermStructure>& rateCurve, const Real baseCPI, const Period& observationLag);
     CPILeg& withNotionals(Real notional);
     CPILeg& withNotionals(const std::vector<Real>& notionals);
     CPILeg& withFixedRates(Real fixedRate);
@@ -125,11 +147,13 @@ public:
     CPILeg& withExCouponPeriod(const Period&, const Calendar&, BusinessDayConvention, bool endOfMonth = false);
     CPILeg& withStartDate(const Date& startDate);
     CPILeg& withObservationLag(const Period& observationLag);
+    CPILeg& withSubtractInflationNominalAllCoupons(bool subtractInflationNominalAllCoupons);
     operator Leg() const;
 
 private:
     Schedule schedule_;
     ext::shared_ptr<ZeroInflationIndex> index_;
+    Handle<YieldTermStructure> rateCurve_;
     Real baseCPI_;
     Period observationLag_;
     std::vector<Real> notionals_;
@@ -147,6 +171,7 @@ private:
     Calendar exCouponCalendar_;
     BusinessDayConvention exCouponAdjustment_;
     bool exCouponEndOfMonth_;
+    bool subtractInflationNominalAllCoupons_;
 
     // Needed for pricing the embedded caps/floors
     Date startDate_;

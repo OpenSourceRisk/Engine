@@ -63,6 +63,11 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                 << " and strike " << std::setprecision(6) << strike_ << " is "
                                 << market->fxVol(ccyPairCode)->blackVol(expiryDate_, strike_));
     }
+    
+    additionalData_["boughtCurrency"] = assetName_; 
+    additionalData_["boughtAmount"] = quantity_;
+    additionalData_["soldCurrency"] = currency_;
+    additionalData_["soldAmount"] = quantity_ * strike_;
 }
 
 void FxOption::fromXML(XMLNode* node) {

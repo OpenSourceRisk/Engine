@@ -4196,6 +4196,8 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
         refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
+    
+    infIndex->addFixing(Date(1, April, 2015), 100);
 
     Real premium[] = { 0.0044, 0.0085, 0.0127, 0.0160, 0.0186 };
 
@@ -4323,7 +4325,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
         refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
-
+    infIndex->addFixing(Date(1, April, 2015), 100);
     Size nMat = 14;
     Real premium[] = { 0.000555, 0.000813, 0.000928, 0.00127, 0.001616, 0.0019, 0.0023,
                        0.0026,   0.0029,   0.0032,   0.0032,  0.0033,   0.0038, 0.0067 };

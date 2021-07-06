@@ -68,6 +68,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             currencies[i] = parseCurrency(legData_[i].currency());
         if (currencies[i] != currency)
             isXCCY_ = true;
+        isResetting_ = isResetting_ || (!legData_[i].isNotResetXCCY());
     }
 
     boost::shared_ptr<EngineBuilder> builder =
@@ -76,139 +77,14 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
-
-        boost::shared_ptr<FxIndex> fxIndex;
-        if (legData_[i].fxIndex() != "") {
-            // We have an FX Index to setup
-            fxIndex = buildFxIndex(legData_[i].fxIndex(), legData_[i].currency(), legData_[i].foreignCurrency(), market,
-                                   configuration, legData_[i].fixingCalendar(), legData_[i].fixingDays(), true);
-        }
-
-        // build the leg
-
         auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
         legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
-
-        // handle fx resetting Ibor leg
-
-        if (legData_[i].legType() == "Floating" && !legData_[i].isNotResetXCCY()) {
-            // this is the reseting leg...
-            QL_REQUIRE(fxIndex != nullptr, "fx resetting leg requires fx index");
-
-            // If the domestic notional value is not specified, i.e. there are no notionals specified in the leg
-            // data, then all coupons including the first will be FX linked. If the first coupon's FX fixing date
-            // is in the past, a FX fixing will be used to determine the first domestic notional. If the first
-            // coupon's FX fixing date is in the future, the first coupon's domestic notional will be determined
-            // by the FX forward rate on that future fixing date.
-            Size j = 0;
-            if (legData_[i].notionals().size() == 0) {
-                DLOG("Building FX Resettable with unspecified domestic notional");
-            } else {
-                // First coupon a plain floating rate coupon i.e. it is not FX linked because the initial notional is
-                // known. But, we need to add it to additionalLegs_ so that we don't miss the first coupon's ibor fixing
-                LOG("Building FX Resettable with first domestic notional specified explicitly");
-                j = 1;
-            }
-
-            // Make the necessary FX linked floating rate coupons
-            for (; j < legs_[i].size(); ++j) {
-                boost::shared_ptr<FloatingRateCoupon> coupon =
-                    boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
-
-                Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
-                                                                    -static_cast<Integer>(fxIndex->fixingDays()), Days);
-                boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
-                    boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, legData_[i].foreignAmount(),
-                                                                           fxIndex, coupon);
-                // set the same pricer
-                fxLinkedCoupon->setPricer(coupon->pricer());
-                legs_[i][j] = fxLinkedCoupon;
-
-                // Add the FX fixing to the required fixings
-                requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), fxLinkedCoupon->date());
-            }
-        }
-
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
-
-        // If we have an FX resetting leg, add the notional amount at the start and end of each coupon period.
-        if (!legData_[i].isNotResetXCCY()) {
-
-            DLOG("Building Resetting XCCY Notional leg");
-            Real foreignNotional = legData_[i].foreignAmount();
-            isResetting_ = true;
-
-            Leg resettingLeg;
-            for (Size j = 0; j < legs_[i].size(); j++) {
-
-                boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(legs_[i][j]);
-                QL_REQUIRE(c, "Expected each cashflow in FX resetting leg to be of type Coupon");
-
-                // Build a pair of notional flows, one at the start and one at the end of the accrual period.
-                // They both have the same FX fixing date => same amount in this leg's currency.
-                boost::shared_ptr<CashFlow> outCf;
-                boost::shared_ptr<CashFlow> inCf;
-                Date fixingDate;
-                if (j == 0) {
-                    // Two possibilities for first coupon:
-                    // 1. we have not been given a domestic notional so it is an FX linked coupon
-                    // 2. we have been given an explicit domestic notional so it is a simple cashflow
-                    if (legData_[i].notionals().size() == 0) {
-                        fixingDate = fxIndex->fixingDate(c->accrualStartDate());
-                        if (legData_[i].notionalInitialExchange()) {
-                            outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                                                                         -foreignNotional, fxIndex);
-                        }
-                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
-                                                                    fxIndex);
-                    } else {
-                        if (legData_[i].notionalInitialExchange()) {
-                            outCf = boost::make_shared<SimpleCashFlow>(-c->nominal(), c->accrualStartDate());
-                        }
-                        inCf = boost::make_shared<SimpleCashFlow>(c->nominal(), c->accrualEndDate());
-                    }
-                } else {
-                    fixingDate = fxIndex->fixingDate(c->accrualStartDate());
-                    outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional,
-                                                                 fxIndex);
-                    // we don't want a final one, unless there is notional exchange
-                    if (j < legs_[i].size() - 1 || legData_[i].notionalFinalExchange()) {
-                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
-                                                                    fxIndex);
-                    }
-                }
-
-                // Add the cashflows to the notional leg if they have been populated
-                if (outCf) {
-                    resettingLeg.push_back(outCf);
-                    if (fixingDate != Date())
-                        requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), outCf->date());
-                }
-                if (inCf) {
-                    resettingLeg.push_back(inCf);
-                    if (fixingDate != Date())
-                        requiredFixings_.addFixingDate(fixingDate, legData_[i].fxIndex(), inCf->date());
-                }
-            }
-
-            legs_.push_back(resettingLeg);
-            legPayers_.push_back(legPayers_[i]);
-            currencies.push_back(currencies[i]);
-
-            if (legData_[i].notionalAmortizingExchange()) {
-                QL_FAIL("Cannot have an amoritizing notional with FX reset");
-            }
-        }
-
-        // check for notional exchanges on non FX reseting trades
-        else if ((legData_[i].notionalInitialExchange() || legData_[i].notionalFinalExchange() ||
-                  legData_[i].notionalAmortizingExchange()) &&
-                 (legData_[i].legType() != "CPI")) {
-
-            legs_.push_back(makeNotionalLeg(
-                legs_[i], legData_[i].notionalInitialExchange(), legData_[i].notionalFinalExchange(),
-                legData_[i].notionalAmortizingExchange(), parseBusinessDayConvention(legData_[i].paymentConvention()),
-                parseCalendar(legData_[i].paymentCalendar())));
+        
+        // add notional leg, if appicable
+        auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
+        if (!leg.empty()) {
+            legs_.push_back(leg);
             legPayers_.push_back(legPayers_[i]);
             currencies.push_back(currencies[i]);
         }
@@ -291,6 +167,44 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (!l.empty())
             maturity_ = std::max(maturity_, l.back()->date());
     }
+
+}
+
+const std::map<std::string,boost::any>& Swap::additionalData() const {
+    Size numLegs = legData_.size();
+    // use the build time as of date to determine current notionals
+    Date asof = Settings::instance().evaluationDate();
+    for (Size i = 0; i < numLegs; ++i) {
+        string legID = to_string(i+1);
+        additionalData_["legType[" + legID + "]"] = legData_[i].legType();
+        additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
+        additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
+        for (Size j = 0; j < legs_[i].size(); ++j) {
+            boost::shared_ptr<CashFlow> flow = legs_[i][j];
+            // pick flow with earliest future payment date on this leg
+            if (flow->date() > asof) {
+                additionalData_["amount[" + legID + "]"] = flow->amount();
+                additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
+                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+                if (coupon) {
+                    additionalData_["currentNotional[" + legID + "]"] = coupon->nominal();
+                    additionalData_["rate[" + legID + "]"] = coupon->rate();
+                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                    if (frc) {
+                        additionalData_["index[" + legID + "]"] = frc->index()->name();
+                        additionalData_["spread[" + legID + "]"] = frc->spread();                        
+                    }
+                }
+                break;
+            }
+        }
+        if (legs_[i].size() > 0) {
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
+            if (coupon)
+                additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
+        }
+    }
+    return additionalData_;
 }
 
 QuantLib::Real Swap::notional() const {
@@ -298,17 +212,17 @@ QuantLib::Real Swap::notional() const {
     try {
         return instrument_->qlInstrument()->result<Real>("currentNotional");
     } catch (const std::exception& e) {
-        if (strcmp(e.what(), "currentNotional not provided"))
-            WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
+        WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
         // Try getting current notional from coupons
-        Real n = currentNotional(legs_[notionalTakenFromLeg_]);
-        if (fabs(n) > QL_EPSILON) {
-            return n;
-        } else {
-            // else return the face value
-            WLOG("swap does not provide coupon notionals, useing face value");
-            return notional_;
+        if (notionalTakenFromLeg_ < legs_.size()) {
+            Real n = currentNotional(legs_[notionalTakenFromLeg_]);
+            if (fabs(n) > QL_EPSILON) {
+                return n;
+            }
         }
+        // else return the face value
+        WLOG("swap does not provide coupon notionals, useing face value");
+        return notional_;
     }
 }
 

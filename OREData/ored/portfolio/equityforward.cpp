@@ -82,8 +82,13 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     // But rather than having it move around we use strike * quantity
     notional_ = strike * quantity_;
     notionalCurrency_ = ccy.code();
-}
 
+    additionalData_["underlyingSecurityId"] = name;
+    additionalData_["strike"] = strike;
+    additionalData_["strikeCurrency"] = strikeCurrency_;
+    additionalData_["quantity"] = quantity_;
+}
+    
 void EquityForward::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* eNode = XMLUtils::getChildNode(node, "EquityForwardData");

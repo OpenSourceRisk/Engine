@@ -69,7 +69,8 @@ public:
         vector<Real> prices = {1346.0, 1348.0};
         Handle<PriceTermStructure> priceCurve(
             boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
-        commodityCurves_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = priceCurve;
+        Handle<CommodityIndex> commIdx(boost::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar(), priceCurve));
+        commodityIndices_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = commIdx;
 
         // Add GOLD_USD volatilities
         vector<Date> volatilityDates = {Date(19, Feb, 2019), Date(19, Feb, 2020)};
@@ -335,8 +336,8 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionPremium) {
     Date premiumDate(21, Feb, 2018);
 
     // Create option
-    OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry, "Cash", "", premium, td.currency,
-                          "2018-02-21");
+    OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry, "Cash", "",
+                          PremiumData{premium, td.currency, Date(21, Feb, 2018)});
     boost::shared_ptr<CommodityOption> option = boost::make_shared<CommodityOption>(
         td.envelope, optionData, td.commodityName, td.currency, td.strike, td.quantity);
 

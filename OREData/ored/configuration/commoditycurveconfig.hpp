@@ -36,15 +36,41 @@ namespace data {
 class PriceSegment : public XMLSerializable {
 public:
     //! Type of price segment being represented, i.e. type of instrument in the price segment.
-    enum class Type { Future, AveragingFuture, AveragingSpot, AveragingOffPeakPower };
+    enum class Type { Future, AveragingFuture, AveragingSpot, AveragingOffPeakPower, OffPeakPowerDaily };
+
+    //! Class to store quotes used in building daily off-peak power quotes.
+    class OffPeakDaily : public XMLSerializable {
+    public:
+        //! Constructor.
+        OffPeakDaily();
+
+        //! Detailed constructor.
+        OffPeakDaily(
+            const std::vector<std::string>& offPeakQuotes,
+            const std::vector<std::string>& peakQuotes);
+
+        const std::vector<std::string>& offPeakQuotes() const { return offPeakQuotes_; }
+        const std::vector<std::string>& peakQuotes() const { return peakQuotes_; }
+
+        void fromXML(XMLNode* node) override;
+        XMLNode* toXML(XMLDocument& doc) override;
+
+    private:
+        std::vector<std::string> offPeakQuotes_;
+        std::vector<std::string> peakQuotes_;
+    };
 
     //! \name Constructors
     //@{
     //! Default constructor
     PriceSegment();
     //! Detailed constructor
-    PriceSegment(const std::string& type, const std::string& conventionsId, const std::vector<std::string>& quotes,
-        const boost::optional<unsigned short>& priority = boost::none, const std::string& peakPriceCurveId = "",
+    PriceSegment(const std::string& type,
+        const std::string& conventionsId,
+        const std::vector<std::string>& quotes,
+        const boost::optional<unsigned short>& priority = boost::none,
+        const boost::optional<OffPeakDaily>& offPeakDaily = boost::none,
+        const std::string& peakPriceCurveId = "",
         const std::string& peakPriceCalendar = "");
     //@}
 
@@ -54,6 +80,7 @@ public:
     const std::string& conventionsId() const;
     const std::vector<std::string>& quotes() const;
     const boost::optional<unsigned short>& priority() const;
+    const boost::optional<OffPeakDaily>& offPeakDaily() const;
     const std::string& peakPriceCurveId() const;
     const std::string& peakPriceCalendar() const;
     bool empty() const;
@@ -66,10 +93,14 @@ public:
     //@}
 
 private:
+    //! Populate quotes
+    void populateQuotes();
+
     std::string strType_;
     std::string conventionsId_;
     std::vector<std::string> quotes_;
     boost::optional<unsigned short> priority_;
+    boost::optional<OffPeakDaily> offPeakDaily_;
     std::string peakPriceCurveId_;
     std::string peakPriceCalendar_;
 

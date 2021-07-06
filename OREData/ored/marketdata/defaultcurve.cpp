@@ -19,6 +19,7 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/interpolatedhazardratecurve.hpp>
@@ -32,7 +33,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
-#include <regex>
 #include <set>
 
 using namespace QuantLib;
@@ -75,19 +75,13 @@ void addQuote(set<QuoteData>& quotes, const string& configId, const string& name
     TLOG("Loaded quote " << name << " for default curve " << configId);
 }
 
-set<QuoteData> getRegexQuotes(string strRegex, const string& configId, DefaultCurveConfig::Type type,
+set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, DefaultCurveConfig::Type type,
     const Date& asof, const Loader& loader) {
 
     using DCCT = DefaultCurveConfig::Type;
     using MDQT = MarketDatum::QuoteType;
     using MDIT = MarketDatum::InstrumentType;
     LOG("Loading regex quotes for default curve " << configId);
-
-    // "*" is used as wildcard in strRegex in our quotes. Need to replace with ".*" here for regex to work.
-    boost::replace_all(strRegex, "*", ".*");
-
-    // Create the regular expression
-    regex expression(strRegex);
 
     // Loop over the available market data and pick out quotes that match the expression
     set<QuoteData> result;
@@ -105,21 +99,21 @@ set<QuoteData> getRegexQuotes(string strRegex, const string& configId, DefaultCu
             (mdqt == MDQT::CREDIT_SPREAD || mdqt == MDQT::CONV_CREDIT_SPREAD)) {
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
-            if (regex_match(q->name(), expression)) {
+            if (wc.matches(q->name())) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
             }
 
         } else if (type == DCCT::Price && (mdit == MDIT::CDS && mdqt == MDQT::PRICE)) {
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
-            if (regex_match(q->name(), expression)) {
+            if (wc.matches(q->name())) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
             }
 
         } else if (type == DCCT::HazardRate && (mdit == MDIT::HAZARD_RATE && mdqt == MDQT::RATE)) {
 
             auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
-            if (regex_match(q->name(), expression)) {
+            if (wc.matches(q->name())) {
                 addQuote(result, configId, q->name(), q->term(), q->quote()->value());
             }
         }
@@ -178,12 +172,13 @@ set<QuoteData> getConfiguredQuotes(DefaultCurveConfig& config, const Date& asof,
     QL_REQUIRE(!config.cdsQuotes().empty(), "No quotes configured for curve " << config.curveID());
 
     // We may have a _single_ regex quote or a list of explicit quotes. Check if we have single regex quote.
-    bool haveRegexQuote = config.cdsQuotes()[0].first.find("*") != string::npos;
+    std::vector<std::string> tmp;
+    std::transform(config.cdsQuotes().begin(), config.cdsQuotes().end(), std::back_inserter(tmp),
+                   [](const std::pair<std::string, bool>& p) { return p.first; });
+    auto wildcard = getUniqueWildcard(tmp);
 
-    if (haveRegexQuote) {
-        QL_REQUIRE(config.cdsQuotes().size() == 1,
-            "Wild card specified in " << config.curveID() << " so only one quote should be provided.");
-        return getRegexQuotes(config.cdsQuotes()[0].first, config.curveID(), config.type(), asof, loader);
+    if (wildcard) {
+        return getRegexQuotes(*wildcard, config.curveID(), config.type(), asof, loader);
     } else {
         return getExplicitQuotes(config.cdsQuotes(), config.curveID(), config.type(), asof, loader);
     }
@@ -348,8 +343,12 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     survivalProbs.push_back(1.0);
     TLOG("Survival probabilities for CDS curve " << config.curveID() << ":");
     TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
+
+    bool gotAliveHelper = false;
+
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
+            gotAliveHelper = true;
 
             Date pillarDate = helpers[i]->pillarDate();
             Probability sp = tmp->survivalProbability(pillarDate);
@@ -369,7 +368,12 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
             TLOG(io::iso_date(pillarDate) << "," << fixed << setprecision(9) << sp);
         }
     }
-    QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
+    QL_REQUIRE(gotAliveHelper, "Need at least one alive helper to build the default curve");
+    if (dates.size() == 1) {
+        // We might have removed points above. To make the interpolation work, we need at least two points though.
+        dates.push_back(dates.back() + 1);
+        survivalProbs.push_back(survivalProbs.back());
+    }
 
     LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
     curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(

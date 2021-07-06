@@ -117,7 +117,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
 }
 
 void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
-                                 boost::shared_ptr<ore::data::Market> market, const std::string& configuration) {
+                                 boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                                 const bool includePastCashflows) {
     Date asof = Settings::instance().evaluationDate();
     bool write_discount_factor = market ? true : false;
     LOG("Writing cashflow report for " << asof);
@@ -179,7 +180,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     for (size_t j = 0; j < leg.size(); j++) {
                         boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                         Date payDate = ptrFlow->date();
-                        if (!ptrFlow->hasOccurred(asof)) {
+                        if (!ptrFlow->hasOccurred(asof) || includePastCashflows) {
                             Real amount = ptrFlow->amount();
                             string flowType = "";
                             if (payer)
@@ -270,7 +271,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
 
                             if (write_discount_factor) {
-                                Real discountFactor = discountCurve->discount(payDate);
+                                Real discountFactor =
+                                    ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
                                 report.add(discountFactor);
                                 Real presentValue = discountFactor * effectiveAmount;
                                 report.add(presentValue);
@@ -315,7 +317,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 if (cf.discountFactor != Null<Real>()) {
                                     discountFactor = cf.discountFactor;
                                 } else if (!cf.currency.empty() && cf.payDate != Null<Date>()) {
-                                    discountFactor = market->discountCurve(cf.currency)->discount(cf.payDate);
+                                    discountFactor = cf.payDate < asof
+                                                         ? 0.0
+                                                         : market->discountCurve(cf.currency)->discount(cf.payDate);
                                 }
                                 Real presentValue = effectiveAmount * discountFactor;
                                 if (cf.presentValue != Null<Real>()) {
@@ -844,85 +848,92 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
         .addColumn("ResultValue", string());
 
     for (auto trade : portfolio->trades()) {
-        // we first add any additional trade data.
-        string tradeId = trade->id();
-        Real notional2 = Null<Real>();
-        string notional2Ccy = "";
-        // Get the additional data for the current instrument.
-        auto additionalData = trade->additionalData();
-        for (const auto& kv : additionalData) {
-            auto p = parseBoostAny(kv.second);
-            report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
-        }
-        // if the 'notionalTwo' has been provided convert it to base currency
-        if (additionalData.count("notionalTwo") != 0 && additionalData.count("notionalTwoCurrency") != 0) {
-            notional2 = trade->additionalDatum<Real>("notionalTwo");
-            notional2Ccy = trade->additionalDatum<string>("notionalTwoCurrency");
-        }
-
-        if (trade->instrument()->qlInstrument()) {
-            auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
-            if (additionalResults.count("notionalTwo") != 0 && additionalResults.count("notionalTwoCurrency") != 0) {
-                notional2 = trade->instrument()->qlInstrument()->result<Real>("notionalTwo");
-                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalTwoCurrency");
+        try {
+            // we first add any additional trade data.
+            string tradeId = trade->id();
+            string tradeType = trade->tradeType();
+            Real notional2 = Null<Real>();
+            string notional2Ccy = "";
+            // Get the additional data for the current instrument.
+            auto additionalData = trade->additionalData();
+            for (const auto& kv : additionalData) {
+                auto p = parseBoostAny(kv.second);
+                report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
             }
-        }
-
-        if (notional2 != Null<Real>() && notional2Ccy != "") {
-            Real fx = 1.0;
-            if (notional2Ccy != baseCurrency)
-                fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
-            std::ostringstream oss;
-            oss << std::fixed << std::setprecision(8) << notional2 * fx;
-            report.next().add(tradeId).add("notionalTwoInBaseCurrency").add("double").add(oss.str());
-        }
-
-        // Just use the unadjusted trade ID in the additional results report for the main instrument.
-        // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each
-        // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the
-        // multiplier as an extra additional result if additional results exist.
-        auto instruments = trade->instrument()->additionalInstruments();
-        auto multipliers = trade->instrument()->additionalMultipliers();
-        QL_REQUIRE(instruments.size() == multipliers.size(),
-                   "Expected the number of "
-                       << "additional instruments (" << instruments.size() << ") to equal the number of "
-                       << "additional multipliers (" << multipliers.size() << ").");
-        instruments.insert(instruments.begin(), trade->instrument()->qlInstrument());
-        multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
-
-        for (Size i = 0; i < instruments.size(); ++i) {
-
-            const auto& instrument = instruments[i];
-
-            if (!instrument)
-                continue;
-
-            // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in
-            // the portfolio (still a risk).
-            tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
-
-            // Get the additional results for the current instrument.
-            auto additionalResults = instrument->additionalResults();
-            // Add the multiplier if there are additional results.
-            // Check on 'inst_multiplier' already existing is probably unnecessary.
-            if (!additionalResults.empty() && additionalResults.count("inst_multiplier") == 0) {
-                additionalResults["inst_multiplier"] = multipliers[i];
+            // if the 'notional[2]' has been provided convert it to base currency
+            if (additionalData.count("notional[2]") != 0 && additionalData.count("notionalCurrency[2]") != 0) {
+                notional2 = trade->additionalDatum<Real>("notional[2]");
+                notional2Ccy = trade->additionalDatum<string>("notionalCurrency[2]");
             }
 
-            // Write current instrument's additional results.
-            for (const auto& kv : additionalResults) {
-                // some results are stored as maps. We loop over these so that there is one result per line
-                if (kv.second.type() == typeid(result_type_matrix)) {
-                    addMapResults<result_type_matrix>(kv.second, tradeId, kv.first, report);
-                } else if (kv.second.type() == typeid(result_type_vector)) {
-                    addMapResults<result_type_vector>(kv.second, tradeId, kv.first, report);
-                } else if (kv.second.type() == typeid(result_type_scalar)) {
-                    addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
-                } else {
-                    auto p = parseBoostAny(kv.second);
-                    report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+            if (trade->instrument()->qlInstrument()) {
+                auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
+                if (additionalResults.count("notional[2]") != 0 &&
+                    additionalResults.count("notionalCurrency[2]") != 0) {
+                    notional2 = trade->instrument()->qlInstrument()->result<Real>("notional[2]");
+                    notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalCurrency[2]");
                 }
             }
+
+            if (notional2 != Null<Real>() && notional2Ccy != "") {
+                Real fx = 1.0;
+                if (notional2Ccy != baseCurrency)
+                    fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(8) << notional2 * fx;
+                // report.next().add(tradeId).add("notionalInBaseCurrency[2]").add("double").add(oss.str());
+            }
+
+            // Just use the unadjusted trade ID in the additional results report for the main instrument.
+            // If we have one or more additional instruments, use "_i" as suffix where i = 1, 2, 3, ... for each
+            // additional instrument in turn and underscore as prefix to reduce risk of ID clash. We also add the
+            // multiplier as an extra additional result if additional results exist.
+            auto instruments = trade->instrument()->additionalInstruments();
+            auto multipliers = trade->instrument()->additionalMultipliers();
+            QL_REQUIRE(instruments.size() == multipliers.size(),
+                       "Expected the number of "
+                           << "additional instruments (" << instruments.size() << ") to equal the number of "
+                           << "additional multipliers (" << multipliers.size() << ").");
+            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument());
+            multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
+
+            for (Size i = 0; i < instruments.size(); ++i) {
+
+                const auto& instrument = instruments[i];
+
+                if (!instrument)
+                    continue;
+
+                // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in
+                // the portfolio (still a risk).
+                tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
+
+                // Get the additional results for the current instrument.
+                auto additionalResults = instrument->additionalResults();
+                // Add the multiplier if there are additional results.
+                // Check on 'instMultiplier' already existing is probably unnecessary.
+                if (!additionalResults.empty() && additionalResults.count("instMultiplier") == 0) {
+                    additionalResults["instMultiplier"] = multipliers[i];
+                }
+
+                // Write current instrument's additional results.
+                for (const auto& kv : additionalResults) {
+                    // some results are stored as maps. We loop over these so that there is one result per line
+                    if (kv.second.type() == typeid(result_type_matrix)) {
+                        addMapResults<result_type_matrix>(kv.second, tradeId, kv.first, report);
+                    } else if (kv.second.type() == typeid(result_type_vector)) {
+                        addMapResults<result_type_vector>(kv.second, tradeId, kv.first, report);
+                    } else if (kv.second.type() == typeid(result_type_scalar)) {
+                        addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
+                    } else {
+                        auto p = parseBoostAny(kv.second);
+                        report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
+                    }
+                }
+            }
+        } catch (const std::exception& e) {
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(),
+                                             "Error during trade pricing (additional results)", e.what()));
         }
     }
 
@@ -1026,7 +1037,11 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
     addRowMktCalReport(report, type, id, "longTermAtmType", "", "", "", info->longTermAtmType);
     addRowMktCalReport(report, type, id, "longTermDeltaType", "", "", "", info->longTermDeltaType);
     addRowMktCalReport(report, type, id, "switchTenor", "", "", "", info->switchTenor);
+    addRowMktCalReport(report, type, id, "riskReversalInFavorOf", "", "", "", info->riskReversalInFavorOf);
+    addRowMktCalReport(report, type, id, "butterflyStyle", "", "", "", info->butterflyStyle);
     addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+    for (Size i = 0; i < info->messages.size(); ++i)
+        addRowMktCalReport(report, type, id, "message_" + std::to_string(i), "", "", "", info->messages[i]);
 
     for (Size i = 0; i < info->times.size(); ++i) {
         std::string tStr = std::to_string(info->times.at(i));
@@ -1103,8 +1118,76 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
         addFxEqVolCalibrationInfo(report, "fxVol", r.first, r.second);
     }
 
+    // eq vol results
+    for (auto const& r : calibrationInfo->eqVolCalibrationInfo) {
+        addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
+    }
+
     report.end();
     LOG("TodaysMktCalibration report written");
+}
+
+void ReportWriter::addMarketDatum(Report& report, const ore::data::MarketDatum& md) {
+    report.next().add(md.asofDate()).add(md.name()).add(md.quote()->value());
+}
+
+void ReportWriter::writeMarketData(Report& report, const boost::shared_ptr<Loader>& loader, const Date& asof,
+                                   const set<string>& quoteNames, bool returnAll) {
+
+    LOG("Writing MarketData report");
+
+    report.addColumn("datumDate", Date()).addColumn("datumId", string()).addColumn("datumValue", double(), 10);
+
+    if (returnAll) {
+        for (const auto& md : loader->loadQuotes(asof)) {
+            addMarketDatum(report, *md);
+        }
+        return;
+    }
+
+    set<string> names;
+    set<string> regexStrs;
+    partitionQuotes(quoteNames, names, regexStrs);
+
+    vector<std::regex> regexes;
+    regexes.reserve(regexStrs.size());
+    for (auto regexStr : regexStrs) {
+        regexes.push_back(regex(regexStr));
+    }
+
+    for (const auto& md : loader->loadQuotes(asof)) {
+        const auto& mdName = md->name();
+
+        if (names.find(mdName) != names.end()) {
+            addMarketDatum(report, *md);
+            continue;
+        }
+
+        // This could be slow
+        for (const auto& regex : regexes) {
+            if (regex_match(mdName, regex)) {
+                addMarketDatum(report, *md);
+                break;
+            }
+        }
+    }
+
+    report.end();
+    LOG("MarketData report written");
+}
+
+void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>& loader) {
+
+    LOG("Writing Fixings report");
+
+    report.addColumn("fixingDate", Date()).addColumn("fixingId", string()).addColumn("fixingValue", double(), 10);
+
+    for (const auto& f : loader->loadFixings()) {
+        report.next().add(f.date).add(f.name).add(f.fixing);
+    }
+
+    report.end();
+    LOG("Fixings report written");
 }
 
 } // namespace analytics

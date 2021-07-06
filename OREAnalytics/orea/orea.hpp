@@ -33,6 +33,7 @@
 #include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/mporcalculator.hpp>
+#include <orea/engine/npvrecord.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/engine/riskfilter.hpp>

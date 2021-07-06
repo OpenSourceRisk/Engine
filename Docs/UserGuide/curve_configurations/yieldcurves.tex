@@ -60,23 +60,23 @@ in section \ref{sec:bootstrap_config} are used.
 
 \begin{table}[h]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular}{|l|l|}
     \hline
-    \bfseries{Variable} & \bfseries{Description} \\
+    {\bfseries Variable} & {\bfseries Description} \\
     \hline
     Zero & The continuously compounded zero rate \\ \hline
     Discount & The discount factor \\ \hline
-    Forward & The instantaneous forward rate \\ \hline
-  \end{tabu}
+    Forward & The instantaneous forward rate \\ \hline 
+  \end{tabular}
   \caption{Allowable interpolation variables.}
   \label{tab:allow_interp_variables}
 \end{table}
 
 \begin{table}[h]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|l|p{10cm}|}
     \hline
-    \bfseries{Method} & \bfseries{Description} \\
+    {\bfseries Method} & {\bfseries Description} \\
     \hline
     Linear & Linear interpolation \\ \hline
     LogLinear & Linear interpolation on the natural log of the interpolation variable \\ \hline
@@ -84,10 +84,14 @@ in section \ref{sec:bootstrap_config} are used.
     FinancialCubic & Monotonic Kruger cubic interpolation with second derivative at left and 
                      first derivative at right \\ \hline
     ConvexMonotone & Convex Monotone Interpolation (Hagan, West) \\ \hline
+    Quadratic & Quadratic interpolation \\ \hline
+    LogQuadratic & Quadratic interpolation on the natural log of the interpolation variable \\ \hline
+    Hermite & Hermite cubic spline interpolation \\ \hline
+    CubicSpline & Non-monotonic cubic spline interpolation with second derivative at left and right \\ \hline
     ExponentialSplines & Exponential Spline curve fitting, for Fitted Bond Curves only \\ \hline
     NelsonSiegel & Nelson-Siegel curve fitting, for Fitted Bond Curves only \\ \hline
     Svensson & Svensson curve fitting, for Fitted Bond Curves only \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable interpolation methods.}
   \label{tab:allow_interp_methods}
 \end{table}
@@ -505,4 +509,36 @@ P(0,t) = P_1(0,t)^{w_1}P_2(0,t)^{w_2}
 \end{minted}
 \caption{Weighted Average yield curve segment}
 \label{lst:weighted_average_segment}
+\end{listing}
+
+\subsubsection*{Ibor Fallback Segment}
+\label{sec:ibor_fallback_curve_segment}
+
+When the node name is \lstinline!IborFallback!, the \lstinline!Type! node has the only allowable value \emph{Ibor
+  Fallback}, and the node has the structure shown in Listing \ref{lst:ibor_fallback_segment}. This segment is used to
+build a projection curve for an Ibor index based on a risk free rate and a spread.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurve>
+  <CurveId>USD-LIBOR-3M</CurveId>
+  <CurveDescription>USD-Libor-3M built from USD-SOFR plus spread</CurveDescription>
+  <Currency>USD</Currency>
+  <DiscountCurve/>
+  <Segments>
+    <IborFallback>
+      <Type>Ibor Fallback</Type>
+      <IborIndex>USD-LIBOR-3M</IborIndex>
+      <RfrCurve>Yield/USD/USD-SOFR</RfrCurve>
+      <!-- optional, if not given the rfr index and sprad are read from the ibor
+           fallback configuration -->
+      <RfrIndex>USD-SOFR</RfrIndex>
+      <Spread>0.0026161</Spread>
+    </IborFallback>
+  </Segments>
+</YieldCurve>
+\end{minted}
+\caption{Ibor fallback segment}
+\label{lst:ibor_fallback_segment}
 \end{listing}

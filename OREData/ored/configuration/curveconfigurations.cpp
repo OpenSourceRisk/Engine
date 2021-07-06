@@ -265,6 +265,12 @@ std::set<string> CurveConfigurations::conventions() const {
             conventions.insert(c.second->conventions());
     }
 
+    for (auto& c : fxVolCurveConfigs_) {
+        if (c.second->conventionsID() != "") {
+            conventions.insert(c.second->conventionsID());
+        }
+    }
+
     return conventions;
 }
 

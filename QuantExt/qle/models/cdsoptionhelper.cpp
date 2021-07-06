@@ -39,7 +39,8 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
                                  const Date protectionStart, const Date upfrontDate,
                                  const boost::shared_ptr<Claim>& claim,
                                  const BlackCalibrationHelper::CalibrationErrorType errorType)
-    : BlackCalibrationHelper(volatility, termStructure, errorType), blackVol_(boost::make_shared<SimpleQuote>(0.0)) {
+    : BlackCalibrationHelper(volatility, errorType), termStructure_(termStructure),
+      blackVol_(boost::make_shared<SimpleQuote>(0.0)) {
 
     boost::shared_ptr<PricingEngine> cdsEngine =
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability, recoveryRate, termStructure);

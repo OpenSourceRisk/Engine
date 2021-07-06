@@ -29,7 +29,6 @@
 
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/pricingengines/vanilla/baroneadesiwhaleyengine.hpp>
-#include <ql/pricingengines/vanilla/fdamericanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>

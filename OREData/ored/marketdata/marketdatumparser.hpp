@@ -44,6 +44,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const string&, cons
 //! Get a date from a date string or period
 /*! \ingroup marketdata
  */
-Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal = QuantLib::WeekendsOnly());
+Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar cal = QuantLib::WeekendsOnly(), 
+    QuantLib::BusinessDayConvention bdc = QuantLib::BusinessDayConvention::Following);
 } // namespace data
 } // namespace ore

@@ -102,6 +102,8 @@ struct FxEqVolCalibrationInfo {
     std::string longTermAtmType;
     std::string longTermDeltaType;
     std::string switchTenor;
+    std::string riskReversalInFavorOf;
+    std::string butterflyStyle;
     bool isArbitrageFree;
     std::vector<QuantLib::Date> expiryDates;
     std::vector<double> times;
@@ -119,6 +121,7 @@ struct FxEqVolCalibrationInfo {
     std::vector<std::vector<bool>> moneynessGridCalendarArbitrage;
     std::vector<std::vector<bool>> deltaGridCallSpreadArbitrage;
     std::vector<std::vector<bool>> deltaGridButterflyArbitrage;
+    std::vector<std::string> messages;
 };
 
 // main container

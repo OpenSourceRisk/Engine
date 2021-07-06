@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -111,10 +112,10 @@ private:
         const Conventions& conventions, const Loader& loader,
         const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves);
 
-    //! Get the configured quotes
+    //! Get the configured quotes. If filter is \c true, remove tenor based quotes and quotes with expiry before asof.
     std::vector<boost::shared_ptr<CommodityForwardQuote>>
     getQuotes(const QuantLib::Date& asof, const std::string& configId, const std::vector<std::string>& quotes,
-        const Loader& loader);
+        const Loader& loader, bool filter = false);
 
     //! Method for populating the price curve
     template <template <class> class CurveType, typename... Args> void populateCurve(Args... args);
@@ -124,6 +125,11 @@ private:
     void addInstruments(const QuantLib::Date& asof, const Loader& loader, const std::string& configId,
         const std::string& currency, const PriceSegment& priceSegment, const Conventions& conventions,
         const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+        std::map<QuantLib::Date, boost::shared_ptr<Helper>>& instruments);
+
+    //! Special method to add instruments when the \p priceSegment is \c OffPeakPowerDaily
+    void addOffPeakPowerInstruments(const QuantLib::Date& asof, const Loader& loader, const std::string& configId,
+        const PriceSegment& priceSegment, const Conventions& conventions,
         std::map<QuantLib::Date, boost::shared_ptr<Helper>>& instruments);
 };
 
@@ -135,12 +141,17 @@ template <template <class> class CurveType, typename... Args> void CommodityCurv
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::LogLinear>>(args...);
     } else if (interpolationMethod_ == "Cubic") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::Cubic>>(args...);
+    } else if (interpolationMethod_ == "Hermite") {
+         commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::Cubic>>(
+             args..., QuantLib::Cubic(QuantLib::CubicInterpolation::Parabolic));
     } else if (interpolationMethod_ == "LinearFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::LinearFlat>>(args...);
     } else if (interpolationMethod_ == "LogLinearFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::LogLinearFlat>>(args...);
     } else if (interpolationMethod_ == "CubicFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::CubicFlat>>(args...);
+    } else if (interpolationMethod_ == "HermiteFlat") {
+         commodityPriceCurve_ = boost::make_shared<CurveType<QuantExt::HermiteFlat>>(args...);
     } else if (interpolationMethod_ == "BackwardFlat") {
         commodityPriceCurve_ = boost::make_shared<CurveType<QuantLib::BackwardFlat>>(args...);
     } else {

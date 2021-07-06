@@ -22,7 +22,6 @@
           <Spreads>
             <Spread>0.000000</Spread>
           </Spreads>
-          <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
@@ -96,7 +95,6 @@
           <Spreads>
             <Spread>0.02700347453122</Spread>
           </Spreads>
-          <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>

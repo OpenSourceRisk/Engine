@@ -29,6 +29,7 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ql/quotes/all.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
@@ -124,7 +125,8 @@ public:
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
-                      const bool cacheSimData = false, const bool allowPartialScenarios = false);
+                      const bool cacheSimData = false, const bool allowPartialScenarios = false,
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
@@ -133,7 +135,8 @@ public:
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false, const bool useSpreadedTermStructures = false,
-                      const bool cacheSimData = false, const bool allowPartialScenarios = false);
+                      const bool cacheSimData = false, const bool allowPartialScenarios = false,
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
@@ -214,6 +217,7 @@ protected:
 
     bool cacheSimData_;
     bool allowPartialScenarios_;
+    IborFallbackConfig iborFallbackConfig_;
 };
 } // namespace analytics
 } // namespace ore
