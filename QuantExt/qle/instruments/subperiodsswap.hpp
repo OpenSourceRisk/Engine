@@ -45,7 +45,7 @@ public:
                    const DayCounter& fixedDayCount, BusinessDayConvention fixedConvention, const Period& floatPayTenor,
                    const boost::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatingDayCount,
                    DateGeneration::Rule rule = DateGeneration::Backward,
-                   SubPeriodsCoupon::Type type = SubPeriodsCoupon::Compounding);
+                   QLESubPeriodsCoupon::Type type = QLESubPeriodsCoupon::Compounding);
     //@}
     //! \name Inspectors
     //@{
@@ -58,7 +58,7 @@ public:
 
     const Schedule& floatSchedule() const;
     const boost::shared_ptr<IborIndex>& floatIndex() const;
-    SubPeriodsCoupon::Type type() const;
+    QLESubPeriodsCoupon::Type type() const;
     const Period& floatPayTenor() const;
     const Leg& floatLeg() const;
 
@@ -84,7 +84,7 @@ private:
     boost::shared_ptr<IborIndex> floatIndex_;
     DayCounter floatDayCount_;
     Period floatPayTenor_;
-    SubPeriodsCoupon::Type type_;
+    QLESubPeriodsCoupon::Type type_;
 };
 
 // Inline definitions
@@ -106,7 +106,7 @@ inline const Schedule& SubPeriodsSwap::floatSchedule() const { return floatSched
 
 inline const boost::shared_ptr<IborIndex>& SubPeriodsSwap::floatIndex() const { return floatIndex_; }
 
-inline SubPeriodsCoupon::Type SubPeriodsSwap::type() const { return type_; }
+inline QLESubPeriodsCoupon::Type SubPeriodsSwap::type() const { return type_; }
 
 inline const Period& SubPeriodsSwap::floatPayTenor() const { return floatPayTenor_; }
 
@@ -135,7 +135,7 @@ public:
     MakeSubPeriodsSwap& withFixedLegRule(DateGeneration::Rule r);
     MakeSubPeriodsSwap& withFixedLegDayCount(const DayCounter& dc);
 
-    MakeSubPeriodsSwap& withSubCouponsType(const SubPeriodsCoupon::Type& st);
+    MakeSubPeriodsSwap& withSubCouponsType(const QLESubPeriodsCoupon::Type& st);
 
     MakeSubPeriodsSwap& withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve);
     MakeSubPeriodsSwap& withPricingEngine(const boost::shared_ptr<PricingEngine>& engine);
@@ -158,7 +158,7 @@ private:
     DateGeneration::Rule fixedRule_;
     DayCounter fixedDayCount_, floatDayCounter_;
 
-    SubPeriodsCoupon::Type subCouponsType_;
+    QLESubPeriodsCoupon::Type subCouponsType_;
 
     boost::shared_ptr<PricingEngine> engine_;
 };

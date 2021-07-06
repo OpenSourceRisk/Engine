@@ -34,9 +34,9 @@ using namespace QuantLib;
 //! Pricer for sub-period coupons
 /*! \ingroup cashflows
  */
-class SubPeriodsCouponPricer : public FloatingRateCouponPricer {
+class QLESubPeriodsCouponPricer : public FloatingRateCouponPricer {
 public:
-    SubPeriodsCouponPricer() {}
+    QLESubPeriodsCouponPricer() {}
 
     void initialize(const FloatingRateCoupon& coupon);
     Rate swapletRate() const;
@@ -52,10 +52,10 @@ protected:
     Spread spread_;
     Time accrualPeriod_;
     boost::shared_ptr<InterestRateIndex> index_;
-    SubPeriodsCoupon::Type type_;
+    QLESubPeriodsCoupon::Type type_;
     bool includeSpread_;
 
-    const SubPeriodsCoupon* coupon_;
+    const QLESubPeriodsCoupon* coupon_;
 };
 } // namespace QuantExt
 

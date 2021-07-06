@@ -38,7 +38,7 @@ SubPeriodsSwap::SubPeriodsSwap(const Date& effectiveDate, Real nominal, const Pe
                                const DayCounter& fixedDayCount, BusinessDayConvention fixedConvention,
                                const Period& floatPayTenor, const boost::shared_ptr<IborIndex>& iborIndex,
                                const DayCounter& floatingDayCount, DateGeneration::Rule rule,
-                               SubPeriodsCoupon::Type type)
+                               QLESubPeriodsCoupon::Type type)
 
     : Swap(2), nominal_(nominal), isPayer_(isPayer), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
       floatIndex_(iborIndex), floatDayCount_(floatingDayCount), floatPayTenor_(floatPayTenor), type_(type) {
@@ -72,7 +72,7 @@ SubPeriodsSwap::SubPeriodsSwap(const Date& effectiveDate, Real nominal, const Pe
                          .withTerminationDateConvention(floatPmtConvention)
                          .withRule(rule);
 
-    legs_[1] = SubPeriodsLeg(floatSchedule_, floatIndex_)
+    legs_[1] = QLESubPeriodsLeg(floatSchedule_, floatIndex_)
                    .withNotional(nominal_)
                    .withPaymentAdjustment(floatPmtConvention)
                    .withPaymentDayCounter(floatDayCount_)
@@ -105,7 +105,7 @@ MakeSubPeriodsSwap::MakeSubPeriodsSwap(const Period& swapTenor, const boost::sha
     : swapTenor_(swapTenor), index_(index), fixedRate_(fixedRate), floatPayTenor_(floatPayTenor), forwardStart_(forwardStart), 
     nominal_(1.0), isPayer_(true), settlementDays_(index->fixingDays()), fixedCalendar_(index->fixingCalendar()), 
     fixedConvention_(ModifiedFollowing), fixedRule_(DateGeneration::Backward), floatDayCounter_(index->dayCounter()),
-    subCouponsType_(SubPeriodsCoupon::Compounding)  {}
+    subCouponsType_(QLESubPeriodsCoupon::Compounding)  {}
 
 MakeSubPeriodsSwap::operator SubPeriodsSwap() const {
     boost::shared_ptr<SubPeriodsSwap> swap = *this;
@@ -229,7 +229,7 @@ MakeSubPeriodsSwap& MakeSubPeriodsSwap::withFixedLegDayCount(const DayCounter& d
     return *this;
 }
 
-MakeSubPeriodsSwap& MakeSubPeriodsSwap::withSubCouponsType(const SubPeriodsCoupon::Type& st) {
+MakeSubPeriodsSwap& MakeSubPeriodsSwap::withSubCouponsType(const QLESubPeriodsCoupon::Type& st) {
     subCouponsType_ = st;
     return *this;
 }

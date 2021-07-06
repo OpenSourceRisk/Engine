@@ -517,7 +517,7 @@ public:
     // For sub period
     bool hasSubPeriod() const { return hasSubPeriod_; }
     Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
+    QuantExt::QLESubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
     //! \name Serialisation
@@ -535,7 +535,7 @@ private:
     boost::shared_ptr<IborIndex> index_;
     bool hasSubPeriod_;
     Frequency floatFrequency_;
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType_;
+    QuantExt::QLESubPeriodsCoupon::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
     string strFixedCalendar_;
@@ -641,7 +641,7 @@ public:
     const Period& shortPayTenor() const { return shortPayTenor_; }
     bool spreadOnShort() const { return spreadOnShort_; }
     bool includeSpread() const { return includeSpread_; }
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
+    QuantExt::QLESubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
     //! \name Serialisation
@@ -657,7 +657,7 @@ private:
     Period shortPayTenor_;
     bool spreadOnShort_;
     bool includeSpread_;
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType_;
+    QuantExt::QLESubPeriodsCoupon::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
     string strLongIndex_;
