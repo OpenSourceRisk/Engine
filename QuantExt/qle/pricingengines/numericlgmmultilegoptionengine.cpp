@@ -30,35 +30,29 @@ using namespace QuantLib;
 
 namespace {
 
-/* For a given cashflow and option exercise date, return the
-   - earliest
-   - lastest
-   - actual
-   simulation date that can (or is, including approximations) used in the 1D backward scheme applied in this engine.
-   The earliest and latest date should be determined, so that the amount can be esimated accurately. The actual date
-   might include approximations though, this is what is used in the end in the engine to simulate the amount.
-   If the pay date is <= today, (null, null, null) is returned. If the lastest option date is <= today or null, it is
-   assumed, there is no relevant option date for this cashflow, but nevertheless the triplet of dates is returned.
-*/
-std::tuple<Date, Date, Date> getSimulationDates(const Date& today, const Date& latestOptionDate,
-                                                const boost::shared_ptr<CashFlow>& c) {
+/* For a given cashflow and option exercise date, return the simulation date on which we determine the coupon amout.
+   - If the pay date is <= today, null is returned.
+   - The latestOptionDate is the latest option date for which the cashflow is relevant. This can be minDate, if the
+     cashflow is not relevant for any option date.
+   The return value will be >= today (or null) always. */
+Date getSimulationDates(const Date& today, const Date& latestOptionDate, const boost::shared_ptr<CashFlow>& c) {
     if (c->date() <= today)
-        return std::make_tuple(Date(), Date(), Date());
+        return Date();
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
         if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(c)) {
             /* Handle Ibor coupon */
             Date fixingDate = ibor->fixingDate();
-            return std::make_tuple(latestOptionDate, fixingDate, std::max(today, latestOptionDate));
+            return std::max(fixingDate, std::max(today, latestOptionDate));
         } else if (auto fix = boost::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
             /* Handle Fixed Rate coupon */
-            return std::make_tuple(today, fix->date(), std::max(today, latestOptionDate));
+            return std::max(fix->date(), std::max(today, latestOptionDate));
         } else {
             /* Other coupons are not supported at the moment */
             QL_FAIL("NumericLgmMultiLegOptionEngine: coupon type not handled, supported are Ibor and Fixed coupons");
         }
     } else {
         /* Handle non-coupon, i.e. a cashflow */
-        return std::make_tuple(today, cpn->date(), latestOptionDate);
+        return std::max(c->date(), std::max(today, latestOptionDate));
     }
 }
 
@@ -81,7 +75,6 @@ bool isCashflowRelevantForExercise(const Date& today, const Date& exercise, cons
 /* Get the model-estimate of a cashflow as observed from model time t, state x, deflated by model numeraire */
 RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, const RandomVariable& x,
                                        const Handle<YieldTermStructure>& discountCurve,
-                                       const std::tuple<Date, Date, Date>& simulationDates,
                                        const boost::shared_ptr<CashFlow>& c) {
     Real T = lgm.parametrization()->termStructure()->timeFromReference(c->date());
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
@@ -179,9 +172,9 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         }
     }
 
-    /* map a actual simulation date => ((cf leg, cf number), (earliest sim date, latest sim date))  */
+    /* map a actual simulation date => set of (cf leg, cf number) */
 
-    std::map<Date, std::set<std::pair<std::pair<Size, Size>, std::tuple<Date, Date, Date>>>> cashflowDates;
+    std::map<Date, std::set<std::pair<Size, Size>>> cashflowDates;
 
     /* Each underlying cashflow has a date on which we can efficiently calculate its amount, depending on
        the option date for which the cashflow is relevant. We estimate a cashflow amount for the latest
@@ -195,9 +188,8 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
                     latestOptionDate = std::max(latestOptionDate, d.first);
             }
             auto d = getSimulationDates(refDate, latestOptionDate, legs_[i][j]);
-            if (std::get<2>(d) != Null<Date>())
-                cashflowDates[std::get<2>(d)].insert(std::make_pair(
-                    std::make_pair(i, j), std::make_tuple(std::get<0>(d), std::get<1>(d), std::get<2>(d))));
+            if (d != Null<Date>())
+                cashflowDates[d].insert(std::make_pair(i, j));
         }
     }
 
@@ -239,16 +231,14 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
         // collect cashflow amounts on simulation date
 
         if (cashflow != cashflowDates.end()) {
-            Size i, j;
             for (auto const& cf : cashflow->second) {
-                std::tie(i, j) = cf.first;
-                auto tmp = getUnderlyingCashflowPv(lgm, t_from, state, discountCurve_, cf.second, legs_[i][j]) *
-                           RandomVariable(gridSize(), payer_[i]);
-                auto it = underlyingNpv2.find(cf.first);
+                auto tmp = getUnderlyingCashflowPv(lgm, t_from, state, discountCurve_, legs_[cf.first][cf.second]) *
+                           RandomVariable(gridSize(), payer_[cf.first]);
+                auto it = underlyingNpv2.find(cf);
                 if (it != underlyingNpv2.end())
                     it->second += tmp;
                 else
-                    underlyingNpv2[cf.first] = tmp;
+                    underlyingNpv2[cf] = tmp;
             }
         }
 
