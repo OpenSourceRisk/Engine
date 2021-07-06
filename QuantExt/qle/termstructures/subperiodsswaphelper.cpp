@@ -31,7 +31,7 @@ SubPeriodsSwapHelper::SubPeriodsSwapHelper(Handle<Quote> spread, const Period& s
                                            const boost::shared_ptr<IborIndex>& iborIndex,
                                            const DayCounter& floatDayCount,
                                            const Handle<YieldTermStructure>& discountingCurve,
-                                           QLESubPeriodsCoupon::Type type)
+                                           QuantExt::SubPeriodsCoupon::Type type)
     : RelativeDateRateHelper(spread), iborIndex_(iborIndex), swapTenor_(swapTenor), fixedTenor_(fixedTenor),
       fixedCalendar_(fixedCalendar), fixedDayCount_(fixedDayCount), fixedConvention_(fixedConvention),
       floatPayTenor_(floatPayTenor), floatDayCount_(floatDayCount), type_(type), discountHandle_(discountingCurve) {
@@ -77,7 +77,7 @@ void SubPeriodsSwapHelper::initializeDates() {
     latestDate_ = std::max(latestDate_, endValueDate);
 #else
     /* Subperiods coupons do not have a par approximation either... */
-    if (boost::dynamic_pointer_cast<QLESubPeriodsCoupon>(lastFloating)) {
+    if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon>(lastFloating)) {
         Date fixingValueDate = iborIndex_->valueDate(lastFloating->fixingDate());
         Date endValueDate = iborIndex_->maturityDate(fixingValueDate);
         latestDate_ = std::max(latestDate_, endValueDate);

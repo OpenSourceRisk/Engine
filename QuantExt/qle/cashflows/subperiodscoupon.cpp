@@ -28,7 +28,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-QLESubPeriodsCoupon::QLESubPeriodsCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+SubPeriodsCoupon::SubPeriodsCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                                    const boost::shared_ptr<InterestRateIndex>& index, Type type,
                                    BusinessDayConvention convention, Spread spread, const DayCounter& dayCounter,
                                    bool includeSpread, Real gearing)
@@ -65,7 +65,7 @@ QLESubPeriodsCoupon::QLESubPeriodsCoupon(const Date& paymentDate, Real nominal, 
     }
 }
 
-const std::vector<Rate>& QLESubPeriodsCoupon::indexFixings() const {
+const std::vector<Rate>& SubPeriodsCoupon::indexFixings() const {
 
     fixings_.resize(numPeriods_);
 
@@ -76,8 +76,8 @@ const std::vector<Rate>& QLESubPeriodsCoupon::indexFixings() const {
     return fixings_;
 }
 
-void QLESubPeriodsCoupon::accept(AcyclicVisitor& v) {
-    Visitor<QLESubPeriodsCoupon>* v1 = dynamic_cast<Visitor<QLESubPeriodsCoupon>*>(&v);
+void SubPeriodsCoupon::accept(AcyclicVisitor& v) {
+    Visitor<SubPeriodsCoupon>* v1 = dynamic_cast<Visitor<SubPeriodsCoupon>*>(&v);
     if (v1 != 0) {
         v1->visit(*this);
     } else {
@@ -85,66 +85,66 @@ void QLESubPeriodsCoupon::accept(AcyclicVisitor& v) {
     }
 }
 
-QLESubPeriodsLeg::QLESubPeriodsLeg(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index)
+SubPeriodsLeg::SubPeriodsLeg(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index)
     : schedule_(schedule), index_(index), notionals_(std::vector<Real>(1, 1.0)), paymentAdjustment_(Following),
-      paymentCalendar_(Calendar()), type_(QLESubPeriodsCoupon::Compounding) {}
+      paymentCalendar_(Calendar()), type_(SubPeriodsCoupon::Compounding) {}
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withNotional(Real notional) {
+SubPeriodsLeg& SubPeriodsLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withNotionals(const std::vector<Real>& notionals) {
+SubPeriodsLeg& SubPeriodsLeg::withNotionals(const std::vector<Real>& notionals) {
     notionals_ = notionals;
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withPaymentDayCounter(const DayCounter& dayCounter) {
+SubPeriodsLeg& SubPeriodsLeg::withPaymentDayCounter(const DayCounter& dayCounter) {
     paymentDayCounter_ = dayCounter;
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withPaymentAdjustment(BusinessDayConvention convention) {
+SubPeriodsLeg& SubPeriodsLeg::withPaymentAdjustment(BusinessDayConvention convention) {
     paymentAdjustment_ = convention;
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withGearing(Real gearing) {
+SubPeriodsLeg& SubPeriodsLeg::withGearing(Real gearing) {
     gearings_ = std::vector<Real>(1, gearing);
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withGearings(const std::vector<Real>& gearings) {
+SubPeriodsLeg& SubPeriodsLeg::withGearings(const std::vector<Real>& gearings) {
     gearings_ = gearings;
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withSpread(Spread spread) {
+SubPeriodsLeg& SubPeriodsLeg::withSpread(Spread spread) {
     spreads_ = std::vector<Spread>(1, spread);
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withSpreads(const std::vector<Spread>& spreads) {
+SubPeriodsLeg& SubPeriodsLeg::withSpreads(const std::vector<Spread>& spreads) {
     spreads_ = spreads;
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withPaymentCalendar(const Calendar& calendar) {
+SubPeriodsLeg& SubPeriodsLeg::withPaymentCalendar(const Calendar& calendar) {
     paymentCalendar_ = calendar;
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::withType(QLESubPeriodsCoupon::Type type) {
+SubPeriodsLeg& SubPeriodsLeg::withType(SubPeriodsCoupon::Type type) {
     type_ = type;
     return *this;
 }
 
-QLESubPeriodsLeg& QLESubPeriodsLeg::includeSpread(bool includeSpread) {
+SubPeriodsLeg& SubPeriodsLeg::includeSpread(bool includeSpread) {
     includeSpread_ = includeSpread;
     return *this;
 }
 
-QLESubPeriodsLeg::operator Leg() const {
+SubPeriodsLeg::operator Leg() const {
 
     Leg cashflows;
     Date startDate;
@@ -173,8 +173,8 @@ QLESubPeriodsLeg::operator Leg() const {
         // of identifying it except parsing the exception text, which isn't a
         // clean solution either
         try {
-            boost::shared_ptr<QLESubPeriodsCoupon> cashflow(
-                new QLESubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
+            boost::shared_ptr<SubPeriodsCoupon> cashflow(
+                new SubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
                                      index_, type_, paymentAdjustment_, detail::get(spreads_, i, 0.0),
                                      paymentDayCounter_, includeSpread_, detail::get(gearings_, i, 1.0)));
 
@@ -184,7 +184,7 @@ QLESubPeriodsLeg::operator Leg() const {
         }
     }
 
-    boost::shared_ptr<QLESubPeriodsCouponPricer> pricer(new QLESubPeriodsCouponPricer);
+    boost::shared_ptr<SubPeriodsCouponPricer> pricer(new SubPeriodsCouponPricer);
     QuantExt::setCouponPricer(cashflows, pricer);
 
     return cashflows;

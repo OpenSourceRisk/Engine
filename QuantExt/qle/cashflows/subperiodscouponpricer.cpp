@@ -20,9 +20,9 @@
 
 namespace QuantExt {
 
-void QLESubPeriodsCouponPricer::initialize(const FloatingRateCoupon& coupon) {
+void SubPeriodsCouponPricer::initialize(const FloatingRateCoupon& coupon) {
 
-    coupon_ = dynamic_cast<const QLESubPeriodsCoupon*>(&coupon);
+    coupon_ = dynamic_cast<const SubPeriodsCoupon*>(&coupon);
     QL_REQUIRE(coupon_, "SubPeriodsCoupon required");
 
     index_ = boost::dynamic_pointer_cast<InterestRateIndex>(coupon_->index());
@@ -35,7 +35,7 @@ void QLESubPeriodsCouponPricer::initialize(const FloatingRateCoupon& coupon) {
     includeSpread_ = coupon_->includeSpread();
 }
 
-Rate QLESubPeriodsCouponPricer::swapletRate() const {
+Rate SubPeriodsCouponPricer::swapletRate() const {
 
     std::vector<Time> accrualFractions = coupon_->accrualFractions();
     Size numPeriods = accrualFractions.size();
@@ -45,13 +45,13 @@ Rate QLESubPeriodsCouponPricer::swapletRate() const {
     Rate rate;
 
     std::vector<Rate> fixings = coupon_->indexFixings();
-    if (type_ == QLESubPeriodsCoupon::Averaging) {
+    if (type_ == SubPeriodsCoupon::Averaging) {
         accumulatedRate = 0.0;
         for (Size i = 0; i < numPeriods; ++i) {
             accumulatedRate += (fixings[i] + incSpread) * accrualFractions[i];
         }
         rate = gearing_ * accumulatedRate / accrualPeriod_ + excSpread;
-    } else if (type_ == QLESubPeriodsCoupon::Compounding) {
+    } else if (type_ == SubPeriodsCoupon::Compounding) {
         accumulatedRate = 1.0;
         for (Size i = 0; i < numPeriods; ++i) {
             accumulatedRate *= (1.0 + (fixings[i] + incSpread) * accrualFractions[i]);

@@ -39,11 +39,11 @@ using boost::lexical_cast;
 namespace {
 
 // TODO move to parsers
-QuantExt::QLESubPeriodsCoupon::Type parseSubPeriodsCouponType(const string& s) {
+QuantExt::SubPeriodsCoupon::Type parseSubPeriodsCouponType(const string& s) {
     if (s == "Compounding")
-        return QuantExt::QLESubPeriodsCoupon::Compounding;
+        return QuantExt::SubPeriodsCoupon::Compounding;
     else if (s == "Averaging")
-        return QuantExt::QLESubPeriodsCoupon::Averaging;
+        return QuantExt::SubPeriodsCoupon::Averaging;
     else
         QL_FAIL("SubPeriodsCoupon type " << s << " not recognized");
 };
@@ -458,7 +458,7 @@ void IRSwapConvention::build() {
         subPeriodsCouponType_ = parseSubPeriodsCouponType(strSubPeriodsCouponType_);
     } else {
         floatFrequency_ = NoFrequency;
-        subPeriodsCouponType_ = QuantExt::QLESubPeriodsCoupon::Compounding;
+        subPeriodsCouponType_ = QuantExt::SubPeriodsCoupon::Compounding;
     }
 }
 
@@ -583,7 +583,7 @@ void TenorBasisSwapConvention::build() {
     shortPayTenor_ = strShortPayTenor_.empty() ? shortIndex_->tenor() : parsePeriod(strShortPayTenor_);
     spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
-    subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? QuantExt::QLESubPeriodsCoupon::Compounding
+    subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? QuantExt::SubPeriodsCoupon::Compounding
                                                              : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
 }
 

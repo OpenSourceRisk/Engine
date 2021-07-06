@@ -40,7 +40,7 @@ public:
                          const boost::shared_ptr<IborIndex> shortIndex, const Period& shortPayTenor = Period(),
                          const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
                          bool spreadOnShort = true, bool includeSpread = false,
-                         QLESubPeriodsCoupon::Type type = QLESubPeriodsCoupon::Compounding);
+                         QuantExt::SubPeriodsCoupon::Type type = QuantExt::SubPeriodsCoupon::Compounding);
 
     //! \name RateHelper interface
     //@{
@@ -65,7 +65,7 @@ protected:
     Period shortPayTenor_;
     bool spreadOnShort_;
     bool includeSpread_;
-    QLESubPeriodsCoupon::Type type_;
+    QuantExt::SubPeriodsCoupon::Type type_;
 
     boost::shared_ptr<TenorBasisSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;

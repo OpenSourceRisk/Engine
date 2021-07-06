@@ -428,7 +428,7 @@ void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     requiredFixings_.addFixingDate(c.fxFixingDate(), oreIndexName(c.fxIndex()->name()), c.date());
 }
 
-void FixingDateGetter::visit(QuantExt::QLESubPeriodsCoupon& c) {
+void FixingDateGetter::visit(QuantExt::SubPeriodsCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 

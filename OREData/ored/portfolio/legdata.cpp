@@ -951,11 +951,11 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                                                                 Date(), dc, isInArrears);
                         coupon->setPricer(boost::make_shared<BlackIborCouponPricer>());
                     } else {
-                        coupon = boost::make_shared<QuantExt::QLESubPeriodsCoupon>(
+                        coupon = boost::make_shared<QuantExt::SubPeriodsCoupon>(
                             paymentDate, notionals[i], schedule[i], schedule[i + 1], index,
-                            floatData->isAveraged() ? QuantExt::QLESubPeriodsCoupon::Averaging : QuantExt::QLESubPeriodsCoupon::Compounding,
+                            floatData->isAveraged() ? QuantExt::SubPeriodsCoupon::Averaging : QuantExt::SubPeriodsCoupon::Compounding,
                             index->businessDayConvention(), spreads[i], dc, floatData->includeSpread(), gearings[i]);
-                        coupon->setPricer(boost::make_shared<QuantExt::QLESubPeriodsCouponPricer>());
+                        coupon->setPricer(boost::make_shared<QuantExt::SubPeriodsCouponPricer>());
                     }
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
@@ -984,15 +984,15 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "SubPeriodsLegs does not support caps or floors");
         QL_REQUIRE(!isInArrears, "SubPeriodLegs do not support in aarears fixings");
-        Leg leg = QuantExt::QLESubPeriodsLeg(schedule, index)
+        Leg leg = QuantExt::SubPeriodsLeg(schedule, index)
                       .withNotionals(notionals)
                       .withPaymentDayCounter(dc)
                       .withPaymentAdjustment(bdc)
                       .withGearings(gearings)
                       .withSpreads(spreads)
-            .withType(floatData->isAveraged() ? QuantExt::QLESubPeriodsCoupon::Averaging : QuantExt::QLESubPeriodsCoupon::Compounding)
+            .withType(floatData->isAveraged() ? QuantExt::SubPeriodsCoupon::Averaging : QuantExt::SubPeriodsCoupon::Compounding)
                       .includeSpread(floatData->includeSpread());
-        QuantExt::setCouponPricer(leg, boost::make_shared<QuantExt::QLESubPeriodsCouponPricer>());
+        QuantExt::setCouponPricer(leg, boost::make_shared<QuantExt::SubPeriodsCouponPricer>());
         return leg;
     }
 

@@ -46,12 +46,12 @@ public:
                    const boost::shared_ptr<IborIndex>& longIndex, Spread longSpread,
                    const boost::shared_ptr<IborIndex>& shortIndex, Spread shortSpread, const Period& shortPayTenor,
                    DateGeneration::Rule rule = DateGeneration::Backward, bool includeSpread = false,
-                   QLESubPeriodsCoupon::Type type = QLESubPeriodsCoupon::Compounding);
+                   QuantExt::SubPeriodsCoupon::Type type = QuantExt::SubPeriodsCoupon::Compounding);
     //! Constructor using Schedules with a full interface
     TenorBasisSwap(Real nominal, bool payLongIndex, const Schedule& longSchedule,
                    const boost::shared_ptr<IborIndex>& longIndex, Spread longSpread, const Schedule& shortSchedule,
                    const boost::shared_ptr<IborIndex>& shortIndex, Spread shortSpread, bool includeSpread = false,
-                   QLESubPeriodsCoupon::Type type = QLESubPeriodsCoupon::Compounding);
+                   QuantExt::SubPeriodsCoupon::Type type = QuantExt::SubPeriodsCoupon::Compounding);
     //@}
     //! \name Inspectors
     //@{
@@ -68,7 +68,7 @@ public:
     Spread shortSpread() const;
     const Period& shortPayTenor() const;
     bool includeSpread() const;
-    QLESubPeriodsCoupon::Type type() const;
+    QuantExt::SubPeriodsCoupon::Type type() const;
     const Leg& shortLeg() const;
     //@}
     //! \name Results
@@ -99,7 +99,7 @@ private:
     Spread shortSpread_;
     Period shortPayTenor_;
     bool includeSpread_;
-    QLESubPeriodsCoupon::Type type_;
+    QuantExt::SubPeriodsCoupon::Type type_;
     Size shortNo_, longNo_;
 
     mutable Spread fairLongSpread_;
@@ -143,7 +143,7 @@ inline const Period& TenorBasisSwap::shortPayTenor() const { return shortPayTeno
 
 inline bool TenorBasisSwap::includeSpread() const { return includeSpread_; }
 
-inline QLESubPeriodsCoupon::Type TenorBasisSwap::type() const { return type_; }
+inline QuantExt::SubPeriodsCoupon::Type TenorBasisSwap::type() const { return type_; }
 
 inline const Leg& TenorBasisSwap::shortLeg() const { return payLongIndex_ ? legs_[1] : legs_[0]; }
 } // namespace QuantExt

@@ -31,7 +31,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 //! Sub-periods pricer
-class QLESubPeriodsCouponPricer;
+class SubPeriodsCouponPricer;
 
 //! Sub-periods coupon
 /*! The coupon period tenor is a multiple of the tenor associated with
@@ -41,10 +41,10 @@ class QLESubPeriodsCouponPricer;
 
         \ingroup cashflows
 */
-class QLESubPeriodsCoupon : public FloatingRateCoupon {
+class SubPeriodsCoupon : public FloatingRateCoupon {
 public:
     enum Type { Averaging, Compounding };
-    QLESubPeriodsCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+    SubPeriodsCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                      const boost::shared_ptr<InterestRateIndex>& index, Type type, BusinessDayConvention convention,
                      Spread spread = 0.0, const DayCounter& dayCounter = DayCounter(), bool includeSpread = false,
                      Real gearing = 1.0);
@@ -87,20 +87,20 @@ private:
 //! helper class building a sequence of sub-period coupons
 /*! \ingroup cashflows
  */
-class QLESubPeriodsLeg {
+class SubPeriodsLeg {
 public:
-    QLESubPeriodsLeg(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index);
-    QLESubPeriodsLeg& withNotional(Real notional);
-    QLESubPeriodsLeg& withNotionals(const std::vector<Real>& notionals);
-    QLESubPeriodsLeg& withPaymentDayCounter(const DayCounter& dayCounter);
-    QLESubPeriodsLeg& withPaymentAdjustment(BusinessDayConvention convention);
-    QLESubPeriodsLeg& withGearing(Real gearing);
-    QLESubPeriodsLeg& withGearings(const std::vector<Real>& gearings);
-    QLESubPeriodsLeg& withSpread(Spread spread);
-    QLESubPeriodsLeg& withSpreads(const std::vector<Spread>& spreads);
-    QLESubPeriodsLeg& withPaymentCalendar(const Calendar& calendar);
-    QLESubPeriodsLeg& withType(QLESubPeriodsCoupon::Type type);
-    QLESubPeriodsLeg& includeSpread(bool includeSpread);
+    SubPeriodsLeg(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index);
+    SubPeriodsLeg& withNotional(Real notional);
+    SubPeriodsLeg& withNotionals(const std::vector<Real>& notionals);
+    SubPeriodsLeg& withPaymentDayCounter(const DayCounter& dayCounter);
+    SubPeriodsLeg& withPaymentAdjustment(BusinessDayConvention convention);
+    SubPeriodsLeg& withGearing(Real gearing);
+    SubPeriodsLeg& withGearings(const std::vector<Real>& gearings);
+    SubPeriodsLeg& withSpread(Spread spread);
+    SubPeriodsLeg& withSpreads(const std::vector<Spread>& spreads);
+    SubPeriodsLeg& withPaymentCalendar(const Calendar& calendar);
+    SubPeriodsLeg& withType(SubPeriodsCoupon::Type type);
+    SubPeriodsLeg& includeSpread(bool includeSpread);
     operator Leg() const;
 
 private:
@@ -112,7 +112,7 @@ private:
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     Calendar paymentCalendar_;
-    QLESubPeriodsCoupon::Type type_;
+    SubPeriodsCoupon::Type type_;
     bool includeSpread_;
 };
 } // namespace QuantExt
