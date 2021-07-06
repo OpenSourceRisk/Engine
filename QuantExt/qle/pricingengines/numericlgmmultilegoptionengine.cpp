@@ -273,8 +273,9 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
         if (t_from != t_to) {
             underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
-            for (auto& c : underlyingNpv2) {
-                c.second = rollback(c.second, t_from, t_to);
+            for (auto const& c : underlyingNpv2) {
+                auto tmp = rollback(c.second, t_from, t_to);
+                underlyingNpv2[c.first] = tmp;
             }
             optionNpv = rollback(optionNpv, t_from, t_to);
         }
