@@ -150,17 +150,13 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     QL_REQUIRE(!isCrossCcy, "Cross Currency Swaptions are not supported at the moment.");
 
-    // fill some trade attributes
+    // fill currencies and set notional to null (will be retrieved via notional())
 
     npvCurrency_ = notionalCurrency_ = "USD"; // only if no legs are given, not relevant in this case
 
     if (!legData_.empty()) {
         npvCurrency_ = notionalCurrency_ = legData_[0].currency();
     }
-
-    legs_ = underlying_->legs();
-    legCurrencies_ = underlying_->legCurrencies();
-    legPayers_ = underlying_->legPayers();
 
     notional_ = Null<Real>();
 
@@ -180,6 +176,25 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         notional_ = Null<Real>();
         maturity_ = today;
         return;
+    }
+
+    // fill legs, only include coupons after first exercise
+
+    legCurrencies_ = underlying_->legCurrencies();
+    legPayers_ = underlying_->legPayers();
+    legs_.clear();
+    Date firstExerciseDate = exerciseBuilder_->exercise()->dates().front();
+    for (auto const& l : underlying_->legs()) {
+        legs_.push_back(Leg());
+        for (auto const& c : l) {
+            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+                if (firstExerciseDate <= cpn->accrualStartDate()) {
+                    legs_.back().push_back(c);
+                }
+            } else if (firstExerciseDate <= c->date()) {
+                legs_.back().push_back(c);
+            }
+        }
     }
 
     // build a Euroepan or Bermudan swaption
