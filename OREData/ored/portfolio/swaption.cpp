@@ -209,7 +209,7 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
-                positionType_ == Position::Long ? 1.0 : -1.0, ccy, engineFactory,
+                positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
                 swaptionBuilder->configuration(MarketContext::pricing));
 
     swaption->setPricingEngine(swaptionBuilder->engine(ccy));
