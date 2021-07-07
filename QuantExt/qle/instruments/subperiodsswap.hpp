@@ -45,7 +45,7 @@ public:
                    const DayCounter& fixedDayCount, BusinessDayConvention fixedConvention, const Period& floatPayTenor,
                    const boost::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatingDayCount,
                    DateGeneration::Rule rule = DateGeneration::Backward,
-                   QuantExt::SubPeriodsCoupon::Type type = QuantExt::SubPeriodsCoupon::Compounding);
+                   QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
     //@}
     //! \name Inspectors
     //@{
@@ -58,7 +58,7 @@ public:
 
     const Schedule& floatSchedule() const;
     const boost::shared_ptr<IborIndex>& floatIndex() const;
-    QuantExt::SubPeriodsCoupon::Type type() const;
+    QuantExt::SubPeriodsCoupon1::Type type() const;
     const Period& floatPayTenor() const;
     const Leg& floatLeg() const;
 
@@ -84,7 +84,7 @@ private:
     boost::shared_ptr<IborIndex> floatIndex_;
     DayCounter floatDayCount_;
     Period floatPayTenor_;
-    QuantExt::SubPeriodsCoupon::Type type_;
+    QuantExt::SubPeriodsCoupon1::Type type_;
 };
 
 // Inline definitions
@@ -106,7 +106,7 @@ inline const Schedule& SubPeriodsSwap::floatSchedule() const { return floatSched
 
 inline const boost::shared_ptr<IborIndex>& SubPeriodsSwap::floatIndex() const { return floatIndex_; }
 
-inline QuantExt::SubPeriodsCoupon::Type SubPeriodsSwap::type() const { return type_; }
+inline QuantExt::SubPeriodsCoupon1::Type SubPeriodsSwap::type() const { return type_; }
 
 inline const Period& SubPeriodsSwap::floatPayTenor() const { return floatPayTenor_; }
 
@@ -135,7 +135,7 @@ public:
     MakeSubPeriodsSwap& withFixedLegRule(DateGeneration::Rule r);
     MakeSubPeriodsSwap& withFixedLegDayCount(const DayCounter& dc);
 
-    MakeSubPeriodsSwap& withSubCouponsType(const QuantExt::SubPeriodsCoupon::Type& st);
+    MakeSubPeriodsSwap& withSubCouponsType(const QuantExt::SubPeriodsCoupon1::Type& st);
 
     MakeSubPeriodsSwap& withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve);
     MakeSubPeriodsSwap& withPricingEngine(const boost::shared_ptr<PricingEngine>& engine);
@@ -158,7 +158,7 @@ private:
     DateGeneration::Rule fixedRule_;
     DayCounter fixedDayCount_, floatDayCounter_;
 
-    QuantExt::SubPeriodsCoupon::Type subCouponsType_;
+    QuantExt::SubPeriodsCoupon1::Type subCouponsType_;
 
     boost::shared_ptr<PricingEngine> engine_;
 };

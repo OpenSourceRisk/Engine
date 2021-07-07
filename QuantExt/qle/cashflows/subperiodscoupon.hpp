@@ -31,7 +31,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 //! Sub-periods pricer
-class SubPeriodsCouponPricer;
+class SubPeriodsCouponPricer1;
 
 //! Sub-periods coupon
 /*! The coupon period tenor is a multiple of the tenor associated with
@@ -40,11 +40,13 @@ class SubPeriodsCouponPricer;
 *   the full coupon period.
 
         \ingroup cashflows
+        \todo merge into QuantLib
+
 */
-class SubPeriodsCoupon : public FloatingRateCoupon {
+class SubPeriodsCoupon1 : public FloatingRateCoupon {
 public:
     enum Type { Averaging, Compounding };
-    SubPeriodsCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+    SubPeriodsCoupon1(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                      const boost::shared_ptr<InterestRateIndex>& index, Type type, BusinessDayConvention convention,
                      Spread spread = 0.0, const DayCounter& dayCounter = DayCounter(), bool includeSpread = false,
                      Real gearing = 1.0);
@@ -86,21 +88,22 @@ private:
 
 //! helper class building a sequence of sub-period coupons
 /*! \ingroup cashflows
+  \todo merge into QuantLib
  */
-class SubPeriodsLeg {
+class SubPeriodsLeg1 {
 public:
-    SubPeriodsLeg(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index);
-    SubPeriodsLeg& withNotional(Real notional);
-    SubPeriodsLeg& withNotionals(const std::vector<Real>& notionals);
-    SubPeriodsLeg& withPaymentDayCounter(const DayCounter& dayCounter);
-    SubPeriodsLeg& withPaymentAdjustment(BusinessDayConvention convention);
-    SubPeriodsLeg& withGearing(Real gearing);
-    SubPeriodsLeg& withGearings(const std::vector<Real>& gearings);
-    SubPeriodsLeg& withSpread(Spread spread);
-    SubPeriodsLeg& withSpreads(const std::vector<Spread>& spreads);
-    SubPeriodsLeg& withPaymentCalendar(const Calendar& calendar);
-    SubPeriodsLeg& withType(SubPeriodsCoupon::Type type);
-    SubPeriodsLeg& includeSpread(bool includeSpread);
+    SubPeriodsLeg1(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index);
+    SubPeriodsLeg1& withNotional(Real notional);
+    SubPeriodsLeg1& withNotionals(const std::vector<Real>& notionals);
+    SubPeriodsLeg1& withPaymentDayCounter(const DayCounter& dayCounter);
+    SubPeriodsLeg1& withPaymentAdjustment(BusinessDayConvention convention);
+    SubPeriodsLeg1& withGearing(Real gearing);
+    SubPeriodsLeg1& withGearings(const std::vector<Real>& gearings);
+    SubPeriodsLeg1& withSpread(Spread spread);
+    SubPeriodsLeg1& withSpreads(const std::vector<Spread>& spreads);
+    SubPeriodsLeg1& withPaymentCalendar(const Calendar& calendar);
+    SubPeriodsLeg1& withType(SubPeriodsCoupon1::Type type);
+    SubPeriodsLeg1& includeSpread(bool includeSpread);
     operator Leg() const;
 
 private:
@@ -112,7 +115,7 @@ private:
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
     Calendar paymentCalendar_;
-    SubPeriodsCoupon::Type type_;
+    SubPeriodsCoupon1::Type type_;
     bool includeSpread_;
 };
 } // namespace QuantExt

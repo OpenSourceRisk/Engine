@@ -35,7 +35,7 @@ class PricerSetter : public AcyclicVisitor,
                      public Visitor<QuantExt::OvernightIndexedCoupon>,
                      public Visitor<CappedFlooredOvernightIndexedCoupon>,
                      public Visitor<AverageONIndexedCoupon>,
-                     public Visitor<QuantExt::SubPeriodsCoupon> {
+                     public Visitor<QuantExt::SubPeriodsCoupon1> {
 private:
     const boost::shared_ptr<FloatingRateCouponPricer> pricer_;
 
@@ -48,7 +48,7 @@ public:
     void visit(QuantExt::OvernightIndexedCoupon& c);
     void visit(CappedFlooredOvernightIndexedCoupon& c);
     void visit(AverageONIndexedCoupon& c);
-    void visit(QuantExt::SubPeriodsCoupon& c);
+    void visit(QuantExt::SubPeriodsCoupon1& c);
 };
 
 void PricerSetter::visit(CashFlow&) {
@@ -102,9 +102,9 @@ void PricerSetter::visit(AverageONIndexedCoupon& c) {
     c.setPricer(averageONIndexedCouponPricer);
 }
 
-void PricerSetter::visit(QuantExt::SubPeriodsCoupon& c) {
-    const boost::shared_ptr<QuantExt::SubPeriodsCouponPricer> subPeriodsCouponPricer =
-        boost::dynamic_pointer_cast<QuantExt::SubPeriodsCouponPricer>(pricer_);
+void PricerSetter::visit(QuantExt::SubPeriodsCoupon1& c) {
+    const boost::shared_ptr<QuantExt::SubPeriodsCouponPricer1> subPeriodsCouponPricer =
+        boost::dynamic_pointer_cast<QuantExt::SubPeriodsCouponPricer1>(pricer_);
     QL_REQUIRE(subPeriodsCouponPricer, "Pricer not compatible with sub-periods coupon");
     c.setPricer(subPeriodsCouponPricer);
 }
