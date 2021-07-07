@@ -656,6 +656,8 @@
     <ClInclude Include="qle\math\logquadraticinterpolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\math\quadraticinterpolation.hpp" />
+    <ClInclude Include="qle\math\randomvariable.hpp" />
+    <ClInclude Include="qle\math\randomvariable_io.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
@@ -698,8 +700,10 @@
     <ClInclude Include="qle\models\jyimpliedzeroinflationtermstructure.hpp" />
     <ClInclude Include="qle\models\lgm.hpp" />
     <ClInclude Include="qle\models\lgmcalibrationinfo.hpp" />
+    <ClInclude Include="qle\models\lgmconvolutionsolver2.hpp" />
     <ClInclude Include="qle\models\lgmimplieddefaulttermstructure.hpp" />
     <ClInclude Include="qle\models\lgmimpliedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\models\lgmvectorised.hpp" />
     <ClInclude Include="qle\models\linearannuitymapping.hpp" />
     <ClInclude Include="qle\models\linkablecalibratedmodel.hpp" />
     <ClInclude Include="qle\models\normalsabr.hpp" />
@@ -740,7 +744,7 @@
     <ClInclude Include="qle\pricingengines\inflationcapfloorengines.hpp" />
     <ClInclude Include="qle\pricingengines\lgmconvolutionsolver.hpp" />
     <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
-    <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\numericlgmmultilegoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
     <ClInclude Include="qle\processes\crcirppstateprocess.hpp" />
@@ -970,6 +974,8 @@
     <ClCompile Include="qle\instruments\cashflowresults.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
+    <ClCompile Include="qle\math\randomvariable.cpp" />
+    <ClCompile Include="qle\math\randomvariable_io.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\annuitymapping.cpp" />
     <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp" />
@@ -998,8 +1004,10 @@
     <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\lgm.cpp" />
     <ClCompile Include="qle\models\lgmcalibrationinfo.cpp" />
+    <ClCompile Include="qle\models\lgmconvolutionsolver2.cpp" />
     <ClCompile Include="qle\models\lgmimplieddefaulttermstructure.cpp" />
     <ClCompile Include="qle\models\lgmimpliedyieldtermstructure.cpp" />
+    <ClCompile Include="qle\models\lgmvectorised.cpp" />
     <ClCompile Include="qle\models\linearannuitymapping.cpp" />
     <ClCompile Include="qle\models\linkablecalibratedmodel.cpp" />
     <ClCompile Include="qle\models\normalsabr.cpp" />
@@ -1038,7 +1046,7 @@
     <ClCompile Include="qle\pricingengines\inflationcapfloorengines.cpp" />
     <ClCompile Include="qle\pricingengines\lgmconvolutionsolver.cpp" />
     <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
-    <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\numericlgmmultilegoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
     <ClCompile Include="qle\processes\crcirppstateprocess.cpp" />
