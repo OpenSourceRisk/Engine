@@ -1165,6 +1165,9 @@
     <ClInclude Include="qle\pricingengines\numericlgmmultilegoptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\multilegoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1987,6 +1990,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\numericlgmmultilegoptionengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\multilegoption.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
