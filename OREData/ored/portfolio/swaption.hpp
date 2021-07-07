@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/trade.hpp>
 
 #include <ql/instruments/nonstandardswap.hpp>
@@ -38,21 +38,16 @@ namespace data {
 */
 class Swaption : public Trade {
 public:
-    //! Default constructor
     Swaption() : Trade("Swaption") {}
-    //! Constructor
-    Swaption(const Envelope& env, const OptionData& option, const vector<LegData>& swap)
-        : Trade("Swaption", env), option_(option), swap_(swap) {}
+    Swaption(const Envelope& env, const OptionData& optionData, const vector<LegData>& legData)
+        : Trade("Swaption", env), optionData_(optionData), legData_(legData) {}
 
-    //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
-    QuantLib::Real notional() const override;
-    std::string notionalCurrency() const override;
 
     //! \name Inspectors
     //@{
-    const OptionData& option() { return option_; }
-    const vector<LegData>& swap() { return swap_; }
+    const OptionData& optionData() { return optionData_; }
+    const vector<LegData>& legData() { return legData_; }
     //@}
 
     //! \name Serialisation
@@ -61,34 +56,31 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
-    //! \name Trade
-    //@{
+    QuantLib::Real notional() const override;
+    const std::map<std::string, boost::any>& additionalData() const override;
     bool hasCashflows() const override { return false; }
-    //@}
-
-    const std::map<std::string,boost::any>& additionalData() const override;
 
 private:
-    OptionData option_;
-    vector<LegData> swap_;
+    OptionData optionData_;
+    vector<LegData> legData_;
 
-    boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&,
-                                                    const Date& firstExerciseDate = Null<Date>());
-    boost::shared_ptr<NonstandardSwap> buildNonStandardSwap(const boost::shared_ptr<EngineFactory>&);
+    //! build European Vanilla Swaption
     void buildEuropean(const boost::shared_ptr<EngineFactory>&);
+    boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&);
+
+    //! build all other types of Swaptions
     void buildBermudan(const boost::shared_ptr<EngineFactory>&);
+
+    //! build underlying swaps for exposure simulation
     std::vector<boost::shared_ptr<Instrument>> buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>&,
-                                                                    const boost::shared_ptr<Swap>&,
                                                                     const std::vector<Date>&);
 
-    //! Underlying Exercise object
-    boost::shared_ptr<QuantLib::Exercise> exercise_;
-
-    //! Store the name of the underlying swap's floating leg index
-    std::string underlyingIndex_, underlyingIndexQlName_;
-
-    //! Store the underlying swap's floating and fixed leg
-    QuantLib::Leg underlyingLeg_, underlyingFixedLeg_;
+    boost::shared_ptr<ore::data::Swap> underlying_;
+    boost::shared_ptr<ExerciseBuilder> exerciseBuilder_;
+    Position::Type positionType_;
+    Exercise::Type exerciseType_;
+    Settlement::Type settlementType_;
+    Settlement::Method settlementMethod_;
 };
 } // namespace data
 } // namespace ore

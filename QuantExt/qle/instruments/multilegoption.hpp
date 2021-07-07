@@ -40,8 +40,6 @@ public:
     class results;
     class engine;
 
-    /*! If an exercise is given, the instrument represents an exercise into underlying option
-      otherwise the instrument represents the underlying itself. */
     MultiLegOption(const std::vector<Leg>& legs, const std::vector<bool>& payer, const std::vector<Currency>& currency,
                    const boost::shared_ptr<Exercise>& exercise = boost::shared_ptr<Exercise>(),
                    const Settlement::Type settlementType = Settlement::Physical,
