@@ -32,27 +32,27 @@ namespace {
 
 /* For a given cashflow and option exercise date, return the simulation date on which we determine the coupon amout.
    - If the pay date is <= today, null is returned.
-   - The latestOptionDate is the latest option date for which the cashflow is relevant. This can be minDate, if the
-     cashflow is not relevant for any option date.
+   - The latestOptionDate is the latest option date for which the cashflow is relevant. This can be Date::minDate(),
+     if the cashflow is not relevant for any option date.
    The return value will be >= today (or null) always. */
 Date getSimulationDates(const Date& today, const Date& latestOptionDate, const boost::shared_ptr<CashFlow>& c) {
     if (c->date() <= today)
         return Date();
+    Date minDate = std::max(today, latestOptionDate);
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
         if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(c)) {
             /* Handle Ibor coupon */
-            Date fixingDate = ibor->fixingDate();
-            return std::max(fixingDate, std::max(today, latestOptionDate));
+            return minDate;
         } else if (auto fix = boost::dynamic_pointer_cast<FixedRateCoupon>(cpn)) {
             /* Handle Fixed Rate coupon */
-            return std::max(fix->date(), std::max(today, latestOptionDate));
+            return minDate;
         } else {
             /* Other coupons are not supported at the moment */
             QL_FAIL("NumericLgmMultiLegOptionEngine: coupon type not handled, supported are Ibor and Fixed coupons");
         }
     } else {
         /* Handle non-coupon, i.e. a cashflow */
-        return std::max(c->date(), std::max(today, latestOptionDate));
+        return minDate;
     }
 }
 
@@ -219,7 +219,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
     for (auto it = simulationDates.rbegin(); it != simulationDates.rend(); ++it) {
 
         Real t_from = model()->parametrization()->termStructure()->timeFromReference(*it);
-        Real t_to = (it != simulationDates.rend())
+        Real t_to = (it != std::next(simulationDates.rend(), -1))
                         ? model()->parametrization()->termStructure()->timeFromReference(*std::next(it, 1))
                         : t_from;
 
@@ -263,9 +263,8 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
         if (t_from != t_to) {
             underlyingNpv1 = rollback(underlyingNpv1, t_from, t_to);
-            for (auto const& c : underlyingNpv2) {
-                auto tmp = rollback(c.second, t_from, t_to);
-                underlyingNpv2[c.first] = tmp;
+            for (auto& c : underlyingNpv2) {
+                c.second = rollback(c.second, t_from, t_to);
             }
             optionNpv = rollback(optionNpv, t_from, t_to);
         }
@@ -275,7 +274,7 @@ void NumericLgmMultiLegOptionEngineBase::calculate() const {
 
     npv_ = optionNpv.at(0);
     underlyingNpv_ = underlyingNpv1.at(0);
-    for (auto& c : underlyingNpv2) {
+    for (auto const& c : underlyingNpv2) {
         underlyingNpv_ += c.second.at(0);
     }
 
