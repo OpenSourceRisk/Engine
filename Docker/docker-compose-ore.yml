@@ -8,4 +8,4 @@ services:
       dockerfile: Docker/Dockerfile-ORE
       args:
         - quantlib_version=${QL_TAG}
-        - num_cores=16
+        - num_cores=${NUM_CORES}
