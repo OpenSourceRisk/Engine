@@ -24,13 +24,13 @@ namespace QuantExt {
 
 LgmConvolutionSolver2::LgmConvolutionSolver2(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
                                              const Size ny, const Real sx, const Size nx)
-    : model_(model), nx_(nx) {
+    : model_(model), nx_(static_cast<int>(nx)) {
 
     // precompute weights
 
     // number of x, y grid points > 0
-    mx_ = static_cast<Size>(floor(sx * static_cast<Real>(nx)) + 0.5);
-    my_ = static_cast<Size>(floor(sy * static_cast<Real>(ny)) + 0.5);
+    mx_ = static_cast<int>(floor(sx * static_cast<Real>(nx)) + 0.5);
+    my_ = static_cast<int>(floor(sy * static_cast<Real>(ny)) + 0.5);
 
     // y-grid spacing
     h_ = 1.0 / static_cast<Real>(ny);

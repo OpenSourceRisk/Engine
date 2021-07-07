@@ -73,8 +73,9 @@ public:
     void calculate() const override;
 };
 
-class NumericLgmNonstandardSwaptionEngine : public QuantLib::GenericEngine<Swaption::arguments, Swaption::results>,
-                                            public NumericLgmMultiLegOptionEngineBase {
+class NumericLgmNonstandardSwaptionEngine
+    : public QuantLib::GenericEngine<NonstandardSwaption::arguments, NonstandardSwaption::results>,
+      public NumericLgmMultiLegOptionEngineBase {
 public:
     NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
                                         const Size ny, const Real sx, const Size nx,
