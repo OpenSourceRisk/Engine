@@ -26,6 +26,6 @@ RUN apt-get update \
   && cd /ore \
   && find -regex ".*\.\(sh\|txt\|in\|ac\|am\)" -exec dos2unix {} ';'
 
-WORKDIR /ore/Examples/Example_1
+WORKDIR /ore
 
 CMD bash

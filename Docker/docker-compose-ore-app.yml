@@ -2,7 +2,7 @@ version: '3'
 
 services:
   ore_app:
-    image: ore_app
+    image: ore_app:${ORE_TAG}
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE-App
