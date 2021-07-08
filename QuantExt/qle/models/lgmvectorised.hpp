@@ -26,7 +26,8 @@
 #include <qle/math/randomvariable.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
-#include <ql/indexes/interestrateindex.hpp>
+#include <ql/indexes/bmaindex.hpp>
+#include <ql/indexes/iborindex.hpp>
 
 namespace QuantExt {
 
@@ -51,6 +52,26 @@ public:
 
     RandomVariable fixing(const boost::shared_ptr<InterestRateIndex>& index, const Date& fixingDate, const Time t,
                           const RandomVariable& x) const;
+
+    RandomVariable compoundedOnRate(const boost::shared_ptr<OvernightIndex>& index,
+                                    const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
+                                    const std::vector<Real>& dt, const Natural rateCutoff, const bool includeSpread,
+                                    const Real spread, const Real gearing, const Period lookback,
+                                    const Real accrualPeriod, const DayCounter& accrualDayCounter, const Real cap,
+                                    const Real floor, const bool localCapFloor, const bool nakedOption, const Time t,
+                                    const RandomVariable& x) const;
+
+    RandomVariable averagedOnRate(const boost::shared_ptr<OvernightIndex>& index, const std::vector<Date>& fixingDates,
+                                  const std::vector<Date>& valueDates, const std::vector<Real>& dt,
+                                  const Natural rateCutoff, const bool includeSpread, const Real spread,
+                                  const Real gearing, const Period lookback, const Real accrualPeriod,
+                                  const DayCounter& accrualDayCounter, const Real cap, const Real floor,
+                                  const bool localCapFloor, const bool nakedOption, const Time t,
+                                  const RandomVariable& x) const;
+
+    RandomVariable averagedBmaRate(const boost::shared_ptr<BMAIndex>& index, const std::vector<Date>& fixingDates,
+                                   const Date& accrualStartDate, const Date& accrualEndDate, const Time t,
+                                   const RandomVariable& x) const;
 
 private:
     const boost::shared_ptr<IrLgm1fParametrization> p_;
