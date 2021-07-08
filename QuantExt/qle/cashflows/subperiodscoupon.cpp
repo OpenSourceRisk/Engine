@@ -28,10 +28,10 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-SubPeriodsCoupon::SubPeriodsCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                                   const boost::shared_ptr<InterestRateIndex>& index, Type type,
-                                   BusinessDayConvention convention, Spread spread, const DayCounter& dayCounter,
-                                   bool includeSpread, Real gearing)
+SubPeriodsCoupon1::SubPeriodsCoupon1(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                                     const boost::shared_ptr<InterestRateIndex>& index, Type type,
+                                     BusinessDayConvention convention, Spread spread, const DayCounter& dayCounter,
+                                     bool includeSpread, Real gearing)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, index->fixingDays(), index, gearing, spread, Date(),
                          Date(), dayCounter, false),
       type_(type), includeSpread_(includeSpread) {
@@ -65,7 +65,7 @@ SubPeriodsCoupon::SubPeriodsCoupon(const Date& paymentDate, Real nominal, const 
     }
 }
 
-const std::vector<Rate>& SubPeriodsCoupon::indexFixings() const {
+const std::vector<Rate>& SubPeriodsCoupon1::indexFixings() const {
 
     fixings_.resize(numPeriods_);
 
@@ -76,8 +76,8 @@ const std::vector<Rate>& SubPeriodsCoupon::indexFixings() const {
     return fixings_;
 }
 
-void SubPeriodsCoupon::accept(AcyclicVisitor& v) {
-    Visitor<SubPeriodsCoupon>* v1 = dynamic_cast<Visitor<SubPeriodsCoupon>*>(&v);
+void SubPeriodsCoupon1::accept(AcyclicVisitor& v) {
+    Visitor<SubPeriodsCoupon1>* v1 = dynamic_cast<Visitor<SubPeriodsCoupon1>*>(&v);
     if (v1 != 0) {
         v1->visit(*this);
     } else {
@@ -85,66 +85,66 @@ void SubPeriodsCoupon::accept(AcyclicVisitor& v) {
     }
 }
 
-SubPeriodsLeg::SubPeriodsLeg(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index)
+SubPeriodsLeg1::SubPeriodsLeg1(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index)
     : schedule_(schedule), index_(index), notionals_(std::vector<Real>(1, 1.0)), paymentAdjustment_(Following),
-      paymentCalendar_(Calendar()), type_(SubPeriodsCoupon::Compounding) {}
+      paymentCalendar_(Calendar()), type_(SubPeriodsCoupon1::Compounding) {}
 
-SubPeriodsLeg& SubPeriodsLeg::withNotional(Real notional) {
+SubPeriodsLeg1& SubPeriodsLeg1::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withNotionals(const std::vector<Real>& notionals) {
+SubPeriodsLeg1& SubPeriodsLeg1::withNotionals(const std::vector<Real>& notionals) {
     notionals_ = notionals;
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withPaymentDayCounter(const DayCounter& dayCounter) {
+SubPeriodsLeg1& SubPeriodsLeg1::withPaymentDayCounter(const DayCounter& dayCounter) {
     paymentDayCounter_ = dayCounter;
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withPaymentAdjustment(BusinessDayConvention convention) {
+SubPeriodsLeg1& SubPeriodsLeg1::withPaymentAdjustment(BusinessDayConvention convention) {
     paymentAdjustment_ = convention;
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withGearing(Real gearing) {
+SubPeriodsLeg1& SubPeriodsLeg1::withGearing(Real gearing) {
     gearings_ = std::vector<Real>(1, gearing);
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withGearings(const std::vector<Real>& gearings) {
+SubPeriodsLeg1& SubPeriodsLeg1::withGearings(const std::vector<Real>& gearings) {
     gearings_ = gearings;
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withSpread(Spread spread) {
+SubPeriodsLeg1& SubPeriodsLeg1::withSpread(Spread spread) {
     spreads_ = std::vector<Spread>(1, spread);
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withSpreads(const std::vector<Spread>& spreads) {
+SubPeriodsLeg1& SubPeriodsLeg1::withSpreads(const std::vector<Spread>& spreads) {
     spreads_ = spreads;
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withPaymentCalendar(const Calendar& calendar) {
+SubPeriodsLeg1& SubPeriodsLeg1::withPaymentCalendar(const Calendar& calendar) {
     paymentCalendar_ = calendar;
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::withType(SubPeriodsCoupon::Type type) {
+SubPeriodsLeg1& SubPeriodsLeg1::withType(SubPeriodsCoupon1::Type type) {
     type_ = type;
     return *this;
 }
 
-SubPeriodsLeg& SubPeriodsLeg::includeSpread(bool includeSpread) {
+SubPeriodsLeg1& SubPeriodsLeg1::includeSpread(bool includeSpread) {
     includeSpread_ = includeSpread;
     return *this;
 }
 
-SubPeriodsLeg::operator Leg() const {
+SubPeriodsLeg1::operator Leg() const {
 
     Leg cashflows;
     Date startDate;
@@ -173,8 +173,8 @@ SubPeriodsLeg::operator Leg() const {
         // of identifying it except parsing the exception text, which isn't a
         // clean solution either
         try {
-            boost::shared_ptr<SubPeriodsCoupon> cashflow(
-                new SubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
+            boost::shared_ptr<SubPeriodsCoupon1> cashflow(
+                new SubPeriodsCoupon1(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
                                      index_, type_, paymentAdjustment_, detail::get(spreads_, i, 0.0),
                                      paymentDayCounter_, includeSpread_, detail::get(gearings_, i, 1.0)));
 
@@ -184,7 +184,7 @@ SubPeriodsLeg::operator Leg() const {
         }
     }
 
-    boost::shared_ptr<QuantExt::SubPeriodsCouponPricer> pricer(new SubPeriodsCouponPricer);
+    boost::shared_ptr<SubPeriodsCouponPricer1> pricer(new SubPeriodsCouponPricer1);
     QuantExt::setCouponPricer(cashflows, pricer);
 
     return cashflows;

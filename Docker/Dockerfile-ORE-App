@@ -22,9 +22,9 @@ RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
-  && pip3 install matplotlib pandas \
-  && cd /ore/Examples \
-  && find -regex ".*\.\(sh\|txt\)" -exec dos2unix {} ';'
+  && pip3 install matplotlib pandas nose nose_xunitmp datacompy \
+  && cd /ore \
+  && find -regex ".*\.\(sh\|txt\|in\|ac\|am\)" -exec dos2unix {} ';'
 
 WORKDIR /ore/Examples/Example_1
 
