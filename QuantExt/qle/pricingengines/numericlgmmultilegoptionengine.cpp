@@ -106,14 +106,14 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
                                         on->valueDates(), on->dt(), on->rateCutoff(), on->includeSpread(), on->spread(),
                                         on->gearing(), on->lookback(), on->accrualPeriod(), on->dayCounter(),
                                         Null<Real>(), Null<Real>(), false, false, t, x) *
-                   RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) *
+                   RandomVariable(x.size(), on->accrualPeriod() * on->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto av = boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(cpn)) {
             return lgm.averagedOnRate(boost::dynamic_pointer_cast<OvernightIndex>(av->index()), av->fixingDates(),
                                       av->valueDates(), av->dt(), av->rateCutoff(), false, av->spread(), av->gearing(),
-                                      on->lookback(), on->accrualPeriod(), on->dayCounter(), Null<Real>(), Null<Real>(),
+                                      av->lookback(), av->accrualPeriod(), av->dayCounter(), Null<Real>(), Null<Real>(),
                                       false, false, t, x) *
-                   RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) *
+                   RandomVariable(x.size(), av->accrualPeriod() * av->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
             return (RandomVariable(x.size(), ibor->gearing()) *
@@ -126,11 +126,11 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
             auto und = cf->underlying();
             RandomVariable cap(x.size(), cf->cap() == Null<Real>() ? QL_MAX_REAL : cf->cap());
             RandomVariable floor(x.size(), cf->floor() == Null<Real>() ? -QL_MAX_REAL : cf->floor());
-            if (auto cfibor = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(und)) {
-                return max(floor, min(cap, (RandomVariable(x.size(), cfibor->gearing()) *
-                                                lgm.fixing(cfibor->index(), cfibor->fixingDate(), t, x) +
-                                            RandomVariable(x.size(), cfibor->spread())))) *
-                       RandomVariable(x.size(), cfibor->accrualPeriod() * cfibor->nominal()) *
+            if (auto undibor = boost::dynamic_pointer_cast<QuantLib::IborCoupon>(und)) {
+                return max(floor, min(cap, (RandomVariable(x.size(), undibor->gearing()) *
+                                                lgm.fixing(undibor->index(), undibor->fixingDate(), t, x) +
+                                            RandomVariable(x.size(), undibor->spread())))) *
+                       RandomVariable(x.size(), undibor->accrualPeriod() * undibor->nominal()) *
                        lgm.reducedDiscountBond(t, T, x, discountCurve);
             }
         } else if (auto cfon = boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(cpn)) {

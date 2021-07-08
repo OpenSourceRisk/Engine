@@ -247,7 +247,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
     }
 
     RandomVariable floorVal(x.size(), floor == Null<Real>() ? -QL_MAX_REAL : floor);
-    RandomVariable capVal(x.size(), cap == Null<Real>() ? -QL_MAX_REAL : cap);
+    RandomVariable capVal(x.size(), cap == Null<Real>() ? QL_MAX_REAL : cap);
 
     return max(floorVal, min(capVal, swapletRate));
 }
@@ -348,7 +348,7 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
     RandomVariable rate =
         RandomVariable(x.size(), gearing / tau) * accumulatedRateLgm + RandomVariable(x.size(), spread);
     RandomVariable floorVal(x.size(), floor == Null<Real>() ? -QL_MAX_REAL : floor);
-    RandomVariable capVal(x.size(), cap == Null<Real>() ? -QL_MAX_REAL : cap);
+    RandomVariable capVal(x.size(), cap == Null<Real>() ? QL_MAX_REAL : cap);
     return max(floorVal, min(capVal, rate));
 }
 
