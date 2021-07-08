@@ -6,6 +6,7 @@ FROM env_ore:${ore_version} as env_ore
 FROM debian:${debian_tag}
 
 COPY Examples /ore/Examples
+COPY Tools /ore/Tools
 
 RUN mkdir /ore/App
 
