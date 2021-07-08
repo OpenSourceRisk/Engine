@@ -1397,7 +1397,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const b
     DLOG("OREApp::buildEngineFactoryFromXMLString called");
 
     if (pricingEngineXML == "")
-        return buildEngineFactory(market, "", generateAdditionalResults);
+        return buildEngineFactory(market, "setup", generateAdditionalResults);
     else {
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         engineData->fromXMLString(pricingEngineXML);
