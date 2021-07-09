@@ -116,7 +116,7 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
                    RandomVariable(x.size(), av->accrualPeriod() * av->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto bma = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
-            return (RandomVariable(x.size(), ibor->gearing()) *
+            return (RandomVariable(x.size(), bma->gearing()) *
                         lgm.averagedBmaRate(boost::dynamic_pointer_cast<BMAIndex>(bma->index()), bma->fixingDates(),
                                             bma->accrualStartDate(), bma->accrualEndDate(), t, x) +
                     RandomVariable(x.size(), bma->spread())) *
