@@ -225,7 +225,6 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
-    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->setSimulateFXVols(false);
     simMarketConfig->setSimulateEquityVols(false);
 
@@ -235,7 +234,6 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
-    simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
 
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);

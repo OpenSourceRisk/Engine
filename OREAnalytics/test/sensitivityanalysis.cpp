@@ -118,7 +118,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -882,7 +882,7 @@ void test1dShifts(bool granular) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
 
     // cache initial zero rates
@@ -979,7 +979,7 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
 
     // cache initial zero rates
@@ -1092,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -1301,7 +1301,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -1653,7 +1653,7 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
