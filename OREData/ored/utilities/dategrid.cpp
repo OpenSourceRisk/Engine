@@ -145,7 +145,7 @@ void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCoun
         if (tenors_[i].units() == Days)
             dates_[i] = cal.adjust(today + tenors_[i]);
         else
-            dates_[i] = cal.advance(today, tenors_[i], Following, true);
+            dates_[i] = cal.advance(today, tenors_[i], Following, false);
         if (i > 0) {
             QL_REQUIRE(dates_[i] >= dates_[i - 1], "DateGrid::buildDates(): tenors must be monotonic");
             if (dates_[i] == dates_[i - 1]) {
@@ -222,14 +222,20 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
         std::vector<Date> tmpDates;
         std::vector<bool> tmpIsCloseOutDate, tmpIsValuationDate;
         for (Size i = 0; i < dates_.size(); ++i) {
-            Date c = calendar_.advance(dates_[i], p);
+            Date c;
+            if (p.units() == Days)
+                c = calendar_.adjust(dates_[i] + p);
+            else
+                c = calendar_.advance(dates_[i], p, Following, false);
             if (i < dates_.size() - 1) {
                 // adjust the grid to ensure no overlap in valuation and closeout dates
-                if ( c >= dates_[i + 1]) {
+                if (c >= dates_[i + 1]) {
                     dates_[i + 1] = calendar_.advance(c, QuantLib::Period(1, QuantLib::Days));
+                    std::cout << QuantLib::io::iso_date(dates_[i + 1]) << std::endl;
                     // check that the grid is still monotonic
-                    if ( (i + 2) < dates_.size()) {
-                        QL_REQUIRE(dates_[i + 1] < dates_[i + 2], "date grid is no longer monotonic: " << dates_[i + 1] << ", " << dates_[i + 2]);
+                    if ((i + 2) < dates_.size()) {
+                        QL_REQUIRE(dates_[i + 1] < dates_[i + 2],
+                                   "date grid is no longer monotonic: " << dates_[i + 1] << ", " << dates_[i + 2]);
                     }
                 }
                 QL_REQUIRE(c < dates_[i + 1],

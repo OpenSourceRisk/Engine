@@ -72,6 +72,7 @@ public:
     StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
                             const boost::shared_ptr<Scenario>& baseScenario,
                             const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+			    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
                             const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory);
     //! Default destructor
     ~StressScenarioGenerator() {}
