@@ -145,7 +145,7 @@ void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCoun
         if (tenors_[i].units() == Days)
             dates_[i] = cal.adjust(today + tenors_[i]);
         else
-            dates_[i] = cal.advance(today, tenors_[i], Following, true);
+            dates_[i] = cal.advance(today, tenors_[i], Following, false);
         if (i > 0) {
             QL_REQUIRE(dates_[i] >= dates_[i - 1], "DateGrid::buildDates(): tenors must be monotonic");
             if (dates_[i] == dates_[i - 1]) {
