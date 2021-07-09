@@ -251,10 +251,10 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
     The original \p fixings map may be empty.
 */
 void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
-                          const TodaysMarketParameters& mktParams,
-                          const Conventions& conventions,
+                          const TodaysMarketParameters& mktParams, const Conventions& conventions,
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
+                          const QuantLib::Period& bmaLookback = 2 * QuantLib::Weeks,
                           const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
                           const std::string& configuration = Market::defaultConfiguration);
 
