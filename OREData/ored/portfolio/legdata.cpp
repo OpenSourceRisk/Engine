@@ -2197,6 +2197,10 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     } catch (...) {
     }
 
+    if(!data.hasCreditRisk()) {
+      defaultCurve = Handle<DefaultProbabilityTermStructure>();
+    }
+
     // build and return the index
 
     return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, relative, fixingCalendar, qlBond, discountCurve,

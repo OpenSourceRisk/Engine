@@ -95,11 +95,6 @@ void BondData::initialise() {
 
     isPayer_ = false;
 
-    if (!hasCreditRisk() && !creditCurveId().empty()) {
-        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
-        creditCurveId_ = "";
-    }
-
     if (!zeroBond()) {
 
         // fill currency, if not directly given (which is only the case for zero bonds)
@@ -203,8 +198,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency currency = parseCurrency(bondData_.currency());
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(
-        bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
+    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
+                                               bondData_.securityId(), bondData_.referenceCurveId()));
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();
