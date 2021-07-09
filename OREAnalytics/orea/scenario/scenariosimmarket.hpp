@@ -185,7 +185,7 @@ protected:
     virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
-                       const std::string& dc, bool simulate = true, bool spreaded = false);
+                       bool simulate = true, bool spreaded = false);
 
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
