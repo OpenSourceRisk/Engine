@@ -2,7 +2,7 @@ version: '3'
 
 services:
   env_quantlib_debug:
-    image: env_quantlib_debug:1.18_c310d3f4e
+    image: env_quantlib_debug:${QL_TAG}
     build:
       context: ../
       dockerfile: Docker/Dockerfile-QuantLib-Debug

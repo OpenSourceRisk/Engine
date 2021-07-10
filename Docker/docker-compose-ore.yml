@@ -2,10 +2,10 @@ version: '3'
 
 services:
   env_ore:
-    image: env_ore
+    image: env_ore:${ORE_TAG}
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE
       args:
-        - quantlib_version=1.18_c310d3f4e
-        - num_cores=16
+        - quantlib_version=${QL_TAG}
+        - num_cores=${NUM_CORES}

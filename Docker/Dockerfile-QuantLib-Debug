@@ -8,18 +8,18 @@ LABEL Description="Build debug version of QuantLib and add to the Boost build en
 ARG num_cores
 
 # Exclusions are performed by .dockerignore
-COPY QuantLib /ore/QuantLib
+COPY QuantLib /lib_src/QuantLib
 
 # Need the dos2unix all if building from Windows because the shell 
 # scripts fail if there are CRLF present in the files
-RUN cd /ore/QuantLib \
+RUN cd /lib_src/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ql && cd build.ql \
-  && cmake .. -DCMAKE_BUILD_TYPE=Debug \
+  && cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_FLAGS="-D QL_USE_STD_UNIQUE_PTR -D BOOST_ENABLE_ASSERT_HANDLER" \
   && make -j ${num_cores} \
   && make install \
   && cd / \
-  && rm -rf ore \
+  && rm -rf /lib_src/QuantLib/build.ql \
   && ldconfig
 
 CMD bash

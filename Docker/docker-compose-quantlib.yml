@@ -2,10 +2,10 @@ version: '3'
 
 services:
   env_quantlib:
-    image: env_quantlib:1.18_c310d3f4e
+    image: env_quantlib:${QL_TAG}
     build:
       context: ../
       dockerfile: Docker/Dockerfile-QuantLib
       args:
-        - boost_version=1.72.0
-        - num_cores=16
+        - boost_version=${BOOST_TAG}
+        - num_cores=${NUM_CORES}

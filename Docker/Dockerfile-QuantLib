@@ -15,7 +15,7 @@ COPY QuantLib /ore/QuantLib
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ql && cd build.ql \
-  && cmake .. \
+  && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_FLAGS="-D QL_USE_STD_UNIQUE_PTR -D BOOST_ENABLE_ASSERT_HANDLER" \
   && make -j ${num_cores} \
   && make install \
   && cd / \
