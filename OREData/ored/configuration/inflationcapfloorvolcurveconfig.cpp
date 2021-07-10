@@ -16,13 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
 #include <ql/errors.hpp>
+
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -57,19 +59,24 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const vector<string>& capStrikes, const vector<string>& floorStrikes, const vector<string>& strikes,
     const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
     const BusinessDayConvention& businessDayConvention, const string& index, const string& indexCurve,
-    const string& yieldTermStructure, const Period& observationLag)
+    const string& yieldTermStructure, const Period& observationLag, const string& quoteIndex)
     : CurveConfig(curveID, curveDescription), type_(type), quoteType_(quoteType), volatilityType_(volatilityType),
       extrapolate_(extrapolate), tenors_(tenors), capStrikes_(capStrikes), floorStrikes_(floorStrikes),
       strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
-      yieldTermStructure_(yieldTermStructure), observationLag_(observationLag) {}
+      yieldTermStructure_(yieldTermStructure), observationLag_(observationLag), quoteIndex_(quoteIndex) {
+    populateRequiredCurveIds();
+}
+
+void InflationCapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!yieldTermStructure().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(yieldTermStructure())->curveConfigID());
+    if (!indexCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Inflation].insert(parseCurveSpec(indexCurve())->curveConfigID());
+}
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        QL_REQUIRE(isInflationIndex(index_), "Index '" << index_ << "' for InflationCapFloorVolatilityCurveConfig '"
-                                                       << curveID_ << "' should be an inflation index");
-        boost::shared_ptr<InflationIndex> index = parseZeroInflationIndex(index_);
-        Currency ccy = index->currency();
 
         string type;
         if (type_ == Type::ZC)
@@ -77,11 +84,14 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
         else if (type_ == Type::YY)
             type = "YY";
 
+        // Determine the index string to use for the quotes.
+        string index = quoteIndex_.empty() ? index_ : quoteIndex_;
+
         std::stringstream ssBase;
         if (quoteType_ == QuoteType::Price)
-            ssBase << type << "_INFLATIONCAPFLOOR/PRICE/" << index_ << "/";
+            ssBase << type << "_INFLATIONCAPFLOOR/PRICE/" << index << "/";
         else
-            ssBase << type << "_INFLATIONCAPFLOOR/" << volatilityType_ << "/" << index_ << "/";
+            ssBase << type << "_INFLATIONCAPFLOOR/" << volatilityType_ << "/" << index << "/";
         string base = ssBase.str();
 
         // TODO: how to tell if atmFlag or relative flag should be true
@@ -103,7 +113,7 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index_ + "/" + t);
+                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index + "/" + t);
             }
         }
     }
@@ -182,10 +192,12 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     indexCurve_ = XMLUtils::getChildValue(node, "IndexCurve", true);
     yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
     observationLag_ = parsePeriod(XMLUtils::getChildValue(node, "ObservationLag", true));
+    quoteIndex_ = XMLUtils::getChildValue(node, "QuoteIndex", false);
+    populateRequiredCurveIds();
 }
 
 XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("CapFloorVolatility");
+    XMLNode* node = doc.allocNode("InflationCapFloorVolatility");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
@@ -195,7 +207,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     } else if (type_ == Type::YY) {
         XMLUtils::addChild(doc, node, "Type", "YY");
     } else
-        QL_FAIL("Unknown Type in InflationCapFloorPriceSurfaceConfig::toXML()");
+        QL_FAIL("Unknown Type in InflationCapFloorVolatilityCurveConfig::toXML()");
 
     if (quoteType_ == QuoteType::Price) {
         XMLUtils::addChild(doc, node, "QuoteType", "Price");
@@ -228,6 +240,8 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "IndexCurve", indexCurve_);
     XMLUtils::addChild(doc, node, "ObservationLag", to_string(observationLag_));
     XMLUtils::addChild(doc, node, "YieldTermStructure", yieldTermStructure_);
+    if (!quoteIndex_.empty())
+        XMLUtils::addChild(doc, node, "QuoteIndex", quoteIndex_);
 
     return node;
 }

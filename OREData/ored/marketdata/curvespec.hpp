@@ -24,6 +24,7 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
+
 #include <ostream>
 #include <string>
 
@@ -49,7 +50,6 @@ public:
         Default,
         CDSVolatility,
         Inflation,
-        InflationCapFloorPrice,
         InflationCapFloorVolatility,
         Equity,
         EquityVolatility,
@@ -82,56 +82,17 @@ public:
     */
     const std::string& curveConfigID() const { return curveConfigID_; }
 
-    string baseName() const {
-        switch (baseType()) {
-        case CurveType::Yield:
-            return "Yield";
-        case CurveType::CapFloorVolatility:
-            return "CapFloorVolatility";
-        case CurveType::SwaptionVolatility:
-            return "SwaptionVolatility";
-        case CurveType::YieldVolatility:
-            return "YieldVolatility";
-        case CurveType::FX:
-            return "FX";
-        case CurveType::FXVolatility:
-            return "FXVolatility";
-        case CurveType::Security:
-            return "Security";
-        case CurveType::Default:
-            return "Default";
-        case CurveType::CDSVolatility:
-            return "CDSVolatility";
-        case CurveType::Inflation:
-            return "Inflation";
-        case CurveType::InflationCapFloorPrice:
-            return "InflationCapFloorPrice";
-        case CurveType::InflationCapFloorVolatility:
-            return "InflationCapFloorVolatility";
-        case CurveType::Equity:
-            return "Equity";
-        case CurveType::EquityVolatility:
-            return "EquityVolatility";
-        case CurveType::BaseCorrelation:
-            return "BaseCorrelation";
-        case CurveType::Commodity:
-            return "Commodity";
-        case CurveType::CommodityVolatility:
-            return "CommodityVolatility";
-        case CurveType::Correlation:
-            return "Correlation";
-        default:
-            return "N/A";
-        }
-    }
+    string baseName() const;
     //@}
 private:
     //! The id of the CurveConfig associated with the CurveSpec, if any.
     std::string curveConfigID_;
 };
 
-//! Stream operator
+//! Stream operator for CurveSpec
 std::ostream& operator<<(std::ostream& os, const CurveSpec& spec);
+//! Stream operator for CurveType
+std::ostream& operator<<(std::ostream& os, const CurveSpec::CurveType& t);
 
 //! Relational operators for CurveSpecs
 //@{
@@ -355,24 +316,6 @@ public:
     InflationCurveSpec(const string& index, const string& curveConfigID) : CurveSpec(curveConfigID), index_(index) {}
 
     CurveType baseType() const { return CurveType::Inflation; }
-    const string& index() const { return index_; }
-
-    string subName() const { return index() + "/" + curveConfigID(); }
-
-private:
-    string index_;
-};
-
-//! Inflation cap floor price description
-/*! \ingroup curves
- */
-class InflationCapFloorPriceSurfaceSpec : public CurveSpec {
-public:
-    InflationCapFloorPriceSurfaceSpec() {}
-    InflationCapFloorPriceSurfaceSpec(const string& index, const string& curveConfigID)
-        : CurveSpec(curveConfigID), index_(index) {}
-
-    CurveType baseType() const { return CurveType::InflationCapFloorPrice; }
     const string& index() const { return index_; }
 
     string subName() const { return index() + "/" + curveConfigID(); }

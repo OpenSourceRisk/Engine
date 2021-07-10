@@ -19,7 +19,9 @@
 #include <algorithm>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/correlationcurve.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <ql/cashflows/lineartsrpricer.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
@@ -201,55 +203,111 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
         // build default correlation termsructure
         boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
 
-        if (config->quoteType() == CorrelationCurveConfig::QuoteType::Null) {
+        if (config->quoteType() == MarketDatum::QuoteType::NONE) {
 
             corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
                 new QuantExt::FlatCorrelation(0, config->calendar(), 0.0, config->dayCounter()));
 
         } else {
-
             QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM ||
                            config->dimension() == CorrelationCurveConfig::Dimension::Constant,
                        "Unsupported correlation curve building dimension");
 
-            vector<Period> optionTenors = parseVectorOfValues<Period>(config->optionTenors(), &parsePeriod);
-            vector<Handle<Quote>> quotes(optionTenors.size());
-            bool failed = false;
+            // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
+            // contain exactly one element.
+            auto wildcard = getUniqueWildcard(config->quotes());
 
-            // search market data loader for quotes, logging missing ones
-            for (auto& q : config->quotes()) {
-                if (loader.has(q, asof)) {
-                    boost::shared_ptr<CorrelationQuote> c =
-                        boost::dynamic_pointer_cast<CorrelationQuote>(loader.get(q, asof));
+            // vector with times, quotes pairs
+            vector<pair<Real, Handle<Quote>>> quotePairs;
+            // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
+            if (wildcard) {
+                QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM, 
+                    "CorrelationCurve: Wildcards only supported for curve dimension ATM");
+                LOG("Have single quote with pattern " << (*wildcard).regex());
 
-                    Size i = std::find(optionTenors.begin(), optionTenors.end(), parsePeriod(c->expiry())) -
-                             optionTenors.begin();
-                    QL_REQUIRE(i < optionTenors.size(), "correlation tenor not found for " << q);
-                    quotes[i] = c->quote();
-                } else {
-                    DLOGGERSTREAM << "could not find correlation quote " << q << std::endl;
-                    failed = true;
+                // Loop over quotes and process commodity option quotes matching pattern on asof
+                for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
+
+                    // Go to next quote if the market data point's date does not equal our asof
+                    if (md->asofDate() != asof)
+                        continue;
+
+                    auto q = boost::dynamic_pointer_cast<CorrelationQuote>(md);
+                    if (q && (*wildcard).matches(q->name()) && q->quoteType() == config->quoteType()) {
+
+                        TLOG("The quote " << q->name() << " matched the pattern");
+
+                        Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof, config->calendar(), config->businessDayConvention());
+                        if (expiryDate > asof) {
+                            // add a <time, quote> pair
+                            quotePairs.push_back(make_pair(config->dayCounter().yearFraction(asof, expiryDate), q->quote()));
+                            TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
+                                << setprecision(9) << q->quote()->value() << ")");
+                        }
+                    }
+                }
+
+                if (quotePairs.size() == 0) {
+                    WLOG("CorrelationCurve: No quotes found for correlation curve: " << config->curveID() << ", continuing with zero correlation.");
+                    corr_ = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
+                        new QuantExt::FlatCorrelation(0, config->calendar(), 0.0, config->dayCounter()));
+                    return;
+                }
+
+            } else {
+                vector<Period> optionTenors = parseVectorOfValues<Period>(config->optionTenors(), &parsePeriod);
+                quotePairs.resize(optionTenors.size());
+                bool failed = false;
+
+                // search market data loader for quotes, logging missing ones
+                for (auto& q : config->quotes()) {
+                    if (loader.has(q, asof)) {
+                        boost::shared_ptr<CorrelationQuote> c =
+                            boost::dynamic_pointer_cast<CorrelationQuote>(loader.get(q, asof));
+
+                        Size i = std::find(optionTenors.begin(), optionTenors.end(), parsePeriod(c->expiry())) -
+                            optionTenors.begin();
+                        QL_REQUIRE(i < optionTenors.size(), "CorrelationCurve: correlation tenor not found for " << q);
+
+                        Real time;
+                        // add the expiry time - don't need for Constant curves
+                        if (config->dimension() != CorrelationCurveConfig::Dimension::Constant) {
+                            Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
+                            time = config->dayCounter().yearFraction(asof, d);
+                        }
+                        quotePairs[i] = make_pair(time, c->quote());
+
+                        TLOG("CorrelationCurve: Added quote " << c->name() << ", tenor " << optionTenors[i] << ", with value "
+                            << fixed << setprecision(9) << c->quote()->value() );
+                    } else {
+                        DLOGGERSTREAM << "could not find correlation quote " << q << std::endl;
+                        failed = true;
+                    }
+                }
+                // fail if any quotes missing
+                if (failed) {
+                    QL_FAIL("could not build correlation curve");
                 }
             }
-
-            // fail if any quotes missing
-            if (failed) {
-                QL_FAIL("could not build correlation curve");
-            }
-
             vector<Handle<Quote>> corrs;
 
-            for (Size i = 0; i < optionTenors.size(); i++) {
-                if (config->quoteType() == CorrelationCurveConfig::QuoteType::Rate) {
-                    corrs.push_back(quotes[i]);
+            // sort the quotes
+            std::sort(quotePairs.begin(), quotePairs.end());
+            vector<Real> times;
+            vector<Handle<Quote>> quotes;
+            for (Size i = 0; i < quotePairs.size(); i++) {
+                if (config->quoteType() == MarketDatum::QuoteType::RATE) {
+                    corrs.push_back(quotePairs[i].second);
                 } else {
                     Handle<Quote> q(boost::make_shared<SimpleQuote>(0));
                     corrs.push_back(q);
                 }
-            }
+                quotes.push_back(quotePairs[i].second);
+                times.push_back(quotePairs[i].first);
+            }                       
 
             // build correlation termsructure
-            bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
+            bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant || quotes.size() == 1);
             LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
 
             if (flat) {
@@ -258,22 +316,13 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
 
                 corr->enableExtrapolation(config->extrapolate());
             } else {
-                vector<Real> times(optionTenors.size());
-
-                for (Size i = 0; i < optionTenors.size(); ++i) {
-                    Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
-
-                    times[i] = config->dayCounter().yearFraction(asof, d);
-
-                    LOG("asof " << asof << ", tenor " << optionTenors[i] << ", date " << d << ", time " << times[i]);
-                }
 
                 corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
                     new QuantExt::InterpolatedCorrelationCurve<Linear>(times, corrs, config->dayCounter(),
                                                                        config->calendar()));
             }
 
-            if (config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
+            if (config->quoteType() == MarketDatum::QuoteType::PRICE) {
 
                 if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread) {
                     calibrateCMSSpreadCorrelations(config, asof, quotes, corrs, corr, conventions, swapIndices,

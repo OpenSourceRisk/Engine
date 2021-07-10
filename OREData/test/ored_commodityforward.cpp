@@ -59,7 +59,8 @@ public:
         vector<Real> prices = {1346.0, 1348.0};
         Handle<PriceTermStructure> priceCurve(
             boost::make_shared<InterpolatedPriceCurve<Linear>>(asof_, dates, prices, dayCounter, USDCurrency()));
-        commodityCurves_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = priceCurve;
+        Handle<CommodityIndex> commIdx(boost::make_shared<CommoditySpotIndex>("GOLD_USD", NullCalendar(), priceCurve));
+        commodityIndices_[make_pair(Market::defaultConfiguration, "GOLD_USD")] = commIdx;
     }
 };
 
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
         boost::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
     BOOST_CHECK(commodityForward);
     BOOST_CHECK_EQUAL(commodityForward->position(), Position::Type::Long);
-    BOOST_CHECK_EQUAL(commodityForward->name(), "GOLD_USD");
+    BOOST_CHECK_EQUAL(commodityForward->index()->name(), "COMM-GOLD_USD");
     BOOST_CHECK_EQUAL(commodityForward->currency(), USDCurrency());
     BOOST_CHECK_CLOSE(commodityForward->quantity(), 100.0, testTolerance);
     BOOST_CHECK_EQUAL(commodityForward->maturityDate(), Date(19, Feb, 2019));

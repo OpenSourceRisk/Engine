@@ -47,22 +47,10 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::Dimension t)
         QL_FAIL("unknown Dimension(" << Integer(t) << ")");
     }
 }
-std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t) {
-    switch (t) {
-    case CorrelationCurveConfig::QuoteType::Rate:
-        return out << "RATE";
-    case CorrelationCurveConfig::QuoteType::Price:
-        return out << "PRICE";
-    case CorrelationCurveConfig::QuoteType::Null:
-        return out << "NULL";
-    default:
-        QL_FAIL("unknown QuoteType(" << Integer(t) << ")");
-    }
-}
 
 CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const string& curveDescription,
                                                const Dimension& dimension, const CorrelationType& corrType,
-                                               const string& convention, const QuoteType& quoteType,
+                                               const string& convention, const MarketDatum::QuoteType& quoteType,
                                                const bool extrapolate, const vector<string>& optionTenors,
                                                const DayCounter& dayCounter, const Calendar& calendar,
                                                const BusinessDayConvention& businessDayConvention, const string& index1,
@@ -79,6 +67,15 @@ CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const stri
         QL_REQUIRE(optionTenors.size() == 1,
                    "Only one tenor should be supplied for a constant correlation termstructure");
     }
+
+    populateRequiredCurveIds();
+}
+
+void CorrelationCurveConfig::populateRequiredCurveIds() {
+    if (!swaptionVolatility().empty())
+        requiredCurveIds_[CurveSpec::CurveType::SwaptionVolatility].insert(swaptionVolatility());
+    if (!discountCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(discountCurve());
 }
 
 const vector<string>& CorrelationCurveConfig::quotes() {
@@ -117,17 +114,17 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     // For QuoteType, we use an insensitive compare because we previously used "Rate" here
     // But now we want to be consistent with the market datum name
     if (boost::iequals(quoteType, "RATE")) {
-        quoteType_ = QuoteType::Rate;
+        quoteType_ = MarketDatum::QuoteType::RATE;
     } else if (boost::iequals(quoteType, "PRICE")) {
-        quoteType_ = QuoteType::Price;
+        quoteType_ = MarketDatum::QuoteType::PRICE;
     } else if (boost::iequals(quoteType, "NULL")) {
-        quoteType_ = QuoteType::Null;
+        quoteType_ = MarketDatum::QuoteType::NONE;
     } else {
         QL_FAIL("Quote type " << quoteType << " not recognized");
     }
 
     string cal, dc;
-    if (quoteType_ == QuoteType::Null) {
+    if (quoteType_ == MarketDatum::QuoteType::NONE) {
 
         cal = XMLUtils::getChildValue(node, "Calendar", false);
         cal == "" ? calendar_ = QuantLib::NullCalendar() : calendar_ = parseCalendar(cal);
@@ -147,10 +144,10 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
         string dim = XMLUtils::getChildValue(node, "Dimension", true);
         QL_REQUIRE(dim == "ATM" || dim == "Constant", "Dimension " << dim << " not recognised");
 
-        if (optionTenors_.size() == 1) {
+        if (dim == "Constant") {
             dimension_ = Dimension::Constant;
+            QL_REQUIRE(optionTenors_.size() == 1, "Only one tenor should be supplied for a constant correlation termstructure");
         } else {
-            QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
             dimension_ = Dimension::ATM;
         }
 
@@ -163,7 +160,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
         extrapolate_ = parseBool(extr);
 
         if (correlationType_ == CorrelationType::Generic) {
-            QL_REQUIRE(quoteType_ == QuoteType::Rate, "For CorrelationType::Generic calibration is not supported!");
+            QL_REQUIRE(quoteType_ == MarketDatum::QuoteType::RATE, "For CorrelationType::Generic calibration is not supported!");
         }
         // needed for Rate and Price QuoteTyope to build the quote string
         index1_ = XMLUtils::getChildValue(node, "Index1", true);
@@ -174,13 +171,14 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
         // Index1, Index2, Currency, Conventions, SwaptionVolatility, DiscountCurve are relevant for calibration which
         // is only supported for
         // CMSSpread type corrrelation
-        if (correlationType_ == CorrelationType::CMSSpread && quoteType_ == QuoteType::Price) {
+        if (correlationType_ == CorrelationType::CMSSpread && quoteType_ == MarketDatum::QuoteType::PRICE) {
             currency_ = XMLUtils::getChildValue(node, "Currency", true);
             conventions_ = XMLUtils::getChildValue(node, "Conventions");
             swaptionVol_ = XMLUtils::getChildValue(node, "SwaptionVolatility", true);
             discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
         }
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
@@ -192,18 +190,18 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index2", index2_);
     XMLUtils::addChild(doc, node, "Conventions", conventions_);
 
-    if (quoteType_ == QuoteType::Price) {
+    if (quoteType_ == MarketDatum::QuoteType::PRICE) {
         XMLUtils::addChild(doc, node, "SwaptionVolatility", swaptionVol_);
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
         XMLUtils::addChild(doc, node, "Currency", currency_);
     }
-    if (quoteType_ != QuoteType::Null) {
+    if (quoteType_ != MarketDatum::QuoteType::NONE) {
         XMLUtils::addChild(doc, node, "Dimension", to_string(dimension_));
     }
 
     XMLUtils::addChild(doc, node, "QuoteType", to_string(quoteType_));
 
-    if (quoteType_ != QuoteType::Null) {
+    if (quoteType_ != MarketDatum::QuoteType::NONE) {
 
         XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
@@ -215,7 +213,7 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
     }
 
-    if (quoteType_ == QuoteType::Null) {
+    if (quoteType_ == MarketDatum::QuoteType::NONE) {
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     }
@@ -234,7 +232,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
 
     Size s1, s2;
 
-    if (tokens1[0] == "CMS")
+    if (tokens1[1] == "CMS")
         s1 = 4;
     else if (tokens1[0] == "FX")
         s1 = 2;
@@ -245,7 +243,7 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
     else
         s1 = 3; // assume Ibor
 
-    if (tokens2[0] == "CMS")
+    if (tokens2[1] == "CMS")
         s2 = 4;
     else if (tokens2[0] == "FX")
         s2 = 2;

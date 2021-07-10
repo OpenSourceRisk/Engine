@@ -37,7 +37,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conventions) {
+void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::Conventions>& conventions) {
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
     cpu_timer timer;
@@ -55,7 +55,7 @@ void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conven
             TLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
             count++;
         } catch (const std::exception& e) {
-            DLOG("Error during adding fixing for " << f.name << ": " << e.what());
+            WLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
     }
     timer.stop();

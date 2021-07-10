@@ -24,6 +24,7 @@
 #pragma once
 
 #include <string>
+#include <ql/currency.hpp>
 
 namespace ore {
 namespace data {
@@ -33,5 +34,18 @@ using std::string;
     \ingroup utilities
 */
 bool checkCurrency(const string& s);
+
+//! Minor Currency Check
+/*! check whether string is a minor currency
+    \ingroup utilities
+*/
+bool checkMinorCurrency(const string& s);
+
+//! Convert a value from a minor ccy to major
+/*! .i.e 100 GBp to 1 GBP
+    \ingroup utilities
+*/
+QuantLib::Real convertMinorToMajorCurrency(const std::string& s, QuantLib::Real value);
+
 } // namespace data
 } // namespace ore

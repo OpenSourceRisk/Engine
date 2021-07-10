@@ -907,6 +907,7 @@
       <Name>SP5</Name>
       <Currency>USD</Currency>
       <Strike>2147.56</Strike>
+      <StrikeCurrency>USD</StrikeCurrency>
       <Quantity>775</Quantity>
     </EquityForwardData>
   </Trade>

@@ -61,8 +61,7 @@ public:
         const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
         const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
         const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
-        bool spreadOnForeignCcy = true, bool invertFxIndex = false,
-        boost::optional<QuantLib::Period> foreignTenor = boost::none,
+        bool spreadOnForeignCcy = true, boost::optional<QuantLib::Period> foreignTenor = boost::none,
         boost::optional<QuantLib::Period> domesticTenor = boost::none);
     //! \name RateHelper interface
     //@{
@@ -92,7 +91,7 @@ protected:
     Handle<YieldTermStructure> domesticCcyDiscountCurve_;
     Handle<YieldTermStructure> foreignCcyFxFwdRateCurve_;
     Handle<YieldTermStructure> domesticCcyFxFwdRateCurve_;
-    bool eom_, spreadOnForeignCcy_, invertFxIndex_;
+    bool eom_, spreadOnForeignCcy_;
     QuantLib::Period foreignTenor_;
     QuantLib::Period domesticTenor_;
 

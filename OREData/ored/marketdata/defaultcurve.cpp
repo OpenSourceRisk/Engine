@@ -17,10 +17,15 @@
 */
 
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
+#include <qle/termstructures/interpolatedhazardratecurve.hpp>
+#include <qle/termstructures/interpolatedsurvivalprobabilitycurve.hpp>
 #include <qle/termstructures/iterativebootstrap.hpp>
+#include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
@@ -28,7 +33,7 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
-#include <regex>
+#include <set>
 
 using namespace QuantLib;
 using namespace std;
@@ -41,12 +46,153 @@ using namespace std;
 #define ATTR_UNUSED __attribute__((unused))
 #endif
 
+namespace {
+
+using namespace ore::data;
+
+struct QuoteData {
+    QuoteData() : value(Null<Real>()), runningSpread(Null<Real>()) {}
+
+    QuoteData(const Period& t, Real v, Real rs = Null<Real>())
+        : term(t), value(v), runningSpread(rs) {}
+
+    Period term;
+    Real value;
+    Real runningSpread;
+};
+
+bool operator<(const QuoteData& lhs, const QuoteData& rhs)
+{
+    return lhs.term < rhs.term;
+}
+
+void addQuote(set<QuoteData>& quotes, const string& configId, const string& name, const Period& tenor,
+    Real value, Real runningSpread = Null<Real>()) {
+
+    // Add to quotes, with a check that we have no duplicate tenors
+    auto r = quotes.insert(QuoteData(tenor, value, runningSpread));
+    QL_REQUIRE(r.second, "duplicate term in quotes found (" << tenor << ") while loading default curve " << configId);
+    TLOG("Loaded quote " << name << " for default curve " << configId);
+}
+
+set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, DefaultCurveConfig::Type type,
+    const Date& asof, const Loader& loader) {
+
+    using DCCT = DefaultCurveConfig::Type;
+    using MDQT = MarketDatum::QuoteType;
+    using MDIT = MarketDatum::InstrumentType;
+    LOG("Loading regex quotes for default curve " << configId);
+
+    // Loop over the available market data and pick out quotes that match the expression
+    set<QuoteData> result;
+    for (const auto& md : loader.loadQuotes(asof)) {
+
+        // Go to next quote if the market data point's date does not equal our asof
+        if (md->asofDate() != asof)
+            continue;
+
+        auto mdit = md->instrumentType();
+        auto mdqt = md->quoteType();
+
+        // If we have a CDS spread or hazard rate quote, check it and populate tenor and value if it matches
+        if (type == DCCT::SpreadCDS && mdit == MDIT::CDS &&
+            (mdqt == MDQT::CREDIT_SPREAD || mdqt == MDQT::CONV_CREDIT_SPREAD)) {
+
+            auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
+            if (wc.matches(q->name())) {
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
+            }
+
+        } else if (type == DCCT::Price && (mdit == MDIT::CDS && mdqt == MDQT::PRICE)) {
+
+            auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
+            if (wc.matches(q->name())) {
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
+            }
+
+        } else if (type == DCCT::HazardRate && (mdit == MDIT::HAZARD_RATE && mdqt == MDQT::RATE)) {
+
+            auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
+            if (wc.matches(q->name())) {
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value());
+            }
+        }
+    }
+
+    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances,
+    // it may be allowable to have no quotes.
+    if (type != DCCT::SpreadCDS && type != DCCT::Price) {
+        QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    }
+
+    LOG("DefaultCurve " << configId << " loaded and using " << result.size() << " quotes.");
+
+    return result;
+}
+
+set<QuoteData> getExplicitQuotes(const vector<pair<string, bool>>& quotes, const string& configId,
+    DefaultCurveConfig::Type type, const Date& asof, const Loader& loader) {
+
+    using DCCT = DefaultCurveConfig::Type;
+    LOG("Loading explicit quotes for default curve " << configId);
+
+    set<QuoteData> result;
+    for (const auto& p : quotes) {
+        if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
+            if (type == DCCT::SpreadCDS || type == DCCT::Price) {
+                auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
+                QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a CdsQuote");
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
+            } else {
+                auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
+                QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a HazardRateQuote");
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value());
+            }
+        }
+    }
+
+    // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances,
+    // it may be allowable to have no quotes.
+    if (type != DCCT::SpreadCDS && type != DCCT::Price) {
+        QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
+    }
+
+    LOG("DefaultCurve " << configId << " using " << result.size() << " default quotes of " << quotes.size()
+        << " requested quotes.");
+
+    return result;
+}
+
+set<QuoteData> getConfiguredQuotes(DefaultCurveConfig& config, const Date& asof, const Loader& loader) {
+
+    using DCCT = DefaultCurveConfig::Type;
+    auto type = config.type();
+    QL_REQUIRE(type == DCCT::SpreadCDS || type == DCCT::Price || type == DCCT::HazardRate,
+        "getConfiguredQuotes expects a curve type of SpreadCDS, Price or HazardRate.");
+    QL_REQUIRE(!config.cdsQuotes().empty(), "No quotes configured for curve " << config.curveID());
+
+    // We may have a _single_ regex quote or a list of explicit quotes. Check if we have single regex quote.
+    std::vector<std::string> tmp;
+    std::transform(config.cdsQuotes().begin(), config.cdsQuotes().end(), std::back_inserter(tmp),
+                   [](const std::pair<std::string, bool>& p) { return p.first; });
+    auto wildcard = getUniqueWildcard(tmp);
+
+    if (wildcard) {
+        return getRegexQuotes(*wildcard, config.curveID(), config.type(), asof, loader);
+    } else {
+        return getExplicitQuotes(config.cdsQuotes(), config.curveID(), config.type(), asof, loader);
+    }
+}
+
+}
+
 namespace ore {
 namespace data {
 
 DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader,
                            const CurveConfigurations& curveConfigs, const Conventions& conventions,
-                           map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                           map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                           map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
 
     try {
 
@@ -55,9 +201,12 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         // Set the recovery rate if necessary
         recoveryRate_ = Null<Real>();
         if (!config->recoveryRateQuote().empty()) {
-            QL_REQUIRE(loader.has(config->recoveryRateQuote(), asof),
-                       "There is no market data for the requested recovery rate " << config->recoveryRateQuote());
-            recoveryRate_ = loader.get(config->recoveryRateQuote(), asof)->quote()->value();
+            // for some curve types (Benchmark, MutliSection) a numeric recovery rate is allowed, which we handle here
+            if (!tryParseReal(config->recoveryRateQuote(), recoveryRate_)) {
+                QL_REQUIRE(loader.has(config->recoveryRateQuote(), asof),
+                           "There is no market data for the requested recovery rate " << config->recoveryRateQuote());
+                recoveryRate_ = loader.get(config->recoveryRateQuote(), asof)->quote()->value();
+            }
         }
 
         // Build the default curve of the requested type
@@ -71,6 +220,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             break;
         case DefaultCurveConfig::Type::Benchmark:
             buildBenchmarkCurve(*config, asof, spec, loader, conventions, yieldCurves);
+            break;
+        case DefaultCurveConfig::Type::MultiSection:
+            buildMultiSectionCurve(*config, asof, spec, loader, conventions, defaultCurves);
             break;
         default:
             QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config->type()) << " was not recognised");
@@ -107,67 +259,71 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     Handle<YieldTermStructure> discountCurve = it->second->handle();
 
     // Get the CDS spread / price curve quotes
-    map<Period, Real> quotes = getConfiguredQuotes(config, asof, loader);
+    set<QuoteData> quotes = getConfiguredQuotes(config, asof, loader);
 
-    // 0M as a tenor should be allowable with CDS date generation but it is not yet supported so we
-    // remove any CDS pillars that have a Period with length == 0. For the erasing logic while iterating map:
-    // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-while-iterating-it
-    for (auto it = quotes.cbegin(); it != quotes.cend();) {
-        if (it->first.length() == 0) {
-            WLOG("Removing CDS with tenor zero from curve " << spec.name() << " since it is not supported yet");
-            it = quotes.erase(it);
-        } else {
-            ++it;
+    // If the configuration instructs us to imply a default from the market data, we do it here.
+    if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
+        if (recoveryRate_ != Null<Real>() && quotes.empty()) {
+            // Assume entity is in default, between event determination date and auction date. Build a survivial
+            // probability curve with value 0.0 tomorrow to approximate this and allow dependent instruments to price.
+            // Need to use small but positive numbers to avoid downstream issues with log linear survivals e.g. below
+            // and in places like ScenarioSimMarket.
+            vector<Date> dates{asof, asof + 1 * Years, asof + 10 * Years};
+            vector<Real> survivalProbs{1.0, 1e-16, 1e-18};
+            curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+                dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(),
+                std::vector<Date>(), LogLinear());
+            curve_->enableExtrapolation();
+            WLOG("DefaultCurve: recovery rate found but no CDS quotes for "
+                 << config.curveID() << " and "
+                 << "ImplyDefaultFromMarket is true. Curve built that gives default immediately.");
+            return;
         }
-    }
-
-    // If date generation rule is DateGeneration::CDS2015, need to ensure that the CDS tenor is a multiple of
-    // 6M. The wrong CDS maturity date is generated if it is not. Additionally, you can end up with a curve that
-    // has multiple identical maturity dates which leads to a crash. Issue opened with QuantLib on this:
-    // https://github.com/lballabio/QuantLib/issues/727
-    if (cdsConv->rule() == DateGeneration::CDS2015) {
-        // Erase any elements with a tenor that is not a multiple of 6 months. Intentionally getting rid of anything
-        // here that is in units of days or weeks also.
-        for (auto it = quotes.cbegin(); it != quotes.cend();) {
-            if ((it->first.units() == Months && it->first.length() % 6 == 0) || it->first.units() == Years) {
-                ++it;
-            } else {
-                WLOG("Removing CDS with tenor "
-                     << it->first << " from curve " << spec.name()
-                     << " since date generation rule is CDS2015 and the tenor is not a multiple of 6 months");
-                it = quotes.erase(it);
-            }
-        }
+    } else {
+        QL_REQUIRE(!quotes.empty(), "No market points found for CDS curve config " << config.curveID());
     }
 
     // Create the CDS instrument helpers
     vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helpers;
+    QuantExt::CreditDefaultSwap::ProtectionPaymentTime ppt = cdsConv->paysAtDefaultTime() ?
+        QuantExt::CreditDefaultSwap::atDefault : QuantExt::CreditDefaultSwap::atPeriodEnd;
+
     if (config.type() == DefaultCurveConfig::Type::SpreadCDS) {
         for (auto quote : quotes) {
             helpers.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
-                quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
+                quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                 cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                config.startDate(), cdsConv->settlesAccrual(),
-                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
-                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
+                config.startDate(), cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter()));
         }
     } else {
         for (auto quote : quotes) {
+
+            // If there is no running spread encoded in the quote, the config must have one.
+            Real runningSpread = quote.runningSpread;
+            if (runningSpread == Null<Real>()) {
+                QL_REQUIRE(config.runningSpread() != Null<Real>(), "A running spread was not provided in the quote " <<
+                    "string so it must be provided in the config for CDS upfront curve " << config.curveID());
+                runningSpread = config.runningSpread();
+            }
+
             helpers.push_back(boost::make_shared<QuantExt::UpfrontCdsHelper>(
-                quote.second, config.runningSpread(), quote.first, cdsConv->settlementDays(), cdsConv->calendar(),
+                quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                recoveryRate_, discountCurve, config.startDate(), cdsConv->settlesAccrual(),
-                cdsConv->paysAtDefaultTime() ? QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault
-                                             : QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd));
+                recoveryRate_, discountCurve, config.startDate(), cdsConv->upfrontSettlementDays(),
+                cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter()));
         }
     }
+
+    // Ensure that the helpers are sorted. This is done in IterativeBootstrap, but we need
+    // a sorted instruments vector in the code here as well.
+    std::sort(helpers.begin(), helpers.end(), QuantLib::detail::BootstrapHelperSorter());
 
     // Get configuration values for bootstrap
     Real accuracy = config.bootstrapConfig().accuracy();
     Real globalAccuracy = config.bootstrapConfig().globalAccuracy();
     bool dontThrow = config.bootstrapConfig().dontThrow();
     Size maxAttempts = config.bootstrapConfig().maxAttempts();
-    Real maxFactor = config.bootstrapConfig().maxFactor();
+    Real maxFactor = config.allowNegativeRates() ? config.bootstrapConfig().maxFactor() : 1.0;
     Real minFactor = config.bootstrapConfig().minFactor();
     Size dontThrowSteps = config.bootstrapConfig().dontThrowSteps();
 
@@ -187,18 +343,42 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     survivalProbs.push_back(1.0);
     TLOG("Survival probabilities for CDS curve " << config.curveID() << ":");
     TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
+
+    bool gotAliveHelper = false;
+
     for (Size i = 0; i < helpers.size(); ++i) {
         if (helpers[i]->latestDate() > asof) {
-            dates.push_back(helpers[i]->latestDate());
-            survivalProbs.push_back(tmp->survivalProbability(dates.back()));
-            TLOG(io::iso_date(dates.back()) << "," << fixed << setprecision(9) << survivalProbs.back());
+            gotAliveHelper = true;
+
+            Date pillarDate = helpers[i]->pillarDate();
+            Probability sp = tmp->survivalProbability(pillarDate);
+
+            // In some cases the bootstrapped survival probability at one tenor will be `close` to that at a previous
+            // tenor. Here we don't add that survival probability and date to avoid issues when creating the
+            // InterpolatedSurvivalProbabilityCurve below.
+            if (!survivalProbs.empty() && close(survivalProbs.back(), sp)) {
+                DLOG("Survival probability for curve " << spec.name() << " at date " << io::iso_date(pillarDate)
+                                                       << " is the same as that at previous date "
+                                                       << io::iso_date(dates.back()) << " so skipping it.");
+                continue;
+            }
+
+            dates.push_back(pillarDate);
+            survivalProbs.push_back(sp);
+            TLOG(io::iso_date(pillarDate) << "," << fixed << setprecision(9) << sp);
         }
     }
-    QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
+    QL_REQUIRE(gotAliveHelper, "Need at least one alive helper to build the default curve");
+    if (dates.size() == 1) {
+        // We might have removed points above. To make the interpolation work, we need at least two points though.
+        dates.push_back(dates.back() + 1);
+        survivalProbs.push_back(survivalProbs.back());
+    }
 
     LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
-    curve_ =
-        boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, survivalProbs, config.dayCounter());
+    curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+        dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(), std::vector<Date>(),
+        LogLinear(), config.allowNegativeRates());
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
         DLOG("DefaultCurve: Enabled Extrapolation");
@@ -225,7 +405,7 @@ void DefaultCurve::buildHazardRateCurve(DefaultCurveConfig& config, const Date& 
     QL_REQUIRE(cdsConv, "HazardRate curves require CDS convention");
 
     // Get the hazard rate quotes
-    map<Period, Real> quotes = getConfiguredQuotes(config, asof, loader);
+    set<QuoteData> quotes = getConfiguredQuotes(config, asof, loader);
 
     // Build the hazard rate curve
     Calendar cal = cdsConv->calendar();
@@ -233,20 +413,20 @@ void DefaultCurve::buildHazardRateCurve(DefaultCurveConfig& config, const Date& 
     vector<Real> quoteValues;
 
     // If first term is not zero, add asof point
-    if (quotes.begin()->first != 0 * Days) {
-        LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << quotes.begin()->second << ", as not given");
+    if (quotes.begin()->term != 0 * Days) {
+        LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << quotes.begin()->value << ", as not given");
         dates.push_back(asof);
-        quoteValues.push_back(quotes.begin()->second);
+        quoteValues.push_back(quotes.begin()->value);
     }
 
     for (auto quote : quotes) {
-        dates.push_back(cal.advance(asof, quote.first, Following, false));
-        quoteValues.push_back(quote.second);
+        dates.push_back(cal.advance(asof, quote.term, Following, false));
+        quoteValues.push_back(quote.value);
     }
 
     LOG("DefaultCurve: set up interpolated hazard rate curve");
-    curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(dates, quoteValues, config.dayCounter(),
-                                                                           BackwardFlat());
+    curve_ = boost::make_shared<QuantExt::InterpolatedHazardRateCurve<BackwardFlat>>(
+        dates, quoteValues, config.dayCounter(), BackwardFlat(), config.allowNegativeRates());
 
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
@@ -273,9 +453,8 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::Benchmark,
                "DefaultCurve::buildBenchmarkCurve expected a default curve configuration with type Benchmark");
 
-    QL_REQUIRE(recoveryRate_ == Null<Real>(), "DefaultCurve: recovery rate must not be given "
-                                              "for benchmark implied curve type, it is assumed to be 0.0");
-    recoveryRate_ = 0.0;
+    if (recoveryRate_ == Null<Real>())
+        recoveryRate_ = 0.0;
 
     // Populate benchmark yield curve
     auto it = yieldCurves.find(config.benchmarkCurveID());
@@ -302,8 +481,12 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     Date spot = cal.advance(asof, spotLag * Days);
     for (Size i = 0; i < pillars.size(); ++i) {
         dates.push_back(cal.advance(spot, pillars[i]));
-        Real tmp = sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i]);
-        impliedSurvProb.push_back(dates[i] == asof ? 1.0 : tmp);
+        Real tmp = dates[i] == asof
+                       ? 1.0
+                       : sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i]);
+        // if a non-zero recovery rate is given, we adjust the implied surv probability according to a market value
+        // recovery model (see the documentation of the benchmark curve in the user guide for more details)
+        impliedSurvProb.push_back(std::pow(tmp, 1.0 / (1.0 - recoveryRate_)));
     }
     QL_REQUIRE(dates.size() > 0, "DefaultCurve (Benchmark): no dates given");
 
@@ -314,8 +497,9 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     }
 
     LOG("DefaultCurve: set up interpolated surv prob curve as yield over benchmark");
-    curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, impliedSurvProb,
-                                                                                 config.dayCounter());
+    curve_ = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+        dates, impliedSurvProb, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(), std::vector<Date>(),
+        LogLinear(), config.allowNegativeRates());
 
     if (config.extrapolation()) {
         curve_->enableExtrapolation();
@@ -328,118 +512,33 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
     LOG("Finished building default curve of type Benchmark for curve " << config.curveID());
 }
 
-map<Period, Real> DefaultCurve::getConfiguredQuotes(DefaultCurveConfig& config, const Date& asof,
-                                                    const Loader& loader) const {
+void DefaultCurve::buildMultiSectionCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
+                                          const Loader& loader, const Conventions& conventions,
+                                          map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
+    LOG("Start building default curve of type MultiSection for curve " << config.curveID());
 
-    QL_REQUIRE(config.type() == DefaultCurveConfig::Type::SpreadCDS ||
-                   config.type() == DefaultCurveConfig::Type::Price ||
-                   config.type() == DefaultCurveConfig::Type::HazardRate,
-               "DefaultCurve::getConfiguredQuotes expected a default curve configuration with type SpreadCDS, Price or "
-               "HazardRate");
-    QL_REQUIRE(!config.cdsQuotes().empty(), "No quotes configured for curve " << config.curveID());
+    std::vector<Handle<DefaultProbabilityTermStructure>> curves;
+    std::vector<Handle<Quote>> recoveryRates;
+    std::vector<Date> switchDates;
 
-    // Populate with quotes
-    map<Period, Real> result;
-
-    // We may have a _single_ regex quote or a list of explicit quotes. Check if we have single regex quote.
-    bool haveRegexQuote = config.cdsQuotes()[0].first.find("*") != string::npos;
-
-    if (haveRegexQuote) {
-        QL_REQUIRE(config.cdsQuotes().size() == 1,
-                   "Wild card specified in " << config.curveID() << " so only one quote should be provided.");
-        return getRegexQuotes(config.cdsQuotes()[0].first, config.curveID(), config.type(), asof, loader);
-    } else {
-        return getExplicitQuotes(config.cdsQuotes(), config.curveID(), config.type(), asof, loader);
-    }
-}
-
-map<Period, Real> DefaultCurve::getRegexQuotes(string strRegex, const string& configId, DefaultCurveConfig::Type type,
-                                               const Date& asof, const Loader& loader) const {
-
-    LOG("Loading regex quotes for default curve " << configId);
-
-    // "*" is used as wildcard in strRegex in our quotes. Need to replace with ".*" here for regex to work.
-    boost::replace_all(strRegex, "*", ".*");
-
-    // Create the regular expression
-    regex expression(strRegex);
-
-    // Loop over the available market data and pick out quotes that match the expression
-    map<Period, Real> result;
-    for (const auto& md : loader.loadQuotes(asof)) {
-
-        // Go to next quote if the market data point's date does not equal our asof
-        if (md->asofDate() != asof)
-            continue;
-
-        // If we have a CDS spread or hazard rate quote, check it and populate tenor and value if it matches
-        if (type == DefaultCurveConfig::Type::SpreadCDS && (md->instrumentType() == MarketDatum::InstrumentType::CDS &&
-                                                            md->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD)) {
-
-            auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
-            if (regex_match(q->name(), expression)) {
-                addQuote(result, q->term(), *md, configId);
-            }
-
-        } else if (type == DefaultCurveConfig::Type::Price &&
-                   (md->instrumentType() == MarketDatum::InstrumentType::CDS &&
-                    md->quoteType() == MarketDatum::QuoteType::PRICE)) {
-
-            auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
-            if (regex_match(q->name(), expression)) {
-                addQuote(result, q->term(), *md, configId);
-            }
-
-        } else if (type == DefaultCurveConfig::Type::HazardRate &&
-                   (md->instrumentType() == MarketDatum::InstrumentType::HAZARD_RATE &&
-                    md->quoteType() == MarketDatum::QuoteType::RATE)) {
-
-            auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
-            if (regex_match(q->name(), expression)) {
-                addQuote(result, q->term(), *md, configId);
-            }
-        }
+    for (auto const& s : config.multiSectionSourceCurveIds()) {
+        auto it = defaultCurves.find(s);
+        QL_REQUIRE(it != defaultCurves.end(),
+                   "The multi section source curve " << s << " required for " << spec.name() << " was not found.");
+        curves.push_back(Handle<DefaultProbabilityTermStructure>(it->second->defaultTermStructure()));
+        recoveryRates.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(it->second->recoveryRate())));
     }
 
-    QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
-    LOG("DefaultCurve " << configId << " loaded and using " << result.size() << " quotes.");
-
-    return result;
-}
-
-map<Period, Real> DefaultCurve::getExplicitQuotes(const vector<pair<string, bool>>& quotes, const string& configId,
-                                                  DefaultCurveConfig::Type type, const Date& asof,
-                                                  const Loader& loader) const {
-
-    LOG("Loading explicit quotes for default curve " << configId);
-
-    map<Period, Real> result;
-    for (const auto& p : quotes) {
-        if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
-            Period tenor;
-            if (type == DefaultCurveConfig::Type::SpreadCDS || type == DefaultCurveConfig::Type::Price) {
-                tenor = boost::dynamic_pointer_cast<CdsQuote>(md)->term();
-            } else {
-                tenor = boost::dynamic_pointer_cast<HazardRateQuote>(md)->term();
-            }
-            addQuote(result, tenor, *md, configId);
-        }
+    for (auto const& d : config.multiSectionSwitchDates()) {
+        switchDates.push_back(parseDate(d));
     }
 
-    QL_REQUIRE(!result.empty(), "No market points found for curve config " << configId);
-    LOG("DefaultCurve " << configId << " using " << result.size() << " default quotes of " << quotes.size()
-                        << " requested quotes.");
+    Handle<Quote> recoveryRate(boost::make_shared<SimpleQuote>(recoveryRate_));
+    LOG("DefaultCurve: set up multi section curve with " << curves.size() << " sections");
+    curve_ = boost::make_shared<QuantExt::MultiSectionDefaultCurve>(curves, recoveryRates, switchDates, recoveryRate,
+                                                                    config.dayCounter(), config.extrapolation());
 
-    return result;
-}
-
-void DefaultCurve::addQuote(map<Period, Real>& quotes, const Period& tenor, const MarketDatum& marketDatum,
-                            const string& configId) const {
-
-    // Add to quotes, with a check that we have no duplicate tenors
-    auto r = quotes.insert(make_pair(tenor, marketDatum.quote()->value()));
-    QL_REQUIRE(r.second, "duplicate term in quotes found (" << tenor << ") while loading default curve " << configId);
-    TLOG("Loaded quote " << marketDatum.name() << " for default curve " << configId);
+    LOG("Finished building default curve of type MultiSection for curve " << config.curveID());
 }
 
 } // namespace data

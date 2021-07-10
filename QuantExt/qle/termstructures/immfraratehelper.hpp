@@ -29,6 +29,8 @@
 namespace QuantExt {
 using namespace QuantLib;
 
+Date getImmDate(Date asof, Size i);
+
 typedef RelativeDateBootstrapHelper<YieldTermStructure> RelativeDateRateHelper;
 
 //! Rate helper for bootstrapping over %FRA rates
@@ -51,7 +53,6 @@ public:
 
 private:
     void initializeDates();
-    Date getImmDate(Date asof, Size i);
     Date fixingDate_;
     Size imm1_, imm2_;
     Pillar::Choice pillarChoice_;

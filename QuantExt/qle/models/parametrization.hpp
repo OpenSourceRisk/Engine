@@ -39,9 +39,14 @@ public:
     Parametrization(const Currency& currency, const std::string& name = "");
     virtual ~Parametrization() {}
 
+    /*! the currency associated to this parametrization */
     virtual const Currency currency() const;
 
+    /*! the times associated to parameter i */
     virtual const Array& parameterTimes(const Size) const;
+
+    /*! the number of parameters in this parametrization */
+    virtual Size numberOfParameters() const { return 0; }
 
     /*! these are the actual (real) parameter values in contrast
         to the raw values which are stored in Parameter::params_
@@ -62,6 +67,10 @@ public:
     /*! return a name (inflation index, equity name, credit name, etc.) */
     const std::string& name() const { return name_; }
 
+    /*! transformations between raw and real parameters */
+    virtual Real direct(const Size, const Real x) const;
+    virtual Real inverse(const Size, const Real y) const;
+
 protected:
     /*! step size for numerical differentiation */
     const Real h_, h2_;
@@ -71,9 +80,6 @@ protected:
     Time tr2(const Time t) const;
     Time tm2(const Time t) const;
     Time tl2(const Time t) const;
-    /*! transformations between raw and real parameters */
-    virtual Real direct(const Size, const Real x) const;
-    virtual Real inverse(const Size, const Real y) const;
 
 private:
     Currency currency_;

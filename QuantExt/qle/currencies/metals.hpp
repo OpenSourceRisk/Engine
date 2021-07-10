@@ -67,5 +67,9 @@ class XPDCurrency : public Currency {
 public:
     XPDCurrency();
 };
+
+//! Check if a given \p currency is a metal.
+bool isMetal(const QuantLib::Currency& currency);
+
 } // namespace QuantExt
 #endif

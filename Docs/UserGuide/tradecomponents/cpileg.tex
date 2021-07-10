@@ -1,8 +1,8 @@
 \subsubsection{CPI Leg Data}
 \label{ss:cpilegdata}
 
-A CPI leg contains a series of CPI-linked coupon payments $I(t)/I_0\,N\,c\,\delta$ and a final
-inflation-linked redemption $I(t)/I_0\,N$. The final redemption can be
+A CPI leg contains a series of CPI-linked coupon payments $(I(t)/I_0)\,N\,c\,\delta$ and, if \lstinline!NotionalFinalExchange! is set to \emph{true}, a final
+inflation-linked redemption $(I(t)/I_0)\,N$. Each coupon and the final redemption can be
 subtracting the (un-inflated) notional $N$, i.e. $(I(t)/I_0-1)\,N$,
 see below.
 
@@ -26,8 +26,8 @@ Allowable values:  See \lstinline!Inflation CPI Index! in Table \ref{tab:cpiinde
 Allowable values:  Any positive real number.
 
 \item StartDate [Optional]: The start date needs to be provided in case the schedule comprises only a single date. If
-  the schedule has at least two dates and a start date is given at the same time, the first schedule date must be
-  identical to the start date.
+  the schedule has at least two dates and a start date is given at the same time, the first schedule date is taken as 
+  the start date and the supplied \lstinline!StartDate! is ignored.
   
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}. 
 
@@ -35,13 +35,10 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in a positive number of  \emph{M}, months. Note that negative values are allowed, but mean that the inflation is observed forward in time from the period start/end date, which is unusual.  
 
-\item Interpolation: The type of interpolation that is applied to inflation fixings.
+\item Interpolation: The type of interpolation that is applied to inflation fixings. \emph{Linear} interpolation means that the inflation fixing for a given date is interpolated linearly between the surrounding - usually monthly - actual fixings, whereas with  \emph{Flat} interpolation the inflation fixings are constant for each day at the value of the previous/latest actual fixing (flat forward interpolation).  
+%\emph{AsIndex} means that the underlying inflation index interpolation is applied. Note that if an inflation index have fixing interpolation switched off,  \emph{AsIndex}  is equivalent to \emph{Flat} interpolation.
 
-Allowable values:  \emph{Linear, Flat, AsIndex} 
-
-\medskip
-The latter choice means that the underlying inflation index
-interpolation is applied.
+Allowable values:  \emph{Linear, Flat} 
 
 \item SubtractInflationNotional [Optional]: A flag indicating whether
   the non-inflation adjusted notional amount should be subtracted from
@@ -50,20 +47,60 @@ interpolation is applied.
 Final notional payment if \emph{true}: $N \,(I(T)/I_0-1)$. \\ 
 Final notional payment if  \emph{false}: $N \,I(T)/I_0$ 
 
+\item SubtractInflationNotionalAllCoupons [Optional]: A flag indicating whether
+  the non-inflation adjusted notional amount should be subtracted from
+  all coupons.
+  Note that the final redemption payment is not affected by this flag. \\ 
+Coupon payment if \emph{true}: $N \,(I(T)/I_0-1)$. \\ 
+Coupon payment if  \emph{false}: $N \,I(T)/I_0$ 
+
 Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
 \\Defaults to \emph{false}  if left blank or omitted.
 
 \item Caps [Optional]: This node contains child elements of type
   \lstinline!Cap! indicating that the inflation indexed payment is
   capped; the cap is applied to the inflation index and expressed as
-  an inflation rate, see CPI Cap.
+  an inflation rate, see CPI Cap/Floor in the Product Description. \\
+  If the cap is constant over the life of the 
+cpi leg, only one cap value should
+be entered. If two or more coupons have different caps, multiple cap values
+are required, each represented by a \lstinline!Cap! child element. The first cap value
+corresponds to the first coupon, the second cap value corresponds to the
+second coupon, etc. If the number of coupons exceeds the number of cap
+values, the cap will be kept at at the value of last entered spread for the
+remaining coupons. The number of entered cap values cannot exceed the
+number of coupons. Notice that the caps defined under this node only apply to the cpi coupons,
+but not a final notional flow (if present). A cap for the final notional flow can be defined
+under the FinalFlowCap node.
 
-\item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
-  the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
-  above.
+Allowable values: Each child element can take any real number. The cap is
+expressed in decimal form, e.g. 0.03 is a cap of 3\%.
 
-\item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+\item Floors [Optional]: This node contains child elements of type
+  \lstinline!Floor! indicating that the inflation indexed payment is
+  floored; the floor is applied to the inflation index and expressed as
+  an inflation rate. The mode of specification is analogous to caps, see
+  above. Notice that the floors defined under this node only apply to the cpi coupons,
+  but not a final notional flow (if present). A floor for the final notional flow can be defined
+  under the FinalFlowFloor node.
+
+Allowable values: Each child element can take any real number. The floor is
+expressed in decimal form, e.g. 0.01 is a cap of 1\%.
+
+\item FinalFlowCap [Optional]: The cap to be applied to the final notional flow of the cpi leg. If not given, no cap
+  is applied.
+
+Allowable values: A real number.
+
+\item FinalFlowFloor [Optional]: The floor to be applied to the final notional flow of the cpi leg. If not given, no floor
+  is applied.
+
+Allowable values: A real number.
+
+\item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+ 
+ Allowable values:  \emph{true}, \emph{false}. Defaults to \emph{false} if left blank or omitted.
  
 \end{itemize} 
 
@@ -79,6 +116,10 @@ Whether the leg cotains a final redemption flow at all or not depends on the
         <Currency>GBP</Currency>
         <Notionals>
           <Notional>10000000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>false</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>          
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
@@ -111,8 +152,11 @@ Whether the leg cotains a final redemption flow at all or not depends on the
           <Floors>
             <Floor>0.0</Floor>
           <Floors>
+          <FinalFlowCap>0.03</FinalFlowCap>
+          <FinalFlowFloor>0.0</FinalFlowFloor>
+          <NakedOption>false</NakedOption>
+          <SubtractInflationNotionalAllCoupons>false</SubtractInflationNotionalAllCoupons>         
         </CPILegData>
-        <NakedOption>N</NakedOption>
       </LegData>
 \end{minted}
 \caption{CPI leg data with capped annual coupons}
@@ -153,6 +197,7 @@ Whether the leg cotains a final redemption flow at all or not depends on the
           <ObservationLag>2M</ObservationLag>
           <Interpolated>false</Interpolated>
           <SubtractInflationNotional>true</SubtractInflationNotional>
+          <SubtractInflationNotionalAllCoupons>false</SubtractInflationNotionalAllCoupons>
         </CPILegData>
       </LegData>
 \end{minted}

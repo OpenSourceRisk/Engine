@@ -26,5 +26,9 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv_flat.csv</Parameter>
     </Analytic>
+    <Analytic type="additionalResults">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="outputFileName">additionalResultsFlat.csv</Parameter>
+    </Analytic>
   </Analytics>
 </ORE>

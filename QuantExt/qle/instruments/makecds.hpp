@@ -67,7 +67,9 @@ public:
     MakeCreditDefaultSwap& withNominal(Real);
     MakeCreditDefaultSwap& withCouponTenor(Period);
     MakeCreditDefaultSwap& withDayCounter(DayCounter&);
-    // MakeCreditDefaultSwap& withLastPeriodDayCounter(DayCounter&);
+    MakeCreditDefaultSwap& withLastPeriodDayCounter(DayCounter&);
+    MakeCreditDefaultSwap& withDateGenerationRule(DateGeneration::Rule rule);
+    MakeCreditDefaultSwap& withCashSettlementDays(Natural cashSettlementDays);
 
     MakeCreditDefaultSwap& withPricingEngine(const boost::shared_ptr<PricingEngine>&);
 
@@ -80,7 +82,9 @@ private:
     Real couponRate_;
     Real upfrontRate_;
     DayCounter dayCounter_;
-    // DayCounter lastPeriodDayCounter_;
+    DayCounter lastPeriodDayCounter_;
+    DateGeneration::Rule rule_;
+    Natural cashSettlementDays_;
 
     boost::shared_ptr<PricingEngine> engine_;
 };

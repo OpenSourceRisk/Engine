@@ -17,6 +17,7 @@
 */
 
 #include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -29,10 +30,14 @@ namespace data {
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency,
                                                          const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-                                                         const string& dayCounter, const string& calendar)
+                                                         const string& dayCounter, const string& calendar,
+                                                         const OneDimSolverConfig& solverConfig,
+                                                         const boost::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
-      dayCounter_(dayCounter), calendar_(calendar) {
+      dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
+      preferOutOfTheMoney_(preferOutOfTheMoney) {
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 const string EquityVolatilityCurveConfig::quoteStem() const {
@@ -63,6 +68,15 @@ void EquityVolatilityCurveConfig::populateQuotes() {
     }
 }
 
+void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (!proxySurface().empty()) {
+        requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(proxySurface());
+        // see EquityVolCurve::buildVolatility(...) for proxy surfaces, there we require equity curves for
+        // the curveID of the vol curve and the proxy vol curve implicitly
+        requiredCurveIds_[CurveSpec::CurveType::Equity].insert(proxySurface());
+    }
+}
+
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityVolatility");
 
@@ -78,6 +92,16 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     dayCounter_ = "A365";
     if ((n = XMLUtils::getChildNode(node, "DayCounter")))
         dayCounter_ = XMLUtils::getNodeValue(n);
+
+    solverConfig_ = OneDimSolverConfig();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "OneDimSolverConfig")) {
+        solverConfig_.fromXML(n);
+    }
+
+    preferOutOfTheMoney_ = boost::none;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "PreferOutOfTheMoney")) {
+        preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
+    }
 
     // In order to remain backward compatible, we first check for a dimension node
     // If this is present we read the nodes as before but create volatilityConfigs from the inputs
@@ -127,9 +151,9 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
             volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
-            QL_FAIL("DeltaSurface not currently supported for equity volatilities.");
+            volatilityConfig_ = boost::make_shared<VolatilityDeltaSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
-            QL_FAIL("MoneynessSurface not currently supported for equity volatilities.");
+            volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
         } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
             QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
         } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
@@ -143,7 +167,13 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
+
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -164,7 +194,28 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
 
+    if (!solverConfig_.empty())
+        XMLUtils::appendNode(node, solverConfig_.toXML(doc));
+
+    if (preferOutOfTheMoney_)
+        XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
+
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
+
     return node;
+}
+
+OneDimSolverConfig EquityVolatilityCurveConfig::solverConfig() const {
+    return solverConfig_.empty() ? defaultSolverConfig() : solverConfig_;
+}
+
+OneDimSolverConfig EquityVolatilityCurveConfig::defaultSolverConfig() {
+
+    // Backward compatible with code that existed before EquityVolatilityCurveConfig
+    // accepted a solver configuration.
+    static OneDimSolverConfig res(100, 0.2, 0.0001, 0.01, 0.0001);
+
+    return res;
 }
 
 } // namespace data

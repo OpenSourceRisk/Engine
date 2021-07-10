@@ -51,7 +51,7 @@ public:
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
     //! Build a date grid from an explicit set of dates, sorted in ascending order.
-    DateGrid(const std::vector<QuantLib::Date>& dates,
+    DateGrid(const std::vector<QuantLib::Date>& dates, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
     //! The size of the date grid
@@ -69,16 +69,36 @@ public:
     //! Truncate the grid to the given length
     void truncate(QuantLib::Size length);
 
+    /*! Add close out dates. If 0D is given, the valuation dates itself are treated
+      as close out dates. The first date is a valuation date only and the last
+      date is a close out date only then, all other dates are both valuation and
+      close out dates. */
+    void addCloseOutDates(const QuantLib::Period& p = QuantLib::Period(2, QuantLib::Weeks));
+
     //! \name Inspectors
     //@{
     const std::vector<QuantLib::Period>& tenors() const { return tenors_; }
     const std::vector<QuantLib::Date>& dates() const { return dates_; }
+    const std::vector<bool>& isValuationDate() const { return isValuationDate_; }
+    const std::vector<bool>& isCloseOutDate() const { return isCloseOutDate_; }
+    std::vector<QuantLib::Date> valuationDates() const;
+    std::vector<QuantLib::Date> closeOutDates() const;
+    const QuantLib::Calendar& calendar() const { return calendar_; }
+    const QuantLib::DayCounter& dayCounter() const { return dayCounter_; }
 
     //! Returns the times from Settings::instance().evaluationDate to each Date using the day counter
     const std::vector<QuantLib::Time>& times() const { return times_; }
 
     //! Returns the time grid associated with the vector of times (plus t=0)
     const QuantLib::TimeGrid& timeGrid() const { return timeGrid_; }
+    //@}
+
+    //! Returns the time grid associated with the vector of valuation times (plus t=0)
+    QuantLib::TimeGrid valuationTimeGrid() const;
+    //@}
+
+    //! Returns the time grid associated with the vector of close-out times (plus t=0)
+    QuantLib::TimeGrid closeOutTimeGrid() const;
     //@}
 
     //! Accessor methods
@@ -89,10 +109,21 @@ private:
     // Log the constructed DateGrid
     void log();
 
+    QuantLib::Calendar calendar_;
+    QuantLib::DayCounter dayCounter_;
     std::vector<QuantLib::Date> dates_;
     std::vector<QuantLib::Period> tenors_;
     std::vector<QuantLib::Time> times_;
     QuantLib::TimeGrid timeGrid_;
+    std::vector<bool> isValuationDate_, isCloseOutDate_;
 };
+
+boost::shared_ptr<DateGrid> generateShiftedDateGrid(const boost::shared_ptr<DateGrid>& dg,
+                                                    const QuantLib::Period& shift = QuantLib::Period(2,
+                                                                                                     QuantLib::Weeks));
+
+boost::shared_ptr<DateGrid> combineDateGrids(const boost::shared_ptr<DateGrid>& dg1,
+                                             const boost::shared_ptr<DateGrid>& dg2);
+
 } // namespace data
 } // namespace ore

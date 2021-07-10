@@ -60,15 +60,20 @@ public:
                                        const QuantLib::Date& referenceDate = QuantLib::Date(),
                                        bool forOption = false) = 0;
 
-    /*! Given the contract's month, \p contractMonth and the contract's year, \p contractYear, return the expiry date
-        of the future contract that is \p monthOffset number of months from the future contract. If \p monthOffset is
-        zero, the expiry date of the future contract itself is returned.
-
-        If \p forOption is \c true, the expiry date for the option contract, as opposed to the future contract, is
-        returned.
+    /*! Given a date, \p contractDate, return the future expiry date associated with that date.
+        
+        If the future contract has a frequency that is less than monthly, the next available future contract expiry 
+        date will be returned. If \p forOption is \c true, the next available future option expiry is returned. For 
+        future contracts that have a frequency that is less than monthly, the \p monthOffset parameter is ignored.
+        
+        If the future contract has a frequency that is monthly or greater, the contract's month and year is taken 
+        to be the \p contractDate month and year, and the expiry date of the future contract that is \p monthOffset 
+        number of months from that month's future contract is returned. If \p monthOffset is zero, the expiry date of 
+        the future contract associated with that month and year is returned. If \p forOption is \c true, the expiry 
+        date for the option contract, as opposed to the future contract, is returned.
     */
-    virtual QuantLib::Date expiryDate(QuantLib::Month contractMonth, QuantLib::Year contractYear,
-                                      QuantLib::Natural monthOffset, bool forOption = false) = 0;
+    virtual QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset = 0,
+        bool forOption = false) = 0;
 };
 
 } // namespace QuantExt

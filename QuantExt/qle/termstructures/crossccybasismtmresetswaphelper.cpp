@@ -38,14 +38,14 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
     const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
-    const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, bool eom, bool spreadOnForeignCcy, bool invertFxIndex,
+    const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, bool eom, bool spreadOnForeignCcy,
     boost::optional<Period> foreignTenor, boost::optional<Period> domesticTenor)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex),
       foreignCcyDiscountCurve_(foreignCcyDiscountCurve), domesticCcyDiscountCurve_(domesticCcyDiscountCurve),
       foreignCcyFxFwdRateCurve_(foreignCcyFxFwdRateCurve), domesticCcyFxFwdRateCurve_(domesticCcyFxFwdRateCurve),
-      eom_(eom), spreadOnForeignCcy_(spreadOnForeignCcy), invertFxIndex_(invertFxIndex),
+      eom_(eom), spreadOnForeignCcy_(spreadOnForeignCcy),
       foreignTenor_(foreignTenor ? *foreignTenor : foreignCcyIndex_->tenor()),
       domesticTenor_(domesticTenor ? *domesticTenor : domesticCcyIndex_->tenor()) {
 
@@ -129,22 +129,18 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
 
     Real foreignNominal = 1.0;
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
-    boost::shared_ptr<FxIndex> fxIdx = boost::make_shared<FxIndex>(
-        "dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_, spotFX_,
-        foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_, invertFxIndex_);
+
+    boost::shared_ptr<FxIndex> fxIdx =
+        boost::make_shared<FxIndex>("dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_,
+                                    spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_);
 
     swap_ = boost::shared_ptr<CrossCcyBasisMtMResetSwap>(
         new CrossCcyBasisMtMResetSwap(foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0,
                                       domesticCurrency_, domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx));
 
     boost::shared_ptr<PricingEngine> engine;
-    if (invertFxIndex_) {
-        engine.reset(new CrossCcySwapEngine(foreignCurrency_, foreignDiscountRLH_, domesticCurrency_,
-                                            domesticDiscountRLH_, spotFX_));
-    } else {
-        engine.reset(new CrossCcySwapEngine(domesticCurrency_, domesticDiscountRLH_, foreignCurrency_,
-                                            foreignDiscountRLH_, spotFX_));
-    }
+    engine.reset(new CrossCcySwapEngine(domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_,
+                                        spotFX_));
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();

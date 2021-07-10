@@ -88,7 +88,7 @@ public:
     //! Return the length of each dimension
     Size numIds() const override { return ids_.size(); }
     Size numDates() const override { return dates_.size(); }
-    Size samples() const override { return samples_; }
+    virtual Size samples() const override { return samples_; }
 
     //! Get the vector of ids for this cube
     const std::vector<std::string>& ids() const override { return ids_; }
@@ -100,10 +100,10 @@ public:
 
 protected:
     void check(Size i, Size j, Size k, Size d) const {
-        QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ")");
-        QL_REQUIRE(j < numDates(), "Out of bounds on dates (j=" << j << ")");
-        QL_REQUIRE(k < samples(), "Out of bounds on samples (k=" << k << ")");
-        QL_REQUIRE(d < depth(), "Out of bounds on depth(d=" << d << ")");
+        QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ", numIds=" << numIds() << ")");
+        QL_REQUIRE(j < numDates(), "Out of bounds on dates (j=" << j << ", numDates=" << numDates() << ")");
+        QL_REQUIRE(k < samples(), "Out of bounds on samples (k=" << k << ", samples=" << samples() << ")");
+        QL_REQUIRE(d < depth(), "Out of bounds on depth (d=" << d << ", depth=" << depth() << ")");
     }
 
 private:
@@ -135,8 +135,9 @@ protected:
 template <typename T> class InMemoryCube1 : public InMemoryCubeBase<T> {
 public:
     //! ctor
-    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples)
-        : InMemoryCubeBase<T>(asof, ids, dates, samples) {}
+    InMemoryCube1(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples,
+                  const T& t = T())
+        : InMemoryCubeBase<T>(asof, ids, dates, samples, t) {}
 
     //! default
     InMemoryCube1() {}
@@ -145,13 +146,13 @@ public:
     Size depth() const override { return 1; }
 
     //! Get a T0 value from the cube
-    Real getT0(Size i, Size d) const override {
+    virtual Real getT0(Size i, Size d) const override {
         this->check(i, 0, 0, d);
         return this->t0Data_[i];
     }
 
     //! Set a value in the cube
-    void setT0(Real value, Size i, Size d) override {
+    virtual void setT0(Real value, Size i, Size d) override {
         this->check(i, 0, 0, d);
         this->t0Data_[i] = static_cast<T>(value);
     }
@@ -175,8 +176,9 @@ public:
 template <typename T> class InMemoryCubeN : public InMemoryCubeBase<vector<T>> {
 public:
     //! ctor
-    InMemoryCubeN(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, Size depth)
-        : InMemoryCubeBase<vector<T>>(asof, ids, dates, samples, vector<T>(depth, T())) {}
+    InMemoryCubeN(const Date& asof, const vector<std::string>& ids, const vector<Date>& dates, Size samples, Size depth,
+                  const T& t = T())
+        : InMemoryCubeBase<vector<T>>(asof, ids, dates, samples, vector<T>(depth, t)) {}
 
     //! default
     InMemoryCubeN() {}
@@ -185,13 +187,13 @@ public:
     Size depth() const override { return this->data_[0][0][0].size(); } // we don't want any members in this class
 
     //! Get a T0 value from the cube
-    Real getT0(Size i, Size d) const override {
+    virtual Real getT0(Size i, Size d) const override {
         this->check(i, 0, 0, d);
         return this->t0Data_[i][d];
     }
 
     //! Set a value in the cube
-    void setT0(Real value, Size i, Size d) override {
+    virtual void setT0(Real value, Size i, Size d) override {
         this->check(i, 0, 0, d);
         this->t0Data_[i][d] = static_cast<T>(value);
     }

@@ -29,9 +29,13 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
     <ExerciseDate>2019-04-20</ExerciseDate>
     <ExerciseDate>2020-04-20</ExerciseDate>
   </ExerciseDates>
-  <PremiumAmount>100000</PremiumAmount>
-  <PremiumCurrency>EUR</PremiumCurrency>
-  <PremiumPayDate>2018-05-07</PremiumPayDate>
+  <Premiums>
+    <Premium>
+      <Amount>100000</Amount>
+      <Currency>EUR</Currency>
+      <PayDate>2018-05-07</PayDate>
+    </Premium>
+  </Premiums>
   <AutomaticExercise>...</AutomaticExercise>
   <ExerciseData>
     <Date>...</Date>
@@ -55,21 +59,25 @@ Allowable values: \emph{Long, L} or \emph{Short, S}
 
 Allowable values: \emph{Call} or \emph{Put} 
 
-The meaning of Call and Put values depend on the asset class of the option, see Table \ref{tab:callput_specs}.
+The meaning of Call and Put values depend on the trade type and asset class of the option, see Table \ref{tab:callput_specs}.
 
 \begin{table}[H]
 \centering
-\begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+\begin{tabular} {|p{6cm}|p{8cm}|}
     \hline
       \bfseries{Asset Class and Trade Type}  & \bfseries{Call / Put Specifications} \\  \hline
-Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
-\newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
+Equity/ Commodity/Bond Option & \emph{Call}: The right to buy the underlying equity/commodity/bond at the strike price.
+\newline \emph{Put}: The right to sell the underlying equity/commodity/bond at the strike price. \\  \hline
  IR Swaption, CallableSwap, Commodity Swaption&  \emph{Call/Put} values are ignored, and the OptionType field is optional. Payer/Receiver swaption is determined by the  \lstinline!Payer! fields in the Leg Data nodes of the underlying swap. \\ \hline
-FX Options (all variants) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
-\newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
+FX Options (all variants, except Touch, Digital, Asian) &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
+\newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node. Note that barriers are not switched / unaffected. \\ \hline
 Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field is optional. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection. \\ \hline
+Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency at the strike price.  \newline \emph{Put}: The right to sell/pay  the underlying currency at the strike price.   \\ \hline
+Digital FX Options &  \emph{Call}: The digital payout will occur if the fx rate at the expiry date is above the givenstrike, \newline \emph{Put}: The digital payout will occur if the fx rate at the expiry date is below the given strike.   \\ \hline
+FX Single Touch Options &  The OptionType should be \emph{Call} for Up and \emph{Put} for Down barrier types - this is used to check whether the barrier has been hit in the past.   \\ \hline
+FX Double Touch Options &  \emph{Call/Put} values are ignored, and the OptionType field is optional.  \\ \hline
 
-  \end{tabu}
+  \end{tabular}
   \caption{Specification of Option Type Call / Put}
   \label{tab:callput_specs}
 \end{table}
@@ -85,6 +93,7 @@ Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field
     FxRainbowOption, CommodityRainbowOption only)
   \item \emph{Vanilla, Asian, AverageStrike, LookbackCall, LookbackPut} (applies to trade types EquityBasketOption,
     FxBasketOption, CommodityBasketOption only)
+  \item \emph{Asian} (applies to trade types EquityAsianOption, FxAsianOption only)    
   \end{itemize}
 
 \item Style: The exercise style of the option. 
@@ -94,8 +103,10 @@ Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field
   Note that trade types IR Swaption and CallableSwap can have style
   \emph{European} or \emph{Bermudan}, but not \emph{American}.  
   
-  FX, Equity and Commodity options can have styles \emph{European}
+  FX, Equity and Commodity vanilla options can have styles \emph{European}
   or \emph{American}, but not \emph{Bermudan}. 
+  
+  Exotic FX, Equity and Commodity  options can generally only have style \emph{European}, see each trade type for details.
   
   Commodity Swaption and Commodity Average Price Options must have style \emph{European}. 
   
@@ -111,7 +122,7 @@ Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field
 \item NoticeConvention [Optional]: The convention used to compute the notice date from the exercise date. Defaults to
   Unadjusted if not given.
 
-\item Settlement: Delivery type. 
+\item Settlement: Delivery type. Note that Settlement is not required for Asian options.
 
   Allowable values: \emph{Cash} or \emph{Physical}
 
@@ -137,7 +148,7 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
 
 %TBC: Do not see payoffatexpiry used in either fxoption or swaption build() functions, to be logged as a bug.       
 
-\item ExerciseFees [Optional]: This node contains child elements of tpye ExerciseFee. Similar to a list of notionals
+\item ExerciseFees [Optional]: This node contains child elements of type ExerciseFee. Similar to a list of notionals
   (see \ref{ss:leg_data}) the fees can be given either
 
   \begin{itemize}
@@ -156,14 +167,20 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
 
   Only supported for Swaptions and Callable Swaps currently.
 
-\item ExerciseFeeSettlementPeriod [Optional]: The settlement lag for exercise fee payments. Defaults to 0D if not
+\item ExerciseFeeSettlementPeriod [Optional]: The settlement lag for exercise fee payments. Defaults to \emph{0D} if not
   given. This lag is relative to the exercise date (as opposed to the notice date).
+  
+  Allowable values: A number followed by \emph{D, W, M, or Y}
 
 \item ExerciseFeeSettlementCalendar [Optional]: The calendar used to compute the exercise fee settlement date from the
-  exercise date. If not given defaults to the null calendar (no holidays, weekends are no holidays either).
+  exercise date. If not given defaults to the  \emph{NullCalendar} (no holidays, weekends are no holidays either).
+  
+  Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item ExerciseFeeSettlementConvention [Optional]: The convention used to compute the exercise fee settlement date from
-  the exercise date. Defaults to Unadjusted if not given.
+  the exercise date. Defaults to \emph{Unadjusted} if not given.
+  
+  Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
 \item ExerciseDates: This node contains child elements of type
   \lstinline!ExerciseDate!.  Options of style \emph{European} or
@@ -172,21 +189,15 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
   style options must have two or more \lstinline!ExerciseDate! child
   elements.
 
-\item PremiumAmount [Optional]: Option premium amount paid by the option buyer to the option seller.
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
 
-Allowable values:  Any positive real number.
+Allowable values:  See section \ref{ss:premiums}
 
-\item PremiumCurrency [Optional]: Currency of the option premium.
+\item AutomaticExercise [Optional]: Used if the option expiry date is on the current date or in the past, and the payment date is in the future  - so that there still is an outstanding cashflow if the option was in the money on the expiry date. In this case, if AutomaticExercise is applied, the FX / Commodity / Equity fixing on the expiry date is used to automatically determine the payoff and thus whether the option was exercised or not.\\
+\medskip
+Currently, this field is only used for vanilla European cash settled FX, equity and commodity options. It is a boolean flag indicating if Automatic Exercise is applicable for the option trade. A value of \emph{true} indicates that Automatic Exercise is applicable and a value of \emph{false} indicates that it is not.
 
-Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-
-\item PremiumPayDate [Optional]: Date of the option premium payment.
-
-Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-
-\item AutomaticExercise [Optional]: Currently, this field is only used for vanilla European cash settled FX, equity and commodity options. It is a boolean flag indicating if \textit{Automatic Exercise} is applicable for the option trade. A value of \lstinline!true! indicates that \textit{Automatic Exercise} is applicable and a value of \lstinline!false! indicates that it is not.
-
-Allowable values: A boolean value given in Table \ref{tab:boolean_allowable}. If not provided, the default value is \lstinline!false!.
+Allowable values: A boolean value given in Table \ref{tab:boolean_allowable}. If not provided, the default value is \emph{false}.
 
 \item ExerciseData [Optional]: Currently, this node is only used for vanilla European cash settled FX, equity and commodity options where \textit{Automatic Exercise} is not applicable. It has the structure shown in Listing \ref{lst:option_data} i.e.\ a child \lstinline!Date! and \lstinline!Price! node. It is used to supply the price at which an option was exercised and the date of exercise. For a European option, the supplied date clearly has to match the single option \lstinline!ExerciseDate!. It is needed where the cash settlement date is after the \lstinline!ExerciseDate!. If this node is not supplied, and the \lstinline!ExerciseDate! is in the past relative to the valuation date, the option is assumed to have expired unexercised.
 

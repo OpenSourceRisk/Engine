@@ -39,8 +39,11 @@ using namespace QuantLib;
  */
 class PiecewiseConstantHelper1 {
 public:
-    PiecewiseConstantHelper1(const Array& t);
-    PiecewiseConstantHelper1(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts);
+    PiecewiseConstantHelper1(const Array& t,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint = boost::make_shared<QuantLib::NoConstraint>());
+    PiecewiseConstantHelper1(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint = boost::make_shared<QuantLib::NoConstraint>());
+
     const Array& t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
@@ -68,9 +71,14 @@ private:
 class PiecewiseConstantHelper11 {
 public:
     /*! y are the raw values in the sense of parameter transformation */
-    PiecewiseConstantHelper11(const Array& t1, const Array& t2);
+    PiecewiseConstantHelper11(const Array& t1, const Array& t2,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint1 = boost::make_shared<QuantLib::NoConstraint>(),
+        const boost::shared_ptr<QuantLib::Constraint>& constraint2 = boost::make_shared<QuantLib::NoConstraint>());
     PiecewiseConstantHelper11(const std::vector<Date>& dates1, const std::vector<Date>& dates2,
-                              const Handle<YieldTermStructure>& yts);
+        const Handle<YieldTermStructure>& yts,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint1 = boost::make_shared<QuantLib::NoConstraint>(),
+        const boost::shared_ptr<QuantLib::Constraint>& constraint2 = boost::make_shared<QuantLib::NoConstraint>());
+
     const PiecewiseConstantHelper1& helper1() const;
     const PiecewiseConstantHelper1& helper2() const;
 
@@ -83,8 +91,11 @@ private:
  */
 class PiecewiseConstantHelper2 {
 public:
-    PiecewiseConstantHelper2(const Array& t);
-    PiecewiseConstantHelper2(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts);
+    PiecewiseConstantHelper2(const Array& t, const boost::shared_ptr<PseudoParameter>& y);
+    PiecewiseConstantHelper2(const Array& t,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint = boost::make_shared<QuantLib::NoConstraint>());
+    PiecewiseConstantHelper2(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint = boost::make_shared<QuantLib::NoConstraint>());
     const Array& t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
@@ -115,9 +126,14 @@ private:
  */
 class PiecewiseConstantHelper3 {
 public:
-    PiecewiseConstantHelper3(const Array& t1, const Array& t2);
+    PiecewiseConstantHelper3(const Array& t1, const Array& t2,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint1 = boost::make_shared<QuantLib::NoConstraint>(),
+        const boost::shared_ptr<QuantLib::Constraint>& constraint2 = boost::make_shared<QuantLib::NoConstraint>());
     PiecewiseConstantHelper3(const std::vector<Date>& dates1, const std::vector<Date>& dates2,
-                             const Handle<YieldTermStructure>& yts);
+        const Handle<YieldTermStructure>& yts,
+        const boost::shared_ptr<QuantLib::Constraint>& constraint1 = boost::make_shared<QuantLib::NoConstraint>(),
+        const boost::shared_ptr<QuantLib::Constraint>& constraint2 = boost::make_shared<QuantLib::NoConstraint>());
+
     const Array& t1() const;
     const Array& t2() const;
     const Array& tUnion() const;

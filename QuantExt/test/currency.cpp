@@ -23,6 +23,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/europe.hpp>
 #include <qle/currencies/metals.hpp>
 
 using namespace QuantLib;
@@ -43,7 +44,6 @@ static CcyTestData currencyData[] = {
     // African cuurencies
     { TNDCurrency(), "Tunisian dinar", "TND", 788 },
     { EGPCurrency(), "Egyptian pound", "EGP", 818 },
-    { NGNCurrency(), "Nigerian naira", "NGN", 566 },
     { MADCurrency(), "Moroccan dirham", "MAD", 504 },
     // American currencies
     { MXVCurrency(), "Mexican Unidad de Inversion", "MXV", 979 },
@@ -60,6 +60,11 @@ static CcyTestData currencyData[] = {
     { XAGCurrency(), "Troy Ounce of Silver", "XAG", 961 },
     { XPDCurrency(), "Troy Ounce of Palladium", "XPD", 964 },
     { XPTCurrency(), "Troy Ounce of Platinum", "XPT", 962 },
+    { AOACurrency(), "Angolan kwanza", "AOA", 973 },
+    { ETBCurrency(), "Ethiopian birr", "ETB", 230 },
+    { XOFCurrency(), "West African CFA franc", "XOF", 952 },
+    // European currencies
+    { GELCurrency(), "Georgian lari", "GEL", 981 }
 };
 } // namespace
 

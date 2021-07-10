@@ -3,7 +3,7 @@
 
 A Bond is set up using a {\tt BondData} block, and can be both a stand-alone instrument with trade type \emph{Bond}, or a trade component used by multiple bond derivative instruments.
 
-A Bond can be set up in a short version referencing an underlying bond static, or in a long version where the underlying bond details are specified explicitly.
+A Bond can be set up in a short version referencing an underlying bond static, or in a long version where the underlying bond details are specified explicitly, including a full LegData block.
 The short version is shown in listing \ref{lst:bonddata_refdata}. The details of the
 bond are read from the reference data in this case using the SecurityId as a key. The bond trade is fully specified by
 
@@ -12,6 +12,8 @@ bond are read from the reference data in this case using the SecurityId as a key
   Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
 \item BondNotional: The notional of the position in the reference bond, expressed in the currency of the bond\\
   Allowable Values: Any non-negative real number
+\item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. If set to \emph{false}, the product class will  not be set to \emph{Credit}, and there will be no credit sensitivities. \\
+  Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.
 \end{itemize}
 
 in this case.
@@ -22,6 +24,7 @@ in this case.
     <BondData>
       <SecurityId>ISIN:XS0982710740</SecurityId>
       <BondNotional>100000000.0</BondNotional>
+      <CreditRisk>true</CreditRisk>
     </BondData>
 \end{minted}
 \caption{Bond Data}
@@ -80,7 +83,7 @@ See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \end{itemize}
 
-A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc.
+A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc. Note that a LegData block should only be included in the long version. 
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -104,5 +107,8 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \caption{Bond Data}
 \label{lst:bonddata}
 \end{listing}
+
+The bond trade type supports perpetual schedules, i.e. perpetual bonds can be represented by omitting the EndDate in the
+leg data schedule definition. Only rule based schedules can be used to indicate perpetual schedules.
 
 %The bond pricing requires a recovery rate that can be specified per SecurityId in the market data configuration.

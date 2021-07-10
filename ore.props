@@ -3,6 +3,9 @@
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Language)'=='C++'">
+    <CAExcludePath>$(ORE)\QuantLib\ql;$(BOOST)\boost;$(CAExcludePath)</CAExcludePath>
+  </PropertyGroup>
   <PropertyGroup>
     <CodeAnalysisRuleSet>$(ORE)\disable_selected.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -16,16 +19,22 @@
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '16.0'">v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
-    <!--Additional warnings-->
-    <additionalWarning></additionalWarning>
-    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">$(additionalWarning) /w35038</additionalWarning>
+    <!-- Additional warnings -->
+    <additionalWarning/>
+    <additionalWarning Condition="'$(VisualStudioVersion)' &gt;= '15.3'">$(additionalWarning) /w35038</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
-  </PropertyGroup>  
+    <!-- Disable some warnings if necessary here -->
+    <additionalWarning>$(additionalWarning) /wd4834</additionalWarning>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);BOOST_ENABLE_ASSERT_HANDLER</PreprocessorDefinitions>
+      <AdditionalOptions>/MP /bigobj $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>  
 </Project>

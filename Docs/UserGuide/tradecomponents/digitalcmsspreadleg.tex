@@ -1,7 +1,7 @@
 \subsubsection{Digital CMS Spread Leg Data}
 \label{ss:digitalcmsspreadlegdata}
 
-Listing \ref{lst:digitalcmsspreadlegdata} shows an example for a leg of type DigitalCMSSpread.
+Listing \ref{lst:digitalcmsspreadlegdata} shows an example for a leg of type \emph{DigitalCMSSpread}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -28,7 +28,7 @@ Listing \ref{lst:digitalcmsspreadlegdata} shows an example for a leg of type Dig
               <Gearings>
                 <Gearing>8.0</Gearing>
               </Gearings>
-              <NakedOption>N</NakedOption>
+              <NakedOption>false</NakedOption>
             </CMSSpreadLegData>
             <CallPosition>Long</CallPosition>
             <IsCallATMIncluded>false</IsCallATMIncluded>
@@ -53,12 +53,13 @@ Listing \ref{lst:digitalcmsspreadlegdata} shows an example for a leg of type Dig
 \label{lst:digitalcmsspreadlegdata}
 \end{listing}
 
-The DigitalCMSLegData block contains the following elements:
+The \lstinline!DigitalCMSSpreadLegData! block contains the following elements:
 
 \begin{itemize}
-\item CMSLegData: a CMSSpreadLegData block describing the underlying digital cms spread leg (see \ref{ss:cmsspreadlegdata}.)
-\item CallPosition: Specifies whether the call option position is long  or
-  short.
+\item CMSSpreadLegData: a \lstinline!CMSSpreadLegData! block describing the underlying Digital CMS Spread leg (see \ref{ss:cmsspreadlegdata}). 
+Caps and floors in the underlying CMS Spread leg are not supported for Digital CMS Spread Options. The \lstinline!NakedOption! flag in the
+\lstinline!CMSSpreadLegData! block is supported and can be used to separate the digital option payoff from the underlying CMS Spread coupon.
+\item CallPosition: Specifies whether the call option position is long or short.
 \item IsCallATMIncluded: inclusion flag on the call payoff if the call option ends at-the-money
 \item CallStrikes: strike rate for the the call option
 \item CallPayoffs: digital call option payoff rate. If included the option is cash-or-nothing, if excluded the option is asset-or-nothing

@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     capNpv = cap->instrument()->NPV();
     floorNpv = floor->instrument()->NPV();
     Real swapNpv = swap->instrument()->NPV();
-    Real capFloorNpv = capNpv + floorNpv;
+    Real capFloorNpv = capNpv - floorNpv;
     BOOST_TEST_MESSAGE("CMS Cap NPV is " << capNpv);
     BOOST_TEST_MESSAGE("CMS Floor NPV is " << floorNpv);
     BOOST_TEST_MESSAGE("CMS Cap + Floor NPV is " << capFloorNpv);

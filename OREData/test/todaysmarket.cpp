@@ -517,10 +517,10 @@ boost::shared_ptr<Conventions> conventions() {
                                                           "USD-LIBOR-3M"));
 
     // USD swap index conventions
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-1Y", "USD-3M-SWAP-CONVENTIONS"));
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS"));
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS"));
-    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-10Y", "USD-3M-SWAP-CONVENTIONS"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-1Y", "USD-3M-SWAP-CONVENTIONS", "US"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS", "US"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS", "US"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-10Y", "USD-3M-SWAP-CONVENTIONS", "US"));
 
     // USD CMS spread option conventions
 
@@ -730,12 +730,12 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
-        CorrelationCurveConfig::QuoteType::Rate, extrapolate, optionTenors2, dayCounter, UnitedStates(), bdc,
+        MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(), bdc,
         "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR");
     configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "USD-CMS-10Y-2Y-CONVENTION",
-        CorrelationCurveConfig::QuoteType::Price, extrapolate, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
+        MarketDatum::QuoteType::PRICE, extrapolate, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
         "USD-CMS-10Y", "USD-CMS-2Y", "USD", "USD_SW_LN", "USD1D");
 
     // clang-format off
@@ -750,7 +750,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
-        "SP5", "", "USD1D", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
+        "SP5", "", "USD1D", "USD", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
     vector<string> eqVolQuotes = {"EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF",
                                   "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF"};
@@ -785,10 +785,10 @@ public:
         Date asof(26, February, 2016);
         Settings::instance().evaluationDate() = asof;
 
-        MarketDataLoader loader;
-        TodaysMarketParameters params = *marketParameters();
-        CurveConfigurations configs = *curveConfigurations();
-        Conventions convs = *conventions();
+        auto loader = boost::make_shared<MarketDataLoader>();
+        auto params = marketParameters();
+        auto configs = curveConfigurations();
+        auto convs = conventions();
 
         BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
         market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);

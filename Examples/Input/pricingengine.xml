@@ -33,8 +33,7 @@
       <Parameter name="TimeGridPerYear">100</Parameter>
       <Parameter name="XGrid">100</Parameter>
       <Parameter name="DampingSteps">0</Parameter>
-      <!-- Optional, prevents too small time grids for increased Greek precision when expiry is near -->
-      <!-- <Parameter name="TGridMinimum">20</Parameter> -->
+      <Parameter name="TimeGridMinimumSize">1</Parameter>
     </EngineParameters>
   </Product>
   <Product type="EuropeanSwaption">
@@ -133,8 +132,6 @@
       <Parameter name="TimeGridPerYear">100</Parameter>
       <Parameter name="XGrid">100</Parameter>
       <Parameter name="DampingSteps">0</Parameter>
-      <!-- Optional, prevents too small time grids for increased Greek precision when expiry is near -->
-      <!-- <Parameter name="TGridMinimum">20</Parameter> -->
     </EngineParameters>
   </Product>
   <Product type="Bond">
@@ -157,6 +154,12 @@
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CreditDefaultSwapOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackCdsOptionEngine</Engine>
     <EngineParameters/>
   </Product>
   <!-- CMS Linear TRS Model -->

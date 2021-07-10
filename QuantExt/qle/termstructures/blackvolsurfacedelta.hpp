@@ -90,6 +90,10 @@ public:
                                 DeltaVolQuote::DeltaType dt = DeltaVolQuote::DeltaType::Spot,
                                 DeltaVolQuote::AtmType at = DeltaVolQuote::AtmType::AtmDeltaNeutral,
                                 boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType = boost::none,
+                                const Period& switchTenor = 0 * Days,
+                                DeltaVolQuote::DeltaType ltdt = DeltaVolQuote::DeltaType::Fwd,
+                                DeltaVolQuote::AtmType ltat = DeltaVolQuote::AtmType::AtmDeltaNeutral,
+                                boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType = boost::none,
                                 InterpolatedSmileSection::InterpolationMethod interpolationMethod =
                                     InterpolatedSmileSection::InterpolationMethod::Linear,
                                 bool flatExtrapolation = true);
@@ -142,9 +146,15 @@ private:
     DeltaVolQuote::DeltaType dt_;
     DeltaVolQuote::AtmType at_;
     boost::optional<QuantLib::DeltaVolQuote::DeltaType> atmDeltaType_;
+    Period switchTenor_;
+    DeltaVolQuote::DeltaType ltdt_;
+    DeltaVolQuote::AtmType ltat_;
+    boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType_;
 
     InterpolatedSmileSection::InterpolationMethod interpolationMethod_;
     bool flatExtrapolation_;
+
+    Real switchTime_;
 
     // calculate forward for time $t$
     Real forward(Time t) const;

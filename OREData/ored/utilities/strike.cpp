@@ -41,6 +41,10 @@ Strike parseStrike(const std::string& s) {
     boost::regex m7b("^(bf|BF)");
     boost::regex m8("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(rr|RR)");
     boost::regex m8b("^(rr|RR)");
+    boost::regex m9("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(ATMF|atmf)");
+    boost::regex m9b("(ATMF|atmf)");
+    boost::regex m10("^(\\+|\\-)?([0-9]+[.]?[0-9]*)(ATM|atm)");
+    boost::regex m10b("(ATM|atm)");
     Strike result;
     if (boost::regex_match(s, m1)) {
         result.type = Strike::Type::ATM;
@@ -87,6 +91,16 @@ Strike parseStrike(const std::string& s) {
         result.value = parseReal(regex_replace(s, m8b, std::string("")));
         return result;
     }
+    if (boost::regex_match(s, m9)) {
+        result.type = Strike::Type::ATMF_Moneyness;
+        result.value = parseReal(regex_replace(s, m9b, std::string("")));
+        return result;
+    }
+    if (boost::regex_match(s, m10)) {
+        result.type = Strike::Type::ATM_Moneyness;
+        result.value = parseReal(regex_replace(s, m10b, std::string("")));
+        return result;
+    }
     QL_FAIL("could not parse strike given by " << s);
 }
 
@@ -107,11 +121,18 @@ std::ostream& operator<<(std::ostream& out, const Strike& s) {
     case Strike::Type::Delta:
         out << "Delta";
         break;
+    case Strike::Type::ATMF_Moneyness:
+        out << "ATMF_Moneyness";
+        break;
+    case Strike::Type::ATM_Moneyness:
+        out << "ATM_Moneyness";
+        break;
     default:
         out << "UNKNOWN";
         break;
     }
-    if (s.type == Strike::Type::ATM_Offset || s.type == Strike::Type::Absolute || s.type == Strike::Type::Delta) {
+    if (s.type == Strike::Type::ATM_Offset || s.type == Strike::Type::Absolute || s.type == Strike::Type::Delta ||
+        s.type == Strike::Type::ATMF_Moneyness || s.type == Strike::Type::ATM_Moneyness) {
         if (s.value >= 0.0)
             out << "+";
         else
@@ -157,6 +178,21 @@ QuantLib::Real computeAbsoluteStrike(const Strike& s, const QuantLib::Real atm, 
         return atm * s.value;
     default:
         QL_FAIL("can not compute strike for unknown type " << s);
+    }
+}
+
+DeltaString::DeltaString(const std::string& s) {
+    QL_REQUIRE(!s.empty() && (s.back() == 'P' || s.back() == 'C' || s == "ATM"),
+               "invalid delta quote, expected ATM, 10P, 25C, ...");
+    isAtm_ = s == "ATM";
+    isPut_ = !s.empty() && s.back() == 'P';
+    isCall_ = !s.empty() && s.back() == 'C';
+    if (isPut_ || isCall_) {
+        try {
+            delta_ = ore::data::parseReal(s.substr(0, s.size() - 1)) / 100.0 * (isPut_ ? -1.0 : 1.0);
+        } catch (const std::exception& e) {
+            QL_FAIL("DeltaString: can not convert call / put delta '" << s << "' to numeric value: " << e.what());
+        }
     }
 }
 

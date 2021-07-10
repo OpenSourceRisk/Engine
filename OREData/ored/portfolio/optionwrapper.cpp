@@ -35,7 +35,7 @@ OptionWrapper::OptionWrapper(const boost::shared_ptr<Instrument>& inst, const bo
     : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers), isLong_(isLongOption),
       isPhysicalDelivery_(isPhysicalDelivery), contractExerciseDates_(exerciseDate),
       effectiveExerciseDates_(exerciseDate), underlyingInstruments_(undInst),
-      activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false) {
+      activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false), exercisable_(true) {
     QL_REQUIRE(exerciseDate.size() == undInst.size(), "number of exercise dates ("
                                                           << exerciseDate.size()
                                                           << ") must be equal to underlying instrument vector size ("
@@ -101,11 +101,17 @@ Real OptionWrapper::NPV() const {
 }
 
 bool EuropeanOptionWrapper::exercise() const {
+    if (!exercisable_)
+        return false;
+
     // for European Exercise, we only require that underlying has positive PV
     return activeUnderlyingInstrument_->NPV() * undMultiplier_ > 0.0;
 }
 
 bool AmericanOptionWrapper::exercise() const {
+    if (!exercisable_)
+        return false;
+
     if (Settings::instance().evaluationDate() == effectiveExerciseDates_.back())
         return activeUnderlyingInstrument_->NPV() * undMultiplier_ > 0.0;
     else
@@ -113,6 +119,9 @@ bool AmericanOptionWrapper::exercise() const {
 }
 
 bool BermudanOptionWrapper::exercise() const {
+    if(!exercisable_)
+        return false;
+
     // set active underlying instrument
     Date today = Settings::instance().evaluationDate();
     for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {

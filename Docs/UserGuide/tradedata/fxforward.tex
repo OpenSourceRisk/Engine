@@ -1,8 +1,7 @@
 \subsubsection{FX Forward}
 
 The \lstinline!FXForwardData!  node is the trade data container for the \emph{FxForward} trade type.  The structure -
-including example values - of the \lstinline!FXForwardData!  node is shown in Listing \ref{lst:fxforward_data}. It
-contains no sub-nodes.
+including example values - of the \lstinline!FXForwardData!  node is shown in Listing \ref{lst:fxforward_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -13,13 +12,17 @@ contains no sub-nodes.
             <BoughtAmount>1000000</BoughtAmount>
             <SoldCurrency>USD</SoldCurrency>
             <SoldAmount>1500000</SoldAmount>
+            <Settlement>Physical</Settlement>
+            <SettlementData>
+              ...
+            </SettlementData>
         </FxForwardData>
 \end{minted}
 \caption{FX Forward data}
 \label{lst:fxforward_data}
 \end{listing}
 
-The meanings and allowable values of the various elements in the \lstinline!FXForwardData!  node follow below.  All elements are required.
+The meanings and allowable values of the various elements in the \lstinline!FXForwardData!  node follow below.
 
 \begin{itemize}
 \item ValueDate: The value date of the FX Forward. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
@@ -27,12 +30,51 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 \item BoughtAmount: The amount to be bought on value date.  \\ Allowable values:  Any positive real number.
 \item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 \item SoldAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
-\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Forwards can be represented by \emph{Cash} settlement. Delivery type does not impact pricing in ORE.  
-
+\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Forwards can be represented by \emph{Cash} settlement. \\
 Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} if left blank or omitted.
+\item SettlementData [Optional]: This node is used to specify  the settlement of the cash flows on the value date.
+\end{itemize}
 
+A \lstinline!SettlementData! node is shown in Listing \ref{lst:settlement_data_node}, and the meanings and allowable values of its elements follow below.
 
+\begin{itemize}
+\item Currency: The currency in which the FX Forward is settled. This field is only used if settlement is \emph{Cash}. \\
+Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. Defaults to the sold currency if left blank or omitted.
+\item FXIndex: The FX reference index for determining the FX fixing at the value date. This field is required if settlement is \emph{Cash}
+and the payment date is greater than the value date. Otherwise, it is ignored. \\
+Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
+\item Date [Optional]: If specified, this will be the payment date. \\
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. If left blank or omitted, defaults to the value date with some adjustments applied
+from the \lstinline!Rules! sub-node.
+\item Rules [Optional]: If \lstinline!Date! is left blank or omitted, this node will be used to derive the payment date from the value date.
+The \lstinline!Rules! sub-node is shown in Listing \ref{lst:settlement_data_node}, and the meanings and allowable values of its elements follow below.
+  \begin{itemize}
+	\item PaymentLag [Optional]: The lag between the value date and the payment date. \\
+	Allowable values: Any valid period, i.e.\ a non-negative whole number, followed by \emph{D} (days), \emph{W} (weeks), \emph{M} (months),
+  \emph{Y} (years). Defaults to \emph{0D} if left blank or omitted.
+	\item PaymentCalendar [Optional]: The calendar to be used when applying the payment lag. \\
+	Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. Defaults to \emph{NullCalendar} (no holidays) if left blank or omitted.
+	\item PaymentConvention [Optional]: The business day convention to be used when applying the payment lag. \\
+	Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if left blank or omitted.
+  \end{itemize}
 \end{itemize}
 
 Note that FX Forwards also cover Precious Metals forwards, i.e. with
 currencies XAU, XAG, XPT, XPD.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SettlementData>
+  <Currency>USD</Currency>
+  <FXIndex>FX-ECB-EUR-USD</FXIndex>
+  <Date>2020-09-03</Date>
+  <Rules>
+    <PaymentLag>2D</PaymentLag>
+    <PaymentCalendar>USD</PaymentCalendar>
+    <PaymentConvention>Following</PaymentConvention>
+  </Rules>
+</SettlementData>
+\end{minted}
+\caption{Example \lstinline!SettlementData! node with \lstinline!Rules! sub-node}
+\label{lst:settlement_data_node}
+\end{listing}

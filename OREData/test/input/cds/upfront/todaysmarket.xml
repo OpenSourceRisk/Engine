@@ -1,0 +1,9 @@
+<TodaysMarket>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves/>
+  <DefaultCurves id="default">
+    <DefaultCurve name="RED:8B69AP|SNRFOR|USD|CR">Default/USD/RED:8B69AP|SNRFOR|USD|CR-UPFRONT</DefaultCurve>
+  </DefaultCurves>
+</TodaysMarket>

@@ -37,6 +37,15 @@ public:
         : EuropeanOptionEngineBuilder("BlackScholes", {"CommodityOption"}, AssetClass::COM) {}
 };
 
+/*! Engine builder for European commodity options
+  \ingroup builders
+*/
+class CommodityEuropeanForwardOptionEngineBuilder : public EuropeanForwardOptionEngineBuilder {
+public:
+    CommodityEuropeanForwardOptionEngineBuilder()
+        : EuropeanForwardOptionEngineBuilder("BlackScholes", {"CommodityOptionForward"}, AssetClass::COM) {}
+};
+
 /*! Engine builder for European cash-settled commodity options
     \ingroup builders
  */

@@ -17,6 +17,7 @@
 */
 
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/log.hpp>
 
 using namespace QuantLib;
 using std::string;
@@ -35,7 +36,7 @@ Date ConventionsBasedFutureExpiry::nextExpiry(bool includeExpiry, const Date& re
     Date today = referenceDate == Date() ? Settings::instance().evaluationDate() : referenceDate;
 
     // Get the next expiry date relative to referenceDate
-    Date expiryDate = nextExpiry(referenceDate, forOption);
+    Date expiryDate = nextExpiry(today, forOption);
 
     // If expiry date equals today and we have asked not to include expiry, return next contract's expiry
     if (expiryDate == today && !includeExpiry && offset == 0) {
@@ -81,9 +82,12 @@ Date ConventionsBasedFutureExpiry::priorExpiry(bool includeExpiry, const Date& r
     return expiry;
 }
 
-Date ConventionsBasedFutureExpiry::expiryDate(Month contractMonth, Year contractYear, Natural monthOffset,
-                                              bool forOption) {
-    return expiry(contractMonth, contractYear, monthOffset, forOption);
+Date ConventionsBasedFutureExpiry::expiryDate(const Date& contractDate, Natural monthOffset, bool forOption) {
+    if (convention_.contractFrequency() == Daily) {
+        return nextExpiry(contractDate, forOption);
+    } else {
+        return expiry(contractDate.month(), contractDate.year(), monthOffset, forOption);
+    }
 }
 
 Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear, QuantLib::Natural monthOffset,
@@ -98,8 +102,8 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         contractYear = newDate.year();
     }
 
-    // Move n months previously for the expiry if necessary
-    if (convention_.expiryMonthLag() > 0) {
+    // Move n months before (+ve) or after (-ve) for the expiry if necessary
+    if (convention_.expiryMonthLag() != 0) {
         Date newDate = Date(15, contractMonth, contractYear) - convention_.expiryMonthLag() * Months;
         contractMonth = newDate.month();
         contractYear = newDate.year();
@@ -129,26 +133,51 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
     // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
     expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
 
-    // If expiry date is one of the prohibited dates, move to preceding business day
-    while (convention_.prohibitedExpiries().count(expiry) > 0) {
-        expiry = convention_.calendar().advance(expiry, -1, Days);
-    }
-
     // If we want the option contract expiry, do the extra work here.
     if (forOption) {
-        expiry =
-            convention_.expiryCalendar().advance(expiry, -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
+        if (convention_.optionExpiryDay() != Null<Natural>()) {
 
-        // If expiry date is one of the prohibited dates, move to preceding business day
-        while (convention_.prohibitedExpiries().count(expiry) > 0) {
-            expiry = convention_.expiryCalendar().advance(expiry, -1, Days);
+            // Option expiry may be specified as n months before future expiry. Adjust here if necessary.
+            auto optionMonth = expiry.month();
+            auto optionYear = expiry.year();
+
+            if (convention_.optionExpiryMonthLag() != 0) {
+                Date newDate = Date(15, optionMonth, optionYear) - convention_.optionExpiryMonthLag() * Months;
+                optionMonth = newDate.month();
+                optionYear = newDate.year();
+            }
+
+            auto d = convention_.optionExpiryDay();
+            expiry = Date(d, optionMonth, optionYear);
+            expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
+
+        } else {
+
+            QL_REQUIRE(convention_.optionExpiryMonthLag() == 0 ||
+                convention_.expiryMonthLag() == convention_.optionExpiryMonthLag(), "The expiry month lag " <<
+                "and the option expiry month lag should be the same if using option expiry offset days.");
+
+            expiry = convention_.expiryCalendar().advance(expiry,
+                -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
         }
+
+        expiry = avoidProhibited(expiry, true);
+
+    } else {
+        // If expiry date is one of the prohibited dates, move to preceding or following business day
+        expiry = avoidProhibited(expiry, false);
     }
 
     return expiry;
 }
 
 Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool forOption) const {
+
+    // If contract frequency is daily, next expiry is simply the next valid date on expiry calendar.
+    if (convention_.contractFrequency() == Daily) {
+        Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
+        return avoidProhibited(expiry, false);
+    }
 
     // Get a contract expiry before today and increment until expiryDate is >= today
     Date guideDate(15, convention_.oneContractMonth(), referenceDate.year() - 1);
@@ -160,6 +189,45 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     }
 
     return expiryDate;
+}
+
+const CommodityFutureConvention& ConventionsBasedFutureExpiry::commodityFutureConvention() const {
+    return convention_;
+}
+
+Size ConventionsBasedFutureExpiry::maxIterations() const {
+    return maxIterations_;
+}
+
+Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry, bool forOption) const {
+
+    // If expiry date is one of the prohibited dates, move to preceding or following business day.
+    using PE = CommodityFutureConvention::ProhibitedExpiry;
+    Date result = expiry;
+    const auto& pes = convention_.prohibitedExpiries();
+    auto it = pes.find(PE(result));
+
+    while (it != pes.end()) {
+
+        // If not relevant, exit.
+        if ((!forOption && !it->forFuture()) || (forOption && !it->forOption()))
+            break;
+
+        auto bdc = !forOption ? it->futureBdc() : it->optionBdc();
+
+        if (bdc == Preceding || bdc == ModifiedPreceding) {
+            result = convention_.calendar().advance(result, -1, Days, bdc);
+        } else if (bdc == Following || bdc == ModifiedFollowing) {
+            result = convention_.calendar().advance(result, 1, Days, bdc);
+        } else {
+            QL_FAIL("Convention " << bdc << " associated with prohibited expiry " <<
+                io::iso_date(result) << " is not supported.");
+        }
+
+        it = pes.find(PE(result));
+    }
+
+    return result;
 }
 
 } // namespace data

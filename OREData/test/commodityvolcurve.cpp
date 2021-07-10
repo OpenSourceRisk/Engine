@@ -112,17 +112,17 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
                                                    const string& marketFile = "market.txt",
                                                    const string& fixingsFile = "fixings.txt") {
 
-    Conventions conventions;
-    conventions.fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+    auto conventions = boost::make_shared<Conventions>();
+    conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
 
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfigFile)));
+    auto curveConfigs = boost::make_shared<CurveConfigurations>();
+    curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfigFile)));
 
-    TodaysMarketParameters todaysMarketParameters;
-    todaysMarketParameters.fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
+    auto todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    todaysMarketParameters->fromFile(TEST_INPUT_FILE(string(inputDir + "/todaysmarket.xml")));
 
-    CSVLoader loader(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
-                     TEST_INPUT_FILE(string(inputDir + "/" + fixingsFile)), false);
+    auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
+                                                TEST_INPUT_FILE(string(inputDir + "/" + fixingsFile)), false);
 
     return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
 }
@@ -565,7 +565,7 @@ BOOST_DATA_TEST_CASE(testCommodityVolDeltaSurface, bdata::make(asofDates) * bdat
 
         // Check that the expected grid strike is one of the smile section strikes.
         auto itStrike =
-            find_if(iss->strikes().begin(), iss->strikes().end(), [&](Real s) { return abs(s - strike) < tol; });
+            find_if(iss->strikes().begin(), iss->strikes().end(), [&](Real s) { return std::abs(s - strike) < tol; });
         BOOST_REQUIRE(itStrike != iss->strikes().end());
 
         // Check that the expected volatility is equal to that at the grid strike
@@ -693,6 +693,7 @@ BOOST_DATA_TEST_CASE(testCommodityApoSurface, bdata::make(asofDates), asof) {
     CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
     BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 3);
 
+    BOOST_TEST_MESSAGE("exp_vol,calc_vol,difference");
     while (reader.next()) {
 
         // Get the expected expiry date, strike and volatility grid point
@@ -701,8 +702,51 @@ BOOST_DATA_TEST_CASE(testCommodityApoSurface, bdata::make(asofDates), asof) {
         Real volatility = parseReal(reader.get(2));
 
         // Check the surface on the grid point.
-        BOOST_CHECK_SMALL(volatility - vts->blackVol(expiryDate, strike), tol);
+        auto calcVolatility = vts->blackVol(expiryDate, strike);
+        auto difference = volatility - calcVolatility;
+        BOOST_TEST_MESSAGE(std::fixed << std::setprecision(12) << strike << "," << volatility << "," << calcVolatility
+                                      << "," << difference);
+        BOOST_CHECK_SMALL(difference, tol);
     }
+}
+
+// Main point of this test is to test that the option expiries are interpreted correctly.
+BOOST_AUTO_TEST_CASE(testCommodityVolSurfaceMyrCrudePalmOil) {
+
+    BOOST_TEST_MESSAGE("Testing commodity volatility delta surface building for MYR Crude Palm Oil");
+
+    Date asof(14, Oct, 2020);
+    auto todaysMarket = createTodaysMarket(asof, "myr_crude_palm_oil", "curveconfig.xml", "market.txt");
+
+    // Get the built commodity volatility surface
+    auto vts = todaysMarket->commodityVolatility("XKLS:FCPO");
+
+    // Check that it built ok i.e. can query a volatility.
+    BOOST_CHECK_NO_THROW(vts->blackVol(1.0, 2800));
+
+    // Cast to expected type and check that it succeeds
+    // For some reason, todaysmarket wraps the surface built in CommodityVolCurve in a BlackVolatilityWithATM.
+    auto bvwa = dynamic_pointer_cast<BlackVolatilityWithATM>(*vts);
+    BOOST_REQUIRE(bvwa);
+    auto bvsd = boost::dynamic_pointer_cast<BlackVolatilitySurfaceDelta>(bvwa->surface());
+    BOOST_REQUIRE(bvsd);
+
+    // Now check that the surface dates are as expected.
+
+    // Calculated surface dates.
+    const vector<Date>& surfaceDates = bvsd->dates();
+
+    // Read in the expected dates.
+    vector<Date> expectedDates;
+    string filename = "myr_crude_palm_oil/expected_expiries.csv";
+    CSVFileReader reader(TEST_INPUT_FILE(filename), true, ",");
+    BOOST_REQUIRE_EQUAL(reader.numberOfColumns(), 1);
+    while (reader.next()) {
+        expectedDates.push_back(parseDate(reader.get(0)));
+    }
+
+    // Check equal.
+    BOOST_CHECK_EQUAL_COLLECTIONS(surfaceDates.begin(), surfaceDates.end(), expectedDates.begin(), expectedDates.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

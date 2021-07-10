@@ -43,7 +43,7 @@
 #ifndef quantext_credit_default_swap_hpp
 #define quantext_credit_default_swap_hpp
 
-#include <ql/cashflow.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/default.hpp>
 #include <ql/instrument.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
@@ -91,17 +91,25 @@ public:
         @param settlesAccrual  Whether or not the accrued coupon is
                                due in the event of a default.
         @param protectionPaymentTime timing of protection and default accrual payments
-        @param protectionStart  The first date where a default
-                                event will trigger the contract.
+        @param protectionStart  The first date where a default event will trigger the contract. 
+                                Before the CDS Big Bang 2009, this was typically trade date (T) + 1 calendar day.
+                                After the CDS Big Bang 2009, protection is typically effective immediately i.e. on 
+                                trade date so this is what should be entered for protection start.
         @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
+        @param tradeDate  The contract's trade date. It will be used with the \p cashSettlementDays to determine 
+                          the date on which the cash settlement amount is paid. If not given, the trade date is 
+                          guessed from the protection start date and \p schedule date generation rule.
+        @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
-                      const DayCounter& lastPeriodDayCounter = DayCounter());
+                      const DayCounter& lastPeriodDayCounter = DayCounter(),
+                      const Date& tradeDate = Date(),
+                      Natural cashSettlementDays = 3);
     //! CDS quoted as upfront and running spread
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Notional value
@@ -114,18 +122,92 @@ public:
         @param settlesAccrual Whether or not the accrued coupon is
                               due in the event of a default.
         @param protectionPaymentTime timing of protection and default accrual payments
-        @param protectionStart The first date where a default
-                               event will trigger the contract.
+        @param protectionStart  The first date where a default event will trigger the contract. 
+                                Before the CDS Big Bang 2009, this was typically trade date (T) + 1 calendar day.
+                                After the CDS Big Bang 2009, protection is typically effective immediately i.e. on 
+                                trade date so this is what should be entered for protection start.
         @param upfrontDate Settlement date for the upfront payment.
         @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
                                      allow for possibility of including maturity date in the last
                                      period's coupon accrual which is standard.
+        @param tradeDate  The contract's trade date. It will be used with the \p cashSettlementDays to determine
+                          the date on which the cash settlement amount is paid. If not given, the trade date is
+                          guessed from the protection start date and \p schedule date generation rule.
+        @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
                       ProtectionPaymentTime protectionPaymentTime = atDefault, const Date& protectionStart = Date(),
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
-                      const DayCounter& lastPeriodDayCounter = DayCounter());
+                      const DayCounter& lastPeriodDayCounter = DayCounter(),
+                      const Date& tradeDate = Date(),
+                      Natural cashSettlementDays = 3);
+    //! CDS quoted as running-spread only and with amortized notional structure
+    /*! @param side  Whether the protection is bought or sold.
+        @param notional  Initial Notional value
+        @param amortized_leg  Amortizing Notional structure
+        @param spread  Running spread in fractional units.
+        @param schedule  Coupon schedule.
+        @param paymentConvention  Business-day convention for
+                                  payment-date adjustment.
+        @param dayCounter  Day-count convention for accrual.
+        @param settlesAccrual  Whether or not the accrued coupon is
+                               due in the event of a default.
+        @param protectionPaymentTime timing of protection and default accrual payments
+        @param protectionStart  The first date where a default event will trigger the contract. 
+                                Before the CDS Big Bang 2009, this was typically trade date (T) + 1 calendar day.
+                                After the CDS Big Bang 2009, protection is typically effective immediately i.e. on 
+                                trade date so this is what should be entered for protection start.
+        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
+                                     allow for possibility of including maturity date in the last
+                                     period's coupon accrual which is standard.
+        @param tradeDate  The contract's trade date. It will be used with the \p cashSettlementDays to determine 
+                          the date on which the cash settlement amount is paid. If not given, the trade date is 
+                          guessed from the protection start date and \p schedule date generation rule.
+        @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
+    */
+    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread,
+                      const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
+                      bool settlesAccrual = true, ProtectionPaymentTime protectionPaymentTime = atDefault,
+                      const Date& protectionStart = Date(),
+                      const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
+                      const DayCounter& lastPeriodDayCounter = DayCounter(),
+                      const Date& tradeDate = Date(),
+                      Natural cashSettlementDays = 3);
+    //! CDS quoted as upfront and running spread and with amortized notional structure
+    /*! @param side  Whether the protection is bought or sold.
+        @param notional  Initial Notional value
+        @param amortized_leg  Amortizing Notional structure
+        @param upfront Upfront in fractional units.
+        @param spread Running spread in fractional units.
+        @param schedule  Coupon schedule.
+        @param paymentConvention  Business-day convention for
+                                  payment-date adjustment.
+        @param dayCounter  Day-count convention for accrual.
+        @param settlesAccrual Whether or not the accrued coupon is
+                              due in the event of a default.
+        @param protectionPaymentTime timing of protection and default accrual payments
+        @param protectionStart  The first date where a default event will trigger the contract. 
+                                Before the CDS Big Bang 2009, this was typically trade date (T) + 1 calendar day.
+                                After the CDS Big Bang 2009, protection is typically effective immediately i.e. on 
+                                trade date so this is what should be entered for protection start.
+        @param upfrontDate Settlement date for the upfront payment.
+        @param lastPeriodDayCounter  Day-count convention for accrual in last period. Mainly to
+                                     allow for possibility of including maturity date in the last
+                                     period's coupon accrual which is standard.
+        @param tradeDate  The contract's trade date. It will be used with the \p cashSettlementDays to determine
+                          the date on which the cash settlement amount is paid. If not given, the trade date is
+                          guessed from the protection start date and \p schedule date generation rule.
+        @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
+    */
+    CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront, Rate spread,
+                      const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
+                      bool settlesAccrual = true, ProtectionPaymentTime protectionPaymentTime = atDefault,
+                      const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
+                      const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
+                      const DayCounter& lastPeriodDayCounter = DayCounter(),
+                      const Date& tradeDate = Date(),
+                      Natural cashSettlementDays = 3);
     //@}
     //! \name Instrument interface
     //@{
@@ -146,6 +228,10 @@ public:
     const Date& protectionStartDate() const;
     //! The last date for which defaults will trigger the contract
     const Date& protectionEndDate() const;
+    const boost::shared_ptr<SimpleCashFlow>& upfrontPayment() const;
+    const boost::shared_ptr<SimpleCashFlow>& accrualRebate() const;
+    const Date& tradeDate() const;
+    Natural cashSettlementDays() const;
     //@}
     //! \name Results
     //@{
@@ -192,7 +278,6 @@ public:
     */
     Rate impliedHazardRate(Real targetNPV, const Handle<YieldTermStructure>& discountCurve,
                            const DayCounter& dayCounter, Real recoveryRate = 0.4, Real accuracy = 1.0e-6) const;
-
     //! Conventional/standard upfront-to-spread conversion
     /*! Under a standard ISDA model and a set of standardised
         instrument characteristics, it is the running only quoted
@@ -228,6 +313,7 @@ public:
     */
     Rate conventionalSpread(Real conventionalRecovery, const Handle<YieldTermStructure>& discountCurve,
                             const DayCounter& dayCounter) const;
+
     //@}
 protected:
     //! \name Instrument interface
@@ -243,8 +329,11 @@ protected:
     ProtectionPaymentTime protectionPaymentTime_;
     boost::shared_ptr<Claim> claim_;
     Leg leg_;
-    boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_;
+    boost::shared_ptr<SimpleCashFlow> upfrontPayment_;
+    boost::shared_ptr<SimpleCashFlow> accrualRebate_;
     Date protectionStart_, maturity_;
+    Date tradeDate_;
+    Natural cashSettlementDays_;
     // results
     mutable Rate fairUpfront_;
     mutable Rate fairSpread_;
@@ -256,6 +345,11 @@ protected:
     virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
                                                                 Real r, const Handle<YieldTermStructure>& d) const;
     //@}
+
+private:
+    //! Shared initialisation.
+    void init(const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
+        const DayCounter& lastPeriodDayCounter, const Date& upfrontDate = Date());
 };
 
 //! \ingroup instruments
@@ -265,6 +359,7 @@ public:
     virtual ~arguments() {}
     Protection::Side side;
     Real notional;
+
     boost::optional<Rate> upfront;
     Rate spread;
     Leg leg;

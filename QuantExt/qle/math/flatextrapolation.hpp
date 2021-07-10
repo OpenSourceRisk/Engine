@@ -113,6 +113,16 @@ public:
     static const Size requiredPoints = 2;
 };
 
+//! Hermite interpolation and flat extrapolation factory and traits
+class HermiteFlat {
+public:
+     template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
+         return FlatExtrapolation(boost::make_shared<Parabolic>(xBegin, xEnd, yBegin));
+     }
+     static const bool global = false;
+     static const Size requiredPoints = 2;
+};
+
 //! Cubic interpolation and flat extrapolation factory and traits
 class CubicFlat {
 public:
@@ -141,16 +151,6 @@ private:
     QuantLib::CubicInterpolation::BoundaryCondition rightType_;
     QuantLib::Real leftValue_;
     QuantLib::Real rightValue_;
-};
-
-//! Hermite interpolation and flat extrapolation factory and traits
-class HermiteFlat {
-public:
-    template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
-        return FlatExtrapolation(boost::make_shared<Parabolic>(xBegin, xEnd, yBegin));
-    }
-    static const bool global = false;
-    static const Size requiredPoints = 2;
 };
 
 } // namespace QuantExt

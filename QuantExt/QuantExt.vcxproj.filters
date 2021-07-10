@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="qle\quantext.hpp" />
@@ -18,7 +18,16 @@
     <ClInclude Include="qle\indexes\genericiborindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ambor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ameribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\boebaserate.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\chftois.hpp">
@@ -31,6 +40,9 @@
       <Filter>indexes\ibor</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\hkdhonia.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp">
@@ -172,6 +184,9 @@
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\lgm.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\lgmcalibrationinfo.hpp">
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\lgmimpliedyieldtermstructure.hpp">
@@ -498,9 +513,6 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -549,9 +561,6 @@
     <ClInclude Include="qle\calendars\philippines.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
-    <ClInclude Include="qle\calendars\thailand.hpp">
-      <Filter>time\calendars</Filter>
-    </ClInclude>
     <ClInclude Include="qle\calendars\switzerland.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
@@ -568,6 +577,12 @@
       <Filter>indexes\ibor</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\clpcamara.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhhibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnhshibor.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\copibr.hpp">
@@ -629,6 +644,9 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\currencies\configurablecurrency.hpp">
+      <Filter>currencies</Filter>
     </ClInclude>
     <ClInclude Include="qle\currencies\metals.hpp">
       <Filter>currencies</Filter>
@@ -813,13 +831,16 @@
     <ClInclude Include="qle\pricingengines\commodityapoengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\adjusteddefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\aposurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\indexedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityoptionsurfacestripper.hpp">
+    <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\cpicoupon.hpp">
@@ -830,9 +851,6 @@
     </ClInclude>
     <ClInclude Include="qle\cashflows\strippedcapflooredcpicoupon.hpp">
       <Filter>cashflows</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\constantyoyinflationoptionletvolatility.hpp">
-      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\dynamiccpivolatilitystructure.hpp">
       <Filter>termstructures</Filter>
@@ -845,12 +863,6 @@
     </ClInclude>
     <ClInclude Include="qle\cashflows\blackovernightindexedcouponpricer.hpp">
       <Filter>cashflows</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\instruments\overnightindexfuture.hpp">
-      <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\overnightindexfutureratehelper.hpp">
-      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\currencies\europe.hpp">
       <Filter>currencies</Filter>
@@ -876,13 +888,31 @@
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\futurepricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averagespotpricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewisepricecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp">
       <Filter>termstructures</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\cashflowresults.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticcashsettledeuropeanengine.hpp">
@@ -899,6 +929,232 @@
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\dkkcita.hpp">
       <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadeddiscountcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\eqfxindexbase.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\amendedcalendar.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\infjyparameterization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\zeroinflationmodeltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\yoyinflationmodeltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\jyimpliedyoyinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\jyimpliedzeroinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedhazardratecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedsurvivalprobabilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\multisectiondefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\weightedyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\yieldplusdefaultyieldtermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\genericindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\behicp.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\frcpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\jpyeytibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\projectedcrossassetmodel.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\yoyswaphelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\yoycapfloorhelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticjycpicapfloorengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\jyyoyinflationcouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticjyyoycapfloorengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\utilities\inflation.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\crcirpp.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\processes\crcirppstateprocess.hpp">
+      <Filter>processes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppconstantfellerparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppconstantparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppimplieddefaulttermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\cirppparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticeuropeanforwardengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\vanillaforwardoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedblackvolatilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedblackvolatilitysurfacemoneyness.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedcorrelationcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedcpivolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedinflationcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedoptionletvolatility2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedpricetermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedsmilesection2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedsurvivalprobabilitytermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedyoyvolsurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\durationadjustedcmscoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\durationadjustedcmscoupontsrpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\linearannuitymapping.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\annuitymapping.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\cnyrepofix.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\commoditycashflow.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\compoequityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\decpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\carrmadanarbitragecheck.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\exactbachelierimpliedvolatility.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabr.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrinterpolation.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\normalsabrsmilesection.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfacebfrr.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackdeltautilities.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\currencies\currencycomparator.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\escpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\plnpolonia.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\covariancesalvage.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\methods\pathgeneratorfactory.hpp">
+      <Filter>methods</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blacktriangulationatmvol.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\version.hpp" />
+    <ClInclude Include="qle\indexes\offpeakpowerindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\crossccyfixfloatmtmresetswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\fixedratefxlinkednotionalcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\fallbackiborindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\nonstandardyoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\nonstandardcapflooredyoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\nonstandardinflationcouponpricer.hpp">
+      <Filter>cashflows</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -997,6 +1253,9 @@
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
+    <ClCompile Include="qle\instruments\cashflowresults.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -1046,6 +1305,9 @@
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\lgm.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\lgmcalibrationinfo.cpp">
       <Filter>models</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\lgmimpliedyieldtermstructure.cpp">
@@ -1118,6 +1380,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\fxindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\genericiborindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp">
@@ -1303,9 +1568,6 @@
     <ClCompile Include="qle\calendars\philippines.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
-    <ClCompile Include="qle\calendars\thailand.cpp">
-      <Filter>time\calendars</Filter>
-    </ClCompile>
     <ClCompile Include="qle\calendars\switzerland.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
@@ -1354,6 +1616,9 @@
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\currencies\configurablecurrency.cpp">
+      <Filter>currencies</Filter>
+    </ClCompile>
     <ClCompile Include="qle\currencies\metals.cpp">
       <Filter>currencies</Filter>
     </ClCompile>
@@ -1383,6 +1648,12 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\ameribor.cpp">
+      <Filter>indexes\ibor</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\boebaserate.cpp">
+      <Filter>indexes\ibor</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp">
       <Filter>indexes\ibor</Filter>
@@ -1480,7 +1751,7 @@
     <ClCompile Include="qle\cashflows\indexedcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\equityoptionsurfacestripper.cpp">
+    <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\cpicoupon.cpp">
@@ -1491,9 +1762,6 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\strippedcapflooredcpicoupon.cpp">
       <Filter>cashflows</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\constantyoyinflationoptionletvolatility.cpp">
-      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\dynamiccpivolatilitystructure.cpp">
       <Filter>termstructures</Filter>
@@ -1506,12 +1774,6 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\blackovernightindexedcouponpricer.cpp">
       <Filter>cashflows</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\instruments\overnightindexfuture.cpp">
-      <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\overnightindexfutureratehelper.cpp">
-      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\currencies\europe.cpp">
       <Filter>currencies</Filter>
@@ -1534,6 +1796,15 @@
     <ClCompile Include="qle\time\actual364.cpp">
       <Filter>time</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\futurepricehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averagespotpricehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averagefuturepricehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1542,6 +1813,162 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticcashsettledeuropeanengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadeddiscountcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\amendedcalendar.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\infjyparameterization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\zeroinflationmodeltermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoyinflationmodeltermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\jyimpliedyoyinflationtermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\jyimpliedzeroinflationtermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolconstantspread.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\projectedcrossassetmodel.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoyswaphelper.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\yoycapfloorhelper.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticjycpicapfloorengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\jyyoyinflationcouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticjyyoycapfloorengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\utilities\inflation.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\crcirpp.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\processes\crcirppstateprocess.cpp">
+      <Filter>processes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\cirppimplieddefaulttermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticeuropeanforwardengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedblackvolatilitycurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedblackvolatilitysurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedcorrelationcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedcpivolatilitysurface.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedinflationcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedoptionletvolatility2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedpricetermstructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedsmilesection2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedsurvivalprobabilitytermstructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedyoyvolsurface.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\durationadjustedcmscoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\durationadjustedcmscoupontsrpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\linearannuitymapping.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\annuitymapping.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\commoditycashflow.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\compoequityindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averageoffpeakpowerhelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\exactbachelierimpliedvolatility.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabr.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\normalsabrsmilesection.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\offpeakpowerindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackdeltautilities.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccyfixfloatmtmresetswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\fixedratefxlinkednotionalcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\fallbackiborindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\nonstandardyoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\nonstandardcapflooredyoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\nonstandardinflationcouponpricer.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

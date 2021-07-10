@@ -76,11 +76,9 @@ string getBaseDataPath(int argc, char** argv) {
         }
     }
 
-    // Test that we have a valid path and it contains an 'input' folder
+    // Test that we have a valid path
     path p(strPath);
     QL_REQUIRE(is_directory(p), "Test set up failed: the path '" << strPath << "' is not a directory");
-    QL_REQUIRE(is_directory(p / path("input")),
-               "Test set up failed: the path '" << strPath << "' does not contain an 'input' directory");
 
     return strPath;
 }

@@ -25,32 +25,41 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-DiscountingCommodityForwardEngine::DiscountingCommodityForwardEngine(const Handle<PriceTermStructure>& priceCurve,
-                                                                     const Handle<YieldTermStructure>& discountCurve,
+DiscountingCommodityForwardEngine::DiscountingCommodityForwardEngine(const Handle<YieldTermStructure>& discountCurve,
                                                                      boost::optional<bool> includeSettlementDateFlows,
                                                                      const Date& npvDate)
-    : priceCurve_(priceCurve), discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
+    : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
       npvDate_(npvDate) {
 
-    registerWith(priceCurve_);
     registerWith(discountCurve_);
 }
 
 void DiscountingCommodityForwardEngine::calculate() const {
 
-    Date npvDate = npvDate_ == Null<Date>() ? priceCurve_->referenceDate() : npvDate_;
+    const auto& index = arguments_.index;
+    Date npvDate = npvDate_;
+    if (npvDate == Null<Date>()) {
+        const auto& priceCurve = index->priceCurve();
+        QL_REQUIRE(!priceCurve.empty(), "DiscountingCommodityForwardEngine: need a non-empty price curve.");
+        npvDate = priceCurve->referenceDate();
+    }
+
+    const Date& maturity = arguments_.maturityDate;
+    Date paymentDate = maturity;
+    if (!arguments_.physicallySettled && arguments_.paymentDate != Date()) {
+        paymentDate = arguments_.paymentDate;
+    }
 
     results_.value = 0.0;
-    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(Date(), includeSettlementDateFlows_)) {
+    if (!detail::simple_event(paymentDate).hasOccurred(Date(), includeSettlementDateFlows_)) {
 
-        Real buySellIndicator = arguments_.position == Position::Long ? 1.0 : -1.0;
+        Real buySell = arguments_.position == Position::Long ? 1.0 : -1.0;
+        Real forwardPrice = index->fixing(maturity);
 
-        Real forwardPrice = priceCurve_->price(arguments_.maturityDate);
-        DiscountFactor discount = discountCurve_->discount(arguments_.maturityDate);
-        discount /= discountCurve_->discount(npvDate);
+        results_.value = arguments_.quantity * buySell * (forwardPrice - arguments_.strike) *
+            discountCurve_->discount(paymentDate) / discountCurve_->discount(npvDate);
 
-        results_.value = (forwardPrice - arguments_.strike) * discount;
-        results_.value *= arguments_.quantity * buySellIndicator;
+        results_.additionalResults["currentNotional"] = forwardPrice * arguments_.quantity;
     }
 }
 

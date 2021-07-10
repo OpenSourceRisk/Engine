@@ -1,10 +1,8 @@
 \subsubsection{Commodity Forward}
 
-The \lstinline!CommodityForwardData!  node is the trade data container for the  \emph{CommodityForward} trade type.   The structure of an example \lstinline!CommodityForwardData! node for a commodity option is shown in 
-Listing \ref{lst:comfwd_data}.
+The \lstinline!CommodityForwardData! node is the trade data container for the \lstinline!CommodityForward! trade type. The structure of an example \lstinline!CommodityForwardData! node is shown in Listings \ref{lst:comfwd_data} and \ref{lst:comm_fwd_lme_3M}.
 
 \begin{listing}[H]
-%\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <CommodityForwardData>
   <Position>Long</Position>
@@ -13,29 +11,76 @@ Listing \ref{lst:comfwd_data}.
   <Currency>USD</Currency>
   <Strike>1355</Strike>
   <Quantity>1000</Quantity>
+  <IsFuturePrice>...</IsFuturePrice>
+  <FutureExpiryDate>...</FutureExpiryDate>
+  <FutureExpiryOffset>...</FutureExpiryOffset>
+  <FutureExpiryOffsetCalendar>...</FutureExpiryOffsetCalendar>
+  <PhysicallySettled>...</PhysicallySettled>
+  <PaymentDate>...</PaymentDate>
 </CommodityForwardData>
 \end{minted}
 \caption{Commodity Forward data}
 \label{lst:comfwd_data}
 \end{listing}
 
-The meanings and allowable values of the elements in the \lstinline!CommodityForwardData!  node follow below.
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityForwardData>
+  <Position>Long</Position>
+  <Maturity>2021-08-16</Maturity>
+  <Name>XLME:AH</Name>
+  <Currency>USD</Currency>
+  <Strike>2160</Strike>
+  <Quantity>1000</Quantity>
+  <IsFuturePrice>true</IsFuturePrice>
+  <FutureExpiryDate>2021-11-16</FutureExpiryDate>
+  <PhysicallySettled>true</PhysicallySettled>
+</CommodityForwardData>
+\end{minted}
+\caption{\lstinline!CommodityForwardData! for forward on LME Aluminium 3M future.}
+\label{lst:comm_fwd_lme_3M}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!CommodityForwardData! node follow below.
 
 \begin{itemize}
-	\item Position: Defines whether the underlying commodity will be bought (long) or sold (short). \\
-	Allowable values: \emph{Long, Short}
-	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying commodity will be bought/sold. \\
-	Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-	\item Name: The name of the underlying commodity. \\
-	Allowable values:  See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}. \\
-	\item Currency: The  currency of the commodity forward. \\
-	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
-	\item Strike: The agreed buy/sell price of the commodity forward. \\
-	Allowable values:  Any positive real number.	
-	\item Quantity: The number of units of the underlying commodity to be bought/sold. \\
-	Allowable values:  Any positive real number.
+\item Position: Defines whether the underlying commodity will be bought (long) or sold (short). \\
+Allowable values: \emph{Long, Short}
+
+\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying commodity will be bought/sold. \\
+Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Name: The name of the underlying commodity. \\
+Allowable values:  See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}. \\
+
+\item Currency: The  currency of the commodity forward. \\
+Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
+
+\item Strike: The agreed buy/sell price of the commodity forward. \\
+Allowable values:  Any positive real number.
+
+\item Quantity: The number of units of the underlying commodity to be bought/sold. \\
+Allowable values:  Any positive real number.
+
+\item \lstinline!IsFuturePrice! [Optional]: This should be set to \lstinline!true! if the forward contract underlying is the settlement price of a commodity future contract. If omitted, it defaults to \lstinline!false!. \\
+Allowable values: Any string that evaluates to true or false as outlined in Table \ref{tab:boolean_allowable}.
+
+\item \lstinline!FutureExpiryDate! [Optional]: If \lstinline!IsFuturePrice! is set to \lstinline!true!, this gives the expiration date of the underlying commodity future contract. If omitted, the expiration date of the underlying commodity future contract is set equal to the value in the \lstinline!Maturity! node. If \lstinline!FutureExpiryDate! is provided, it takes precedence over any value provided in the \lstinline!FutureExpiryOffset! and \lstinline!FutureExpiryOffsetCalendar! fields. \\
+Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!FutureExpiryOffset! [Optional]: If \lstinline!IsFuturePrice! is set to \lstinline!true! and \lstinline!FutureExpiryDate! is not explicitly specified, this gives the offset period that should be applied to the \lstinline!Maturity! date to generate the underlying commodity future contract expiration date. If omitted, the expiration date of the underlying commodity future contract is set equal to the value in the \lstinline!Maturity! node. \\
+Allowable values: Any string that can be parsed as a period e.g.\ \lstinline!2D!, \lstinline!3M!, etc.
+
+\item \lstinline!FutureExpiryOffsetCalendar! [Optional]: If \lstinline!FutureExpiryOffset! is provided and is being used, this gives the calendar that should be used when generating the underlying commodity future contract expiration date from the \lstinline!Maturity! date. If omitted, all days are considered good business days when generating the commodity future contract expiration date which is generally not what is desired. \\
+Allowable values: Any calendar string, see \lstinline!Calendar! in Table \ref{tab:calendar}.
+
+\item \lstinline!PhysicallySettled! [Optional]: A value of \lstinline!true! indicates that the forward contract is physically settled e.g.\ if the underlying is a future contract, that future contract is entered into on the \lstinline!Maturity! date. A value of \lstinline!false! indicates that the forward contract is cash settled e.g.\ if the underlying is a future contract, that future contract settlement price is observed on the \lstinline!Maturity! date and the net amount due is exchanged on the cash settlement date. If omitted, it defaults to \lstinline!true!. \\
+Allowable values: Any string that evaluates to true or false as outlined in Table \ref{tab:boolean_allowable}.
+
+\item \lstinline!PaymentDate! [Optional]: If \lstinline!PhysicallySettled! is set to \lstinline!false!, this gives the cash settlement date. It must be greater than or equal to the \lstinline!Maturity! date. If omitted and the forward is cash settled, the \lstinline!Maturity! date is used. \\
+Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
 \end{itemize}
 
 %\subsubsection{Precious Metal Forward}
-Note that a Precious Metal Forward should be represented as an FX
-Forward using the appropriate commodity ``currency'' (XAU, XAG, XPT, XPD).
+Note that a Precious Metal Forward should be represented as an FX Forward using the appropriate commodity ``currency'' (XAU, XAG, XPT, XPD).

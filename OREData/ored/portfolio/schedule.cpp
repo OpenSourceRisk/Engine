@@ -19,6 +19,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <set>
 
 using namespace QuantLib;
 
@@ -28,7 +29,7 @@ namespace data {
 void ScheduleRules::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Rules");
     startDate_ = XMLUtils::getChildValue(node, "StartDate");
-    endDate_ = XMLUtils::getChildValue(node, "EndDate");
+    endDate_ = XMLUtils::getChildValue(node, "EndDate", false);
     tenor_ = XMLUtils::getChildValue(node, "Tenor");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
@@ -42,7 +43,8 @@ void ScheduleRules::fromXML(XMLNode* node) {
 XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
     XMLNode* rules = doc.allocNode("Rules");
     XMLUtils::addChild(doc, rules, "StartDate", startDate_);
-    XMLUtils::addChild(doc, rules, "EndDate", endDate_);
+    if (!endDate_.empty())
+        XMLUtils::addChild(doc, rules, "EndDate", endDate_);
     XMLUtils::addChild(doc, rules, "Tenor", tenor_);
     XMLUtils::addChild(doc, rules, "Calendar", calendar_);
     XMLUtils::addChild(doc, rules, "Convention", convention_);
@@ -102,22 +104,35 @@ Schedule makeSchedule(const ScheduleDates& data) {
     BusinessDayConvention convention = Unadjusted;
     if (data.convention() != "")
         convention = parseBusinessDayConvention(data.convention());
-    boost::optional<Period> tenor = boost::none;
+    // Avoid compiler warning on gcc
+    // https://www.boost.org/doc/libs/1_74_0/libs/optional/doc/html/boost_optional/tutorial/
+    // gotchas/false_positive_with__wmaybe_uninitialized.html
+    auto tenor = boost::make_optional(false, Period());
     if (data.tenor() != "")
         tenor = parsePeriod(data.tenor());
     bool endOfMonth = false;
     if (data.endOfMonth() != "")
         endOfMonth = parseBool(data.endOfMonth());
-    vector<Date> scheduleDates(data.dates().size());
-    for (Size i = 0; i < data.dates().size(); i++)
-        scheduleDates[i] = calendar.adjust(parseDate(data.dates()[i]), convention);
-    return Schedule(scheduleDates, calendar, convention, boost::none, tenor, boost::none, endOfMonth);
+
+    // Ensure that Schedule ctor is passed a vector of unique ordered dates.
+    std::set<Date> uniqueDates;
+    for (const string& d : data.dates())
+        uniqueDates.insert(calendar.adjust(parseDate(d), convention));
+
+    return Schedule(vector<Date>(uniqueDates.begin(), uniqueDates.end()), calendar, convention, boost::none, tenor,
+                    boost::none, endOfMonth);
 }
 
-Schedule makeSchedule(const ScheduleRules& data) {
+Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacement) {
+    QL_REQUIRE(!data.endDate().empty() || openEndDateReplacement != Null<Date>(),
+               "makeSchedule(): Schedule does not have an end date, this is not supported in this context / for this "
+               "trade type. Please provide an end date.");
+    QL_REQUIRE(!data.endDate().empty() || data.lastDate().empty(),
+               "makeSchedule(): If no end date is given, a last date is not allowed either. Please remove the last "
+               "date from the schedule.");
     Calendar calendar = parseCalendar(data.calendar());
     Date startDate = parseDate(data.startDate());
-    Date endDate = parseDate(data.endDate());
+    Date endDate = data.endDate().empty() ? openEndDateReplacement : parseDate(data.endDate());
     // Handle trivial case here
     if (startDate == endDate)
         return Schedule(vector<Date>(1, startDate), calendar);
@@ -184,13 +199,18 @@ void updateData(const std::string& s, T& t, bool& hasT, bool& hasConsistentT, co
 Calendar parseCalendarTemp(const string& s) { return parseCalendar(s); }
 } // namespace
 
-Schedule makeSchedule(const ScheduleData& data) {
+Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplacement) {
+    // only the last rule-based schedule is allowed to have an open end date, check this
+    for (Size i = 1; i < data.rules().size(); ++i) {
+        QL_REQUIRE(!data.rules()[i - 1].endDate().empty(),
+                   "makeSchedule: only last schedule is allowed to have an open end date");
+    }
     // build all the date and rule based sub-schedules we have
     vector<Schedule> schedules;
     for (auto& d : data.dates())
         schedules.push_back(makeSchedule(d));
     for (auto& r : data.rules())
-        schedules.push_back(makeSchedule(r));
+        schedules.push_back(makeSchedule(r, openEndDateReplacement));
     QL_REQUIRE(!schedules.empty(), "No dates or rules to build Schedule from");
     if (schedules.size() == 1)
         // if we have just one, use that (most common case)

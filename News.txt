@@ -1,3 +1,102 @@
+Changes for the 6th ORE release (1.8.6.0):
+============================================
+
+ORE 1.8.6.0 includes the following notable changes, details can be
+found in the commits between June 2020 and June 2021.
+
+INSTRUMENTS
+
+- Add Equity, FX and Commodity Asian Options (thanks to Skandinaviska Enskilda Banken)
+- Add Equity Future Option
+- Support Quanto Equity Options
+- Add Digital CMS Leg
+- Add Duration Adjusted CMS Leg
+- Allow settlement delay in FX Forwards
+- Support separate caps/floors on inflation coupon and redemption
+- CPI and YoY coupons can now pay the inflation ratio or the inflation rate = inflation ratio - 1 
+- Support caps / floors on ON index fixings, see LocalCapFloor tag in the User Guide
+- Support local and global caps / floors on ON average coupons
+- Reference commodity index in Commodity forwards
+- Support strike of type yield-to-maturity in bond forwards (T-Locks etc.)
+- Support averaging and in-advance fixing for SOFR/ON-Index linked legs
+- Add LastRecentPeriodCalendar to handle SOFR30A, 90A, 180A 
+- Fix construction of notional amortization schedules
+- Update CDS Option Pricing (O’Kane, 2008)
+- Refine Cross Currency Swap pricing (thanks to Ioannis Rigopoulos)
+- Allow for more than one premium, introduce new premium node
+
+MARKETS
+
+- Add minor currency support (GBX, ZAC, ILA)
+- Add currencies - AOA, ETB, GEL and XOF
+- Add configurable currencies support to cover all remaining ISO currencies, see Examples/Input/currencies.xml
+- Add configurable calendars
+- Add various hard-coded IBOR Indices, DKK CITA and SEK STINA (thanks to Skandinaviska Enskilda Banken), AED EIBOR, GBP BoEBase, CNH HIBOR, CNY REPOFIX, HKD HONIA, JPY-Euroyen TIBOR, ZAR SABOR
+- Add Inflation indices - AUCPI, FRCPI, BEHICP
+- Add configurable, conventions based, IR/INF index support for greater flexibility in adding indexes to ORE 
+- Add LIBOR fallback support based on configurable adjustment spread, cessation date and RFR index
+- Fix the FX triangulation to avoid spurious small FX sensitivities
+
+TERM STRUCTURES
+
+- Support 1M SOFR Futures in yield curve building
+- Support CDS upfront quotes in default curve building
+- Add support for delta-based Equity volatility surfaces 
+- Improve robustness of Cap/Floor volatility surfaces to missing data
+- Support commodity volatility surfaces built from option prices
+- Support flat zero extrapolation on yield curves
+- Support linear zero interpolation for yield curves (thanks to Steven van Haren)
+- Support delta interpolated FX volatility surfaces accepting BF/RR market data
+- Support wild cards in FX volatility surface configurations
+- Support Hermite interpolation in commodity price curves (thanks to Skandinaviska Enskilda Banken)
+- Arbitrage checks for Equity and FX volatility surfaces 
+- Report to list market data points used in t0 market curve building
+- Set up ScenarioSimMarket curves and surfaces as spreads over the t0 market
+- Support fix-float mtm reset cross currency swaps in curve building
+- Extend yield curve interpolation methods (Quadratic, LogQuadratic, Hermite, Cubic Spline)  
+
+ANALYTICS
+
+- Introduce an optional close-out grid for exposure simulation and XVA, see Example 31
+- Add inflation simulation for exposure and XVA using Jarrow-Yildirim, see Example 32
+- Add credit simulation for exposure and XVA using Gaussian and Cox-Ingersoll-Ross models, see Examples 33 and 34
+- Add “flipped view” XVA feature, flipping “our” perspective to “theirs” (thanks to Roland Kapl), see Example 35
+- Add option to switch from the LGM measure to the Bank Account measure for exposure simulations, see Example 36
+- Refactoring of the exposure and XVA post processor, separating out various classes
+- Support one-sided Initial Margin in CSAs
+- Fix the treatment of independent amounts in Variation Margin calculation 
+- Export additional pricing engine and trade additional results for a range of instruments (Bonds, CDS, Swaps, Swaptions, Equity Forwards/Swaps/Options, FX Forwards and Options)
+- Add an option to include past cashflows in the cashflow report
+- Add accrual start/end dates and accrued amounts to the cash flow report (thanks to Roland Kapl)
+- Fix LGM calibration with Best Fit
+- Update trade notional/maturity in line with ISDA AANA/GRID recommendations
+
+TESTS
+
+- QuantExt: 203 test functions (vs 180 in the previous release)
+- OREData: 160 test functions (vs 135 in the previous release)
+- OREAnalytics: 65 test functions (vs 61 in the previous release) 
+
+with associated increases in the number of data driven test cases 
+
+EXAMPLES
+
+- Added Examples 31 - 36, see the first five bullet points in the ANALYTICS section above
+- Established regression tests for Example outputs
+
+USER GUIDE
+
+- Grown from 267 to 326 pages (thanks also to Roland Kapl and Skandinaviska Enskilda Banken)
+
+LANGUAGE BINDUNGS
+
+- Maintenance to ensure ORE SWIG wrappers build with current ORE, QuantLib-1.22 and QuantLib-SWIG-1.22
+
+OTHER
+
+- Fix the instrument schema to include ore\_types.xsd again (thanks to Tomass Wilson) 
+
+
 Changes for the 5th ORE release (1.8.5.0):
 ============================================
 
@@ -84,7 +183,7 @@ EXAMPLES
 USER GUIDE
 
 - Documentation of ongoing changes, new instruments, broader market coverage,
-  extended to over 260 pages
+  extended to over 250 pages
 
 BUILDING ORE
 

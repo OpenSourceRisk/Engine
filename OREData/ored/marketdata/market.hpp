@@ -37,11 +37,12 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace ore {
 namespace data {
@@ -54,6 +55,31 @@ enum class YieldCurveType {
     Discount = 0, // Chosen to match MarketObject::DiscountCurve
     Yield = 1,    // Chosen to match MarketObject::YieldCurve
     EquityDividend = 2
+};
+
+enum class MarketObject {
+    DiscountCurve = 0,
+    YieldCurve = 1,
+    IndexCurve = 2,
+    SwapIndexCurve = 3,
+    FXSpot = 4,
+    FXVol = 5,
+    SwaptionVol = 6,
+    DefaultCurve = 7,
+    CDSVol = 8,
+    BaseCorrelation = 9,
+    CapFloorVol = 10,
+    ZeroInflationCurve = 11,
+    YoYInflationCurve = 12,
+    ZeroInflationCapFloorVol = 13,
+    YoYInflationCapFloorVol = 14,
+    EquityCurve = 15,
+    EquityVol = 16,
+    Security = 17,
+    CommodityCurve = 18,
+    CommodityVolatility = 19,
+    Correlation = 20,
+    YieldVol = 21
 };
 
 //! Market
@@ -182,11 +208,14 @@ public:
                                          const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
-    //! \name Commodity price curves
+    //! \name Commodity price curves and indices
     //@{
     virtual QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const std::string& commodityName,
                         const std::string& configuration = Market::defaultConfiguration) const = 0;
+
+    virtual QuantLib::Handle<QuantExt::CommodityIndex> commodityIndex(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Commodity volatility

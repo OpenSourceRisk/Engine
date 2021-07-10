@@ -24,9 +24,9 @@
 #pragma once
 
 #include <ored/report/report.hpp>
+#include <ored/report/csvreport.hpp>
 #include <ql/errors.hpp>
 #include <vector>
-
 namespace ore {
 namespace data {
 using std::string;
@@ -71,11 +71,36 @@ public:
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
+    Size rows() const { return data_[0].size(); }
     const string& header(Size i) const { return headers_[i]; }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
     Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
     const vector<ReportType>& data(Size i) const { return data_[i]; }
+    
+    void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
+                const string& nullString = "#N/A") {
+        
+        CSVFileReport cReport(filename, sep, commentCharacter, quoteChar,
+                              nullString);
+        
+        
+        for (Size i = 0; i < headers_.size(); i++) {
+            cReport.addColumn(headers_[i], columnTypes_[i], columnPrecision_[i]);
+        }
+        
+        auto numColumns = columns();
+        auto numRows = data_[0].size();
+    
+        for (Size i = 0; i < numRows; i++) {
+            cReport.next();
+            for (Size j = 0; j < numColumns; j++) {
+                cReport.add(data_[j][i]);
+            }
+        }
+        
+        cReport.end();
+    }
 
 private:
     Size i_;

@@ -55,7 +55,7 @@ deduced. The node for a zero rate quote with an explicit maturity date is shown 
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
-\item €TenorBased€: True if the conventions are for a tenor based zero quote and False if they are
+\item TenorBased: True if the conventions are for a tenor based zero quote and False if they are
 for a zero quote with an explicit maturity date.
 \item DayCounter: The day count basis associated with the zero rate quote (for choices see section
 \ref{sec:allowable_values})
@@ -70,7 +70,7 @@ tenor. If not provided, this defaults to 0.
 \item SpotCalendar [Optional]: The calendar to use for business days when applying the \lstinline!SpotLag!. If not
 provided, it defaults to a calendar with no holidays.
 \item RollConvention [Optional]: The roll convention to use when applying the zero rate tenor. If not provided, it
-defaults to Following (Choices are {\em Backward, Forward, Zero, ThirdWednesday, Twentieth, TwentiethIMM, CDS}).
+defaults to Following (Choices are {\em Backward, Forward, Zero, ThirdWednesday, Twentieth, TwentiethIMM, CDS, ThirdThursday, ThirdFriday, MondayAfterThirdFriday, TuesdayAfterThirdFriday, LastWednesday}).
 \item EOM [Optional]: Whether or not to use the end of month convention when applying the zero rate tenor. If not
 provided, it defaults to false.
 \end{itemize}
@@ -128,12 +128,38 @@ EUR-EURIBOR, USD-LIBOR etc.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{Future Conventions}
+\subsubsection{Future Conventions}\label{ss:conventions_future}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-A node with name \emph{Future} is used to store conventions for IMM Future quotes. The structure of this node is shown
-in Listing \ref{lst:future_conventions}. The only piece of information needed is the underlying money market or
-overnight future index name and this is given in the \lstinline!Index! node. For example, this could be EUR-EURIBOR-3M,
-USD-LIBOR-3M, USD-SOFR, GBP-SONIA etc.
+
+A node with name \emph{Future} is used to store conventions for money market (MM) or overnight index (OI) interest rate
+future quotes, for example futures on Euribor 3M or SOFR 3M underlyings. The structure of this node is shown in Listing
+\ref{lst:future_conventions}. The fields have the following meaning:
+
+\begin{itemize}
+\item Id: The name of the convention.
+\item Index: The underlying index of the futures, this is either a MM (i.e. Ibor) index like e.g. EUR-EURIBOR-3M or an
+  overnight index like e.g. USD-SOFR.
+\item DateGenerationRule [Optional]: This should be set to 'IMM' when the start and end dates of the future are
+  following the IMM date logic or 'FirstDayOfMonth' when the start and end date are the first day of a month. If not
+  given this field defaults to 'IMM'.
+  \begin{itemize}
+  \item For MM futures only 'IMM' is allowed and the expiry date is determined as the next 3rd Wednesday of the expiry
+    month of a future.
+  \item For an overnight index future 'IMM' means that the end date of the future is set to the 3rd Wednesday of the
+    expiry month and the start date is set to the 3rd Wednesday of the expiry month minus the future tenor. The setting
+    'IMM' applies to SOFR-3M futures for example. 'FirstDayOfMonth' on the other hand means that the end date of the
+    future is set to the first day in the month following the future's expiry month and the start date is set to the
+    first day of the month lying $n$ months before the end date's month where $n$ is the number of months of the
+    future's underlying tenor. The setting 'FirstDayOfMonth' applies to SOFR-1M futures for example. This tenor is
+    derived from the market quote, see \ref{ss:market_data_oi_index_future_prices}.
+  \end{itemize}
+\item OvernightIndexFutureNettingType [Optional]: Only relevant for OI futures. Can be 'Compounding' (which is also the
+  default value if no value is given) or 'Averaging'. For example, SOFR 3M futures are compounding while SOFR 1M futures
+  are averaging the daily overnight fixings over the calculation period of the future.
+\end{itemize}
+
+Listings \ref{lst:future_conventions_euribor_3m}, \ref{lst:future_conventions_sofr_3m},
+\ref{lst:future_conventions_sofr_1m} show examples for Euribor-3M, SOFR-3M and SOFR-1M future conventions.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -141,11 +167,54 @@ USD-LIBOR-3M, USD-SOFR, GBP-SONIA etc.
 <Future>
   <Id> </Id>
   <Index> </Index>
+  <DateGenerationRule> </DateGenerationRule>
+  <OvernightIndexFutureNettingType> </OvernightIndexFutureNettingType>
 </Future>
 \end{minted}
 \caption{Future conventions}
 \label{lst:future_conventions}
 \end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id>EURIBOR-3M-FUTURES</Id>
+  <Index>EUR-EURIBOR-3M</Index>
+</Future>
+\end{minted}
+\caption{Euribor 3M MM Future conventions}
+\label{lst:future_conventions_euribor_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Future>
+    <Id>USD-SOFR-3M-FUTURES</Id>
+    <Index>USD-SOFR</Index>
+    <DateGenerationRule>IMM</DateGenerationRule>
+    <OvernightIndexFutureNettingType>Compounding</OvernightIndexFutureNettingType>
+  </Future>
+\end{minted}
+\caption{USD SOFR 3M OI Future conventions}
+\label{lst:future_conventions_sofr_3m}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <Future>
+    <Id>USD-SOFR-1M-FUTURES</Id>
+    <Index>USD-SOFR</Index>
+    <DateGenerationRule>FirstDayOfMonth</DateGenerationRule>
+    <OvernightIndexFutureNettingType>Averaging</OvernightIndexFutureNettingType>
+  </Future>
+\end{minted}
+\caption{USD SOFR 1M OI Future conventions}
+\label{lst:future_conventions_sofr_1m}
+\end{listing}
+
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FRA Conventions}
@@ -384,7 +453,7 @@ rate on the short swap minus the fair rate on the long swap. If not provided, it
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{FX Conventions}
+\subsubsection{FX Conventions}\label{sss:fx_convention}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The
 structure of this node is shown in Listing \ref{lst:fx_conventions}.
@@ -467,28 +536,24 @@ SettlementDays above.
 \item FlatIndexIsResettable [Optional]: \emph{True} if it is the notional on the leg paying the flat index that resets, and \emph{False} otherwise. If not provided, it defaults to \emph{True}.
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{Inflation Conventions}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-A node with name \emph{InflationSwap} is used to store conventions for zero or year on year inflation swap quotes. The
-structure of this node is shown in Listing \ref{lst:inflation_conventions}
+\subsubsection{Inflation Swap Conventions}
+A node with name \lstinline!InflationSwap! is used to store conventions for zero or year on year inflation swap quotes. The structure of this node is shown in Listing \ref{lst:inflation_conventions}
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <InflationSwap>
-      <Id>EUHICPXT_INFLATIONSWAP</Id>
-      <FixCalendar>TARGET</FixCalendar>
-      <FixConvention>MF</FixConvention>
-      <DayCounter>30/360</DayCounter>
-      <Index>EUHICPXT</Index>
-      <Interpolated>false</Interpolated>
-      <ObservationLag>3M</ObservationLag>
-      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
-      <InflationCalendar>TARGET</InflationCalendar>
-      <InflationConvention>MF</InflationConvention>
-  </InflationSwap>
+<InflationSwap>
+  <Id>EUHICPXT_INFLATIONSWAP</Id>
+  <FixCalendar>TARGET</FixCalendar>
+  <FixConvention>MF</FixConvention>
+  <DayCounter>30/360</DayCounter>
+  <Index>EUHICPXT</Index>
+  <Interpolated>false</Interpolated>
+  <ObservationLag>3M</ObservationLag>
+  <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+  <InflationCalendar>TARGET</InflationCalendar>
+  <InflationConvention>MF</InflationConvention>
+</InflationSwap>
 \end{minted}
 \caption{Inflation swap conventions}
 \label{lst:inflation_conventions}
@@ -497,16 +562,54 @@ structure of this node is shown in Listing \ref{lst:inflation_conventions}
 The meaning of the elements is as follows:
 
 \begin{itemize}
-\item FixCalendar: The calendar for the fixed rate leg of the swap.
-\item FixConvention: The rolling convention for the fixed rate leg of the swap.
-\item DayCounter: The payoff / coupon day counter (applied to both legs).
-\item Index: The underlying inflation index.
-\item Interpolated: Flag indicating interpolation of the index in the swap's payoff calculation.
-\item ObservationLag: The index observation lag to be applied.
-\item AdjustInfObsDates: Flag indicating whether index observation dates should be adjusted or not.
-\item InfCalendar: The calendar for the inflation leg of the swap.
-\item InfConvention: The rolling convention for the inflation leg of the swap.
+\item \lstinline!FixCalendar!: The calendar for the fixed rate leg of the swap.
+\item \lstinline!FixConvention!: The rolling convention for the fixed rate leg of the swap.
+\item \lstinline!DayCounter!: The payoff or coupon day counter, applied to both legs.
+\item \lstinline!Index!: The underlying inflation index.
+\item \lstinline!Interpolated!: Flag indicating interpolation of the index in the swap's payoff calculation.
+\item \lstinline!ObservationLag!: The index observation lag to be applied.
+\item \lstinline!AdjustInflationObservationDates!: Flag indicating whether index observation dates should be adjusted or not.
+\item \lstinline!InflationCalendar!: The calendar for the inflation leg of the swap.
+\item \lstinline!InflationConvention!: The rolling convention for the inflation leg of the swap.
+
+\item \lstinline!PublicationRoll!:
+This is an optional node taking the values \lstinline!None!, \lstinline!OnPublicationDate! or \lstinline!AfterPublicationDate!. If omitted, the value \lstinline!None! is used. Currently, our only known use case for a value other than \lstinline!None! is for Australian zero coupon inflation indexed swaps (ZCIIS). Here, the index is published quarterly on the last Wednesday of the month following the end of the reference quarter. The start date and maturity date of the market quoted ZCIIS roll to the next quarterly date after the publication date of the index. For example, the AU CPI value for Q3 2020, i.e.\ 1 Jul 2020 to 30 Sep 2020 was released on 28 Oct 2020. On 27 Oct 2020, before the index publication date, the market 5Y ZCIIS would start on 15 Sep 2020 and end on 15 Sep 2025 and reference the Q2 inflation index value. On 29 Oct 2020, after the index publication date, the market 5Y ZCIIS would start on 15 Dec 2020 and end on 15 Dec 2025 and reference the Q3 inflation index value. On the release date, i.e. 28 Oct 2020, the market ZCIIS that is set up is determined by whether the \lstinline!PublicationRoll! value is \lstinline!OnPublicationDate! or \lstinline!AfterPublicationDate!. If it is set to \lstinline!OnPublicationDate!, the swap rolls on this date and hence the market 5Y ZCIIS would start on 15 Dec 2020 and end on 15 Dec 2025 and reference the Q3 inflation index value. If it is set to \lstinline!AfterPublicationDate!, the swap does not roll on the publication date and instead rolls on the next day, and hence the market 5Y ZCIIS would start on 15 Sep 2020 and end on 15 Sep 2025 and reference the Q2 inflation index value. The publication schedule for the index must be provided in the \lstinline!PublicationSchedule! node if \lstinline!PublicationRoll! is not \lstinline!None!. An example of the AU CPI conventions set up is given in Listing \ref{lst:aucpi_inflation_conventions}.
+
+\item \lstinline!PublicationSchedule!:
+This is an optional node and is not used if \lstinline!PublicationRoll! is \lstinline!None!. If \lstinline!PublicationRoll! is not \lstinline!None!, it must be provided and gives the publication dates for the inflation index. The node fields are the same fields that are described in the Section \ref{ss:schedule_data}, i.e.\ they are \lstinline!ScheduleData! elements. An example of the AU CPI conventions set up is given in Listing \ref{lst:aucpi_inflation_conventions}. The \lstinline!PublicationSchedule! must cover the dates on which you intend to perform valuations, i.e. the first publication schedule date must be less than the smallest valuation date that you intend to use and the last publication schedule date must be greater than the largest valuation date that you intend to use.
+
 \end{itemize}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationSwap>
+  <Id>AUCPI_INFLATIONSWAP</Id>
+  <FixCalendar>AUD</FixCalendar>
+  <FixConvention>F</FixConvention>
+  <DayCounter>30/360</DayCounter>
+  <Index>AUCPI</Index>
+  <Interpolated>false</Interpolated>
+  <ObservationLag>3M</ObservationLag>
+  <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+  <InflationCalendar>AUD</InflationCalendar>
+  <InflationConvention>F</InflationConvention>
+  <PublicationRoll>AfterPublicationDate</PublicationRoll>
+  <PublicationSchedule>
+    <Rules>
+      <StartDate>2001-01-24</StartDate>
+      <EndDate>2030-01-30</EndDate>
+      <Tenor>3M</Tenor>
+      <Calendar>AUD</Calendar>
+      <Convention>Preceding</Convention>
+      <TermConvention>Unadjusted</TermConvention>
+      <Rule>LastWednesday</Rule>
+    </Rules>
+  </PublicationSchedule>
+</InflationSwap>
+\end{minted}
+\caption{AU CPI inflation swap conventions}
+\label{lst:aucpi_inflation_conventions}
+\end{listing}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{CMS Spread Option Conventions}
@@ -623,6 +726,36 @@ in the convention input file.
 
 Also notice that customised indices can not be used in cap / floor volatility surface configurations.
 
+\subsubsection{Inflation Index Conventions}
+A node with the name \lstinline!ZeroInflationIndex! is used to store data for the creation of a new inflation index. This avoids having to add the index definition to the C++ code and recompile. Note that the \lstinline!ZeroInflationIndex! node should be placed before its use in any other convention, e.g.\ in an \lstinline!InflationSwap! convention, to avoid an error due to the new index itself not being created. If the \lstinline!Id! node matches an existing inflation index, the newly created index will take precedence and its defintion will be used in the code for the given \lstinline!Id!.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ZeroInflationIndex>
+  <Id>...</Id>
+  <RegionName>...</RegionName>
+  <RegionCode>...</RegionCode>
+  <Revised>...</Revised>
+  <Frequency>...</Frequency>
+  <AvailabilityLag>...</AvailabilityLag>
+  <Currency>...</Currency>
+</ZeroInflationIndex>
+\end{minted}
+\caption{\emph{ZeroInflationIndex} node}
+\label{lst:zero_inflation_index_conventions}
+\end{listing}
+
+The meaning of each element is as follows:
+\begin{itemize}
+\item \lstinline!Id!: The new inflation index name.
+\item \lstinline!RegionName!: The name of the region with which the inflation index is associated.
+\item \lstinline!RegionCode!: A code for the region with which the inflation index is associated.
+\item \lstinline!Revised!: A boolean flag indicating whether the index is a revised index or not. This is generally set to \lstinline!false! but is left as an option to align with the C++ \lstinline!InflationIndex! class definition.
+\item \lstinline!Frequency!: A valid frequency indicating the publication frequency of the inflation index, generally \lstinline!Monthly!, \lstinline!Quarterly! or \lstinline!Annual!.
+\item \lstinline!AvailabilityLag!: A valid period indicating the lag between the inflation index publication for a given period and the period itself. For example, if March's inflation index value is published in April, the \lstinline!AvailabilityLag! would be \lstinline!1M!.
+\item \lstinline!Currency!: The ISO currency code of the currency associated with the inflation index, generally the currency of the region.
+\end{itemize}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{Swap Index Conventions}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -635,6 +768,7 @@ A node with name \emph{SwapIndex} is used to store conventions for Swap indices 
   <SwapIndex>
     <Id>EUR-CMS-2Y</Id>
     <Conventions>EUR-EURIBOR-6M-SWAP</Conventions>
+    <FixingCalendar>TARGET</FixingCalendar>
   </SwapIndex>
 \end{minted}
 \caption{Swap index convention}
@@ -648,22 +782,30 @@ The meaning of the elements is as follows:
   representing a period. The index name can contain an optional tag ``CCY-CMS-TAG-TENOR'' which is an arbitrary label
   that allows to define more than one swap index per currency.
 \item Conventions: A swap convention defining the index conventions.
+\item FixingCalendar [Optional]: The fixing calendar for the swap index fixings publication. If not given, the fixed leg
+  calendar from the swap conventions will be used as a fall back.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-\subsubsection{FX Option Conventions} 
+\subsubsection{FX Option Conventions}\label{sss:fx_option_conv}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 A node with name \emph{FxOption} is used to store conventions for FX option quotes for a given currency pair. The 
 structure of this node is shown in Listing \ref{lst:fx_option_conventions}. 
  
 \begin{listing}[H] 
 %\hrule\medskip 
-\begin{minted}[fontsize=\footnotesize]{xml} 
-<FxOption> 
-  <Id> </Id> 
-  <AtmType> </AtmType> 
-  <DeltaType> </DeltaType> 
-</FxOption> 
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FxOption>
+  <Id>EUR-USD-FXOPTION</Id>
+  <FXConventionID>EUR-USD-FX</FXConventionID>
+  <AtmType>AtmDeltaNeutral</AtmType>
+  <DeltaType>Spot</DeltaType>
+  <SwitchTenor>2Y</SwitchTenor>
+  <LongTermAtmType>AtmDeltaNeutral</LongTermAtmType>
+  <LongTermDeltaType>Fwd</LongTermDeltaType>
+  <RiskReversalInFavorOf>Call</RiskReversalInFavorOf>
+  <ButterflyStyle>Broker</ButterflyStyle>
+</FxOption>
 \end{minted} 
 \caption{FX option conventions} 
 \label{lst:fx_option_conventions} 
@@ -671,11 +813,21 @@ structure of this node is shown in Listing \ref{lst:fx_option_conventions}.
  
  
 The meanings of the various elements in this node are as follows: 
-\begin{itemize} 
+\begin{itemize}
+\item FXConventionID: The FX convention for the currency pair (see \ref{sss:fx_convention}). Optional, if not given, the
+  FX spot days default to $2$ and the advance calendar defaults to source ccy + target ccy default calendars.
 \item AtmType: Convention of ATM option quote (Choices are {\em AtmNull, AtmSpot, AtmFwd, 
 AtmDeltaNeutral, AtmVegaMax, AtmGammaMax, AtmPutCall50}). 
 \item DeltaType: Convention of Delta option quote (Choices are {\em Spot, Fwd, PaSpot, 
-PaFwd}). 
+    PaFwd}).
+\item SwitchTenor [Optional]: If given, different ATM and Delta conventions will be used if the option tenor is greater
+  or equal the switch tenor (``long term'' atm and delta type)
+\item LongTermAtmType [Mandatory if and only if SwitchTenor is given]: ATM type to use for options with tenor > switch
+  point, if SwitchTenor is given
+\item LongTermDeltaType [Mandatory if and only if SwitchTenor is given]: Delta type to use for options with tenor >
+  switch point, if SwitchTenor is given
+\item RiskReversalInFavorOf [Optional]: Call (default), Put. Only relevant for BF, RR market data input.
+\item ButterflyStyle [Optional]: Broker (default), Smile. Only relevant for BF, RR market data input.
 \end{itemize} 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -712,10 +864,11 @@ The meanings of the various elements in this node are as follows:
 \end{itemize}
 
 \subsubsection{Commodity Future Conventions}
+\label{sec:commodity_future_conventions}
 A node with name \lstinline!CommodityFuture! is used to store conventions for commodity future contracts and options on them. These conventions are used in commodity derivative trades and commodity curve construction to calculate contract expiry dates. The structure of this node is shown in Listing \ref{lst:commodity_future_conventions}.
 
 \begin{listing}[h!]
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\footnotesize,breaklines]{xml}
 <CommodityFuture>
   <Id>...</Id>
   <AnchorDay>
@@ -733,10 +886,31 @@ A node with name \lstinline!CommodityFuture! is used to store conventions for co
   <OptionExpiryOffset>...</OptionExpiryOffset>
   <ProhibitedExpiries>
     <Dates>
-      <Date>...</Date>
+      <Date forFuture="true" convention="Preceding" forOption="true" optionConvention="Preceding">...</Date>
         ...
     </Dates>
   </ProhibitedExpiries>
+  <OptionExpiryMonthLag>...</OptionExpiryMonthLag>
+  <OptionExpiryDay>...</OptionExpiryDay>
+  <OptionBusinessDayConvention>...</OptionBusinessDayConvention>
+  <FutureContinuationMappings>
+    <ContinuationMapping>
+      <From>...</From>
+      <To>...</To>
+    </ContinuationMapping>
+    ...
+  </FutureContinuationMappings>
+  <OptionContinuationMappings>
+    <ContinuationMapping>
+      <From>...</From>
+      <To>...</To>
+    </ContinuationMapping>
+    ...
+  </OptionContinuationMappings>
+  <AveragingData>
+    ...
+  </AveragingData>
+  <HoursPerDay>...</HoursPerDay>
 </CommodityFuture>
 \end{minted}
 \caption{Commodity future conventions}
@@ -746,23 +920,30 @@ A node with name \lstinline!CommodityFuture! is used to store conventions for co
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
 \item \lstinline!Id!: The identifier for the commodity future convention. The identifier here should match the \lstinline!Name! that would be provided for the commodity in the trade XML as described in Table \ref{tab:commodity_data}.
-\item \lstinline!AnchorDay!: This node is used to give a date in the future contract month to use as a base date for calculating the expiry date. It can contain a \lstinline!DayOfMonth! node, a \lstinline!CalendarDaysBefore! node or an \lstinline!NthWeekday! node:
-\begin{itemize}
-\item The \lstinline!DayOfMonth! This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month. A value of 31 will guarantee that the last day in the month is used a base date.
-\item The \lstinline!CalendarDaysBefore! This node can contain any non-negative integer. The contract expiry date is this number of calendar days before the first calendar day of the contract month.
-\item The \lstinline!NthWeekday! This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
-\end{itemize}
+\item \lstinline!AnchorDay! [Optional]: This node is not applicable for daily future contracts and hence is optional. It is necessary for future contracts with a monthly cycle or greater. This node is used to give a date in the future contract month to use as a base date for calculating the expiry date. It can contain a \lstinline!DayOfMonth! node, a \lstinline!CalendarDaysBefore! node or an \lstinline!NthWeekday! node:
+    \begin{itemize}
+    \item The \lstinline!DayOfMonth! This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month. A value of 31 will guarantee that the last day in the month is used a base date.
+    \item The \lstinline!CalendarDaysBefore! This node can contain any non-negative integer. The contract expiry date is this number of calendar days before the first calendar day of the contract month.
+    \item The \lstinline!NthWeekday! This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
+    \end{itemize}
 \item \lstinline!ContractFrequency!: This node indicates the frequency of the commodity future contracts. The value here is usually \lstinline!Monthly! or \lstinline!Quarterly!.
 \item \lstinline!Calendar!: The business day trading calendar(s) applicable for the commodity future contract.
 \item \lstinline!ExpiryCalendar! [Optional]: The business day expiry calendar(s) applicable for the commodity future contract. This calendar is used when deriving expiry dates. If omitted, this defaults to the trading day calendar specified in the \lstinline!Calendar! node.
-\item \lstinline!ExpiryMonthLag! [Optional]: The allowable values are any non-negative integer. This value indicates the number of months from the month containing the expiry date to the contract month. If 0, the commodity future contract expiry date is in the contract month. If the value of \lstinline!ExpiryMonthLag! is $n > 0$, the commodity future contract expires in the $n$-th month prior to the contract month. The value of \lstinline!ExpiryMonthLag! is generally 0, 1 or 2. For example, \lstinline!NYMEX:CL! has an \lstinline!ExpiryMonthLag! of 1 and \lstinline!ICE:B! has an \lstinline!ExpiryMonthLag! of 2. If omitted, it defaults to 0.
+\item \lstinline!ExpiryMonthLag! [Optional]: The allowable values are any integer. This value indicates the number of months from the month containing the expiry date to the contract month. If 0, the commodity future contract expiry date is in the contract month. If the value of \lstinline!ExpiryMonthLag! is $n > 0$, the commodity future contract expires in the $n$-th month prior to the contract month. If the value of \lstinline!ExpiryMonthLag! is $n < 0$, the commodity future contract expires in the $n$-th month after the contract month. The value of \lstinline!ExpiryMonthLag! is generally 0, 1 or 2. For example, \lstinline!NYMEX:CL! has an \lstinline!ExpiryMonthLag! of 1 and \lstinline!ICE:B! has an \lstinline!ExpiryMonthLag! of 2. If omitted, it defaults to 0.
 \item \lstinline!OneContractMonth! [Optional]: This node takes a calendar month in the form of the first three characters of the month with the first character capitalised. The month provided should be an arbitrary valid future contract month. It is used in cases where the \lstinline!ContractFrequency! is not \lstinline!Monthly! in order to determine the valid contract months. If omitted, it defaults to January.
 \item \lstinline!OffsetDays! [Optional]: The number of business days that the expiry date is before the base date where the base date is implied by the \lstinline!AnchorDay! node above. Any non-negative integer is allowed here. If omitted, this takes a default value of zero.
 \item \lstinline!BusinessDayConvention! [Optional]: The business day roll convention used to adjust the expiry date. The allowable values are given in Table \ref{tab:allow_stand_data}. If omitted, it defaults to \lstinline!Preceding!.
 \item \lstinline!AdjustBeforeOffset! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. If \lstinline!true!, if the base date implied by the \lstinline!AnchorDay! node above is not a good business day according to the calendar provided in the \lstinline!Calendar! node, this date is adjusted before the offset specified in the \lstinline!OffsetDays! is applied. If \lstinline!false!, this adjustment does not happen. If omitted, it defaults to \lstinline!true!. 
 \item \lstinline!IsAveraging! [Optional]: The allowable values are \lstinline!true! and \lstinline!false!. This node indicates if the future contract is based on the average commodity price of the contract period. If omitted, it defaults to \lstinline!false!.
 \item \lstinline!OptionExpiryOffset! [Optional]: The number of business days that the option expiry date is before the future expiry date. Any non-negative integer is allowed here. If omitted, this takes a default value of zero and the expiry date of an option on the future contract is assumed to equal the expiry date of the future contract.
-\item \lstinline!ProhibitedExpiries! [Optional]: This node can be used to specify explicit dates which are not allowed as future contract expiry dates or as option expiry dates. A useful example of this is the ICE Brent contract which has the following constraint on expiry dates: \emph{If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or (ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day}.
+\item \lstinline!ProhibitedExpiries! [Optional]: This node can be used to specify explicit dates which are not allowed as future contract expiry dates or as option expiry dates. A useful example of this is the ICE Brent contract which has the following constraint on expiry dates: \emph{If the day on which trading is due to cease would be either: (i) the Business Day preceding Christmas Day, or (ii) the Business Day preceding New Year’s Day, then trading shall cease on the next preceding Business Day}. Each \lstinline!Date! node can take optional attributes. The default values of these attributes is shown in Listing \ref{lst:commodity_future_conventions}. The \lstinline!convention! attribute accepts a valid business day convention in the list \lstinline!Preceding!, \lstinline!ModifiedPreceding!, \lstinline!Following! and \lstinline!ModifiedFollowing!. This \lstinline!convention! indicates how the future expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. If ommitted, the default is \lstinline!Preceding!. Both \lstinline!Preceding! and \lstinline!ModifiedPreceding! indicate that the next available business day before the date is tested. \lstinline!Following! and \lstinline!ModifiedFollowing! indicate that the next available business day after the date is tested. The \lstinline!optionConvention! attribute allows the same values and behaves in the same way to determine how the option expiry date should be adjusted if it lands on the prohibited expiry \lstinline!Date!. The \lstinline!forFuture! and \lstinline!forOption! boolean attributes enable the prohibited expiry to apply only for the future expiry date or the option expiry date respectively by setting the value to \lstinline!false!.
+\item \lstinline!OptionExpiryMonthLag! [Optional]: The allowable values are any integer. This value indicates the number of months from the month containing the option expiry date to the month containing the expiry date. If 0, the commodity future option contract expiry date is anchored in the same month as the commodity future contract expiry date. If the value of \lstinline!OptionExpiryMonthLag! is $n > 0$, the commodity option future contract expires in the $n$-th month prior to the commodity future contract expiry month. If the value of \lstinline!OptionExpiryMonthLag! is $n < 0$, the commodity option future contract expires in the $n$-th month after the the commodity future contract expiry month. The value of \lstinline!OptionExpiryMonthLag! should be equal to \lstinline!ExpiryMonthLag! when \lstinline!OptionExpiryOffset! is used. The \lstinline!OptionExpiryMonthLag! is rarely used. An example is the Crude Palm Oil contract \lstinline!XKLS:FCPO! where the future contract expiry is in the delivery month and the option expiry is in the month that is 2 months prior to this. In this case, \lstinline!OptionExpiryMonthLag! is 2. If omitted, \lstinline!OptionExpiryMonthLag! defaults to 0.
+\item \lstinline!OptionExpiryDay! [Optional]: This node can contain any integer in the range $1,\ldots,31$ indicating the day of the month on which an option expiry date is anchored. A value of 31 will guarantee that the last day in the month is used a base date. If omitted, this is not used. Setting this field takes precedence over \lstinline!OptionExpiryOffset!.
+\item \lstinline!OptionBusinessDayConvention! [Optional]: The business day convention used to adjust the option expiry date to a good business day if \lstinline!OptionExpiryDay! is used.
+\item \lstinline!FutureContinuationMappings! [Optional]: When building future curves, we may use market data that has a continuation expiry, i.e. \lstinline!c1!, \lstinline!c2!, etc. , as opposed to an explicit expiry date or tenor. In some cases, the continuation expiries coming from the market data provider may skip serial months and therefore we use the mapping here to map from the market data provider index to the relevant serial month.
+\item \lstinline!OptionContinuationMappings! [Optional]: When building option volatility structures, we may use market data that has a continuation expiry, i.e. \lstinline!c1!, \lstinline!c2!, etc. , as opposed to an explicit expiry date or tenor. In some cases, the continuation expiries coming from the market data provider may skip serial months and therefore we use the mapping here to map from the market data provider index to the relevant serial month. For example, for the Crude Palm Oil contract \lstinline!XKLS:FCPO!, the option expiry months are serial up to the 9th month and then alternate months. So, we would add a mapping from 10 to 11, 11 to 13 and so on so that the correct option expiry is arrived at when reading the market data quotes and constructing the option volatility structure.
+\item \lstinline!AveragingData! [Optional]: This node is needed for future contracts that are used in a piecewise commodity curve \lstinline!PriceSegment! and whose underlying is the average of other future prices or spot prices over a given period. An example is the ICE PMI power contract with contract specifications outlined \href{https://www.theice.com/products/6590369/PJM-Western-Hub-Real-Time-Peak-1-MW-Fixed-Price-Future}{here}. It is described in detail below.
+\item \lstinline!HoursPerDay! [Optional]: For power derivatives, quantities are sometimes given as a quantity per hour. To deduce the quantity for the day which is multiplied by that day's future price, one needs to know the number of hours in the day associated with the future price. For example ICE PDQ is the daily PJM Western Hub Real Time Peak future contract. The price each day for this contract is the average of the locational marginal prices (LMPs) for all hours ending 08:00 to 23:00 Eastern Pacific Time. In other words, there are 16 hours in the day that feed in to the average yielding this settlement price. For this contract, \lstinline!HoursPerDay! would be \lstinline!16!. This field is only needed if a trade XML references this commodity contract, has \lstinline!CommodityQuantityFrequency! set to \lstinline!PerHour! and has no \lstinline!HoursPerDay! value set directly in the XML.
 \end{itemize}
 
 \begin{listing}[h!]
@@ -796,3 +977,91 @@ An example \lstinline!CommodityFuture! node for the NYMEX WTI future contract, s
 \caption{NYMEX WTI \textnormal{\lstinline!CommodityFuture!} node}
 \label{lst:ex_wti_comm_future_convention}
 \end{listing}
+
+The \lstinline!AveragingData! node referenced above has the structure shown in Listing \ref{lst:ave_data_comm_future_convention}. The meaning of each of the fields is as follows:
+
+\begin{itemize}
+\item \lstinline!CommodityName!: The name of the commodity being averaged.
+\item \lstinline!Conventions!: The identifier for the conventions associated with the commodity being averaged.
+\item \lstinline!Period!: This indicates the averaging period relative to the future expiry date. The allowable values are:
+    \begin{itemize}
+    \item \lstinline!PreviousMonth!: The calendar month prior to the month in which the (top level) future contract's expiry date falls is used as the averaging period.
+    \item \lstinline!ExpiryToExpiry!: Given a (top level) future contract's expiry date, the averaging period is from and excluding the previous expiry date to and including the expiry date.
+    \end{itemize}
+\item \lstinline!PricingCalendar!: The pricing calendar(s) used to determine the pricing dates in the averaging period.
+\item \lstinline!UseBusinessDays! [Optional]: A boolean flag that defaults to \lstinline!true! if omitted. When set to \lstinline!true!, the pricing dates in the averaging period are the set of \lstinline!PricingCalendar! good business days. When set to \lstinline!false!, the pricing dates in the averaging period are the complement of the set of \lstinline!PricingCalendar! good business days. This may be useful in certain situations. For example, the contract ICE PW2 with specifications \href{https://www.theice.com/products/71090520/PJM-Western-Hub-Real-Time-Peak-2x16-Fixed-Price-Future}{here} averages the PJM Western Hub locational marginal prices over each day in the averaging period that is a Saturday, Sunday or NERC holiday. So, in this case, \lstinline!UseBusinessDays! would be \lstinline!false! and \lstinline!PricingCalendar! would be \lstinline!US-NERC!.
+\item \lstinline!DeliveryRollDays! [Optional]: This node allows any non-negative integer value. When averaging a commodity future contract price over the averaging period, the averaging period may include an underlying future contract expiry date. This node's value indicates when we should begin using the next future contract's price in the averaging. If the value is zero, we should include the future contract prices up to and including the contract expiry. If the value is one, we should include the contract prices up to and including the day that is one business day before the contract expiry and then switch to using the next future contract's price thereafter. Similarly for other non-negative integer values. If this node is omitted, it is set to zero.
+\item \lstinline!FutureMonthOffset! [Optional]: This node allows any non-negative integer value. If this node is omitted, it is set to zero. This node indicates which future contract is being referenced on each \textit{Pricing Date} in the averaging period by acting as an offset from the next available expiry date. If \lstinline!FutureMonthOffset! is zero, the settlement price of the next available monthly contract that has not expired with respect to the \textit{Pricing Date} is used as the price on that \textit{Pricing Date}. If \lstinline!FutureMonthOffset! is one, the settlement price of the second available monthly contract that has not expired with respect to the \textit{Pricing Date} is used as the price on that \textit{Pricing Date}. Similarly for other positive values of \lstinline!FutureMonthOffset!.
+\item \lstinline!DailyExpiryOffset! [Optional]: This node allows any non-negative integer value. It should only be used where the \lstinline!CommodityName! being averaged has a daily contract frequency. If this node is omitted, it is set to zero. This node indicates which future contract is being referenced on each \textit{Pricing Date} in the averaging period by acting as a business day offset, using the \lstinline!CommodityName!'s expiry calendar, from the \textit{Pricing Date}. It is useful in the base metals market where the future contract being averaged on each \textit{Pricing Date} is the cash contract on that \textit{Pricing Date} i.e.\ the contract with expiry date two business days after the \textit{Pricing Date}.
+\end{itemize}
+
+\begin{listing}[h!]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<AveragingData>
+  <CommodityName>...</CommodityName>
+  <Conventions>...</Conventions>
+  <Period>...</Period>
+  <PricingCalendar>...</PricingCalendar>
+  <UseBusinessDays>...</UseBusinessDays>
+  <DeliveryRollDays>...</DeliveryRollDays>
+  <FutureMonthOffset>...</FutureMonthOffset>
+  <DailyExpiryOffset>...</DailyExpiryOffset>
+</AveragingData>
+\end{minted}
+\caption{\lstinline!AveragingData! node structure}
+\label{lst:ave_data_comm_future_convention}
+\end{listing}
+
+\subsubsection{Credit Default Swap Conventions}
+\label{sss:cds_conventions}
+A node with name \lstinline!CDS! is used to store conventions for credit default swaps. The structure of this node is shown in Listing \ref{lst:cds_conventions}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CDS>
+  <Id>...</Id>
+  <SettlementDays>...</SettlementDays>
+  <Calendar>...</Calendar>
+  <Frequency>...</Frequency>
+  <PaymentConvention>...</PaymentConvention>
+  <Rule>...</Rule>
+  <DayCounter>...</DayCounter>
+  <SettlesAccrual>...</SettlesAccrual>
+  <PaysAtDefaultTime>...</PaysAtDefaultTime>
+</CDS>
+\end{minted}
+\caption{CDS conventions}
+\label{lst:cds_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+
+\item \lstinline!Id!:
+The identifier for the CDS convention.
+
+\item \lstinline!SettlementDays!:
+The number of days after the CDS trade date when protection starts i.e.\ the \textit{Protection effective date} or \textit{step-in date}. Any non-negative integer is allowed here. For standard CDS after, this is generally set to 1.
+
+\item \lstinline!Calendar!:
+The calendar associated with the CDS. For non-JPY currencies, this is generally \lstinline!WeekendsOnly! to agree with the ISDA standard. For JPY CDS, the ISDA standard calendar is \lstinline!TYO! documented at \url{https://www.cdsmodel.com/cdsmodel}. This could be set up as an additional calendar or \lstinline!JPN! could be used as a proxy. Allowable calendar values are given in Table \ref{tab:calendar}.
+
+\item \lstinline!Frequency!:
+The frequency of fee leg payments for the CDS. The ISDA standard is \lstinline!Quarterly! but any valid frequency is allowed.
+
+\item \lstinline!PaymentConvention!:
+The business day convention for payments on the CDS. The ISDA standard is \lstinline!Following! but any valid business day convention from Table \ref{tab:allow_stand_data} is allowed.
+
+\item \lstinline!Rule!:
+The date generation rule for the fee leg on the CDS. The ISDA standard is \lstinline!CDS2015! but any valid date generation rule is allowed.
+
+\item \lstinline!DayCounter!:
+The day counter for fee leg payments on the CDS. The ISDA standard is \lstinline!A360! but any valid day counter from Table \ref{tab:daycount} is allowed.
+
+\item \lstinline!SettlesAccrual!:
+A boolean value indicating if an accrued fee is due on the occurrence of a credit event. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. In general, this is set \lstinline!true!.
+
+\item \lstinline!PaysAtDefaultTime!:
+A boolean value indicating if the accrued fee, on the occurrence of a credit event, is payable at the credit event date or the end of the fee period. A value of \lstinline!true! indicates that the accrued is payable at the credit event date and a value of \lstinline!false! indicates that it is payable at the end of the fee period. In general, this is set \lstinline!true!.
+
+\end{itemize}

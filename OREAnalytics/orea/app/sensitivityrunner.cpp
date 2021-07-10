@@ -50,21 +50,28 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
     LOG("Running sensitivity analysis");
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
-    boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
+    sensiData_ = boost::make_shared<SensitivityScenarioData>();
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
     string marketConfiguration = params_->get("markets", "sensitivity");
 
-    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio);
+    sensiInputInitialize(simMarketData, sensiData_, engineData, sensiPortfolio);
 
     bool recalibrateModels =
         params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
 
+    bool analyticFxSensis = false;
+    if (params_->has("sensitivity", "analyticFxSensis")) {
+        analyticFxSensis = parseBool(params_->get("sensitivity", "analyticFxSensis"));
+    }
+
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData, conventions,
+        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, conventions,
         recalibrateModels, curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_,
-        referenceData_, continueOnError_);
+        referenceData_, iborFallbackConfig_, continueOnError_, false, analyticFxSensis);
     sensiAnalysis->generateSensitivities();
+
+    simMarket_ = sensiAnalysis->simMarket();
 
     sensiOutputReports(sensiAnalysis);
 
@@ -116,9 +123,14 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
     auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
 
+    Size outputPrecision = 2;
+    if (params_->has("sensitivity", "outputPrecision")) {
+        outputPrecision = parseInteger(params_->get("sensitivity", "outputPrecision"));
+    }
+
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
-    ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold);
+    ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold, outputPrecision);
 }
 
 } // namespace analytics

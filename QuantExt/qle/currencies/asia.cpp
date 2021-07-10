@@ -43,6 +43,13 @@ OMRCurrency::OMRCurrency() {
     data_ = omrData;
 }
 
+// Jordanian dinar
+JODCurrency::JODCurrency() {
+    static boost::shared_ptr<Data> jodData(
+        new Data("Jordanian dinar", "JOD", 400, "JOD", "", 1000, Rounding(), "1$.2f %3%"));
+    data_ = jodData;
+}
+
 // United Arab Emirates dirham
 AEDCurrency::AEDCurrency() {
     static boost::shared_ptr<Data> aedData(
@@ -70,4 +77,5 @@ LKRCurrency::LKRCurrency() {
         new Data("Sri Lankan rupee", "LKR", 144, "LKR", "", 100, Rounding(), "1$.2f %3%"));
     data_ = lkrData;
 }
+
 } // namespace QuantExt

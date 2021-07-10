@@ -54,15 +54,19 @@ public:
     ScenarioGeneratorData()
         : discretization_(CrossAssetStateProcess::discretization::exact), grid_(boost::make_shared<DateGrid>()),
           sequenceType_(SobolBrownianBridge), seed_(0), samples_(0), ordering_(SobolBrownianGenerator::Steps),
-          directionIntegers_(SobolRsg::JoeKuoD7) {}
+          directionIntegers_(SobolRsg::JoeKuoD7), withCloseOutLag_(false), withMporStickyDate_(false) {}
 
     //! Constructor
     ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization, boost::shared_ptr<DateGrid> dateGrid,
                           SequenceType sequenceType, long seed, Size samples,
                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
-                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7)
-        : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed), samples_(samples),
-          ordering_(ordering), directionIntegers_(directionIntegers) {}
+                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7,
+                          bool withCloseOutLag = false, bool withMporStickyDate = false)
+        : discretization_(discretization), sequenceType_(sequenceType), seed_(seed), samples_(samples),
+          ordering_(ordering), directionIntegers_(directionIntegers), withCloseOutLag_(false),
+          withMporStickyDate_(false) {
+        setGrid(dateGrid);
+    }
 
     void clear();
 
@@ -75,23 +79,30 @@ public:
     //! \name Inspectors
     //@{
     CrossAssetStateProcess::discretization discretization() const { return discretization_; }
-    boost::shared_ptr<DateGrid> grid() const { return grid_; }
+    boost::shared_ptr<DateGrid> getGrid() const { return grid_; }
     SequenceType sequenceType() const { return sequenceType_; }
     long seed() const { return seed_; }
     Size samples() const { return samples_; }
     SobolBrownianGenerator::Ordering ordering() const { return ordering_; }
     SobolRsg::DirectionIntegers directionIntegers() const { return directionIntegers_; }
+    boost::shared_ptr<ore::analytics::DateGrid> closeOutDateGrid() const { return closeOutDateGrid_; }
+    bool withCloseOutLag() const { return withCloseOutLag_; }
+    bool withMporStickyDate() const { return withMporStickyDate_; }
+    Period closeOutLag() const { return closeOutLag_; }
     //@}
 
     //! \name Setters
     //@{
     CrossAssetStateProcess::discretization& discretization() { return discretization_; }
-    boost::shared_ptr<DateGrid>& grid() { return grid_; }
+    void setGrid(boost::shared_ptr<DateGrid> grid);
     SequenceType& sequenceType() { return sequenceType_; }
     long& seed() { return seed_; }
     Size& samples() { return samples_; }
     SobolBrownianGenerator::Ordering& ordering() { return ordering_; }
     SobolRsg::DirectionIntegers& directionIntegers() { return directionIntegers_; }
+    bool& withCloseOutLag() { return withCloseOutLag_; }
+    bool& withMporStickyDate() { return withMporStickyDate_; }
+    Period& closeOutLag() { return closeOutLag_; }
     //@}
 private:
     CrossAssetStateProcess::discretization discretization_;
@@ -101,13 +112,16 @@ private:
     Size samples_;
     SobolBrownianGenerator::Ordering ordering_;
     SobolRsg::DirectionIntegers directionIntegers_;
+    boost::shared_ptr<ore::analytics::DateGrid> closeOutDateGrid_;
+    bool withCloseOutLag_;
+    bool withMporStickyDate_;
+    Period closeOutLag_;
+
+    string gridString_;
 };
 
 //! Enum parsers used in ScenarioGeneratorBuilder's fromXML
 CrossAssetStateProcess::discretization parseDiscretization(const string& s);
-
-//! Enum to string used in ScenarioGeneratorData's toXML
-std::ostream& operator<<(std::ostream& out, const CrossAssetStateProcess::discretization& type);
 
 } // namespace analytics
 } // namespace ore

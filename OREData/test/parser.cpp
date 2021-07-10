@@ -25,6 +25,7 @@
 #include <ql/math/comparison.hpp>
 #include <ql/time/calendars/austria.hpp>
 #include <ql/time/calendars/france.hpp>
+#include <ql/time/calendars/thailand.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
@@ -34,7 +35,6 @@
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
-#include <qle/calendars/thailand.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -299,7 +299,8 @@ BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
     BOOST_CHECK_THROW(ore::data::parsePeriod("20170605"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parsePeriod("3X"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parsePeriod("xY"), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), QuantLib::Error);
+    // QL moved to std::stoi in its period and date parsers
+    // BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parsePeriod("3M."), QuantLib::Error);
 
     Date d;
@@ -322,8 +323,9 @@ BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
     BOOST_CHECK(!isDate && p == 20170605 * Days);
     //
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("5Y2017", d, p, isDate), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), QuantLib::Error);
+    // QL moved to std::stoi in its period and date parsers
+    // BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), QuantLib::Error);
+    // BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), QuantLib::Error);
 }
@@ -665,10 +667,13 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     // add thailand holidays
     expectedHolidays.insert(Date(1, January, 2018));
     expectedHolidays.insert(Date(2, January, 2018));
+    expectedHolidays.insert(Date(1, March, 2018)); // Makha Bucha Day
     expectedHolidays.insert(Date(6, April, 2018));
     expectedHolidays.insert(Date(13, April, 2018));
     expectedHolidays.insert(Date(16, April, 2018));
     expectedHolidays.insert(Date(1, May, 2018));
+    expectedHolidays.insert(Date(29, May, 2018));  // Wisakha Bucha Day
+    expectedHolidays.insert(Date(27, July, 2018)); // Asarnha Bucha Day
     expectedHolidays.insert(Date(30, July, 2018));
     expectedHolidays.insert(Date(13, August, 2018));
     expectedHolidays.insert(Date(15, October, 2018));

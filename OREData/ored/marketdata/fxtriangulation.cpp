@@ -58,23 +58,34 @@ public:
 namespace ore {
 namespace data {
 
+void FXTriangulation::addQuote(const std::string& pair, const Handle<Quote>& spot) {
+    auto it = std::find_if(map_.begin(), map_.end(),
+                           [&pair](const std::pair<string, Handle<Quote>>& x) { return x.first == pair; });
+    if (it != map_.end())
+        *it = std::make_pair(pair, spot);
+    else
+        map_.push_back(std::make_pair(pair, spot));
+}
+
 Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
     // First, look for the pair in the map
-    auto it = map_.find(pair);
+    auto it = std::find_if(map_.begin(), map_.end(),
+                           [&pair](const std::pair<string, Handle<Quote>>& x) { return x.first == pair; });
     if (it != map_.end())
         return it->second;
 
     // Now we have to break the pair up and search for it.
-    QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
+    QL_REQUIRE(pair.size() == 6, "FXTriangulation: Invalid ccypair " << pair);
     string domestic = pair.substr(0, 3);
     string foreign = pair.substr(3);
 
     // check reverse
     string reverse = foreign + domestic;
-    it = map_.find(reverse);
+    it = std::find_if(map_.begin(), map_.end(),
+                      [&reverse](const std::pair<string, Handle<Quote>>& x) { return x.first == reverse; });
     if (it != map_.end()) {
         Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<Inverse>>(it->second, Inverse()));
-        map_[pair] = invertedQuote;
+        map_.push_back(std::make_pair(pair, invertedQuote));
         return invertedQuote;
     }
 
@@ -103,41 +114,57 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
         if (domestic == keyDomestic) {
             // we have domestic, now look for foreign/keyForeign
             // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
-            it = map_.find(foreign + keyForeign);
+            it = std::find_if(map_.begin(), map_.end(),
+                              [&foreign, &keyForeign](const std::pair<string, Handle<Quote>>& x) {
+                                  return x.first == foreign + keyForeign;
+                              });
             if (it != map_.end()) {
                 // Here q1 is USDEUR and it->second is JPYEUR
-                map_[pair] =
+                auto tmp =
                     Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(q1, it->second, Triangulation()));
-                return map_[pair];
+                map_.push_back(std::make_pair(pair, tmp));
+                return tmp;
             }
             // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
-            it = map_.find(keyForeign + foreign);
+            it = std::find_if(map_.begin(), map_.end(),
+                              [&foreign, &keyForeign](const std::pair<string, Handle<Quote>>& x) {
+                                  return x.first == keyForeign + foreign;
+                              });
             if (it != map_.end()) {
-                map_[pair] = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(q1, it->second, Product()));
-                return map_[pair];
+                auto tmp = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(q1, it->second, Product()));
+                map_.push_back(std::make_pair(pair, tmp));
+                return tmp;
             }
         }
 
         if (domestic == keyForeign) {
             // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
-            it = map_.find(foreign + keyDomestic);
+            it = std::find_if(map_.begin(), map_.end(),
+                              [&foreign, &keyDomestic](const std::pair<string, Handle<Quote>>& x) {
+                                  return x.first == foreign + keyDomestic;
+                              });
             if (it != map_.end()) {
-                map_[pair] =
+                auto tmp =
                     Handle<Quote>(boost::make_shared<CompositeQuote<InverseProduct>>(q1, it->second, InverseProduct()));
-                return map_[pair];
+                map_.push_back(std::make_pair(pair, tmp));
+                return tmp;
             }
             // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
-            it = map_.find(keyDomestic + foreign);
+            it = std::find_if(map_.begin(), map_.end(),
+                              [&foreign, &keyDomestic](const std::pair<string, Handle<Quote>>& x) {
+                                  return x.first == keyDomestic + foreign;
+                              });
             if (it != map_.end()) {
                 // Here q1 is EURUSD and it->second is EURJPY
-                map_[pair] =
+                auto tmp =
                     Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(it->second, q1, Triangulation()));
-                return map_[pair];
+                map_.push_back(std::make_pair(pair, tmp));
+                return tmp;
             }
         }
     }
 
-    QL_FAIL("Unable to build FXQuote for ccy pair " << pair);
+    QL_FAIL("FXTriangulation: Unable to build FXQuote for ccy pair " << pair);
 }
 } // namespace data
 } // namespace ore

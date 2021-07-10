@@ -20,6 +20,7 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <qle/methods/pathgeneratorfactory.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -41,23 +42,18 @@ boost::shared_ptr<ScenarioGenerator>
 ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> model,
                                 boost::shared_ptr<ScenarioFactory> scenarioFactory,
                                 boost::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
-                                boost::shared_ptr<ore::data::Market> initMarket, const std::string& configuration) {
+                                boost::shared_ptr<ore::data::Market> initMarket, const std::string& configuration,
+                                const boost::shared_ptr<PathGeneratorFactory>& pf) {
 
-    LOG("ScenarioGeneratorBuilder::build() started");
+    LOG("ScenarioGeneratorBuilder::build() called");
 
     QL_REQUIRE(initMarket != NULL, "ScenarioGeneratorBuilder: initMarket is null");
 
-    boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(data_->discretization());
+    auto pathGen = pf->build(data_->sequenceType(), model->stateProcess(data_->discretization()),
+                             data_->getGrid()->timeGrid(), data_->seed(), data_->ordering(), data_->directionIntegers());
 
-    boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
-        makeMultiPathGenerator(data_->sequenceType(), stateProcess, data_->grid()->timeGrid(), data_->seed(),
-                               data_->ordering(), data_->directionIntegers());
-
-    boost::shared_ptr<ScenarioGenerator> scenGen = boost::make_shared<CrossAssetModelScenarioGenerator>(
-        model, pathGen, scenarioFactory, marketConfig, asof, data_->grid(), initMarket, configuration);
-    LOG("ScenarioGeneratorBuilder::build() done");
-
-    return scenGen;
+    return boost::make_shared<CrossAssetModelScenarioGenerator>(model, pathGen, scenarioFactory, marketConfig, asof,
+                                                                data_->getGrid(), initMarket, configuration);
 }
 } // namespace analytics
 } // namespace ore

@@ -2,6 +2,7 @@
 
 set(QuantExt-Test_SRC analyticcashsettledeuropeanengine.cpp
 analyticlgmswaptionengine.cpp
+bfrrvolsurface.cpp
 blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
@@ -12,6 +13,7 @@ cashflow.cpp
 commodityforward.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
+crcirpp.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
@@ -20,21 +22,25 @@ crossccybasismtmresetswaphelper.cpp
 crossccyfixfloatswap.cpp
 crossccyfixfloatswaphelper.cpp
 currency.cpp
+dategeneration.cpp
 deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
 discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
+durationadjustedcmscoupon.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
 equityblackvolsurfaceproxy.cpp
 equityforwardcurvestripper.cpp
+exactbachelierimpliedvolatility.cpp
 fillemptymatrix.cpp
 forwardbond.cpp
 fxvolsmile.cpp
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
+normalfreeboundarysabr.cpp
 optionletstripper.cpp
 payment.cpp
 piecewiseatmoptionletcurve.cpp

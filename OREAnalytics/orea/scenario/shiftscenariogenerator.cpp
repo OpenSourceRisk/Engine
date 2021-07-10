@@ -126,8 +126,9 @@ string ShiftScenarioGenerator::ScenarioDescription::factors() const {
 }
 
 ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
-                                               const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData)
-    : baseScenario_(baseScenario), simMarketData_(simMarketData), counter_(0) {
+                                               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+					       const boost::shared_ptr<ScenarioSimMarket>& simMarket)
+  : baseScenario_(baseScenario), simMarketData_(simMarketData), simMarket_(simMarket), counter_(0) {
     QL_REQUIRE(baseScenario_ != NULL, "ShiftScenarioGenerator: baseScenario is null");
     QL_REQUIRE(simMarketData_ != NULL, "ShiftScenarioGenerator: simMarketData is null");
     scenarios_.push_back(baseScenario_);
@@ -149,6 +150,15 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     } else {
         QL_FAIL("Cannot convert shift type \"" << s << "\" to ShiftScenarioGenerator::ShiftType");
     }
+}
+
+std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ShiftType& shiftType) {
+    if (shiftType == ShiftScenarioGenerator::ShiftType::Absolute)
+        return out << "Absolute";
+    else if (shiftType == ShiftScenarioGenerator::ShiftType::Relative)
+        return out << "Relative";
+    else
+        QL_FAIL("Invalid ShiftType " << shiftType);
 }
 
 ostream& operator<<(ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription) {

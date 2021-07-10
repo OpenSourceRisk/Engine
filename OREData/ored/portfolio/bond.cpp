@@ -18,6 +18,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/lexical_cast.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/bondutils.hpp>
@@ -63,6 +64,7 @@ void BondData::fromXML(XMLNode* node) {
         coupons_.push_back(ld);
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
+    hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
     initialise();
 }
 
@@ -84,12 +86,19 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
+    if (!hasCreditRisk_)
+        XMLUtils::addChild(doc, bondNode, "CreditRisk", hasCreditRisk_);
     return bondNode;
 }
 
 void BondData::initialise() {
 
     isPayer_ = false;
+
+    if (!hasCreditRisk() && !creditCurveId().empty()) {
+        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
+        creditCurveId_ = "";
+    }
 
     if (!zeroBond()) {
 
@@ -100,8 +109,8 @@ void BondData::initialise() {
                 currency_ = coupons()[i].currency();
             else {
                 QL_REQUIRE(currency_ == coupons()[i].currency(),
-                           "leg #" << i << " currency (" << coupons()[i].currency()
-                                   << ") not equal to leg #0 currency (" << coupons()[0].currency());
+                           "bond leg #" << i << " currency (" << coupons()[i].currency()
+                                        << ") not equal to leg #0 currency (" << coupons()[0].currency());
             }
         }
 
@@ -112,8 +121,8 @@ void BondData::initialise() {
                 isPayer_ = coupons()[i].isPayer();
             else {
                 QL_REQUIRE(isPayer_ == coupons()[i].isPayer(),
-                           "leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
-                                   << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
+                           "bond leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
+                                        << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
             }
         }
     }
@@ -124,23 +133,16 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferen
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
                                              referenceCurveId_, proxySecurityId_, incomeCurveId_, volatilityCurveId_,
                                              coupons_, securityId_, referenceDatum);
-    // initialise data
-
     initialise();
-
-    // plausibility checks to check whether the reference data was set up at all
-
-    QL_REQUIRE(!settlementDays_.empty(),
-               "settlement days not given, check bond reference data for '" << securityId_ << "'");
-
-    QL_REQUIRE(!currency_.empty(), "currency not given, check bond reference data for '" << securityId_ << "'");
+    checkData();
 }
 
 void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
-
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
     if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
         DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
+        initialise();
+        checkData();
     } else {
         auto bondRefData = boost::dynamic_pointer_cast<BondReferenceDatum>(
             referenceData->getData(BondReferenceDatum::TYPE, securityId_));
@@ -149,19 +151,37 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDa
     }
 }
 
+void BondData::checkData() const {
+    QL_REQUIRE(!securityId_.empty(), "BondData invalid: no security id given");
+    std::vector<std::string> missingElements;
+    if (settlementDays_.empty())
+        missingElements.push_back("SettlementDays");
+    if (currency_.empty())
+        missingElements.push_back("Currency");
+    QL_REQUIRE(missingElements.empty(), "BondData invalid: missing " + boost::algorithm::join(missingElements, ", ") +
+                                                " - check if reference data is set up for '"
+                                            << securityId_ << "'");
+}
+
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
+    QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
+
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     Date issueDate = parseDate(bondData_.issueDate());
     Calendar calendar = parseCalendar(bondData_.calendar());
-    QL_REQUIRE(!bondData_.settlementDays().empty(), "no bond settlement days given");
+    QL_REQUIRE(!bondData_.settlementDays().empty(),
+               "no bond settlement days given, if reference data is used, check if securityId '"
+                   << bondData_.securityId() << "' is present and of type Bond.");
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
+    std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", "", false, "");
+    Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
     std::vector<Leg> separateLegs;
     if (bondData_.zeroBond()) { // Zero coupon bond
@@ -172,14 +192,12 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
+            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+                                       openEndDateReplacement);
             separateLegs.push_back(leg);
         } // for coupons_
         Leg leg = joinLegs(separateLegs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
-        // workaround, QL doesn't register a bond with its leg's cashflows
-        for (auto const& c : leg)
-            bond->registerWith(c);
     }
 
     Currency currency = parseCurrency(bondData_.currency());
@@ -210,5 +228,53 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, bondData_.toXML(doc));
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>>
+Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    std::map<AssetClass, std::set<std::string>> result;
+    result[AssetClass::BOND] = {bondData_.securityId()};
+    return result;
+}
+
+boost::shared_ptr<QuantLib::Bond> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                                     const std::string& securityId) const {
+    for (auto const& b : builders_) {
+        if (referenceData->hasData(b.first, securityId))
+            return b.second->build(engineFactory, referenceData, securityId);
+    }
+
+    QL_FAIL("BondFactory: could not build bond '"
+            << securityId
+            << "': no reference data given or no suitable builder registered. Check if bond is set up in the reference "
+               "data and that there is a builder for the reference data type.");
+}
+
+void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder) {
+    builders_[referenceDataType] = builder;
+}
+
+BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
+
+boost::shared_ptr<QuantLib::Bond>
+VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                          const std::string& securityId) const {
+    BondData data(securityId, 1.0);
+    data.populateFromBondReferenceData(referenceData);
+    ore::data::Bond bond(Envelope(), data);
+    bond.id() = "VanillaBondBuilder_" + securityId;
+    bond.build(engineFactory);
+
+    QL_REQUIRE(bond.instrument(), "VanillaBondBuilder: constructed bond is null, this is unexpected");
+    auto qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(bond.instrument()->qlInstrument());
+
+    QL_REQUIRE(bond.instrument() && bond.instrument()->qlInstrument(),
+               "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
+               "(either the instrument wrapper or the ql instrument is null)");
+
+    return qlBond;
+}
+
 } // namespace data
 } // namespace ore

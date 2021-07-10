@@ -39,33 +39,33 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     try {
         DLOG("FxSwap::build() called for trade " << id());
-        boost::shared_ptr<QuantLib::Instrument> instNear;
+        //boost::shared_ptr<QuantLib::Instrument> instNear;
         // builds two fxforwards and sums the npvs
         // so that both npvs are in the same currency, the value of the first forward is taken to be the negative of the
         // counterparty's npv
         // npv_total= -npv1+npv2
-        instNear.reset(
+        instNear_.reset(
             new QuantExt::FxForward(nearSoldAmount_, nearSoldCcy, nearBoughtAmount_, nearBoughtCcy, nearDate, false));
         boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxForward");
         QL_REQUIRE(builder, "No builder found for " << tradeType_);
         boost::shared_ptr<FxForwardEngineBuilder> fxBuilder =
             boost::dynamic_pointer_cast<FxForwardEngineBuilder>(builder);
-        instNear->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
-        boost::shared_ptr<QuantLib::Instrument> instFar;
-        instFar.reset(
+        instNear_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
+        //boost::shared_ptr<QuantLib::Instrument> instFar;
+        instFar_.reset(
             new QuantExt::FxForward(farBoughtAmount_, nearSoldCcy, farSoldAmount_, nearBoughtCcy, farDate, false));
-        instFar->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
+        instFar_->setPricingEngine(fxBuilder->engine(nearSoldCcy, nearBoughtCcy));
 
-        DLOG("FxSwap::build(): Near NPV = " << instNear->NPV());
-        DLOG("FxSwap::build(): Far NPV = " << instFar->NPV());
+        DLOG("FxSwap::build(): Near NPV = " << instNear_->NPV());
+        DLOG("FxSwap::build(): Far NPV = " << instFar_->NPV());
         // TODO: cannot use a CompositeInstrument
         boost::shared_ptr<CompositeInstrument> composite(new CompositeInstrument());
-        composite->add(instNear, -1.0);
-        composite->add(instFar, 1.0);
+        composite->add(instNear_, -1.0);
+        composite->add(instFar_, 1.0);
         instrument_.reset(new VanillaInstrument(composite));
         npvCurrency_ = nearBoughtCurrency_;
-        notional_ = nearBoughtAmount_;
-        notionalCurrency_ = nearBoughtCurrency_;
+        notional_ = Null<Real>();//nearBoughtAmount_;
+        notionalCurrency_ = "";//nearBoughtCurrency_;
         maturity_ = farDate;
 
     } catch (std::exception&) {
@@ -92,10 +92,44 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legPayers_[2] = false;
     legPayers_[3] = true;
 
+    additionalData_["farSoldCurrency"] = nearBoughtCurrency_;
+    additionalData_["farBoughtCurrency"] = nearSoldCurrency_;
+    additionalData_["farSoldAmount"] = farSoldAmount_;
+    additionalData_["farBoughtAmount"] = farBoughtAmount_;
+    additionalData_["nearSoldCurrency"] = nearSoldCurrency_;
+    additionalData_["nearBoughtCurrency"] = nearBoughtCurrency_;
+    additionalData_["nearSoldAmount"] = nearSoldAmount_;
+    additionalData_["nearBoughtAmount"] = nearBoughtAmount_;
+
     DLOG("FxSwap leg 0: " << nearDate_ << " " << legs_[0][0]->amount());
     DLOG("FxSwap leg 1: " << nearDate_ << " " << legs_[1][0]->amount());
     DLOG("FxSwap leg 2: " << farDate_ << " " << legs_[2][0]->amount());
     DLOG("FxSwap leg 3: " << farDate_ << " " << legs_[3][0]->amount());
+}
+
+  
+QuantLib::Real FxSwap::notional() const {
+    // try to get the notional from the additional results of the instrument
+    try {
+        return instFar_->result<Real>("currentNotional");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "currentNotional not provided"))
+	    ALOG("error when retrieving notional: " << e.what());
+    }
+    // if not provided, return null
+    return Null<Real>();
+}
+
+std::string FxSwap::notionalCurrency() const {
+    // try to get the notional ccy from the additional results of the instrument
+    try {
+        return instFar_->result<std::string>("notionalCurrency");
+    } catch (const std::exception& e) {
+        if (strcmp(e.what(), "notionalCurrency not provided"))
+            ALOG("error when retrieving notional ccy: " << e.what());
+    }
+    // if not provided, return an empty string
+    return "";
 }
 
 void FxSwap::fromXML(XMLNode* node) {

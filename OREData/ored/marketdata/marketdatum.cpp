@@ -16,9 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/lexical_cast.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/lexical_cast.hpp>
 
 using boost::bad_lexical_cast;
 using boost::lexical_cast;
@@ -32,6 +35,8 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "BASIS_SPREAD";
     case MarketDatum::QuoteType::CREDIT_SPREAD:
         return out << "CREDIT_SPREAD";
+    case MarketDatum::QuoteType::CONV_CREDIT_SPREAD:
+        return out << "CONV_CREDIT_SPREAD";
     case MarketDatum::QuoteType::YIELD_SPREAD:
         return out << "YIELD_SPREAD";
     case MarketDatum::QuoteType::RATE:
@@ -50,13 +55,16 @@ std::ostream& operator<<(std::ostream& out, const MarketDatum::QuoteType& type) 
         return out << "BASE_CORRELATION";
     case MarketDatum::QuoteType::SHIFT:
         return out << "SHIFT";
+    case MarketDatum::QuoteType::NONE:
+        return out << "NULL";
     default:
         return out << "?";
     }
 }
 
 EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
-                                     string equityName, string ccy, string expiry, string strike, bool isCall)
+                                     string equityName, string ccy, string expiry,
+                                     const boost::shared_ptr<BaseStrike>& strike, bool isCall)
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
       expiry_(expiry), strike_(strike), isCall_(isCall) {
 
@@ -127,9 +135,10 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
 CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                            const string& commodityName, const string& quoteCurrency,
                                            const boost::shared_ptr<Expiry>& expiry,
-                                           const boost::shared_ptr<BaseStrike>& strike)
+                                           const boost::shared_ptr<BaseStrike>& strike,
+                                           Option::Type optionType)
     : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
-      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {}
+      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike), optionType_(optionType) {}
 
 CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                    const string& index1, const string& index2, const string& expiry,
@@ -151,49 +160,464 @@ CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& n
     parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
 }
 
+template <class Archive> void MarketDatum::serialize(Archive& ar, const unsigned int version) {
+    Real value;
+    // save / load the value of the quote, do not try to serialize the quote as such
+    if (Archive::is_saving::value) {
+        value = quote_->value();
+        ar& value;
+    } else {
+        ar& value;
+        quote_ = Handle<Quote>(boost::make_shared<SimpleQuote>(value));
+    }
+    ar& asofDate_;
+    ar& name_;
+    ar& instrumentType_;
+    ar& quoteType_;
+}
+
+template <class Archive> void MoneyMarketQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& fwdStart_;
+    ar& term_;
+}
+
+template <class Archive> void FRAQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& fwdStart_;
+    ar& term_;
+}
+
+template <class Archive> void ImmFraQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& imm1_;
+    ar& imm2_;
+}
+
+template <class Archive> void SwapQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& fwdStart_;
+    ar& term_;
+    ar& tenor_;
+}
+
+template <class Archive> void ZeroQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& date_;
+    ar& dayCounter_;
+    ar& tenor_;
+    ar& tenorBased_;
+}
+
+template <class Archive> void DiscountQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& date_;
+}
+
+template <class Archive> void MMFutureQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& expiry_;
+    ar& contract_;
+    ar& tenor_;
+}
+
+template <class Archive> void OIFutureQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& expiry_;
+    ar& contract_;
+    ar& tenor_;
+}
+
+template <class Archive> void BasisSwapQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& flatTerm_;
+    ar& term_;
+    ar& ccy_;
+    ar& maturity_;
+}
+
+template <class Archive> void BMASwapQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& term_;
+    ar& ccy_;
+    ar& maturity_;
+}
+
+template <class Archive> void CrossCcyBasisSwapQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& flatCcy_;
+    ar& flatTerm_;
+    ar& ccy_;
+    ar& term_;
+    ar& maturity_;
+}
+
+template <class Archive> void CrossCcyFixFloatSwapQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& floatCurrency_;
+    ar& floatTenor_;
+    ar& fixedCurrency_;
+    ar& fixedTenor_;
+    ar& maturity_;
+}
+
+template <class Archive> void CdsQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& underlyingName_;
+    ar& seniority_;
+    ar& ccy_;
+    ar& term_;
+}
+
+template <class Archive> void HazardRateQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& underlyingName_;
+    ar& seniority_;
+    ar& ccy_;
+    ar& term_;
+    ar& docClause_;
+}
+
+template <class Archive> void RecoveryRateQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& underlyingName_;
+    ar& seniority_;
+    ar& ccy_;
+    ar& docClause_;
+}
+
+template <class Archive> void SwaptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& expiry_;
+    ar& term_;
+    ar& dimension_;
+    ar& strike_;
+}
+
+template <class Archive> void SwaptionShiftQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& term_;
+}
+
+template <class Archive> void BondOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& qualifier_;
+    ar& expiry_;
+    ar& term_;
+}
+
+template <class Archive> void BondOptionShiftQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& qualifier_;
+    ar& term_;
+}
+
+template <class Archive> void CapFloorQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& term_;
+    ar& underlying_;
+    ar& atm_;
+    ar& relative_;
+    ar& strike_;
+}
+
+template <class Archive> void CapFloorShiftQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& ccy_;
+    ar& indexTenor_;
+}
+
+template <class Archive> void FXSpotQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& unitCcy_;
+    ar& ccy_;
+}
+
+template <class Archive> void FXForwardQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& unitCcy_;
+    ar& ccy_;
+    ar& term_;
+    ar& conversionFactor_;
+}
+
+template <class Archive> void FXOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& unitCcy_;
+    ar& ccy_;
+    ar& expiry_;
+    ar& strike_;
+}
+
+template <class Archive> void ZcInflationSwapQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& index_;
+    ar& term_;
+}
+
+template <class Archive> void InflationCapFloorQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& index_;
+    ar& term_;
+    ar& isCap_;
+    ar& strike_;
+}
+
+template <class Archive> void ZcInflationCapFloorQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<InflationCapFloorQuote>(*this);
+}
+
+template <class Archive> void YoYInflationSwapQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& index_;
+    ar& term_;
+}
+
+template <class Archive> void YyInflationCapFloorQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<InflationCapFloorQuote>(*this);
+}
+
+template <class Archive> void SeasonalityQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& index_;
+    ar& type_;
+    ar& month_;
+}
+
+template <class Archive> void EquitySpotQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& eqName_;
+    ar& ccy_;
+}
+
+template <class Archive> void EquityForwardQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& eqName_;
+    ar& ccy_;
+    ar& expiry_;
+}
+
+template <class Archive> void EquityDividendYieldQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& eqName_;
+    ar& ccy_;
+    ar& tenor_;
+}
+
+template <class Archive> void EquityOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& eqName_;
+    ar& ccy_;
+    ar& expiry_;
+    ar& strike_;
+    ar& isCall_;
+}
+
+template <class Archive> void SecuritySpreadQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& securityID_;
+}
+
+template <class Archive> void BaseCorrelationQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& cdsIndexName_;
+    ar& term_;
+    ar& detachmentPoint_;
+}
+
+template <class Archive> void IndexCDSOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& indexName_;
+    ar& expiry_;
+    ar& indexTerm_;
+    ar& strike_;
+}
+
+template <class Archive> void CommoditySpotQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& commodityName_;
+    ar& quoteCurrency_;
+}
+
+template <class Archive> void CommodityForwardQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& commodityName_;
+    ar& quoteCurrency_;
+    ar& expiryDate_;
+    ar& tenor_;
+    ar& startTenor_;
+    ar& tenorBased_;
+}
+
+template <class Archive> void CommodityOptionQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& commodityName_;
+    ar& quoteCurrency_;
+    ar& expiry_;
+    ar& strike_;
+}
+
+template <class Archive> void CorrelationQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& index1_;
+    ar& index2_;
+    ar& expiry_;
+    ar& strike_;
+}
+
+template <class Archive> void CPRQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& securityID_;
+}
+
+template <class Archive> void BondPriceQuote::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<MarketDatum>(*this);
+    ar& securityID_;
+}
+
+template void MarketDatum::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void MarketDatum::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void MoneyMarketQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void MoneyMarketQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void FRAQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void FRAQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ImmFraQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ImmFraQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void SwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void SwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ZeroQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ZeroQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void DiscountQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void DiscountQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void MMFutureQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void MMFutureQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void OIFutureQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void OIFutureQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BasisSwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BasisSwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BMASwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BMASwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CrossCcyBasisSwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CrossCcyBasisSwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CrossCcyFixFloatSwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CrossCcyFixFloatSwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CdsQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CdsQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void HazardRateQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void HazardRateQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void RecoveryRateQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void RecoveryRateQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void SwaptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void SwaptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void SwaptionShiftQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void SwaptionShiftQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BondOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BondOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BondOptionShiftQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BondOptionShiftQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CapFloorQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CapFloorQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CapFloorShiftQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CapFloorShiftQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void FXSpotQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void FXSpotQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void FXForwardQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void FXForwardQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void FXOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void FXOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ZcInflationSwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ZcInflationSwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void InflationCapFloorQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void InflationCapFloorQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void ZcInflationCapFloorQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void ZcInflationCapFloorQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void YoYInflationSwapQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void YoYInflationSwapQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void YyInflationCapFloorQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void YyInflationCapFloorQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void SeasonalityQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void SeasonalityQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void EquitySpotQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void EquitySpotQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void EquityForwardQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void EquityForwardQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void EquityDividendYieldQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void EquityDividendYieldQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void EquityOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void EquityOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void SecuritySpreadQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void SecuritySpreadQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BaseCorrelationQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BaseCorrelationQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void IndexCDSOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void IndexCDSOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CommoditySpotQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CommoditySpotQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CommodityForwardQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CommodityForwardQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CommodityOptionQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CommodityOptionQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CorrelationQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CorrelationQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void CPRQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void CPRQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void BondPriceQuote::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BondPriceQuote::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+
 } // namespace data
 } // namespace ore
 
-BOOST_CLASS_EXPORT_GUID(ore::data::MoneyMarketQuote, "MoneyMarketQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::FRAQuote, "FRAQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::ImmFraQuote, "ImmFraQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::SwapQuote, "SwapQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::ZeroQuote, "ZeroQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::DiscountQuote, "DiscountQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::MMFutureQuote, "MMFutureQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::OIFutureQuote, "OIFutureQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::BasisSwapQuote, "BasisSwapQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::BMASwapQuote, "BMASwapQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CrossCcyBasisSwapQuote, "CrossCcyBasisSwapQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CrossCcyFixFloatSwapQuote, "CrossCcyFixFloatSwapQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CdsQuote, "CdsQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::HazardRateQuote, "HazardRateQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::RecoveryRateQuote, "RecoveryRateQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::SwaptionQuote, "SwaptionQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::SwaptionShiftQuote, "SwaptionShiftQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::BondOptionQuote, "BondOptionQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::BondOptionShiftQuote, "BondOptionShiftQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CapFloorQuote, "CapFloorQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CapFloorShiftQuote, "CapFloorShiftQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::FXSpotQuote, "FXSpotQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::FXForwardQuote, "FXForwardQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::FXOptionQuote, "FXOptionQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::ZcInflationSwapQuote, "ZcInflationSwapQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::InflationCapFloorQuote, "InflationCapFloorQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::ZcInflationCapFloorQuote, "ZcInflationCapFloorQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::YoYInflationSwapQuote, "YoYInflationSwapQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::YyInflationCapFloorQuote, "YyInflationCapFloorQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::SeasonalityQuote, "SeasonalityQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::EquitySpotQuote, "EquitySpotQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::EquityForwardQuote, "EquityForwardQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::EquityDividendYieldQuote, "EquityDividendYieldQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::EquityOptionQuote, "EquityOptionQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::SecuritySpreadQuote, "SecuritySpreadQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::BaseCorrelationQuote, "BaseCorrelationQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::IndexCDSOptionQuote, "IndexCDSOptionQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CommoditySpotQuote, "CommoditySpotQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CommodityForwardQuote, "CommodityForwardQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CommodityOptionQuote, "CommodityOptionQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CorrelationQuote, "CorrelationQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::CPRQuote, "CPRQuote");
-BOOST_CLASS_EXPORT_GUID(ore::data::BondPriceQuote, "BondPriceQuote");
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::MoneyMarketQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FRAQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ImmFraQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SwapQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ZeroQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::DiscountQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::MMFutureQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::OIFutureQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BasisSwapQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BMASwapQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CrossCcyBasisSwapQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CrossCcyFixFloatSwapQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CdsQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::HazardRateQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::RecoveryRateQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SwaptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SwaptionShiftQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondOptionShiftQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CapFloorQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CapFloorShiftQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FXSpotQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FXForwardQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::FXOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ZcInflationSwapQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::InflationCapFloorQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::ZcInflationCapFloorQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::YoYInflationSwapQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::YyInflationCapFloorQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SeasonalityQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::EquitySpotQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::EquityForwardQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::EquityDividendYieldQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::EquityOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::SecuritySpreadQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BaseCorrelationQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::IndexCDSOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommoditySpotQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityForwardQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CommodityOptionQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CorrelationQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::CPRQuote);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::BondPriceQuote);

@@ -62,6 +62,7 @@ protected:
     virtual ~NumericLgmSwaptionEngineBase() {}
 
     Real calculate() const;
+    std::map<std::string, boost::any> additionalResults() const;
 
     virtual Real conditionalSwapValue(Real x, Real t, const Date expiry0) const = 0;
 

@@ -23,14 +23,16 @@
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
+#include <ored/portfolio/creditdefaultswapoption.hpp>
 #include <ored/portfolio/equityasianoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
-#include <ored/portfolio/fxasianoption.hpp>
 #include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/fxasianoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -50,18 +52,20 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("ForwardRateAgreement", boost::make_shared<TradeBuilder<ForwardRateAgreement>>());
     addBuilder("FxSwap", boost::make_shared<TradeBuilder<FxSwap>>());
     addBuilder("FxOption", boost::make_shared<TradeBuilder<FxOption>>());
+    addBuilder("FxAsianOption", boost::make_shared<TradeBuilder<FxAsianOption>>());
     addBuilder("CapFloor", boost::make_shared<TradeBuilder<CapFloor>>());
     addBuilder("EquityOption", boost::make_shared<TradeBuilder<EquityOption>>());
+    addBuilder("EquityAsianOption", boost::make_shared<TradeBuilder<EquityAsianOption>>());
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("EquitySwap", boost::make_shared<TradeBuilder<EquitySwap>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
     addBuilder("ForwardBond", boost::make_shared<TradeBuilder<ForwardBond>>());
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
+    addBuilder("CreditDefaultSwapOption", boost::make_shared<TradeBuilder<CreditDefaultSwapOption>>());
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
-    addBuilder("EquityAsianOption", boost::make_shared<TradeBuilder<EquityAsianOption>>());
     addBuilder("CommodityAsianOption", boost::make_shared<TradeBuilder<CommodityAsianOption>>());
-    addBuilder("FxAsianOption", boost::make_shared<TradeBuilder<FxAsianOption>>());
+    addBuilder("EquityFutureOption", boost::make_shared<TradeBuilder<EquityFutureOption>>());
     if (extraBuilders.size() > 0)
         addExtraBuilders(extraBuilders);
 }
@@ -80,10 +84,11 @@ void TradeFactory::addExtraBuilders(std::map<string, boost::shared_ptr<AbstractT
 
 boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
     auto it = builders_.find(className);
-    if (it == builders_.end())
-        return boost::shared_ptr<Trade>();
-    else
-        return it->second->build();
+
+    if (it == builders_.end()) {
+        return boost::shared_ptr<Trade>();}
+    else {
+        return it->second->build();}
 }
 
 } // namespace data

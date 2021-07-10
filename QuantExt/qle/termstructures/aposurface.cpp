@@ -28,7 +28,7 @@ using std::vector;
 namespace QuantExt {
 
 ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>& moneynessLevels,
-                                   const boost::shared_ptr<CommoditySpotIndex>& index,
+                                   const boost::shared_ptr<CommodityIndex>& index,
                                    const Handle<PriceTermStructure>& pts, const Handle<YieldTermStructure>& yts,
                                    const boost::shared_ptr<FutureExpiryCalculator>& expCalc,
                                    const Handle<BlackVolTermStructure>& baseVts,
@@ -160,7 +160,11 @@ void ApoFutureSurface::performCalculations() const {
             apo.setPricingEngine(apoEngine_);
             apo.NPV();
 
-            sigmas[i] = apo.sigma();
+            auto it = apo.additionalResults().find("sigma");
+            if (it != apo.additionalResults().end())
+                sigmas[i] = boost::any_cast<Real>(it->second);
+            else
+                sigmas[i] = Null<Real>();
         }
 
         QL_REQUIRE(sigmas.back() != Null<Real>(), "All of the sigmas are null.");

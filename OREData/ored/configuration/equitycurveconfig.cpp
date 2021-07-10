@@ -27,17 +27,23 @@ namespace ore {
 namespace data {
 
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription,
-                                     const string& forecastingCurve, const string& currency,
+                                     const string& forecastingCurve, const string& currency, const string& calendar,
                                      const EquityCurveConfig::Type& type, const string& equitySpotQuote,
                                      const vector<string>& fwdQuotes, const string& dayCountID,
                                      const string& dividendInterpVariable, const string& dividendInterpMethod,
                                      bool extrapolation, const QuantLib::Exercise::Type& exerciseStyle)
     : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve),
-      currency_(currency), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
+      currency_(currency), calendar_(calendar), type_(type), equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID),
       divInterpVariable_(dividendInterpVariable), divInterpMethod_(dividendInterpMethod), extrapolation_(extrapolation),
       exerciseStyle_(exerciseStyle) {
     quotes_ = fwdQuotes;
     quotes_.insert(quotes_.begin(), equitySpotQuote);
+    populateRequiredCurveIds();
+}
+
+void EquityCurveConfig::populateRequiredCurveIds() {
+    if (!forecastingCurve().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(forecastingCurve());
 }
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
@@ -47,6 +53,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
+    calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
     type_ = parseEquityCurveConfigType(XMLUtils::getChildValue(node, "Type", true));
     if (type_ == EquityCurveConfig::Type::OptionPremium)
         exerciseStyle_ = parseExerciseType(XMLUtils::getChildValue(node, "ExerciseStyle", true));
@@ -76,6 +83,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     } else {
         QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }
+    populateRequiredCurveIds();
 }
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
@@ -83,6 +91,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::addChild(doc, node, "Calendar", calendar_);
     XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
     if (type_ == EquityCurveConfig::Type::OptionPremium)
@@ -107,6 +116,8 @@ std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t) {
         return out << "DividendYield";
     case EquityCurveConfig::Type::ForwardPrice:
         return out << "ForwardPrice";
+    case EquityCurveConfig::Type::ForwardDividendPrice:
+        return out << "ForwardDividendPrice";
     case EquityCurveConfig::Type::OptionPremium:
         return out << "OptionPremium";
     case EquityCurveConfig::Type::NoDividends:
@@ -121,6 +132,8 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
         return EquityCurveConfig::Type::DividendYield;
     else if (str == "ForwardPrice")
         return EquityCurveConfig::Type::ForwardPrice;
+    else if (str == "ForwardDividendPrice")
+        return EquityCurveConfig::Type::ForwardDividendPrice;
     else if (str == "OptionPremium")
         return EquityCurveConfig::Type::OptionPremium;
     else if (str == "NoDividends")

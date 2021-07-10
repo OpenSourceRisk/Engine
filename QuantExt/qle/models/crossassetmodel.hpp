@@ -24,10 +24,13 @@
 #ifndef quantext_crossasset_model_hpp
 #define quantext_crossasset_model_hpp
 
+#include <qle/models/cirppparametrization.hpp>
+#include <qle/models/crcirpp.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infjyparameterization.hpp>
 #include <qle/models/lgm.hpp>
 
 #include <qle/processes/crossassetstateprocess.hpp>
@@ -45,13 +48,21 @@ using namespace QuantLib;
 namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
-enum AssetType { IR, FX, INF, CR, EQ };
-static constexpr Size crossAssetModelAssetTypes = 5;
+enum AssetType { IR, FX, INF, CR, EQ, AUX };
+static constexpr Size crossAssetModelAssetTypes = 6;
+
+std::ostream& operator<<(std::ostream& out, const AssetType& type);
 
 /*! the model types supported by the CrossAssetModel or derived classes;
   a model type may applicable to several asset types (like BS for FX, EQ) */
-enum ModelType { LGM1F, BS, DK, CIRPP };
+enum ModelType { LGM1F, BS, DK, CIRPP, JY };
+
 } // namespace CrossAssetModelTypes
+
+//! Choice of measure
+struct Measure {
+    enum Type { LGM, BA };
+};
 
 using namespace CrossAssetModelTypes;
 
@@ -70,15 +81,15 @@ public:
         as the unit matrix (and can be customized after
         construction of the model).
     */
-    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations,
-                    const Matrix& correlation = Matrix(),
-                    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations,
+                    const Matrix& correlation = Matrix(), SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+                    Measure::Type measure = Measure::LGM);
 
     /*! IR-FX model based constructor */
-    CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel> >& currencyModels,
-                    const std::vector<boost::shared_ptr<FxBsParametrization> >& fxParametrizations,
-                    const Matrix& correlation = Matrix(),
-                    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+    CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel>>& currencyModels,
+                    const std::vector<boost::shared_ptr<FxBsParametrization>>& fxParametrizations,
+                    const Matrix& correlation = Matrix(), SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None,
+                    Measure::Type measure = Measure::LGM);
 
     /*! returns the state process with a given discretization */
     const boost::shared_ptr<StochasticProcess>
@@ -105,6 +116,9 @@ public:
     /*! model type of a component */
     ModelType modelType(const AssetType t, const Size i) const;
 
+    /*! Choice of probability measure */
+    Measure::Type measure() const { return measure_; }
+
     /*! return index for currency (0 = domestic, 1 = first
       foreign currency and so on) */
     Size ccyIndex(const Currency& ccy) const;
@@ -115,9 +129,15 @@ public:
     /*! return index for inflation (0 = first inflation index) */
     Size infIndex(const std::string& index) const;
 
+    /*! return index for credit (0 = first credit name) */
+    Size crName(const std::string& name) const;
+
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
+
+    /*! the vector of parametrizations */
+    const std::vector<boost::shared_ptr<Parametrization>>& parametrizations() const { return p_; }
 
     /*! components per asset class, see below for specific model type inspectors */
     const boost::shared_ptr<Parametrization> ir(const Size ccy) const;
@@ -131,8 +151,14 @@ public:
 
     const boost::shared_ptr<IrLgm1fParametrization> irlgm1f(const Size ccy) const;
 
+    /*! LGM measure numeraire */
     Real numeraire(const Size ccy, const Time t, const Real x,
                    Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
+
+    /*! Bank account measure numeraire B(t) as a function of drifted LGM state variable x and drift-free auxiliary state
+     * variable y */
+    Real bankAccountNumeraire(const Size ccy, const Time t, const Real x, const Real y,
+                              Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
     Real discountBond(const Size ccy, const Time t, const Time T, const Real x,
                       Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
@@ -151,8 +177,15 @@ public:
     /*! INF DK components */
     const boost::shared_ptr<InfDkParametrization> infdk(const Size i) const;
 
+    //! Inflation JY component
+    const boost::shared_ptr<InfJyParameterization> infjy(const Size i) const;
+
     /*! CR LGM 1F components */
     const boost::shared_ptr<CrLgm1fParametrization> crlgm1f(const Size i) const;
+
+    /*! CR CIR++ components */
+    const boost::shared_ptr<CrCirpp> crcirppModel(const Size i) const;
+    const boost::shared_ptr<CrCirppParametrization> crcirpp(const Size i) const;
 
     /*! EQBS components */
     const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
@@ -183,6 +216,9 @@ public:
     void correlation(const AssetType s, const Size i, const AssetType t, const Size j, const Real value,
                      const Size iOffset = 0, const Size jOffset = 0);
 
+    /*! get salvaging algorithm */
+    SalvagingAlgorithm::Type salvagingAlgorithm() const { return salvaging_; }
+
     /*! analytical moments require numerical integration,
       which can be customized here */
     void setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
@@ -205,6 +241,9 @@ public:
     std::pair<Real, Real> crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
                                    const Real y) const;
 
+    /*! returns (S(t), S^tilde(t,T)) in the notation of the book */
+    std::pair<Real, Real> crcirppS(const Size i, const Time t, const Time T, const Real y, const Real s) const;
+
     /*! tentative: more generic interface that is agnostic of the model type - so far only for CR */
     virtual Handle<DefaultProbabilityTermStructure> crTs(const Size i) const;
     virtual std::pair<Real, Real> crS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
@@ -215,7 +254,7 @@ public:
     /*! calibrate irlgm1f volatilities to a sequence of ir options with
         expiry times equal to step times in the parametrization */
     void calibrateIrLgm1fVolatilitiesIterative(const Size ccy,
-                                               const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                               const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                                OptimizationMethod& method, const EndCriteria& endCriteria,
                                                const Constraint& constraint = Constraint(),
                                                const std::vector<Real>& weights = std::vector<Real>());
@@ -223,14 +262,14 @@ public:
     /*! calibrate irlgm1f reversion to a sequence of ir options with
         maturities equal to step times in the parametrization */
     void calibrateIrLgm1fReversionsIterative(const Size ccy,
-                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                              OptimizationMethod& method, const EndCriteria& endCriteria,
                                              const Constraint& constraint = Constraint(),
                                              const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate irlgm1f parameters for one ccy globally to a set
         of ir options */
-    void calibrateIrLgm1fGlobal(const Size ccy, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    void calibrateIrLgm1fGlobal(const Size ccy, const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                 OptimizationMethod& method, const EndCriteria& endCriteria,
                                 const Constraint& constraint = Constraint(),
                                 const std::vector<Real>& weights = std::vector<Real>());
@@ -238,14 +277,14 @@ public:
     /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
     void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,
-                                          const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                          const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                           OptimizationMethod& method, const EndCriteria& endCriteria,
                                           const Constraint& constraint = Constraint(),
                                           const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate eq/fx volatilities globally to a set of fx options */
     void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
-                                       const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                       const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                        OptimizationMethod& method, const EndCriteria& endCriteria,
                                        const Constraint& constraint = Constraint(),
                                        const std::vector<Real>& weights = std::vector<Real>());
@@ -253,7 +292,7 @@ public:
     /*! calibrate infdk volatilities to a sequence of cpi options with
         expiry times equal to step times in the parametrization */
     void calibrateInfDkVolatilitiesIterative(const Size index,
-                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                              OptimizationMethod& method, const EndCriteria& endCriteria,
                                              const Constraint& constraint = Constraint(),
                                              const std::vector<Real>& weights = std::vector<Real>());
@@ -261,29 +300,55 @@ public:
     /*! calibrate infdk reversions to a sequence of cpi options with
         maturity times equal to step times in the parametrization */
     void calibrateInfDkReversionsIterative(const Size index,
-                                           const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                           const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                            OptimizationMethod& method, const EndCriteria& endCriteria,
                                            const Constraint& constraint = Constraint(),
                                            const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate infdk volatilities globally to a sequence of cpi cap/floors */
     void calibrateInfDkVolatilitiesGlobal(const Size index,
-                                          const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                          const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                           OptimizationMethod& method, const EndCriteria& endCriteria,
                                           const Constraint& constraint = Constraint(),
                                           const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate infdk reversions globally to a sequence of cpi cap/floors */
     void calibrateInfDkReversionsGlobal(const Size index,
-                                        const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                        const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& constraint = Constraint(),
                                         const std::vector<Real>& weights = std::vector<Real>());
 
+    /*! Calibrate JY inflation parameters globally.
+
+        The parameter \p toCalibrate indicates which parameters of the JY inflation model that we want to calibrate.
+        The map key should be in {0, 1, 2} where 0 indicates the real rate volatility, 1 indicates the real rate
+        reversion and 2 indicates the inflation index volatility. The value is \c true if we wish to calibrate
+        the parameter and \p false if we do not want to calibrate it.
+    */
+    void calibrateInfJyGlobal(QuantLib::Size index,
+                              const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>& helpers,
+                              QuantLib::OptimizationMethod& method, const QuantLib::EndCriteria& endCriteria,
+                              const std::map<QuantLib::Size, bool>& toCalibrate,
+                              const QuantLib::Constraint& constraint = QuantLib::Constraint(),
+                              const std::vector<QuantLib::Real>& weights = std::vector<QuantLib::Real>());
+
+    /*! Calibrate a single JY inflation parameter iteratively.
+
+        Calibrate one of real rate volatility, real rate reversion or inflation index volatility. The
+        \p parameterIndex indicates the parameter that should be calibrated where 0 indicates the real rate
+        volatility, 1 indicates the real rate reversion and 2 indicates the inflation index volatility.
+    */
+    void calibrateInfJyIterative(QuantLib::Size inflationModelIndex, QuantLib::Size parameterIndex,
+                                 const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>& helpers,
+                                 QuantLib::OptimizationMethod& method, const QuantLib::EndCriteria& endCriteria,
+                                 const QuantLib::Constraint& constraint = QuantLib::Constraint(),
+                                 const std::vector<QuantLib::Real>& weights = std::vector<QuantLib::Real>());
+
     /*! calibrate crlgm1f volatilities to a sequence of cds options with
         expiry times equal to step times in the parametrization */
     void calibrateCrLgm1fVolatilitiesIterative(const Size index,
-                                               const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                               const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                                OptimizationMethod& method, const EndCriteria& endCriteria,
                                                const Constraint& constraint = Constraint(),
                                                const std::vector<Real>& weights = std::vector<Real>());
@@ -291,7 +356,7 @@ public:
     /*! calibrate crlgm1f reversions to a sequence of cds options with
         maturity times equal to step times in the parametrization */
     void calibrateCrLgm1fReversionsIterative(const Size index,
-                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& helpers,
                                              OptimizationMethod& method, const EndCriteria& endCriteria,
                                              const Constraint& constraint = Constraint(),
                                              const std::vector<Real>& weights = std::vector<Real>());
@@ -300,9 +365,10 @@ public:
 
 protected:
     /* ctor to be used in extensions, initialize is not called */
-    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >& parametrizations, const Matrix& correlation,
-                    SalvagingAlgorithm::Type salvaging, const bool)
-        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging) {}
+    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization>>& parametrizations, const Matrix& correlation,
+                    SalvagingAlgorithm::Type salvaging, Measure::Type measure, const bool)
+        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation), salvaging_(salvaging), measure_(measure) {
+    }
 
     /*! number of arguments for a component */
     Size arguments(const AssetType t, const Size i) const;
@@ -360,16 +426,18 @@ protected:
     // components per asset type
     std::vector<Size> components_;
     // indices per asset type and component number within asset type
-    std::vector<std::vector<Size> > idx_, cIdx_, pIdx_, aIdx_, brownians_, stateVariables_, numArguments_;
+    std::vector<std::vector<Size>> idx_, cIdx_, pIdx_, aIdx_, brownians_, stateVariables_, numArguments_;
     // counter
     Size totalDimension_, totalNumberOfBrownians_, totalNumberOfParameters_;
     // model type per asset type and component number within asset type
-    std::vector<std::vector<ModelType> > modelType_;
+    std::vector<std::vector<ModelType>> modelType_;
     // parametrizations, models
-    std::vector<boost::shared_ptr<Parametrization> > p_;
-    std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
+    std::vector<boost::shared_ptr<Parametrization>> p_;
+    std::vector<boost::shared_ptr<LinearGaussMarkovModel>> lgm_;
+    std::vector<boost::shared_ptr<CrCirpp>> crcirppModel_;
     Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
+    Measure::Type measure_;
     mutable boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<CrossAssetStateProcess> stateProcessExact_, stateProcessEuler_;
 
@@ -394,7 +462,7 @@ protected:
 
     // move parameter param (e.g. vol, reversion, or all if null) of asset type component t / index at step i (or at all
     // steps if i is null)
-    Disposable<std::vector<bool> > MoveParameter(const AssetType t, const Size param, const Size index, const Size i) {
+    Disposable<std::vector<bool>> MoveParameter(const AssetType t, const Size param, const Size index, const Size i) {
         QL_REQUIRE(param == Null<Size>() || param < arguments(t, index),
                    "parameter for " << t << " at " << index << " (" << param << ") out of bounds 0..."
                                     << arguments(t, index) - 1);
@@ -404,9 +472,15 @@ protected:
         appendToFixedParameterVector(INF, t, param, index, i, res);
         appendToFixedParameterVector(CR, t, param, index, i, res);
         appendToFixedParameterVector(EQ, t, param, index, i, res);
+        if (measure_ == Measure::BA)
+            appendToFixedParameterVector(AUX, t, param, index, i, res);
         return res;
     }
 };
+
+//! Utility function to return a handle to the inflation term structure given the inflation index.
+QuantLib::Handle<QuantLib::ZeroInflationTermStructure>
+inflationTermStructure(const boost::shared_ptr<CrossAssetModel>& model, QuantLib::Size index);
 
 // inline
 
@@ -449,9 +523,27 @@ inline const boost::shared_ptr<InfDkParametrization> CrossAssetModel::infdk(cons
     return tmp;
 }
 
+inline const boost::shared_ptr<InfJyParameterization> CrossAssetModel::infjy(const Size i) const {
+    auto tmp = boost::dynamic_pointer_cast<InfJyParameterization>(p_[idx(INF, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not INF-JY");
+    return tmp;
+}
+
 inline const boost::shared_ptr<CrLgm1fParametrization> CrossAssetModel::crlgm1f(const Size i) const {
     boost::shared_ptr<CrLgm1fParametrization> tmp = boost::dynamic_pointer_cast<CrLgm1fParametrization>(p_[idx(CR, i)]);
     QL_REQUIRE(tmp, "model at " << i << " is not CR-LGM");
+    return tmp;
+}
+
+inline const boost::shared_ptr<CrCirpp> CrossAssetModel::crcirppModel(const Size i) const {
+    boost::shared_ptr<CrCirpp> tmp = crcirppModel_[i];
+    QL_REQUIRE(tmp, "model at " << i << " is not CR-CIRPP");
+    return tmp;
+}
+
+inline const boost::shared_ptr<CrCirppParametrization> CrossAssetModel::crcirpp(const Size i) const {
+    boost::shared_ptr<CrCirppParametrization> tmp = boost::dynamic_pointer_cast<CrCirppParametrization>(p_[idx(CR, i)]);
+    QL_REQUIRE(tmp, "model at " << i << " is not CR-CIRPP");
     return tmp;
 }
 
@@ -464,6 +556,11 @@ inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const 
 inline Real CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,
                                        Handle<YieldTermStructure> discountCurve) const {
     return lgm(ccy)->numeraire(t, x, discountCurve);
+}
+
+inline Real CrossAssetModel::bankAccountNumeraire(const Size ccy, const Time t, const Real x, const Real y,
+                                                  Handle<YieldTermStructure> discountCurve) const {
+    return lgm(ccy)->bankAccountNumeraire(t, x, y, discountCurve);
 }
 
 inline Real CrossAssetModel::discountBond(const Size ccy, const Time t, const Time T, const Real x,
@@ -493,12 +590,22 @@ inline const Matrix& CrossAssetModel::correlation() const { return rho_; }
 inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const { return integrator_; }
 
 inline Handle<DefaultProbabilityTermStructure> CrossAssetModel::crTs(const Size i) const {
-    return crlgm1f(i)->termStructure();
+    if (modelType(CR, i) == LGM1F)
+        return crlgm1f(i)->termStructure();
+    if (modelType(CR, i) == CIRPP)
+        return crcirpp(i)->termStructure();
+    QL_FAIL("model at " << i << " is not CR-*");
 }
 
 inline std::pair<Real, Real> CrossAssetModel::crS(const Size i, const Size ccy, const Time t, const Time T,
                                                   const Real z, const Real y) const {
-    return crlgm1fS(i, ccy, t, T, z, y);
+    if (modelType(CR, i) == LGM1F)
+        return crlgm1fS(i, ccy, t, T, z, y);
+    if (modelType(CR, i) == CIRPP) {
+        QL_REQUIRE(ccy == 0, "CrossAssetModelPlus::crS() only implemented for ccy=0, got " << ccy);
+        return crcirppS(i, t, T, z, y);
+    }
+    QL_FAIL("model at " << i << " is not CR-*");
 }
 
 } // namespace QuantExt

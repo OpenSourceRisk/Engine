@@ -47,21 +47,26 @@ public:
         registerWith(underlying_);
     }
 
+    //! \name FXLinked interface
+    //@{
+    boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) override;
+    //@}
+
     //! \name Coupon interface
     //@{
-    Rate nominal() const { return foreignAmount() * fxRate(); }
-    Rate rate() const { return underlying_->rate(); }
+    Rate nominal() const override { return foreignAmount() * fxRate(); }
+    Rate rate() const override { return underlying_->rate(); }
     //@}
 
     //! \name FloatingRateCoupon interface
     //@{
-    Rate indexFixing() const { return underlying_->indexFixing(); } // might be overwritten in underlying
-    void setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& p) { underlying_->setPricer(p); }
+    Rate indexFixing() const override { return underlying_->indexFixing(); } // might be overwritten in underlying
+    void setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& p) override { underlying_->setPricer(p); }
     //@}
 
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 
     //! more inspectors
@@ -79,6 +84,12 @@ inline void FloatingRateFXLinkedNotionalCoupon::accept(AcyclicVisitor& v) {
     else
         FloatingRateCoupon::accept(v);
 }
+
+inline boost::shared_ptr<FXLinked> FloatingRateFXLinkedNotionalCoupon::clone(boost::shared_ptr<FxIndex> fxIndex) {
+    return boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fxFixingDate(), foreignAmount(), fxIndex,
+                                                                  underlying());
+}
+
 } // namespace QuantExt
 
 #endif

@@ -23,9 +23,11 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/indexes/fallbackiborindex.hpp>
 
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
@@ -43,18 +45,50 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+// Search for a valid fixing date maximum gap days larger than d, the only relevant case for this so far is BMA/SIFMA
+Date nextValidFixingDate(Date d, const boost::shared_ptr<Index>& index, Size gap = 7) {
+    Date adjusted = d;
+    for (Size i = 0; i <= gap; ++i) {
+        adjusted = d + i;
+        if (index->isValidFixingDate(adjusted))
+            return adjusted;
+    }
+    QL_FAIL("no valid fixing date found for index " << index->name() << " within gap from " << io::iso_date(d));
+}
+
+FixingManager::FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
+
 //! Initialise the manager-
 
-void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
+void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio, const boost::shared_ptr<Market>& market,
+                               const std::string& configuration) {
 
     // loop over all cashflows, populate index map
+
+    auto standardCashflowHandler = boost::make_shared<StandardFixingManagerCashflowHandler>();
 
     for (auto trade : portfolio->trades()) {
         for (auto leg : trade->legs()) {
             for (auto cf : leg) {
-                processCashFlows(cf);
+                bool done = false;
+                for (auto& h : FixingManagerCashflowHandlerFactory::instance().handlers()) {
+                    if (done)
+                        break;
+                    done = done || h->processCashflow(cf, fixingMap_);
+                }
+                if (!done)
+                    standardCashflowHandler->processCashflow(cf, fixingMap_);
             }
-            // processLegs(leg);
+        }
+        // some trades require fixings, but don't have legs - actually we might switch to the
+        // logic here for all trade types eventually, see ore ticket 1157
+        if (trade->tradeType() == "ForwardRateAgreement") {
+            for (auto const& m : trade->fixings(QuantLib::Date::maxDate())) {
+                auto index = market->iborIndex(m.first, configuration);
+                for (auto const& d : m.second) {
+                    fixingMap_[*index].insert(d);
+                }
+            }
         }
     }
 
@@ -64,112 +98,14 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
     }
 }
 
-void FixingManager::processCashFlows(const boost::shared_ptr<QuantLib::CashFlow> cf) {
-
-    // For any coupon type that requires fixings, it must be handled here
-    // Most coupons are based off a floating rate coupon and their single index
-    // will be captured in section A.
-    //
-    // Other more exotic coupons (inflation, CMS spreads, etc) are captured on a
-    // case by case basis in section B.
-    //
-    // In all cases we want to add dates to the fixingMap_ map.
-
-    // A floating rate coupons
-
-    // extract underlying from cap/floored coupons
-    boost::shared_ptr<FloatingRateCoupon> frc;
-    auto cfCpn = boost::dynamic_pointer_cast<CappedFlooredCoupon>(cf);
-    if (cfCpn)
-        frc = cfCpn->underlying();
-    else
-        frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-
-    if (frc) {
-        // A1 indices with fixings derived from underlying indices
-        auto cmssp = boost::dynamic_pointer_cast<CmsSpreadCoupon>(frc);
-        if (cmssp) {
-            fixingMap_[cmssp->swapSpreadIndex()->swapIndex1()].insert(frc->fixingDate());
-            fixingMap_[cmssp->swapSpreadIndex()->swapIndex2()].insert(frc->fixingDate());
-            return;
-        }
-        auto dcmssp = boost::dynamic_pointer_cast<DigitalCmsSpreadCoupon>(frc);
-        if (dcmssp) {
-            fixingMap_
-                [boost::dynamic_pointer_cast<CmsSpreadCoupon>(dcmssp->underlying())->swapSpreadIndex()->swapIndex1()]
-                    .insert(frc->fixingDate());
-            fixingMap_
-                [boost::dynamic_pointer_cast<CmsSpreadCoupon>(dcmssp->underlying())->swapSpreadIndex()->swapIndex2()]
-                    .insert(frc->fixingDate());
-            return;
-        }
-
-        // A2 indices with native fixings, but no only on the standard fixing date
-        auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc);
-        if (on) {
-            for (auto const& d : on->fixingDates())
-                fixingMap_[on->index()].insert(d);
-            return;
-        }
-        auto avon = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(frc);
-        if (avon) {
-            for (auto const& d : avon->fixingDates())
-                fixingMap_[avon->index()].insert(d);
-            return;
-        }
-        auto bma = boost::dynamic_pointer_cast<AverageBMACoupon>(frc);
-        if (bma) {
-            for (auto const& d : bma->fixingDates())
-                fixingMap_[bma->index()].insert(d);
-            return;
-        }
-
-        // A3 standard case
-        fixingMap_[frc->index()].insert(frc->fixingDate());
-    }
-
-    // B other coupon types
-
-    boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
-        boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
-    if (fc) {
-        fixingMap_[fc->index()].insert(fc->fixingDate());
-        fixingMap_[fc->fxIndex()].insert(fc->fxFixingDate());
-        return;
-    }
-
-    boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
-    if (flcf) {
-        fixingMap_[flcf->fxIndex()].insert(flcf->fxFixingDate());
-        return;
-    }
-
-    boost::shared_ptr<CPICoupon> cpc = boost::dynamic_pointer_cast<CPICoupon>(cf);
-    if (cpc) {
-        fixingMap_[cpc->index()].insert(cpc->fixingDate());
-        return;
-    }
-
-    boost::shared_ptr<InflationCoupon> ic = boost::dynamic_pointer_cast<InflationCoupon>(cf);
-    if (ic) {
-        fixingMap_[ic->index()].insert(ic->fixingDate());
-        return;
-    }
-
-    boost::shared_ptr<CPICashFlow> cpcf = boost::dynamic_pointer_cast<CPICashFlow>(cf);
-    if (cpcf) {
-        fixingMap_[cpcf->index()].insert(cpcf->fixingDate());
-        return;
-    }
-}
-
 //! Update fixings to date d
 void FixingManager::update(Date d) {
     if (!fixingMap_.empty()) {
         QL_REQUIRE(d >= fixingsEnd_, "Can't go back in time, fixings must be reset."
                                      " Update date "
                                          << d << " but current fixings go to " << fixingsEnd_);
-        applyFixings(fixingsEnd_, d);
+        if (d > fixingsEnd_)
+            applyFixings(fixingsEnd_, d);
     }
     fixingsEnd_ = d;
 }
@@ -215,6 +151,9 @@ void FixingManager::applyFixings(Date start, Date end) {
             }
         } else {
             currentFixingDate = m.first->fixingCalendar().adjust(fixEnd, Following);
+            // This date is a business day but may not be a valid fixing date in case of BMA/SIFMA
+            if (!m.first->isValidFixingDate(currentFixingDate))
+                currentFixingDate = nextValidFixingDate(currentFixingDate, m.first);
             fixingDates = m.second;
         }
 
@@ -237,8 +176,12 @@ void FixingManager::applyFixings(Date start, Date end) {
             TimeSeries<Real> history;
             for (auto const& d : fixingDates) {
                 if (d >= fixStart && d < fixEnd) {
-                    history[d] = currentFixing;
-                    modifiedFixingHistory_ = true;
+                    // Fixing dates include the valuation grid dates which might not be valid fixing dates (BMA/SIFMA)
+                    bool valid = m.first->isValidFixingDate(d);
+                    if (valid) {
+                        history[d] = currentFixing;
+                        modifiedFixingHistory_ = true;
+                    }
                 }
                 if (d >= fixEnd)
                     break;
@@ -246,6 +189,132 @@ void FixingManager::applyFixings(Date start, Date end) {
             m.first->addFixings(history, true);
         }
     }
+}
+
+bool StandardFixingManagerCashflowHandler::processCashflow(const boost::shared_ptr<QuantLib::CashFlow>& cf,
+                                                           FixingManager::FixingMap& fixingMap) {
+
+    // For any coupon type that requires fixings, it must be handled here
+    // Most coupons are based off a floating rate coupon and their single index
+    // will be captured in section A.
+    //
+    // Other more exotic coupons (inflation, CMS spreads, etc) are captured on a
+    // case by case basis in section B.
+    //
+    // In all cases we want to add dates to the fixingMap_ map.
+
+    // A floating rate coupons
+
+    // extract underlying from cap/floored coupons
+    boost::shared_ptr<FloatingRateCoupon> frc;
+    auto cfCpn = boost::dynamic_pointer_cast<CappedFlooredCoupon>(cf);
+    if (cfCpn)
+        frc = cfCpn->underlying();
+    else
+        frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+
+    if (frc) {
+        // A1 indices with fixings derived from underlying indices
+        auto cmssp = boost::dynamic_pointer_cast<CmsSpreadCoupon>(frc);
+        if (cmssp) {
+            fixingMap[cmssp->swapSpreadIndex()->swapIndex1()].insert(frc->fixingDate());
+            fixingMap[cmssp->swapSpreadIndex()->swapIndex2()].insert(frc->fixingDate());
+            return true;
+        }
+        auto dcmssp = boost::dynamic_pointer_cast<DigitalCmsSpreadCoupon>(frc);
+        if (dcmssp) {
+            fixingMap
+                [boost::dynamic_pointer_cast<CmsSpreadCoupon>(dcmssp->underlying())->swapSpreadIndex()->swapIndex1()]
+                    .insert(frc->fixingDate());
+            fixingMap
+                [boost::dynamic_pointer_cast<CmsSpreadCoupon>(dcmssp->underlying())->swapSpreadIndex()->swapIndex2()]
+                    .insert(frc->fixingDate());
+            return true;
+        }
+
+        // A2 indices with native fixings, but no only on the standard fixing date
+        auto on = boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(frc);
+        if (on) {
+            for (auto const& d : on->fixingDates()) {
+                fixingMap[on->index()].insert(d);
+            }
+            return true;
+        }
+        auto avon = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(frc);
+        if (avon) {
+            for (auto const& d : avon->fixingDates())
+                fixingMap[avon->index()].insert(d);
+            return true;
+        }
+        auto bma = boost::dynamic_pointer_cast<AverageBMACoupon>(frc);
+        if (bma) {
+            for (auto const& d : bma->fixingDates())
+                fixingMap[bma->index()].insert(d);
+            return true;
+        }
+
+        // A3 standard case
+        auto fb = boost::dynamic_pointer_cast<FallbackIborIndex>(frc->index());
+        if (fb != nullptr && frc->fixingDate() >= fb->switchDate()) {
+            // handle ibor fallback
+            return processCashflow(fb->onCoupon(frc->fixingDate()), fixingMap);
+        } else {
+            // handle other cases
+            fixingMap[frc->index()].insert(frc->fixingDate());
+        }
+    }
+
+    // B other coupon types
+
+    boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
+        boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
+    if (fc) {
+        fixingMap[fc->fxIndex()].insert(fc->fxFixingDate());
+        return processCashflow(fc->underlying(), fixingMap);
+    }
+
+    boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
+    if (flcf) {
+        fixingMap[flcf->fxIndex()].insert(flcf->fxFixingDate());
+        return true;
+    }
+
+    boost::shared_ptr<CPICoupon> cpc = boost::dynamic_pointer_cast<CPICoupon>(cf);
+    if (cpc) {
+        fixingMap[cpc->index()].insert(cpc->fixingDate());
+        return true;
+    }
+
+    boost::shared_ptr<InflationCoupon> ic = boost::dynamic_pointer_cast<InflationCoupon>(cf);
+    if (ic) {
+        fixingMap[ic->index()].insert(ic->fixingDate());
+        return true;
+    }
+
+    boost::shared_ptr<CPICashFlow> cpcf = boost::dynamic_pointer_cast<CPICashFlow>(cf);
+    if (cpcf) {
+        fixingMap[cpcf->index()].insert(cpcf->fixingDate());
+        return true;
+    }
+
+    boost::shared_ptr<EquityCoupon> ec = boost::dynamic_pointer_cast<EquityCoupon>(cf);
+    if (ec) {
+        for (auto const& f : ec->fixingDates())
+            fixingMap[ec->equityCurve()].insert(f);
+        if (ec->fxIndex() != nullptr) {
+            fixingMap[ec->fxIndex()].insert(ec->fixingStartDate());
+        }
+    }
+
+    return true;
+}
+
+const std::set<boost::shared_ptr<FixingManagerCashflowHandler>>& FixingManagerCashflowHandlerFactory::handlers() const {
+    return handlers_;
+}
+
+void FixingManagerCashflowHandlerFactory::addHandler(const boost::shared_ptr<FixingManagerCashflowHandler>& handler) {
+    handlers_.insert(handler);
 }
 
 } // namespace analytics

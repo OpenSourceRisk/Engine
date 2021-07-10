@@ -40,25 +40,28 @@ void Portfolio::reset() {
         t->reset();
 }
 
-void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactory>& factory) {
+void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactory>& factory,
+                     const bool checkForDuplicateIds) {
 
     LOG("Parsing XML " << fileName.c_str());
     XMLDocument doc(fileName);
     LOG("Loaded XML file");
     XMLNode* node = doc.getFirstNode("Portfolio");
-    fromXML(node, factory);
+    fromXML(node, factory, checkForDuplicateIds);
 }
 
-void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory) {
+void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory,
+                                  const bool checkForDuplicateIds) {
     LOG("Parsing XML string");
     XMLDocument doc;
     doc.fromXMLString(xmlString);
     LOG("Loaded XML string");
     XMLNode* node = doc.getFirstNode("Portfolio");
-    fromXML(node, factory);
+    fromXML(node, factory, checkForDuplicateIds);
 }
 
-void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& factory) {
+void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& factory,
+                        const bool checkForDuplicateIds) {
     XMLUtils::checkNode(node, "Portfolio");
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
     for (Size i = 0; i < nodes.size(); i++) {
@@ -68,14 +71,13 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-
         boost::shared_ptr<Trade> trade = factory->build(tradeType);
 
         if (trade) {
             try {
                 trade->fromXML(nodes[i]);
                 trade->id() = id;
-                add(trade);
+                add(trade, checkForDuplicateIds);
 
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                     << " type:" << tradeType);
@@ -127,6 +129,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     auto trade = trades_.begin();
     while (trade != trades_.end()) {
         try {
+            (*trade)->reset();
             (*trade)->build(engineFactory);
             TLOG("Required Fixings for trade " << (*trade)->id() << ":");
             TLOGGERSTREAM << (*trade)->requiredFixings();
@@ -163,8 +166,25 @@ map<string, string> Portfolio::nettingSetMap() const {
     return nettingSetMap;
 }
 
-void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
-    QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
+std::vector<std::string> Portfolio::counterparties() const {
+    vector<string> counterparties;
+    for (auto t : trades_)
+        counterparties.push_back(t->envelope().counterparty());
+    sort(counterparties.begin(), counterparties.end());
+    counterparties.erase(unique(counterparties.begin(), counterparties.end()), counterparties.end());
+    return counterparties;
+}
+
+map<string, set<string>> Portfolio::counterpartyNettingSets() const {
+    map<string, set<string>> cpNettingSets;
+    for (auto t : trades_)
+        cpNettingSets[t->envelope().counterparty()].insert(t->envelope().nettingSetId());
+    return cpNettingSets;
+}
+
+void Portfolio::add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds) {
+    QL_REQUIRE(!checkForDuplicateIds || !has(trade->id()),
+               "Attempted to add a trade to the portfolio with an id, which already exists.");
     trades_.push_back(trade);
 }
 
@@ -205,7 +225,8 @@ map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
     return result;
 }
 
-std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
+std::map<AssetClass, std::set<std::string>>
+Portfolio::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
 
     if (!underlyingIndicesCache_.empty())
         return underlyingIndicesCache_;
@@ -213,7 +234,7 @@ std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
     map<AssetClass, std::set<std::string>> result;
 
     for (const auto& t : trades_) {
-        auto underlyings = t->underlyingIndices();
+        auto underlyings = t->underlyingIndices(referenceDataManager);
         for (const auto& kv : underlyings) {
             result[kv.first].insert(kv.second.begin(), kv.second.end());
         }
@@ -222,9 +243,11 @@ std::map<AssetClass, std::set<std::string>> Portfolio::underlyingIndices() {
     return underlyingIndicesCache_;
 }
 
-std::set<std::string> Portfolio::underlyingIndices(AssetClass assetClass) {
+std::set<std::string>
+Portfolio::underlyingIndices(AssetClass assetClass,
+                             const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) {
 
-    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices();
+    std::map<AssetClass, std::set<std::string>> indices = underlyingIndices(referenceDataManager);
     auto it = indices.find(assetClass);
     if (it != indices.end()) {
         return it->second;

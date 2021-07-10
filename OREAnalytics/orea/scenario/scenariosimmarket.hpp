@@ -29,7 +29,9 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ql/quotes/all.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
@@ -55,7 +57,6 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
-#include <qle/termstructures/interpolateddiscountcurvelinearzero.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
@@ -66,8 +67,6 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
-#include <qle/termstructures/spreadedsmilesection.hpp>
-#include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
@@ -80,7 +79,6 @@
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 
@@ -110,6 +108,14 @@ public:
 };
 
 //! Simulation Market updated with discrete scenarios
+/*! If useSpreadedTermStructures is true, spreaded term structures over the initMarket for supported risk factors will
+  be generated. This is used by the SensitivityScenarioGenerator.
+
+  If cacheSimData is true, the scenario application is optimised. This requires that all scenarios are SimpleScenario
+  instances with identical key structure in their data.
+
+  If allowPartialScenarios is true, the check that all simData_ is touched by a scenario is disabled.
+ */
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
@@ -118,7 +124,9 @@ public:
                       const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false);
+                      const bool continueOnError = false, const bool useSpreadedTermStructures = false,
+                      const bool cacheSimData = false, const bool allowPartialScenarios = false,
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
@@ -126,7 +134,9 @@ public:
                       const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                      const bool continueOnError = false);
+                      const bool continueOnError = false, const bool useSpreadedTermStructures = false,
+                      const bool cacheSimData = false, const bool allowPartialScenarios = false,
+                      const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
@@ -143,14 +153,27 @@ public:
     //! Get scenarioFilter
     const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
-    //! Update market snapshot and relevant fixing history
-    void update(const Date& d) override;
+    //! Update
+    // virtual void update(const Date&) override;
+    virtual void preUpdate() override;
+    virtual void updateScenario(const Date&) override;
+    virtual void updateDate(const Date&) override;
+    virtual void postUpdate(const Date& d, bool withFixings) override;
+    virtual void updateAsd(const Date&) override;
 
     //! Reset sim market to initial state
     virtual void reset() override;
 
-    //! Scenario representing the initial state of the market
+    /*! Scenario representing the initial state of the market. If useSpreadedTermStructures = false, this scenario
+      contains absolute values for all risk factor keys. If useSpreadedTermStructures = true, this scenario contains
+      spread values for all risk factor keys which support spreaded term structures and absolute values for the other
+      risk factor keys. The spread values will typically be zero (e.g. for vol risk factors) or 1 (e.g. for rate curve
+      risk factors, since we use discount factors there). */
     boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+
+    /*! Scenario representing the initial state of the market. This scenario contains absolute values for all risk factor
+      types, no matter whether useSpreadedTermStructures is true or false. */
+    boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
     //! Return the fixing manager
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
@@ -162,7 +185,7 @@ protected:
     virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
-                       const std::string& dc, bool simulate = true, const string& interpolation = "LogLinear");
+                       bool simulate = true, bool spreaded = false);
 
     /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
     from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
@@ -180,8 +203,21 @@ protected:
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
     boost::shared_ptr<Scenario> baseScenario_;
+    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
+
+    std::vector<boost::shared_ptr<SimpleQuote>> cachedSimData_;
+    std::vector<bool> cachedSimDataActive_;
 
     std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
+
+    // if generate spread scenario values for keys, we store the absolute values in this map
+    // so that we can set up the base scenario with absolute values
+    bool useSpreadedTermStructures_;
+    std::map<RiskFactorKey, Real> absoluteSimData_;
+
+    bool cacheSimData_;
+    bool allowPartialScenarios_;
+    IborFallbackConfig iborFallbackConfig_;
 };
 } // namespace analytics
 } // namespace ore

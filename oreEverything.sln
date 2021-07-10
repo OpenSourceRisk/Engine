@@ -31,14 +31,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OREDataTestSuite", "OREData
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OREAnalyticsTestSuite", "OREAnalytics\test\OREAnalyticsTestSuite.vcxproj", "{87DD6B48-D3E0-4C2D-A984-0E41259A9D3C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{69B19B76-A089-4F8E-A10B-58F607A96214} = {69B19B76-A089-4F8E-A10B-58F607A96214}
-	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "quantexttestsuite", "QuantExt\test\testsuite.vcxproj", "{643BCBE7-4369-42EC-9766-DCB8DAD6615F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testsuite", "QuantExt\test\testsuite.vcxproj", "{643BCBE7-4369-42EC-9766-DCB8DAD6615F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{EE3B829C-8824-4656-B37F-32DED1F62E68} = {EE3B829C-8824-4656-B37F-32DED1F62E68}
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2357D164-A285-4EA9-8BF1-1E5168DC153D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -183,8 +182,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {F193375E-9238-41AA-AA91-DF17D36330CA}
 	EndGlobalSection
 EndGlobal

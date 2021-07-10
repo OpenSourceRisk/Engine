@@ -30,7 +30,9 @@ StrippedCappedFlooredCPICashFlow::StrippedCappedFlooredCPICashFlow(
     : CPICashFlow(underlying->notional(), boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index()), Date(),
                   underlying->baseFixing(), underlying->fixingDate(), underlying->date(), underlying->growthOnly(),
                   underlying->interpolation(), underlying->frequency()),
-      underlying_(underlying) {}
+      underlying_(underlying) {
+    registerWith(underlying_);
+}
 
 Real StrippedCappedFlooredCPICashFlow::amount() const {
     return underlying_->amount() - underlying_->underlying()->amount();
@@ -44,7 +46,7 @@ StrippedCappedFlooredCPICoupon::StrippedCappedFlooredCPICoupon(
                 underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
                 underlying->referencePeriodEnd(), underlying->exCouponDate()),
       underlying_(underlying) {
-    registerWith(underlying);
+    registerWith(underlying_);
 }
 
 Rate StrippedCappedFlooredCPICoupon::rate() const { return underlying_->rate() - underlying_->underlying()->rate(); }

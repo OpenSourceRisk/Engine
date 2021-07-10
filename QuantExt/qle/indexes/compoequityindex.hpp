@@ -1,0 +1,56 @@
+/*
+ Copyright (C) 2021 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file qle/indexes/compoequityindex.hpp
+    \brief equity index converting the original equity currency to another currency
+    \ingroup indexes
+*/
+
+#pragma once
+
+#include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
+
+#include <ql/patterns/lazyobject.hpp>
+
+namespace QuantExt {
+using namespace QuantLib;
+
+class CompoEquityIndex : public EquityIndex, public LazyObject {
+public:
+    /*! fxIndex source ccy must be the equity ccy, fxIndex target ccy is the new equity ccy */
+    CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source, const boost::shared_ptr<FxIndex>& fxIndex);
+
+    boost::shared_ptr<EquityIndex> source() const;
+
+    void addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite = false) override;
+    const TimeSeries<Real>& dividendFixings() const override;
+    Real pastFixing(const Date& fixingDate) const override;
+    boost::shared_ptr<EquityIndex> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+                                         const Handle<YieldTermStructure>& dividend) const override;
+
+private:
+    void performCalculations() const override;
+
+    boost::shared_ptr<EquityIndex> source_;
+    boost::shared_ptr<FxIndex> fxIndex_;
+
+    mutable TimeSeries<Real> dividendFixings_;
+};
+
+} // namespace QuantExt

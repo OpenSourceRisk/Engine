@@ -52,6 +52,8 @@ public:
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    std::string notionalCurrency() const override;
 
     //! \name Inspectors
     //@{
@@ -82,6 +84,7 @@ private:
     double farBoughtAmount_;
     double farSoldAmount_;
     string settlement_;
+    boost::shared_ptr<QuantLib::Instrument> instNear_, instFar_;
 };
 } // namespace data
 } // namespace ore

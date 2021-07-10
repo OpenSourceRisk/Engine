@@ -49,33 +49,9 @@ using std::vector;
   \ingroup marketdata
  */
 
-//! elements must be numbered 0...n, so we can iterate over them
-enum class MarketObject {
-    DiscountCurve = 0,
-    YieldCurve = 1,
-    IndexCurve = 2,
-    SwapIndexCurve = 3,
-    FXSpot = 4,
-    FXVol = 5,
-    SwaptionVol = 6,
-    DefaultCurve = 7,
-    CDSVol = 8,
-    BaseCorrelation = 9,
-    CapFloorVol = 10,
-    ZeroInflationCurve = 11,
-    YoYInflationCurve = 12,
-    ZeroInflationCapFloorVol = 13,
-    YoYInflationCapFloorVol = 14,
-    EquityCurve = 15,
-    EquityVol = 16,
-    Security = 17,
-    CommodityCurve = 18,
-    CommodityVolatility = 19,
-    Correlation = 20,
-    YieldVol = 21
-};
-
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);
+
+std::set<MarketObject> getMarketObjectTypes();
 
 class MarketConfiguration {
 public:
@@ -115,7 +91,7 @@ public:
     //! Build a vector of all the curve specs (may contain duplicates)
     vector<string> curveSpecs(const string& configuration) const;
 
-    //! Individual term structure ids for a given configuration
+    //! Intermediate id for a given market object and configuration, see the description of configurations_ below
     string marketObjectId(const MarketObject o, const string& configuration) const;
     //@}
 
@@ -135,9 +111,33 @@ public:
     //@}
 
 private:
-    // maps configuration name to id list
+    /* Maps a configuration label to a MarketConfiguration instance. For the command line application, the configuration
+       label is specified under the Markets node in ore.xml. An example is given by:
+
+       default          => (DiscountCurve => xois_eur)
+       collateral_inccy => (DiscountCurve => ois)
+       collateral_eur   => (DiscountCurve => xois_eur)
+       ...
+
+       The RHS maps each market object to a configuration id, which is an intermediate identifier used to group
+       assignments for each market object together, see the description of marketObjects_ below. Missing market objects
+       are mapped to the market default configuration "default". The latter is defined as a constant in
+       Market::defaultConfiguration.
+
+       A configuration label "default" is always added, which maps all market objects to the market default
+       configuration "default". The entries for the configuration label "default" can be overwritten though. */
     map<string, MarketConfiguration> configurations_;
-    // maps id to map (key,value) for each market object type
+
+    /* For each market object type, maps the intermediate configuration id to a list of assignments, e.g.
+
+       DiscountCurve => (xois_eur => (EUR => Yield/EUR/EUR1D,
+                                      USD => Yield/USD/USD-IN_EUR)
+                         ois      => (EUR => Yield/EUR/EUR1D,
+                                      USD => Yield/USD/USD1D))
+       IndexCurve    => ...
+
+       For each pair (market object, intermediate configuration id) defined in the rhs of the configurations_ map, a
+       mapping should be defined in marketObjects_). */
     map<MarketObject, map<string, map<string, string>>> marketObjects_;
 
     void curveSpecs(const map<string, map<string, string>>&, const string&, vector<string>&) const;
@@ -166,6 +166,7 @@ inline string TodaysMarketParameters::marketObjectId(const MarketObject o, const
 
 inline const map<string, string>& TodaysMarketParameters::mapping(const MarketObject o,
                                                                   const string& configuration) const {
+    static map<string, string> empty;
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = marketObjects_.find(o);
     if (it != marketObjects_.end()) {
@@ -174,8 +175,7 @@ inline const map<string, string>& TodaysMarketParameters::mapping(const MarketOb
             return it2->second;
         }
     }
-    QL_FAIL("market object of type " << o << " with id " << marketObjectId(o, configuration)
-                                     << " specified in configuration " << configuration << " not found");
+    return empty;
 }
 
 } // namespace data

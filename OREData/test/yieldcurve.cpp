@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -111,7 +112,7 @@ MarketDataLoader::MarketDataLoader(vector<string> data) {
         vector<string> tokens;
         boost::trim(s);
         boost::split(tokens, s, boost::is_any_of(" "), boost::token_compress_on);
-
+        
         QL_REQUIRE(tokens.size() == 3, "Invalid market data line, 3 tokens expected " << s);
         Date date = parseDate(tokens[0]);
         const string& key = tokens[1];
@@ -119,6 +120,100 @@ MarketDataLoader::MarketDataLoader(vector<string> data) {
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
+
+// List of curve configuration files that set up an ARS-IN-USD curve with various interpolation methods and variables.
+// We have a set of files under ars_in_usd/failing and a set under ars_in_usd/passing:
+// - failing: has the old QuantLib::IterativeBootstrap parameters i.e. 1 attempt with hard bounds
+// - passing: has the default QuantExt::IterativeBootstrap parameters i.e. 5 attempts with widening bounds
+vector<string> curveConfigFiles = {"discount_linear.xml",
+                                   "discount_loglinear.xml",
+                                   "discount_natural_cubic.xml",
+                                   "discount_financial_cubic.xml",
+                                   "zero_linear.xml",
+                                   "zero_natural_cubic.xml",
+                                   "zero_financial_cubic.xml",
+                                   "forward_linear.xml",
+                                   "forward_natural_cubic.xml",
+                                   "forward_financial_cubic.xml",
+                                   "forward_convex_monotone.xml"};
+
+// Construct and hold the arguments needed to construct a TodaysMarket.
+struct TodaysMarketArguments {
+
+    TodaysMarketArguments(const Date& asof, const string& inputDir, const string& curveConfigFile = "curveconfig.xml")
+        : asof(asof) {
+
+        Settings::instance().evaluationDate() = asof;
+
+        string filename = inputDir + "/conventions.xml";
+        conventions->fromFile(TEST_INPUT_FILE(filename));
+
+        filename = inputDir + "/" + curveConfigFile;
+        curveConfigs->fromFile(TEST_INPUT_FILE(filename));
+
+        filename = inputDir + "/todaysmarket.xml";
+        todaysMarketParameters->fromFile(TEST_INPUT_FILE(filename));
+
+        filename = inputDir + "/market.txt";
+        string fixingsFilename = inputDir + "/fixings.txt";
+        loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
+    }
+
+    Date asof;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    boost::shared_ptr<CurveConfigurations> curveConfigs = boost::make_shared<CurveConfigurations>();
+    boost::shared_ptr<TodaysMarketParameters> todaysMarketParameters = boost::make_shared<TodaysMarketParameters>();
+    boost::shared_ptr<Loader> loader;
+};
+
+// Used to check that the exception message contains the expected message string, expMsg.
+struct ExpErrorPred {
+
+    ExpErrorPred(const string& msg) : expMsg(msg) {}
+
+    bool operator()(const Error& ex) {
+        string errMsg(ex.what());
+        return errMsg.find(expMsg) != string::npos;
+    }
+
+    string expMsg;
+};
+
+// Test yield curve bootstrap from overnight index futures where the first future in the list of instruments may be
+// expired. We use the March 2020 SOFR future contract whose last trade date is 16 Jun 2020 with settlement date 17
+// Jun 2020. A number of cases are tested:
+// 1. Valuation date is 9 Jun 2020. March 2020 SOFR future should be included in bootstrap fine.
+// 2. Valuation date is 16 Jun 2020. March 2020 SOFR future should be included in bootstrap. The final SOFR fixing
+//    i.e. the fixing for 16 Jun 2020 will not be known on 16 Jun 2020.
+// 3. Valuation date is 17 Jun 2020. March 2020 SOFR future should be excluded from the bootstrap.
+// 4. Valuation date is 23 Jun 2020. March 2020 SOFR future should be excluded from the bootstrap.
+
+struct FutureCase {
+    Date date;
+    string desc;
+};
+
+vector<FutureCase> oiFutureCases{{Date(9, Jun, 2020), "before_ltd"},
+                                 {Date(16, Jun, 2020), "on_ltd"},
+                                 {Date(17, Jun, 2020), "on_settlement"},
+                                 {Date(23, Jun, 2020), "after_ltd"}};
+
+// Test yield curve bootstrap from money market futures where the first future in the list of instruments has an ibor
+// start date that is before, on and after the valuation date. We use the August 2020 Eurodollar future contract whose
+// last trade date is 17 Aug 2020 with an underlying ibor start date of 19 Aug 2020. Note that the USD-LIBOR-3M fixing
+// is known on 17 Aug 2020 and the future expires on this date with the associated final settlement price. A number of
+// cases are tested:
+// 1. Valuation date is 18 Aug 2020. August 2020 Eurodollar future should be included in bootstrap.
+// 2. Valuation date is 19 Aug 2020. August 2020 Eurodollar future should be included in bootstrap.
+// 3. Valuation date is 20 Aug 2020. August 2020 Eurodollar future should be excluded from the bootstrap.
+vector<FutureCase> mmFutureCases{{Date(18, Aug, 2020), "before_ibor_start"},
+                                 {Date(19, Aug, 2020), "on_ibor_start"},
+                                 {Date(20, Aug, 2020), "after_ibor_start"}};
+
+ostream& operator<<(ostream& os, const FutureCase& c) {
+    return os << "Date is " << io::iso_date(c.date) << " and case is " << c.desc << ".";
+}
+    
 } // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
@@ -139,106 +234,30 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
         boost::make_shared<YieldCurveConfig>("JPY6M", "JPY 6M curve", "JPY", "", segments);
     curveConfigs.yieldCurveConfig("JPY6M") = jpyYieldConfig;
 
+    MarketDataLoader loader;
+
+    // QL >= 1.19 should not throw, no matter if the float convention has the correct calendar
+
     Conventions conventions;
     boost::shared_ptr<Convention> convention =
         boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
     conventions.add(convention);
 
-    MarketDataLoader loader;
+    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
 
-    // Construction should fail due to missing fixing on August 28th, 2015
-    auto checker = [](const Error& ex) -> bool {
-        return string(ex.what()).find("Missing JPYLibor6M Actual/360 fixing for August 28th, 2015") != string::npos;
-    };
-    BOOST_CHECK_EXCEPTION(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions), Error, checker);
-
-    // Change calendar in conventions to Japan & London and the curve building should not throw an exception
     conventions.clear();
     convention = boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP,UK", "Semiannual", "MF", "A365",
                                                       "JPY-LIBOR-6M");
     conventions.add(convention);
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
-
-    // Reapply old convention but load necessary fixing and the curve building should still not throw an exception
-    conventions.clear();
-    convention =
-        boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
-    conventions.add(convention);
-
-    vector<Real> fixings{0.0013086};
-    TimeSeries<Real> fixingHistory(Date(28, August, 2015), fixings.begin(), fixings.end());
-    IndexManager::instance().setHistory("JPYLibor6M Actual/360", fixingHistory);
-
-    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
 }
-
-namespace {
-
-// List of curve configuration files that set up an ARS-IN-USD curve with various interpolation methods and variables.
-// We have a set of files under ars_in_usd/failing and a set under ars_in_usd/passing:
-// - failing: has the old QuantLib::IterativeBootstrap parameters i.e. 1 attempt with hard bounds
-// - passing: has the default QuantExt::IterativeBootstrap parameters i.e. 5 attempts with widening bounds
-vector<string> curveConfigFiles = {"discount_linear.xml",
-                                   "discount_loglinear.xml",
-                                   "discount_natural_cubic.xml",
-                                   "discount_financial_cubic.xml",
-                                   "zero_linear.xml",
-                                   "zero_natural_cubic.xml",
-                                   "zero_financial_cubic.xml",
-                                   "forward_linear.xml",
-                                   "forward_natural_cubic.xml",
-                                   "forward_financial_cubic.xml",
-                                   "forward_convex_monotone.xml"};
-
-// Construct and hold the arguments needed to construct a TodaysMarket.
-struct TodaysMarketArguments {
-    TodaysMarketArguments(const string& inputDir, const string& curveConfigFile) {
-
-        asof = Date(25, Sep, 2019);
-        Settings::instance().evaluationDate() = asof;
-
-        string filename = inputDir + "/conventions.xml";
-        conventions.fromFile(TEST_INPUT_FILE(filename));
-
-        filename = inputDir + "/" + curveConfigFile;
-        curveConfigs.fromFile(TEST_INPUT_FILE(filename));
-
-        filename = inputDir + "/todaysmarket.xml";
-        todaysMarketParameters.fromFile(TEST_INPUT_FILE(filename));
-
-        filename = inputDir + "/market.txt";
-        string fixingsFilename = inputDir + "/fixings.txt";
-        loader = CSVLoader(TEST_INPUT_FILE(filename), TEST_INPUT_FILE(fixingsFilename), false);
-    }
-
-    Date asof;
-    Conventions conventions;
-    CurveConfigurations curveConfigs;
-    TodaysMarketParameters todaysMarketParameters;
-    CSVLoader loader;
-};
-
-// Used to check that the exception message contains the expected message string, expMsg.
-struct ExpErrorPred {
-
-    ExpErrorPred(const string& msg) : expMsg(msg) {}
-
-    bool operator()(const Error& ex) {
-        string errMsg(ex.what());
-        return errMsg.find(expMsg) != string::npos;
-    }
-
-    string expMsg;
-};
-
-} // namespace
 
 // Test ARS-IN-USD failures using the old QuantLib::IterativeBootstrap parameters
 BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles), curveConfigFile) {
 
     BOOST_TEST_MESSAGE("Testing ARS-IN-USD fails with configuration file: failing/" << curveConfigFile);
 
-    TodaysMarketArguments tma("ars_in_usd", "failing/" + curveConfigFile);
+    TodaysMarketArguments tma(Date(25, Sep, 2019), "ars_in_usd", "failing/" + curveConfigFile);
 
     boost::shared_ptr<TodaysMarket> todaysMarket;
     BOOST_CHECK_EXCEPTION(todaysMarket =
@@ -252,7 +271,7 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDPasses, bdata::make(curveConfigFiles),
 
     BOOST_TEST_MESSAGE("Testing ARS-IN-USD passes with configuration file: passing/" << curveConfigFile);
 
-    TodaysMarketArguments tma("ars_in_usd", "passing/" + curveConfigFile);
+    TodaysMarketArguments tma(Date(25, Sep, 2019), "ars_in_usd", "passing/" + curveConfigFile);
 
     boost::shared_ptr<TodaysMarket> todaysMarket;
     BOOST_REQUIRE_NO_THROW(todaysMarket =
@@ -261,6 +280,44 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDPasses, bdata::make(curveConfigFiles),
 
     Handle<YieldTermStructure> yts = todaysMarket->discountCurve("ARS");
     BOOST_TEST_MESSAGE("Discount: " << std::fixed << std::setprecision(14) << yts->discount(1.0));
+}
+
+BOOST_DATA_TEST_CASE(testOiFirstFutureDateVsValuationDate, bdata::make(oiFutureCases), oiFutureCase) {
+
+    BOOST_TEST_MESSAGE("Testing OI future. " << oiFutureCase);
+
+    BOOST_TEST_CONTEXT(oiFutureCase) {
+
+        TodaysMarketArguments tma(oiFutureCase.date, "oi_future/" + oiFutureCase.desc);
+
+        boost::shared_ptr<TodaysMarket> todaysMarket;
+        BOOST_REQUIRE_NO_THROW(todaysMarket =
+                                   boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                                                    tma.curveConfigs, tma.conventions, false, true));
+
+        Handle<YieldTermStructure> yts;
+        BOOST_REQUIRE_NO_THROW(yts = todaysMarket->discountCurve("USD"));
+        BOOST_REQUIRE_NO_THROW(yts->discount(1.0));
+    }
+}
+
+BOOST_DATA_TEST_CASE(testMmFirstFutureDateVsValuationDate, bdata::make(mmFutureCases), mmFutureCase) {
+
+    BOOST_TEST_MESSAGE("Testing money market future. " << mmFutureCase);
+
+    BOOST_TEST_CONTEXT(mmFutureCase) {
+
+        TodaysMarketArguments tma(mmFutureCase.date, "mm_future/" + mmFutureCase.desc);
+
+        boost::shared_ptr<TodaysMarket> todaysMarket;
+        BOOST_REQUIRE_NO_THROW(todaysMarket =
+                                   boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
+                                                                    tma.curveConfigs, tma.conventions, false, true));
+
+        Handle<YieldTermStructure> yts;
+        BOOST_REQUIRE_NO_THROW(yts = todaysMarket->discountCurve("USD"));
+        BOOST_REQUIRE_NO_THROW(yts->discount(1.0));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
@@ -291,31 +348,31 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
         { "2045-03-27", -0.00149953900205779 },
         { "2050-03-28", -0.00228805321739911 },
     };
-
+    
     YieldCurveSpec spec("CHF", "CHF-OIS");
-
+    
     vector<string> quotes(zero_data.size());
     for (Size i=0; i < zero_data.size(); ++i) {
         quotes[i] = "ZERO/RATE/CHF/CHF-OIS/A365/" + zero_data[i].date;
     }
-
+    
     CurveConfigurations curveConfigs;
     vector<boost::shared_ptr<YieldCurveSegment>> segments{
         boost::make_shared<DirectYieldCurveSegment>(
-        "Zero", "CHF-ZERO-CONVENTIONS", quotes)
+            "Zero", "CHF-ZERO-CONVENTIONS", quotes)
     };
     boost::shared_ptr<YieldCurveConfig> chfYieldConfig =
         boost::make_shared<YieldCurveConfig>("CHF-OIS", "CHF OIS curve", "CHF",
                                              "", segments,
                                              "Discount", "LogQuadratic");
     curveConfigs.yieldCurveConfig("CHF-OIS") = chfYieldConfig;
-
+    
     Conventions conventions;
     boost::shared_ptr<Convention> convention =
         boost::make_shared<ZeroRateConvention>("CHF-ZERO-CONVENTIONS", "A365",
                                                "CHF", "Compounded", "Annual");
     conventions.add(convention);
-
+    
     vector<string> data(zero_data.size());
     for (Size i=0; i < zero_data.size(); ++i) {
         data[i] = to_string(asof) + " " + quotes[i] + " ";
@@ -324,7 +381,7 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
     
     MarketDataLoader loader(data);
     YieldCurve chfYieldCurve(asof, spec, curveConfigs, loader, conventions);
-
+    
     BOOST_TEST_MESSAGE("Test zeroRate from YieldCurve against input");
     for (Size i=0; i < zero_data.size(); ++i) {
         BOOST_CHECK_CLOSE(
@@ -332,9 +389,9 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
                                              Actual365Fixed(), Compounded,
                                              Annual).rate(),
             zero_data[i].zero, 1e-6
-        );
+            );
     }
-
+    
     // From Front Arena Prime
     std::vector<ExpectedResult> expected = {
         { "2020-03-25", -0.00705200739223866, 1.00001953963179, -0.00710652430814573 },
@@ -419,7 +476,7 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
         { "2042-09-26", -0.00416154603709362, 1.02580615300844, -0.0011305804441839 },
         { "2050-03-28", -0.00655222665784105, 1.07121045806809, -0.0022880532151871 }
     };
-
+    
     BOOST_TEST_MESSAGE("Test rates from YieldCurve cached result");
     for (Size i=0; i < expected.size(); ++i) {
         BOOST_CHECK_CLOSE(
@@ -427,11 +484,11 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
                                              Actual365Fixed(), Compounded,
                                              Annual).rate(),
             expected[i].zero, 1e-7
-        );
+            );
         BOOST_CHECK_CLOSE(
             chfYieldCurve.handle()->discount(parseDate(expected[i].date)),
             expected[i].discount, 1e-7
-        );
+            );
     }
     BOOST_TEST_MESSAGE("Test rates from YieldCurve cached result");
     BOOST_CHECK_EQUAL(chfYieldCurve.handle()->discount(asof), 1);

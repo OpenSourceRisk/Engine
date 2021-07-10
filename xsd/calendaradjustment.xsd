@@ -10,10 +10,11 @@
   </xs:complexType>  
   
   <xs:complexType name="newcalendar">
-    <xs:sequence>
+    <xs:all>
+      <xs:element type="xs:string" name="BaseCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="Dates" name="AdditionalHolidays"/>
       <xs:element type="Dates" name="AdditionalBusinessDays"/>
-    </xs:sequence>
+    </xs:all>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
   

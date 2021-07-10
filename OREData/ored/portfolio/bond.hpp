@@ -35,38 +35,41 @@ namespace data {
 class BondData : public XMLSerializable {
 public:
     //! Default Contructor
-    BondData() : faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false) {}
+    BondData() : hasCreditRisk_(true), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false) {}
 
     //! Constructor to set up a bond from reference data
-    BondData(string securityId, Real bondNotional)
-        : securityId_(securityId), faceAmount_(0.0), zeroBond_(false), bondNotional_(bondNotional), isPayer_(false) {}
+    BondData(string securityId, Real bondNotional, bool hasCreditRisk = true)
+        : securityId_(securityId), hasCreditRisk_(hasCreditRisk), faceAmount_(0.0), zeroBond_(false),
+          bondNotional_(bondNotional), isPayer_(false) {}
 
     //! Constructor for coupon bonds
     BondData(string issuerId, string creditCurveId, string securityId, string referenceCurveId, string settlementDays,
-             string calendar, string issueDate, LegData& coupons)
+             string calendar, string issueDate, LegData& coupons, bool hasCreditRisk = true)
         : issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_(std::vector<LegData>{coupons}), faceAmount_(0), zeroBond_(false),
-          bondNotional_(1.0) {
+          issueDate_(issueDate), coupons_(std::vector<LegData>{coupons}), hasCreditRisk_(hasCreditRisk), faceAmount_(0),
+          zeroBond_(false), bondNotional_(1.0) {
         initialise();
     }
 
     //! Constructor for coupon bonds with multiple phases (represented as legs)
     BondData(string issuerId, string creditCurveId, string securityId, string referenceCurveId, string settlementDays,
-             string calendar, string issueDate, const std::vector<LegData>& coupons)
+             string calendar, string issueDate, const std::vector<LegData>& coupons, bool hasCreditRisk = true)
         : issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_(coupons), faceAmount_(0), zeroBond_(false), bondNotional_(1.0) {
+          issueDate_(issueDate), coupons_(coupons), hasCreditRisk_(hasCreditRisk), faceAmount_(0), zeroBond_(false),
+          bondNotional_(1.0) {
         initialise();
     }
 
     //! Constructor for zero bonds, FIXME these can only be set up via this ctor, not via fromXML()
     BondData(string issuerId, string creditCurveId, string securityId, string referenceCurveId, string settlementDays,
-             string calendar, Real faceAmount, string maturityDate, string currency, string issueDate)
+             string calendar, Real faceAmount, string maturityDate, string currency, string issueDate,
+             bool hasCreditRisk = true)
         : issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_(), faceAmount_(faceAmount), maturityDate_(maturityDate), currency_(currency),
-          zeroBond_(true), bondNotional_(1.0) {
+          issueDate_(issueDate), coupons_(), hasCreditRisk_(hasCreditRisk), faceAmount_(faceAmount),
+          maturityDate_(maturityDate), currency_(currency), zeroBond_(true), bondNotional_(1.0) {
         initialise();
     }
 
@@ -84,6 +87,7 @@ public:
     const std::vector<LegData>& coupons() const { return coupons_; }
     const string& currency() const { return currency_; }
     Real bondNotional() const { return bondNotional_; }
+    bool hasCreditRisk() const { return hasCreditRisk_; }
     bool isPayer() const { return isPayer_; }
     bool zeroBond() const { return zeroBond_; }
     // only used for zero bonds
@@ -97,10 +101,14 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
-    //! populate data from reference datum
+    //! populate data from reference datum and check data for completeness
     void populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum);
-    //! look up reference datum in ref data manager and populate
+
+    //! look up reference datum in ref data manager and populate, check data for completeness
     void populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData);
+
+    //! check data for completeness
+    void checkData() const;
 
 private:
     void initialise();
@@ -115,6 +123,7 @@ private:
     string calendar_;
     string issueDate_;
     std::vector<LegData> coupons_;
+    bool hasCreditRisk_;
     Real faceAmount_;     // only used for zero bonds
     string maturityDate_; // only used for for zero bonds
     string currency_;
@@ -144,12 +153,48 @@ public:
     const string& currency() const { return bondData_.currency(); }
     const string& creditCurveId() const { return bondData_.creditCurveId(); }
 
+    //! Add underlying Bond names
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
+
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
 private:
     BondData bondData_;
+};
+
+//! Bond Factory that builds bonds from reference data
+
+struct BondBuilder {
+    virtual ~BondBuilder() {}
+    virtual boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                    const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                                    const std::string& securityId) const = 0;
+};
+
+class BondFactory : public QuantLib::Singleton<BondFactory> {
+    map<std::string, boost::shared_ptr<BondBuilder>> builders_;
+
+public:
+    boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                            const std::string& securityId) const;
+    void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
+};
+
+template <typename T> struct BondBuilderRegister {
+    BondBuilderRegister<T>(const std::string& referenceDataType) {
+        BondFactory::instance().addBuilder(referenceDataType, boost::make_shared<T>());
+    }
+};
+
+struct VanillaBondBuilder : public BondBuilder {
+    static BondBuilderRegister<VanillaBondBuilder> reg_;
+    boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                            const std::string& securityId) const override;
 };
 
 } // namespace data

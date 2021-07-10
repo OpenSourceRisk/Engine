@@ -20,29 +20,92 @@
 #include <boost/algorithm/string.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
-#include <ql/time/date.hpp>
+#include <ored/utilities/wildcard.hpp>
+#include <qle/termstructures/averagefuturepricehelper.hpp>
+#include <qle/termstructures/averageoffpeakpowerhelper.hpp>
+#include <qle/termstructures/averagespotpricehelper.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/crosscurrencypricetermstructure.hpp>
-#include <regex>
+#include <qle/termstructures/futurepricehelper.hpp>
+#include <qle/termstructures/iterativebootstrap.hpp>
+#include <qle/termstructures/piecewisepricecurve.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/date.hpp>
 
+using QuantExt::AverageFuturePriceHelper;
+using QuantExt::AverageOffPeakPowerHelper;
+using QuantExt::AverageSpotPriceHelper;
+using QuantExt::FutureExpiryCalculator;
+using QuantExt::FuturePriceHelper;
 using QuantExt::CommodityAverageBasisPriceCurve;
 using QuantExt::CommodityBasisPriceCurve;
-using QuantExt::CommoditySpotIndex;
+using QuantExt::CommodityIndex;
 using QuantExt::CrossCurrencyPriceTermStructure;
 using QuantExt::CubicFlat;
 using QuantExt::InterpolatedPriceCurve;
 using QuantExt::LinearFlat;
 using QuantExt::LogLinearFlat;
 using QuantExt::PriceTermStructure;
+using QuantExt::PiecewisePriceCurve;
+using QuantLib::BootstrapHelper;
+using std::make_pair;
 using std::map;
-using std::regex;
 using std::string;
+
+// Explicit template instantiation to avoid "error C2079: ... uses undefined class ..."
+// Explained in the answer to the SO question here: 
+// https://stackoverflow.com/a/57666066/1771882
+// Needs to be in global namespace also i.e. not under ore::data
+// https://stackoverflow.com/a/25594741/1771882
+template class QuantExt::PiecewisePriceCurve<QuantLib::Linear, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::LogLinear, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::Cubic, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantExt::LinearFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantExt::LogLinearFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantExt::CubicFlat, QuantExt::IterativeBootstrap>;
+template class QuantExt::PiecewisePriceCurve<QuantLib::BackwardFlat, QuantExt::IterativeBootstrap>;
+
+namespace {
+
+using ore::data::Convention;
+using ore::data::Conventions;
+using QuantLib::Date;
+using QuantLib::Error;
+using QuantLib::io::iso_date;
+using QuantLib::Real;
+
+void addMarketFixing(const string& idxConvId, const Date& expiry, Real value, const Conventions& conventions) {
+    auto p = conventions.get(idxConvId, Convention::Type::CommodityFuture);
+    if (p.first) {
+        auto idx = parseCommodityIndex(idxConvId, conventions, false);
+        idx = idx->clone(expiry);
+        if (idx->isValidFixingDate(expiry)) {
+            try {
+                idx->addFixing(expiry, value);
+                TLOG("Added fixing (" << iso_date(expiry) << "," << idx->name() << "," << value << ").");
+            } catch (const Error& e) {
+                TLOG("Failed to add fixing (" << iso_date(expiry) << "," << idx->name() << "," <<
+                    value << "): " << e.what());
+            }
+        } else {
+            TLOG("Failed to add fixing (" << iso_date(expiry) << "," << idx->name() << "," <<
+                value << ") because " << iso_date(expiry) << " is not a valid fixing date.");
+        }
+    } else {
+        TLOG("Failed to add fixing because no commodity future convention for " << idxConvId << ".");
+    }
+}
+
+}
 
 namespace ore {
 namespace data {
+
+CommodityCurve::CommodityCurve()
+    : commoditySpot_(Null<Real>()), onValue_(Null<Real>()), tnValue_(Null<Real>()), regexQuotes_(false) {}
 
 CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
                                const CurveConfigurations& curveConfigs, const Conventions& conventions,
@@ -61,7 +124,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         if (config->type() == CommodityCurveConfig::Type::Direct) {
 
             // Populate the raw price curve data
-            map<Date, Real> data;
+            map<Date, Handle<Quote>> data;
             populateData(data, asof, config, loader, conventions);
 
             // Create the commodity price curve
@@ -80,6 +143,11 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
             auto pts = Handle<PriceTermStructure>(itCc->second->commodityPriceCurve());
 
             buildBasisPriceCurve(asof, *config, conventions, pts, loader);
+
+        } else if (config->type() == CommodityCurveConfig::Type::Piecewise) {
+
+            // We have a piecewise commodity configuration
+            buildPiecewiseCurve(asof, *config, conventions, loader, commodityCurves);
 
         } else {
 
@@ -103,7 +171,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
     }
 }
 
-void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
+void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& asof,
                                   const boost::shared_ptr<CommodityCurveConfig>& config, const Loader& loader,
                                   const Conventions& conventions) {
 
@@ -136,15 +204,16 @@ void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
     // Commodity spot quote if provided by the configuration
     Date spotDate = cal.advance(asof, spotTenor);
     if (!config->commoditySpotQuoteId().empty()) {
-        commoditySpot_ = loader.get(config->commoditySpotQuoteId(), asof)->quote()->value();
-        data[spotDate] = commoditySpot_;
+        auto spot = loader.get(config->commoditySpotQuoteId(), asof)->quote();
+        commoditySpot_ = spot->value();
+        data[spotDate] = spot;
     } else {
         QL_REQUIRE(outright, "If the commodity forward quotes are not outright,"
                                  << " a commodity spot quote needs to be configured");
     }
 
     // Add the forward quotes to the curve data
-    for (auto& q : getQuotes(asof, *config, loader)) {
+    for (auto& q : getQuotes(asof, config->curveID(), config->fwdQuotes(), loader)) {
 
         // We add ON and TN quotes after this loop if they are given and not outright quotes
         TLOG("Commodity Forward Price found for quote: " << q->name());
@@ -196,7 +265,7 @@ void CommodityCurve::populateData(map<Date, Real>& data, const Date& asof,
     }
 }
 
-void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, map<Date, Real>& data, bool outright,
+void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, map<Date, Handle<Quote>>& data, bool outright,
                          Real pointsFactor) {
 
     if (expiry < asof)
@@ -209,15 +278,15 @@ void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, map<D
         value = commoditySpot_ + value / pointsFactor;
     }
 
-    data[expiry] = value;
+    data[expiry] = Handle<Quote>(boost::make_shared<SimpleQuote>(value));
 }
 
-void CommodityCurve::buildCurve(const Date& asof, const map<Date, Real>& data,
+void CommodityCurve::buildCurve(const Date& asof, const map<Date, Handle<Quote>>& data,
                                 const boost::shared_ptr<CommodityCurveConfig>& config) {
 
     vector<Date> curveDates;
     curveDates.reserve(data.size());
-    vector<Real> curvePrices;
+    vector<Handle<Quote>> curvePrices;
     curvePrices.reserve(data.size());
     for (auto const& datum : data) {
         curveDates.push_back(datum.first);
@@ -291,26 +360,14 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
                "Convention " << config.baseConventionsId() << " not of expected type CommodityFutureConvention");
     auto baseFec = boost::make_shared<ConventionsBasedFutureExpiry>(*baseConvention);
 
-    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a
-    // commodity future index during curve construction in QuantExt.
-    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
+    // Construct the commodity index.
+    auto index = parseCommodityIndex(baseConvention->id(), conventions, false, basePts);
 
     // Sort the configured quotes on expiry dates
     // Ignore tenor based quotes i.e. we expect an explicit expiry date and log a warning if the expiry date does not
     // match our own calculated expiry date based on the basis conventions.
     map<Date, Handle<Quote>> basisData;
-    for (auto& q : getQuotes(asof, config, loader)) {
-
-        if (q->tenorBased()) {
-            TLOG("Skipping tenor based quote, " << q->name() << ".");
-            continue;
-        }
-
-        if (q->expiryDate() < asof) {
-            TLOG("Skipping quote because its expiry date, " << io::iso_date(q->expiryDate())
-                                                            << ", is before the market date " << io::iso_date(asof));
-            continue;
-        }
+    for (auto& q : getQuotes(asof, config.curveID(), config.fwdQuotes(), loader, true)) {
 
         QL_REQUIRE(basisData.find(q->expiryDate()) == basisData.end(), "Found duplicate quote, "
                                                                            << q->name() << ", for expiry date "
@@ -328,44 +385,122 @@ void CommodityCurve::buildBasisPriceCurve(const Date& asof, const CommodityCurve
         }
     }
 
-    if (basisConvention->isAveraging() && !baseConvention->isAveraging()) {
-        DLOG("Creating a CommodityAverageBasisPriceCurve.");
-        populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, index, basePts, baseFec,
-                                                       config.addBasis());
-    } else if ((basisConvention->isAveraging() && baseConvention->isAveraging()) ||
-               (!basisConvention->isAveraging() && !baseConvention->isAveraging())) {
-        DLOG("Creating a CommodityBasisPriceCurve.");
-        populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index, basePts, baseFec, config.addBasis(),
-                                                config.monthOffset());
+    if (basisConvention->isAveraging()) {
+        // We are building a curve that will be used to return an average price.
+        if (!baseConvention->isAveraging() && config.averageBase()) {
+            DLOG("Creating a CommodityAverageBasisPriceCurve.");
+            populateCurve<CommodityAverageBasisPriceCurve>(asof, basisData, basisFec, index,
+                basePts, baseFec, config.addBasis());
+        } else {
+            // Either 1) base convention is not averaging and config.averageBase() is false or 2) the base convention 
+            // is averaging. Either way, we build a CommodityBasisPriceCurve.
+            DLOG("Creating a CommodityBasisPriceCurve for an average price curve.");
+            populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index, basePts,
+                baseFec, config.addBasis(), config.monthOffset());
+        }
     } else {
-        QL_FAIL("A commodity basis curve with non-averaging basis and averaging base is not valid.");
+        // We are building a curve that will be used to return a price on a single date.
+        QL_REQUIRE(!baseConvention->isAveraging(), "A commodity basis curve with non-averaging" <<
+            " basis and averaging base is not valid.");
+
+        DLOG("Creating a CommodityBasisPriceCurve.");
+        populateCurve<CommodityBasisPriceCurve>(asof, basisData, basisFec, index, basePts,
+            baseFec, config.addBasis(), config.monthOffset());
     }
 
     LOG("CommodityCurve: finished building commodity basis curve.");
 }
 
+// Allow for more readable code in method below.
+template<class I> using Crv = QuantExt::PiecewisePriceCurve<I, QuantExt::IterativeBootstrap>;
+template<class C> using BS = QuantExt::IterativeBootstrap<C>;
+
+void CommodityCurve::buildPiecewiseCurve(const Date& asof, const CommodityCurveConfig& config,
+    const Conventions& conventions, const Loader& loader,
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves) {
+
+    LOG("CommodityCurve: start building commodity piecewise curve.");
+
+    // We store the instruments in a map. The key is the instrument's pillar date. The segments are ordered in 
+    // priority so if we encounter the same pillar date later, we ignore it with a debug log.
+    map<Date, boost::shared_ptr<Helper>> mpInstruments;
+    const auto& priceSegments = config.priceSegments();
+    QL_REQUIRE(!priceSegments.empty(), "CommodityCurve: need at least one price segment to build piecewise curve.");
+    for (const auto& kv : priceSegments) {
+        if (kv.second.type() != PriceSegment::Type::OffPeakPowerDaily) {
+            addInstruments(asof, loader, config.curveID(), config.currency(), kv.second,
+                conventions, commodityCurves, mpInstruments);
+        } else {
+            addOffPeakPowerInstruments(asof, loader, config.curveID(), kv.second, conventions, mpInstruments);
+        }
+    }
+
+    // Populate the vector of helpers.
+    vector<boost::shared_ptr<Helper>> instruments;
+    instruments.reserve(mpInstruments.size());
+    for (const auto& kv : mpInstruments) {
+        instruments.push_back(kv.second);
+    }
+
+    // Use bootstrap configuration if provided.
+    BootstrapConfig bc;
+    if (config.bootstrapConfig()) {
+        bc = *config.bootstrapConfig();
+    }
+    Real acc = bc.accuracy();
+    Real globalAcc = bc.globalAccuracy();
+    bool noThrow = bc.dontThrow();
+    Size maxAttempts = bc.maxAttempts();
+    Real maxF = bc.maxFactor();
+    Real minF = bc.minFactor();
+    Size noThrowSteps = bc.dontThrowSteps();
+
+    // Create curve based on interpolation method provided.
+    Currency ccy = parseCurrency(config.currency());
+    if (interpolationMethod_ == "Linear") {
+        BS<Crv<Linear>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<Linear>>(asof, instruments, dayCounter_, ccy, Linear(), bs);
+    } else if (interpolationMethod_ == "LogLinear") {
+        BS<Crv<QuantLib::LogLinear>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantLib::LogLinear>>(asof, instruments,
+            dayCounter_, ccy, QuantLib::LogLinear(), bs);
+    } else if (interpolationMethod_ == "Cubic") {
+        BS<Crv<QuantLib::Cubic>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantLib::Cubic>>(asof, instruments,
+            dayCounter_, ccy, QuantLib::Cubic(), bs);
+    } else if (interpolationMethod_ == "LinearFlat") {
+        BS<Crv<QuantExt::LinearFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantExt::LinearFlat>>(asof, instruments,
+            dayCounter_, ccy, QuantExt::LinearFlat(), bs);
+    } else if (interpolationMethod_ == "LogLinearFlat") {
+        BS<Crv<QuantExt::LogLinearFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantExt::LogLinearFlat>>(asof, instruments,
+            dayCounter_, ccy, QuantExt::LogLinearFlat(), bs);
+    } else if (interpolationMethod_ == "CubicFlat") {
+        BS<Crv<QuantExt::CubicFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<QuantExt::CubicFlat>>(asof, instruments,
+            dayCounter_, ccy, QuantExt::CubicFlat(), bs);
+    } else if (interpolationMethod_ == "BackwardFlat") {
+        BS<Crv<BackwardFlat>> bs(acc, globalAcc, noThrow, maxAttempts, maxF, minF, noThrowSteps);
+        commodityPriceCurve_ = boost::make_shared<Crv<BackwardFlat>>(asof, instruments,
+            dayCounter_, ccy, BackwardFlat(), bs);
+    } else {
+        QL_FAIL("The interpolation method, " << interpolationMethod_ << ", is not supported.");
+    }
+
+    LOG("CommodityCurve: finished building commodity piecewise curve.");
+}
+
 vector<boost::shared_ptr<CommodityForwardQuote>>
-CommodityCurve::getQuotes(const Date& asof, const CommodityCurveConfig& config, const Loader& loader) {
+CommodityCurve::getQuotes(const Date& asof, const string& configId, const vector<string>& quotes,
+    const Loader& loader, bool filter) {
 
     LOG("CommodityCurve: start getting configured commodity quotes.");
 
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
-    regexQuotes_ = false;
-    for (Size i = 0; i < config.fwdQuotes().size(); i++) {
-        if ((regexQuotes_ = config.fwdQuotes()[i].find("*") != string::npos)) {
-            QL_REQUIRE(i == 0 && config.fwdQuotes().size() == 1,
-                       "Wild card config, " << config.curveID() << ", should have exactly one quote.");
-            DLOG("Regular expression, '" << config.fwdQuotes()[0] << "', specified for forward quotes"
-                                         << " for commodity curve " << config.curveID());
-            break;
-        }
-    }
-
-    // If we find a regex in forward quotes, check there is only one and initialise the regex
-    regex reg;
-    if (regexQuotes_)
-        reg = regex(boost::replace_all_copy(config.fwdQuotes()[0], "*", ".*"));
+    auto wildcard = getUniqueWildcard(quotes);
+    regexQuotes_ = wildcard != boost::none;
 
     // Add the relevant forward quotes to the result vector
     vector<boost::shared_ptr<CommodityForwardQuote>> result;
@@ -378,14 +513,27 @@ CommodityCurve::getQuotes(const Date& asof, const CommodityCurveConfig& config, 
             boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(md);
 
             // Check if the quote is requested by the config and if it isn't continue to the next quote
-            if (!regexQuotes_) {
+            if (!wildcard) {
                 vector<string>::const_iterator it =
-                    find(config.fwdQuotes().begin(), config.fwdQuotes().end(), q->name());
-                if (it == config.fwdQuotes().end())
+                    find(quotes.begin(), quotes.end(), q->name());
+                if (it == quotes.end())
                     continue;
             } else {
-                if (!regex_match(q->name(), reg))
+                if (!(*wildcard).matches(q->name()))
                     continue;
+            }
+
+            // If filter is true, remove tenor based quotes and quotes with expiry before asof.
+            if (filter) {
+                if (q->tenorBased()) {
+                    TLOG("Skipping tenor based quote, " << q->name() << ".");
+                    continue;
+                }
+                if (q->expiryDate() < asof) {
+                    TLOG("Skipping quote because its expiry date, " << io::iso_date(q->expiryDate())
+                        << ", is before the market date " << io::iso_date(asof));
+                    continue;
+                }
             }
 
             // If we make it here, the quote is relevant.
@@ -397,6 +545,271 @@ CommodityCurve::getQuotes(const Date& asof, const CommodityCurveConfig& config, 
     LOG("CommodityCurve: finished getting configured commodity quotes.");
 
     return result;
+}
+
+void CommodityCurve::addInstruments(const Date& asof, const Loader& loader, const string& configId,
+    const string& currency, const PriceSegment& priceSegment, const Conventions& conventions,
+    const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
+    map<Date, boost::shared_ptr<Helper>>& instruments) {
+
+    using PST = PriceSegment::Type;
+    using AD = CommodityFutureConvention::AveragingData;
+    PST type = priceSegment.type();
+
+    // Pre-populate some variables if averaging segment.
+    boost::shared_ptr<CommodityFutureConvention> convention;
+    AD ad;
+    boost::shared_ptr<CommodityIndex> index;
+    boost::shared_ptr<FutureExpiryCalculator> uFec;
+    if (type == PST::AveragingFuture || type == PST::AveragingSpot || type == PST::AveragingOffPeakPower) {
+
+        // Get the associated averaging commodity future convention.
+        convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+            conventions.get(priceSegment.conventionsId()));
+        QL_REQUIRE(convention, "Convention " << priceSegment.conventionsId() <<
+            " not of expected type CommodityFutureConvention.");
+
+        ad = convention->averagingData();
+        QL_REQUIRE(!ad.empty(), "CommodityCurve: convention " << convention->id() <<
+            " should have non-empty averaging data for piecewise price curve construction.");
+
+        // The commodity index for which we are building a price curve.
+        index = parseCommodityIndex(ad.commodityName(), conventions, false);
+
+        // If referencing a future, we need conventions for the underlying future that is being averaged.
+        if (type == PST::AveragingFuture || type == PST::AveragingOffPeakPower) {
+
+            auto uConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                conventions.get(ad.conventionsId()));
+            QL_REQUIRE(uConvention, "Convention " << priceSegment.conventionsId() <<
+                " not of expected type CommodityFutureConvention.");
+            uFec = boost::make_shared<ConventionsBasedFutureExpiry>(*uConvention);
+
+            if (ad.dailyExpiryOffset() != Null<Natural>() && ad.dailyExpiryOffset() > 0) {
+                QL_REQUIRE(uConvention->contractFrequency() == Daily, "CommodityCurve: the averaging data has" <<
+                    " a positive DailyExpiryOffset (" << ad.dailyExpiryOffset() << ") but the underlying future" <<
+                    " contract frequency is not daily (" << uConvention->contractFrequency() << ").");
+            }
+        }
+
+    }
+
+    // Pre-populate some variables if the price segment is AveragingOffPeakPower.
+    boost::shared_ptr<CommodityIndex> peakIndex;
+    Natural peakHoursPerDay = 16;
+    Calendar peakCalendar;
+    if (type == PST::AveragingOffPeakPower) {
+
+        // Look up the peak price curve in the commodityCurves map
+        const string& ppId = priceSegment.peakPriceCurveId();
+        QL_REQUIRE(!ppId.empty(), "CommodityCurve: AveragingOffPeakPower segment in " <<
+            " curve configuration " << configId << " does not provide a peak price curve ID.");
+        CommodityCurveSpec ccSpec(currency, ppId);
+        DLOG("Looking for peak price curve with id, " << ppId << ", and spec, " << ccSpec << ".");
+        auto itCc = commodityCurves.find(ccSpec.name());
+        QL_REQUIRE(itCc != commodityCurves.end(), "Can't find peak price curve with id " << ppId);
+        auto peakPts = Handle<PriceTermStructure>(itCc->second->commodityPriceCurve());
+
+        // Create the daily peak price index linked to the peak price term structure.
+        peakIndex = parseCommodityIndex(ppId, conventions, false, peakPts);
+
+        // Calendar defining the peak business days.
+        peakCalendar = parseCalendar(priceSegment.peakPriceCalendar());
+
+        // Look up the conventions for the peak price commodity to determine peak hours per day.
+        if (conventions.has(ppId)) {
+            auto peakConvention = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(ppId));
+            if (peakConvention && peakConvention->hoursPerDay() != Null<Natural>()) {
+                peakHoursPerDay = peakConvention->hoursPerDay();
+            }
+        }
+    }
+
+    // Get the relevant quotes
+    auto quotes = getQuotes(asof, configId, priceSegment.quotes(), loader, true);
+
+    // Add an instrument for each relevant quote.
+    for (const auto& quote : quotes) {
+
+        const Date& expiry = quote->expiryDate();
+        switch (type) {
+        case PST::Future:
+            if (expiry == asof) {
+                TLOG("Quote " << quote->name() << " has expiry date " << io::iso_date(expiry) << " equal to asof" <<
+                    " so not adding to instruments. Attempt to add as fixing instead.");
+                addMarketFixing(priceSegment.conventionsId(), expiry, quote->quote()->value(), conventions);
+            } else if (instruments.count(expiry) == 0) {
+                instruments[expiry] = boost::make_shared<FuturePriceHelper>(quote->quote(), expiry);
+            } else {
+                TLOG("Skipping quote, " << quote->name() << ", because its expiry date, " <<
+                    io::iso_date(expiry) << ", is already in the instrument set.");
+            }
+            break;
+
+        // An averaging future referencing an underlying future or spot. Setup is similar.
+        case PST::AveragingFuture:
+        case PST::AveragingSpot:
+        case PST::AveragingOffPeakPower: {
+
+            // Determine the calculation period.
+            using ADCP = AD::CalculationPeriod;
+            Date start;
+            Date end;
+            if (ad.period() == ADCP::ExpiryToExpiry) {
+
+                auto fec = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
+                end = fec->nextExpiry(true, expiry);
+                if (end != expiry) {
+                    WLOG("Calculated expiry date, " << io::iso_date(end) << ", does not equal quote's expiry date "
+                        << io::iso_date(expiry) << ". Proceed with quote's expiry.");
+                }
+                start = fec->priorExpiry(false, end) + 1;
+
+            } else if (ad.period() == ADCP::PreviousMonth) {
+
+                end = Date::endOfMonth(expiry - 1 * Months);
+                start = Date(1, end.month(), end.year());
+            }
+
+            boost::shared_ptr<Helper> helper;
+            if (type == PST::AveragingOffPeakPower) {
+                TLOG("Building average off-peak power helper from quote, " << quote->name() << ".");
+                helper = boost::make_shared<AverageOffPeakPowerHelper>(quote->quote(), index, start,
+                    end, uFec, peakIndex, peakCalendar, peakHoursPerDay);
+            } else {
+                TLOG("Building average future price helper from quote, " << quote->name() << ".");
+                helper = boost::make_shared<AverageFuturePriceHelper>(quote->quote(), index, start, end, uFec,
+                    ad.pricingCalendar(), ad.deliveryRollDays(), ad.futureMonthOffset(), ad.useBusinessDays(),
+                    ad.dailyExpiryOffset());
+            }
+
+            // Only add to instruments if an instrument with the same pillar date is not there already.
+            Date pillar = helper->pillarDate();
+            if (instruments.count(pillar) == 0) {
+                instruments[pillar] = helper;
+            } else {
+                TLOG("Skipping quote, " << quote->name() << ", because an instrument with its pillar date, " <<
+                    io::iso_date(pillar) << ", is already in the instrument set.");
+            }
+            break;
+        }
+
+        default:
+            QL_FAIL("CommodityCurve: unrecognised price segment type.");
+            break;
+        }
+    }
+}
+
+void CommodityCurve::addOffPeakPowerInstruments(const Date& asof, const Loader& loader, const string& configId,
+    const PriceSegment& priceSegment, const Conventions& conventions,
+    map<Date, boost::shared_ptr<Helper>>& instruments) {
+
+    // Check that we have been called with the expected segment type.
+    using PST = PriceSegment::Type;
+    QL_REQUIRE(priceSegment.type() == PST::OffPeakPowerDaily, "Expecting a price segment type of OffPeakPowerDaily.");
+
+    // Check we have a commodity future convention for the price segment.
+    const string& convId = priceSegment.conventionsId();
+    auto p = conventions.get(convId, Convention::Type::CommodityFuture);
+    QL_REQUIRE(p.first, "Could not get conventions with id " << convId << " for OffPeakPowerDaily price segment" <<
+        " in curve configuration " << configId << ".");
+    auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(p.second);
+
+    // Check that the commodity future convention has off-peak information for the name.
+    const auto& oppIdxData = convention->offPeakPowerIndexData();
+    QL_REQUIRE(oppIdxData, "Conventions with id " << convId << " for OffPeakPowerDaily price segment" <<
+        " should have an OffPeakPowerIndexData section.");
+    Real offPeakHours = oppIdxData->offPeakHours();
+    TLOG("Off-peak hours is " << offPeakHours);
+    const Calendar& peakCalendar = oppIdxData->peakCalendar();
+
+    // Check that the price segment has off-peak daily section.
+    const auto& opd = priceSegment.offPeakDaily();
+    QL_REQUIRE(opd, "The OffPeakPowerDaily price segment for curve configuration " << configId <<
+        " should have an OffPeakDaily section.");
+
+    // Get all the peak and off-peak quotes that we have and store them in a map. The map key is the expiry date and 
+    // the map value is a pair of values the first being the off-peak value for that expiry and the second being the 
+    // peak value for that expiry. We only need the peak portion to form the quote on peakCalendar holidays. We need 
+    // the off-peak portion always.
+    map<Date, pair<Real, Real>> quotes;
+
+    auto opqs = getQuotes(asof, configId, opd->offPeakQuotes(), loader, true);
+    for (const auto& q : opqs) {
+        Real value = q->quote()->value();
+        Date expiry = q->expiryDate();
+        if (quotes.count(expiry) != 0) {
+            TLOG("Already have off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+        } else {
+            TLOG("Adding off-peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
+            quotes[expiry] = make_pair(value, Null<Real>());
+        }
+    }
+
+    auto pqs = getQuotes(asof, configId, opd->peakQuotes(), loader, true);
+    for (const auto& q : pqs) {
+        Real value = q->quote()->value();
+        Date expiry = q->expiryDate();
+        auto it = quotes.find(expiry);
+        if (it == quotes.end()) {
+            TLOG("Have no off-peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+        } else if (it->second.second != Null<Real>()) {
+            TLOG("Already have a peak quote with expiry " << io::iso_date(expiry) << " so skipping " << q->name());
+        } else {
+            TLOG("Adding peak quote " << q->name() << ": " << io::iso_date(expiry) << "," << value);
+            it->second.second = value;
+        }
+    }
+
+    // Now, use the quotes to create the future instruments in the curve.
+    for (const auto& kv : quotes) {
+
+        // If the expiry is already in the instrument set, we skip it.
+        const Date& expiry = kv.first;
+        if (instruments.count(expiry) != 0) {
+            TLOG("Skipping expiry " << io::iso_date(expiry) << " because it is already in the instrument set.");
+            continue;
+        }
+
+        // If the expiry is equal to the asof, we add fixings.
+        if (expiry == asof) {
+            TLOG("The off-peak power expiry date " << io::iso_date(expiry) << " is equal to asof" <<
+                " so not adding to instruments. Attempt to add fixing(s) instead.");
+            if (peakCalendar.isHoliday(expiry) && kv.second.second == Null<Real>()) {
+                DLOG("The peak portion of the quote on holiday " << io::iso_date(expiry) <<
+                    " is missing so can't add fixings.");
+            } else {
+                // Add the off-peak and if necessary peak fixing
+                addMarketFixing(oppIdxData->offPeakIndex(), expiry, kv.second.first, conventions);
+                if (peakCalendar.isHoliday(expiry))
+                    addMarketFixing(oppIdxData->peakIndex(), expiry, kv.second.second, conventions);
+            }
+            continue;
+        }
+
+        // Determine the quote that we will use in the future instrument for this expiry.
+        Real quote = 0.0;
+        if (peakCalendar.isHoliday(expiry)) {
+            Real peakValue = kv.second.second;
+            if (peakValue == Null<Real>()) {
+                DLOG("The peak portion of the quote on holiday " << io::iso_date(expiry) << " is missing so skip.");
+                continue;
+            } else {
+                Real offPeakValue = kv.second.first;
+                quote = (offPeakHours * offPeakValue + (24.0 - offPeakHours) * peakValue) / 24.0;
+                TLOG("The quote on holiday " << io::iso_date(expiry) << " is " << quote << ". (off-peak,peak) is" <<
+                    " (" << offPeakValue << "," << peakValue << ").");
+            }
+        } else {
+            quote = kv.second.first;
+            TLOG("The quote on business day " << io::iso_date(expiry) << " is the off-peak value " << quote << ".");
+        }
+
+        // Add the future helper for this expiry.
+        instruments[expiry] = boost::make_shared<FuturePriceHelper>(quote, expiry);
+
+    }
 }
 
 } // namespace data

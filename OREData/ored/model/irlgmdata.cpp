@@ -24,8 +24,8 @@ namespace ore {
 namespace data {
 
 void IrLgmData::fromXML(XMLNode* node) {
-    ccy_ = XMLUtils::getAttribute(node, "ccy");
-    LOG("LGM with attribute (ccy) = " << ccy_);
+    qualifier_ = XMLUtils::getAttribute(node, "ccy");
+    LOG("LGM with attribute (ccy) = " << qualifier_);
 
     // Calibration Swaptions
 
@@ -34,11 +34,11 @@ void IrLgmData::fromXML(XMLNode* node) {
     optionExpiries() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
     optionTerms() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Terms", false);
     QL_REQUIRE(optionExpiries().size() == optionTerms().size(),
-               "vector size mismatch in swaption expiries/terms for ccy " << ccy_);
+               "vector size mismatch in swaption expiries/terms for ccy " << qualifier_);
     optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
     if (optionStrikes().size() > 0) {
         QL_REQUIRE(optionStrikes().size() == optionExpiries().size(),
-                   "vector size mismatch in swaption expiries/strikes for ccy " << ccy_);
+                   "vector size mismatch in swaption expiries/strikes for ccy " << qualifier_);
     } else // Default: ATM
         optionStrikes().resize(optionExpiries().size(), "ATM");
 
@@ -52,7 +52,7 @@ void IrLgmData::fromXML(XMLNode* node) {
 
 XMLNode* IrLgmData::toXML(XMLDocument& doc) {
     XMLNode* node = LgmData::toXML(doc);
-    XMLUtils::addAttribute(doc, node, "ccy", ccy_);
+    XMLUtils::addAttribute(doc, node, "ccy", qualifier_);
 
     // swaption calibration
     XMLNode* calibrationSwaptionsNode = XMLUtils::addChild(doc, node, "CalibrationSwaptions");

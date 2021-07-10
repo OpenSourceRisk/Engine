@@ -18,6 +18,7 @@
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <ql/errors.hpp>
@@ -29,35 +30,6 @@ namespace data {
 
 // check if map has an entry for the given id
 template <class T> bool has(const string& id, const map<string, boost::shared_ptr<T>>& m) { return m.count(id) == 1; }
-
-// utility function for getting a value from a map, throwing if it is not present
-template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) {
-    auto it = m.find(id);
-    QL_REQUIRE(it != m.end(), "no curve id for " << id);
-    return it->second;
-}
-
-// utility function for parsing a node of name "parentName" and decoding all
-// child elements, storing the resulting config in the map
-template <class T>
-void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m) {
-
-    XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
-    if (parentNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
-             child = XMLUtils::getNextSibling(child, childName)) {
-            boost::shared_ptr<T> curveConfig(new T());
-            try {
-                curveConfig->fromXML(child);
-                const string& id = curveConfig->curveID();
-                m[id] = curveConfig;
-                DLOG("Added curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing curve config: " << ex.what());
-            }
-        }
-    }
-}
 
 // utility function to add a set of nodes from a given map of curve configs
 template <class T>
@@ -87,6 +59,52 @@ void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& con
     // For each config in configs, add its quotes to the set
     for (auto m : configs) {
         quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
+    }
+}
+
+template <class T>
+void CurveConfigurations::parseNode(XMLNode* node, const char* parentName, const char* childName,
+                                    map<string, boost::shared_ptr<T>>& m) {
+
+    XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
+    if (parentNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
+             child = XMLUtils::getNextSibling(child, childName)) {
+            boost::shared_ptr<T> curveConfig(new T());
+            try {
+                curveConfig->fromXML(child);
+                const string& id = curveConfig->curveID();
+                m[id] = curveConfig;
+                DLOG("Added curve config with ID = " << id);
+            } catch (std::exception& ex) {
+                string id = "(unknown curve id)";
+                try {
+                    // try to get the curve id for which an error was thrown
+                    id = XMLUtils::getChildValue(child, "CurveId", true);
+                    // if we got it, store the error, so that get() can include that information in its error message
+                    parseErrors_[std::make_pair(std::type_index(typeid(T)), id)] =
+                        std::make_pair(string(parentName), ex.what());
+                } catch (...) {
+                }
+                ALOG("Exception parsing curve config under node '" << parentName << "' for curve id '" << id
+                                                                   << "': " << ex.what());
+            }
+        }
+    }
+}
+
+template <class T>
+const boost::shared_ptr<T>& CurveConfigurations::get(const string& id,
+                                                     const map<string, boost::shared_ptr<T>>& m) const {
+    auto it = m.find(id);
+    if (it != m.end())
+        return it->second;
+    auto err = parseErrors_.find(std::make_pair(std::type_index(typeid(T)), id));
+    if (err != parseErrors_.end()) {
+        QL_FAIL("no curve id for '" << id << "' under node '" << err->second.first
+                                    << "' due to parser error: " << err->second.second);
+    } else {
+        QL_FAIL("no curve id for '" << id << "', is the id present in the curve configuration?");
     }
 }
 
@@ -247,6 +265,12 @@ std::set<string> CurveConfigurations::conventions() const {
             conventions.insert(c.second->conventions());
     }
 
+    for (auto& c : fxVolCurveConfigs_) {
+        if (c.second->conventionsID() != "") {
+            conventions.insert(c.second->conventionsID());
+        }
+    }
+
     return conventions;
 }
 
@@ -257,6 +281,61 @@ set<string> CurveConfigurations::yieldCurveConfigIds() {
         curves.insert(yc.first);
 
     return curves;
+}
+
+namespace {
+template <typename T>
+void addRequiredCurveIds(const std::string& curveId, const std::map<std::string, boost::shared_ptr<T>>& configs,
+                         std::map<CurveSpec::CurveType, std::set<string>>& result) {
+    auto c = configs.find(curveId);
+    if (c != configs.end()) {
+        auto r = c->second->requiredCurveIds();
+        result.insert(r.begin(), r.end());
+    }
+}
+} // namespace
+
+std::map<CurveSpec::CurveType, std::set<string>>
+CurveConfigurations::requiredCurveIds(const CurveSpec::CurveType& type, const std::string& curveId) const {
+    std::map<CurveSpec::CurveType, std::set<string>> result;
+    if (type == CurveSpec::CurveType::Yield)
+        addRequiredCurveIds(curveId, yieldCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::FXVolatility)
+        addRequiredCurveIds(curveId, fxVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::SwaptionVolatility)
+        addRequiredCurveIds(curveId, swaptionVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::YieldVolatility)
+        addRequiredCurveIds(curveId, yieldVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CapFloorVolatility)
+        addRequiredCurveIds(curveId, capFloorVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Default)
+        addRequiredCurveIds(curveId, defaultCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CDSVolatility)
+        addRequiredCurveIds(curveId, cdsVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::BaseCorrelation)
+        addRequiredCurveIds(curveId, baseCorrelationCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Inflation)
+        addRequiredCurveIds(curveId, inflationCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::InflationCapFloorVolatility)
+        addRequiredCurveIds(curveId, inflationCapFloorVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Equity)
+        addRequiredCurveIds(curveId, equityCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::EquityVolatility)
+        addRequiredCurveIds(curveId, equityVolCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::Security)
+        addRequiredCurveIds(curveId, securityConfigs_, result);
+    else if (type == CurveSpec::CurveType::FX)
+        addRequiredCurveIds(curveId, fxSpotConfigs_, result);
+    else if (type == CurveSpec::CurveType::Commodity)
+        addRequiredCurveIds(curveId, commodityCurveConfigs_, result);
+    else if (type == CurveSpec::CurveType::CommodityVolatility)
+        addRequiredCurveIds(curveId, commodityVolatilityConfigs_, result);
+    else if (type == CurveSpec::CurveType::Correlation)
+        addRequiredCurveIds(curveId, correlationCurveConfigs_, result);
+    else {
+        QL_FAIL("CurveConfigurations::requiredCurveIds(): unhandled curve spec type");
+    }
+    return result;
 }
 
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
@@ -397,6 +476,18 @@ CurveConfigurations::correlationCurveConfig(const string& curveID) const {
 
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
+
+    // Load global settings
+    if (auto tmp = XMLUtils::getChildNode(node, "ReportConfiguration")) {
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "EquityVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigEqVols_.fromXML(tmp3);
+        }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "FXVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigFxVols_.fromXML(tmp3);
+        }
+    }
 
     // Load YieldCurves, FXVols, etc, etc
     parseNode(node, "YieldCurves", "YieldCurve", yieldCurveConfigs_);

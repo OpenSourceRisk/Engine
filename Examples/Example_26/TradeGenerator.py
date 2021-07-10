@@ -47,7 +47,7 @@ oisFile = "Input/ois_portfolio.xml"
 EURxoisFile = r"Input/EUR_xois_portfolio.xml"
 USDxoisFile = r"Input/USD_xois_portfolio.xml"
 
-convetions_file = "../Input/conventions.xml"
+conventions_file = "../Input/conventions.xml"
 curve_config_file = "../Input/curveconfig.xml"
 
 def debugPrint(line):
@@ -193,7 +193,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                     isResettable = True if (isResettableNode.text=="Y") else False
                     flatIndexIsResettableNode = convention.find("FlatIndexIsResettable")
                     flatIndexIsResettable = True if (flatIndexIsResettableNode.text=="Y") else False
-                if(payer):
+                if (payer):
                     index = convention.find("FlatIndex").text
                     currency = flatCCY
                     tenor = flatTenor
@@ -232,15 +232,29 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 maturity = details [5]
                 convention = basisConventions[curve]
                 calendar = currency
-                tenor = curve.split("-")[3]
+                shortPayTenor = convention.find("ShortPayTenor")
                 fixingDays = getFixingDaysForCCY(currency)
                 spotLag = fixingDays
-                if(payer):
+                if (payer):
                     index = convention.find("ShortIndex").text
+                    if shortPayTenor is not None:
+                        tenor = shortPayTenor.text
+                    else:
+                        tenor = index.split("-")[2]
+                        shortPayTenor = tenor
                     spread = marketData[tradeQuote]
                 else:
                     index = convention.find("LongIndex").text
+                    tenor = index.split("-")[2]
                     spread = "0"
+
+                if (shortPayTenor is not None) and payer:
+                    hasSubPeriods = "true" if shortPayTenor > tenor else "false"
+                    subPeriodsCouponType =  convention.find("SubPeriodsCouponType").text \
+                        if convention.find("SubPeriodsCouponType") is not None else "Compounding"
+                    isAveraged = "true" if subPeriodsCouponType == "Average" else "false"
+                    includeSpread = convention.find("IncludeSpread").text \
+                        if convention.find("IncludeSpread") is not None else "false"
             dayCounter = currencyDaycountConvention(currency)
         else:
             spotLag = details[3][0:-1]
@@ -272,7 +286,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
             maturity = details[5]
 
 
-    except:
+    except Exception as e:
         debugPrint("Error generating floating leg for " + tradeQuote + " - " + curve)
         return False
     if (currency != "EUR"):
@@ -296,6 +310,16 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
     legroot.find("FloatingLegData/Index").text = index
     legroot.find("FloatingLegData/FixingDays").text = str(fixingDays)
     legroot.find("FloatingLegData/Spreads/Spread").text = spread
+
+    if tradeType == "Tenor Basis Swap" and payer:
+        floatingLegData = legroot.find("FloatingLegData")
+        floatingLegData.append(ET.Element("HasSubPeriods"))
+        floatingLegData.append(ET.Element("IsAveraged"))
+        floatingLegData.append(ET.Element("IncludeSpread"))
+
+        floatingLegData.find("HasSubPeriods").text = hasSubPeriods
+        floatingLegData.find("IsAveraged").text = isAveraged
+        floatingLegData.find("IncludeSpread").text = includeSpread
 
     # scheduledata
     # rules
@@ -414,7 +438,6 @@ def getFixingDaysForCCY(currency):
 
 
 def CreateTrade(tradeType, tradeQuote, curve, ois):
-
     details = tradeQuote.split("/")
 
     if tradeType == "Swap":
@@ -559,7 +582,6 @@ def CreateTrade(tradeType, tradeQuote, curve, ois):
 
             addTradeToPortfolio(newRoot, ois)
 
-
         except Exception as e:
             debugPrint("Failed to append trade")
         return
@@ -600,9 +622,8 @@ def CreateTrade(tradeType, tradeQuote, curve, ois):
 importMarketData(marketDataInputFile)
 
 
-conventions = ET.parse(convetions_file)
+conventions = ET.parse(conventions_file)
 conventions = conventions.getroot()
-
 
 for conv in conventions:
     type = conv.tag
@@ -625,7 +646,7 @@ root = configs.getroot()
 yield_curves = root.find('YieldCurves')
 
 
-for child in yield_curves.getchildren():
+for child in list(yield_curves):
     currentCurve = child.find("CurveId").text
     if curveID == currentCurve or curveID == 'all':
         types = child.findall(".//Simple")
@@ -633,15 +654,14 @@ for child in yield_curves.getchildren():
         for quoteType in types:
             conventionID = quoteType.find("Conventions").text
             type = quoteType.find("Type").text
-            quotes = quoteType.find("Quotes").getchildren()
+            quotes = list(quoteType.find("Quotes"))
             for quote in quotes:
-
                 CreateTrade(type,quote.text,quoteType.find(".//Conventions").text,ois=True)
         types = child.findall(".//CrossCurrency")
         for quoteType in types:
             conventionID = quoteType.find("Conventions").text
             type = quoteType.find("Type").text
-            quotes = quoteType.find("Quotes").getchildren()
+            quotes = list(quoteType.find("Quotes"))
             for quote in quotes:
 
                 CreateTrade(type,quote.text,quoteType.find(".//Conventions").text,ois=False)

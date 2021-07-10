@@ -50,9 +50,12 @@ public:
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    std::string notionalCurrency() const override;
 
     //! Add underlying index names
-    std::map<AssetClass, std::set<std::string>> underlyingIndices() const override;
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! Settlement Type can be set to "Cash" for NDF. Default value is "Physical"
     const string& settlement() const { return settlement_; }
@@ -65,8 +68,10 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<LegData>& legData() { return legData_; }
+    const vector<LegData>& legData() const { return legData_; }
     //@}
+
+    const std::map<std::string,boost::any>& additionalData() const override;
 
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
@@ -74,6 +79,9 @@ protected:
 
 private:
     string settlement_;
+    bool isXCCY_;
+    bool isResetting_;
+    Size notionalTakenFromLeg_;
 };
 } // namespace data
 } // namespace ore

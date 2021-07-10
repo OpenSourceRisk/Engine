@@ -87,17 +87,34 @@ boost::shared_ptr<IborIndex> parseIborIndex(
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,
                        const boost::shared_ptr<Convention>& c = nullptr);
 
-//! Return true if the \p indexName is that of a generic index, otherwise false
+//! Return true if the \p indexName is that of a generic ibor index, otherwise false
 /*!
     \ingroup utilities
 */
-bool isGenericIndex(const string& indexName);
+bool isGenericIborIndex(const string& indexName);
 
-//! Return true if the \p indexName is that of an InflationIndex, otherwise false
+/*! Returns true as the first element in the pair if the \p indexName is that of an InflationIndex. The second element 
+    in the pair is an instance of the inflation index. If \p indexName is not an inflation index, the first element in 
+    the pair is \c false and the second element is a \c nullptr.
+
+    If inflation indices have been set up via ZeroInflationIndex entries in the Conventions, the \p conventions
+    should be passed here. If not, the default \c nullptr parameter will be sufficient.
+
+    \ingroup utilities
+*/
+std::pair<bool, boost::shared_ptr<QuantLib::ZeroInflationIndex>> isInflationIndex(const std::string& indexName,
+    const boost::shared_ptr<Conventions>& conventions = nullptr);
+
+//! Return true if the \p indexName is that of an EquityIndex, otherwise false
 /*!
     \ingroup utilities
 */
-bool isInflationIndex(const std::string& indexName);
+bool isEquityIndex(const std::string& indexName);
+
+/*! Return true if the \p indexName is that of an GenericIndex, otherwise false
+    \ingroup utilities
+*/
+bool isGenericIndex(const std::string& indexName);
 
 //! Convert std::string (e.g SP5) to QuantExt::EquityIndex
 /*!
@@ -112,7 +129,8 @@ boost::shared_ptr<QuantExt::EquityIndex> parseEquityIndex(const string& s);
 boost::shared_ptr<SwapIndex>
 parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
                const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>(),
-               boost::shared_ptr<Convention> convention = nullptr);
+               boost::shared_ptr<IRSwapConvention> irSwapConvention = nullptr,
+               boost::shared_ptr<SwapIndexConvention> swapIndexConvention = nullptr);
 
 //! Convert std::string to QuantLib::ZeroInflationIndex
 /*!
@@ -120,7 +138,8 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
  */
 boost::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, bool isInterpolated = false,
-                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
+                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>(),
+                        const boost::shared_ptr<Conventions>& conventions = nullptr);
 
 //! Convert std::string to QuantExt::BondIndex
 /*!
@@ -138,19 +157,35 @@ boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
     \ingroup utilities
  */
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
-    const std::string& name, const QuantLib::Calendar& cal = QuantLib::NullCalendar(),
+    const std::string& name, bool hasPrefix = true, const QuantLib::Calendar& cal = QuantLib::NullCalendar(),
+    const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>(),
+    const Conventions& conventions = Conventions());
+
+boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
+    const std::string& name, const Conventions& conventions, bool hasPrefix = true,
     const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>());
+
+//! Convert std::string (GENERIC-...) to QuantExt::Index
+/*!
+    \ingroup utilities
+*/
+boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s);
 
 //! Convert std::string to QuantLib::Index
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventions = Conventions());
+boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Conventions>& conventions = nullptr);
 
 //! Return true if the \p indexName is that of an overnight index, otherwise false
 /*! \ingroup utilities
  */
 bool isOvernightIndex(const std::string& indexName, const Conventions& conventions = Conventions());
+
+//! Return true if the \p indexName is that of an bma/sifma index, otherwise false
+/*! \ingroup utilities
+ */
+bool isBmaIndex(const std::string& indexName);
 
 /*! In some cases, we allow multiple external ibor index names to represent the same QuantLib index. This function
    returns the unique index name that we use internally to represent the QuantLib index.

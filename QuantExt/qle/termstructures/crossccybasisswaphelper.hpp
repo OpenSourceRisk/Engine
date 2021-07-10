@@ -60,8 +60,8 @@ public:
                             bool flatIsDomestic = true, boost::optional<QuantLib::Period> flatTenor = boost::none,
                             boost::optional<QuantLib::Period> spreadTenor = boost::none, Real spreadOnFlatLeg = 0.0,
                             Real flatGearing = 1.0, Real spreadGearing = 1.0, const Calendar& flatCalendar = Calendar(),
-                            const Calendar& spreadCalendar = Calendar(), 
-							const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
+                            const Calendar& spreadCalendar = Calendar(),
+                            const std::vector<Natural>& spotFXSettleDaysVec = std::vector<Natural>(),
                             const std::vector<Calendar>& spotFXSettleCalendar = std::vector<Calendar>());
     //! \name RateHelper interface
     //@{

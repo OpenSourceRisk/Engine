@@ -31,7 +31,6 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-namespace {
 class ConstantSpreadSmileSection : public SmileSection {
 public:
     ConstantSpreadSmileSection(const Handle<SwaptionVolatilityStructure>& atm,
@@ -41,20 +40,15 @@ public:
                        atm->volatilityType() == ShiftedLognormal ? atm->shift(optionTime, swapLength) : 0.0),
           atm_(atm), cube_(cube), swapLength_(swapLength), section_(cube_->smileSection(optionTime, swapLength_)),
           atmStrike_(section_->atmLevel()) {
-        registerWith(atm);
-        registerWith(cube);
+        registerWith(atm_);
+        registerWith(cube_);
     }
     Rate minStrike() const { return cube_->minStrike(); }
     Rate maxStrike() const { return cube_->maxStrike(); }
     Rate atmLevel() const { return Null<Real>(); }
 
 protected:
-    Volatility volatilityImpl(Rate strike) const {
-        Real t = exerciseTime();
-        Real s = section_->volatility(strike) - section_->volatility(atmStrike_);
-        Real v = atm_->volatility(t, swapLength_, strike);
-        return v + s;
-    }
+    Volatility volatilityImpl(Rate strike) const;
 
 private:
     const Handle<SwaptionVolatilityStructure> atm_, cube_;
@@ -62,7 +56,6 @@ private:
     const boost::shared_ptr<SmileSection> section_;
     const Real atmStrike_;
 };
-} // anonymous namespace
 
 //! Swaption cube that combines an ATM matrix and vol spreads from a cube
 /*! Notice that the TS has a floating reference date and accesses the source TS only via
@@ -102,20 +95,17 @@ public:
     const Period& maxSwapTenor() const { return atm_->maxSwapTenor(); }
     VolatilityType volatilityType() const { return atm_->volatilityType(); }
     //@}
+    //! \name Observer interface
+    //@{
+    void deepUpdate();
+    //@}
     const Handle<SwaptionVolatilityStructure>& atmVol() { return atm_; }
     const Handle<SwaptionVolatilityStructure>& cube() { return cube_; }
 
 protected:
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const {
-        return boost::make_shared<ConstantSpreadSmileSection>(atm_, cube_, optionTime, swapLength);
-    }
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const;
 
-    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
-        if (strike == Null<Real>())
-            return atm_->volatility(optionTime, swapLength, 0.0);
-        else
-            return smileSectionImpl(optionTime, swapLength)->volatility(strike);
-    }
+    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const;
 
 private:
     Handle<SwaptionVolatilityStructure> atm_, cube_;

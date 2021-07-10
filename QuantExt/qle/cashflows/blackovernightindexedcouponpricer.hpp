@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
@@ -29,26 +30,56 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Black overnight coupon pricer
+//! Black compounded overnight coupon pricer
+/* The methods that are implemented here to price capped / floored compounded ON coupons are
+   highly experimental and ad-hoc. As soon as a market best practice has evolved, the pricer
+   should be revised. */
 class BlackOvernightIndexedCouponPricer : public CappedFlooredOvernightIndexedCouponPricer {
 public:
     using CappedFlooredOvernightIndexedCouponPricer::CappedFlooredOvernightIndexedCouponPricer;
-    virtual void initialize(const FloatingRateCoupon& coupon);
-    Real swapletPrice() const;
-    Rate swapletRate() const;
-    Real capletPrice(Rate effectiveCap) const;
-    Rate capletRate(Rate effectiveCap) const;
-    Real floorletPrice(Rate effectiveFloor) const;
-    Rate floorletRate(Rate effectiveFloor) const;
+    void initialize(const FloatingRateCoupon& coupon) override;
+    Real swapletPrice() const override;
+    Rate swapletRate() const override;
+    Real capletPrice(Rate effectiveCap) const override;
+    Rate capletRate(Rate effectiveCap) const override;
+    Real floorletPrice(Rate effectiveFloor) const override;
+    Rate floorletRate(Rate effectiveFloor) const override;
 
-protected:
-    Real optionletRate(Option::Type optionType, Real effStrike) const;
+private:
+    Real optionletRateGlobal(Option::Type optionType, Real effStrike) const;
+    Real optionletRateLocal(Option::Type optionType, Real effStrike) const;
 
     Real gearing_;
     ext::shared_ptr<IborIndex> index_;
-    Real effectiveIndexFixing_, swapletRate_, fixedAccrualPeriodRatio_;
+    Real effectiveIndexFixing_, swapletRate_;
 
     const CappedFlooredOvernightIndexedCoupon* coupon_;
+};
+
+//! Black averaged overnight coupon pricer
+/* The methods that are implemented here to price capped / floored avergad ON coupons are
+   highly experimental and ad-hoc. As soon as a market best practice has evolved, the pricer
+   should be revised. */
+class BlackAverageONIndexedCouponPricer : public CapFlooredAverageONIndexedCouponPricer {
+public:
+    using CapFlooredAverageONIndexedCouponPricer::CapFlooredAverageONIndexedCouponPricer;
+    void initialize(const FloatingRateCoupon& coupon) override;
+    Real swapletPrice() const override;
+    Rate swapletRate() const override;
+    Real capletPrice(Rate effectiveCap) const override;
+    Rate capletRate(Rate effectiveCap) const override;
+    Real floorletPrice(Rate effectiveFloor) const override;
+    Rate floorletRate(Rate effectiveFloor) const override;
+
+private:
+    Real optionletRateGlobal(Option::Type optionType, Real effStrike) const;
+    Real optionletRateLocal(Option::Type optionType, Real effStrike) const;
+
+    Real gearing_;
+    ext::shared_ptr<IborIndex> index_;
+    Real swapletRate_;
+
+    const CappedFlooredAverageONIndexedCoupon* coupon_;
 };
 
 } // namespace QuantExt

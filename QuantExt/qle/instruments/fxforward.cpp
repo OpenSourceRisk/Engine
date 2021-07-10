@@ -25,14 +25,35 @@ using namespace QuantLib;
 namespace QuantExt {
 
 FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real& nominal2, const Currency& currency2,
-                     const Date& maturityDate, const bool& payCurrency1)
+                     const Date& maturityDate, const bool& payCurrency1, const bool isPhysicallySettled,
+                     const Date& payDate, const Currency& payCcy, const Date& fixingDate,
+                     const boost::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1), currency1_(currency1), nominal2_(nominal2), currency2_(currency2),
-      maturityDate_(maturityDate), payCurrency1_(payCurrency1) {}
+      maturityDate_(maturityDate), payCurrency1_(payCurrency1), isPhysicallySettled_(isPhysicallySettled),
+      payDate_(payDate), payCcy_(payCcy), fxIndex_(fxIndex), fixingDate_(fixingDate) {
+
+    if (payDate_ == Date())
+        payDate_ = maturityDate_;
+
+    if (payCcy_.empty())
+        payCcy_ = currency2_;
+
+    if (fixingDate_ == Date())
+        fixingDate_ = maturityDate_;
+
+    if (!isPhysicallySettled && payDate_ > fixingDate_) {
+        QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
+        QL_REQUIRE(fixingDate_ != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
+        registerWith(fxIndex_);
+    }
+}
 
 FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, const Date& maturityDate,
-                     bool sellingNominal)
+                     bool sellingNominal, const bool isPhysicallySettled, const Date& payDate, const Currency& payCcy,
+                     const Date& fixingDate, const boost::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), maturityDate_(maturityDate),
-      payCurrency1_(sellingNominal) {
+      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate), payCcy_(payCcy),
+      fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(currency1_ == forwardRate.target(), "Currency of nominal1 does not match target (domestic) "
                                                    "currency in the exchange rate.");
@@ -40,19 +61,52 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
     Money otherNominal = forwardRate.exchange(nominal1);
     nominal2_ = otherNominal.value();
     currency2_ = otherNominal.currency();
+
+    if (payDate_ == Date())
+        payDate_ = maturityDate_;
+
+    if (payCcy_.empty())
+        payCcy_ = currency2_;
+
+    if (fixingDate_ == Date())
+        fixingDate_ = maturityDate_;
+
+    if (!isPhysicallySettled && payDate_ > fixingDate_) {
+        QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
+        QL_REQUIRE(fixingDate_ != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
+        registerWith(fxIndex_);
+    }
 }
 
 FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote, const Currency& currency2,
-                     const Date& maturityDate, bool sellingNominal)
+                     const Date& maturityDate, bool sellingNominal, const bool isPhysicallySettled, const Date& payDate,
+                     const Currency& payCcy, const Date& fixingDate,
+                     const boost::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : nominal1_(nominal1.value()), currency1_(nominal1.currency()), currency2_(currency2), maturityDate_(maturityDate),
-      payCurrency1_(sellingNominal) {
+      payCurrency1_(sellingNominal), isPhysicallySettled_(isPhysicallySettled), payDate_(payDate), payCcy_(payCcy),
+      fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(fxForwardQuote->isValid(), "The FX Forward quote is not valid.");
 
     nominal2_ = nominal1_ / fxForwardQuote->value();
+
+    if (payDate_ == Date())
+        payDate_ = maturityDate_;
+
+    if (payCcy_.empty())
+        payCcy_ = currency2_;
+
+    if (fixingDate_ == Date())
+        fixingDate_ = maturityDate_;
+
+    if (!isPhysicallySettled && payDate_ > fixingDate_) {
+        QL_REQUIRE(fxIndex_, "FxForward: no FX index given for non-deliverable forward.");
+        QL_REQUIRE(fixingDate_ != Date(), "FxForward: no FX fixing date given for non-deliverable forward.");
+        registerWith(fxIndex_);
+    }
 }
 
-bool FxForward::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }
+bool FxForward::isExpired() const { return detail::simple_event(payDate_).hasOccurred(); }
 
 void FxForward::setupExpired() const {
     Instrument::setupExpired();
@@ -72,6 +126,11 @@ void FxForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->currency2 = currency2_;
     arguments->maturityDate = maturityDate_;
     arguments->payCurrency1 = payCurrency1_;
+    arguments->isPhysicallySettled = isPhysicallySettled_;
+    arguments->payDate = payDate_;
+    arguments->payCcy = payCcy_;
+    arguments->fxIndex = fxIndex_;
+    arguments->fixingDate = fixingDate_;
 }
 
 void FxForward::fetchResults(const PricingEngine::results* r) const {

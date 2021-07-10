@@ -55,25 +55,31 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                        const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
                        const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
-                       boost::shared_ptr<ScenarioFactory> scenarioFactory, bool continueOnError) {
+                       boost::shared_ptr<ScenarioFactory> scenarioFactory,
+                       std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
+                       std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
+                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                       const IborFallbackConfig& iborFallbackConfig, bool continueOnError) {
 
     LOG("Build Simulation Market");
-    boost::shared_ptr<ScenarioSimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions, Market::defaultConfiguration,
-                                              curveConfigs, todaysMarketParams, continueOnError);
+    boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
+        market, simMarketData, conventions, Market::defaultConfiguration, curveConfigs, todaysMarketParams,
+        continueOnError, false, false, false, iborFallbackConfig);
 
     LOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
     scenarioFactory = scenarioFactory ? scenarioFactory : boost::make_shared<CloneScenarioFactory>(baseScenario);
     boost::shared_ptr<StressScenarioGenerator> scenarioGenerator =
-        boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, scenarioFactory);
+        boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, simMarket, scenarioFactory);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     LOG("Build Engine Factory");
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration;
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket, configurations);
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(engineData, simMarket, configurations, extraEngineBuilders, extraLegBuilders,
+                                          referenceData, iborFallbackConfig);
 
     LOG("Reset and Build Portfolio");
     portfolio->reset();

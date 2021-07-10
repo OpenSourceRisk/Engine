@@ -51,7 +51,7 @@ string convertToString(const Real value) {
     // scientific notation, so we check for really small numbers here and explicitly set
     // to 16 decimal places
     string result;
-    if (abs(value) < 1.0e-6) {
+    if (std::abs(value) < 1.0e-6) {
         std::ostringstream obj1;
         obj1.precision(16);
         obj1 << std::fixed << value;
@@ -244,6 +244,10 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool v
     addChild(doc, n, name, s);
 }
 
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const Period& value) {
+    addChild(doc, n, name, convertToString(value));
+}
+
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* parent, const string& name, const vector<Real>& values) {
     vector<string> strings(values.size());
     std::transform(values.begin(), values.end(), strings.begin(), [](Real x) { return convertToString2(x); });
@@ -272,19 +276,24 @@ string XMLUtils::getChildValue(XMLNode* node, const string& name, bool mandatory
     return child ? getNodeValue(child) : "";
 }
 
-Real XMLUtils::getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory) {
+Real XMLUtils::getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory, double defaultValue) {
     string s = getChildValue(node, name, mandatory);
-    return s == "" ? 0.0 : parseReal(s);
+    return s == "" ? defaultValue : parseReal(s);
 }
 
-int XMLUtils::getChildValueAsInt(XMLNode* node, const string& name, bool mandatory) {
+int XMLUtils::getChildValueAsInt(XMLNode* node, const string& name, bool mandatory, int defaultValue) {
     string s = getChildValue(node, name, mandatory);
-    return s == "" ? 0 : parseInteger(s);
+    return s == "" ? defaultValue : parseInteger(s);
 }
 
-bool XMLUtils::getChildValueAsBool(XMLNode* node, const string& name, bool mandatory) {
+bool XMLUtils::getChildValueAsBool(XMLNode* node, const string& name, bool mandatory, bool defaultValue) {
     string s = getChildValue(node, name, mandatory);
-    return s == "" ? true : parseBool(s);
+    return s == "" ? defaultValue : parseBool(s);
+}
+
+Period XMLUtils::getChildValueAsPeriod(XMLNode* node, const string& name, bool mandatory, const Period& defaultValue) {
+    string s = getChildValue(node, name, mandatory);
+    return s == "" ? defaultValue : parsePeriod(s);
 }
 
 vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names, const string& name, bool mandatory) {

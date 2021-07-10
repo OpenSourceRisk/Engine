@@ -31,6 +31,8 @@
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
+#include <orea/app/xvarunner.hpp>
+#include <orea/cube/cubeinterpretation.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
@@ -73,7 +75,7 @@ public:
     //! build engine factory for a given market from an XML String
     boost::shared_ptr<ore::data::EngineFactory>
     buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
-                                    const std::string& pricingEngineXML);
+                                    const std::string& pricingEngineXML, const bool generateAdditionalResults = false);
 
 protected:
     //! read setup from params_
@@ -85,12 +87,13 @@ protected:
     //! load market conventions
     void getConventions();
     //! load market parameters
-    void getMarketParameters();
+    boost::shared_ptr<TodaysMarketParameters> getMarketParameters();
     //! load reference data
     void getReferenceData();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                                const string& groupName = "setup") const;
+                                                                const string& groupName = "setup",
+                                                                const bool generateAdditionalResults = false) const;
     //! build trade factory
     boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
@@ -98,16 +101,20 @@ protected:
     //! load portfolio from file(s)
     boost::shared_ptr<Portfolio> loadPortfolio();
 
+    //! get the XVA runner
+    virtual boost::shared_ptr<XvaRunner> getXvaRunner();
     //! generate NPV cube
     virtual void generateNPVCube();
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids);
+    virtual void initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids, const Size cubeDepth);
+    //! set depth of NPV cube in cubeDepth_
+    virtual void setCubeDepth(const boost::shared_ptr<ScenarioGeneratorData>& sgd);
     //! build an NPV cube
     virtual void buildNPVCube();
     //! initialise NPV cube generation
-    void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
+    virtual void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
     //! load simMarketData
     boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
     //! load scenarioGeneratorData
@@ -115,6 +122,11 @@ protected:
     //! build CAM
     boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market,
                                                           const bool continueOnCalibrationError);
+    //! load pricing engine data
+    boost::shared_ptr<EngineData> getEngineData(string groupName);
+    //! load cross asset model data
+    boost::shared_ptr<CrossAssetModelData> getCrossAssetModelData();
+
     //! build scenarioGenerator
     virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,
@@ -126,7 +138,7 @@ protected:
     //! load in cube
     virtual void loadCube();
     //! run postProcessor to generate reports from cube
-    void runPostProcessor();
+    virtual void runPostProcessor();
 
     //! run stress tests and write out report
     virtual void runStressTest();
@@ -140,7 +152,7 @@ protected:
     //! write out DIM reports
     void writeDIMReport();
     //! write out cube
-    void writeCube(boost::shared_ptr<NPVCube> cube);
+    void writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeFileParam);
     //! write out scenarioData
     void writeScenarioData();
     //! write out base scenario
@@ -185,8 +197,6 @@ protected:
     getExtraTradeBuilders(const boost::shared_ptr<TradeFactory>& = {}) const {
         return {};
     };
-    //! Get fixing manager
-    virtual boost::shared_ptr<FixingManager> getFixingManager() { return boost::make_shared<FixingManager>(asof_); }
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
@@ -195,6 +205,9 @@ protected:
                                  const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                  const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                                  const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
+    /*! Generate market data (based on the market data available in the loader passed as an argument) and return the
+     * generated data as a new loader, a nullptr can be returned if no data is generated */
+    virtual boost::shared_ptr<Loader> generateMarketData(const boost::shared_ptr<Loader>& loader) { return nullptr; }
 
     Size tab_, progressBarWidth_;
     //! ORE Input parameters
@@ -211,15 +224,17 @@ protected:
     bool parametricVar_;
     bool writeBaseScenario_;
     bool continueOnError_;
+    bool lazyMarketBuilding_;
     std::string inputPath_;
     std::string outputPath_;
 
     boost::shared_ptr<Market> market_;               // T0 market
     boost::shared_ptr<EngineFactory> engineFactory_; // engine factory linked to T0 market
     boost::shared_ptr<Portfolio> portfolio_;         // portfolio linked to T0 market
-    Conventions conventions_;
-    TodaysMarketParameters marketParameters_;
+    boost::shared_ptr<Conventions> conventions_;
+    boost::shared_ptr<TodaysMarketParameters> marketParameters_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
 
     boost::shared_ptr<ScenarioSimMarket> simMarket_; // sim market
     boost::shared_ptr<Portfolio> simPortfolio_;      // portfolio linked to sim market
@@ -227,12 +242,21 @@ protected:
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;
 
-    Size cubeDepth_;
-    boost::shared_ptr<NPVCube> cube_;
+    Size cubeDepth_; // depth of cube_ defined below
+    bool storeFlows_, useCloseOutLag_, useMporStickyDate_, storeSp_;
+
+    boost::shared_ptr<NPVCube> cube_;           // cube to store results on trade level (e.g. NPVs, flows)
+    boost::shared_ptr<NPVCube> nettingSetCube_; // cube to store results on netting set level
+    boost::shared_ptr<NPVCube> cptyCube_; // cube to store results at counterparty level (e.g. survival probability)
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
+    boost::shared_ptr<CubeInterpretation> cubeInterpreter_;
+    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
 
-    ore::data::CurveConfigurations curveConfigs_;
+    //! Populated if a sensitivity analysis is performed.
+    boost::shared_ptr<SensitivityRunner> sensitivityRunner_;
+
+    boost::shared_ptr<DynamicInitialMarginCalculator> dimCalculator_;
 
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }

@@ -61,6 +61,7 @@
       <Name>SP5</Name>
       <Currency>USD</Currency>
       <Strike>2147.56</Strike>
+      <StrikeCurrency>USD</StrikeCurrency>
       <Quantity>775</Quantity>
     </EquityForwardData>
   </Trade>
@@ -125,6 +126,7 @@
       <Name>Lufthansa</Name>
       <Currency>EUR</Currency>
       <Strike>12.24</Strike>
+      <StrikeCurrency>EUR</StrikeCurrency>
       <Quantity>775</Quantity>
     </EquityForwardData>
   </Trade>

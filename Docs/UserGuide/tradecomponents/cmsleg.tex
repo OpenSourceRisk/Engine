@@ -9,7 +9,7 @@ Listing \ref{lst:cmslegdata} shows an example for a leg of type CMS.
       <LegData>
         <LegType>CMS</LegType>
         <Payer>false</Payer>
-        <Currency>GBP</Currency>
+        <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
         </Notionals>
@@ -32,8 +32,8 @@ Listing \ref{lst:cmslegdata} shows an example for a leg of type CMS.
           <Floors>
             <Floor>0.01</Floor>
           </Floors>
+          <NakedOption>false</NakedOption>
         </CMSLegData>
-        <NakedOption>N</NakedOption>
       </LegData>
 \end{minted}
 \caption{CMS leg data}
@@ -49,20 +49,38 @@ Allowable values:  See \ref{tab:indices}, a string on the form CCY-CMS-TENOR, wh
 
 \item Spreads [Optional]: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
   values.
-\item IsInArrears [Optional]:  \emph{true} indicates that  fixing is in arrears, defaults to N
+  
+  Allowable values: Each child spread element can take any real number. The spread is expressed in decimal form, e.g. 0.005 is
+  a spread of 0.5\% or 50 bp. 
+    
+\item IsInArrears [Optional]:  \emph{true} indicates that  fixing is in arrears, 
   i.e. the fixing gap is calculated in relation to the current period
   end date.\\ \emph{false} indicates that  fixing is in advance,
   i.e. the fixing gap is calculated in relation to the previous period
   end date.
+  
+Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
+  
 \item FixingDays [Optional]: This is the fixing gap, i.e. the number of days
   before the period end date an index fixing is taken. Defaults to the index's fixing gap.
+  
+    Allowable values: A non-negative whole number.  Defaults to the fixing days of the Ibor index the swap references if blank or omitted. See defaults per index in Table \ref{tab:fixingdaysdefaults}.
+  
 \item Gearings [Optional]: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
   multiplied by the given factors. The mode of specification is analogous to spreads, see above.
+  
+  If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \emph{1}.
+  
 \item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
 \item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
-\item NakedOption [Optional]: defaults to N, if Y the leg represents only the embedded floor, cap or collar.
-By convention these embedded options are considered long if the leg is a receiver leg, otherwise short.
+\item NakedOption [Optional]: If \emph{true} the leg represents only the embedded floor, cap or collar.
+  By convention the embedded floor (or cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  collar the floor is long and the cap is short if the leg is a receiver leg.
+  
+Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
+
+
 \end{itemize}

@@ -36,8 +36,9 @@ class CapFloor : public Trade {
 public:
     CapFloor() : Trade("CapFloor") {}
     CapFloor(const Envelope& env, const string& longShort, const LegData& leg, const vector<double>& caps,
-             const vector<double>& floors)
-        : Trade("CapFloor", env), longShort_(longShort), legData_(leg), caps_(caps), floors_(floors) {}
+             const vector<double>& floors, const PremiumData& premiumData = {})
+        : Trade("CapFloor", env), longShort_(longShort), legData_(leg), caps_(caps), floors_(floors),
+          premiumData_(premiumData) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -62,6 +63,7 @@ private:
     LegData legData_;
     vector<double> caps_;
     vector<double> floors_;
+    PremiumData premiumData_;
 };
 } // namespace data
 } // namespace ore

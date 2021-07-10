@@ -74,7 +74,8 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
-    QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
+    QL_REQUIRE(isValidFixingDate(fixingDate),
+               "Fixing date " << fixingDate << " is not valid for FxIndex '" << name() << "'");
 
     Date today = Settings::instance().evaluationDate();
 
@@ -104,6 +105,25 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     return inverseIndex_ ? 1.0 / result : result;
 }
 
+Real FxIndex::forecastFixing(const Time& fixingTime) const {
+    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
+
+    // we base the forecast always on the exchange rate (and not on today's
+    // fixing)
+    Real rate;
+    if (!useQuote_) {
+        rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
+    } else {
+        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        rate = fxQuote_->value();
+    }
+    
+    // TODO: Add a time based adjusement for settlement days
+    Real forward = rate * sourceYts_->discount(fixingTime)  /
+        targetYts_->discount(fixingTime);
+    return forward;
+}
+
 Real FxIndex::forecastFixing(const Date& fixingDate) const {
     QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
 
@@ -119,7 +139,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
     // settlement date
-    Date refValueDate = valueDate(Settings::instance().evaluationDate());
+    Date refValueDate = valueDate(fixingCalendar().adjust(Settings::instance().evaluationDate()));
 
     // the fixing is obeying the settlement delay as well
     Date fixingValueDate = valueDate(fixingDate);
@@ -135,6 +155,12 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
                    (sourceYts_->discount(refValueDate) * targetYts_->discount(fixingValueDate));
 
     return forward;
+}
+
+boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
+                                          const Handle<YieldTermStructure>& targetYts) {
+    return boost::make_shared<FxIndex>(familyName_, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_,
+                                       fxQuote, sourceYts, targetYts, inverseIndex_);
 }
 
 } // namespace QuantExt

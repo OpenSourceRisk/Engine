@@ -53,7 +53,7 @@ public:
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
                  const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
-                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
+                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false, const bool isAbsoluteReturn = false);
 
     //! \name CashFlow interface
     //@{
@@ -79,6 +79,8 @@ public:
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     //! total return or price return?
     bool isTotalReturn() const { return isTotalReturn_; }
+    //! absolute return or relative return
+    bool absoluteReturn() const { return isAbsoluteReturn_; }
     //! are dividends scaled (e.g. to account for tax)
     Real dividendFactor() const { return dividendFactor_; }
     //! The date at which the starting equity price is fixed
@@ -127,7 +129,9 @@ protected:
     Real quantity_;
     Date fixingStartDate_;
     Date fixingEndDate_;
+    Natural paymentLag_;
     boost::shared_ptr<FxIndex> fxIndex_;
+    bool isAbsoluteReturn_;
 };
 
 // inline definitions
@@ -153,8 +157,10 @@ public:
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
     EquityLeg& withPaymentDayCounter(const DayCounter& dayCounter);
     EquityLeg& withPaymentAdjustment(BusinessDayConvention convention);
+    EquityLeg& withPaymentLag(Natural paymentLag);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
+    EquityLeg& withAbsoluteReturn(bool);
     EquityLeg& withDividendFactor(Real);
     EquityLeg& withInitialPrice(Real);
     EquityLeg& withInitialPriceIsInTargetCcy(bool);
@@ -170,9 +176,11 @@ private:
     boost::shared_ptr<FxIndex> fxIndex_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
+    Natural paymentLag_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
+    bool absoluteReturn_;
     Real initialPrice_;
     bool initialPriceIsInTargetCcy_;
     Real dividendFactor_;

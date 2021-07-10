@@ -30,8 +30,8 @@ CrossCcySwapEngine::CrossCcySwapEngine(const Currency& ccy1, const Handle<YieldT
                                        const Date& settlementDate, const Date& npvDate, const Date& spotFXSettleDate)
     : ccy1_(ccy1), currency1Discountcurve_(currency1Discountcurve), ccy2_(ccy2),
       currency2Discountcurve_(currency2Discountcurve), spotFX_(spotFX),
-      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate), 
-	  spotFXSettleDate_(spotFXSettleDate) {
+      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate),
+      spotFXSettleDate_(spotFXSettleDate) {
 
     registerWith(currency1Discountcurve_);
     registerWith(currency2Discountcurve_);
@@ -69,6 +69,7 @@ void CrossCcySwapEngine::calculate() const {
                                                            << referenceDate << ")");
         results_.valuationDate = npvDate_;
     }
+
     Date spotFXSettleDate = spotFXSettleDate_;
     if (spotFXSettleDate_ == Date()) {
         spotFXSettleDate = referenceDate;
@@ -78,6 +79,7 @@ void CrossCcySwapEngine::calculate() const {
                                                                            "reference date ("
                                                                         << referenceDate << ")");
     }
+    
     results_.value = 0.0;
     results_.errorEstimate = Null<Real>();
     // - Swap::Results
@@ -118,11 +120,13 @@ void CrossCcySwapEngine::calculate() const {
 
             // Convert to NPV currency if necessary.
             if (arguments_.currencies[legNo] != ccy1_) {
-				Real settleFXRate = spotFX_->value();
-				Real spotFXRate = settleFXRate;
-				if( spotFXSettleDate != referenceDate ) {
-					//Use the parity relation between discount factors and fx rates to compute spotFXRate
-					//Generic formula: fx(T1)/fx(T2) = FwdDF_Quote(T1->T2) / FwdDF_Base(T1->T2), where fx represents the currency ratio Base/Quote
+                // results_.legNPV[legNo] *= spotFX_->value();
+                // results_.legBPS[legNo] *= spotFX_->value();
+				Real spotFXRate = spotFX_->value();
+				if (spotFXSettleDate != referenceDate) {
+					// Use the parity relation between discount factors and fx rates to compute spotFXRate
+					// Generic formula: fx(T1)/fx(T2) = FwdDF_Quote(T1->T2) / FwdDF_Base(T1->T2),
+                    // where fx represents the currency ratio Base/Quote
 					Real ccy1DF = currency1Discountcurve_->discount(spotFXSettleDate);
 					Real ccy2DF = currency2Discountcurve_->discount(spotFXSettleDate);
 					QL_REQUIRE(ccy2DF != 0.0, "Discount Factor associated with currency " << ccy2_

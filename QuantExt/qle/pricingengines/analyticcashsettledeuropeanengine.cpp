@@ -18,6 +18,7 @@
 
 #include <ql/event.hpp>
 #include <ql/exercise.hpp>
+#include <qle/indexes/commodityindex.hpp>
 #include <qle/pricingengines/analyticcashsettledeuropeanengine.hpp>
 
 using QuantLib::close;
@@ -29,6 +30,7 @@ using QuantLib::Null;
 using QuantLib::PricingEngine;
 using QuantLib::Real;
 using QuantLib::Settings;
+using QuantLib::StrikedTypePayoff;
 using QuantLib::Time;
 using QuantLib::VanillaOption;
 using QuantLib::YieldTermStructure;
@@ -63,19 +65,22 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
         // If expiry has occurred, we attempt to establish the payoff amount, if any, and discount it.
         Real payoffAmount = 0.0;
+        Real priceAtExercise = 0.0;
         if (arguments_.automaticExercise) {
             // If we have automatic exercise, we base the payoff on the value of the index on the expiry date.
             QL_REQUIRE(arguments_.underlying, "Expect a valid underlying index when exercise is automatic.");
-            Real indexValue = arguments_.underlying->fixing(expiryDate);
-            payoffAmount = (*arguments_.payoff)(indexValue);
+            priceAtExercise = arguments_.underlying->fixing(expiryDate);
+            payoffAmount = (*arguments_.payoff)(priceAtExercise);
         } else if (arguments_.exercised) {
             // If we have manually exercised, we base the payoff on the value at exercise.
             QL_REQUIRE(arguments_.priceAtExercise != Null<Real>(), "Expect a valid price at exercise when option "
                                                                        << "has been manually exercised.");
-            payoffAmount = (*arguments_.payoff)(arguments_.priceAtExercise);
+            priceAtExercise = arguments_.priceAtExercise;
+            payoffAmount = (*arguments_.payoff)(priceAtExercise);
         } else if (expiryDate == today) {
             // Expiry date is today, not automatic exercise and hasn't been manually exercised - use spot.
-            payoffAmount = (*arguments_.payoff)(bsp_->x0());
+            priceAtExercise = bsp_->x0();
+            payoffAmount = (*arguments_.payoff)(priceAtExercise);
         }
 
         // Discount factor to payment date.
@@ -101,6 +106,16 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
         results_.strikeSensitivity = 0.0;
         results_.itmCashProbability = 0.0;
 
+        // Populate some additional results.
+        results_.additionalResults["spot"] = bsp_->x0();
+        auto payoff = boost::dynamic_pointer_cast<StrikedTypePayoff>(arguments_.payoff);
+        if (payoff)
+            results_.additionalResults["strike"] = payoff->strike();
+        results_.additionalResults["priceAtExercise"] = priceAtExercise;
+        results_.additionalResults["payoffAmount"] = payoffAmount;
+        results_.additionalResults["discountFactor"] = df_tp;
+        results_.additionalResults["timeToExpiry"] = delta_tp;
+
     } else {
 
         // If expiry has not occurred, we use the underlying engine and amend the results to account
@@ -108,11 +123,19 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
 
         // Prepare the underlying engine for the valuation.
         underlyingEngine_.reset();
-        VanillaOption::arguments* underlyingArgs =
-            dynamic_cast<VanillaOption::arguments*>(underlyingEngine_.getArguments());
+        VanillaForwardOption::arguments* underlyingArgs =
+            dynamic_cast<VanillaForwardOption::arguments*>(underlyingEngine_.getArguments());
         QL_REQUIRE(underlyingArgs, "Underlying engine expected to have vanilla option arguments.");
         underlyingArgs->exercise = arguments_.exercise;
         underlyingArgs->payoff = arguments_.payoff;
+
+        // If we have a commodity future index, set the forward date to its expiry to get the right future price 
+        // in the Black formula. If not, just use the expiry date => same result as standard QL engine.
+        if (auto cfi = boost::dynamic_pointer_cast<CommodityFuturesIndex>(arguments_.underlying)) {
+            underlyingArgs->forwardDate = cfi->expiryDate();
+        } else {
+            underlyingArgs->forwardDate = expiryDate;
+        }
         underlyingEngine_.calculate();
 
         // Discount factor from payment date back to expiry date i.e. P(t_e, t_p) when rates are deterministic.
@@ -138,7 +161,12 @@ void AnalyticCashSettledEuropeanEngine::calculate() const {
             results_.thetaPerDay = df_te_tp * underlyingResults->thetaPerDay;
         results_.strikeSensitivity = df_te_tp * underlyingResults->strikeSensitivity;
         results_.itmCashProbability = underlyingResults->itmCashProbability;
+
+        // Take the additional results from the underlying engine and add more.
+        results_.additionalResults = underlyingResults->additionalResults;
+        results_.additionalResults["discountFactorTeTp"] = df_te_tp;
     }
+
 }
 
 } // namespace QuantExt

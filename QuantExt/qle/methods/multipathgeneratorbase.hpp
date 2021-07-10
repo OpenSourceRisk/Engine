@@ -67,6 +67,13 @@ private:
     mutable bool antitheticVariate_;
 };
 
+class MultiPathGeneratorMersenneTwisterAntithetic : public MultiPathGeneratorMersenneTwister {
+public:
+    MultiPathGeneratorMersenneTwisterAntithetic(const boost::shared_ptr<StochasticProcess>& p, const TimeGrid& grid,
+                                                BigNatural seed = 0)
+        : MultiPathGeneratorMersenneTwister(p, grid, seed, true) {}
+};
+
 //! Instantiation of MultiPathGenerator with standard LowDiscrepancy traits
 /*! no Brownian bridge provided, use MultiPathGeneratorSobolBrownianBridge for this,
 for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp

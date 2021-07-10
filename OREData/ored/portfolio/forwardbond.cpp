@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/fixingdates.hpp>
@@ -27,14 +26,18 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <qle/instruments/forwardbond.hpp>
+
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <qle/instruments/forwardbond.hpp>
-
-#include <boost/make_shared.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/daycounters/actual360.hpp>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -52,7 +55,6 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
-    // check data requirements
     QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
     QL_REQUIRE(!bondData_.settlementDays().empty(), "settlement days required");
 
@@ -61,84 +63,93 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
 
     Date fwdMaturityDate = parseDate(fwdMaturityDate_);
-    Real payOff = parseReal(payOff_);
-    bool longInBond = parseBool(longInBond_);
-
-    bool settlementDirty = !settlementDirty_.empty() ? parseBool(settlementDirty_) : true;
+    Date fwdSettlementDate = fwdSettlementDate_.empty() ? fwdMaturityDate : parseDate(fwdSettlementDate_);
+    bool isPhysicallySettled;
+    if (settlement_ == "Physical" || settlement_.empty())
+        isPhysicallySettled = true;
+    else if (settlement_ == "Cash")
+        isPhysicallySettled = false;
+    else {
+        QL_FAIL("ForwardBond: invalid settlement '" << settlement_ << "', expected Cash or Physical");
+    }
+    Real amount = amount_.empty() ? Null<Real>() : parseReal(amount_);
+    Real lockRate = lockRate_.empty() ? Null<Real>() : parseReal(lockRate_);
+    DayCounter lockRateDayCounter = lockRateDayCounter_.empty() ? Actual360() : parseDayCounter(lockRateDayCounter_);
+    bool settlementDirty = settlementDirty_.empty() ? true : parseBool(settlementDirty_);
     Real compensationPayment = parseReal(compensationPayment_);
     Date compensationPaymentDate = parseDate(compensationPaymentDate_);
+    bool longInForward = parseBool(longInForward_);
 
+    QL_REQUIRE((amount == Null<Real>() && lockRate != Null<Real>()) ||
+                   (amount != Null<Real>() && lockRate == Null<Real>()),
+               "ForwardBond: exactly one of Amount of LockRate must be given");
     QL_REQUIRE(compensationPaymentDate <= fwdMaturityDate, "Premium cannot be paid after forward contract maturity");
 
-    boost::shared_ptr<QuantLib::Bond> bond; // pointer to QuantLib Bond
-    // pointer to fwdBond; both are needed. But only the fwdBond equipped with pricer
-    boost::shared_ptr<QuantExt::ForwardBond> fwdBond;
+    if (lockRate != Null<Real>())
+        isPhysicallySettled = false;
 
-    // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
-    bool firstLegIsPayer = (bondData_.coupons().size() == 0) ? false : bondData_.coupons()[0].isPayer();
-    QL_REQUIRE(firstLegIsPayer == false,
-               "The zero bond position must be Long. Specify long/short position of the forward using 'longInBond'");
-    QL_REQUIRE(compensationPayment >= 0, "Negative compensation payments are not supported");
+    QL_REQUIRE(!bondData_.coupons().empty(), "ForwardBond: No LegData given. If you want to represent a zero bond, "
+                                             "set it up as a coupon bond with zero fixed rate");
 
-    boost::shared_ptr<Payoff> payoff =
-        longInBond ? boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, payOff)
-                   : boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, payOff);
-    compensationPayment = longInBond ? compensationPayment : compensationPayment * (-1.0);
+    bool firstLegIsPayer = bondData_.coupons()[0].isPayer();
+    QL_REQUIRE(firstLegIsPayer == false, "ForwardBond: The underlying bond must be entered with a receiver leg. Use "
+                                         "LongInBond to specify pay direction of forward payoff");
+    QL_REQUIRE(compensationPayment > 0.0 || close_enough(compensationPayment, 0.0),
+               "ForwardBond: Negative compensation payments ("
+                   << compensationPayment
+                   << ") are not allowed. Notice that we will ensure that a positive compensation amount will be paid "
+                      "by the party being long in the forward contract.");
+
+    boost::shared_ptr<Payoff> payoff;
+    if (amount != Null<Real>()) {
+        payoff = longInForward ? boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, amount)
+                               : boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, amount);
+    }
+    compensationPayment = longInForward ? compensationPayment : -compensationPayment;
 
     std::vector<Leg> separateLegs;
-    if (bondData_.zeroBond()) { // Zero coupon bond
-        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, bondData_.faceAmount(),
-                                                parseDate(bondData_.maturityDate())));
-    } else { // Coupon bond
-        for (Size i = 0; i < bondData_.coupons().size(); ++i) {
-            bool legIsPayer = bondData_.coupons()[i].isPayer();
-            QL_REQUIRE(legIsPayer == firstLegIsPayer, "Bond legs must all have same pay/receive flag");
-            if (i == 0)
-                currency_ = bondData_.coupons()[i].currency();
-            else {
-                QL_REQUIRE(currency_ == bondData_.coupons()[i].currency(),
-                           "leg #" << i << " currency (" << bondData_.coupons()[i].currency()
-                                   << ") not equal to leg #0 currency (" << bondData_.coupons()[0].currency());
-            }
-            Leg leg;
-            auto configuration = builder_bd->configuration(MarketContext::pricing);
-            auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
-            separateLegs.push_back(leg);
-        } // for coupons_
-        Leg leg = joinLegs(separateLegs);
-        bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
-        // workaround, QL doesn't register a bond with its leg's cashflows
-        for (auto const& c : leg)
-            bond->registerWith(c);
+    for (Size i = 0; i < bondData_.coupons().size(); ++i) {
+        Leg leg;
+        auto configuration = builder_bd->configuration(MarketContext::pricing);
+        auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
+        leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
+        separateLegs.push_back(leg);
     }
+    Leg leg = joinLegs(separateLegs);
+    auto bond = boost::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);
 
-    npvCurrency_ = currency_;
+    npvCurrency_ = currency_ = bondData_.coupons().front().currency();
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     notionalCurrency_ = currency_;
 
-    // Add legs (only 1)
-    legs_ = {bond->cashflows()};
+    // cashflows will be generated as additional results in the pricing engine
+    legs_ = {};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {firstLegIsPayer};
-
     Currency currency = parseCurrency(currency_);
 
-    fwdBond.reset(new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment,
-                                            compensationPaymentDate,
-                                            bondData_.bondNotional())); // nur bond payoff maturityDate lassen
+    // first ctor is for vanilla fwd bonds, second for tlocks with a lock rate specifying the payoff
+    boost::shared_ptr<QuantLib::Instrument> fwdBond =
+        payoff ? boost::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
+                                                           isPhysicallySettled, settlementDirty, compensationPayment,
+                                                           compensationPaymentDate, bondData_.bondNotional())
+               : boost::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
+                                                           fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
+                                                           settlementDirty, compensationPayment,
+                                                           compensationPaymentDate, bondData_.bondNotional());
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
-    QL_REQUIRE(fwdBondBuilder, "No Builder found for fwdBond: " << id());
+    QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    LOG("Calling engine for forward bond " << id() << " with credit curve: " << bondData_.creditCurveId()
-                                           << " with reference curve:" << bondData_.referenceCurveId()
-                                           << " with income curve: " << bondData_.incomeCurveId());
     fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.securityId(),
                                                      bondData_.referenceCurveId(), bondData_.incomeCurveId()));
-    instrument_.reset(new VanillaInstrument(fwdBond, 1.0)); // long or short is regulated via the payoff class
+    instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
+
+    additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
+    additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
+    additionalData_["currency"] = currency_;
 }
 
 void ForwardBond::fromXML(XMLNode* node) {
@@ -150,9 +161,14 @@ void ForwardBond::fromXML(XMLNode* node) {
     XMLNode* fwdSettlementNode = XMLUtils::getChildNode(fwdBondNode, "SettlementData");
     QL_REQUIRE(fwdSettlementNode, "No fwdSettlementNode Node");
 
-    payOff_ = XMLUtils::getChildValue(fwdSettlementNode, "Amount", true);
     fwdMaturityDate_ = XMLUtils::getChildValue(fwdSettlementNode, "ForwardMaturityDate", true);
-    settlementDirty_ = XMLUtils::getChildValue(fwdSettlementNode, "SettlementDirty", true);
+    fwdSettlementDate_ = XMLUtils::getChildValue(fwdSettlementNode, "ForwardSettlementDate", false);
+    settlement_ = XMLUtils::getChildValue(fwdSettlementNode, "Settlement", false);
+    amount_ = XMLUtils::getChildValue(fwdSettlementNode, "Amount", false);
+    lockRate_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRate", false);
+    lockRateDayCounter_ = XMLUtils::getChildValue(fwdSettlementNode, "LockRateDayCounter", false);
+    settlementDirty_ = XMLUtils::getChildValue(fwdSettlementNode, "SettlementDirty", false);
+
     XMLNode* fwdPremiumNode = XMLUtils::getChildNode(fwdBondNode, "PremiumData");
     if (fwdPremiumNode) {
         compensationPayment_ = XMLUtils::getChildValue(fwdPremiumNode, "Amount", true);
@@ -162,7 +178,7 @@ void ForwardBond::fromXML(XMLNode* node) {
         compensationPaymentDate_ = fwdMaturityDate_;
     }
 
-    longInBond_ = XMLUtils::getChildValue(fwdBondNode, "LongInForward", true);
+    longInForward_ = XMLUtils::getChildValue(fwdBondNode, "LongInForward", true);
 }
 
 XMLNode* ForwardBond::toXML(XMLDocument& doc) {
@@ -171,20 +187,38 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, fwdBondNode);
     XMLUtils::appendNode(fwdBondNode, bondData_.toXML(doc));
 
-    XMLNode* fwdSettlmentNode = doc.allocNode("SettlementData");
-    XMLUtils::appendNode(fwdBondNode, fwdSettlmentNode);
-    XMLUtils::addChild(doc, fwdSettlmentNode, "ForwardMaturityDate", fwdMaturityDate_);
-    XMLUtils::addChild(doc, fwdSettlmentNode, "Amount", payOff_);
-    XMLUtils::addChild(doc, fwdSettlmentNode, "SettlementDirty", settlementDirty_);
+    XMLNode* fwdSettlementNode = doc.allocNode("SettlementData");
+    XMLUtils::appendNode(fwdBondNode, fwdSettlementNode);
+    XMLUtils::addChild(doc, fwdSettlementNode, "ForwardMaturityDate", fwdMaturityDate_);
+    if (!fwdSettlementDate_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "ForwardSettlementDate", fwdSettlementDate_);
+    if (!settlement_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "Settlement", settlement_);
+    if (!amount_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "Amount", amount_);
+    if (!lockRate_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "LockRate", lockRate_);
+    if (!lockRateDayCounter_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "LockRateDayCounter", lockRateDayCounter_);
+    if (!settlementDirty_.empty())
+        XMLUtils::addChild(doc, fwdSettlementNode, "SettlementDirty", settlementDirty_);
 
     XMLNode* fwdPremiumNode = doc.allocNode("PremiumData");
     XMLUtils::appendNode(fwdBondNode, fwdPremiumNode);
     XMLUtils::addChild(doc, fwdPremiumNode, "Amount", compensationPayment_);
     XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
 
-    XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
+    XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInForward_);
 
     return node;
 }
+
+std::map<AssetClass, std::set<std::string>>
+ForwardBond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+    std::map<AssetClass, std::set<std::string>> result;
+    result[AssetClass::BOND] = {bondData_.securityId()};
+    return result;
+}
+
 } // namespace data
 } // namespace ore

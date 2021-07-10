@@ -20,10 +20,16 @@ Allowable values: \lstinline!atDefault!, \lstinline!atPeriodEnd!, \lstinline!atM
   
 Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The full set of allowable values is given in Table \ref{tab:boolean_allowable}.
   
-\item ProtectionStart [Optional]: The first date where a default event will trigger the contract. This defaults to the first date in the schedule if it is not provided. Must be set to a date before or on the first date in the schedule.
-\item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, UpfrontDate is required. The UpfrontDate, if provided, must be on or after the ProtectionStart date.
-\item UpfrontFee [Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount. If an UpfrontDate is provided, an UpfrontFee must also be provided. The UpfrontFee cannot be left blank.
+\item ProtectionStart [Optional]: The first date where a credit event will trigger the contract. This defaults to the first date in the schedule if it is not provided. Must be set to a date before or on the first date in the schedule if the \lstinline!LegData! has a rule that is not one of \lstinline!CDS! or \lstinline!CDS2015!. In general, for standard CDS traded after the CDS Big Bang in 2009, the protection start date is equal to the trade date. Therefore, typically the \lstinline!ProtectionStart! should be set to the trade date of the CDS.
+\item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, \lstinline!UpfrontDate! is required. The \lstinline!UpfrontDate!, if provided, must be on or after the ProtectionStart date. Typically, it is 3 business days after the CDS contract trade date.
+\item UpfrontFee [Optional]: The upfront payment, expressed as a percentage in decimal form, to be multiplied by notional amount.  If an UpfrontDate is provided, an UpfrontFee must also be provided. The UpfrontFee can be omitted but cannot be left blank.
+The UpfrontFee can be negative. The UpfrontFee is treated as an amount payable by the protection buyer to the protection seller. A negative value for the UpfrontFee indicates that the UpfrontFee is being paid by the protection seller to the protection buyer.
+
+Allowable values: Any real number, expressed in decimal form as a percentage of the notional.  E.g. an UpfrontFee of \emph{0.045} and a notional of 10M, would imply an upfront fee amount of 450K.
+
 \item FixedRecoveryRate [Optional]: This node holds the fixed recovery rate if the CDS is a fixed recovery CDS. For a standard CDS, this field should be omitted.
+\item TradeDate [Optional]: The CDS trade date. If omitted, the trade date is deduced from the protection start date. If the schedule provided in the \lstinline!LegData! has a rule that is either \lstinline!CDS! or \lstinline!CDS2015!, the trade date is set equal to the protection start date. This is the standard for CDS traded after the CDS Big Bang in 2009. Otherwise, the trade date is set equal to the protection start date minus 1 day as it was standard before the CDS Big Bang to have protection starting on the day after the trade date.
+\item CashSettlementDays [Optional]: The number of business days between the trade date and the cash settlement date. For standard CDS, this is 3 business days. If omitted, this defaults to 3.
 \end{itemize}
 
 The \lstinline!LegData! block then defines the CDS premium leg structure. This premium leg must be be of type \lstinline!Fixed! as described in Section \ref{ss:fixedleg_data}.

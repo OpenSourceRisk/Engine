@@ -24,9 +24,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #pragma once
 
 #include <boost/make_shared.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/smilesection.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -45,40 +45,15 @@ public:
                                          ReactionToTimeDecay decayMode = ConstantVariance);
 
 protected:
-    //! \name YoYOptionletVolatilitySurface interface
-    //@{
-    Volatility volatilityImpl(Date optionDate, Rate strike) const;
-    //@}
-
-    //! \name VolatilityTermStructure interface
-    //@{
-    Rate minStrike() const;
-    Rate maxStrike() const;
-    //@}
-
-    //! \name VolatilityTermStructure interface
-    //@{
-    Date maxDate() const;
-    //@}
-
-    //! \name Observer interface
-    //@{
-    void update();
-    //@}
-
-    //! Override the default implementations in YoYOptionletVolatilitySurface
-    VolatilityType volatilityType() const;
-    Real displacement() const;
+    Volatility volatilityImpl(Time optionTime, Rate strike) const override;
+    Rate minStrike() const override;
+    Rate maxStrike() const override;
+    Date maxDate() const override;
 
 private:
     const boost::shared_ptr<YoYOptionletVolatilitySurface> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
-    const VolatilityType volatilityType_;
-    const Real displacement_;
 };
 
-inline VolatilityType DynamicYoYOptionletVolatilitySurface::volatilityType() const { return volatilityType_; }
-
-inline Real DynamicYoYOptionletVolatilitySurface::displacement() const { return displacement_; }
 } // namespace QuantExt

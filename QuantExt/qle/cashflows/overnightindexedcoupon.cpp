@@ -116,16 +116,9 @@ public:
             Handle<YieldTermStructure> curve = index->forwardingTermStructure();
             QL_REQUIRE(!curve.empty(), "null term structure set to this instance of " << index->name());
 
-            // we know that nCutoff >= i because either
-            // a) i = today, but if nCutoff < today, there is no forward part
-            // b) i = today + 1bd, the we have a historical fixing available on today and if nCutoff = today
-            //        again there is no forward part
-            QL_REQUIRE(nCutoff >= i,
-                       "internal inconsistency: nCutoff (" << nCutoff << ") >= i (" << i << ") expected.");
-
             // handle the part until the rate cutoff (might be empty, i.e. startDiscount = endDiscount)
             DiscountFactor startDiscount = curve->discount(dates[i]);
-            DiscountFactor endDiscount = curve->discount(dates[nCutoff]);
+            DiscountFactor endDiscount = curve->discount(dates[std::max(nCutoff, i)]);
 
             // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
             if (nCutoff < n) {
@@ -157,7 +150,6 @@ public:
             effectiveSpread_ = coupon_->spread();
             effectiveIndexFixing_ = rate;
         } else {
-            // we know that gearing = 1 if includeSpread = true
             effectiveSpread_ = rate - (compoundFactorWithoutSpread - 1.0) / tau;
             effectiveIndexFixing_ = rate - effectiveSpread_;
         }
@@ -198,16 +190,15 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                Spread spread, const Date& refPeriodStart, const Date& refPeriodEnd,
                                                const DayCounter& dayCounter, bool telescopicValueDates,
                                                bool includeSpread, const Period& lookback, const Natural rateCutoff,
-                                               const Natural fixingDays)
+                                               const Natural fixingDays, const Date& rateComputationStartDate,
+                                               const Date& rateComputationEndDate)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
                          refPeriodStart, refPeriodEnd, dayCounter, false),
-      includeSpread_(includeSpread), lookback_(lookback), rateCutoff_(rateCutoff) {
+      includeSpread_(includeSpread), lookback_(lookback), rateCutoff_(rateCutoff),
+      rateComputationStartDate_(rateComputationStartDate), rateComputationEndDate_(rateComputationEndDate) {
 
-    QL_REQUIRE(!includeSpread || close_enough(gearing, 1.0),
-               "OvernightIndexedCoupon does not support includeSpread with non-unit gearing (got " << gearing << ")");
-
-    Date valueStart = startDate;
-    Date valueEnd = endDate;
+    Date valueStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
+    Date valueEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
     if (lookback != 0 * Days) {
         BusinessDayConvention bdc = lookback.length() > 0 ? Preceding : Following;
         valueStart = overnightIndex->fixingCalendar().advance(valueStart, -lookback, bdc);
@@ -321,17 +312,39 @@ Real OvernightIndexedCoupon::effectiveIndexFixing() const {
 // CappedFlooredOvernightIndexedCoupon implementation
 
 CappedFlooredOvernightIndexedCoupon::CappedFlooredOvernightIndexedCoupon(
-    const ext::shared_ptr<OvernightIndexedCoupon>& underlying, Real cap, Real floor, bool nakedOption)
+    const ext::shared_ptr<OvernightIndexedCoupon>& underlying, Real cap, Real floor, bool nakedOption,
+    bool localCapFloor)
     : FloatingRateCoupon(underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
                          underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
                          underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                          underlying->referencePeriodEnd(), underlying->dayCounter(), false),
-      underlying_(underlying), cap_(cap), floor_(floor), nakedOption_(nakedOption) {
-    registerWith(underlying_);
+      underlying_(underlying), nakedOption_(nakedOption), localCapFloor_(localCapFloor) {
+
+    QL_REQUIRE(!underlying_->includeSpread() || close_enough(underlying_->gearing(), 1.0),
+               "CappedFlooredOvernightIndexedCoupon: if include spread = true, only a gearing 1.0 is allowed - scale "
+               "the notional in this case instead.");
+
+    if (!localCapFloor) {
+        if (gearing_ > 0.0) {
+            cap_ = cap;
+            floor_ = floor;
+        } else {
+            cap_ = floor;
+            floor_ = cap;
+        }
+    } else {
+        cap_ = cap;
+        floor_ = floor;
+    }
     if (cap_ != Null<Real>() && floor_ != Null<Real>()) {
         QL_REQUIRE(cap_ >= floor, "cap level (" << cap_ << ") less than floor level (" << floor_ << ")");
     }
+    registerWith(underlying_);
 }
+
+Rate CappedFlooredOvernightIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
+
+Rate CappedFlooredOvernightIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
 
 Rate CappedFlooredOvernightIndexedCoupon::rate() const {
     QL_REQUIRE(underlying_->pricer(), "pricer not set");
@@ -343,7 +356,7 @@ Rate CappedFlooredOvernightIndexedCoupon::rate() const {
         floorletRate = pricer()->floorletRate(effectiveFloor());
     Rate capletRate = 0.;
     if (cap_ != Null<Real>())
-        capletRate = pricer()->capletRate(effectiveCap());
+        capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
     return swapletRate + floorletRate - capletRate;
 }
 
@@ -352,13 +365,51 @@ Rate CappedFlooredOvernightIndexedCoupon::convexityAdjustment() const { return u
 Rate CappedFlooredOvernightIndexedCoupon::effectiveCap() const {
     if (cap_ == Null<Real>())
         return Null<Real>();
-    return (cap_ - underlying_->effectiveSpread()) / gearing();
+    /* We have four cases dependent on localCapFloor_ and includeSpread. Notation in the formulas:
+       g         gearing,
+       s         spread,
+       A         coupon amount,
+       f_i       daily fixings,
+       \tau_i    daily accrual fractions,
+       \tau      coupon accrual fraction,
+       C         cap rate
+       F         floor rate
+    */
+    if (localCapFloor_) {
+        if (underlying_->includeSpread()) {
+            // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau}
+            return cap_ - underlying_->spread();
+        } else {
+            // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s
+            return cap_;
+        }
+    } else {
+        if (underlying_->includeSpread()) {
+            // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)
+            return (cap_ / gearing() - underlying_->effectiveSpread());
+        } else {
+            // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)
+            return (cap_ - underlying_->effectiveSpread()) / gearing();
+        }
+    }
 }
 
 Rate CappedFlooredOvernightIndexedCoupon::effectiveFloor() const {
     if (floor_ == Null<Real>())
         return Null<Real>();
-    return (floor_ - underlying_->effectiveSpread()) / gearing();
+    if (localCapFloor_) {
+        if (underlying_->includeSpread()) {
+            return floor_ - underlying_->spread();
+        } else {
+            return floor_;
+        }
+    } else {
+        if (underlying_->includeSpread()) {
+            return (floor_ - underlying_->effectiveSpread());
+        } else {
+            return (floor_ - underlying_->effectiveSpread()) / gearing();
+        }
+    }
 }
 
 void CappedFlooredOvernightIndexedCoupon::update() { notifyObservers(); }
@@ -388,7 +439,7 @@ Handle<OptionletVolatilityStructure> CappedFlooredOvernightIndexedCouponPricer::
 OvernightLeg::OvernightLeg(const Schedule& schedule, const ext::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentCalendar_(schedule.calendar()), paymentAdjustment_(Following),
       paymentLag_(0), telescopicValueDates_(false), includeSpread_(false), lookback_(0 * Days), rateCutoff_(0),
-      fixingDays_(Null<Size>()), nakedOption_(false) {}
+      fixingDays_(Null<Size>()), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
 
 OvernightLeg& OvernightLeg::withNotionals(Real notional) {
     notionals_ = vector<Real>(1, notional);
@@ -490,14 +541,41 @@ OvernightLeg& OvernightLeg::withNakedOption(const bool nakedOption) {
     return *this;
 }
 
+OvernightLeg& OvernightLeg::withLocalCapFloor(const bool localCapFloor) {
+    localCapFloor_ = localCapFloor;
+    return *this;
+}
+
+OvernightLeg& OvernightLeg::withInArrears(const bool inArrears) {
+    inArrears_ = inArrears;
+    return *this;
+}
+
+OvernightLeg& OvernightLeg::withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod) {
+    lastRecentPeriod_ = lastRecentPeriod;
+    return *this;
+}
+
+OvernightLeg& OvernightLeg::withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar) {
+    lastRecentPeriodCalendar_ = lastRecentPeriodCalendar;
+    return *this;
+}
+
 OvernightLeg::operator Leg() const {
 
-    QL_REQUIRE(!notionals_.empty(), "no notional given");
+    QL_REQUIRE(!notionals_.empty(), "no notional given for compounding overnight leg");
 
     Leg cashflows;
 
-    // the following is not always correct
     Calendar calendar = schedule_.calendar();
+    Calendar paymentCalendar = paymentCalendar_;
+
+    if (calendar.empty())
+        calendar = paymentCalendar;
+    if (calendar.empty())
+        calendar = WeekendsOnly();
+    if (paymentCalendar.empty())
+        paymentCalendar = calendar;
 
     Date refStart, start, refEnd, end;
     Date paymentDate;
@@ -506,12 +584,48 @@ OvernightLeg::operator Leg() const {
     for (Size i = 0; i < n; ++i) {
         refStart = start = schedule_.date(i);
         refEnd = end = schedule_.date(i + 1);
-        paymentDate = paymentCalendar_.advance(end, paymentLag_, Days, paymentAdjustment_);
+        paymentDate = paymentCalendar.advance(end, paymentLag_, Days, paymentAdjustment_);
+
+        // determine refStart and refEnd
 
         if (i == 0 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1))
             refStart = calendar.adjust(end - schedule_.tenor(), paymentAdjustment_);
         if (i == n - 1 && schedule_.hasIsRegular() && !schedule_.isRegular(i + 1))
             refEnd = calendar.adjust(start + schedule_.tenor(), paymentAdjustment_);
+
+        // Determine the rate computation start and end date as
+        // - the coupon start and end date, if in arrears, and
+        // - the previous coupon start and end date, if in advance.
+        // In addition, adjust the start date, if a last recent period is given.
+
+        Date rateComputationStartDate, rateComputationEndDate;
+        if (inArrears_) {
+            // in arrears fixing (i.e. the "classic" case)
+            rateComputationStartDate = start;
+            rateComputationEndDate = end;
+        } else {
+            // handle in advance fixing
+            if (i > 0) {
+                // if there is a previous period, we take that
+                rateComputationStartDate = schedule_.date(i - 1);
+                rateComputationEndDate = schedule_.date(i);
+            } else {
+                // otherwise we construct the previous period
+                rateComputationEndDate = start;
+                if (schedule_.hasTenor())
+                    rateComputationStartDate = calendar.adjust(start - schedule_.tenor(), Preceding);
+                else
+                    rateComputationStartDate = calendar.adjust(start - (end - start), Preceding);
+            }
+        }
+
+        if (lastRecentPeriod_) {
+            rateComputationStartDate = (lastRecentPeriodCalendar_.empty() ? calendar : lastRecentPeriodCalendar_)
+                                           .advance(rateComputationEndDate, -*lastRecentPeriod_);
+        }
+
+        // build coupon
+
         if (close_enough(detail::get(gearings_, i, 1.0), 0.0)) {
             // fixed coupon
             cashflows.push_back(boost::make_shared<FixedRateCoupon>(
@@ -522,14 +636,15 @@ OvernightLeg::operator Leg() const {
             auto cpn = ext::make_shared<OvernightIndexedCoupon>(
                 paymentDate, detail::get(notionals_, i, 1.0), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), refStart, refEnd, paymentDayCounter_,
-                telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_);
+                telescopicValueDates_, includeSpread_, lookback_, rateCutoff_, fixingDays_, rateComputationStartDate,
+                rateComputationEndDate);
             Real cap = detail::get(caps_, i, Null<Real>());
             Real floor = detail::get(floors_, i, Null<Real>());
             if (cap == Null<Real>() && floor == Null<Real>()) {
                 cashflows.push_back(cpn);
             } else {
-                cashflows.push_back(
-                    ext::make_shared<CappedFlooredOvernightIndexedCoupon>(cpn, cap, floor, nakedOption_));
+                cashflows.push_back(ext::make_shared<CappedFlooredOvernightIndexedCoupon>(cpn, cap, floor, nakedOption_,
+                                                                                          localCapFloor_));
             }
         }
     }

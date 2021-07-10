@@ -53,7 +53,18 @@ class MarketImpl : public Market {
 public:
     //! Default constructor
     MarketImpl() {}
-    MarketImpl(const Conventions& conventions) : conventions_(conventions) {
+
+    //! Constructor taking a pointer to conventions
+    MarketImpl(const boost::shared_ptr<Conventions>& conventions)
+        : conventions_ref_(conventions), conventions_(*conventions_ref_) {
+        initialise();
+    }
+
+    /*! Constructor taking a reference to conventions. This ctor is deprecated.
+        TODO remove this ctor, remove the conventions member variable holding the copy. */
+    MarketImpl(const Conventions& conventions) : conventions_(conventions) { initialise(); }
+
+    void initialise() {
         // if no fx spots are defined we still need an empty triangulation
         fxSpots_[Market::defaultConfiguration] = FXTriangulation();
     }
@@ -118,20 +129,10 @@ public:
     virtual Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const;
 
-    //! CPI Inflation Cap Floor Price Surfaces
-    // virtual Handle<CPICapFloorTermPriceSurface>
-    // cpiInflationCapFloorPriceSurface(const string& indexName,
-    //                                  const string& configuration = Market::defaultConfiguration) const;
-
     //! Inflation Cap Floor Volatility Surfaces
     virtual Handle<CPIVolatilitySurface>
     cpiInflationCapFloorVolatilitySurface(const string& indexName,
                                           const string& configuration = Market::defaultConfiguration) const;
-
-    //! YoY Inflation Cap Floor Price Surfaces
-    // virtual Handle<YoYCapFloorTermPriceSurface>
-    // yoyInflationCapFloorPriceSurface(const string& indexName,
-    //                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Equity curves
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
@@ -161,6 +162,11 @@ public:
     QuantLib::Handle<QuantExt::PriceTermStructure>
     commodityPriceCurve(const string& commodityName, const string& configuration = Market::defaultConfiguration) const;
 
+    //! Commodity index
+    QuantLib::Handle<QuantExt::CommodityIndex> commodityIndex(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const;
+
+    //! Commodity volatility
     QuantLib::Handle<QuantLib::BlackVolTermStructure>
     commodityVolatility(const string& commodityName, const string& configuration = Market::defaultConfiguration) const;
     //@}
@@ -185,42 +191,63 @@ public:
     void refresh(const string& configuration = Market::defaultConfiguration);
 
 protected:
+    /*! Require a market object, this can be used in derived classes to build objects lazily. If the
+        method is not overwritten in a derived class, it is assumed that the class builds all market
+        object upfront.
+
+        For FXVols and Correlations the require is not 'hard', e.g. both EURUSD and USDEUR might
+        be required for FXVols, but only one of them is expected to be actually built (the other
+        one is then constructed on the fly from the first one). Therefore no error should be thrown
+        in the implementation of require(), if an object is ultimately not found, an appropriate error
+        will be thrown from this class.
+
+        An object is required for a single configuration. If it can't be built for this configuration,
+        it should be tried to be built for the "default" configuration instead, because this is used
+        as a fallback.
+
+        Notice that correlation curves are required with '&' as a delimiter between the indexes. */
+    virtual void require(const MarketObject o, const string& name, const string& configuration) const {}
+
     Date asof_;
     // maps (configuration, key) => term structure
-    map<tuple<string, YieldCurveType, string>, Handle<YieldTermStructure>> yieldCurves_;
-    map<pair<string, string>, Handle<IborIndex>> iborIndices_;
-    map<pair<string, string>, Handle<SwapIndex>> swapIndices_;
-    map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
-    map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
-    map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
-    map<string, FXTriangulation> fxSpots_;
+    mutable map<tuple<string, YieldCurveType, string>, Handle<YieldTermStructure>> yieldCurves_;
+    mutable map<pair<string, string>, Handle<IborIndex>> iborIndices_;
+    mutable map<pair<string, string>, Handle<SwapIndex>> swapIndices_;
+    mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
+    mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
+    mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
+    mutable map<string, FXTriangulation> fxSpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
-    map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
-    map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;
-    map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
-    map<pair<string, string>, Handle<Quote>> recoveryRates_;
-    map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
-    map<pair<string, string>, Handle<QuantExt::YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
-    map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
-    map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
-    map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
-    map<pair<string, string>, Handle<Quote>> equitySpots_;
-    map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
-    map<pair<string, string>, Handle<Quote>> securitySpreads_;
-    map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
-    map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
-    map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
-    map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
-    map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
-    map<pair<string, string>, Handle<Quote>> cprs_;
+    mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
+    mutable map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;
+    mutable map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
+    mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;
+    mutable map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
+    mutable map<pair<string, string>, Handle<YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
+    mutable map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
+    mutable map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
+    mutable map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
+    mutable map<pair<string, string>, Handle<Quote>> equitySpots_;
+    mutable map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
+    mutable map<pair<string, string>, Handle<Quote>> securitySpreads_;
+    mutable map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
+    mutable map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::CommodityIndex>> commodityIndices_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
+    mutable map<pair<string, string>, Handle<Quote>> cprs_;
+
+    boost::shared_ptr<Conventions> conventions_ref_;
+    // needed for the deprecated ctor taking a reference to conventions, TODO remove
     Conventions conventions_;
 
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,
-                      const string& configuration = Market::defaultConfiguration);
+                      const string& configuration = Market::defaultConfiguration) const;
 
     // set of term structure pointers for refresh (per configuration)
     map<string, std::set<boost::shared_ptr<TermStructure>>> refreshTs_;
 };
+
 } // namespace data
 } // namespace ore

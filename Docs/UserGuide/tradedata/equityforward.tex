@@ -13,6 +13,7 @@ Listing \ref{lst:eqfwd_data}.
   <Name>RIC:.SPX</Name>
   <Currency>USD</Currency>
   <Strike>2147.56</Strike>
+  <StrikeCurrency>USD</StrikeCurrency>
   <Quantity>17000</Quantity>
 </EquityForwardData>
 \end{minted}
@@ -32,9 +33,11 @@ The meanings and allowable values of the elements in the \lstinline!EquityForwar
 	Allowable values:  See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
 	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 	\item Currency: The  currency of the equity forward. \\
-	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
+	Allowable values:  See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The agreed buy/sell price of the equity forward. \\
 	Allowable values:  Any positive real number.	
+	\item StrikeCurrency: [Optional] The currency of the strike value. Defaults to \lstinline!Currency! field \\
+	Allowable values:  See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.	
 	\item Quantity: The number of units of the underlying equity to be bought/sold. \\
 	Allowable values:  Any positive real number.
 \end{itemize}

@@ -61,7 +61,12 @@ public:
                const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
                const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-               boost::shared_ptr<ScenarioFactory> scenarioFactory = {}, bool continueOnError = false);
+               boost::shared_ptr<ScenarioFactory> scenarioFactory = {},
+               std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
+               std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
+               const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+               const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+               bool continueOnError = false);
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }

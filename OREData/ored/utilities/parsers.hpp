@@ -25,6 +25,8 @@
 #pragma once
 
 #include <ored/utilities/log.hpp>
+#include <ored/configuration/conventions.hpp>
+#include <ored/configuration/commoditycurveconfig.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
@@ -32,6 +34,9 @@
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/instruments/capfloor.hpp>
+#include <ql/instruments/inflationcapfloor.hpp>
+#include <ql/instruments/overnightindexfuture.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
@@ -43,10 +48,15 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+#include <qle/cashflows/commoditycashflow.hpp>
+#include <qle/instruments/cdsoption.hpp>
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/currencies/configurablecurrency.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/variant.hpp>
 
 namespace ore {
 namespace data {
@@ -95,7 +105,7 @@ bool parseBool(const string& s);
   comma-delimited.
   \ingroup utilities
 */
-QuantLib::Calendar parseCalendar(const string& s, bool adjustCalendar = true);
+QuantLib::Calendar parseCalendar(const string& s, const string& newName = "");
 
 //! Convert text to QuantLib::Period
 /*!
@@ -119,7 +129,19 @@ QuantLib::DayCounter parseDayCounter(const string& s);
 /*!
   \ingroup utilities
  */
-QuantLib::Currency parseCurrency(const string& s);
+QuantLib::Currency parseCurrency(const string& s, const Currency& currency = QuantLib::Currency());
+
+//! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
+/*!
+  \ingroup utilities
+ */
+QuantLib::Currency parseMinorCurrency(const string& s);
+
+//! Convert text to QuantLib::Currency
+/*!
+  \ingroup utilities
+ */
+QuantLib::Currency parseCurrencyWithMinors(const string& s);
 
 //! Convert text to QuantLib::DateGeneration::Rule
 /*!
@@ -144,6 +166,12 @@ QuantLib::Compounding parseCompounding(const string& s);
 \ingroup utilities
 */
 QuantLib::Position::Type parsePositionType(const string& s);
+
+//! Convert text to QuantLib::Protection::Side
+/*!
+\ingroup utilities
+*/
+QuantLib::Protection::Side parseProtectionSide(const string& s);
 
 //! Convert text to QuantLib::Settlement::Type
 /*!
@@ -170,6 +198,12 @@ QuantLib::Exercise::Type parseExerciseType(const string& s);
 QuantLib::Option::Type parseOptionType(const string& s);
 
 //! Convert text to QuantLib::Period or QuantLib::Date
+/*!
+\ingroup utilities
+*/
+boost::variant<QuantLib::Date, QuantLib::Period> parseDateOrPeriod(const string& s);
+
+//! Convert text to QuantLib::Period or QuantLib::Date (deprecated version)
 /*!
 \ingroup utilities
 */
@@ -250,13 +284,19 @@ QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string
 */
 QuantLib::FdmSchemeDesc parseFdmSchemeDesc(const std::string& s);
 
-enum class AssetClass { EQ, FX, COM, IR, INF, CR };
+enum class AssetClass { EQ, FX, COM, IR, INF, CR, BOND };
 
 //! Convert text to ore::data::AssetClass
 /*!
 \ingroup utilities
 */
 AssetClass parseAssetClass(const std::string& s);
+
+//! Write ore::data::AssetClass to stream
+/*!
+\ingroup utilities
+*/
+std::ostream& operator<<(std::ostream& os, AssetClass a);
 
 //! Convert text to QuantLib::DeltaVolQuote::AtmType
 /*!
@@ -270,6 +310,12 @@ QuantLib::DeltaVolQuote::AtmType parseAtmType(const std::string& s);
 */
 QuantLib::DeltaVolQuote::DeltaType parseDeltaType(const std::string& s);
 
+//! Convert text to QuantLib::Rounding
+/*!
+\ingroup utilities
+*/
+QuantLib::Rounding::Type parseRoundingType(const std::string& s);
+  
 /*! Attempt to parse string \p str to \p obj of type \c T using \p parser
     \param[in]  str    The string we wish to parse.
     \param[out] obj    The resulting object if the parsing was successful.
@@ -290,6 +336,17 @@ template <class T> bool tryParse(const std::string& str, T& obj, std::function<T
     return true;
 }
 
+inline bool tryParseCurrency(const std::string& str, Currency& obj) {
+    DLOG("tryParse: attempting to parse currency from " << str);
+    try {
+      obj = parseCurrency(str, Currency());
+    } catch (...) {
+        TLOG("String " << str << " could not be parsed");
+        return false;
+    }
+    return true;
+}
+
 //! Enumeration for holding various extrapolation settings
 enum class Extrapolation { None, UseInterpolator, Flat };
 
@@ -299,6 +356,84 @@ Extrapolation parseExtrapolation(const std::string& s);
 //! Write Extrapolation, \p extrap, to stream.
 std::ostream& operator<<(std::ostream& os, Extrapolation extrap);
 
+/*! Convert text to QuantLib::VolatilityType
+    \ingroup utilities
+*/
+QuantLib::VolatilityType parseVolatilityQuoteType(const std::string& s);
+
+/*! Convert text to QuantLib::CapFloor::Type
+    \ingroup utilities
+*/
+QuantLib::CapFloor::Type parseCapFloorType(const std::string& s);
+
+/*! Convert text to QuantLib::YoYInflationCapFloor::Type
+    \ingroup utilities
+*/
+QuantLib::YoYInflationCapFloor::Type parseYoYInflationCapFloorType(const std::string& s);
+
+/*! Convert text to QuantExt::CrossAssetModelTypes::AssetType
+    \ingroup utilities
+*/
+QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s);
+
+/*! Convert boost::any to pair<string,string>, including the valueType and the value
+    \ingroup utilities
+*/
+std::pair<string, string> parseBoostAny(const boost::any& anyType);
+
+//! Convert text to QuantLib::RateAveraging::Type
+QuantLib::RateAveraging::Type parseOvernightIndexFutureNettingType(const std::string& s);
+
+//! Write QuantLib::RateAveraging::Type to stream
+std::ostream& operator<<(std::ostream& os, QuantLib::RateAveraging::Type t);
+
+//! Convert text to FutureConvention::DateGeneration
+FutureConvention::DateGenerationRule parseFutureDateGenerationRule(const std::string& s);
+
+//! Write QuantLib::RateAveraging::Type to stream
+std::ostream& operator<<(std::ostream& os, FutureConvention::DateGenerationRule t);
+
+//! Convert text to InflationSwapConvention::PublicationRoll
+InflationSwapConvention::PublicationRoll parseInflationSwapPublicationRoll(const std::string& s);
+
+//! Write InflationSwapConvention::PublicationRoll to stream
+std::ostream& operator<<(std::ostream& os, InflationSwapConvention::PublicationRoll pr);
+
+//! Write QuantLib::SobolBrownianGenerator::Ordering to stream
+std::ostream& operator<<(std::ostream& os, SobolBrownianGenerator::Ordering t);
+    
+//! Write QuantLib::SobolRsg::DirectionIntegers to stream
+std::ostream& operator<<(std::ostream& os, SobolRsg::DirectionIntegers t);
+    
+//! Enum to string used in ScenarioGeneratorData's toXML
+std::ostream& operator<<(std::ostream& os, QuantExt::CrossAssetStateProcess::discretization type);
+
+//! Convert text to CommodityFutureConvention::AveragingData::CalculationPeriod
+CommodityFutureConvention::AveragingData::CalculationPeriod parseAveragingDataPeriod(const std::string& s);
+
+//! Write CommodityFutureConvention::AveragingData::CalculationPeriod to stream
+std::ostream& operator<<(std::ostream& os, CommodityFutureConvention::AveragingData::CalculationPeriod cp);
+
+//! Convert text to PriceSegment::Type
+PriceSegment::Type parsePriceSegmentType(const std::string& s);
+
+//! Write PriceSegment::Type to stream
+std::ostream& operator<<(std::ostream& os, PriceSegment::Type pst);
+
+//! Convert text to QuantExt::CommodityQuantityFrequency
+QuantExt::CommodityQuantityFrequency parseCommodityQuantityFrequency(const std::string& s);
+
+//! Write QuantExt::CommodityQuantityFrequency to stream
+std::ostream& operator<<(std::ostream& os, QuantExt::CommodityQuantityFrequency cqf);
+
+/*! Convert text to QuantExt::CdsOption::StrikeType
+    \ingroup utilities
+*/
+QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
+
+/*! Convert text to QuantLib::Average::Type
+    \ingroup utilities
+*/
 QuantLib::Average::Type parseAverageType(const std::string& s);
 
 } // namespace data

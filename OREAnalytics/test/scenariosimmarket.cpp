@@ -67,24 +67,20 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setYieldCurveTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-6M"});
     parameters->interpolation() = "LogLinear";
-    parameters->extrapolate() = true;
-    parameters->setYieldCurveDayCounters("", "ACT/ACT");
+    parameters->extrapolation() = "FlatFwd";
 
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
     parameters->setSwapVolCcys({"EUR", "USD"});
     parameters->swapVolDecayMode() = "ForwardVariance";
-    parameters->setSwapVolDayCounters("", "ACT/ACT");
 
     parameters->setDefaultNames({"dc2"});
     parameters->setDefaultTenors("", {6 * Months, 8 * Months, 1 * Years, 2 * Years});
-    parameters->setDefaultCurveDayCounters("", "ACT/ACT");
 
     parameters->setSimulateFXVols(false);
     parameters->setFxVolExpiries(vector<Period>{2 * Years, 3 * Years, 4 * Years});
     parameters->setFxVolDecayMode(string("ConstantVariance"));
     parameters->setSimulateEquityVols(false);
-    parameters->setFxVolDayCounters("", "ACT/ACT");
 
     parameters->setFxVolCcyPairs({"USDEUR"});
 
@@ -92,7 +88,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
 
     parameters->setZeroInflationIndices({"EUHICPXT"});
     parameters->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years});
-    parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
     parameters->setSimulateCorrelations(false);
     parameters->correlationExpiries() = {1 * Years, 2 * Years};

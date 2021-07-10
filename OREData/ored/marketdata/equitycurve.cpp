@@ -28,10 +28,11 @@
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 
+#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/wildcard.hpp>
 
 #include <algorithm>
-#include <regex>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -53,6 +54,19 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             DLOG("No Day Count convention specified for " << spec.curveConfigID() << ", using A365F as default");
         } else {
             dc_ = parseDayCounter(config->dayCountID());
+        }
+
+        // set the calendar to the ccy based calendar, if provided by config we try to use that
+        Calendar calendar;
+        if (!config->calendar().empty()) {
+            try {
+                calendar = parseCalendar(config->calendar());
+            } catch (exception& ex) {
+                WLOG("Failed to get Calendar name for  " << config->calendar() << ":" << ex.what());
+            }
+        }
+        if (calendar.empty()) {
+            calendar = parseCalendar(config->currency());
         }
 
         // Set the Curve type - EquityFwd / OptionPrice / DividendYield
@@ -88,24 +102,13 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         Size quotesRead = 0;
 
         // in case of wild-card in config
-        bool wcFlag = false;
-        bool foundRegex = false;
-        regex reg1;
+        auto wildcard = getUniqueWildcard(config->fwdQuotes());
 
-        // check for regex string in config
-        for (Size i = 0; i < config->fwdQuotes().size(); i++) {
-            foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
-        }
         if ((config->type() == EquityCurveConfig::Type::ForwardPrice ||
+             config->type() == EquityCurveConfig::Type::ForwardDividendPrice ||
              config->type() == EquityCurveConfig::Type::OptionPremium) &&
-            foundRegex) {
-            QL_REQUIRE(config->fwdQuotes().size() == 1,
-                       "wild card specified in " << config->curveID() << " but more quotes also specified.");
+            wildcard) {
             LOG("Wild card quote specified for " << config->curveID())
-            wcFlag = true;
-            string regexstr = config->fwdQuotes()[0];
-            boost::replace_all(regexstr, "*", ".*");
-            reg1 = regex(regexstr);
         } else {
             if (config->type() == EquityCurveConfig::Type::OptionPremium) {
                 oqt.resize(config->fwdQuotes().size());
@@ -126,19 +129,22 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 if (q->name() == config->equitySpotQuoteID()) {
                     QL_REQUIRE(equitySpot.empty(), "duplicate equity spot quote " << q->name() << " found.");
-                    equitySpot = Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value()));
+                    // convert quote from minor to major currency if needed
+                    Real spot = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
+                    equitySpot = Handle<Quote>(boost::make_shared<SimpleQuote>(spot));
                 }
             }
 
-            if (config->type() == EquityCurveConfig::Type::ForwardPrice && md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::EQUITY_FWD &&
+            if ((config->type() == EquityCurveConfig::Type::ForwardPrice ||
+                 config->type() == EquityCurveConfig::Type::ForwardDividendPrice) &&
+                md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_FWD &&
                 md->quoteType() == MarketDatum::QuoteType::PRICE) {
 
                 boost::shared_ptr<EquityForwardQuote> q = boost::dynamic_pointer_cast<EquityForwardQuote>(md);
 
-                if (wcFlag) {
+                if (wildcard) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof <= q->expiryDate()) {
+                    if ((*wildcard).matches(q->name()) && asof < q->expiryDate()) {
                         QL_REQUIRE(find(qt.begin(), qt.end(), q) == qt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Forward Price found for quote: " << q->name());
@@ -155,7 +161,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         QL_REQUIRE(terms_[pos] == Null<Date>(),
                                    "duplicate market datum found for " << config->fwdQuotes()[pos]);
                         terms_[pos] = q->expiryDate();
-                        quotes_[pos] = q->quote()->value();
+                        // convert quote from minor to major currency if needed
+                        quotes_[pos] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
                         quotesRead++;
                     }
                 }
@@ -168,9 +175,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
                 Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof);
 
-                if (wcFlag) {
+                if (wildcard) {
                     // is the quote 'in' the config? (also check expiry not before asof)
-                    if (regex_match(q->name(), reg1) && asof <= expiryDate) {
+                    if ((*wildcard).matches(q->name()) && asof < expiryDate) {
                         QL_REQUIRE(find(oqt.begin(), oqt.end(), q) == oqt.end(),
                                    "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Volatility Price found for quote: " << q->name());
@@ -218,7 +225,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
         QL_REQUIRE(!equitySpot.empty(), "Equity spot quote not found for " << config->curveID());
 
-        if (!wcFlag) {
+        if (!wildcard) {
             QL_REQUIRE(quotesRead == config->fwdQuotes().size(),
                        "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
         }
@@ -234,31 +241,40 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         EquityCurveConfig::Type buildCurveType = curveType_;
 
         // for curveType ForwardPrice or OptionPremium poputuate the terms_ and quotes_ with forward prices
-        if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
+        if (curveType_ == EquityCurveConfig::Type::ForwardPrice ||
+            curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
 
-            DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
+            if (qt.size() > 0) {
+                DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
 
-            // sort quotes and terms in case of wild-card
-            if (wcFlag) {
-                QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
+                // sort quotes and terms in case of wild-card
+                if (wildcard) {
+                    QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
 
-                // sort
-                std::sort(qt.begin(), qt.end(),
-                          [](const boost::shared_ptr<EquityForwardQuote>& a,
-                             const boost::shared_ptr<EquityForwardQuote>& b) -> bool {
-                              return a->expiryDate() < b->expiryDate();
-                          });
+                        // sort
+                        std::sort(qt.begin(), qt.end(),
+                            [](const boost::shared_ptr<EquityForwardQuote>& a,
+                                const boost::shared_ptr<EquityForwardQuote>& b) -> bool {
+                        return a->expiryDate() < b->expiryDate();
+                    });
 
-                // populate individual quote, term vectors
-                for (Size i = 0; i < qt.size(); i++) {
-                    terms_.push_back(qt[i]->expiryDate());
-                    quotes_.push_back(qt[i]->quote()->value());
+                    // populate individual quote, term vectors
+                    for (Size i = 0; i < qt.size(); i++) {
+                        terms_.push_back(qt[i]->expiryDate());
+                        // convert quote from minor to major currency if needed
+                        quotes_.push_back(convertMinorToMajorCurrency(qt[i]->ccy(), qt[i]->quote()->value()));
+                    }
                 }
+            }
+            if (quotes_.size() == 0) {
+                LOG("No Equity Forward quotes provided for " << config->curveID()
+                    << ", continuing without dividend curve.");
+                buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
 
             if (oqt.size() == 0) {
-                WLOG("No Equity Option quotes provided for " << config->curveID()
+                LOG("No Equity Option quotes provided for " << config->curveID()
                                                              << ", continuing without dividend curve.");
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             } else {
@@ -271,10 +287,13 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 // Split the quotes into call and puts
                 for (auto q : oqt) {
-                    if (q->isCall()) {
-                        calls.push_back(q);
-                    } else {
-                        puts.push_back(q);
+                    if (q->quote()->value() > 0) {
+                        if (q->isCall()) {
+                            calls.push_back(q);
+                        }
+                        else {
+                            puts.push_back(q);
+                        }
                     }
                 }
 
@@ -282,44 +301,64 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 // We only want overlapping expiry/strike pairs
                 for (Size i = 0; i < calls.size(); i++) {
                     for (Size j = 0; j < puts.size(); j++) {
-                        if (calls[i]->expiry() == puts[j]->expiry() && calls[i]->strike() == puts[j]->strike()) {
-                            TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/"
-                                                                                 << calls[i]->strike());
-                            callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
-                            putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
-                            callStrikes.push_back(parseReal(calls[i]->strike()));
-                            putStrikes.push_back(parseReal(puts[j]->strike()));
-                            callPremiums.push_back(calls[i]->quote()->value());
-                            putPremiums.push_back(puts[j]->quote()->value());
+                        if (calls[i]->expiry() == puts[j]->expiry()) {
+                            auto callAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(calls[i]->strike());
+                            auto putAbsoluteStrike = boost::dynamic_pointer_cast<AbsoluteStrike>(puts[j]->strike());
+                            QL_REQUIRE(callAbsoluteStrike, "Expected absolute strike for quote " << calls[i]->name());
+                            QL_REQUIRE(putAbsoluteStrike, "Expected absolute strike for quote " << puts[j]->name());
+                            if (*calls[i]->strike() == *puts[j]->strike()) {
+                                TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/"
+                                                                                     << calls[i]->strike()->toString());
+                                callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
+                                putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
+
+                                // convert strike to major currency if quoted in minor
+                                Real callStrike =
+                                    convertMinorToMajorCurrency(calls[i]->ccy(), callAbsoluteStrike->strike());
+                                Real putStrike =
+                                    convertMinorToMajorCurrency(puts[j]->ccy(), putAbsoluteStrike->strike());
+                                callStrikes.push_back(callStrike);
+                                putStrikes.push_back(putStrike);
+                                // convert premium to major currency if quoted in minor
+                                callPremiums.push_back(
+                                    convertMinorToMajorCurrency(calls[i]->ccy(), calls[i]->quote()->value()));
+                                putPremiums.push_back(
+                                    convertMinorToMajorCurrency(puts[j]->ccy(), puts[j]->quote()->value()));
+                            }
                         }
                     }
                 }
 
-                QL_REQUIRE(callDates.size() > 0 && putDates.size() > 0,
-                           "Must provide valid overlapping call and put quotes");
-                DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
+                if (callDates.size() > 0 && putDates.size() > 0) {                    
+                        DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
 
-                DLOG("Building a Sparce Volatility surface for calls and puts");
-                // Build a Black Variance Sparse matrix
-                boost::shared_ptr<OptionPriceSurface> callSurface =
-                    boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
-                boost::shared_ptr<OptionPriceSurface> putSurface =
-                    boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
-                DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
+                        DLOG("Building a Sparce Volatility surface for calls and puts");
+                        // Build a Black Variance Sparse matrix
+                        boost::shared_ptr<OptionPriceSurface> callSurface =
+                            boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
+                        boost::shared_ptr<OptionPriceSurface> putSurface =
+                            boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
+                        DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
 
-                DLOG("Stripping equity forwards from the option premium surfaces");
-                boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(
-                    callSurface, putSurface, forecastYieldTermStructure, equitySpot, config->exerciseStyle());
+                        DLOG("Stripping equity forwards from the option premium surfaces");
+                        boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(
+                            callSurface, putSurface, forecastYieldTermStructure, equitySpot, config->exerciseStyle());
 
-                // set terms and quotes from the stripper
-                terms_ = efcs->expiries();
-                quotes_ = efcs->forwards();
+                        // set terms and quotes from the stripper
+                        terms_ = efcs->expiries();
+                        quotes_ = efcs->forwards();
+                }
+                else {
+                    DLOG("No overlapping call and put quotes for equity " << spec.curveConfigID() << " building NoDividends curve");
+                    buildCurveType = EquityCurveConfig::Type::NoDividends;
+                }
             }
         }
 
         // Build the Dividend Yield curve from the quotes loaded
         vector<Rate> dividendRates;
         if (buildCurveType == EquityCurveConfig::Type::ForwardPrice ||
+            buildCurveType == EquityCurveConfig::Type::ForwardDividendPrice ||
             buildCurveType == EquityCurveConfig::Type::OptionPremium) {
             // Convert Fwds into dividends.
             // Fwd = Spot e^{(r-q)T}
@@ -337,9 +376,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
             dividendYieldTermStructure = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
-            equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), parseCalendar(config->currency()),
-                                                           parseCurrency(config->currency()), equitySpot,
-                                                           forecastYieldTermStructure, dividendYieldTermStructure);
+            equityIndex_ =
+                boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
+                                                equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
             return;
         } else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
@@ -393,9 +432,22 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
         dividendYieldTermStructure = Handle<YieldTermStructure>(divCurve);
 
-        equityIndex_ = boost::make_shared<EquityIndex>(spec.curveConfigID(), parseCalendar(config->currency()),
-                                                       parseCurrency(config->currency()), equitySpot,
-                                                       forecastYieldTermStructure, dividendYieldTermStructure);
+        equityIndex_ =
+            boost::make_shared<EquityIndex>(spec.curveConfigID(), calendar, parseCurrency(config->currency()),
+                                            equitySpot, forecastYieldTermStructure, dividendYieldTermStructure);
+
+        // set calibration info
+
+        calibrationInfo_ = boost::make_shared<YieldCurveCalibrationInfo>();
+        calibrationInfo_->dayCounter = dc_.name();
+        calibrationInfo_->currency = config->currency();
+        for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods) {
+            Date d = asof + p;
+            calibrationInfo_->pillarDates.push_back(d);
+            calibrationInfo_->zeroRates.push_back(dividendYieldTermStructure->zeroRate(d, dc_, Continuous));
+            calibrationInfo_->discountFactors.push_back(dividendYieldTermStructure->discount(d));
+            calibrationInfo_->times.push_back(dividendYieldTermStructure->timeFromReference(d));
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("equity curve building failed: " << e.what());

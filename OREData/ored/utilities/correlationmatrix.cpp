@@ -18,275 +18,295 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/quotes/derivedquote.hpp>
 #include <ql/quotes/simplequote.hpp>
 
+using namespace QuantLib;
 using namespace std;
+
+namespace CT = QuantExt::CrossAssetModelTypes;
+
+namespace {
+
+string invertFx(const string& ccyPair) {
+    QL_REQUIRE(ccyPair.size() == 6, "invertFx: Expected currency pair to be 6 characters but got: " << ccyPair);
+    return ccyPair.substr(3, 3) + ccyPair.substr(0, 3);
+}
+
+}
 
 namespace ore {
 namespace data {
 
-// typedef std::pair<std::string, std::string> key;
-
-void CorrelationMatrixBuilder::addCorrelation(const std::string& factor1, const std::string& factor2,
-                                              Real correlation) {
-    addCorrelation(factor1, factor2, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)));
+bool operator<(const CorrelationFactor& lhs, const CorrelationFactor& rhs) {
+    return tie(lhs.type, lhs.name, lhs.index) < tie(rhs.type, rhs.name, rhs.index);
 }
 
-void CorrelationMatrixBuilder::addCorrelation(const std::string& factor1, const std::string& factor2,
-                                              const Handle<Quote>& correlation) {
-    checkFactor(factor1);
-    checkFactor(factor2);
-    // we store the correlations in a map, but we sort the key (pair of strings)
-    // first for quicker lookup.
-    key k = buildkey(factor1, factor2);
-    QL_REQUIRE(data_.find(k) == data_.end(), "Correlation for key " << k.first << "," << k.second << " already set");
-    QL_REQUIRE(correlation->value() >= -1.0 && correlation->value() <= 1.0,
-               "Invalid correlation " << correlation->value());
-    data_[k] = correlation;
+bool operator==(const CorrelationFactor& lhs, const CorrelationFactor& rhs) {
+    return lhs.type == rhs.type && lhs.name == rhs.name && lhs.index == rhs.index;
 }
 
-// -- public interface, wrapping the Impl methods
-// we don't need the factors vector
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector<std::string>& ccys) {
-    vector<string> factors;
-    return correlationMatrixImpl(ccys, factors);
+bool operator!=(const CorrelationFactor& lhs, const CorrelationFactor& rhs) {
+    return !(lhs == rhs);
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector<std::string>& ccys,
-                                                               const std::vector<std::string>& infIndices) {
-    vector<string> factors;
-    return correlationMatrixImpl(ccys, infIndices, factors);
+ostream& operator<<(ostream& out, const CorrelationFactor& f) {
+    return out << "{" << f.type << "," << f.name << "," << f.index << "}";
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector<std::string>& ccys,
-                                                               const std::vector<std::string>& infIndices,
-                                                               const std::vector<std::string>& names) {
-    vector<string> factors;
-    return correlationMatrixImpl(ccys, infIndices, names, factors);
+CorrelationFactor parseCorrelationFactor(const string& name) {
+    
+    Size pos = name.find(':');
+    QL_REQUIRE(pos != string::npos, "Expected the factor to be of the form 'type:name'");
+
+    CT::AssetType factorType = parseCamAssetType(name.substr(0, pos));
+    string factorName = name.substr(pos + 1);
+
+    return { factorType, factorName, 0 };
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector<std::string>& ccys,
-                                                               const std::vector<std::string>& infIndices,
-                                                               const std::vector<std::string>& names,
-                                                               const std::vector<std::string>& equities) {
-    vector<string> factors;
-    return correlationMatrixImpl(ccys, infIndices, names, equities, factors);
+void CorrelationMatrixBuilder::reset() {
+    corrs_.clear();
 }
 
-// -- Impl methods, used for building ontop of each other.
+void CorrelationMatrixBuilder::addCorrelation(const string& factor1, const string& factor2, Real correlation) {
+    CorrelationFactor f_1 = parseCorrelationFactor(factor1);
+    CorrelationFactor f_2 = parseCorrelationFactor(factor2);
+    addCorrelation(f_1, f_2, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)));
+}
 
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
-                                                                   vector<string>& factors) {
-    QL_REQUIRE(factors.size() == 0, "Factors Input vector must be empty");
+void CorrelationMatrixBuilder::addCorrelation(const string& factor1, const string& factor2,
+    const Handle<Quote>& correlation) {
+    CorrelationFactor f_1 = parseCorrelationFactor(factor1);
+    CorrelationFactor f_2 = parseCorrelationFactor(factor2);
+    addCorrelation(f_1, f_2, correlation);
+}
 
-    QL_REQUIRE(ccys.size() >= 1, "At least one currency required to build correlation matrix");
-    for (Size i = 0; i < ccys.size(); i++)
-        QL_REQUIRE(ccys[i].size() == 3, "Invalid ccy code " << ccys[i]);
+void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1,
+    const CorrelationFactor& f_2, Real correlation) {
+    addCorrelation(f_1, f_2, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)));
+}
 
-    // Build (2n-1)*(2n-1) matrix
-    // IR/IR first, than IR/FX
-    Size n = ccys.size();
-    Size len = 2 * n - 1;
+void CorrelationMatrixBuilder::addCorrelation(const CorrelationFactor& f_1, const CorrelationFactor& f_2,
+    const Handle<Quote>& correlation) {
 
-    // start with an empty matrix
-    Matrix mat(len, len, 0);
-    for (Size i = 0; i < len; i++)
-        mat[i][i] = 1.0;
+    // Check the factors
+    checkFactor(f_1);
+    checkFactor(f_2);
 
-    // build factors
-    // { "EUR", "USD", "GBP" } -> { "IR:EUR", "IR:USD", "IR:GBP", "FX:EURUSD", "FX:EURGBP" }
-    factors.resize(len);
-    for (Size i = 0; i < n; i++)
-        factors[i] = "IR:" + ccys[i];
-    for (Size i = 1; i < n; i++)
-        factors[n + i - 1] = "FX:" + ccys[i] + ccys[0];
+    // Store the correlation.
+    CorrelationKey ck = createKey(f_1, f_2);
+    QL_REQUIRE(corrs_.find(ck) == corrs_.end(), "Correlation for key [" <<
+        ck.first << "," << ck.second << "] already set");
+    QL_REQUIRE(correlation->value() >= -1.0 && correlation->value() <= 1.0, "Correlation value, " <<
+        correlation->value() << ", for key [" << ck.first << "," << ck.second << "] should be in [-1.0,1.0]");
+    corrs_[ck] = correlation;
+    DLOG("Added correlation: (" << f_1 << "," << f_2 << ") = " << correlation->value() << ".");
+}
 
-    // now populate matrix
-    // the lookup function takes care of FX:EURUSD / FX:USDEUR conversion
-    for (Size i = 0; i < len; i++) {
-        for (Size j = 0; j < i; j++)
-            mat[i][j] = mat[j][i] = lookup(factors[i], factors[j])->value();
+Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys) {
+    ProcessInfo pi = createProcessInfo(ccys);
+    return correlationMatrix(pi);
+}
+
+Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
+    const vector<string>& infIndices) {
+    ProcessInfo pi = createProcessInfo(ccys, infIndices);
+    return correlationMatrix(pi);
+}
+
+Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
+    const vector<string>& infIndices, const vector<string>& names) {
+    ProcessInfo pi = createProcessInfo(ccys, infIndices, names);
+    return correlationMatrix(pi);
+}
+
+Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const vector<string>& ccys,
+    const vector<string>& infIndices, const vector<string>& names, const vector<string>& equities) {
+    ProcessInfo pi = createProcessInfo(ccys, infIndices, names, equities);
+    return correlationMatrix(pi);
+}
+
+Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const ProcessInfo& processInfo) {
+
+    // Check that all IR processes are currency codes and that we have at least one currency
+    auto outerIt = processInfo.find(CT::IR);
+    QL_REQUIRE(outerIt != processInfo.end() && !outerIt->second.empty(),
+        "Need at least one currency to build correlation matrix.");
+    
+    for (const auto& p : outerIt->second) {
+        QL_REQUIRE(p.first.size() == 3, "Invalid ccy code " << p.first);
     }
 
-    // check it
-    checkMatrix(mat);
+    // Get the dimension of the matrix to create and create a list of factors.
+    Size dim = 0;
+    vector<CorrelationFactor> factors;
+    for (const auto& kv : processInfo) {
+        for (const auto& p : kv.second) {
+            
+            // Don't allow multiple factors for FX for now. Need to check later the FX inversion in the lookup below 
+            // if we want to extend the builder to multiple factors for each FX process.
+            if (kv.first == CT::FX) {
+                QL_REQUIRE(p.second == 1, "CorrelationMatrixBuilder does not support multiple factors for FX. " <<
+                    p.first << " is set up with " << p.second << " factors.");
+            }
 
-    return mat;
-}
-
-// increases a matrix by n rows + n columns, values are 0, diagionals 1.
-Disposable<Matrix> CorrelationMatrixBuilder::extendMatrix(const Matrix& mat, Size n) {
-    Matrix newMat(mat.rows() + n, mat.columns() + n, 0);
-    // copy old into new
-    for (Size i = 0; i < mat.rows(); ++i) {
-        for (Size j = 0; j < mat.columns(); ++j)
-            newMat[i][j] = mat[i][j];
-    }
-    // set diagional
-    for (Size i = 0; i < n; ++i)
-        newMat[mat.rows() + i][mat.columns() + i] = 1.0;
-    return newMat;
-}
-
-Disposable<Matrix> CorrelationMatrixBuilder::extendCorrelationMatrix(const Matrix& mat, const vector<string>& names,
-                                                                     vector<string>& factors, const string& prefix) {
-    Size m = names.size();
-
-    // build extra factors
-    // { "UKRPI", "EUHICP" } -> { "INF:UKRPI", "INF:EUHICP" }
-    for (Size i = 0; i < m; i++)
-        factors.push_back(prefix + names[i]);
-
-    // Build extended matrix. 2n-1 => 2n-1+m
-    Matrix mat1 = extendMatrix(mat, m);
-
-    // now populate additional terms
-    Size len = mat1.rows();
-    QL_REQUIRE(len == mat1.columns(), "Matrix not square");
-    for (Size i = 0; i < len; i++) {
-        for (Size j = max(i + 1, mat.rows()); j < len; j++)
-            mat1[i][j] = mat1[j][i] = lookup(factors[i], factors[j])->value();
-    }
-
-    // check it
-    checkMatrix(mat1);
-
-    return mat1;
-}
-
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
-                                                                   const vector<string>& infIndices,
-                                                                   vector<string>& factors) {
-
-    // First, build the IR/FX matrix
-    Matrix mat1 = correlationMatrixImpl(ccys, factors);
-
-    if (infIndices.size() == 0)
-        return mat1;
-
-    Matrix mat2 = extendCorrelationMatrix(mat1, infIndices, factors, "INF:");
-    return mat2;
-}
-
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
-                                                                   const vector<string>& infIndices,
-                                                                   const vector<string>& names,
-                                                                   vector<string>& factors) {
-
-    // First, build the IR/FX/INF matrix
-    Matrix mat1 = correlationMatrixImpl(ccys, infIndices, factors);
-
-    if (names.size() == 0)
-        return mat1;
-
-    Matrix mat2 = extendCorrelationMatrix(mat1, names, factors, "CR:");
-    return mat2;
-}
-
-Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
-                                                                   const vector<string>& infIndices,
-                                                                   const vector<string>& names,
-                                                                   const vector<string>& equities,
-                                                                   vector<string>& factors) {
-
-    // First, build the IR/FX/INF/CR matrix
-    Matrix mat1 = correlationMatrixImpl(ccys, infIndices, names, factors);
-
-    if (equities.size() == 0)
-        return mat1;
-
-    Matrix mat2 = extendCorrelationMatrix(mat1, equities, factors, "EQ:");
-    return mat2;
-}
-
-// static
-void CorrelationMatrixBuilder::checkMatrix(const Matrix& m) {
-    QL_REQUIRE(m.rows() == m.columns(), "Error matrix is not square");
-    for (Size i = 0; i < m.rows(); i++)
-        QL_REQUIRE(m[i][i] == 1.0, "Error, diagonal is not equal to 1 at point " << i);
-    for (Size i = 0; i < m.rows(); i++) {
-        for (Size j = 0; j < i; j++) {
-            QL_REQUIRE(m[i][j] == m[j][i], "Error, matrix is not symmetric at [" << i << "," << j << "]");
-            QL_REQUIRE(m[i][j] >= -1.0 && m[i][j] <= 1.0,
-                       "Error, invalid correlation value" << m[i][j] << " at [" << i << "," << j << "]");
+            dim += p.second;
+            for (Size i = 0; i < p.second; ++i) {
+                factors.push_back({ kv.first, p.first, i });
+            }
         }
     }
-}
-
-// static
-Size CorrelationMatrixBuilder::countNonZero(const Matrix& m) {
-    checkMatrix(m);
-    Size c = 0;
-    for (Size i = 0; i < m.rows(); i++) {
-        for (Size j = 0; j < i; j++) {
-            if (m[i][j] != 0)
-                c++;
+    
+    // Start with the identity matrix
+    Matrix corr(dim, dim, 0.0);
+    for (Size i = 0; i < dim; i++)
+        corr[i][i] = 1.0;
+    
+    // Populate all of the off-diagonal elements
+    for (Size i = 0; i < dim; ++i) {
+        for (Size j = 0; j < i; ++j) {
+            corr[i][j] = corr[j][i] = getCorrelation(factors[i], factors[j])->value();
         }
     }
-    return c;
+
+    return corr;
 }
 
-void CorrelationMatrixBuilder::checkFactor(const string& f) {
-    if (f.substr(0, 3) == "IR:") {
-        QL_REQUIRE(f.size() == 6, "Invalid factor name " << f);
-    } else if (f.substr(0, 3) == "FX:") {
-        QL_REQUIRE(f.size() == 9, "Invalid factor name " << f);
-    } else if (f.substr(0, 4) == "INF:") {
-        // Inflation index, check it's at least 1 character
-        QL_REQUIRE(f.size() > 4, "Invalid factor name " << f);
-    } else if (f.substr(0, 3) == "CR:") {
-        // credit name, just check it's at least 1 character
-        QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
-    } else if (f.substr(0, 3) == "EQ:") {
-        // equity name, just check it's at least 1 character
-        QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
-    } else {
-        QL_FAIL("Invalid factor name " << f);
+CorrelationMatrixBuilder::ProcessInfo CorrelationMatrixBuilder::createProcessInfo(
+    const vector<string>& ccys,
+    const std::vector<std::string>& inflationIndices,
+    const std::vector<std::string>& creditNames,
+    const std::vector<std::string>& equityNames) {
+    
+    // Check the currencies.
+    QL_REQUIRE(!ccys.empty(), "At least one currency required to build correlation matrix");
+    for (const string& ccy : ccys) {
+        QL_REQUIRE(ccy.size() == 3, "Invalid currency code " << ccy);
+    }
+
+    // Hold the resulting process information.
+    // Supporting a legacy method, assumed that there is 1 factor per process.
+    ProcessInfo result;
+
+    // Add process information for each currency.
+    for (const string& ccy : ccys) {
+        result[CT::IR].emplace_back(ccy, 1);
+    }
+
+    // Add process information for each FX pair.
+    for (Size i = 1; i < ccys.size(); ++i) {
+        string ccyPair = ccys[i] + ccys[0];
+        result[CT::FX].emplace_back(ccyPair, 1);
+    }
+
+    // Add process information for inflation indices.
+    for (const string& inflationIndex : inflationIndices) {
+        result[CT::INF].emplace_back(inflationIndex, 1);
+    }
+
+    // Add process information for credit names.
+    for (const string& creditName : creditNames) {
+        result[CT::CR].emplace_back(creditName, 1);
+    }
+
+    // Add process information for equity names.
+    for (const string& equityName : equityNames) {
+        result[CT::EQ].emplace_back(equityName, 1);
+    }
+
+    return result;
+}
+
+void CorrelationMatrixBuilder::checkFactor(const CorrelationFactor& f) const {
+    switch (f.type) {
+    case CT::IR:
+    case CT::AUX:
+        QL_REQUIRE(f.name.size() == 3, "Expected IR factor name to be 3 character currency code but got: " << f.name);
+        break;
+    case CT::FX:
+        QL_REQUIRE(f.name.size() == 6, "Expected FX factor name to be 6 character currency pair but got: " << f.name);
+        break;
+    case CT::INF:
+    case CT::CR:
+    case CT::EQ:
+        QL_REQUIRE(!f.name.empty(), "Expected non-empty factor name for factor type " << f.type);
+        break;
+    default:
+        QL_FAIL("Did not recognise factor type " << static_cast<int>(f.type) << ".");
     }
 }
 
-CorrelationMatrixBuilder::key CorrelationMatrixBuilder::buildkey(const string& f1In, const string& f2In) {
-    string f1(f1In), f2(f2In); // we need local copies
-    QL_REQUIRE(f1 != f2, "Correlation factors must be unique (" << f1 << ")");
-    if (f1 < f2)
-        return make_pair(f1, f2);
+CorrelationKey CorrelationMatrixBuilder::createKey(const CorrelationFactor& f_1,
+    const CorrelationFactor& f_2) const {
+
+    QL_REQUIRE(f_1 != f_2, "Correlation factors must be unique: " << f_1 << ".");
+    
+    if (f_1 < f_2)
+        return make_pair(f_1, f_2);
     else
-        return make_pair(f2, f1);
+        return make_pair(f_2, f_1);
 }
-
-static bool isFX(const string& s) { return s.size() == 9 && s.substr(0, 3) == "FX:"; }
-
-static string invertFX(const string& s) { return "FX:" + s.substr(6, 3) + s.substr(3, 3); }
 
 Handle<Quote> CorrelationMatrixBuilder::lookup(const string& f1, const string& f2) {
-    key k = buildkey(f1, f2);
-    if (data_.find(k) != data_.end())
-        return data_[k];
+    CorrelationFactor f_1 = parseCorrelationFactor(f1);
+    CorrelationFactor f_2 = parseCorrelationFactor(f2);
+    return getCorrelation(f_1, f_2);
+}
 
-    // There are up to 3 possible alternatives.
-    bool isfx1 = isFX(f1);
-    bool isfx2 = isFX(f2);
-    if (isfx1) {
-        k = buildkey(invertFX(f1), f2);
-        if (data_.find(k) != data_.end())
-            return Handle<Quote>(
-                boost::make_shared<DerivedQuote<std::negate<Real>>>(data_[k], std::negate<Real>())); // invert
-    }
-    if (isfx2) {
-        k = buildkey(f1, invertFX(f2));
-        if (data_.find(k) != data_.end())
-            return Handle<Quote>(
-                boost::make_shared<DerivedQuote<std::negate<Real>>>(data_[k], std::negate<Real>())); // invert
-    }
-    if (isfx1 && isfx2) {
-        k = buildkey(invertFX(f1), invertFX(f2));
-        if (data_.find(k) != data_.end())
-            return data_[k]; // don't invert
+//! Get the correlation between the factor \p f_1 and \p f_2.
+Handle<Quote> CorrelationMatrixBuilder::getCorrelation(const CorrelationFactor& f_1,
+    const CorrelationFactor& f_2) const {
+    
+    // Create key with the correct order for lookup
+    CorrelationKey ck = createKey(f_1, f_2);
+    
+    // If we have the correlation via direct lookup, return it.
+    if (corrs_.find(ck) != corrs_.end())
+        return corrs_.at(ck);
+
+    // If one or both of the factors are FX, we may still be able to generate a correlation by using the inverse of 
+    // a provided FX quote. Note that we have FX restricted to 1 factor in this class above.
+
+    typedef DerivedQuote<negate<Real>> InvQuote;
+
+    // If factor 1 is FX
+    if (f_1.type == CT::FX) {
+        CorrelationFactor if_1{ CT::FX, invertFx(f_1.name), f_1.index };
+        ck = createKey(if_1, f_2);
+        auto it = corrs_.find(ck);
+        if (it != corrs_.end())
+            return Handle<Quote>(boost::make_shared<InvQuote>(it->second, negate<Real>()));
     }
 
-    // default.
+    // If factor 2 is FX
+    if (f_2.type == CT::FX) {
+        CorrelationFactor if_2{ CT::FX, invertFx(f_2.name), f_2.index };
+        ck = createKey(f_1, if_2);
+        auto it = corrs_.find(ck);
+        if (it != corrs_.end())
+            return Handle<Quote>(boost::make_shared<InvQuote>(it->second, negate<Real>()));
+    }
+
+    // If factor 1 and factor 2 are both FX
+    if (f_1.type == CT::FX && f_2.type == CT::FX) {
+        CorrelationFactor if_1{ CT::FX, invertFx(f_1.name), f_1.index };
+        CorrelationFactor if_2{ CT::FX, invertFx(f_2.name), f_2.index };
+        ck = createKey(if_1, if_2);
+        auto it = corrs_.find(ck);
+        if (it != corrs_.end())
+            return it->second;
+    }
+
+    // If we still haven't found anything, return a correlation of 0.
     return Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 }
+
+const map<CorrelationKey, Handle<Quote>>& CorrelationMatrixBuilder::correlations() {
+    return corrs_;
+}
+
+
 } // namespace data
 } // namespace ore

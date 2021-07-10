@@ -25,7 +25,12 @@
 
 #include <ored/portfolio/optionexercisedata.hpp>
 #include <ored/portfolio/optionpaymentdata.hpp>
+#include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/schedule.hpp>
+
+#include <ql/cashflow.hpp>
+#include <ql/exercise.hpp>
+#include <ql/time/date.hpp>
 
 namespace ore {
 namespace data {
@@ -37,13 +42,13 @@ namespace data {
 class OptionData : public XMLSerializable {
 public:
     //! Default constructor
-    OptionData() : payoffAtExpiry_(true), premium_(0.0), automaticExercise_(false) {}
+    OptionData() : payoffAtExpiry_(true), automaticExercise_(false) {}
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
-               string settlement = "Cash", string settlementMethod = "", double premium = 0, string premiumCcy = "",
-               string premiumPayDate = "", vector<double> exerciseFees = vector<Real>(),
-               vector<double> exercisePrices = vector<Real>(), string noticePeriod = "", string noticeCalendar = "",
-               string noticeConvention = "", const vector<string>& exerciseFeeDates = vector<string>(),
+               string settlement = "Cash", string settlementMethod = "", const PremiumData& premiumData = {},
+               vector<double> exerciseFees = vector<Real>(), vector<double> exercisePrices = vector<Real>(),
+               string noticePeriod = "", string noticeCalendar = "", string noticeConvention = "",
+               const vector<string>& exerciseFeeDates = vector<string>(),
                const vector<string>& exerciseFeeTypes = vector<string>(), string exerciseFeeSettlementPeriod = "",
                string exerciseFeeSettlementCalendar = "", string exerciseFeeSettlementConvention = "",
                string payoffType = "", const boost::optional<bool>& automaticExercise = boost::none,
@@ -52,9 +57,9 @@ public:
         : longShort_(longShort), callPut_(callPut), payoffType_(payoffType), style_(style),
           payoffAtExpiry_(payoffAtExpiry), exerciseDates_(exerciseDates), noticePeriod_(noticePeriod),
           noticeCalendar_(noticeCalendar), noticeConvention_(noticeConvention), settlement_(settlement),
-          settlementMethod_(settlementMethod), premium_(premium), premiumCcy_(premiumCcy),
-          premiumPayDate_(premiumPayDate), exerciseFees_(exerciseFees), exerciseFeeDates_(exerciseFeeDates),
-          exerciseFeeTypes_(exerciseFeeTypes), exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
+          settlementMethod_(settlementMethod), premiumData_(premiumData), exerciseFees_(exerciseFees),
+          exerciseFeeDates_(exerciseFeeDates), exerciseFeeTypes_(exerciseFeeTypes),
+          exerciseFeeSettlementPeriod_(exerciseFeeSettlementPeriod),
           exerciseFeeSettlementCalendar_(exerciseFeeSettlementCalendar),
           exerciseFeeSettlementConvention_(exerciseFeeSettlementConvention), exercisePrices_(exercisePrices),
           automaticExercise_(automaticExercise), exerciseData_(exerciseData), paymentData_(paymentData) {}
@@ -72,9 +77,7 @@ public:
     const string& noticeConvention() const { return noticeConvention_; }
     const string& settlement() const { return settlement_; }
     const string& settlementMethod() const { return settlementMethod_; }
-    double premium() const { return premium_; }
-    const string& premiumCcy() const { return premiumCcy_; }
-    const string& premiumPayDate() const { return premiumPayDate_; }
+    const PremiumData& premiumData() const { return premiumData_; }
     const vector<double>& exerciseFees() const { return exerciseFees_; }
     const vector<string>& exerciseFeeDates() const { return exerciseFeeDates_; }
     const vector<string>& exerciseFeeTypes() const { return exerciseFeeTypes_; }
@@ -82,12 +85,16 @@ public:
     const string& exerciseFeeSettlementCalendar() const { return exerciseFeeSettlementCalendar_; }
     const string& exerciseFeeSettlementConvention() const { return exerciseFeeSettlementConvention_; }
     const vector<double>& exercisePrices() const { return exercisePrices_; }
-    bool automaticExercise() const {
-        // Assumed false if not provided.
-        return automaticExercise_ ? *automaticExercise_ : false;
-    }
+    boost::optional<bool> automaticExercise() const { return automaticExercise_; }
     const boost::optional<OptionExerciseData>& exerciseData() const { return exerciseData_; }
     const boost::optional<OptionPaymentData>& paymentData() const { return paymentData_; }
+    //@}
+
+    //! \name Setters
+    //@{
+    void setExerciseDates(const std::vector<std::string>& exerciseDates) { exerciseDates_ = exerciseDates; }
+    void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
+    void setPaymentData(const OptionPaymentData& paymentData) { paymentData_ = paymentData; }
     //@}
 
     //! \name Serialisation
@@ -95,6 +102,9 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
+
+    //! Automatic exercise assumed false if not explicitly provided.
+    bool isAutomaticExercise() const { return automaticExercise_ ? *automaticExercise_ : false; }
 
 private:
     string longShort_;    // long or short
@@ -108,9 +118,7 @@ private:
     string noticeConvention_;
     string settlement_;       // Cash or Physical, default Cash.
     string settlementMethod_; // QuantLib::Settlement::Method, default empty
-    double premium_;
-    string premiumCcy_;
-    string premiumPayDate_;
+    PremiumData premiumData_;
     vector<double> exerciseFees_;
     vector<string> exerciseFeeDates_;
     vector<string> exerciseFeeTypes_;
@@ -122,5 +130,24 @@ private:
     boost::optional<OptionExerciseData> exerciseData_;
     boost::optional<OptionPaymentData> paymentData_;
 };
+
+/* Helper class to build an exercise instance for Bermudan swaptions and related instruments from given option data.
+   Only future exercise dates that exercise into a whole future accrual period of the underlying are kept.
+   If no exercise dates are left, exercise() will return a nullptr. */
+
+class ExerciseBuilder {
+public:
+    ExerciseBuilder(const OptionData& optionData, const std::vector<QuantLib::Leg> legs);
+
+    boost::shared_ptr<QuantLib::Exercise> exercise() const { return exercise_; }
+    const std::vector<QuantLib::Date>& exerciseDates() const { return exerciseDates_; }
+    const std::vector<QuantLib::Date>& noticeDates() const { return noticeDates_; }
+
+private:
+    boost::shared_ptr<QuantLib::Exercise> exercise_;
+    std::vector<QuantLib::Date> exerciseDates_;
+    std::vector<QuantLib::Date> noticeDates_;
+};
+
 } // namespace data
 } // namespace ore

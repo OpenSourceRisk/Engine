@@ -28,11 +28,13 @@
 
 #include <boost/shared_ptr.hpp>
 #include <ored/utilities/serializationdate.hpp>
+#include <ql/math/array.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 
 namespace ore {
 namespace analytics {
+using QuantLib::Array;
 using QuantLib::Date;
 using QuantLib::Real;
 using QuantLib::Size;
@@ -55,8 +57,8 @@ public:
         FXSpot,
         FXVolatility,
         EquitySpot,
-        EquityVolatility,
         DividendYield,
+        EquityVolatility,
         SurvivalProbability,
         RecoveryRate,
         CDSVolatility,

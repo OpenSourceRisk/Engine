@@ -35,14 +35,38 @@ VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time
     vol_p_ = atmVol + bf_ - 0.5 * rr_;
 
     // infer strikes from delta and vol quote
-    BlackDeltaCalculator a(Option::Type::Call, deltaType, spot, domesticDiscount(), foreignDiscount(),
-                           sqrt(t) * atmVol);
-    BlackDeltaCalculator c(Option::Type::Call, deltaType, spot, domesticDiscount(), foreignDiscount(),
-                           sqrt(t) * vol_c_);
-    BlackDeltaCalculator p(Option::Type::Put, deltaType, spot, domesticDiscount(), foreignDiscount(), sqrt(t) * vol_p_);
-    k_atm_ = a.atmStrike(atmType);
-    k_c_ = c.strikeFromDelta(delta);
-    k_p_ = p.strikeFromDelta(-delta);
+    try {
+        BlackDeltaCalculator a(Option::Type::Call, deltaType, spot, domesticDiscount(), foreignDiscount(),
+                               sqrt(t) * atmVol);
+        k_atm_ = a.atmStrike(atmType);
+    } catch (const std::exception& e) {
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating atm strike: "
+                << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr << ", vol_c="
+                << vol_c_ << ", vol_p=" << vol_p_ << ", atmType=" << atmType << ", deltaType=" << deltaType
+                << ", spot=" << spot << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
+    }
+
+    try {
+        BlackDeltaCalculator c(Option::Type::Call, deltaType, spot, domesticDiscount(), foreignDiscount(),
+                               sqrt(t) * vol_c_);
+        k_c_ = c.strikeFromDelta(delta);
+    } catch (const std::exception& e) {
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating call strike at delta "
+                << delta << ": " << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr
+                << ", vol_c=" << vol_c_ << ", vol_p=" << vol_p_ << ", deltaType=" << deltaType << ", spot=" << spot
+                << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
+    }
+
+    try {
+        BlackDeltaCalculator p(Option::Type::Put, deltaType, spot, domesticDiscount(), foreignDiscount(),
+                               sqrt(t) * vol_p_);
+        k_p_ = p.strikeFromDelta(-delta);
+    } catch (const std::exception& e) {
+        QL_FAIL("VannaVolgaSmileSection: Error during calculating put strike at delta "
+                << delta << ": " << e.what() << " (t=" << t << ", atmVol=" << atmVol << ", bf=" << bf_ << ", rr=" << rr
+                << ", vol_c=" << vol_c_ << ", vol_p=" << vol_p_ << ", deltaType=" << deltaType << ", spot=" << spot
+                << ", domDsc=" << domesticDiscount() << ", forDsc=" << foreignDiscount() << ")");
+    }
 }
 
 Real VannaVolgaSmileSection::d1(Real x) const {

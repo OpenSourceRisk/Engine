@@ -33,7 +33,6 @@
 using namespace std;
 using namespace QuantLib;
 using QuantExt::CommodityFuturesIndex;
-using QuantExt::CommoditySpotIndex;
 using QuantExt::PriceTermStructure;
 
 namespace ore {
@@ -55,16 +54,15 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
     QL_REQUIRE(strike_ > 0, "Commodity option requires a positive strike");
 
-    // Get the price curve for the commodity.
-    const boost::shared_ptr<Market>& market = engineFactory->market();
-    Handle<PriceTermStructure> priceCurve =
-        market->commodityPriceCurve(assetName_, engineFactory->configuration(MarketContext::pricing));
-
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
+    const boost::shared_ptr<Market>& market = engineFactory->market();
+    index_ = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
     if (!isFuturePrice_ || *isFuturePrice_) {
 
-        // Assume future price if isFuturePrice_ is not explicitly set of if it is and true.
+        // Assume future price if isFuturePrice_ is not explicitly set or if it is and true.
+
+        auto index = *market->commodityIndex(assetName_, engineFactory->configuration(MarketContext::pricing));
 
         // If we are given an explicit future contract expiry date, use it, otherwise use option's expiry.
         Date expiryDate;
@@ -78,11 +76,16 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
             expiryDate = parseDate(expiryDates[0]);
         }
 
-        index_ = boost::make_shared<CommodityFuturesIndex>(assetName_, expiryDate, NullCalendar(), priceCurve);
+        // Clone the index with the relevant expiry date.
+        index_ = index->clone(expiryDate);
 
-    } else {
-        // If the underlying is a commodity spot, create a spot index.
-        index_ = boost::make_shared<CommoditySpotIndex>(assetName_, NullCalendar(), priceCurve);
+        // Set the VanillaOptionTrade forwardDate_ if the index is a CommodityFuturesIndex - we possibly still have a 
+        // CommoditySpotIndex at this point so check. Also, will only work for European exercise.
+        auto et = parseExerciseType(option_.style());
+        if (et == Exercise::European && boost::dynamic_pointer_cast<CommodityFuturesIndex>(index_)) {
+            forwardDate_ = expiryDate;
+        }
+
     }
 
     VanillaOptionTrade::build(engineFactory);
@@ -93,9 +96,14 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
                                 << " and strike " << strike_ << " is "
                                 << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_));
     }
+
+    additionalData_["quantity"] = quantity_;
+    additionalData_["strike"] = strike_;
+    additionalData_["strikeCurrency"] = currency_;    
 }
 
-std::map<AssetClass, std::set<std::string>> CommodityOption::underlyingIndices() const {
+std::map<AssetClass, std::set<std::string>>
+CommodityOption::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::COM, std::set<std::string>({assetName_})}};
 }
 

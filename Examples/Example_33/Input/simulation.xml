@@ -1,15 +1,29 @@
 <?xml version="1.0"?>
 <Simulation>
-  <Parameters>
-    <Discretization>Exact</Discretization>
-    <Grid>241,1M</Grid>
-    <Calendar>EUR,USD,GBP,CHF</Calendar>
-    <Sequence>SobolBrownianBridge</Sequence>
-    <Scenario>Simple</Scenario>
-    <Seed>42</Seed>
-    <!--<Samples>5000</Samples>-->
-    <Samples>1000</Samples>
-  </Parameters>
+  <!--
+	This section determines the scenario generation
+	given the model defined below.
+    -->
+    
+    <Parameters>
+
+      <Discretization>Exact</Discretization>
+      <Grid>60,1M</Grid>
+      <!--<Grid>242,1M</Grid>-->
+      <Calendar>EUR,USD,GBP,CHF</Calendar>
+      <Sequence>SobolBrownianBridge</Sequence>
+      <Scenario>Simple</Scenario>
+      <Seed>42</Seed>
+      <Samples>5000</Samples>
+      <Ordering>Steps</Ordering>
+      <DirectionIntegers>JoeKuoD7</DirectionIntegers>
+
+    </Parameters>
+
+    <!--
+	This section determines the simulation model composition
+	and the calibration of all components.
+    -->
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
     <Currencies>
@@ -19,6 +33,11 @@
       <Currency>CHF</Currency>
       <Currency>JPY</Currency>
     </Currencies>
+    <CreditNames>
+      <CreditName>CPTY_A</CreditName>
+      <CreditName>CPTY_B</CreditName>
+      <CreditName>BANK</CreditName>
+    </CreditNames>
     <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
       <LGM ccy="default">
@@ -55,32 +74,6 @@
         </ParameterTransformation>
       </LGM>
       <LGM ccy="EUR">
-        <CalibrationType>Bootstrap</CalibrationType>
-        <Volatility>
-          <Calibrate>Y</Calibrate>
-          <VolatilityType>Hagan</VolatilityType>
-          <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
-        </Volatility>
-        <Reversion>
-          <Calibrate>N</Calibrate>
-          <ReversionType>HullWhite</ReversionType>
-          <ParamType>Constant</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.03</InitialValue>
-        </Reversion>
-        <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-          <Strikes/>
-        </CalibrationSwaptions>
-        <ParameterTransformation>
-          <ShiftHorizon>0.0</ShiftHorizon>
-          <Scaling>1.0</Scaling>
-        </ParameterTransformation>
-      </LGM>
-      <LGM ccy="CHF">
         <CalibrationType>Bootstrap</CalibrationType>
         <Volatility>
           <Calibrate>Y</Calibrate>
@@ -153,6 +146,34 @@
         </CalibrationOptions>
       </CrossCcyLGM>
     </ForeignExchangeModels>
+    <CreditModels>
+      <LGM name="default">
+        <CalibrationType>None</CalibrationType>
+        <Volatility>
+          <Calibrate>N</Calibrate>
+          <VolatilityType>Hagan</VolatilityType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+        </Volatility>
+        <Reversion>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
+          <ParamType>Constant</ParamType>
+          <TimeGrid/>
+          <InitialValue>0.03</InitialValue>
+        </Reversion>
+        <CalibrationCdsOptions>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Strikes/>
+        </CalibrationCdsOptions>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+      </LGM>
+    </CreditModels>
     <InstantaneousCorrelations>
       <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
       <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
@@ -164,17 +185,19 @@
       <Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
       <Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
       <Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
+      <Correlation factor1="IR:EUR" factor2="CR:CPTY_A">0.0</Correlation>
+      <Correlation factor1="CR:CPTY_A" factor2="CR:CPTY_B">0.8</Correlation>
       <!-- ... -->
     </InstantaneousCorrelations>
   </CrossAssetModel>
+  <!--
+	This setion determines the composition of the market used for
+	pricing under future market scenarios,
+	1) the structure/composition of the actively simulated market (IR, FX)
+	2) the method applied to evolve volatility structures even if not
+	simulated (roll or push)
+    -->
   <Market>
-    <!--
-	  This files determines the composition of the market used for
-	  pricing under future market scenarios,
-	  1) the structure/composition of the actively simulated market (IR, FX)
-	  2) the method applied to evolve volatility structures even if not
-	  simulated (roll or push)
-      -->
     <BaseCurrency>EUR</BaseCurrency>
     <Currencies>
       <Currency>EUR</Currency>
@@ -212,16 +235,21 @@
       </SwapIndex>
     </SwapIndices>
     <DefaultCurves>
-      <Names/>
-      <Tenors>6M,1Y,2Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+      <Names>
+        <Name>CPTY_A</Name>
+        <Name>CPTY_B</Name>
+        <Name>BANK</Name>
+      </Names>
+      <Tenors>1W,2W,1M,2M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
     </DefaultCurves>
     <!-- Even if we do not simulate them - option pricing needs vol
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
       <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
@@ -234,8 +262,8 @@
     </SwaptionVolatilities>
     <FxVolatilities>
       <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
         <CurrencyPair>USDEUR</CurrencyPair>
         <CurrencyPair>GBPEUR</CurrencyPair>

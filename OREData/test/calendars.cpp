@@ -24,6 +24,7 @@
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
 // #include <qle/calendars/austria.hpp>
+#include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
@@ -36,7 +37,6 @@
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
-#include <qle/calendars/thailand.hpp>
 #include <qle/calendars/wmr.hpp>
 
 using namespace QuantLib;
@@ -96,29 +96,16 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"TRY", Turkey()},
                             {"UAH", Ukraine()},
                             {"HUF", Hungary()},
-                            // Emerging currencies that default to TARGET
-                            {"AED", TARGET()},
-                            {"BHD", TARGET()},
-                            {"CLF", TARGET()},
+                            // Emerging currencies that default to WeekendsOnly
+                            {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
                             {"CLP", Chile()},
                             {"COP", Colombia()},
-                            {"EGP", TARGET()},
                             {"ILS", Israel()},
-                            {"KWD", TARGET()},
-                            {"KZT", TARGET()},
-                            {"MAD", TARGET()},
-                            {"MXV", TARGET()},
                             {"MYR", Malaysia()},
-                            {"NGN", TARGET()},
-                            {"OMR", TARGET()},
                             {"PEN", Peru()},
                             {"PHP", Philippines()},
-                            {"QAR", TARGET()},
                             {"RON", Romania()},
-                            {"THB", QuantExt::Thailand()},
-                            {"TND", TARGET()},
-                            {"UYU", TARGET()},
-                            {"VND", TARGET()},
+                            {"THB", Thailand()},
                             {"CHF", QuantExt::Switzerland()},
                             {"ZA", SouthAfrica()},
                             {"MISX", Russia(Russia::MOEX)},

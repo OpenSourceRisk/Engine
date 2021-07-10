@@ -17,11 +17,10 @@ ORE is based on [QuantLib](http://quantlib.org), the open source library
 for quantitative finance, and it extends QuantLib in terms of simulation models, financial
 instruments and pricing engines.
 
-ORE is sponsored by
-[Quaternion Risk Management](http://quaternion.com) as part of the
-firm's commitment to transparency in pricing methods and risk
-analytics applied in the industry. ORE is free/open software, provided
-under the Modified BSD License, which permits using and modifying the code base as well as incorporating it into commercial applications.
+ORE is sponsored by [Acadia Inc](http://acadia.inc) as part of the firm's commitment
+to transparency in pricing methods and risk analytics applied in the industry.
+ORE is free/open software, provided under the Modified BSD License, which permits
+using and modifying the code base as well as incorporating it into commercial applications.
 
 ## Documentation
 
@@ -42,6 +41,7 @@ available on the [OpenSourceRisk](http://opensourcerisk.org) project site.
 Open Source Risk Engine (ORE) is
 
 Copyright (C) 2016, 2017, 2018, 2019, 2020 Quaternion Risk Management Ltd.
+Copyright (C) 2021 Acadia Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

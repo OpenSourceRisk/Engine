@@ -1,11 +1,15 @@
 \subsubsection{ZeroCouponFixed Leg Data}
 \label{ss:zerolegdata}
 
-Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fixed. Note that if a rules-based schedule is used, the tenor will be ignored, and the single period will be formed by the start and the end date. If a dates-based schedule is used, the single period will be formed by the first and last dates, and any dates in between will be ignored. The ZeroCouponFixedLegData block contains the following elements:
+A Zero Coupon Fixed leg contains a series of Zero Coupon payments, i.e $(1 + r)^t \,N$ for a compounded coupon. The uninflated notional $N$ can be subtracted from the payment , i.e $((1 + r)^t-1) \,N$, see \lstinline!SubtractNotional! below.
+
+Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fixed. 
+
+To create a leg with only one payment, the schedule must only contain the start and end date. Not that this can be achieved by setting the \emph{Tenor} to \emph{0D} in a rule based Schedule. 
 
 \begin{itemize}
 \item Rates: The fixed real rate(s) of the leg. While this can be a single value, a vector of values or a dated vector of
-  values, the current ZeroCouponFixed leg requires only a single rate value to be passed. 
+  values. 
  
  Allowable values: Each rate element can take any  real number. The rate is
   expressed in decimal form, e.g. \emph{0.05} is a rate of 5\%.
@@ -37,7 +41,7 @@ Allowable values: \emph{true},  \emph{Y} or \emph{false}, \emph{N}, defaults to 
           <Rules>
             <StartDate>2016-07-18</StartDate>
             <EndDate>2021-07-18</EndDate>
-            <Tenor>5Y</Tenor>
+            <Tenor>0D</Tenor>
             <Calendar>UK</Calendar>
             <Convention>ModifiedFollowing</Convention>
             <TermConvention>ModifiedFollowing</TermConvention>

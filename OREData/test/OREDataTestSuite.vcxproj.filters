@@ -139,6 +139,18 @@
     <ClCompile Include="optionpaymentdata.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="basecorrelationcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="inflationcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="fxvolcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="curvespecparser.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="commodityasianoption.cpp">
       <Filter>source</Filter>
     </ClCompile>

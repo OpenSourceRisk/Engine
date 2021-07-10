@@ -11,15 +11,15 @@ respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
               <ScheduleData>
-                    <Rules>
-                        <StartDate>2013-02-01</StartDate>
-                        <EndDate>2030-02-01</EndDate>
-                        <Tenor>1Y</Tenor>
-                        <Calendar>UK</Calendar>
-                        <Convention>MF</Convention>
-                        <TermConvention>MF</TermConvention>
-                        <Rule>Forward</Rule>
-                    </Rules>
+                <Rules>
+                  <StartDate>2013-02-01</StartDate>
+                  <EndDate>2030-02-01</EndDate>
+                  <Tenor>1Y</Tenor>
+                  <Calendar>UK</Calendar>
+                  <Convention>MF</Convention>
+                  <TermConvention>MF</TermConvention>
+                  <Rule>Forward</Rule>
+                </Rules>
               </ScheduleData>
 \end{minted}
 \caption{Schedule data, rules based}
@@ -29,22 +29,22 @@ respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-               <ScheduleData>
+              <ScheduleData>
                 <Dates>
-                 <Calendar>NYB</Calendar>
-                 <Convention>Following</Convention>
-                 <Tenor>3M</Tenor>
-                 <EndOfMonth>false</EndOfMonth>
-                    <Dates>
-                        <Date>2012-01-06</Date>
-                        <Date>2012-04-10</Date>
-                        <Date>2012-07-06</Date>
-                        <Date>2012-10-08</Date>
-                        <Date>2013-01-07</Date>
-                        <Date>2013-04-08</Date>
-                    </Dates>
-                 </Dates> 
-                </ScheduleData>
+                  <Calendar>NYB</Calendar>
+                  <Convention>Following</Convention>
+                  <Tenor>3M</Tenor>
+                  <EndOfMonth>false</EndOfMonth>
+                  <Dates>
+                    <Date>2012-01-06</Date>
+                    <Date>2012-04-10</Date>
+                    <Date>2012-07-06</Date>
+                    <Date>2012-10-08</Date>
+                    <Date>2013-01-07</Date>
+                    <Date>2013-04-08</Date>
+                  </Dates>
+                </Dates> 
+              </ScheduleData>
 \end{minted}
 \caption{Schedule data, date based}
 \label{lst:schedule_data_false}
@@ -70,7 +70,8 @@ sub-node is required.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
-\item EndDate: The schedule end date.  
+\item EndDate: The schedule end date. This can be omitted to indicate a perpetual schedule. Notice that perpetual
+  schedule are only supported by specific trade types (e.g. Bond).
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
@@ -80,7 +81,7 @@ Allowable values: A string where the last character must be D or W or
 M or Y.  The characters before that must be a positive integer. \\D
 $=$ Day, W $=$ Week, M $=$ Month, Y $=$ Year
 
-\item Calendar: The calendar used to generate schedule  dates. 
+\item Calendar: The calendar used to generate schedule  dates. Also used to determine payment dates (except for compounding OIS index legs, which use the index calendar to determine payment dates).
 
 Allowable values: See Table \ref{tab:calendar} Calendar.
 
@@ -122,11 +123,11 @@ The meanings and allowable values of the elements in a {\tt <Dates>} based secti
 
 \item Dates: a sub-node that determines that the schedule is set by specifying schedule dates explicitly. 
 
-\item Calendar [Optional]: Calendar used to determine payment dates, and also to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based. 
+\item Calendar [Optional]: Calendar used to determine the accrual schedule dates. Also used to determine payment dates (except for compounding OIS index legs, which use the index calendar), and also to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based. 
 
 Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullCalendar} if omitted, i.e. no holidays at all, not even on weekends.
 
-\item Convention [Optional]: Roll Convention to determine payment dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+\item Convention [Optional]: Roll Convention to determine the accrual schedule dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
 
 Allowable values: See \lstinline!Roll Convention! in Table
 \ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if omitted.
@@ -147,7 +148,7 @@ Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The
 \item Dates: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
   directly by the \lstinline!Date! child elements.  At least two
-  \lstinline!Date! child elements must be provided. Note that if no calendar and roll convention is given, the specified dates must be given as adjusted dates.    
+  \lstinline!Date! child elements must be provided. Dates must be provided in chronological order. Note that if no calendar and roll convention is given, the specified dates must be given as adjusted dates.    
 
   Allowable values: Each \lstinline!Date!  child element can take the allowable values listed in \lstinline!Date! in
   Table \ref{tab:allow_stand_data}.
@@ -156,24 +157,4 @@ Allowable values: Boolean node, allowing \emph{Y, N, 1, 0, true, false} etc. The
 
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|l|p{6cm}|}
-\hline
-\multicolumn{2}{|l|}{\lstinline!Rule!}                    \\ \hline
-\textbf{Allowable Values}                   & \textbf{Effect}                       \\ \hline
-\emph{Backward}   &   Backward from termination date to effective date.   \\ \hline
-\emph{Forward}   &   Forward from effective date to termination date.  \\ \hline
-\emph{Zero}   &   No intermediate dates between effective date and termination date.  \\ \hline
-\emph{ThirdWednesday}   &   All dates but effective date and
-                          termination date are taken to be on the
-                          third Wednesday of their month (with forward calculation.) \\ \hline
-\emph{Twentieth}   &   All dates but the effective date are taken to be the twentieth of their month (used for CDS schedules in emerging markets.)  The termination date is also modified. \\ \hline
-\emph{TwentiethIMM}   &   All dates but the effective date are  taken to be the twentieth of an IMM month (used for CDS schedules.)  The termination date is also modified. \\ \hline
-\emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and long/short stub coupon period (old CDS convention).\\ \hline
-CDS   &   Credit derivatives standard rule defined in 'Big Bang' changes in 2009. \\ \hline
-CDS2015   &   Credit derivatives standard rule updated in 2015. Same as  \emph{CDS} but with termination dates adjusted to 20th June and 20th December. \\ \hline
-\end{tabular}
-  \caption{Allowable Values for Rule}
-  \label{tab:rule}
-\end{table}
+

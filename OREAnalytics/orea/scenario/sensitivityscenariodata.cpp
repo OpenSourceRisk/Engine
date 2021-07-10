@@ -21,9 +21,11 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using ore::analytics::RiskFactorKey;
 using ore::data::parseBool;
+using ore::data::to_string;
 using ore::data::XMLDocument;
 using std::string;
 
@@ -124,6 +126,10 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     default:
         QL_FAIL("Cannot return shift data for key type: " << keyType);
     }
+}
+
+bool SensitivityScenarioData::twoSidedDelta(const RiskFactorKey::KeyType& keyType) const {
+    return twoSidedDeltas_.count(keyType) == 1;
 }
 
 void SensitivityScenarioData::fromXML(XMLNode* root) {
@@ -364,18 +370,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
-    // LOG("Get commodity spot sensitivity parameters");
-    // XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
-    // if (csNode) {
-    //     for (XMLNode* child = XMLUtils::getChildNode(csNode, "CommoditySpot"); child;
-    //          child = XMLUtils::getNextSibling(child)) {
-    //         string name = XMLUtils::getAttribute(child, "name");
-    //         SpotShiftData data;
-    //         shiftDataFromXML(child, data);
-    //         commodityShiftData_[name] = data;
-    //     }
-    // }
-
     LOG("Get commodity curve sensitivity parameters");
     XMLNode* ccNode = XMLUtils::getChildNode(node, "CommodityCurves");
     if (ccNode) {
@@ -448,6 +442,21 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     LOG("Get compute gamma flag");
     computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
+
+    LOG("Get useSpreadedTermStructures flag");
+    if (auto n = XMLUtils::getChildNode(node, "UseSpreadedTermStructures"))
+        useSpreadedTermStructures_ = parseBool(XMLUtils::getNodeValue(n));
+    else
+        useSpreadedTermStructures_ = false;
+
+    DLOG("Get TwoSidedDeltaKeyTypes.");
+    if (auto n = XMLUtils::getChildNode(node, "TwoSidedDeltaKeyTypes")) {
+        for (XMLNode* c = XMLUtils::getChildNode(n, "RiskFactorKeyType"); c; c = XMLUtils::getNextSibling(c)) {
+            auto keyType = parseRiskFactorKeyType(XMLUtils::getNodeValue(c));
+            twoSidedDeltas_.insert(keyType);
+            TLOG("Added key type " << keyType << " from TwoSidedDeltaKeyTypes.");
+        }
+    }
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
@@ -696,6 +705,15 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
+    XMLUtils::addChild(doc, root, "UseSpreadedTermStructures", useSpreadedTermStructures_);
+
+    if (!twoSidedDeltas_.empty()) {
+        DLOG("toXML for TwoSidedDeltaKeyTypes");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "TwoSidedDeltaKeyTypes");
+        for (const auto& keyType : twoSidedDeltas_) {
+            XMLUtils::addChild(doc, parent, "RiskFactorKeyType", to_string(keyType));
+        }
+    }
 
     return root;
 }

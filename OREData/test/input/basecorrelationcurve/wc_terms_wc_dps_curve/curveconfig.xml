@@ -1,0 +1,16 @@
+<CurveConfiguration>
+  <BaseCorrelations>
+    <BaseCorrelation>
+      <CurveId>BASE_CORR_TEST</CurveId>
+      <CurveDescription/>
+      <Terms>*</Terms>
+      <DetachmentPoints>*</DetachmentPoints>
+      <SettlementDays>0</SettlementDays>
+      <Calendar>US settlement</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Extrapolate>true</Extrapolate>
+      <QuoteName>2I65BRYA2</QuoteName>
+    </BaseCorrelation>
+  </BaseCorrelations>
+</CurveConfiguration>

@@ -38,7 +38,8 @@ public:
     /*! The currency refers to the foreign currency, the spot
         is as of today (i.e. the discounted spot) */
     FxBsPiecewiseConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday, const Array& times,
-                                         const Array& sigma);
+                                         const Array& sigma,
+        const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>());
     /*! The term structure is needed in addition because it
         it's day counter and reference date is needed to
         convert dates to times. It should be the term structure
@@ -47,7 +48,9 @@ public:
         in more general terms. */
     FxBsPiecewiseConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday,
                                          const std::vector<Date>& dates, const Array& sigma,
-                                         const Handle<YieldTermStructure>& domesticTermStructure);
+                                         const Handle<YieldTermStructure>& domesticTermStructure,
+        const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>());
+
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const Array& parameterTimes(const Size) const;

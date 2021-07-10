@@ -35,6 +35,7 @@
 #include <ored/utilities/to_string.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <tuple>
 
 using namespace QuantLib;
@@ -103,7 +104,7 @@ map<tuple<string, Date>, Fixing> dummyFixings() {
 }
 
 // Load the requested fixings
-void loadFixings(const map<string, set<Date>>& requestedFixings, const Conventions& conventions) {
+void loadFixings(const map<string, set<Date>>& requestedFixings, const boost::shared_ptr<Conventions>& conventions) {
 
     // Get the dummy fixings that we have provided in the input directory
     auto fixingValues = dummyFixings();
@@ -127,25 +128,25 @@ void loadFixings(const map<string, set<Date>>& requestedFixings, const Conventio
 class F : public TopLevelFixture {
 public:
     Date today;
-    Conventions conventions;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
     boost::shared_ptr<EngineFactory> engineFactory;
 
     F() {
         today = Date(12, Feb, 2019);
         Settings::instance().evaluationDate() = today;
 
-        conventions.fromFile(TEST_INPUT_FILE("market/conventions.xml"));
+        conventions->fromFile(TEST_INPUT_FILE("market/conventions.xml"));
 
-        TodaysMarketParameters todaysMarketParams;
-        todaysMarketParams.fromFile(TEST_INPUT_FILE("market/todaysmarket.xml"));
+        auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
+        todaysMarketParams->fromFile(TEST_INPUT_FILE("market/todaysmarket.xml"));
 
-        CurveConfigurations curveConfigs;
-        curveConfigs.fromFile(TEST_INPUT_FILE("market/curveconfig.xml"));
+        auto curveConfigs = boost::make_shared<CurveConfigurations>();
+        curveConfigs->fromFile(TEST_INPUT_FILE("market/curveconfig.xml"));
 
         string marketFile = TEST_INPUT_FILE("market/market.txt");
         string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
         string dividendsFile = TEST_INPUT_FILE("market/dividends.txt");
-        CSVLoader loader(marketFile, fixingsFile, dividendsFile, false);
+        auto loader = boost::make_shared<CSVLoader>(marketFile, fixingsFile, dividendsFile, false);
 
         bool continueOnError = false;
         boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
@@ -275,7 +276,8 @@ BOOST_AUTO_TEST_CASE(testModifyInflationFixings) {
 BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
 
     // Set the evaluation date
-    Settings::instance().evaluationDate() = Date(21, Feb, 2019);
+    Date asof(21, Feb, 2019);
+    Settings::instance().evaluationDate() = asof;
 
     // Set up a simple TodaysMarketParameters
     TodaysMarketParameters mktParams;
@@ -306,13 +308,24 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
                                 Date(1, Feb, 2018)};
     set<Date> iborDates = {Date(21, Feb, 2019), Date(20, Feb, 2019), Date(19, Feb, 2019),
                            Date(18, Feb, 2019), Date(15, Feb, 2019), Date(14, Feb, 2019)};
+
+    // Default for OIS dates is a lookback of 4 months on weekend only calendar => 21 Feb 2019 -> 21 Oct 2018.
+    // 21 Oct 2018 is a Sunday => 22 Oct 2018 is the start of the lookback.
+    set<Date> oisDates;
+    Date oisDate(22, Oct, 2018);
+    WeekendsOnly cal;
+    while (oisDate <= asof) {
+        oisDates.insert(oisDate);
+        oisDate = cal.advance(oisDate, 1 * Days);
+    }
+
     map<string, set<Date>> expectedFixings = {{"EUHICPXT", inflationDates}, {"USCPI", inflationDates},
                                               {"UKRPI", inflationDates},    {"EUR-EURIBOR-3M", iborDates},
-                                              {"USD-FedFunds", iborDates},  {"USD-LIBOR-3M", iborDates}};
+                                              {"USD-FedFunds", oisDates},   {"USD-LIBOR-3M", iborDates}};
 
     // Populate empty fixings map using the function to be tested
     map<string, set<Date>> fixings;
-    addMarketFixingDates(fixings, mktParams);
+    addMarketFixingDates(fixings, mktParams, Conventions());
 
     // Check the results
     BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());

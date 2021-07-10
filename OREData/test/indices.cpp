@@ -94,6 +94,12 @@ struct test_data {
     Period tenor;
 };
 
+struct test_data_inf {
+    const char* str;
+    const char* index_name;
+    Frequency frequency;
+};
+
 static struct test_data index_data[] = {
     // parsing string,     index name,                     tenor
     {"EUR-EONIA-1D", "EoniaON Actual/360", 1 * Days},
@@ -169,6 +175,11 @@ static struct test_data index_data[] = {
     {"CAD-BA-1Y", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
 
     {"CNY-SHIBOR-3M", "Shibor3M Actual/360", 3 * Months},
+    {"CNY-REPOFIX-1D", "CNY-REPOFIXTN Actual/365 (Fixed)", 1 * Days},
+    {"CNY-REPOFIX-7D", "CNY-REPOFIX1W Actual/365 (Fixed)", 1 * Weeks},
+    {"CNY-REPOFIX-1W", "CNY-REPOFIX1W Actual/365 (Fixed)", 1 * Weeks},
+    {"CNY-REPOFIX-14D", "CNY-REPOFIX2W Actual/365 (Fixed)", 2 * Weeks},
+    {"CNY-REPOFIX-2W", "CNY-REPOFIX2W Actual/365 (Fixed)", 2 * Weeks},
 
     {"CZK-PRIBOR-6M", "CZK-PRIBOR6M Actual/360", 6 * Months},
 
@@ -290,8 +301,13 @@ static struct test_data index_data[] = {
     {"IDR-IDRFIX-6M", "IDR-IDRFIX6M Actual/360", 6 * Months},
     {"INR-MIFOR-6M", "INR-MIFOR6M Actual/365 (Fixed)", 6 * Months},
     {"MXN-TIIE-6M", "MXN-TIIE6M Actual/360", 6 * Months},
+    {"MXN-TIIE-28D", "MXN-TIIE4W Actual/360", 4 * Weeks},
+    {"MXN-TIIE-4W", "MXN-TIIE4W Actual/360", 4 * Weeks},
+    {"MXN-TIIE-91D", "MXN-TIIE3M Actual/360", 3 * Months},
+    {"MXN-TIIE-3M", "MXN-TIIE3M Actual/360", 3 * Months},
     {"PLN-WIBOR-6M", "PLN-WIBOR6M Actual/365 (Fixed)", 6 * Months},
     {"SKK-BRIBOR-6M", "SKK-BRIBOR6M Actual/360", 6 * Months},
+    {"THB-THBFIX-6M", "THBFIX6M Actual/365 (Fixed)", 6 * Months},
 
     {"NZD-BKBM-1M", "NZD-BKBM1M Actual/Actual (ISDA)", 1 * Months},
     {"NZD-BKBM-2M", "NZD-BKBM2M Actual/Actual (ISDA)", 2 * Months},
@@ -306,6 +322,8 @@ static struct test_data index_data[] = {
     {"KRW-KORIBOR-4M", "KRW-KORIBOR4M Actual/365 (Fixed)", 4 * Months},
     {"KRW-KORIBOR-5M", "KRW-KORIBOR5M Actual/365 (Fixed)", 5 * Months},
     {"KRW-KORIBOR-6M", "KRW-KORIBOR6M Actual/365 (Fixed)", 6 * Months},
+    {"KRW-CD-91D", "KRW-CD3M Actual/365 (Fixed)", 3 * Months},
+    {"KRW-CD-3M", "KRW-CD3M Actual/365 (Fixed)", 3 * Months},
 
     {"TWD-TAIBOR-1M", "TWD-TAIBOR1M Actual/365 (Fixed)", 1 * Months},
     {"TWD-TAIBOR-2M", "TWD-TAIBOR2M Actual/365 (Fixed)", 2 * Months},
@@ -339,6 +357,23 @@ static struct test_data swap_index_data[] = {
     {"CHF-CMS-30Y", "CHFLiborSwapIsdaFix30Y 30/360 (Bond Basis)", 30 * Years},
     {"JPY-CMS-2Y", "JPYLiborSwapIsdaFix2Y Actual/365 (Fixed)", 2 * Years},
     {"JPY-CMS-30Y", "JPYLiborSwapIsdaFix30Y Actual/365 (Fixed)", 30 * Years},
+};
+
+//name_ = region_.name() + " " + familyName_;
+static struct test_data_inf inflation_index_data[] = {
+    {"AUCPI", "Australia CPI", Quarterly},
+    {"BEHICP", "Belgium HICP", Monthly},
+    {"EUHICP", "EU HICP", Monthly},
+    {"EUHICPXT", "EU HICPXT", Monthly},
+    {"FRHICP", "France HICP", Monthly},
+    {"FRCPI", "France CPI", Monthly},
+    {"UKRPI", "UK RPI", Monthly},
+    {"USCPI", "USA CPI", Monthly},
+    {"ZACPI", "South Africa CPI", Monthly},
+    {"SECPI", "Sweden CPI", Monthly},
+    {"DKCPI", "Denmark CPI", Monthly},
+    {"CACPI", "Canada CPI", Monthly},
+    {"ESCPI", "Spain CPI", Monthly},
 };
 
 } // namespace
@@ -407,7 +442,7 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
         QL_REQUIRE(con, "no swap convention");
         boost::shared_ptr<SwapIndex> swap;
         try {
-            swap = ore::data::parseSwapIndex(str, h, h, con);
+            swap = ore::data::parseSwapIndex(str, h, h, con, swapCon);
         } catch (std::exception& e) {
             BOOST_FAIL("Swap Parser failed to parse \"" << str << "\" [exception:" << e.what() << "]");
         } catch (...) {
@@ -420,6 +455,36 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
             BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << swap->name());
         } else
             BOOST_FAIL("Swap Parser(" << str << ") returned null pointer");
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testInflationIndexParsing) {
+
+    BOOST_TEST_MESSAGE("Testing Inflation Index name parsing...");
+
+    Size len = sizeof(inflation_index_data) / sizeof(inflation_index_data[0]);
+    for (Size i = 0; i < len; ++i) {
+        string str(inflation_index_data[i].str);
+        string index_name(inflation_index_data[i].index_name);
+        Frequency frequency(inflation_index_data[i].frequency);
+
+        boost::shared_ptr<ZeroInflationIndex> cpi;
+        try {
+            cpi = ore::data::parseZeroInflationIndex(str);
+        } catch (std::exception& e) {
+            BOOST_FAIL("Inflation Index Parser failed to parse \"" << str << "\" [exception:" << e.what() << "]");
+        } catch (...) {
+            BOOST_FAIL("Inflation Index Parser failed to parse \"" << str << "\" [unhandled]");
+        }
+        if (cpi) {
+            BOOST_CHECK_EQUAL(cpi->name(), index_name);
+            BOOST_CHECK_EQUAL(cpi->frequency(), frequency);
+            // Frequency
+            //Availability lag?
+
+            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << cpi->name());
+        } else
+            BOOST_FAIL("Inflation Index Parser(" << str << ") returned null pointer");
     }
 }
 

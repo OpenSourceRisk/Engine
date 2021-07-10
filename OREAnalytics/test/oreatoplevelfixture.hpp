@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/toplevelfixture.hpp
+/*! \file test/oreatoplevelfixture.hpp
     \brief Fixture that can be used at top level of OREAnalytics test suites
 */
 

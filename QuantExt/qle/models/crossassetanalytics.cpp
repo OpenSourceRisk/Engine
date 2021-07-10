@@ -17,6 +17,10 @@
 */
 
 #include <qle/models/crossassetanalytics.hpp>
+#include <qle/utilities/inflation.hpp>
+
+using std::make_pair;
+using std::pair;
 
 namespace QuantExt {
 
@@ -24,17 +28,97 @@ namespace CrossAssetAnalytics {
 
 Real ir_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, const Real dt) {
     Real res = 0.0;
-    if (i > 0) {
-        res += -integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt) -
-               integral(x, P(az(i), sx(i - 1), rzx(i, i - 1)), t0, t0 + dt) +
-               integral(x, P(Hz(0), az(0), az(i), rzz(0, i)), t0, t0 + dt);
+    if (i == 0) {
+        if (x->measure() == Measure::BA)
+            res -= integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt);
+    } else {
+        res -= integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt);
+        res -= integral(x, P(az(i), sx(i - 1), rzx(i, i - 1)), t0, t0 + dt);
+        if (x->measure() != Measure::BA)
+            res += integral(x, P(Hz(0), az(0), az(i), rzz(0, i)), t0, t0 + dt);
     }
     return res;
 }
 
 Real ir_expectation_2(const CrossAssetModel*, const Size, const Real zi_0) { return zi_0; }
 
+pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel* x, Size i, Time t0, Real dt) {
+
+    QL_REQUIRE(x->modelType(INF, i) == JY, "inf_jy_expectation_1: should only be used for JY CAM inflation component.");
+
+    auto res = make_pair(0.0, 0.0);
+
+    // 1) Real rate process drift
+    res.first = -integral(x, P(Hy(i), ay(i), ay(i)), t0, t0 + dt) +
+                integral(x, P(rzy(0, i), Hz(0), az(0), ay(i)), t0, t0 + dt) -
+                integral(x, P(ryy(i, i, 0, 1), ay(i), sy(i)), t0, t0 + dt);
+
+    // i_i - index of i-th inflation component's currency.
+    Size i_i = x->ccyIndex(x->infjy(i)->currency());
+    if (i_i > 0) {
+        res.first -= integral(x, P(rxy(i_i - 1, i, 0), ay(i), sx(i_i - 1)), t0, t0 + dt);
+    }
+
+    // 2) Inflation index process drift
+    const auto& zts = x->infjy(i)->realRate()->termStructure();
+    res.second = std::log(inflationGrowth(zts, t0 + dt) / inflationGrowth(zts, t0));
+
+    res.second -= 0.5 * (vy(i).eval(x, t0 + dt) - vy(i).eval(x, t0));
+
+    // Final _s means start of period i.e. t_0 and _e means end of period i.e. t_0 + dt
+    Real Hi_i_s = Hz(i_i).eval(x, t0);
+    Real Hi_s = Hy(i).eval(x, t0);
+    Real Hi_i_e = Hz(i_i).eval(x, t0 + dt);
+    Real Hi_e = Hy(i).eval(x, t0 + dt);
+    Real zetai_i_s = zetaz(i_i).eval(x, t0);
+    Real zetai_s = zetay(i).eval(x, t0);
+    Real zetai_i_e = zetaz(i_i).eval(x, t0 + dt);
+    Real zetai_e = zetay(i).eval(x, t0 + dt);
+    res.second += 0.5 * (Hi_i_e * Hi_i_e * zetai_i_e - Hi_i_s * Hi_i_s * zetai_i_s);
+    res.second -= 0.5 * integral(x, P(Hz(i_i), Hz(i_i), az(i_i), az(i_i)), t0, t0 + dt);
+    res.second -= 0.5 * (Hi_e * Hi_e * zetai_e - Hi_s * Hi_s * zetai_s);
+    res.second += 0.5 * integral(x, P(Hy(i), Hy(i), ay(i), ay(i)), t0, t0 + dt);
+
+    res.second += integral(x, P(rzy(0, i, 1), Hz(0), az(0), sy(i)), t0, t0 + dt);
+
+    res.second -=
+        integral(x,
+                 P(LC(Hi_e, -1.0, Hy(i)), LC(0.0, -1.0, P(Hy(i), ay(i), ay(i)), 1.0, P(Hz(0), az(0), ay(i), rzy(0, i)),
+                                             -1.0, P(ryy(i, i, 0, 1), ay(i), sy(i)))),
+                 t0, t0 + dt);
+
+    if (i_i > 0) {
+        res.second += integral(x,
+                               P(LC(Hi_i_e, -1.0, Hz(i_i)),
+                                 LC(0.0, -1.0, P(Hz(i_i), az(i_i), az(i_i)), 1.0, P(Hz(0), az(0), az(i_i), rzz(0, i_i)),
+                                    -1.0, P(rzx(i_i, i_i - 1), az(i_i), sx(i_i - 1)))),
+                               t0, t0 + dt);
+        res.second -= integral(x, P(rxy(i_i - 1, i, 1), sy(i), sx(i_i - 1)), t0, t0 + dt);
+        res.second += integral(x, P(LC(Hi_e, -1.0, Hy(i)), ay(i), sx(i_i - 1), rxy(i_i - 1, i)), t0, t0 + dt);
+    }
+
+    return res;
+}
+
+pair<Real, Real> inf_jy_expectation_2(const CrossAssetModel* x, Size i, Time t0, const pair<Real, Real>& state_0,
+                                      Real zi_i_0, Real dt) {
+
+    QL_REQUIRE(x->modelType(INF, i) == JY, "inf_jy_expectation_2: should only be used for JY CAM inflation component.");
+
+    // i_i - index of i-th inflation component's currency.
+    Size i_i = x->ccyIndex(x->infjy(i)->currency());
+
+    // Real rate portion of the result i.e. first element in pair is not state dependent so nothing needed.
+    // The inflation index portion of the result i.e. second element needs to be updated.
+    auto res = state_0;
+    res.second += (Hz(i_i).eval(x, t0 + dt) - Hz(i_i).eval(x, t0)) * zi_i_0;
+    res.second -= (Hy(i).eval(x, t0 + dt) - Hy(i).eval(x, t0)) * state_0.first;
+
+    return res;
+}
+
 Real fx_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, const Real dt) {
+    bool bam = (x->measure() == Measure::BA);
     Real H0_a = Hz(0).eval(x, t0);
     Real Hi_a = Hz(i + 1).eval(x, t0);
     Real H0_b = Hz(0).eval(x, t0 + dt);
@@ -51,13 +135,17 @@ Real fx_expectation_1(const CrossAssetModel* x, const Size i, const Time t0, con
         0.5 * (H0_b * H0_b * zeta0_b - H0_a * H0_a * zeta0_a - integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt));
     res -= 0.5 * (Hi_b * Hi_b * zetai_b - Hi_a * Hi_a * zetai_a -
                   integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t0 + dt));
-    res += integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t0 + dt);
+    res += (bam ? 0.0 : integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t0 + dt));
     res -= Hi_b * (-integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), t0, t0 + dt) +
-                   integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt) -
+                   (bam ? 0.0 : integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt)) -
                    integral(x, P(az(i + 1), sx(i), rzx(i + 1, i)), t0, t0 + dt));
     res += -integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t0 + dt) +
-           integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt) -
+           (bam ? 0.0 : integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)), t0, t0 + dt)) -
            integral(x, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), t0, t0 + dt);
+    if (bam) {
+        res -= H0_b * integral(x, P(Hz(0), az(0), az(0)), t0, t0 + dt);
+        res += integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt);
+    }
     return res;
 }
 
@@ -163,28 +251,121 @@ Real fx_fx_covariance(const CrossAssetModel* x, const Size i, const Size j, cons
 }
 
 Real infz_infz_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
-    Real res = integral(x, P(ryy(i, j), ay(i), ay(j)), t0, t0 + dt);
-    return res;
+    return integral(x, P(ryy(i, j), ay(i), ay(j)), t0, t0 + dt);
+    ;
 }
 
 Real infz_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
-    Real res = integral(x, P(ryy(i, j), ay(i), Hy(j), ay(j)), t0, t0 + dt);
+
+    Real res = 0.0;
+
+    // Assumption that INF is either JY or DK. j-th inflation model's y component depends on model type.
+    if (x->modelType(INF, j) == DK) {
+        res = integral(x, P(ryy(i, j), ay(i), Hy(j), ay(j)), t0, t0 + dt);
+    } else {
+        // i_j - index of j-th inflation component's currency.
+        Size i_j = x->ccyIndex(x->infjy(j)->currency());
+        // H_{i_j}^{z}(t_0 + dt)
+        Real Hi_j = Hz(i_j).eval(x, t0 + dt);
+        // H_{j}^{y}(t_0 + dt)
+        Real Hj = Hy(j).eval(x, t0 + dt);
+
+        res = integral(x, P(rzy(i_j, i), az(i_j), ay(i), LC(Hi_j, -1.0, Hz(i_j))), t0, t0 + dt);
+        res -= integral(x, P(ryy(i, j), ay(i), ay(j), LC(Hj, -1.0, Hy(j))), t0, t0 + dt);
+        res += integral(x, P(ryy(i, j, 0, 1), ay(i), sy(j)), t0, t0 + dt);
+    }
+
     return res;
 }
 
 Real infy_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
-    Real res = integral(x, P(ryy(i, j), Hy(i), ay(i), Hy(j), ay(j)), t0, t0 + dt);
+
+    Real res = 0.0;
+
+    // Assumption that INF is either JY or DK. Four possibilities.
+    auto mti = x->modelType(INF, i);
+    auto mtj = x->modelType(INF, j);
+    if (mti == DK && mtj == DK) {
+        res = integral(x, P(ryy(i, j), Hy(i), ay(i), Hy(j), ay(j)), t0, t0 + dt);
+    } else if (mti == JY && mtj == DK) {
+
+        // i_i - index of i-th inflation component's currency.
+        Size i_i = x->ccyIndex(x->infjy(i)->currency());
+        // H_{i_i}^{z}(t_0 + dt)
+        Real Hi_i = Hz(i_i).eval(x, t0 + dt);
+        // H_{i}^{y}(t_0 + dt)
+        Real Hi = Hy(i).eval(x, t0 + dt);
+
+        // 3 terms in the covariance.
+        res = integral(x, P(rzy(i_i, j), Hy(j), ay(j), az(i_i), LC(Hi_i, -1.0, Hz(i_i))), t0, t0 + dt);
+        res -= integral(x, P(ryy(i, j, 0, 0), Hy(j), ay(j), ay(i), LC(Hi, -1.0, Hy(i))), t0, t0 + dt);
+        res += integral(x, P(ryy(i, j, 1, 0), Hy(j), ay(j), sy(i)), t0, t0 + dt);
+
+    } else if (mti == DK && mtj == JY) {
+
+        // i_j - index of j-th inflation component's currency.
+        Size i_j = x->ccyIndex(x->infjy(j)->currency());
+        // H_{i_j}^{z}(t_0 + dt)
+        Real Hi_j = Hz(i_j).eval(x, t0 + dt);
+        // H_{j}^{y}(t_0 + dt)
+        Real Hj = Hy(j).eval(x, t0 + dt);
+
+        // 3 terms in the covariance.
+        res = integral(x, P(rzy(i_j, i), Hy(i), ay(i), az(i_j), LC(Hi_j, -1.0, Hz(i_j))), t0, t0 + dt);
+        res -= integral(x, P(ryy(i, j, 0, 0), Hy(i), ay(i), ay(j), LC(Hj, -1.0, Hy(j))), t0, t0 + dt);
+        res += integral(x, P(ryy(i, j, 0, 1), Hy(i), ay(i), sy(j)), t0, t0 + dt);
+
+    } else {
+
+        // index of each inflation component's currency.
+        Size i_i = x->ccyIndex(x->infjy(i)->currency());
+        Size i_j = x->ccyIndex(x->infjy(j)->currency());
+        // H_{i_\cdot}^{z}(t_0 + dt)
+        Real Hi_i = Hz(i_i).eval(x, t0 + dt);
+        Real Hi_j = Hz(i_j).eval(x, t0 + dt);
+        // H_{\cdot}^{y}(t_0 + dt)
+        Real Hi = Hy(i).eval(x, t0 + dt);
+        Real Hj = Hy(j).eval(x, t0 + dt);
+
+        res = integral(x, P(rzz(i_i, i_j), az(i_i), LC(Hi_i, -1.0, Hz(i_i)), az(i_j), LC(Hi_j, -1.0, Hz(i_j))), t0,
+                       t0 + dt);
+        res -=
+            integral(x, P(rzy(i_i, j, 0), az(i_i), LC(Hi_i, -1.0, Hz(i_i)), ay(j), LC(Hj, -1.0, Hy(j))), t0, t0 + dt);
+        res += integral(x, P(rzy(i_i, j, 1), az(i_i), LC(Hi_i, -1.0, Hz(i_i)), sy(j)), t0, t0 + dt);
+        res -=
+            integral(x, P(rzy(i_j, i, 0), ay(i), LC(Hi, -1.0, Hy(i)), az(i_j), LC(Hi_j, -1.0, Hz(i_j))), t0, t0 + dt);
+        res += integral(x, P(ryy(i, j), ay(i), LC(Hi, -1.0, Hy(i)), ay(j), LC(Hj, -1.0, Hy(j))), t0, t0 + dt);
+        res -= integral(x, P(ryy(i, j, 0, 1), ay(i), LC(Hi, -1.0, Hy(i)), sy(j)), t0, t0 + dt);
+        res += integral(x, P(rzy(i_j, i, 1), sy(i), az(i_j), LC(Hi_j, -1.0, Hz(i_j))), t0, t0 + dt);
+        res -= integral(x, P(ryy(i, j, 1, 0), sy(i), ay(j), LC(Hj, -1.0, Hy(j))), t0, t0 + dt);
+        res += integral(x, P(ryy(i, j, 1, 1), sy(i), sy(j)), t0, t0 + dt);
+    }
+
     return res;
 }
 
 Real ir_infz_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
-    Real res = integral(x, P(rzy(i, j), az(i), ay(j)), t0, t0 + dt);
-    return res;
+    return integral(x, P(rzy(i, j), az(i), ay(j)), t0, t0 + dt);
 }
 
 Real ir_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
-    Real res = integral(x, P(rzy(i, j), az(i), Hy(j), ay(j)), t0, t0 + dt);
-    return res;
+    // Assumption that INF is either JY or DK.
+    if (x->modelType(INF, j) == DK) {
+        return integral(x, P(rzy(i, j), az(i), Hy(j), ay(j)), t0, t0 + dt);
+    } else {
+        // i_j - index of j-th inflation component's currency.
+        Size i_j = x->ccyIndex(x->infjy(j)->currency());
+        // H_{i_j}^{z}(t_0 + dt)
+        Real Hi_j = Hz(i_j).eval(x, t0 + dt);
+        // H_{j}^{y}(t_0 + dt)
+        Real Hj = Hy(j).eval(x, t0 + dt);
+
+        Real res = integral(x, P(rzz(i, i_j), az(i), az(i_j), LC(Hi_j, -1.0, Hz(i_j))), t0, t0 + dt);
+        res -= integral(x, P(rzy(i, j, 0), az(i), ay(j), LC(Hj, -1.0, Hy(j))), t0, t0 + dt);
+        res += integral(x, P(rzy(i, j, 1), az(i), sy(j)), t0, t0 + dt);
+
+        return res;
+    }
 }
 
 Real fx_infz_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
@@ -199,13 +380,39 @@ Real fx_infz_covariance(const CrossAssetModel* x, const Size i, const Size j, co
 }
 
 Real fx_infy_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+
+    Real res = 0.0;
     Real H0 = Hz(0).eval(x, t0 + dt);
     Real Hi = Hz(i + 1).eval(x, t0 + dt);
-    Real res = -integral(x, P(rzy(0, j), Hz(0), az(0), Hy(j), ay(j)), t0, t0 + dt) +
-               H0 * integral(x, P(rzy(0, j), az(0), Hy(j), ay(j)), t0, t0 + dt) +
-               integral(x, P(rzy(i + 1, j), Hz(i + 1), az(i + 1), Hy(j), ay(j)), t0, t0 + dt) -
-               Hi * integral(x, P(rzy(i + 1, j), az(i + 1), Hy(j), ay(j)), t0, t0 + dt) +
-               integral(x, P(rxy(i, j), sx(i), Hy(j), ay(j)), t0, t0 + dt);
+
+    if (x->modelType(INF, j) == DK) {
+        res = -integral(x, P(rzy(0, j), Hz(0), az(0), Hy(j), ay(j)), t0, t0 + dt) +
+              H0 * integral(x, P(rzy(0, j), az(0), Hy(j), ay(j)), t0, t0 + dt) +
+              integral(x, P(rzy(i + 1, j), Hz(i + 1), az(i + 1), Hy(j), ay(j)), t0, t0 + dt) -
+              Hi * integral(x, P(rzy(i + 1, j), az(i + 1), Hy(j), ay(j)), t0, t0 + dt) +
+              integral(x, P(rxy(i, j), sx(i), Hy(j), ay(j)), t0, t0 + dt);
+    } else {
+
+        // i_j - index of j-th inflation component's currency.
+        Size i_j = x->ccyIndex(x->infjy(j)->currency());
+        // H_{i_j}^{z}(t_0 + dt)
+        Real Hi_j = Hz(i_j).eval(x, t0 + dt);
+        // H_{j}^{y}(t_0 + dt)
+        Real Hj = Hy(j).eval(x, t0 + dt);
+
+        res = integral(x, P(rzz(i_j, 0), az(i_j), LC(Hi_j, -1.0, Hz(i_j)), az(0), LC(H0, -1.0, Hz(0))), t0, t0 + dt);
+        res -= integral(x, P(rzz(i_j, i + 1), az(i_j), LC(Hi_j, -1.0, Hz(i_j)), az(i + 1), LC(Hi, -1.0, Hz(i + 1))), t0,
+                        t0 + dt);
+        res += integral(x, P(rzx(i_j, i), az(i_j), LC(Hi_j, -1.0, Hz(i_j)), sx(i)), t0, t0 + dt);
+        res -= integral(x, P(rzy(0, j, 0), ay(j), LC(Hj, -1.0, Hy(j)), az(0), LC(H0, -1.0, Hz(0))), t0, t0 + dt);
+        res += integral(x, P(rzy(i + 1, j, 0), ay(j), LC(Hj, -1.0, Hy(j)), az(i + 1), LC(Hi, -1.0, Hz(i + 1))), t0,
+                        t0 + dt);
+        res -= integral(x, P(rxy(i, j), ay(j), LC(Hj, -1.0, Hy(j)), sx(i)), t0, t0 + dt);
+        res += integral(x, P(rzy(0, j, 1), sy(j), az(0), LC(H0, -1.0, Hz(0))), t0, t0 + dt);
+        res -= integral(x, P(rzy(i + 1, j, 1), sy(j), az(i + 1), LC(Hi, -1.0, Hz(i + 1))), t0, t0 + dt);
+        res += integral(x, P(rxy(i, j, 1), sx(i), sy(j)), t0, t0 + dt);
+    }
+
     return res;
 }
 
@@ -267,12 +474,46 @@ Real infz_cry_covariance(const CrossAssetModel* x, const Size i, const Size j, c
 }
 
 Real infy_crz_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
-    Real res = integral(x, P(ryl(i, j), Hy(i), ay(i), al(j)), t0, t0 + dt);
+
+    Real res = 0.0;
+    if (x->modelType(INF, i) == DK) {
+        res = integral(x, P(ryl(i, j), Hy(i), ay(i), al(j)), t0, t0 + dt);
+    } else {
+
+        // i_i - index of i-th inflation component's currency.
+        Size i_i = x->ccyIndex(x->infjy(i)->currency());
+        // H_{i_i}^{z}(t_0 + dt)
+        Real Hi_i = Hz(i_i).eval(x, t0 + dt);
+        // H_{i}^{y}(t_0 + dt)
+        Real Hi = Hy(i).eval(x, t0 + dt);
+
+        res = integral(x, P(rzl(i_i, j), az(i_i), LC(Hi_i, -1.0, Hz(i_i)), al(j)), t0, t0 + dt);
+        res -= integral(x, P(ryl(i, j, 0), ay(i), LC(Hi, -1.0, Hy(i)), al(j)), t0, t0 + dt);
+        res += integral(x, P(ryl(i, j, 1), sy(i), al(j)), t0, t0 + dt);
+    }
+
     return res;
 }
 
 Real infy_cry_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
-    Real res = integral(x, P(ryl(i, j), Hy(i), ay(i), Hl(j), al(j)), t0, t0 + dt);
+
+    Real res = 0.0;
+    if (x->modelType(INF, i) == DK) {
+        res = integral(x, P(ryl(i, j), Hy(i), ay(i), Hl(j), al(j)), t0, t0 + dt);
+    } else {
+
+        // i_i - index of i-th inflation component's currency.
+        Size i_i = x->ccyIndex(x->infjy(i)->currency());
+        // H_{i_i}^{z}(t_0 + dt)
+        Real Hi_i = Hz(i_i).eval(x, t0 + dt);
+        // H_{i}^{y}(t_0 + dt)
+        Real Hi = Hy(i).eval(x, t0 + dt);
+
+        res = integral(x, P(rzl(i_i, j), az(i_i), LC(Hi_i, -1.0, Hz(i_i)), Hl(j), al(j)), t0, t0 + dt);
+        res -= integral(x, P(ryl(i, j, 0), ay(i), LC(Hi, -1.0, Hy(i)), Hl(j), al(j)), t0, t0 + dt);
+        res += integral(x, P(ryl(i, j, 1), sy(i), Hl(j), al(j)), t0, t0 + dt);
+    }
+
     return res;
 }
 
@@ -315,19 +556,40 @@ Real fx_eq_covariance(const CrossAssetModel* x, const Size j, const Size k, cons
 
 Real infz_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
     Size k = x->ccyIndex(x->eqbs(j)->currency());
-    Real Hk_b = Hz(k).eval(x, t0 + dt);
-    Real res = Hk_b * integral(x, P(rzy(k, i), az(k), ay(i)), t0, t0 + dt) -
+    Real Hk = Hz(k).eval(x, t0 + dt);
+    Real res = Hk * integral(x, P(rzy(k, i), az(k), ay(i)), t0, t0 + dt) -
                integral(x, P(rzy(k, i), Hz(k), az(k), ay(i)), t0, t0 + dt) +
                integral(x, P(rys(i, j), ay(i), ss(j)), t0, t0 + dt);
     return res;
 }
 
 Real infy_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+
     Size k = x->ccyIndex(x->eqbs(j)->currency());
-    Real Hk_b = Hz(k).eval(x, t0 + dt);
-    Real res = Hk_b * integral(x, P(rzy(k, i), az(k), Hy(i), ay(i)), t0, t0 + dt) -
-               integral(x, P(rzy(k, i), Hz(k), az(k), Hy(i), ay(i)), t0, t0 + dt) +
-               integral(x, P(rys(i, j), Hy(i), ay(i), ss(j)), t0, t0 + dt);
+    Real Hk = Hz(k).eval(x, t0 + dt);
+
+    Real res = 0.0;
+    if (x->modelType(INF, i) == DK) {
+        res = Hk * integral(x, P(rzy(k, i), az(k), Hy(i), ay(i)), t0, t0 + dt) -
+              integral(x, P(rzy(k, i), Hz(k), az(k), Hy(i), ay(i)), t0, t0 + dt) +
+              integral(x, P(rys(i, j), Hy(i), ay(i), ss(j)), t0, t0 + dt);
+    } else {
+
+        // i_i - index of i-th inflation component's currency.
+        Size i_i = x->ccyIndex(x->infjy(i)->currency());
+        // H_{i_i}^{z}(t_0 + dt)
+        Real Hi_i = Hz(i_i).eval(x, t0 + dt);
+        // H_{i}^{y}(t_0 + dt)
+        Real Hi = Hy(i).eval(x, t0 + dt);
+
+        res = integral(x, P(rzz(i_i, k), az(i_i), LC(Hi_i, -1.0, Hz(i_i)), az(k), LC(Hk, -1.0, Hz(k))), t0, t0 + dt);
+        res += integral(x, P(rzs(i_i, j), az(i_i), LC(Hi_i, -1.0, Hz(i_i)), ss(j)), t0, t0 + dt);
+        res -= integral(x, P(rzy(k, i, 0), ay(i), LC(Hi, -1.0, Hy(i)), az(k), LC(Hk, -1.0, Hz(k))), t0, t0 + dt);
+        res -= integral(x, P(rys(i, j, 0), ay(i), LC(Hi, -1.0, Hy(i)), ss(j)), t0, t0 + dt);
+        res += integral(x, P(rzy(k, i, 1), sy(i), az(k), LC(Hk, -1.0, Hz(k))), t0, t0 + dt);
+        res += integral(x, P(rys(i, j, 1), sy(i), ss(j)), t0, t0 + dt);
+    }
+
     return res;
 }
 
@@ -363,6 +625,25 @@ Real eq_eq_covariance(const CrossAssetModel* x, const Size k, const Size l, cons
     res -= Hi_b * integral(x, P(Hz(j), rzz(i, j), az(i), az(j)), t0, t0 + dt);
     res -= Hj_b * integral(x, P(Hz(i), rzz(i, j), az(i), az(j)), t0, t0 + dt);
     res += integral(x, P(Hz(i), Hz(j), rzz(i, j), az(i), az(j)), t0, t0 + dt);
+    return res;
+}
+
+Real aux_aux_covariance(const CrossAssetModel* x, const Time t0, const Time dt) {
+    Real res = integral(x, P(az(0), az(0), Hz(0), Hz(0)), t0, t0 + dt);
+    return res;
+}
+
+Real aux_ir_covariance(const CrossAssetModel* x, const Size j, const Time t0, const Time dt) {
+    Real res = integral(x, P(az(0), Hz(0), az(j), rzz(0, j)), t0, t0 + dt);
+    return res;
+}
+
+Real aux_fx_covariance(const CrossAssetModel* x, const Size j, const Time t0, const Time dt) {
+    Real res = Hz(0).eval(x, t0 + dt) * integral(x, P(az(0), az(0), Hz(0)), t0, t0 + dt) -
+               integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt) -
+               Hz(j + 1).eval(x, t0 + dt) * integral(x, P(az(j + 1), az(0), Hz(0), rzz(j + 1, 0)), t0, t0 + dt) +
+               integral(x, P(Hz(j + 1), az(j + 1), az(0), Hz(0), rzz(j + 1, 0)), t0, t0 + dt) +
+               integral(x, P(az(0), Hz(0), sx(j), rzx(0, j)), t0, t0 + dt);
     return res;
 }
 

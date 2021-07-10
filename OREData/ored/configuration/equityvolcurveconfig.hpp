@@ -24,8 +24,11 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/onedimsolverconfig.hpp>
 #include <ored/configuration/volatilityconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/types.hpp>
 
@@ -50,7 +53,9 @@ public:
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
-                                const string& dayCounter = "A365", const string& calendar = "NullCalendar");
+                                const string& dayCounter = "A365", const string& calendar = "NullCalendar",
+                                const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
+                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
     //@}
 
     //! \name Serialisation
@@ -61,16 +66,21 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& ccy() const { return ccy_; }
+    const string& ccy() const { return parseCurrencyWithMinors(ccy_).code(); }
     const MarketDatum::QuoteType& quoteType() const { return volatilityConfig_->quoteType(); }
     const QuantLib::Exercise::Type& exerciseType() const { return volatilityConfig_->exerciseType(); }
     const string& dayCounter() const { return dayCounter_; }
     const string& calendar() const { return calendar_; }
-    const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; };
+    const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; }
     const string& proxySurface() const { return proxySurface_; }
     const string quoteStem() const;
     void populateQuotes();
     bool isProxySurface() { return !proxySurface_.empty(); };
+    OneDimSolverConfig solverConfig() const;
+    const boost::optional<bool>& preferOutOfTheMoney() const {
+        return preferOutOfTheMoney_;
+    }
+    const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
     //! \name Setters
@@ -80,11 +90,19 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     string ccy_;
     boost::shared_ptr<VolatilityConfig> volatilityConfig_;
     string dayCounter_;
     string calendar_;
     string proxySurface_;
+    OneDimSolverConfig solverConfig_;
+    boost::optional<bool> preferOutOfTheMoney_;
+    ReportConfig reportConfig_;
+
+    // Return a default solver configuration. Used by solverConfig() if solverConfig_ is empty.
+    static OneDimSolverConfig defaultSolverConfig();
 };
 } // namespace data
 } // namespace ore

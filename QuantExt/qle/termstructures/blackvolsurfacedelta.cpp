@@ -63,16 +63,23 @@ BlackVolatilitySurfaceDelta::BlackVolatilitySurfaceDelta(
     const std::vector<Real>& callDeltas, bool hasAtm, const Matrix& blackVolMatrix, const DayCounter& dayCounter,
     const Calendar& cal, const Handle<Quote>& spot, const Handle<YieldTermStructure>& domesticTS,
     const Handle<YieldTermStructure>& foreignTS, DeltaVolQuote::DeltaType dt, DeltaVolQuote::AtmType at,
-    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType, InterpolatedSmileSection::InterpolationMethod im,
-    bool flatExtrapolation)
+    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType, const Period& switchTenor, DeltaVolQuote::DeltaType ltdt,
+    DeltaVolQuote::AtmType ltat, boost::optional<QuantLib::DeltaVolQuote::DeltaType> longTermAtmDeltaType,
+    InterpolatedSmileSection::InterpolationMethod im, bool flatExtrapolation)
     : BlackVolatilityTermStructure(referenceDate, cal, Following, dayCounter), dates_(dates), times_(dates.size(), 0),
       putDeltas_(putDeltas), callDeltas_(callDeltas), hasAtm_(hasAtm), spot_(spot), domesticTS_(domesticTS),
-      foreignTS_(foreignTS), dt_(dt), at_(at), atmDeltaType_(atmDeltaType), interpolationMethod_(im),
+      foreignTS_(foreignTS), dt_(dt), at_(at), atmDeltaType_(atmDeltaType), switchTenor_(switchTenor), ltdt_(ltdt),
+      ltat_(ltat), longTermAtmDeltaType_(longTermAtmDeltaType), interpolationMethod_(im),
       flatExtrapolation_(flatExtrapolation) {
 
     // If ATM delta type is not given, set it to dt
     if (!atmDeltaType_)
         atmDeltaType_ = dt_;
+    if (!longTermAtmDeltaType_)
+        longTermAtmDeltaType_ = ltdt_;
+
+    // set switch time
+    switchTime_ = switchTenor_ == 0 * Days ? QL_MAX_REAL : timeFromReference(optionDateFromTenor(switchTenor));
 
     QL_REQUIRE(dates.size() > 1, "at least 1 date required");
     // this has already been done for dates
@@ -119,6 +126,19 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
     DiscountFactor dDiscount = domesticTS_->discount(t);
     DiscountFactor fDiscount = foreignTS_->discount(t);
 
+    DeltaVolQuote::AtmType at;
+    DeltaVolQuote::DeltaType dt;
+    DeltaVolQuote::DeltaType atmDt;
+    if (t < switchTime_ && !close_enough(t, switchTime_)) {
+        at = at_;
+        dt = dt_;
+        atmDt = *atmDeltaType_;
+    } else {
+        at = ltat_;
+        dt = ltdt_;
+        atmDt = *longTermAtmDeltaType_;
+    }
+
     // Store smile section in map. Use strikes as key and vols as values for automatic sorting by strike.
     // If we have already have a strike from a previous delta, we do not overwrite it.
     auto comp = [](Real a, Real b) { return !close(a, b) && a < b; };
@@ -126,26 +146,40 @@ boost::shared_ptr<FxSmileSection> BlackVolatilitySurfaceDelta::blackVolSmile(Tim
     Size i = 0;
     for (Real delta : putDeltas_) {
         Real vol = interpolators_.at(i)->blackVol(t, 1, true);
-        BlackDeltaCalculator bdc(Option::Put, dt_, spot, dDiscount, fDiscount, vol * sqrt(t));
-        Real strike = bdc.strikeFromDelta(delta);
-        if (smileSection.count(strike) == 0)
-            smileSection[strike] = vol;
+        try {
+            BlackDeltaCalculator bdc(Option::Put, dt, spot, dDiscount, fDiscount, vol * sqrt(t));
+            Real strike = bdc.strikeFromDelta(delta);
+            if (smileSection.count(strike) == 0)
+                smileSection[strike] = vol;
+        } catch (const std::exception& e) {
+            QL_FAIL("BlackVolatilitySurfaceDelta: Error during calculating put strike at delta " << delta << ": "
+                                                                                                 << e.what());
+        }
         i++;
     }
     if (hasAtm_) {
         Real vol = interpolators_.at(i)->blackVol(t, 1, true);
-        BlackDeltaCalculator bdc(Option::Put, *atmDeltaType_, spot, dDiscount, fDiscount, vol * sqrt(t));
-        Real strike = bdc.atmStrike(at_);
-        if (smileSection.count(strike) == 0)
-            smileSection[strike] = vol;
+        try {
+            BlackDeltaCalculator bdc(Option::Put, atmDt, spot, dDiscount, fDiscount, vol * sqrt(t));
+            Real strike = bdc.atmStrike(at);
+            if (smileSection.count(strike) == 0)
+                smileSection[strike] = vol;
+        } catch (const std::exception& e) {
+            QL_FAIL("BlackVolatilitySurfaceDelta: Error during calculating atm strike: " << e.what());
+        }
         i++;
     }
     for (Real delta : callDeltas_) {
         Real vol = interpolators_.at(i)->blackVol(t, 1, true);
-        BlackDeltaCalculator bdc(Option::Call, dt_, spot, dDiscount, fDiscount, vol * sqrt(t));
-        Real strike = bdc.strikeFromDelta(delta);
-        if (smileSection.count(strike) == 0)
-            smileSection[strike] = vol;
+        try {
+            BlackDeltaCalculator bdc(Option::Call, dt, spot, dDiscount, fDiscount, vol * sqrt(t));
+            Real strike = bdc.strikeFromDelta(delta);
+            if (smileSection.count(strike) == 0)
+                smileSection[strike] = vol;
+        } catch (const std::exception& e) {
+            QL_FAIL("BlackVolatilitySurfaceDelta: Error during calculating call strike at delta " << delta << ": "
+                                                                                                  << e.what());
+        }
         i++;
     }
 

@@ -112,6 +112,9 @@ ostream& operator<<(ostream& out, const CdsDocClause& cdsDocClause) {
     }
 }
 
+CdsReferenceInformation::CdsReferenceInformation() :
+    tier_(CdsTier::SNRFOR), docClause_(CdsDocClause::XR14) {}
+
 CdsReferenceInformation::CdsReferenceInformation(const string& referenceEntityId, CdsTier tier,
                                                  const Currency& currency, CdsDocClause docClause)
     : referenceEntityId_(referenceEntityId), tier_(tier), currency_(currency), docClause_(docClause) {
@@ -159,7 +162,7 @@ bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsI
     }
 
     Currency ccy;
-    if (!tryParse<Currency>(tokens[2], ccy, &parseCurrency)) {
+    if (!tryParseCurrency(tokens[2], ccy)) {
         return false;
     }
 
@@ -173,23 +176,41 @@ bool tryParseCdsInformation(const string& strInfo, CdsReferenceInformation& cdsI
     return true;
 }
 
+CreditDefaultSwapData::CreditDefaultSwapData()
+    : settlesAccrual_(true), protectionPaymentTime_(QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault),
+      upfrontFee_(Null<Real>()), recoveryRate_(Null<Real>()), cashSettlementDays_(3) {}
+
+CreditDefaultSwapData::CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
+    const bool settlesAccrual, const PPT protectionPaymentTime,
+    const Date& protectionStart, const Date& upfrontDate, const Real upfrontFee, Real recoveryRate,
+    const string& referenceObligation, const Date& tradeDate, const string& cashSettlementDays)
+    : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
+      protectionPaymentTime_(protectionPaymentTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
+      upfrontFee_(upfrontFee), recoveryRate_(recoveryRate), referenceObligation_(referenceObligation),
+      tradeDate_(tradeDate), strCashSettlementDays_(cashSettlementDays),
+      cashSettlementDays_(strCashSettlementDays_.empty() ? 3 : parseInteger(strCashSettlementDays_)) {}
+
 CreditDefaultSwapData::CreditDefaultSwapData(
     const string& issuerId, const CdsReferenceInformation& referenceInformation, const LegData& leg,
-    bool settlesAccrual, const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime,
+    bool settlesAccrual, const PPT protectionPaymentTime,
     const Date& protectionStart, const Date& upfrontDate, Real upfrontFee, Real recoveryRate,
-    const std::string& referenceObligation)
+    const std::string& referenceObligation, const Date& tradeDate, const string& cashSettlementDays)
     : issuerId_(issuerId), leg_(leg), settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime),
       protectionStart_(protectionStart), upfrontDate_(upfrontDate), upfrontFee_(upfrontFee),
       recoveryRate_(recoveryRate), referenceObligation_(referenceObligation),
+      tradeDate_(tradeDate), strCashSettlementDays_(cashSettlementDays),
+      cashSettlementDays_(strCashSettlementDays_.empty() ? 3 : parseInteger(strCashSettlementDays_)),
       referenceInformation_(referenceInformation) {}
 
 void CreditDefaultSwapData::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "CreditDefaultSwapData");
+
+    check(node);
+
     issuerId_ = XMLUtils::getChildValue(node, "IssuerId", false);
 
     // May get an explicit CreditCurveId node. If so, we use it. Otherwise, we must have ReferenceInformation node.
-    XMLNode* tmp = XMLUtils::getChildNode(node, "CreditCurveId");
-    if (tmp) {
+    // XMLNode* tmp = XMLUtils::getChildNode(node, "CreditCurveId");
+    if (auto tmp = XMLUtils::getChildNode(node, "CreditCurveId")) {
         creditCurveId_ = XMLUtils::getNodeValue(tmp);
     } else {
         tmp = XMLUtils::getChildNode(node, "ReferenceInformation");
@@ -200,35 +221,35 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
         creditCurveId_ = ref.id();
     }
 
-    settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false); // default = Y
-    protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atDefault;   // set default
+    settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);
+    protectionPaymentTime_ = PPT::atDefault;
+
     // for backwards compatibility only
     if (auto c = XMLUtils::getChildNode(node, "PaysAtDefaultTime"))
         if (!parseBool(XMLUtils::getNodeValue(c)))
-            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
+            protectionPaymentTime_ = PPT::atPeriodEnd;
+
     // new node overrides deprecated one, if both should be given
     if (auto c = XMLUtils::getChildNode(node, "ProtectionPaymentTime")) {
         if (XMLUtils::getNodeValue(c) == "atDefault")
-            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atDefault;
+            protectionPaymentTime_ = PPT::atDefault;
         else if (XMLUtils::getNodeValue(c) == "atPeriodEnd")
-            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
+            protectionPaymentTime_ = PPT::atPeriodEnd;
         else if (XMLUtils::getNodeValue(c) == "atMaturity")
-            protectionPaymentTime_ = CreditDefaultSwap::ProtectionPaymentTime::atMaturity;
+            protectionPaymentTime_ = PPT::atMaturity;
         else {
-            QL_FAIL("protection payment time '" << XMLUtils::getNodeValue(c)
-                                                << "' not known, expected atDefault, atPeriodEnd, atMaturity");
+            QL_FAIL("protection payment time '" << XMLUtils::getNodeValue(c) << 
+                "' not known, expected atDefault, atPeriodEnd, atMaturity");
         }
     }
-    tmp = XMLUtils::getChildNode(node, "ProtectionStart");
-    if (tmp)
-        protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or missing
-    else
-        protectionStart_ = Date();
-    tmp = XMLUtils::getChildNode(node, "UpfrontDate");
-    if (tmp)
-        upfrontDate_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or mssing
-    else
-        upfrontDate_ = Date();
+
+    protectionStart_ = Date();
+    if (auto tmp = XMLUtils::getChildNode(node, "ProtectionStart"))
+        protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp));
+
+    upfrontDate_ = Date();
+    if (auto tmp = XMLUtils::getChildNode(node, "UpfrontDate"))
+        upfrontDate_ = parseDate(XMLUtils::getNodeValue(tmp));
 
     // zero if empty or missing
     upfrontFee_ = Null<Real>();
@@ -239,8 +260,7 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
 
     if (upfrontDate_ == Date()) {
         QL_REQUIRE(close_enough(upfrontFee_, 0.0) || upfrontFee_ == Null<Real>(),
-                   "CreditDefaultSwapData::fromXML(): UpfronFee ("
-                       << upfrontFee_ << ") must be empty or zero if no upfront date is given");
+                   "fromXML(): UpfronFee (" << upfrontFee_ << ") must be empty or zero if no upfront date is given");
         upfrontFee_ = Null<Real>();
     }
 
@@ -251,11 +271,20 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
         recoveryRate_ = parseReal(strRecoveryRate);
     }
 
+    tradeDate_ = Date();
+    if (auto n = XMLUtils::getChildNode(node, "TradeDate"))
+        tradeDate_ = parseDate(XMLUtils::getNodeValue(n));
+
+    strCashSettlementDays_ = XMLUtils::getChildValue(node, "CashSettlementDays", false);
+    cashSettlementDays_ = strCashSettlementDays_.empty() ? 3 : parseInteger(strCashSettlementDays_);
+
     leg_.fromXML(XMLUtils::getChildNode(node, "LegData"));
 }
 
 XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("CreditDefaultSwapData");
+
+    XMLNode* node = alloc(doc);
+
     XMLUtils::addChild(doc, node, "IssuerId", issuerId_);
 
     // We either have reference information or an explicit credit curve ID
@@ -266,32 +295,40 @@ XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);
-    if (protectionPaymentTime_ == CreditDefaultSwap::ProtectionPaymentTime::atDefault)
+    if (protectionPaymentTime_ == PPT::atDefault) {
         XMLUtils::addChild(doc, node, "ProtectionPaymentTime", "atDefault");
-    else if (protectionPaymentTime_ == CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd)
+    } else if (protectionPaymentTime_ == PPT::atPeriodEnd) {
         XMLUtils::addChild(doc, node, "ProtectionPaymentTime", "atPeriodEnd");
-    else if (protectionPaymentTime_ == CreditDefaultSwap::ProtectionPaymentTime::atMaturity)
+    } else if (protectionPaymentTime_ == PPT::atMaturity) {
         XMLUtils::addChild(doc, node, "ProtectionPaymentTime", "atMaturity");
-    else {
-        QL_FAIL("CreditDefaultSwapData::toXML(): unexpected protectionPaymentTime_");
+    } else {
+        QL_FAIL("toXML(): unexpected ProtectionPaymentTime");
     }
+
     if (protectionStart_ != Date()) {
-        std::ostringstream tmp;
-        tmp << QuantLib::io::iso_date(protectionStart_);
-        XMLUtils::addChild(doc, node, "ProtectionStart", tmp.str());
+        XMLUtils::addChild(doc, node, "ProtectionStart", to_string(protectionStart_));
     }
+
     if (upfrontDate_ != Date()) {
-        std::ostringstream tmp;
-        tmp << QuantLib::io::iso_date(upfrontDate_);
-        XMLUtils::addChild(doc, node, "UpfrontDate", tmp.str());
+        XMLUtils::addChild(doc, node, "UpfrontDate", to_string(upfrontDate_));
     }
+
     if (upfrontFee_ != Null<Real>())
         XMLUtils::addChild(doc, node, "UpfrontFee", upfrontFee_);
 
     if (recoveryRate_ != Null<Real>())
         XMLUtils::addChild(doc, node, "FixedRecoveryRate", recoveryRate_);
 
+    if (tradeDate_ != Date()) {
+        XMLUtils::addChild(doc, node, "TradeDate", to_string(tradeDate_));
+    }
+
+    if (!strCashSettlementDays_.empty()) {
+        XMLUtils::addChild(doc, node, "CashSettlementDays", strCashSettlementDays_);
+    }
+
     XMLUtils::appendNode(node, leg_.toXML(doc));
+
     return node;
 }
 
@@ -301,6 +338,14 @@ const string& CreditDefaultSwapData::creditCurveId() const {
     } else {
         return creditCurveId_;
     }
+}
+
+void CreditDefaultSwapData::check(XMLNode* node) const {
+    XMLUtils::checkNode(node, "CreditDefaultSwapData");
+}
+
+XMLNode* CreditDefaultSwapData::alloc(XMLDocument& doc) const {
+    return doc.allocNode("CreditDefaultSwapData");
 }
 
 } // namespace data

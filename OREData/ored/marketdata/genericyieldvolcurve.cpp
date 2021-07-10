@@ -125,6 +125,12 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0)));
 
             atm->enableExtrapolation(config->extrapolate());
+            TLOG("built atm surface with vols:");
+            TLOGGERSTREAM << vols;
+            if(isSln) {
+                TLOG("built atm surface with shifts:");
+                TLOGGERSTREAM << shifts;
+            }
         } else {
             // Constant volatility
             atm = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
@@ -146,11 +152,11 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 parseVectorOfValues<Period>(config->smileUnderlyingTenors(), &parsePeriod);
             vector<Spread> spreads = parseVectorOfValues<Real>(config->smileSpreads(), &parseReal);
 
-            // add smile spread 0, if not already existent
-            auto spr = std::upper_bound(spreads.begin(), spreads.end(), 0.0);
-            if (!close_enough(*spr, 0.0)) {
-                spreads.insert(spr, 0.0);
-            }
+            // add smile spread 0, if not already existent and sort the spreads
+            if (std::find_if(spreads.begin(), spreads.end(), [](const Real x) { return close_enough(x, 0.0); }) ==
+                spreads.end())
+                spreads.push_back(0.0);
+            std::sort(spreads.begin(), spreads.end());
 
             vector<vector<bool>> zero(smileOptionTenors.size() * smileUnderlyingTenors.size(),
                                       std::vector<bool>(spreads.size(), true));
@@ -162,8 +168,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             QL_REQUIRE(spreads.size() > 0, "Need at least 1 strike spread for a SwaptionVolCube");
 
             Size n = smileOptionTenors.size() * smileUnderlyingTenors.size();
-            vector<vector<Handle<Quote>>> volSpreadHandles(
-                n, vector<Handle<Quote>>(spreads.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0))));
+            vector<vector<Handle<Quote>>> volSpreadHandles(n, vector<Handle<Quote>>(spreads.size()));
+            for (auto& i : volSpreadHandles)
+                for (auto& j : i)
+                    j = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 
             LOG("vol cube smile option tenors " << smileOptionTenors.size());
             LOG("vol cube smile swap tenors " << smileUnderlyingTenors.size());
@@ -208,8 +216,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 for (Size j = 0; j < smileUnderlyingTenors.size(); ++j) {
                     Real lastNonZeroValue = 0.0;
                     for (Size k = 0; k < spreads.size(); ++k) {
-                        boost::shared_ptr<SimpleQuote> q = boost::static_pointer_cast<SimpleQuote>(
+                        boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(
                             *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
+                        QL_REQUIRE(q, "internal error: expected simple quote");
                         // do not overwrite vol spread for zero strike spread (ATM point)
                         if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k] &&
                             !close_enough(spreads[spreads.size() - 1 - k], 0.0)) {
@@ -218,7 +227,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                  << config->curveID() << "/" << smileOptionTenors[i] << "/" << smileUnderlyingTenors[j]
                                  << "/" << spreads[spreads.size() - 1 - k] << " with " << lastNonZeroValue
                                  << " since market quote is zero");
-                        } else {
+                        }
+                        // update last non-zero value
+                        if (!zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
                             lastNonZeroValue = q->value();
                         }
                     }

@@ -105,7 +105,7 @@ private:
     }
     \endcode
 
-    In fixedlegdata.hpp
+    In fixedlegdata.cpp
     \code{.cpp}
     LegDataRegister<FixedLegData> FixedLegData::reg_("Fixed");
     \endcode

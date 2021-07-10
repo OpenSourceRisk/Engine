@@ -31,13 +31,22 @@
 #include <ored/utilities/dategrid.hpp>
 
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/cirppimplieddefaulttermstructure.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/jyimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/lgmimplieddefaulttermstructure.hpp>
+#include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 namespace ore {
 namespace analytics {
 using namespace data;
+using namespace QuantLib;
+using namespace QuantExt;
 
 //! Scenario Generator using cross asset model paths
 /*!
@@ -74,12 +83,29 @@ private:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
+    // generated data
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_,
-        yoyInflationKeys_;
+        yoyInflationKeys_, defaultCurveKeys_;
     std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiKeys_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
-    std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_;
+    std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_, ten_dfc_;
+    std::vector<bool> modelCcyRelevant_;
+    Size n_ccy_, n_eq_, n_inf_, n_cr_, n_indices_, n_curves_;
+
+    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves_, fwdCurves_, yieldCurves_;
+    vector<boost::shared_ptr<IborIndex>> indices_;
+    vector<Currency> yieldCurveCurrency_;
+    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves_;
+    vector<Currency> equityForecastCurrency_;
+    vector<string> zeroInflationIndex_, yoyInflationIndex_;
+    vector<tuple<Size, Size, CrossAssetModelTypes::ModelType, boost::shared_ptr<ZeroInflationModelTermStructure>>>
+        zeroInfCurves_;
+    vector<tuple<Size, Size, CrossAssetModelTypes::ModelType, boost::shared_ptr<YoYInflationModelTermStructure>>>
+        yoyInfCurves_;
+    vector<boost::shared_ptr<QuantExt::LgmImpliedDefaultTermStructure>> lgmDefaultCurves_;
+    vector<boost::shared_ptr<QuantExt::CirppImpliedDefaultTermStructure>> cirppDefaultCurves_;
 };
+
 } // namespace analytics
 } // namespace ore

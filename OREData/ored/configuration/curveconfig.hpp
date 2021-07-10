@@ -23,11 +23,15 @@
 
 #pragma once
 
+#include <ored/marketdata/curvespec.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+#include <set>
 
 namespace ore {
 namespace data {
 using ore::data::XMLSerializable;
+using std::set;
 using std::string;
 
 //! Base curve configuration
@@ -36,7 +40,6 @@ using std::string;
 */
 class CurveConfig : public XMLSerializable {
 public:
-    //! Supported equity curve types
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
@@ -50,12 +53,16 @@ public:
     //@{
     const string& curveID() const { return curveID_; }
     const string& curveDescription() const { return curveDescription_; }
+    const set<string>& requiredCurveIds(const CurveSpec::CurveType& curveType) const;
+    const map<CurveSpec::CurveType, set<string>>& requiredCurveIds() const;
     //@}
 
     //! \name Setters
     //@{
     string& curveID() { return curveID_; }
     string& curveDescription() { return curveDescription_; }
+    set<string>& requiredCurveIds(const CurveSpec::CurveType& curveType);
+    map<CurveSpec::CurveType, set<string>>& requiredCurveIds();
     //@}
 
     //! Return all the market quotes required for this config
@@ -65,6 +72,7 @@ protected:
     string curveID_;
     string curveDescription_;
     vector<string> quotes_;
+    map<CurveSpec::CurveType, set<string>> requiredCurveIds_;
 };
 
 } // namespace data

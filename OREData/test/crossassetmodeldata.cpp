@@ -21,7 +21,9 @@
 #include <oret/fileutilities.hpp>
 #include <oret/toplevelfixture.hpp>
 
+#include <ored/model/calibrationinstruments/cpicapfloor.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/model/inflation/infdkdata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 
 using namespace QuantLib;
@@ -131,44 +133,31 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     return lgmDataVector;
 }
 
-boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
+vector<boost::shared_ptr<InflationModelData>> infConfigsData() {
 
-    // Create two instances
-    boost::shared_ptr<InfDkData> infDkData1(new data::InfDkData());
+    // TODO: Replacing the data that was here for now. It doesn't make sense.
 
-    vector<std::string> expiries = {"1Y", "2Y", "36M"};
-    vector<std::string> strikes = {"0.03", "0.03", "0.03"};
+    vector<boost::shared_ptr<CalibrationInstrument>> instruments;
+    vector<Period> expiries = { 1 * Years, 2 * Years, 36 * Months };
+    auto strike = boost::make_shared<AbsoluteStrike>(0.03);
+    for (const Period& expiry : expiries) {
+        instruments.push_back(boost::make_shared<CpiCapFloor>(CapFloor::Floor, expiry, strike));
+    }
+    CalibrationBasket cb(instruments);
+    vector<CalibrationBasket> calibrationBaskets = { cb };
 
-    // First instance
-    infDkData1->infIndex() = "EUHICPXT";
-    infDkData1->currency() = "EUR";
-    infDkData1->calibrationType() = parseCalibrationType("BOOTSTRAP");
-    infDkData1->reversionType() = parseReversionType("HULLWHITE");
-    infDkData1->volatilityType() = parseVolatilityType("HAGAN");
-    std::vector<Time> hTimes = {1.0, 2.0, 3.0, 4.0};
-    std::vector<Real> hValues = {1.0, 2.0, 3.0, 4.0};
-    std::vector<Time> aTimes = {1.0, 2.0, 3.0, 4.0};
-    std::vector<Real> aValues = {1.0, 2.0, 3.0, 4.0};
+    ReversionParameter reversion(LgmData::ReversionType::HullWhite, false, ParamType::Piecewise,
+        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0, 4.0 });
 
-    infDkData1->calibrateH() = false;
-    infDkData1->hParamType() = parseParamType("PIECEWISE");
+    VolatilityParameter volatility(LgmData::VolatilityType::Hagan, false, ParamType::Piecewise,
+        { 1.0, 2.0, 3.0, 4.0 }, { 1.0, 2.0, 3.0, 4.0, 4.0 });
 
-    infDkData1->hTimes() = hTimes;
-    infDkData1->hValues() = hValues;
+    LgmReversionTransformation rt(1.0, 1.0);
 
-    infDkData1->calibrateA() = false;
-    infDkData1->aParamType() = parseParamType("PIECEWISE");
-    infDkData1->aTimes() = aTimes;
-    infDkData1->aValues() = aValues;
-    infDkData1->shiftHorizon() = 1.0;
+    boost::shared_ptr<InfDkData> data = boost::make_shared<InfDkData>(CalibrationType::Bootstrap, calibrationBaskets,
+        "EUR", "EUHICPXT", reversion, volatility, rt);
 
-    infDkData1->optionExpiries() = expiries;
-    infDkData1->optionStrikes() = strikes;
-    infDkData1->scaling() = 1.0;
-
-    boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infDkDataVector(new vector<boost::shared_ptr<InfDkData>>);
-    *infDkDataVector = {infDkData1};
-    return infDkDataVector;
+    return {data};
 }
 
 boost::shared_ptr<vector<boost::shared_ptr<FxBsData>>> fxConfigsData() {
@@ -230,6 +219,64 @@ boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqConfigsData() {
     return eqBsDataVector;
 }
 
+boost::shared_ptr<vector<boost::shared_ptr<CrLgmData>>> crLgmConfigsData() {
+
+    // Create three instances
+    boost::shared_ptr<CrLgmData> lgmData(new data::CrLgmData());
+
+    lgmData->name() = "ItraxxEuropeS9V1";
+
+    lgmData->calibrationType() = parseCalibrationType("BOOTSTRAP");
+    lgmData->reversionType() = parseReversionType("HULLWHITE");
+    lgmData->volatilityType() = parseVolatilityType("HAGAN");
+    std::vector<Time> hTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> hValues = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Time> aTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> aValues = {1.0, 2.0, 3.0, 4.0};
+
+    lgmData->calibrateH() = false;
+    lgmData->hParamType() = parseParamType("CONSTANT");
+
+    lgmData->hTimes() = hTimes;
+
+    lgmData->hValues() = hValues;
+
+    lgmData->calibrateA() = false;
+    lgmData->aParamType() = parseParamType("CONSTANT");
+    lgmData->aTimes() = aTimes;
+    lgmData->aValues() = aValues;
+    lgmData->shiftHorizon() = 1.0;
+
+    lgmData->scaling() = 1.0;
+
+    boost::shared_ptr<vector<boost::shared_ptr<CrLgmData>>> lgmDataVector(new vector<boost::shared_ptr<CrLgmData>>);
+    *lgmDataVector = {lgmData};
+    return lgmDataVector;
+}
+
+boost::shared_ptr<vector<boost::shared_ptr<CrCirData>>> crCirConfigsData() {
+
+    // Create three instances
+    boost::shared_ptr<CrCirData> cirData(new data::CrCirData());
+
+    cirData->name() = "CDX.NA.S33v1";
+
+    cirData->currency() = "USD";
+    cirData->calibrationType() = parseCalibrationType("None");
+    cirData->calibrationStrategy() = parseCirCalibrationStrategy("None");
+    cirData->startValue() = 0.1;
+    cirData->reversionValue() = 0.1;
+    cirData->longTermValue() = 0.1;
+    cirData->volatility() = 0.1;
+    cirData->relaxedFeller() = true;
+    cirData->fellerFactor() = 1.1;
+    cirData->tolerance() = 1e-8;
+
+    boost::shared_ptr<vector<boost::shared_ptr<CrCirData>>> cirDataVector(new vector<boost::shared_ptr<CrCirData>>);
+    *cirDataVector = {cirData};
+    return cirDataVector;
+}
+
 boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 
     boost::shared_ptr<data::CrossAssetModelData> crossAssetData(new data::CrossAssetModelData());
@@ -238,18 +285,24 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     crossAssetData->currencies() = {"EUR", "USD", "JPY"}; // need to check how to set this up
     crossAssetData->equities() = {"SP5"};
     crossAssetData->infIndices() = {"EUHICPXT"};
+    crossAssetData->creditNames() = {"ItraxxEuropeS9V1", "CDX.NA.S33v1"};
     crossAssetData->irConfigs() = *irConfigsData();
     crossAssetData->fxConfigs() = *fxConfigsData();
     crossAssetData->eqConfigs() = *eqConfigsData();
-    crossAssetData->infConfigs() = *infConfigsData();
+    crossAssetData->infConfigs() = infConfigsData();
+    crossAssetData->crLgmConfigs() = *crLgmConfigsData();
+    crossAssetData->crCirConfigs() = *crCirConfigsData();
 
     CorrelationMatrixBuilder cmb;
     cmb.addCorrelation("IR:EUR", "IR:USD", 1.0);
     cmb.addCorrelation("IR:EUR", "IR:JPY", 1.0);
     cmb.addCorrelation("IR:USD", "IR:JPY", 1.0);
     cmb.addCorrelation("INF:EUHICPXT", "IR:EUR", 1.0);
+    cmb.addCorrelation("IR:EUR", "CR:ItraxxEuropeS9V1", 1.0);
+    cmb.addCorrelation("IR:USD", "CR:CDX.NA.S33v1", 1.0);
+    cmb.addCorrelation("CR:ItraxxEuropeS9V1", "CR:CDX.NA.S33v1", 1.0);
 
-    crossAssetData->correlations() = cmb.data();
+    crossAssetData->setCorrelations(cmb.correlations());
 
     crossAssetData->bootstrapTolerance() = 0.001;
 

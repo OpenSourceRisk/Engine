@@ -35,12 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ored\portfolio\builders\asianoption.hpp" />
-    <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp" />
-    <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp" />
-    <ClInclude Include="ored\portfolio\builders\fxasianoption.hpp" />
-    <ClInclude Include="ored\portfolio\commodityasianoption.hpp" />
-    <ClInclude Include="ored\portfolio\equityasianoption.hpp" />
     <ClInclude Include="ored\auto_link.hpp" />
     <ClInclude Include="ored\configuration\basecorrelationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\bootstrapconfig.hpp" />
@@ -58,8 +52,11 @@
     <ClInclude Include="ored\configuration\fxspotconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\genericyieldvolcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\iborfallbackconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\onedimsolverconfig.hpp" />
+    <ClInclude Include="ored\configuration\reportconfig.hpp" />
     <ClInclude Include="ored\configuration\securityconfig.hpp" />
     <ClInclude Include="ored\configuration\swaptionvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\volatilityconfig.hpp" />
@@ -70,12 +67,13 @@
     <ClInclude Include="ored\marketdata\cdsvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\commoditycurve.hpp" />
     <ClInclude Include="ored\marketdata\commodityvolcurve.hpp" />
+    <ClInclude Include="ored\marketdata\compositeloader.hpp" />
     <ClInclude Include="ored\marketdata\correlationcurve.hpp" />
     <ClInclude Include="ored\marketdata\csvloader.hpp" />
-    <ClInclude Include="ored\marketdata\curveloader.hpp" />
     <ClInclude Include="ored\marketdata\curvespec.hpp" />
     <ClInclude Include="ored\marketdata\curvespecparser.hpp" />
     <ClInclude Include="ored\marketdata\defaultcurve.hpp" />
+    <ClInclude Include="ored\marketdata\dependencygraph.hpp" />
     <ClInclude Include="ored\marketdata\equitycurve.hpp" />
     <ClInclude Include="ored\marketdata\equityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\expiry.hpp" />
@@ -97,31 +95,49 @@
     <ClInclude Include="ored\marketdata\structuredcurveerror.hpp" />
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
+    <ClInclude Include="ored\marketdata\todaysmarketcalibrationinfo.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
+    <ClInclude Include="ored\marketdata\wrappedmarket.hpp" />
     <ClInclude Include="ored\marketdata\yieldcurve.hpp" />
     <ClInclude Include="ored\marketdata\inflationcapfloorvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\yieldvolcurve.hpp" />
+    <ClInclude Include="ored\model\calibrationbasket.hpp" />
+    <ClInclude Include="ored\model\calibrationconfiguration.hpp" />
+    <ClInclude Include="ored\model\calibrationinstrumentfactory.hpp" />
+    <ClInclude Include="ored\model\calibrationinstruments\cpicapfloor.hpp" />
+    <ClInclude Include="ored\model\calibrationinstruments\yoycapfloor.hpp" />
+    <ClInclude Include="ored\model\calibrationinstruments\yoyswap.hpp" />
+    <ClInclude Include="ored\model\crcirbuilder.hpp" />
+    <ClInclude Include="ored\model\crcirdata.hpp" />
+    <ClInclude Include="ored\model\crlgmbuilder.hpp" />
+    <ClInclude Include="ored\model\crlgmdata.hpp" />
     <ClInclude Include="ored\model\crossassetmodelbuilder.hpp" />
     <ClInclude Include="ored\model\crossassetmodeldata.hpp" />
     <ClInclude Include="ored\model\eqbsbuilder.hpp" />
     <ClInclude Include="ored\model\eqbsdata.hpp" />
     <ClInclude Include="ored\model\fxbsbuilder.hpp" />
     <ClInclude Include="ored\model\fxbsdata.hpp" />
-    <ClInclude Include="ored\model\infdkbuilder.hpp" />
-    <ClInclude Include="ored\model\infdkdata.hpp" />
+    <ClInclude Include="ored\model\inflation\infdkbuilder.hpp" />
+    <ClInclude Include="ored\model\inflation\infdkdata.hpp" />
+    <ClInclude Include="ored\model\inflation\infjybuilder.hpp" />
+    <ClInclude Include="ored\model\inflation\infjydata.hpp" />
+    <ClInclude Include="ored\model\inflation\inflationmodeldata.hpp" />
     <ClInclude Include="ored\model\irlgmdata.hpp" />
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
+    <ClInclude Include="ored\model\marketobserver.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
+    <ClInclude Include="ored\model\modeldata.hpp" />
+    <ClInclude Include="ored\model\modelparameter.hpp" />
     <ClInclude Include="ored\model\structuredmodelerror.hpp" />
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
-    <ClInclude Include="ored\portfolio\asianoption.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
     <ClInclude Include="ored\portfolio\bondutils.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
+    <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredcpileg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.hpp" />
@@ -132,13 +148,18 @@
     <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
+    <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityfuturesoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\forwardbond.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\quantoequityoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\quantovanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\vanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
     <ClInclude Include="ored\portfolio\capfloor.hpp" />
@@ -146,16 +167,19 @@
     <ClInclude Include="ored\portfolio\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswapdata.hpp" />
+    <ClInclude Include="ored\portfolio\creditdefaultswapoption.hpp" />
+    <ClInclude Include="ored\portfolio\durationadjustedcmslegbuilder.hpp" />
+    <ClInclude Include="ored\portfolio\durationadjustedcmslegdata.hpp" />
     <ClInclude Include="ored\portfolio\enginedata.hpp" />
     <ClInclude Include="ored\portfolio\enginefactory.hpp" />
     <ClInclude Include="ored\portfolio\envelope.hpp" />
     <ClInclude Include="ored\portfolio\equityforward.hpp" />
+    <ClInclude Include="ored\portfolio\equityfuturesoption.hpp" />
     <ClInclude Include="ored\portfolio\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\equityswap.hpp" />
     <ClInclude Include="ored\portfolio\fixingdates.hpp" />
     <ClInclude Include="ored\portfolio\forwardbond.hpp" />
     <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
-    <ClInclude Include="ored\portfolio\fxasianoption.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -166,12 +190,12 @@
     <ClInclude Include="ored\portfolio\legdatafactory.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
-    <ClInclude Include="ored\portfolio\optionasiandata.hpp" />
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp" />
     <ClInclude Include="ored\portfolio\optionpaymentdata.hpp" />
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
+    <ClInclude Include="ored\portfolio\premiumdata.hpp" />
     <ClInclude Include="ored\portfolio\referencedata.hpp" />
     <ClInclude Include="ored\portfolio\referencedatafactory.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
@@ -183,6 +207,15 @@
     <ClInclude Include="ored\portfolio\tradefactory.hpp" />
     <ClInclude Include="ored\portfolio\underlying.hpp" />
     <ClInclude Include="ored\portfolio\vanillaoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\asianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\fxasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\commodityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\equityasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\asianoption.hpp" />
+    <ClInclude Include="ored\portfolio\fxasianoption.hpp" />
+    <ClInclude Include="ored\portfolio\optionasiandata.hpp" />
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
@@ -191,6 +224,7 @@
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
+    <ClInclude Include="ored\utilities\currencyconfig.hpp" />
     <ClInclude Include="ored\utilities\dategrid.hpp" />
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexparser.hpp" />
@@ -206,6 +240,7 @@
     <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
     <ClInclude Include="ored\utilities\vectorutils.hpp" />
+    <ClInclude Include="ored\utilities\wildcard.hpp" />
     <ClInclude Include="ored\utilities\xmlutils.hpp" />
     <ClInclude Include="ored\version.hpp" />
   </ItemGroup>
@@ -218,14 +253,18 @@
     <ClCompile Include="ored\configuration\commodityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\conventions.cpp" />
     <ClCompile Include="ored\configuration\correlationcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\curveconfig.cpp" />
     <ClCompile Include="ored\configuration\curveconfigurations.cpp" />
     <ClCompile Include="ored\configuration\defaultcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\equitycurveconfig.cpp" />
     <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\genericyieldvolcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\iborfallbackconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\onedimsolverconfig.cpp" />
+    <ClCompile Include="ored\configuration\reportconfig.cpp" />
     <ClCompile Include="ored\configuration\volatilityconfig.cpp" />
     <ClCompile Include="ored\configuration\yieldcurveconfig.cpp" />
     <ClCompile Include="ored\marketdata\basecorrelationcurve.cpp" />
@@ -235,10 +274,10 @@
     <ClCompile Include="ored\marketdata\commodityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\correlationcurve.cpp" />
     <ClCompile Include="ored\marketdata\csvloader.cpp" />
-    <ClCompile Include="ored\marketdata\curveloader.cpp" />
     <ClCompile Include="ored\marketdata\curvespec.cpp" />
     <ClCompile Include="ored\marketdata\curvespecparser.cpp" />
     <ClCompile Include="ored\marketdata\defaultcurve.cpp" />
+    <ClCompile Include="ored\marketdata\dependencygraph.cpp" />
     <ClCompile Include="ored\marketdata\equitycurve.cpp" />
     <ClCompile Include="ored\marketdata\equityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\expiry.cpp" />
@@ -258,50 +297,69 @@
     <ClCompile Include="ored\marketdata\strike.cpp" />
     <ClCompile Include="ored\marketdata\swaptionvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarket.cpp" />
+    <ClCompile Include="ored\marketdata\todaysmarketcalibrationinfo.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarketparameters.cpp" />
+    <ClCompile Include="ored\marketdata\wrappedmarket.cpp" />
     <ClCompile Include="ored\marketdata\yieldcurve.cpp" />
     <ClCompile Include="ored\marketdata\inflationcapfloorvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\yieldvolcurve.cpp" />
+    <ClCompile Include="ored\model\calibrationbasket.cpp" />
+    <ClCompile Include="ored\model\calibrationconfiguration.cpp" />
+    <ClCompile Include="ored\model\calibrationinstrumentfactory.cpp" />
+    <ClCompile Include="ored\model\calibrationinstruments\cpicapfloor.cpp" />
+    <ClCompile Include="ored\model\calibrationinstruments\yoycapfloor.cpp" />
+    <ClCompile Include="ored\model\calibrationinstruments\yoyswap.cpp" />
+    <ClCompile Include="ored\model\crcirbuilder.cpp" />
+    <ClCompile Include="ored\model\crcirdata.cpp" />
+    <ClCompile Include="ored\model\crlgmbuilder.cpp" />
+    <ClCompile Include="ored\model\crlgmdata.cpp" />
     <ClCompile Include="ored\model\crossassetmodelbuilder.cpp" />
     <ClCompile Include="ored\model\crossassetmodeldata.cpp" />
     <ClCompile Include="ored\model\eqbsbuilder.cpp" />
     <ClCompile Include="ored\model\eqbsdata.cpp" />
     <ClCompile Include="ored\model\fxbsbuilder.cpp" />
     <ClCompile Include="ored\model\fxbsdata.cpp" />
-    <ClCompile Include="ored\model\infdkbuilder.cpp" />
-    <ClCompile Include="ored\model\infdkdata.cpp" />
+    <ClCompile Include="ored\model\inflation\infdkbuilder.cpp" />
+    <ClCompile Include="ored\model\inflation\infdkdata.cpp" />
+    <ClCompile Include="ored\model\inflation\infjybuilder.cpp" />
+    <ClCompile Include="ored\model\inflation\infjydata.cpp" />
+    <ClCompile Include="ored\model\inflation\inflationmodeldata.cpp" />
     <ClCompile Include="ored\model\irlgmdata.cpp" />
     <ClCompile Include="ored\model\lgmbuilder.cpp" />
     <ClCompile Include="ored\model\lgmdata.cpp" />
+    <ClCompile Include="ored\model\modeldata.cpp" />
+    <ClCompile Include="ored\model\modelparameter.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
-    <ClCompile Include="ored\portfolio\asianoption.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
+    <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\capflooredovernightindexedcouponleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
     <ClCompile Include="ored\portfolio\builders\cmsspread.cpp" />
     <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp" />
+    <ClCompile Include="ored\portfolio\builders\durationadjustedcms.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />
     <ClCompile Include="ored\portfolio\capfloor.cpp" />
-    <ClCompile Include="ored\portfolio\commodityasianoption.cpp" />
     <ClCompile Include="ored\portfolio\commodityforward.cpp" />
     <ClCompile Include="ored\portfolio\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswap.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp" />
+    <ClCompile Include="ored\portfolio\creditdefaultswapoption.cpp" />
+    <ClCompile Include="ored\portfolio\durationadjustedcmslegbuilder.cpp" />
+    <ClCompile Include="ored\portfolio\durationadjustedcmslegdata.cpp" />
     <ClCompile Include="ored\portfolio\enginedata.cpp" />
     <ClCompile Include="ored\portfolio\enginefactory.cpp" />
     <ClCompile Include="ored\portfolio\envelope.cpp" />
-    <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
     <ClCompile Include="ored\portfolio\equityforward.cpp" />
+    <ClCompile Include="ored\portfolio\equityfuturesoption.cpp" />
     <ClCompile Include="ored\portfolio\equityoption.cpp" />
     <ClCompile Include="ored\portfolio\equityswap.cpp" />
     <ClCompile Include="ored\portfolio\fixingdates.cpp" />
     <ClCompile Include="ored\portfolio\forwardbond.cpp" />
     <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />
-    <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
@@ -311,12 +369,12 @@
     <ClCompile Include="ored\portfolio\legdatafactory.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
-    <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
     <ClCompile Include="ored\portfolio\optiondata.cpp" />
     <ClCompile Include="ored\portfolio\optionexercisedata.cpp" />
     <ClCompile Include="ored\portfolio\optionpaymentdata.cpp" />
     <ClCompile Include="ored\portfolio\optionwrapper.cpp" />
     <ClCompile Include="ored\portfolio\portfolio.cpp" />
+    <ClCompile Include="ored\portfolio\premiumdata.cpp" />
     <ClCompile Include="ored\portfolio\referencedata.cpp" />
     <ClCompile Include="ored\portfolio\referencedatafactory.cpp" />
     <ClCompile Include="ored\portfolio\schedule.cpp" />
@@ -327,12 +385,18 @@
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
     <ClCompile Include="ored\portfolio\underlying.cpp" />
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
+    <ClCompile Include="ored\portfolio\asianoption.cpp" />
+    <ClCompile Include="ored\portfolio\commodityasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
+    <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
     <ClCompile Include="ored\utilities\conventionsbasedfutureexpiry.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />
+    <ClCompile Include="ored\utilities\currencyconfig.cpp" />
     <ClCompile Include="ored\utilities\dategrid.cpp" />
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexparser.cpp" />
@@ -343,6 +407,7 @@
     <ClCompile Include="ored\utilities\progressbar.cpp" />
     <ClCompile Include="ored\utilities\strike.cpp" />
     <ClCompile Include="ored\utilities\to_string.cpp" />
+    <ClCompile Include="ored\utilities\wildcard.cpp" />
     <ClCompile Include="ored\utilities\xmlutils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -397,27 +462,35 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -474,7 +547,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning)  %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -519,7 +591,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning)  %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -562,7 +633,6 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) /bigobj  %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -605,7 +675,6 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning)  /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -650,7 +719,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -695,7 +763,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -738,7 +805,6 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -781,7 +847,6 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

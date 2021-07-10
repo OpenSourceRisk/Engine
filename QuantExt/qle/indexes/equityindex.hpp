@@ -26,16 +26,17 @@
 
 #include <ql/currency.hpp>
 #include <ql/handle.hpp>
-#include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/currency.hpp>
+#include <qle/indexes/eqfxindexbase.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Equity Index
 /*! \ingroup indexes */
-class EquityIndex : public Index, public Observer {
+class EquityIndex : public EqFxIndexBase {
 public:
     /*! spot quote is interpreted as of today */
     EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
@@ -60,7 +61,7 @@ public:
         date of the fixing; no settlement days must be used.
     */
     virtual void addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite = false);
-    const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(dividendName()); }
+    virtual const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(dividendName()); }
     Real dividendsBetweenDates(const Date& startDate, const Date& endDate) const;
     //@}
     //! \name Observer interface
@@ -80,7 +81,7 @@ public:
     virtual Real forecastFixing(const Time& fixingTime) const;
     virtual Real forecastFixing(const Date& fixingDate, bool incDividend) const;
     virtual Real forecastFixing(const Time& fixingTime, bool incDividend) const;
-    Real pastFixing(const Date& fixingDate) const;
+    virtual Real pastFixing(const Date& fixingDate) const;
     // @}
     //! \name Additional methods
     //@{

@@ -29,7 +29,7 @@
 #include <ored/marketdata/loader.hpp>
 
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
+#include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 namespace ore {
 namespace data {
@@ -46,7 +46,8 @@ public:
     InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
                               const CurveConfigurations& curveConfigs,
                               map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                              map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
+                              map<string, boost::shared_ptr<InflationCurve>>& inflationCurves,
+                              const boost::shared_ptr<Conventions>& conventions = nullptr);
 
     //! \name Inspectors
     //@{
@@ -76,6 +77,8 @@ private:
     boost::shared_ptr<InflationTermStructure> surface_;
     bool useMarketYoyCurve_;
     boost::shared_ptr<YoYInflationTermStructure> yoyTs_;
+    boost::shared_ptr<Conventions> conventions_;
+    Handle<YieldTermStructure> discountCurve_;
 };
 } // namespace data
 } // namespace ore

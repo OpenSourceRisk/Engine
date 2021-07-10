@@ -24,9 +24,21 @@
 namespace QuantExt {
 
 ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const boost::shared_ptr<Payoff>& payoff,
-                         const Date& fwdMaturityDate, const bool settlementDirty, const Real compensationPayment,
-                         const Date compensationPaymentDate, const Real bondNotional)
-    : underlying_(underlying), payoff_(payoff), fwdMaturityDate_(fwdMaturityDate), settlementDirty_(settlementDirty),
+                         const Date& fwdMaturityDate, const Date& fwdSettlementDate, const bool isPhysicallySettled,
+                         const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
+                         const Real bondNotional)
+    : underlying_(underlying), payoff_(payoff), lockRate_(Null<Real>()), fwdMaturityDate_(fwdMaturityDate),
+      fwdSettlementDate_(fwdSettlementDate), isPhysicallySettled_(isPhysicallySettled),
+      settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
+      compensationPaymentDate_(compensationPaymentDate), bondNotional_(bondNotional) {}
+
+ForwardBond::ForwardBond(const boost::shared_ptr<Bond>& underlying, const Real lockRate,
+                         const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
+                         const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,
+                         const Real compensationPayment, const Date compensationPaymentDate, const Real bondNotional)
+    : underlying_(underlying), payoff_(nullptr), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
+      longInForward_(longInForward), fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate),
+      isPhysicallySettled_(isPhysicallySettled), settlementDirty_(settlementDirty),
       compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
       bondNotional_(bondNotional) {}
 
@@ -37,7 +49,12 @@ void ForwardBond::setupArguments(PricingEngine::arguments* args) const {
     QL_REQUIRE(arguments != 0, "wrong argument type in forward bond");
     arguments->underlying = underlying_;
     arguments->payoff = payoff_;
+    arguments->lockRate = lockRate_;
+    arguments->lockRateDayCounter = lockRateDayCounter_;
+    arguments->longInForward = longInForward_;
     arguments->fwdMaturityDate = fwdMaturityDate_;
+    arguments->fwdSettlementDate = fwdSettlementDate_;
+    arguments->isPhysicallySettled = isPhysicallySettled_;
     arguments->settlementDirty = settlementDirty_;
     arguments->compensationPayment = compensationPayment_;
     arguments->compensationPaymentDate = compensationPaymentDate_;
@@ -60,6 +77,11 @@ void ForwardBond::fetchResults(const PricingEngine::results* r) const {
     underlyingIncome_ = results->underlyingIncome;
 }
 
-void ForwardBond::arguments::validate() const { QL_REQUIRE(underlying, "bond pointer is null"); }
+void ForwardBond::arguments::validate() const {
+    QL_REQUIRE(underlying, "bond pointer is null");
+    QL_REQUIRE((payoff != nullptr && lockRate == Null<Real>()) || (payoff == nullptr && lockRate != Null<Real>()),
+               "exactly one of payoff or lockRate must be filled");
+    QL_REQUIRE(lockRate == Null<Real>() || longInForward, "if lockRate is given, longInForward must be given as well");
+}
 
 } // namespace QuantExt

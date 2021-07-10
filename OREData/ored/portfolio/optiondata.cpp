@@ -18,7 +18,11 @@
 
 #include <ored/portfolio/optiondata.hpp>
 
+#include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+
+#include <qle/instruments/rebatedexercise.hpp>
 
 using namespace QuantLib;
 
@@ -37,9 +41,7 @@ void OptionData::fromXML(XMLNode* node) {
     settlement_ = XMLUtils::getChildValue(node, "Settlement", false);
     settlementMethod_ = XMLUtils::getChildValue(node, "SettlementMethod", false);
     payoffAtExpiry_ = XMLUtils::getChildValueAsBool(node, "PayOffAtExpiry", false);
-    premium_ = XMLUtils::getChildValueAsDouble(node, "PremiumAmount", false);
-    premiumCcy_ = XMLUtils::getChildValue(node, "PremiumCurrency", false);
-    premiumPayDate_ = XMLUtils::getChildValue(node, "PremiumPayDate", false);
+    premiumData_.fromXML(node);
     exerciseFeeTypes_.clear();
     exerciseFeeDates_.clear();
     vector<std::reference_wrapper<vector<string>>> attrs;
@@ -89,9 +91,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     if (settlementMethod_ != "")
         XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
     XMLUtils::addChild(doc, node, "PayOffAtExpiry", payoffAtExpiry_);
-    XMLUtils::addChild(doc, node, "PremiumAmount", premium_);
-    XMLUtils::addChild(doc, node, "PremiumCurrency", premiumCcy_);
-    XMLUtils::addChild(doc, node, "PremiumPayDate", premiumPayDate_);
+    XMLUtils::appendNode(node, premiumData_.toXML(doc));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "ExerciseFees", "ExerciseFee", exerciseFees_,
                                                 {"type", "startDate"}, {exerciseFeeTypes_, exerciseFeeDates_});
     if (exerciseFeeSettlementPeriod_ != "")
@@ -116,5 +116,158 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector<Leg> legs) {
+
+    // only keep a) future exercise dates and b) exercise dates that exercise into a whole
+    // accrual period of the underlying; TODO handle exercises into broken periods?
+
+    // determine last accrual start date present in the underlying legs
+
+    Date lastAccrualStartDate = Date::minDate();
+    for (auto const& l : legs) {
+        for (auto const& c : l) {
+            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
+                lastAccrualStartDate = std::max(lastAccrualStartDate, cpn->accrualStartDate());
+        }
+    }
+
+    // get notiice period, calendar, bdc
+
+    Period noticePeriod = optionData.noticePeriod().empty() ? 0 * Days : parsePeriod(optionData.noticePeriod());
+    Calendar noticeCal =
+        optionData.noticeCalendar().empty() ? NullCalendar() : parseCalendar(optionData.noticeCalendar());
+    BusinessDayConvention noticeBdc =
+        optionData.noticeConvention().empty() ? Unadjusted : parseBusinessDayConvention(optionData.noticeConvention());
+
+    // build vector of sorted exercise dates
+
+    std::vector<QuantLib::Date> sortedExerciseDates;
+    for (auto const& d : optionData.exerciseDates())
+        sortedExerciseDates.push_back(parseDate(d));
+    std::sort(sortedExerciseDates.begin(), sortedExerciseDates.end());
+
+    // build vector of alive exercise dates and corresponding notive dates
+
+    std::vector<bool> isExerciseDateAlive(sortedExerciseDates.size(), false);
+
+    for (Size i = 0; i < sortedExerciseDates.size(); i++) {
+        Date noticeDate = noticeCal.advance(sortedExerciseDates[i], -noticePeriod, noticeBdc);
+        if (noticeDate > Settings::instance().evaluationDate() && noticeDate <= lastAccrualStartDate) {
+            isExerciseDateAlive[i] = true;
+            noticeDates_.push_back(noticeDate);
+            exerciseDates_.push_back(sortedExerciseDates[i]);
+            DLOG("Got notice date " << QuantLib::io::iso_date(noticeDate) << " using notice period " << noticePeriod
+                                    << ", convention " << noticeBdc << ", calendar " << noticeCal.name()
+                                    << " from exercise date " << exerciseDates_.back());
+        }
+        if (noticeDate > lastAccrualStartDate)
+            WLOG("Remove notice date " << ore::data::to_string(noticeDate) << " (exercise date "
+                                       << sortedExerciseDates[i] << ") after last accrual start date "
+                                       << ore ::data::to_string(lastAccrualStartDate));
+    }
+
+    // if we do not have any notice dates left, we are done (a nullptr will be returned by exercise())
+
+    if (noticeDates_.empty())
+        return;
+
+    // build exercise instance
+
+    exercise_ = boost::make_shared<BermudanExercise>(noticeDates_);
+
+    // build feee and rebated exercise instance, if any fees are present
+
+    if (!optionData.exerciseFees().empty()) {
+
+        // build an exercise date "schedule" by adding the maximum possible date at the end
+
+        std::vector<Date> exDatesPlusInf(sortedExerciseDates);
+        exDatesPlusInf.push_back(Date::maxDate());
+        vector<double> allRebates = buildScheduledVectorNormalised(optionData.exerciseFees(),
+                                                                   optionData.exerciseFeeDates(), exDatesPlusInf, 0.0);
+
+        // filter on alive rebates, so that we can a vector of rebates corresponding to the exerciseDates vector
+
+        vector<double> rebates;
+        for (Size i = 0; i < sortedExerciseDates.size(); ++i) {
+            if (isExerciseDateAlive[i])
+                rebates.push_back(allRebates[i]);
+        }
+
+        // flip the sign of the fee to get a rebate
+
+        for (auto& r : rebates)
+            r = -r;
+        vector<string> feeType = buildScheduledVectorNormalised<string>(
+            optionData.exerciseFeeTypes(), optionData.exerciseFeeDates(), exDatesPlusInf, "");
+
+        // convert relative to absolute fees if required
+
+        for (Size i = 0; i < rebates.size(); ++i) {
+
+            // default to Absolute
+
+            if (feeType[i].empty())
+                feeType[i] = "Absolute";
+
+            if (feeType[i] == "Percentage") {
+
+                // get next coupon after exercise to determine relevant notional
+
+                std::set<std::pair<Date, Real>> notionals;
+                for (auto const& l : legs) {
+                    for (auto const& c : l) {
+                        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
+                            if (cpn->accrualStartDate() >= exerciseDates_[i])
+                                notionals.insert(std::make_pair(cpn->accrualStartDate(), cpn->nominal()));
+                        }
+                    }
+                }
+
+                if (notionals.empty())
+                    rebates[i] = 0.0; // notional is zero
+                else {
+                    Real feeNotional = notionals.begin()->second;
+                    DLOG("Convert percentage rebate "
+                         << rebates[i] << " to absolute reabte " << rebates[i] * feeNotional << " using nominal "
+                         << feeNotional << " for exercise date " << QuantLib::io::iso_date(exerciseDates_[i]));
+                    rebates[i] *= feeNotional; // multiply percentage fee by relevant notional
+                }
+
+            } else {
+                QL_REQUIRE(feeType[i] == "Absolute", "fee type must be Absolute or Relative");
+            }
+        }
+
+        Period feeSettlPeriod = optionData.exerciseFeeSettlementPeriod().empty()
+                                    ? 0 * Days
+                                    : parsePeriod(optionData.exerciseFeeSettlementPeriod());
+
+        Calendar feeSettlCal = optionData.exerciseFeeSettlementCalendar().empty()
+                                   ? NullCalendar()
+                                   : parseCalendar(optionData.exerciseFeeSettlementCalendar());
+
+        BusinessDayConvention feeSettlBdc =
+            optionData.exerciseFeeSettlementConvention().empty()
+                ? Unadjusted
+                : parseBusinessDayConvention(optionData.exerciseFeeSettlementConvention());
+
+        exercise_ = boost::make_shared<QuantExt::RebatedExercise>(*exercise_, exerciseDates_, rebates, feeSettlPeriod,
+                                                                  feeSettlCal, feeSettlBdc);
+
+        // log rebates
+
+        auto dbgEx = boost::static_pointer_cast<QuantExt::RebatedExercise>(exercise_);
+
+        for (Size i = 0; i < exerciseDates_.size(); ++i) {
+            DLOG("Got rebate " << dbgEx->rebate(i) << " with payment date "
+                               << QuantLib::io::iso_date(dbgEx->rebatePaymentDate(i)) << " (exercise date="
+                               << QuantLib::io::iso_date(exerciseDates_[i]) << ") using rebate settl period "
+                               << feeSettlPeriod << ", calendar " << feeSettlCal << ", convention " << feeSettlBdc);
+        }
+    }
+}
+
 } // namespace data
 } // namespace ore

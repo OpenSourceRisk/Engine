@@ -118,7 +118,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -236,6 +236,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         Real sensi;
     };
 
+    // clang-format off
     std::vector<Results> cachedResults = {
         {"1_Swap_EUR", "Up:DiscountCurve/EUR/0/6M", -928826, -2.51631},
         {"1_Swap_EUR", "Up:DiscountCurve/EUR/1/1Y", -928826, 14.6846},
@@ -708,14 +709,15 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, 9317.978340855800},
         {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, -4256.075631047075},
         {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, -9477.947397496144},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
-         -337.120477382559},
-        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
-         -5055.174033740186},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
-         333.980691680335},
-        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
-         5053.576515255263}};
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/3/1Y/0.95", -491152.228798501019, -169.914415647450 },
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/6/1Y/ATM", -491152.228798501019, -167.260480643541 },
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/5/5Y/0.95", -491152.228798501019, -2553.579689398874 },
+        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/8/5Y/ATM", -491152.228798501019, -2513.783958086802 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/3/1Y/0.95", -491152.228798501019, 168.278235032340 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/6/1Y/ATM", -491152.228798501019, 165.649017560529 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/5/5Y/0.95", -491152.228798501019, 2540.538653619646 },
+        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/8/5Y/ATM", -491152.228798501019, 2500.755505821493 }};
+    // clang-format on
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -737,7 +739,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
-                // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
+                BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " <<
+                    std::fixed << std::setprecision(12) << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(),
                            "pair (" << p.first << ", " << p.second << ") not found in npv map");
@@ -879,7 +882,7 @@ void test1dShifts(bool granular) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
 
     // cache initial zero rates
@@ -976,7 +979,7 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
 
     // cache initial zero rates
@@ -1089,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -1298,7 +1301,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
@@ -1650,7 +1653,7 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, simMarket, scenarioFactory,
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 

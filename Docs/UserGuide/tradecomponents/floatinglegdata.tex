@@ -28,7 +28,8 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <Floors>
                         <Floor>0.01</Floor>
                     </Floors>
-                    <NakedOption>false</NakedOption>    
+                    <NakedOption>false</NakedOption>
+                    <LocalCapFloor>false</LocalCapFloor>
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -42,7 +43,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
   identifies the relevant fixings and yield curve of the floating leg.  
 
   Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
-  M or Y. See Table \ref{tab:indices}.
+  M or Y. See Table \ref{tab:indices}. TERM is not required for Overnight indices.
 
 \item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that
   the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by
@@ -146,28 +147,54 @@ in Listing \ref{lst:float_zero_coupon_leg_dates}. \begin{listing}[H]
 \label{lst:float_zero_coupon_leg_dates}
 \end{listing}
 
+\item IsInArrears [Optional]: \emph{true} indicates that fixing is in arrears, \emph{false} indicates that fixing is in advance.
+  \begin{itemize}
+  \item For Ibor coupons, ``in arrears'' means that the fixing gap is calculated in relation to the current period end
+    date, while ``in advance'' means that the fixing gap is calculated in relation to the period start date.
+  \item For OIS coupons, ``in arrears'' means that the compounding (or averaging) of ON rates is done over the current
+    period, while ``in advance'' means that the compounding (averaging) is done over the previous period. For the first
+    period, a virtual previous period will be constructed based on the schedule construction rules. In the context of
+    RFRs there are two common ``in advance'' variants:
+    \begin{itemize}
+    \item``Last Recent'' which means the length of the period used for compounding / averaging is independent of the
+      original period. This former period is specified in the LastRecentPeriod field.
+    \item ``Last Reset'' which means the original period will be used for compounding / averaging. This variant is
+      indicated by omitting the LastRecentPeriod field.
+    \end{itemize}
+    Notice that the use of the LastRecentPeriod field is not restricted to ``in advance'' OIS coupons, i.e. it can also
+    be used in combination with ``in arrears''.
+  \end{itemize}
 
+  Allowable values: \emph{true, false}. Defaults to \emph{false} for Ibor and to \emph{true} for OIS coupons, if left
+  blank or omitted.
 
-\item IsInArrears [Optional]:  \emph{true} indicates that  fixing is in arrears,
-  i.e. the fixing gap is calculated in relation to the current period
-  end date.\\ \emph{false} indicates that  fixing is in advance,
-  i.e. the fixing gap is calculated in relation to the previous period
-  end date.  
+\item LastRecentPeriod [Optional]: Only applies to OIS coupons. If given, the compounding / averaging of ON rates will
+  not be done over the usual reference period derived from the accrual period and the Lookback, FixingDays and
+  IsInArrears parameters, but instead over a period determined by the end date of this usual period and the
+  LastRecentPeriod parameter as [ EndDate - LastRecentPeriod, EndDate ]. The calendar used to compute EndDate -
+  LastRecentPeriod is the schedule calendar unless a specific LastRecentPeriodCalendar is specified. To represent SOFR
+  30D, 90D, 180D average indices, the LastRecentPeriodCalendar should be set to NullCalendar, since these averages refer
+  to rolling averages over 30, 90, 180 calendar days. \\
 
-Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
+  Allowable values: any valid period, e.g. 30D, 90D, 180D, 1M, 2M, 6M
+
+\item LastRecentPeriodCalendar [Optional]: The calendar used to compute the LastRecentPeriod, see this field for more
+  details. If not given, defaults to the schedule calendar. \\
+
+  Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item FixingDays [Optional]: The fixing gap. For Ibor coupons this is the number of business days before the accrual
   period's {\em reference} date to observe the index fixing. Here, the accrual period reference date is the accrual
   start date for an in advanced fixed coupon and the accrual end date for in arrears fixed coupon. \\
   For overnight coupons this is the number of business days by which the value dates are shifted into the past to get
-  the fixing observation dates. In the context of the Ibor reform the FixingDays parameter is sometimes also called
+  the fixing observation dates. In the context of RFRs the FixingDays parameter is sometimes also called
   ``obervation lag''.
 
-  Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted.
+  Allowable values: A non-negative whole number.  Defaults to the index's fixing days if blank or omitted. See defaults per index in Table \ref{tab:fixingdaysdefaults}.
 
 \item Lookback [Optional]: Only applicable to OIS legs. A period by which the value dates schedule of (averaged,
   compounded) OIS legs is shifted into the past. On top of this the gap defined by the FixingDays is applied to get the
-  final fixing date for an original date in the OIS value dates schedule. In the context of the Ibor reform the Lookback
+  final fixing date for an original date in the OIS value dates schedule. In the context of RFRs the Lookback
   parameter is sometimes also called ``shift''. With this terminology, first the shift and then the observation lag is
   applied to get the fixing date for an original value date of an overnight coupon.
 
@@ -194,7 +221,7 @@ Allowable values: any non-negative whole number
   a spread of 0.5\% or 50 bp. 
 
 For the {\tt <Spreads>} section, the same applies as for notionals and
-rates - a list of changing spreads can be specified without or with individual starte dates as shown
+rates - a list of changing spreads can be specified without or with individual start dates as shown
 in Listing \ref{lst:spreads_dates}.
 \begin{listing}[H]
 %\hrule\medskip
@@ -216,16 +243,49 @@ If the entire {\tt <Spreads>} section is omitted, it defaults to a spread of \em
   
 If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \emph{1}.
 
-\item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
-  given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
+\item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is
+  capped at the given rate (after applying gearing and spread, if any). The mode of specification is analogous to
+  spreads, see above. Caps / Floors are supported for Ibor and compounded / averaged OIS coupons, but not for coupons
+  with subperiods.
+
+  For OIS coupons notice how the gearing $g$ and spread $s$ enter the calculation of the coupon amount $A$ dependent on
+  the IncludeSpread and LocalCapFloor flags and the cap rate $C$, floor rate $F$, daily rates $f_i$, daily accrual
+  fractions $\tau_i$ and the coupon accrual fraction $\tau$. Notice that the gearing must be $1$ if include spread is
+  set to true for capped / floored coupons. The cases for compounded coupons are:
+  \begin{itemize}
+  \item IncludeSpread = false, LocalCapFloor = false:\\
+    $$ A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)$$
+  \item IncludeSpread = true, LocalCapFloor = false:\\
+    $$ A = \min \left( \max \left( \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)$$
+  \item IncludeSpread = false, LocalCapFloor = true:\\
+    $$ A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s $$
+  \item IncludeSpread = true, LocalCapFloor = true:\\
+    $$ A = \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau} $$
+  \end{itemize}
+  The cases for Averaged coupons are:
+  \begin{itemize}
+  \item IncludeSpread = true or false, LocalCapFloor = false:\\
+    $$ A = \min \left( \max \left( \cdot \frac{\sum (\tau_i f_i)}{\tau} + s, F \right), C \right)$$
+  \item IncludeSpread = false, LocalCapFloor = true:\\
+    $$ A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i , F), C))}{\tau} + s $$
+  \item IncludeSpread = true, LocalCapFloor = true:\\
+    $$ A = g \cdot \frac{\sum (\tau_i \min ( \max ( f_i + s , F), C))}{\tau} $$
+  \end{itemize}
 
 \item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
 \item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar.
-  By convention the embedded floor (cap) are considered long if the leg is a receiver leg, otherwise short. For a
-  collar the floor is long and the cap is short if the leg is a receiver leg.
+  By convention the embedded floor (or cap) are considered long if the leg is a receiver leg, otherwise short. For a
+  collar the floor is long and the cap is short if the leg is a receiver leg. Notice that this is opposite to
+  the definition of a collar in \ref{ss:capfloor}.
+
+ Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
+
+\item LocalCapFloor [Optional]: Optional node, if \emph{true} a cap (floor) will be applied to the daily rates of a
+  compounded / averaged overnight coupon. If \emph{false} the effective period rate will be capped (floored). The flag
+  is ignored for coupons other than overnight coupons.
 
  Allowable values: \emph{true}, \emph{false} . Defaults to \emph{false} if left blank or omitted.
 

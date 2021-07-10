@@ -63,10 +63,11 @@ private:
     CommodityVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantLib::BlackVolTermStructure> volatility_;
     boost::shared_ptr<QuantExt::FutureExpiryCalculator> expCalc_;
+    boost::shared_ptr<CommodityFutureConvention> convention_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
 
-    // Populated for delta and moneyness surfaces and left empty for others
+    // Populated for delta, moneyness and possibly absolute strike surfaces and left empty for others
     QuantLib::Handle<QuantExt::PriceTermStructure> pts_;
     QuantLib::Handle<QuantLib::YieldTermStructure> yts_;
 
@@ -130,7 +131,7 @@ private:
     void populateCurves(const CommodityVolatilityConfig& config,
                         const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                         const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
-                        bool deltaOrFwdMoneyness);
+                        bool searchYield, bool dontThrow = false);
 
     //! Check and return moneyness levels.
     std::vector<QuantLib::Real> checkMoneyness(const std::vector<std::string>& moneynessLevels) const;

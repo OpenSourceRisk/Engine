@@ -29,9 +29,14 @@
 #include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/models/infdkparametrization.hpp>
+#include <qle/models/infjyparameterization.hpp>
 
 #include <ored/marketdata/market.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/model/inflation/infdkdata.hpp>
+#include <ored/model/inflation/infjydata.hpp>
+#include <ored/model/inflation/infjybuilder.hpp>
 #include <ored/model/marketobserver.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/utilities/xmlutils.hpp>
@@ -67,6 +72,8 @@ public:
         const std::string& configurationEqCalibration = Market::defaultConfiguration,
         //! Market configuration for INF model calibration
         const std::string& configurationInfCalibration = Market::defaultConfiguration,
+        //! Market configuration for CR model calibration
+        const std::string& configurationCrCalibration = Market::defaultConfiguration,
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
@@ -89,7 +96,7 @@ public:
     const std::vector<Real>& swaptionCalibrationErrors();
     const std::vector<Real>& fxOptionCalibrationErrors();
     const std::vector<Real>& eqOptionCalibrationErrors();
-    const std::vector<Real>& infCapFloorCalibrationErrors();
+    const std::vector<Real>& inflationCalibrationErrors();
     //@}
 
     //! \name ModelBuilder interface
@@ -107,22 +114,23 @@ private:
     mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
     mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
     mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> eqOptionBaskets_;
-    mutable std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> infCapFloorBaskets_;
     mutable std::vector<Array> optionExpiries_;
     mutable std::vector<Array> swaptionMaturities_;
     mutable std::vector<Array> fxOptionExpiries_;
     mutable std::vector<Array> eqOptionExpiries_;
-    mutable std::vector<Array> infCapFloorExpiries_;
     mutable std::vector<Real> swaptionCalibrationErrors_;
     mutable std::vector<Real> fxOptionCalibrationErrors_;
     mutable std::vector<Real> eqOptionCalibrationErrors_;
-    mutable std::vector<Real> infCapFloorCalibrationErrors_;
-    mutable std::set<boost::shared_ptr<ModelBuilder>> subBuilders_;
+    mutable std::vector<Real> inflationCalibrationErrors_;
+
+    //! Store model builders for each asset under each asset type.
+    mutable std::map<QuantExt::CrossAssetModelTypes::AssetType,
+        std::map<QuantLib::Size, boost::shared_ptr<ModelBuilder>>> subBuilders_;
 
     const boost::shared_ptr<ore::data::Market> market_;
     const boost::shared_ptr<CrossAssetModelData> config_;
     const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
-        configurationInfCalibration_, configurationFinalModel_;
+        configurationInfCalibration_, configurationCrCalibration_, configurationFinalModel_;
     const DayCounter dayCounter_;
     const bool dontCalibrate_;
     const bool continueOnError_;
@@ -140,6 +148,22 @@ private:
 
     // resulting model
     mutable RelinkableHandle<QuantExt::CrossAssetModel> model_;
+
+    // Calibrate DK inflation model
+    void calibrateInflation(const InfDkData& data,
+        QuantLib::Size modelIdx,
+        const std::vector<boost::shared_ptr<QuantLib::BlackCalibrationHelper>>& calibrationBasket,
+        const boost::shared_ptr<QuantExt::InfDkParametrization>& inflationParam) const;
+
+    // Calibrate JY inflation model
+    void calibrateInflation(const InfJyData& data,
+        QuantLib::Size modelIdx,
+        const boost::shared_ptr<InfJyBuilder>& jyBuilder,
+        const boost::shared_ptr<QuantExt::InfJyParameterization>& inflationParam) const;
+
+    // Attach JY engines to helpers for JY calibration
+    void setJyPricingEngine(QuantLib::Size modelIdx,
+        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>& calibrationBasket) const;
 };
 
 } // namespace data

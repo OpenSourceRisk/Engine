@@ -1,0 +1,45 @@
+<Conventions>
+  <InflationSwap>
+    <Id>AUCPI_INFLATIONSWAP</Id>
+    <FixCalendar>AUD</FixCalendar>
+    <FixConvention>F</FixConvention>
+    <DayCounter>30/360</DayCounter>
+    <Index>AUCPI</Index>
+    <Interpolated>false</Interpolated>
+    <!-- If interpolated, would need 5M here because QL code checks in places that 
+         obsLag minus frequencyPeriod is greater than availability lag -->
+    <ObservationLag>3M</ObservationLag>
+    <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+    <InflationCalendar>AUD</InflationCalendar>
+    <InflationConvention>F</InflationConvention>
+    <PublicationRoll>OnPublicationDate</PublicationRoll>
+    <PublicationSchedule>
+      <Rules>
+        <StartDate>2018-10-30</StartDate>
+        <EndDate>2022-01-25</EndDate>
+        <Tenor>3M</Tenor>
+        <Calendar>AUD</Calendar>
+        <Convention>Preceding</Convention>
+        <TermConvention>Unadjusted</TermConvention>
+        <Rule>LastWednesday</Rule>
+      </Rules>
+    </PublicationSchedule>
+  </InflationSwap>
+  <Deposit>
+    <Id>AUD-ON-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>AUD-AONIA</Index>
+  </Deposit>
+  <OIS>
+    <Id>AUD-OIS</Id>
+    <SpotLag>1</SpotLag>
+    <Index>AUD-AONIA</Index>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <PaymentLag>2</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+</Conventions>

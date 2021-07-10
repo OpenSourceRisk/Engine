@@ -178,7 +178,6 @@ void simulation(string dateGridString, bool checkFixings) {
                                     {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
     parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     parameters->interpolation() = "LogLinear";
-    parameters->extrapolate() = true;
 
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
@@ -198,7 +197,6 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M",
                                                    "JPY-LIBOR-6M"};
     parameters->additionalScenarioDataCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
     // Config
 
@@ -266,8 +264,10 @@ void simulation(string dateGridString, bool checkFixings) {
     fxConfigs.push_back(boost::make_shared<FxBsData>("JPY", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
-    std::map<std::pair<std::string, std::string>, Handle<Quote>> corr;
-    corr[std::make_pair("IR:EUR", "IR:USD")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
+    map<CorrelationKey, Handle<Quote>> corr;
+    CorrelationFactor f_1{ CrossAssetModelTypes::IR, "EUR", 0 };
+    CorrelationFactor f_2{ CrossAssetModelTypes::IR, "USD", 0 };
+    corr[make_pair(f_1, f_2)] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.6));
 
     boost::shared_ptr<CrossAssetModelData> config(boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
 

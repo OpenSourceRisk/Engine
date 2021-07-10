@@ -73,8 +73,9 @@ public:
         const bool nonShiftedBaseCurrencyConversion = false,
         std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
         std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr, const bool continueOnError = false,
-        bool xccyDiscounting = false);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        const bool continueOnError = false, bool xccyDiscounting = false, bool analyticFxSensis = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -131,6 +132,9 @@ protected:
     //! build valuation calculators for valuation engine
     virtual std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
 
+    //! Overwrite FX sensitivities in the cube with first order analytical values where possible.
+    virtual void addAnalyticFxSensitivities();
+
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
     Date asof_;
@@ -151,6 +155,7 @@ protected:
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     boost::shared_ptr<ore::data::ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)
@@ -159,6 +164,8 @@ protected:
     boost::shared_ptr<Portfolio> portfolio_;
     //! use separate discount curves for xccy curves
     bool xccyDiscounting_;
+    //! Extract analytic FX sensitivities on trades where possible.
+    bool analyticFxSensis_;
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders

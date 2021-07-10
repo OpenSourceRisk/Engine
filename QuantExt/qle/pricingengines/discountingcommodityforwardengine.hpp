@@ -43,14 +43,12 @@ class DiscountingCommodityForwardEngine : public CommodityForward::engine {
 public:
     //! \name Constructors
     //@{
-    /*! \param priceCurve                 The commodity price curve for estimating future prices.
-        \param discountCurve              The discount curve to discount the forward cashflow.
+    /*! \param discountCurve              The discount curve to discount the forward cashflow.
         \param includeSettlementDateFlows If true (false), cashflows on the forward maturity
                                           are (are not) included in the NPV.
         \param npvDate                    Discount to this date. If not given, is set to the evaluation date
     */
-    DiscountingCommodityForwardEngine(const QuantLib::Handle<PriceTermStructure>& priceCurve,
-                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+    DiscountingCommodityForwardEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                                       boost::optional<bool> includeSettlementDateFlows = boost::none,
                                       const QuantLib::Date& npvDate = QuantLib::Date());
     //@}
@@ -62,12 +60,10 @@ public:
 
     //! \name Inspectors
     //@{
-    const QuantLib::Handle<PriceTermStructure>& priceCurve() const { return priceCurve_; }
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve() const { return discountCurve_; }
     //@}
 
 private:
-    QuantLib::Handle<PriceTermStructure> priceCurve_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
     boost::optional<bool> includeSettlementDateFlows_;
     QuantLib::Date npvDate_;

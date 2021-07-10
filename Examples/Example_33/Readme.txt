@@ -1,19 +1,28 @@
 1) Portfolio
 
-   Vanilla Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851% (ATM), pay 6m Euribor
+   Credit Default Swap, EUR, 10m notional, 5Y maturity, pay
+   fixed 0.59% quaterly, receive protection on CPTY A.
+   Counterparty of the trade is CPTY B
 
 2) Market
 
-   Pseudo market data as of 2016-02-05
+   Flat CPTY A default curve at 1% hazard rate and 40% recovery rate
+   Flat CPTY B default curve at 1% hazard rate and 40% recovery rate
 
 3) Pricing
 
-   Dual curve, Eonia Discounting, Euribor Forwards 
+   Single curve
 
 4) Analytics
 
-   EPE and ENE, compared to European payer and receiver swaption prices 
+   EPE and ENE with dynamic credit, compared to CDS option prices
+   CVA, DVA, FCA, FBA
 
-5) Run Example
+5) Simulation
+
+   Cross Asset Model with CR simulation
+   Instantaneous Correlations between CPTY A and CPTY B is at 80%
+
+6) Run Example
 
    python run.py

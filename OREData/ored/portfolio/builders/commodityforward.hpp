@@ -32,25 +32,22 @@ namespace ore {
 namespace data {
 
 //! Engine builder for commodity forward
-/*! Pricing engines are cached by commodity and currency
-
+/*! Pricing engines are cached by currency
     \ingroup builders
  */
 class CommodityForwardEngineBuilder
-    : public CachingPricingEngineBuilder<std::string, const std::string&, const QuantLib::Currency&> {
+    : public CachingPricingEngineBuilder<std::string, const QuantLib::Currency&> {
 public:
     CommodityForwardEngineBuilder()
         : CachingEngineBuilder("DiscountedCashflows", "DiscountingCommodityForwardEngine", {"CommodityForward"}) {}
 
 protected:
-    virtual std::string keyImpl(const std::string& commodityName, const QuantLib::Currency& ccy) override {
-        return commodityName + "/" + ccy.code();
+    virtual std::string keyImpl(const QuantLib::Currency& ccy) override {
+        return ccy.code();
     }
 
-    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const std::string& commodityName,
-                                                                  const QuantLib::Currency& ccy) override {
+    virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const QuantLib::Currency& ccy) override {
         return boost::make_shared<QuantExt::DiscountingCommodityForwardEngine>(
-            market_->commodityPriceCurve(commodityName, configuration(MarketContext::pricing)),
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));
     }
 };

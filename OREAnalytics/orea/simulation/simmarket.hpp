@@ -43,13 +43,38 @@ using namespace ore::data;
  */
 class SimMarket : public data::MarketImpl {
 public:
+    SimMarket() : MarketImpl(), numeraire_(1.0) {}
     SimMarket(const Conventions& conventions) : MarketImpl(conventions), numeraire_(1.0) {}
 
     //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
-    virtual void update(const Date&) = 0;
+    virtual void update(const Date& d) {
+        preUpdate();
+        updateDate(d);
+        updateScenario(d);
+        postUpdate(d, true);
+        updateAsd(d);
+    }
+
+    //! Observable settings depending on selected mode, before we update the market
+    virtual void preUpdate() = 0;
+
+    //! Update to the given date
+    virtual void updateDate(const Date&) = 0;
+
+    //! Retrieve next market scenario and apply this, but don't update date
+    virtual void updateScenario(const Date&) = 0;
+
+    //! Observable reset depending on selected mode, instrument updates
+    virtual void postUpdate(const Date& d, bool withFixings) = 0;
+
+    //! Update aggregation scenario data
+    virtual void updateAsd(const Date&) = 0;
 
     //! Return current numeraire value
     Real numeraire() { return numeraire_; }
+
+    //! Return current scenario label, if any.
+    const std::string& label() { return label_; }
 
     //! Reset sim market to initial state
     virtual void reset() = 0;
@@ -59,6 +84,7 @@ public:
 
 protected:
     Real numeraire_;
+    std::string label_;
 };
 } // namespace analytics
 } // namespace ore

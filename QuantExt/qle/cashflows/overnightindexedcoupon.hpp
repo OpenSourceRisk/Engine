@@ -76,7 +76,8 @@ public:
                            Spread spread = 0.0, const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(),
                            const DayCounter& dayCounter = DayCounter(), bool telescopicValueDates = false,
                            bool includeSpread = false, const Period& lookback = 0 * Days, const Natural rateCutoff = 0,
-                           const Natural fixingDays = Null<Size>());
+                           const Natural fixingDays = Null<Size>(), const Date& rateComputationStartDate = Null<Date>(),
+                           const Date& rateComputationEndDate = Null<Date>());
     //! \name Inspectors
     //@{
     //! fixing dates for the rates to be compounded
@@ -118,13 +119,17 @@ private:
     bool includeSpread_;
     Period lookback_;
     Natural rateCutoff_;
+    Date rateComputationStartDate_, rateComputationEndDate_;
 };
 
 //! capped floored overnight indexed coupon
 class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
 public:
+    /*! capped / floored compounded, backward-looking on coupon, local means that the daily rates are capped / floored
+      while a global cap / floor is applied to the effective period rate */
     CappedFlooredOvernightIndexedCoupon(const ext::shared_ptr<OvernightIndexedCoupon>& underlying,
-                                        Real cap = Null<Real>(), Real floor = Null<Real>(), bool nakedOption = false);
+                                        Real cap = Null<Real>(), Real floor = Null<Real>(), bool nakedOption = false,
+                                        bool localCapFloor = false);
 
     //! \name Coupon interface
     //@{
@@ -136,9 +141,9 @@ public:
     Date fixingDate() const override { return underlying_->fixingDate(); }
     //@}
     //! cap
-    Rate cap() const { return cap_; }
+    Rate cap() const;
     //! floor
-    Rate floor() const { return floor_; }
+    Rate floor() const;
     //! effective cap of fixing
     Rate effectiveCap() const;
     //! effective floor of fixing
@@ -156,11 +161,14 @@ public:
     bool isFloored() const { return floor_ != Null<Real>(); }
 
     ext::shared_ptr<OvernightIndexedCoupon> underlying() const { return underlying_; }
+    bool nakedOption() const { return nakedOption_; }
+    bool localCapFloor() const { return localCapFloor_; }
 
 protected:
     ext::shared_ptr<OvernightIndexedCoupon> underlying_;
     Rate cap_, floor_;
     bool nakedOption_;
+    bool localCapFloor_;
 };
 
 //! capped floored overnight indexed coupon pricer base class
@@ -197,6 +205,10 @@ public:
     OvernightLeg& withFloors(Rate floor);
     OvernightLeg& withFloors(const std::vector<Rate>& floors);
     OvernightLeg& withNakedOption(const bool nakedOption);
+    OvernightLeg& withLocalCapFloor(const bool localCapFloor);
+    OvernightLeg& withInArrears(const bool inArrears);
+    OvernightLeg& withLastRecentPeriod(const boost::optional<Period>& lastRecentPeriod);
+    OvernightLeg& withLastRecentPeriodCalendar(const Calendar& lastRecentPeriodCalendar);
     operator Leg() const;
 
 private:
@@ -216,6 +228,10 @@ private:
     Natural fixingDays_;
     std::vector<Rate> caps_, floors_;
     bool nakedOption_;
+    bool localCapFloor_;
+    bool inArrears_;
+    boost::optional<Period> lastRecentPeriod_;
+    Calendar lastRecentPeriodCalendar_;
 };
 
 } // namespace QuantExt

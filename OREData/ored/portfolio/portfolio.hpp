@@ -34,6 +34,8 @@
 namespace ore {
 namespace data {
 
+class ReferenceDataManager;
+
 //! Serializable portfolio
 /*!
   \ingroup portfolio
@@ -44,7 +46,7 @@ public:
     Portfolio() {}
 
     //! Add a trade to the portfoliio
-    void add(const boost::shared_ptr<Trade>& trade);
+    void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
 
     //! Check if a trade id is already in the porfolio
     bool has(const string& id);
@@ -66,14 +68,17 @@ public:
 
     //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
-              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+              const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
+              const bool checkForDuplicateIds = true);
 
     //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
     void loadFromXMLString(const std::string& xmlString,
-                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
+                           const bool checkForDuplicateIds = true);
 
     //! Load from XML Node
-    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>(),
+                 const bool checkForDuplicateIds = true);
 
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
@@ -99,6 +104,12 @@ public:
     //! Build a map from trade Ids to NettingSet
     std::map<std::string, std::string> nettingSetMap() const;
 
+    //! Build a vector of unique counterparties
+    std::vector<std::string> counterparties() const;
+
+    //! Build a map from counterparty to NettingSet
+    std::map<std::string, std::set<std::string>> counterpartyNettingSets() const;
+
     //! Compute set of portfolios
     std::set<std::string> portfolioIds() const;
 
@@ -111,8 +122,11 @@ public:
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const;
 
     /*! Returns the names of the underlying instruments for each asset class */
-    std::map<AssetClass, std::set<std::string>> underlyingIndices();
-    std::set<std::string> underlyingIndices(AssetClass assetClass);
+    std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
+    std::set<std::string>
+    underlyingIndices(AssetClass assetClass,
+                      const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
 
 private:
     std::vector<boost::shared_ptr<Trade>> trades_;

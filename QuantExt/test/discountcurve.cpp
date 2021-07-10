@@ -20,11 +20,9 @@
 #include <boost/test/unit_test.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/termstructures/yield/zerocurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
-#include <qle/termstructures/interpolateddiscountcurvelinearzero.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -46,7 +44,6 @@ BOOST_AUTO_TEST_CASE(testDiscountCurve) {
     vector<Date> dates;
     vector<Real> times;
     vector<DiscountFactor> dfs;
-    vector<Rate> zeros;
     vector<Handle<Quote> > quotes;
 
     Size numYears = 30;
@@ -68,7 +65,6 @@ BOOST_AUTO_TEST_CASE(testDiscountCurve) {
         Handle<Quote> q(boost::make_shared<SimpleQuote>(df));
         quotes.push_back(q);
         dfs.push_back(df);
-        zeros.push_back(rate);
     }
 
     // Test against the QL curve
@@ -81,21 +77,6 @@ BOOST_AUTO_TEST_CASE(testDiscountCurve) {
 
     // now check that they give the same discount factors (including extrapolation)
     for (Time t = 0.1; t < numYears + 10.0; t += 0.1) {
-        BOOST_CHECK_CLOSE(ytsBase->discount(t), ytsTest->discount(t), 1e-12);
-    }
-
-
-	BOOST_TEST_MESSAGE("Testing QuantExt::InterpolatedDiscountCurveLinearZero...");
-	// Test linear interpolation in the zero rate against the QL curve
-	// flat in the zero rate between t=0 and the first point
-    zeros.at(0) = zeros.at(1);
-    ytsBase = boost::make_shared<InterpolatedZeroCurve<Linear> >(dates, zeros, dc, cal);
-    ytsBase->enableExtrapolation();
-
-	ytsTest = boost::make_shared<QuantExt::InterpolatedDiscountCurveLinearZero>(times, quotes, dc);
-    
-    // now check that they give the same discount factors (including extrapolation)
-    for (Time t = 0.1; t < numYears + 10.0; t += 0.1) {        
         BOOST_CHECK_CLOSE(ytsBase->discount(t), ytsTest->discount(t), 1e-12);
     }
 }

@@ -70,6 +70,8 @@ public:
         return engines_[key];
     }
 
+    void reset() override { engines_.clear(); }
+
 protected:
     virtual T keyImpl(Args...) = 0;
     virtual boost::shared_ptr<U> engineImpl(Args...) = 0;

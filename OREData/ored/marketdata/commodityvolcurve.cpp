@@ -23,9 +23,11 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/wildcard.hpp>
 #include <ql/math/interpolations/bicubicsplineinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/matrix.hpp>
@@ -39,12 +41,116 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
+#include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
-#include <regex>
 
 using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
+
+namespace {
+
+// Utility struct to represent (expiry, strike) pair when storing volatilities below in map.
+struct ExpiryStrike {
+    ExpiryStrike(const Date& exp = Date(), Real stk = Null<Real>()) : expiry(exp), strike(stk) {}
+    Date expiry;
+    Real strike;
+};
+
+ostream& operator<<(ostream& os, const ExpiryStrike& es) {
+    return os << "(" << io::iso_date(es.expiry) << "," << es.strike << ")";
+}
+
+// Comparator so that ExpiryStrike may be used as a map key.
+struct ExpiryStrikeComp {
+    bool operator() (const ExpiryStrike& lhs, const ExpiryStrike& rhs) const {
+        return (lhs.expiry < rhs.expiry) || (!(rhs.expiry < lhs.expiry) && 
+            !close(lhs.strike, rhs.strike) && (lhs.strike < rhs.strike));
+    }
+};
+
+// Struct that stores a call data point (price or vol) and a put data point (price or vol).
+// Null<Real>() indicates the absence of the data point.
+struct CallPutDatum {
+    CallPutDatum() : call(Null<Real>()), put(Null<Real>()) {}
+
+    CallPutDatum(Option::Type optionType, Real value)
+        : call(Null<Real>()), put(Null<Real>()) {
+        if (optionType == Option::Call) {
+            call = value;
+        } else {
+            put = value;
+        }
+    }
+
+    Real call;
+    Real put;
+};
+
+// Container that stores all the relevant points.
+struct CallPutData {
+
+    void addDatum(ExpiryStrike node, Option::Type optionType, Real value) {
+
+        auto it = data.find(node);
+        if (it != data.end()) {
+            // Already have call or put data for the (expiry, strike)
+            CallPutDatum& cpd = it->second;
+            Real& toUpdate = optionType == Option::Call ? cpd.call : cpd.put;
+            if (toUpdate == Null<Real>()) {
+                toUpdate = value;
+                TLOG("Updated " << optionType << " option data point with value " << fixed <<
+                    setprecision(9) << value << " for expiry strike pair " << node << ".");
+            } else {
+                TLOG("Expiry strike pair " << node << " already has " << optionType << " option data " <<
+                    "point with value " << fixed << setprecision(9) << toUpdate <<
+                    " so did not update with value " << value << ".");
+            }
+        } else {
+            // Have no call or put data for the (expiry, strike)
+            data[node] = CallPutDatum(optionType, value);
+            TLOG("Added " << optionType << " option data point with value " << fixed << setprecision(9) <<
+                value << " for expiry strike pair " << node << ".");
+        }
+    }
+
+    map<ExpiryStrike, CallPutDatum, ExpiryStrikeComp> data;
+};
+
+// Return the relevant surface using the data
+boost::shared_ptr<OptionPriceSurface> optPriceSurface(const CallPutData& cpData,
+    const Date& asof, const DayCounter& dc, bool forCall) {
+
+    DLOG("Creating " << (forCall ? "Call" : "Put") << " option price surface.");
+
+    const auto& priceData = cpData.data;
+    auto n = priceData.size();
+
+    vector<Date> expiries; expiries.reserve(n);
+    vector<Real> strikes; strikes.reserve(n);
+    vector<Real> prices; prices.reserve(n);
+
+    for (const auto& kv : cpData.data) {
+
+        if ((forCall && kv.second.call != Null<Real>()) || (!forCall && kv.second.put != Null<Real>())) {
+
+            expiries.push_back(kv.first.expiry);
+            strikes.push_back(kv.first.strike);
+            prices.push_back(forCall ? kv.second.call : kv.second.put);
+
+            TLOG("Using option datum (" << (forCall ? "Call" : "Put") << "," << io::iso_date(expiries.back()) <<
+                "," << fixed << setprecision(9) << strikes.back() << "," << prices.back() << ")");
+        }
+    }
+
+    // This is not enough but OptionPriceSurface should throw if data is not sufficient.
+    QL_REQUIRE(!prices.empty(), "Need at least one point for " << (forCall ? "Call" : "Put") <<
+        " commodity option price surface.");
+
+    return boost::make_shared<OptionPriceSurface>(asof, expiries, strikes, prices, dc);
+}
+
+}
 
 namespace ore {
 namespace data {
@@ -61,14 +167,12 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         auto config = *curveConfigs.commodityVolatilityConfig(spec.curveConfigID());
 
         if (!config.futureConventionsId().empty()) {
-            QL_REQUIRE(conventions.has(config.futureConventionsId()),
-                       "Conventions, " << config.futureConventionsId() << " for config " << config.curveID()
-                                       << " not found.");
-            auto convention =
-                boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(config.futureConventionsId()));
-            QL_REQUIRE(convention, "Convention with ID '" << config.futureConventionsId()
-                                                          << "' should be of type CommodityFutureConvention");
-            expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
+            const auto& cId = config.futureConventionsId();
+            QL_REQUIRE(conventions.has(cId), "Conventions, " << cId <<
+                " for config " << config.curveID() << " not found.");
+            convention_ = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(cId));
+            QL_REQUIRE(convention_, "Convention with ID '" << cId << "' should be of type CommodityFutureConvention");
+            expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(*convention_);
         }
 
         calendar_ = parseCalendar(config.calendar());
@@ -81,6 +185,8 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         } else if (auto vcc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
             buildVolatility(asof, config, *vcc, loader);
         } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
+            // Try to populate the price and yield term structure. Need them in some cases here.
+            populateCurves(config, yieldCurves, commodityCurves, true, true);
             buildVolatility(asof, config, *vssc, loader);
         } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
             // Need a yield curve and price curve to create a delta surface.
@@ -175,27 +281,20 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
     // Must have at least one quote
     QL_REQUIRE(vcc.quotes().size() > 0, "No quotes specified in config " << vc.curveID());
 
+    QL_REQUIRE(vcc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for 1-D commodity volatility curves.");
+
     // Check if we are using a regular expression to select the quotes for the curve. If we are, the quotes should
     // contain exactly one element.
-    bool isRegex = false;
-    for (Size i = 0; i < vcc.quotes().size(); i++) {
-        if ((isRegex = vcc.quotes()[i].find("*") != string::npos)) {
-            QL_REQUIRE(i == 0 && vcc.quotes().size() == 1,
-                       "Wild card config, " << vc.curveID() << ", should have exactly one quote.");
-            break;
-        }
-    }
+    auto wildcard = getUniqueWildcard(vcc.quotes());
 
     // curveData will be populated with the expiry dates and volatility values.
     map<Date, Real> curveData;
 
     // Different approaches depending on whether we are using a regex or searching for a list of explicit quotes.
-    if (isRegex) {
+    if (wildcard) {
 
-        DLOG("Have single quote with pattern " << vcc.quotes()[0]);
-
-        // Create the regular expression
-        regex regexp(boost::replace_all_copy(vcc.quotes()[0], "*", ".*"));
+        DLOG("Have single quote with pattern " << (*wildcard).regex());
 
         // Loop over quotes and process commodity option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -205,21 +304,23 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
                 continue;
 
             auto q = boost::dynamic_pointer_cast<CommodityOptionQuote>(md);
-            if (q && regex_match(q->name(), regexp)) {
+            if (q && (*wildcard).matches(q->name())) {
 
                 TLOG("The quote " << q->name() << " matched the pattern");
 
                 Date expiryDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
                 if (expiryDate > asof) {
                     // Add the quote to the curve data
-                    QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the expiry date "
-                                                                     << io::iso_date(expiryDate)
-                                                                     << " provided by commodity volatility config "
-                                                                     << vc.curveID());
-                    curveData[expiryDate] = q->quote()->value();
-
-                    TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
-                                        << setprecision(9) << q->quote()->value() << ")");
+                    auto it = curveData.find(expiryDate);
+                    if (it != curveData.end()) {
+                        LOG("Already added quote " << fixed << setprecision(9) << it->second << " for the expiry" <<
+                            " date " << io::iso_date(expiryDate) << " for commodity curve " << vc.curveID() <<
+                            " so not adding " << q->name());
+                    } else {
+                        curveData[expiryDate] = q->quote()->value();
+                        TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," <<
+                            fixed << setprecision(9) << q->quote()->value() << ")");
+                    }
                 }
             }
         }
@@ -373,11 +474,12 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     DLOG("Expiries and or strikes have been configured via wildcards so building a "
          << "wildcard based absolute strike surface");
 
-    // Store aligned strikes, expiries and vols found via wildcard lookup
-    vector<Real> strikes;
-    vector<Date> expiries;
-    vector<Volatility> vols;
-    Size quotesAdded = 0;
+    // Store grid points along with call and/or put data point
+    CallPutData cpData;
+
+    // If the price term structure is not empty, populate the map with (expiry, forward) pairs 
+    // that will be used below when choosing between a call and a put if have volatilities.
+    map<Date, Real> fwdCurve;
 
     // Loop over quotes and process any commodity option quote that matches a wildcard
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -391,8 +493,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         if (!q)
             continue;
 
-        // Go to next quote if not a commodity name or currency do not match config.
-        if (vc.curveID() != q->commodityName() || vc.currency() != q->quoteCurrency())
+        // Go to next quote if not a commodity name or currency or quote type does not match config.
+        if (vc.curveID() != q->commodityName() || vc.currency() != q->quoteCurrency() ||
+            vssc.quoteType() != q->quoteType())
             continue;
 
         // This surface is for absolute strikes only.
@@ -418,18 +521,18 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
                 continue;
         }
 
-        // If we make it here, add the data to the aligned vectors.
-        expiries.push_back(getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays()));
-        strikes.push_back(strike->strike());
-        vols.push_back(q->quote()->value());
-        quotesAdded++;
+        // Store in the data container.
+        Date expiry = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
+        ExpiryStrike node(expiry, strike->strike());
+        cpData.addDatum(ExpiryStrike(expiry, strike->strike()), q->optionType(), q->quote()->value());
 
-        TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiries.back()) << "," << fixed << setprecision(9)
-                            << strikes.back() << "," << vols.back() << ")");
+        // If we have a price term structure, add forward for expiry if not there already.
+        if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL && !pts_.empty() && fwdCurve.count(expiry) == 0) {
+            fwdCurve[expiry] = pts_->price(expiry);
+        }
+
+        TLOG("Added quote " << q->name() << " to intermediate data.");
     }
-
-    LOG("CommodityVolCurve: added " << quotesAdded << " quotes in building wildcard based absolute strike surface.");
-    QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     bool flatStrikeExtrap = true;
@@ -465,9 +568,109 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
              << " strike extrapolation settings are ignored");
     }
 
-    DLOG("Creating the BlackVarianceSurfaceSparse object");
-    volatility_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, expiries, strikes, vols, dayCounter_,
-                                                                 flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
+    // Determine which option type to pick at each expiry and strike.
+    bool preferOutOfTheMoney = !vc.preferOutOfTheMoney() ? true : *vc.preferOutOfTheMoney();
+    TLOG("Prefer out of the money set to: " << ore::data::to_string(preferOutOfTheMoney) << ".");
+
+    // Build the surface depending on the quote type.
+    if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
+
+        DLOG("Creating the BlackVarianceSurfaceSparse object");
+
+        // Now pick the quotes that we want from the data container. If the fwdCurve was populated above, we use 
+        // it in conjunction with preferOutOfTheMoney, to pick the volatilities. If fwdCurve is empty, we just pick 
+        // a call volatility if there is one else a put volatility (should have at least one).
+        vector<Real> strikes;
+        vector<Date> expiries;
+        vector<Volatility> vols;
+        Size quotesAdded = 0;
+
+        for (const auto& kv : cpData.data) {
+
+            const Date& expiry = kv.first.expiry;
+            const Real& stk = kv.first.strike;
+            const CallPutDatum& cpd = kv.second;
+            QL_REQUIRE(cpd.call != Null<Real>() || cpd.put != Null<Real>(),
+                "CommodityVolCurve: expected the call or put value to be populated.");
+
+            expiries.push_back(expiry);
+            strikes.push_back(stk);
+            bool useCall = true;
+
+            if ((cpd.call != Null<Real>() && cpd.put != Null<Real>()) && !fwdCurve.empty()) {
+                // We have a call and a put and a forward curve so use it to decide.
+                auto it = fwdCurve.find(expiry);
+                QL_REQUIRE(it != fwdCurve.end(), "CommodityVolCurve: expected forwards for all expiries.");
+                const Real& fwd = it->second;
+                useCall = (preferOutOfTheMoney && stk >= fwd) || (!preferOutOfTheMoney && stk <= fwd);
+                TLOG("(Forward,Strike,UseCall) = (" << fixed << setprecision(6) <<
+                    fwd << "," << stk << "," << to_string(useCall) << ").");
+            }
+
+            vols.push_back(useCall ? cpd.call : cpd.put);
+            quotesAdded++;
+
+            TLOG("Using option datum (" << (useCall ? "Call" : "Put") << "," << io::iso_date(expiries.back()) <<
+                "," << fixed << setprecision(9) << strikes.back() << "," << vols.back() << ")");
+        }
+
+        LOG("CommodityVolCurve: added " << quotesAdded << " quotes building wildcard based absolute strike surface.");
+        QL_REQUIRE(quotesAdded > 0, "No quotes loaded for " << vc.curveID());
+
+        volatility_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, expiries, strikes,
+            vols, dayCounter_, flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
+
+    } else if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
+
+        QL_REQUIRE(!pts_.empty(), "CommodityVolCurve: require non-empty price term structure" <<
+            " to strip volatilities from prices.");
+        QL_REQUIRE(!yts_.empty(), "CommodityVolCurve: require non-empty yield term structure" <<
+            " to strip volatilities from prices.");
+
+        // Create the 1D solver options used in the price stripping.
+        Solver1DOptions solverOptions = vc.solverConfig();
+
+        // Need to create the call and put option price surfaces.
+        auto cSurface = optPriceSurface(cpData, asof, dayCounter_, true);
+        auto pSurface = optPriceSurface(cpData, asof, dayCounter_, false);
+
+        DLOG("CommodityVolCurve: stripping volatility surface from the option premium surfaces.");
+        auto coss = boost::make_shared<CommodityOptionSurfaceStripper>(pts_, yts_, cSurface, pSurface, calendar_,
+            dayCounter_, vssc.exerciseType(), flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap,
+            preferOutOfTheMoney, solverOptions);
+        volatility_ = coss->volSurface();
+
+        // If data level logging, output the stripped volatilities.
+        if (Log::instance().filter(ORE_DATA)) {
+            volatility_->enableExtrapolation(vssc.extrapolation());
+            TLOG("CommodityVolCurve: stripped volatilities:");
+            TLOG("expiry,strike,forward_price,call_price,put_price,discount,volatility");
+            for (const auto& kv : cpData.data) {
+                const Date& expiry = kv.first.expiry;
+                const Real& strike = kv.first.strike;
+                Real fwd = pts_->price(expiry);
+                string cPrice;
+                if (kv.second.call != Null<Real>()) {
+                    stringstream ss;
+                    ss << fixed << setprecision(6) << kv.second.call;
+                    cPrice = ss.str();
+                }
+                string pPrice;
+                if (kv.second.put != Null<Real>()) {
+                    stringstream ss;
+                    ss << fixed << setprecision(6) << kv.second.put;
+                    pPrice = ss.str();
+                }
+                Real discount = yts_->discount(expiry);
+                Real vol = volatility_->blackVol(expiry, strike);
+                TLOG(io::iso_date(expiry) << "," << fixed << setprecision(6) << strike << "," <<
+                    fwd << "," << cPrice << "," << pPrice << "," << discount << "," << vol);
+            }
+        }
+
+    } else {
+        QL_FAIL("CommodityVolCurve: invalid quote type " << vssc.quoteType() << " provided.");
+    }
 
     DLOG("Setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
     volatility_->enableExtrapolation(vssc.extrapolation());
@@ -480,6 +683,9 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
                                                 const vector<Real>& configuredStrikes) {
 
     LOG("CommodityVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
+
+    QL_REQUIRE(vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for 2-D volatility strike surface with explicit strikes and expiries.");
 
     // Map to hold the rows of the commodity volatility matrix. The keys are the expiry dates and the values are the
     // vectors of volatilities, one for each configured strike.
@@ -626,6 +832,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     LOG("CommodityVolCurve: start building 2-D volatility delta strike surface");
 
+    QL_REQUIRE(vdsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for a 2-D volatility delta strike surface.");
+
     // Parse, sort and check the vector of configured put deltas
     vector<Real> putDeltas = parseVectorOfValues<Real>(vdsc.putDeltas(), &parseReal);
     sort(putDeltas.begin(), putDeltas.end(), [](Real x, Real y) { return !close(x, y) && x < y; });
@@ -766,7 +975,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Populate the matrix of volatilities and the expiry dates.
     vector<Date> expiryDates;
     Matrix vols(surfaceData.size(), numStrikes);
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates.push_back(row.value().first);
         copy(row.value().second.begin(), row.value().second.end(), vols.row_begin(row.index()));
     }
@@ -839,7 +1048,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     bool hasAtm = true;
     volatility_ = boost::make_shared<BlackVolatilitySurfaceDelta>(
         asof, expiryDates, putDeltas, callDeltas, hasAtm, vols, dayCounter_, calendar_, spot, yts_, pyts, deltaType,
-        atmType, atmDeltaType, im, flatExtrapolation);
+        atmType, atmDeltaType, 0 * Days, deltaType, atmType, atmDeltaType, im, flatExtrapolation);
 
     DLOG("Setting BlackVolatilitySurfaceDelta extrapolation to " << to_string(vdsc.extrapolation()));
     volatility_->enableExtrapolation(vdsc.extrapolation());
@@ -854,6 +1063,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     using boost::algorithm::join;
 
     LOG("CommodityVolCurve: start building 2-D volatility moneyness strike surface");
+
+    QL_REQUIRE(vmsc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for a 2-D volatility moneyness strike surface.");
 
     // Parse, sort and check the vector of configured moneyness levels
     vector<Real> moneynessLevels = checkMoneyness(vmsc.moneynessLevels());
@@ -970,7 +1182,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     vector<Date> expiryDates(surfaceData.size());
     vector<Time> expiryTimes(surfaceData.size());
     vector<vector<Handle<Quote>>> vols(moneynessLevels.size());
-    for (const auto& row : surfaceData | boost::adaptors::indexed(0)) {
+    for (const auto row : surfaceData | boost::adaptors::indexed(0)) {
         expiryDates[row.index()] = row.value().first;
         expiryTimes[row.index()] = dayCounter_.yearFraction(asof, row.value().first);
         for (Size i = 0; i < row.value().second.size(); i++) {
@@ -1061,6 +1273,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     LOG("CommodityVolCurve: start building the APO surface");
 
+    QL_REQUIRE(vapo.quoteType() == MarketDatum::QuoteType::RATE_LNVOL, "CommodityVolCurve: only quote type" <<
+        " RATE_LNVOL is currently supported for an APO surface.");
+
     // Get the base conventions and create the associated expiry calculator.
     QL_REQUIRE(!vapo.baseConventionsId().empty(),
                "The APO FutureConventions must be populated to build a future APO surface");
@@ -1084,9 +1299,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     // Get the beta parameter to use for valuing the APOs in the surface
     Real beta = vapo.beta();
 
-    // Construct the commodity "spot index". We pass this to merely indicate the commodity. It is replaced with a
-    // commodity future index during curve construction in QuantExt.
-    auto index = boost::make_shared<CommoditySpotIndex>(baseConvention->id(), baseConvention->calendar(), basePts);
+    // Construct the commodity index.
+    auto index = parseCommodityIndex(baseConvention->id(), conventions, false, basePts);
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to
@@ -1240,11 +1454,10 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
     } else if (auto fcExpiry = boost::dynamic_pointer_cast<FutureContinuationExpiry>(expiry)) {
 
         QL_REQUIRE(expCalc_, "CommodityVolCurve::getExpiry: need a future expiry calculator for continuation quotes.");
+        QL_REQUIRE(convention_, "CommodityVolCurve::getExpiry: need a future convention for continuation quotes.");
         DLOG("Future option continuation expiry is " << *fcExpiry);
 
-        // Get the c1 expiry first. All subsequent expiries are relative to this.
-
-        // Get the next option expiry on or after the asof date
+        // Firstly, get the next option expiry on or after the asof date
         result = expCalc_->nextExpiry(true, asof, 0, true);
         TLOG("CommodityVolCurve::getExpiry: next option expiry relative to " << io::iso_date(asof) << " is "
                                                                              << io::iso_date(result) << ".");
@@ -1266,18 +1479,26 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
             }
         }
 
-        // At this stage, result should hold the c1 expiry.
-        TLOG("CommodityVolCurve::getExpiry: c1 option expiry is " << io::iso_date(result) << ".");
+        // At this stage, 'result' should hold the next option expiry on or after the asof date accounting for roll 
+        // days.
+        TLOG("CommodityVolCurve::getExpiry: first option expiry is " << io::iso_date(result) << ".");
 
         // If the continuation index is greater than 1 get the corresponding expiry.
         Natural fcIndex = fcExpiry->expiryIndex();
+
+        // The option continuation expiry may be mapped to another one.
+        const auto& ocm = convention_->optionContinuationMappings();
+        auto it = ocm.find(fcIndex);
+        if (it != ocm.end())
+            fcIndex = it->second;
+
         if (fcIndex > 1) {
             result += 1 * Days;
             result = expCalc_->nextExpiry(true, result, fcIndex - 2, true);
         }
 
-        DLOG("Expiry date corresponding to continuation expiry, " << *fcExpiry << ", is " << io::iso_date(result)
-                                                                  << ".");
+        DLOG("Expiry date corresponding to continuation expiry, " << *fcExpiry <<
+            ", is " << io::iso_date(result) << ".");
 
     } else {
         QL_FAIL("CommodityVolCurve::getExpiry: cannot determine expiry type.");
@@ -1289,20 +1510,33 @@ Date CommodityVolCurve::getExpiry(const Date& asof, const boost::shared_ptr<Expi
 void CommodityVolCurve::populateCurves(const CommodityVolatilityConfig& config,
                                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                        const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
-                                       bool deltaOrFwdMoneyness) {
+                                       bool searchYield, bool dontThrow) {
 
-    if (deltaOrFwdMoneyness) {
-        QL_REQUIRE(!config.yieldCurveId().empty(), "YieldCurveId must be populated to build delta or "
-                                                       << "forward moneyness surface.");
-        auto itYts = yieldCurves.find(config.yieldCurveId());
-        QL_REQUIRE(itYts != yieldCurves.end(), "Can't find yield curve with id " << config.yieldCurveId());
-        yts_ = itYts->second->handle();
+    if (searchYield) {
+        const string& ytsId = config.yieldCurveId();
+        if (!ytsId.empty()) {
+            auto itYts = yieldCurves.find(ytsId);
+            if (itYts != yieldCurves.end()) {
+                yts_ = itYts->second->handle();
+            } else if (!dontThrow) {
+                QL_FAIL("CommodityVolCurve: can't find yield curve with id " << ytsId);
+            }
+        } else if (!dontThrow) {
+            QL_FAIL("CommodityVolCurve: YieldCurveId was not populated for " << config.curveID());
+        }
     }
 
-    QL_REQUIRE(!config.priceCurveId().empty(), "PriceCurveId must be populated to build delta or moneyness surface.");
-    auto itPts = commodityCurves.find(config.priceCurveId());
-    QL_REQUIRE(itPts != commodityCurves.end(), "Can't find price curve with id " << config.priceCurveId());
-    pts_ = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
+    const string& ptsId = config.priceCurveId();
+    if (!ptsId.empty()) {
+        auto itPts = commodityCurves.find(ptsId);
+        if (itPts != commodityCurves.end()) {
+            pts_ = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
+        } else if (!dontThrow) {
+            QL_FAIL("CommodityVolCurve: can't find price curve with id " << ptsId);
+        }
+    } else if (!dontThrow) {
+        QL_FAIL("CommodityVolCurve: PriceCurveId was not populated for " << config.curveID());
+    }
 }
 
 vector<Real> CommodityVolCurve::checkMoneyness(const vector<string>& strMoneynessLevels) const {

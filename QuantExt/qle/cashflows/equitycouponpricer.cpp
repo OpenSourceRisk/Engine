@@ -48,7 +48,13 @@ Rate EquityCouponPricer::swapletRate() const {
         dividends += equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
     }
 
-    return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
+    if (start == 0) {
+        return (end + dividends * dividendFactor_) * fxEnd;
+    } else if (absoluteReturn_) {
+        return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart);
+    } else {
+        return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
+    }
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
@@ -58,6 +64,7 @@ void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
     equityCurve_ = boost::dynamic_pointer_cast<EquityIndex>(coupon.equityCurve());
     fxIndex_ = boost::dynamic_pointer_cast<FxIndex>(coupon.fxIndex());
     isTotalReturn_ = coupon.isTotalReturn();
+    absoluteReturn_ = coupon.absoluteReturn();
     dividendFactor_ = coupon.dividendFactor();
 }
 

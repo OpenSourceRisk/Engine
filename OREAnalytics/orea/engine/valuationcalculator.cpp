@@ -30,42 +30,40 @@ namespace analytics {
 
 void NPVCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                               const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                              const Date& date, Size dateIndex, Size sample) {
-    outputCube->set(npv(trade, simMarket), tradeIndex, dateIndex, sample, index_);
+                              boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+                              Size sample, bool isCloseOut) {
+    if (!isCloseOut)
+        outputCube->set(npv(trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
 void NPVCalculator::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-                                const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube) {
+                                const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                                boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
     outputCube->setT0(npv(trade, simMarket), tradeIndex, index_);
 }
 
 Real NPVCalculator::npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket) {
-    Real npv = 0;
-    try {
-        Real fx = simMarket->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
-        Real numeraire = simMarket->numeraire();
-
-        npv = trade->instrument()->NPV() * fx / numeraire;
-
-    } catch (std::exception& e) {
-        ALOG("Failed to price trade " << trade->id() << " : " << e.what());
-        npv = 0;
-    } catch (...) {
-        ALOG("Failed to price trade " << trade->id() << " : Unhandled Exception");
-        npv = 0;
-    }
-    return npv;
+    Real npv = trade->instrument()->NPV();
+    if (close_enough(npv, 0.0))
+        return npv;
+    Real fx = simMarket->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
+    Real numeraire = simMarket->numeraire();
+    return npv * fx / numeraire;
 }
 
 void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                    const boost::shared_ptr<SimMarket>& simMarket,
-                                   boost::shared_ptr<NPVCube>& outputCube, const Date& date, Size dateIndex,
-                                   Size sample) {
+                                   boost::shared_ptr<NPVCube>& outputCube,
+                                   boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+                                   Size sample, bool isCloseOut) {
+    if (isCloseOut)
+        return;
 
     Real netFlow = 0;
 
-    QL_REQUIRE(dateGrid_->dates()[dateIndex] == date,
-               "Date mixup, date is " << date << " but grid index is " << dateIndex);
+    QL_REQUIRE(dateGrid_->dates()[dateIndex] == date, "Date mixup, date is " << date << " but grid index is "
+                                                                             << dateIndex << ", grid(dateIndex) is "
+                                                                             << dateGrid_->dates()[dateIndex]);
     // Date startDate = dateIndex == 0 ? t0Date_ : dateGrid_->dates()[dateIndex - 1];
     Date startDate = date;
     Date endDate = date == dateGrid_->dates().back() ? date : dateGrid_->dates()[dateIndex + 1];
@@ -115,35 +113,29 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 
 void NPVCalculatorFXT0::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                   const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                                  const Date& date, Size dateIndex, Size sample) {
-    outputCube->set(npv(trade, simMarket), tradeIndex, dateIndex, sample, index_);
+                                  boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
+                                  Size sample, bool isCloseOut) {
+    if (!isCloseOut)
+        outputCube->set(npv(trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
 void NPVCalculatorFXT0::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                                     const boost::shared_ptr<SimMarket>& simMarket,
-                                    boost::shared_ptr<NPVCube>& outputCube) {
+                                    boost::shared_ptr<NPVCube>& outputCube,
+                                    boost::shared_ptr<NPVCube>& outputCubeNettingSet) {
     outputCube->setT0(npv(trade, simMarket), tradeIndex, index_);
 }
 
 Real NPVCalculatorFXT0::npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket) {
-    Real npv = 0;
-    try {
-        // Real fx = simMarket->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
-        Real fx = 1.0;
-        if (trade->npvCurrency() != baseCcyCode_)
-            fx = t0Market_->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
-        Real numeraire = simMarket->numeraire();
-
-        npv = trade->instrument()->NPV() * fx / numeraire;
-
-    } catch (std::exception& e) {
-        ALOG("Failed to price trade " << trade->id() << " : " << e.what());
-        npv = 0;
-    } catch (...) {
-        ALOG("Failed to price trade " << trade->id() << " : Unhandled Exception");
-        npv = 0;
-    }
-    return npv;
+    Real npv = trade->instrument()->NPV();
+    if (close_enough(npv, 0.0))
+        return npv;
+    Real fx = 1.0;
+    if (trade->npvCurrency() != baseCcyCode_)
+        fx = t0Market_->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
+    Real numeraire = simMarket->numeraire();
+    return npv * fx / numeraire;
 }
+
 } // namespace analytics
 } // namespace ore

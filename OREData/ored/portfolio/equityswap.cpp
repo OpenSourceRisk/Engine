@@ -112,6 +112,23 @@ void EquitySwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // 2 now build the swap using the updated leg data
 
     Swap::build(engineFactory);
+
+    notionalCurrency_ = legCurrencies_[equityLegIndex_];
+
+    // just underlying security, notionals and currencies are covered by the Swap class already
+    additionalData_["underlyingSecurityId"] = eqLegData->eqName();
+}
+
+QuantLib::Real EquitySwap::notional() const {
+    Date asof = Settings::instance().evaluationDate();
+    for (auto const& c : legs_[equityLegIndex_]) {
+        if (auto cpn = boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(c)) {
+            if (c->date() > asof)
+                return cpn->nominal();
+        }
+    }
+    ALOG("Error retrieving current notional for equity swap " << id() << " as of " << io::iso_date(asof));
+    return Null<Real>();
 }
 
 } // namespace data

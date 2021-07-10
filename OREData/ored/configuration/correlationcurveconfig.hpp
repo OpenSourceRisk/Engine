@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -51,8 +52,6 @@ public:
     enum class CorrelationType { CMSSpread, Generic };
     //! supported Correlation dimensions
     enum class Dimension { ATM, Constant };
-    // supported quote types
-    enum class QuoteType { Rate, Price, Null };
 
     //! \name Constructors/Destructors
     //@{
@@ -60,7 +59,7 @@ public:
     CorrelationCurveConfig() {}
     //! Detailed constructor
     CorrelationCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                           const CorrelationType& corrType, const string& conventions, const QuoteType& quoteType,
+                           const CorrelationType& corrType, const string& conventions, const MarketDatum::QuoteType& quoteType,
                            const bool extrapolate, const vector<string>& optionTenors, const DayCounter& dayCounter,
                            const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
                            const string& index1, const string& index2, const string& currency,
@@ -78,7 +77,7 @@ public:
     const CorrelationType& correlationType() const { return correlationType_; }
     const string& conventions() const { return conventions_; }
     const Dimension& dimension() const { return dimension_; }
-    const QuoteType& quoteType() const { return quoteType_; }
+    const MarketDatum::QuoteType& quoteType() const { return quoteType_; }
     const bool& extrapolate() const { return extrapolate_; }
     const vector<string>& optionTenors() const { return optionTenors_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
@@ -98,7 +97,7 @@ public:
     CorrelationType& correlationType() { return correlationType_; }
     string& conventions() { return conventions_; }
     Dimension& dimension() { return dimension_; }
-    QuoteType& quoteType() { return quoteType_; }
+    MarketDatum::QuoteType& quoteType() { return quoteType_; }
     bool& extrapolate() { return extrapolate_; }
     vector<string>& optionTenors() { return optionTenors_; }
     DayCounter& dayCounter() { return dayCounter_; }
@@ -112,10 +111,12 @@ public:
     //@}
 
 private:
+    void populateRequiredCurveIds();
+
     Dimension dimension_;
     CorrelationType correlationType_;
     string conventions_;
-    QuoteType quoteType_;
+    MarketDatum::QuoteType quoteType_;
     bool extrapolate_;
     vector<string> optionTenors_;
     DayCounter dayCounter_;
@@ -126,8 +127,6 @@ private:
     string swaptionVol_;
     string discountCurve_;
 };
-
-std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t);
 
 // Correlation pairs ordering, by convention we use pairs Index1:Index2 with
 // Index2 < Index1, where the ordering on index names is defined via

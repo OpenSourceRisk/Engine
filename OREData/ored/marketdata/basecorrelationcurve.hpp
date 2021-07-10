@@ -31,8 +31,8 @@
 
 namespace ore {
 namespace data {
-using ore::data::CurveConfigurations;
-using QuantLib::Date;
+
+class ReferenceDataManager;
 
 typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
@@ -41,8 +41,9 @@ typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> 
 class BaseCorrelationCurve {
 public:
     BaseCorrelationCurve() {}
-    BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
-                         const CurveConfigurations& curveConfigs);
+    BaseCorrelationCurve(QuantLib::Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
+                         const CurveConfigurations& curveConfigs,
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
 
     //! \name Inspectors
     //@{
@@ -55,6 +56,11 @@ public:
 private:
     BaseCorrelationCurveSpec spec_;
     boost::shared_ptr<BilinearBaseCorrelationTermStructure> baseCorrelation_;
+    boost::shared_ptr<ReferenceDataManager> referenceData_;
+
+    /*! Use the reference data to adjust the detachment points, \p detachPoints, for existing losses if requested.
+    */
+    std::vector<QuantLib::Real> adjustForLosses(const std::vector<QuantLib::Real>& detachPoints) const;
 };
 } // namespace data
 } // namespace ore

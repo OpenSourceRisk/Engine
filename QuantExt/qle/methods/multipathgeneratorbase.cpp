@@ -33,6 +33,7 @@ MultiPathGeneratorMersenneTwister::MultiPathGeneratorMersenneTwister(
 void MultiPathGeneratorMersenneTwister::reset() {
     PseudoRandom::rsg_type rsg = PseudoRandom::make_sequence_generator(process_->size() * (grid_.size() - 1), seed_);
     pg_ = boost::make_shared<MultiPathGenerator<PseudoRandom::rsg_type> >(process_, grid_, rsg, false);
+    antitheticVariate_ = true;
 }
 
 MultiPathGeneratorSobol::MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>& process,

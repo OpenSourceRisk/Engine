@@ -28,6 +28,7 @@
 #include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/methods/pathgeneratorfactory.hpp>
 
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
@@ -63,10 +64,12 @@ public:
     build(boost::shared_ptr<QuantExt::CrossAssetModel> model, boost::shared_ptr<ScenarioFactory> sf,
           boost::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
           boost::shared_ptr<ore::data::Market> initMarket,
-          const std::string& configuration = ore::data::Market::defaultConfiguration);
+          const std::string& configuration = ore::data::Market::defaultConfiguration,
+          const boost::shared_ptr<PathGeneratorFactory>& pf = boost::make_shared<MultiPathGeneratorFactory>());
 
 private:
     boost::shared_ptr<ScenarioGeneratorData> data_;
+    boost::optional<std::set<std::string>> currencies_;
 };
 } // namespace analytics
 } // namespace ore

@@ -116,16 +116,16 @@ BOOST_AUTO_TEST_CASE(testAtmStrikeNoDelta) {
 
 BOOST_AUTO_TEST_CASE(testAtmStrikeNoDeltaEquality) {
 
-    BOOST_TEST_MESSAGE("Testing equality operator for two ATM strikes without delta...");
-    // Checks for failure in operator== if delta type is not given
+     BOOST_TEST_MESSAGE("Testing equality operator for two ATM strikes without delta...");
+     // Checks for failure in operator== if delta type is not given
 
-    DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmFwd;
-    boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
+     DeltaVolQuote::AtmType atmType = DeltaVolQuote::AtmFwd;
+     boost::optional<DeltaVolQuote::DeltaType> atmDeltaType;
 
-    vector<boost::shared_ptr<BaseStrike>> strikes;
-    strikes.push_back(boost::make_shared<AtmStrike>(atmType, atmDeltaType));
-    strikes.push_back(boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd));
-    BOOST_CHECK(*strikes[0] == *strikes[1]);
+     vector<boost::shared_ptr<BaseStrike>> strikes;
+     strikes.push_back(boost::make_shared<AtmStrike>(atmType, atmDeltaType));
+     strikes.push_back(boost::make_shared<AtmStrike>(DeltaVolQuote::AtmFwd));
+     BOOST_CHECK(*strikes[0] == *strikes[1]);
 }
 
 BOOST_AUTO_TEST_CASE(testAtmStrikeWithDelta) {

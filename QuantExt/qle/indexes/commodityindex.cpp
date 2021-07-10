@@ -17,19 +17,35 @@
 */
 
 /*! \file qle/indexes/equityindex.cpp
-\brief equity index class for holding equity fixing histories and forwarding.
-\ingroup indexes
+    \brief equity index class for holding equity fixing histories and forwarding.
+    \ingroup indexes
 */
 
 #include <qle/indexes/commodityindex.hpp>
-
 #include <boost/make_shared.hpp>
+#include <string>
+
+using std::string;
+using QuantExt::PriceTermStructure;
 
 namespace QuantExt {
 
 CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& expiryDate,
-                               const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve)
-    : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar), curve_(curve) {
+    const Calendar& fixingCalendar, const Handle<QuantExt::PriceTermStructure>& curve)
+    : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar),
+      curve_(curve), keepDays_(false) {
+    init();
+}
+
+CommodityIndex::CommodityIndex(const string& underlyingName, const Date& expiryDate,
+    const Calendar& fixingCalendar, bool keepDays, const Handle<PriceTermStructure>& curve)
+    : underlyingName_(underlyingName), expiryDate_(expiryDate), fixingCalendar_(fixingCalendar),
+      curve_(curve), keepDays_(keepDays) {
+    init();
+}
+
+void CommodityIndex::init() {
+
     if (expiryDate_ == Date()) {
         // spot price index
         name_ = "COMM-" + underlyingName_;
@@ -39,18 +55,27 @@ CommodityIndex::CommodityIndex(const std::string& underlyingName, const Date& ex
         std::ostringstream o;
         o << "COMM-" << underlyingName_ << "-" << QuantLib::io::iso_date(expiryDate_);
         name_ = o.str();
-        // Remove the "-dd" portion from the expiry date
-        name_.erase(name_.length() - 3);
+        if (!keepDays_) {
+            // Remove the "-dd" portion from the expiry date
+            name_.erase(name_.length() - 3);
+        }
         isFuturesIndex_ = true;
     }
+
     registerWith(curve_);
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
+
 }
 
 Real CommodityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
-    QL_REQUIRE(expiryDate_ == Date() || fixingDate <= expiryDate_, "fixing past expiry requested");
+
+    QL_REQUIRE(isValidFixingDate(fixingDate), "Commodity index " << name() << ": fixing date " <<
+        io::iso_date(fixingDate) << " is not valid");
+    QL_REQUIRE(expiryDate_ == Date() || fixingDate <= expiryDate_, "Commodity index " << name() <<
+        ": fixing requested on fixing date (" << io::iso_date(fixingDate) << ") that is past the expiry date (" <<
+        io::iso_date(expiryDate_) << ").");
+
     Date today = Settings::instance().evaluationDate();
 
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
@@ -87,6 +112,19 @@ Real CommodityIndex::forecastFixing(const Date& fixingDate) const {
         return curve_->price(expiryDate_);
     else
         return curve_->price(fixingDate);
+}
+
+boost::shared_ptr<CommodityIndex> CommoditySpotIndex::clone(const Date& expiryDate,
+    const boost::optional<Handle<PriceTermStructure>>& ts) const {
+    const auto& pts = ts ? *ts : priceCurve();
+    return boost::make_shared<CommoditySpotIndex>(underlyingName(), fixingCalendar(), pts);
+}
+
+boost::shared_ptr<CommodityIndex> CommodityFuturesIndex::clone(const Date& expiry,
+    const boost::optional<Handle<PriceTermStructure>>& ts) const {
+    const auto& pts = ts ? *ts : priceCurve();
+    const auto& ed = expiry == Date() ? expiryDate() : expiry;
+    return boost::make_shared<CommodityFuturesIndex>(underlyingName(), ed, fixingCalendar(), keepDays(), pts);
 }
 
 } // namespace QuantExt

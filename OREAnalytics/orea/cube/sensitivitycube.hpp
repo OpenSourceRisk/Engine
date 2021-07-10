@@ -43,6 +43,8 @@ public:
     typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
 
     struct FactorData {
+        FactorData() : index(0), shiftSize(0.0) {}
+
         QuantLib::Size index;
         QuantLib::Real shiftSize;
         string factorDesc;
@@ -53,11 +55,14 @@ public:
     //! Constructor using a vector of scenario descriptions
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
                     const std::vector<ShiftScenarioDescription>& scenarioDescriptions,
-                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
+                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
+                    const std::set<RiskFactorKey::KeyType>& twoSidedDeltas = {});
 
     //! Constructor using a vector of scenario description strings
-    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube, const std::vector<std::string>& scenarioDescriptions,
-                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
+    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
+                    const std::vector<std::string>& scenarioDescriptions,
+                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes,
+                    const std::set<RiskFactorKey::KeyType>& twoSidedDeltas = {});
 
     //! \name Inspectors
     //@{
@@ -117,6 +122,9 @@ public:
     //! Get the trade delta for trade given the index of trade and risk factors in the cube
     QuantLib::Real delta(QuantLib::Size id, QuantLib::Size scenarioIdx) const;
 
+    //! Get the two sided trade delta for trade given the index of trade and risk factors in the cube
+    QuantLib::Real delta(QuantLib::Size id, QuantLib::Size upIdx, QuantLib::Size downIdx) const;
+
     //! Get the trade gamma for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
     QuantLib::Real gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
 
@@ -134,6 +142,9 @@ public:
     QuantLib::Real crossGamma(QuantLib::Size id, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2,
                               QuantLib::Size crossIdx) const;
 
+    //! Check if a two sided delta has been configured for the given risk factor key type, \p keyType.
+    bool twoSidedDelta(const RiskFactorKey::KeyType& keyType) const;
+
 private:
     //! Initialise method used by the constructors
     void initialise();
@@ -150,11 +161,21 @@ private:
     // TODO: Review this i.e. could it be done better / using less memory
     std::map<std::string, QuantLib::Size> tradeIdx_;
     std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
+
+    // Suppress warnings from Boost concept_check.hpp (VS 16.9.0, Boost 1.72.0).
+    // warning C4834: discarding return value of function with 'nodiscard' attribute
+#pragma warning( push )
+#pragma warning( disable : 4834 )
     boost::bimap<RiskFactorKey, FactorData> upFactors_;
+#pragma warning( pop )
+
     std::map<RiskFactorKey, FactorData> downFactors_;
     // map of crossPair to tuple of (data of first \p RiskFactorKey, data of second \p RiskFactorKey, index of
     // crossFactor)
     std::map<crossPair, std::tuple<FactorData, FactorData, QuantLib::Size>> crossFactors_;
+
+    // Set of risk factor key types where we want a two-sided delta calculation.
+    std::set<RiskFactorKey::KeyType> twoSidedDeltas_;
 };
 
 std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp);

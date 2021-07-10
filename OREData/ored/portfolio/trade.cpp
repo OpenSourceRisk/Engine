@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/trade.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 
@@ -49,34 +50,43 @@ XMLNode* Trade::toXML(XMLDocument& doc) {
     return node;
 }
 
-void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
-                       const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
-                       const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
-                       const string& configuration) {
-    boost::shared_ptr<QuantExt::Payment> fee(new QuantExt::Payment(paymentAmount, paymentCurrency, paymentDate));
+void Trade::addPremiums(std::vector<boost::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
+                        const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
+                        const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                        const string& configuration) {
 
-    // assuming amount provided with correct sign
-    addMultipliers.push_back(+1.0);
+    for (auto const& d : premiumData.premiumData()) {
+        QL_REQUIRE(d.amount != Null<Real>(), "Trade contains invalid premium data.");
 
-    // build discounting engine, discount in fee currency, convert into trade currency if different
-    Handle<YieldTermStructure> yts = factory->market()->discountCurve(fee->currency().code(), configuration);
-    Handle<Quote> fx;
-    if (tradeCurrency != fee->currency()) {
-        // FX quote for converting the fee NPV into trade currency by multiplication
-        string ccypair = fee->currency().code() + tradeCurrency.code();
-        fx = factory->market()->fxSpot(ccypair, configuration);
+        Currency premiumCurrency = parseCurrencyWithMinors(d.ccy);
+        Real premiumAmount = convertMinorToMajorCurrency(d.ccy, d.amount);
+        auto fee = boost::make_shared<QuantExt::Payment>(premiumAmount, premiumCurrency, d.payDate);
+
+        addMultipliers.push_back(premiumMultiplier);
+
+        Handle<YieldTermStructure> yts = factory->market()->discountCurve(d.ccy, configuration);
+        Handle<Quote> fx;
+        if (tradeCurrency.code() != d.ccy) {
+            fx = factory->market()->fxSpot(d.ccy + tradeCurrency.code(), configuration);
+        }
+        boost::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
+        fee->setPricingEngine(discountingEngine);
+
+        // 1) Add to additional instruments for pricing
+        addInstruments.push_back(fee);
+
+        // 2) Add a trade leg for cash flow reporting, divide the amount by the multiplier, because the leg entries
+        //    are multiplied with the trade multiplier in the cashflow report (and if used elsewhere)
+        legs_.push_back(
+            Leg(1, boost::make_shared<SimpleCashFlow>(fee->cashFlow()->amount() * premiumMultiplier / tradeMultiplier,
+                                                      fee->cashFlow()->date())));
+        legCurrencies_.push_back(fee->currency().code());
+
+        // premium * premiumMultiplier reflects the correct pay direction, set payer to false therefore
+        legPayers_.push_back(false);
+
+        DLOG("added fee " << d.amount << " " << d.ccy << " payable on " << d.payDate << " to trade");
     }
-    boost::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
-    fee->setPricingEngine(discountingEngine);
-
-    // 1) Add to additional instruments for pricing
-    addInstruments.push_back(fee);
-
-    // 2) Add a trade leg for cash flow reporting
-    legs_.push_back(Leg(1, fee->cashFlow()));
-    legCurrencies_.push_back(fee->currency().code());
-    // amount comes with its correct sign, avoid switching by saying payer=false
-    legPayers_.push_back(false);
 }
 
 void Trade::validate() const {
@@ -96,6 +106,20 @@ void Trade::validate() const {
                    "Inconsistent number of leg currencies for legs in trade " << id_ << ".");
     }
 }
+
+void Trade::reset() {
+    instrument_ = boost::shared_ptr<InstrumentWrapper>();
+    legs_.clear();
+    legCurrencies_.clear();
+    legPayers_.clear();
+    npvCurrency_ = "";
+    notional_ = Null<Real>();
+    notionalCurrency_ = "";
+    maturity_ = Date();
+    requiredFixings_.clear();
+}
+
+const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
 
 } // namespace data
 } // namespace ore

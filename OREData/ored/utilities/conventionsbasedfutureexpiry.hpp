@@ -44,9 +44,19 @@ public:
     QuantLib::Date priorExpiry(bool includeExpiry = true, const QuantLib::Date& referenceDate = QuantLib::Date(),
                                bool forOption = false) override;
 
-    //! Provide implementation for the base class method
-    QuantLib::Date expiryDate(QuantLib::Month contractMonth, QuantLib::Year contractYear, QuantLib::Natural monthOffset,
-                              bool forOption = false) override;
+    /*! Provide implementation for the base class method.
+    */
+    QuantLib::Date expiryDate(const QuantLib::Date& contractDate, QuantLib::Natural monthOffset = 0,
+        bool forOption = false) override;
+
+    //! \name Inspectors
+    //@{
+    //! Return the commodity future convention.
+    const CommodityFutureConvention& commodityFutureConvention() const;
+
+    //! Return the maximum iterations parameter.
+    QuantLib::Size maxIterations() const;
+    //@}
 
 private:
     CommodityFutureConvention convention_;
@@ -58,6 +68,9 @@ private:
 
     //! Do the next expiry work
     QuantLib::Date nextExpiry(const QuantLib::Date& referenceDate, bool forOption) const;
+
+    //! Account for prohibited expiries
+    QuantLib::Date avoidProhibited(const QuantLib::Date& expiry, bool forOption) const;
 };
 
 } // namespace data

@@ -60,23 +60,23 @@ in section \ref{sec:bootstrap_config} are used.
 
 \begin{table}[h]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular}{|l|l|}
     \hline
-    \bfseries{Variable} & \bfseries{Description} \\
+    {\bfseries Variable} & {\bfseries Description} \\
     \hline
     Zero & The continuously compounded zero rate \\ \hline
     Discount & The discount factor \\ \hline
-    Forward & The instantaneous forward rate \\ \hline
-  \end{tabu}
+    Forward & The instantaneous forward rate \\ \hline 
+  \end{tabular}
   \caption{Allowable interpolation variables.}
   \label{tab:allow_interp_variables}
 \end{table}
 
 \begin{table}[h]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|l|p{10cm}|}
     \hline
-    \bfseries{Method} & \bfseries{Description} \\
+    {\bfseries Method} & {\bfseries Description} \\
     \hline
     Linear & Linear interpolation \\ \hline
     LogLinear & Linear interpolation on the natural log of the interpolation variable \\ \hline
@@ -91,7 +91,7 @@ in section \ref{sec:bootstrap_config} are used.
     ExponentialSplines & Exponential Spline curve fitting, for Fitted Bond Curves only \\ \hline
     NelsonSiegel & Nelson-Siegel curve fitting, for Fitted Bond Curves only \\ \hline
     Svensson & Svensson curve fitting, for Fitted Bond Curves only \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable interpolation methods.}
   \label{tab:allow_interp_methods}
 \end{table}
@@ -141,14 +141,14 @@ described in section \ref{sec:conventions}. The \lstinline!Conventions! node ass
 
 \subsubsection*{Simple Segment}
 When the node name is \lstinline!Simple!, the \lstinline!Type! node has the value \emph{Deposit}, \emph{FRA},
-\emph{Future}, \emph{OIS} or \emph{Swap} and the node has the structure shown in Listing \ref{lst:simple_segment}. This
-segment holds quotes for a set of deposit, FRA, Future, OIS or swap instruments corresponding to the value in the
-\lstinline!Type! node. These quotes will be used by the bootstrap algorithm to imply a discount factor, or equivalently
-a zero rate, curve. The only difference between this segment and the direct segment is that there is a
-\lstinline!ProjectionCurve! node. This node allows us to specify the CurveId of another curve to project floating rates
-on the instruments underlying the quotes listed in the \lstinline!Quote! nodes during the bootstrap procedure. This is
-an optional node. If it is left blank or omitted, then the projection curve is assumed to equal the curve being
-bootstrapped i.e.\ the current CurveId.
+\emph{Future}, \emph{OIS}, \emph{Swap} or \emph{BMA Basis Swap} and the node has the structure shown in Listing
+\ref{lst:simple_segment}. This segment holds quotes for a set of deposit, FRA, Future, OIS or swap instruments
+corresponding to the value in the \lstinline!Type! node. These quotes will be used by the bootstrap algorithm to imply
+a discount factor, or equivalently a zero rate, curve. The only difference between this segment and the direct segment
+is that there is a \lstinline!ProjectionCurve! node. This node allows us to specify the CurveId of another curve to
+project floating rates on the instruments underlying the quotes listed in the \lstinline!Quote! nodes during the
+bootstrap procedure. This is an optional node. If it is left blank or omitted, then the projection curve is assumed to
+equal the curve being bootstrapped i.e.\ the current CurveId.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -246,13 +246,13 @@ to proceed.
 \end{listing}
 
 \subsubsection*{Cross Currency Segment}
-When the node name is \lstinline!CrossCurrency!, the \lstinline!Type! node has the value \emph{FX Forward} or
-\emph{Cross Currency Basis Swap}. When the \lstinline!Type! node has the value \emph{FX Forward}, the node has the
-structure shown in Listing \ref{lst:fx_forward_segment}. This segment is used to hold quotes for FX forward
-instruments. The \lstinline!DiscountCurve! node holds the CurveId of a curve used to discount cash flows in the other
-currency i.e.\ the currency in the currency pair that is not equal to the currency in Listing
-\ref{lst:top_level_yc}. The \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that is
-looked up in the {\tt market.txt} file.
+When the node name is \lstinline!CrossCurrency!, the \lstinline!Type! node has the value \emph{FX Forward},
+\emph{Cross Currency Basis Swap} or \emph{Cross Currency Fix Float Swap}. When the \lstinline!Type! node has the value
+\emph{FX Forward}, the node has the structure shown in Listing \ref{lst:fx_forward_segment}. This segment is used to
+hold quotes for FX forward instruments. The \lstinline!DiscountCurve! node holds the CurveId of a curve used to
+discount cash flows in the other currency i.e.\ the currency in the currency pair that is not equal to the currency in
+Listing \ref{lst:top_level_yc}. The \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that
+is looked up in the {\tt market.txt} file.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -406,4 +406,139 @@ The \lstinline!BootstrapConfig! has the following interpretation for a fitted bo
 \end{minted}
 \caption{Fitted bond yield curve segment}
 \label{lst:fitted_bond_segment}
+\end{listing}
+
+\subsubsection*{Yield plus Default Segment}
+\label{sec:yield_plus_default}
+
+When the node name is \lstinline!YieldPlusDefault!, the \lstinline!Type! node has the only allowable value \emph{Yield
+ Plus Default}, and the node has the structure shown in Listing \ref{lst:yield_plus_default_segment}. This segment is
+used to build all-in discounting yield curves from a benchmark curve and (a weighted sum of) default curves. The
+construction is in some sense inverse to the benchmark default curve construction, see \ref{ss:benchmark_default_curve}.
+
+\begin{itemize}
+\item ReferenceCurve: the benchmark yield curve serving as the basis of the resulting yield curve
+\item DefaultCurves: a list of default curves whose weighted sum is added to the benchmark yield curve
+\item Weights: a list of weights for the default curves, the number of weights must match the number of default curves
+\end{itemize}
+
+Notice that it is explicitly allowed to use default curves in different currencies than the benchmark yield curve. In
+the construction, the hazard rate is reinterpreted as an instantaneous forward rate, and the sum of the curves is being
+built in the instantaneous forward rate.
+
+The definition takes into account the recovery rates associated to each default curve. The resulting discount factor is
+computed as
+
+\begin{equation}
+P(0,t) = \prod_i  S_i(t)^{(1-R)w_i}
+\end{equation}
+
+where $S_i$ and $R_i$ are the survival probabilities and recovery rates of the source default curves, and $w_i$ are the
+weights.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <YieldCurve>
+    <CurveId>BenchmarkPlusDefault</CurveId>
+    <CurveDescription>USD Libor 3M + 0.5 x CDX.NA.HY + 0.5 x EUR.10BP</CurveDescription>
+    <Currency>USD</Currency>
+    <DiscountCurve/>
+    <Segments>
+      <YieldPlusDefault>
+        <Type>Yield Plus Default</Type>
+        <ReferenceCurve>USD3M</ReferenceCurve>
+        <DefaultCurves>
+          <DefaultCurve>Default/USD/CDX.NA.HY</DefaultCurve>
+          <DefaultCurve>Default/EUR/EUR.10BP</DefaultCurve>
+        </DefaultCurves>
+        <Weights>
+          <Weight>0.5</Weight>
+          <Weight>0.5</Weight>
+        </Weights>
+      </YieldPlusDefault>
+    </Segments>
+  </YieldCurve>
+</YieldCurves>
+\end{minted}
+\caption{Yield plus default curve segment}
+\label{lst:yield_plus_default_segment}
+\end{listing}
+
+\subsubsection*{Weighted Average Segment}
+\label{sec:weigthed_average}
+
+When the node name is \lstinline!WeightedAverage!, the \lstinline!Type! node has the only allowable value
+\emph{Weighted Average}, and the node has the structure shown in Listing \ref{lst:weighted_average_segment}. This segment
+is used to build a curve with instantaneous forward rates that are the weighted sum of instantaneous forward rates of
+reference curves. This way a projection curve for non-standard Ibor curves can be build, e.g. to project a Euribor2M
+index using the curves for 1M and 3M.
+
+\begin{itemize}
+\item ReferenceCurve1: the first source curve
+\item ReferenceCurve2: the second source curve
+\item Weight1: the weight of the first curve
+\item Weights: the weight of the second curve
+\end{itemize}
+
+If $P_1(0,t)$ and $P_2(0,t)$ denote the discount factors of the two reference curves, the discount factor $P(0,t)$ of
+the resulting curve is defined as
+
+\begin{equation}
+P(0,t) = P_1(0,t)^{w_1}P_2(0,t)^{w_2}
+\end{equation}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurve>
+  <CurveId>EUR2M</CurveId>
+  <CurveDescription>Euribor2M forwarding curve, interpolated from 1M and 3M</CurveDescription>
+  <Currency>EUR</Currency>
+  <DiscountCurve>EUR1D</DiscountCurve>
+  <Segments>
+    <WeightedAverage>
+      <Type>Weighted Average</Type>
+      <ReferenceCurve1>EUR1M</ReferenceCurve1>
+      <ReferenceCurve2>EUR3M</ReferenceCurve2>
+      <Weight1>0.5</Weight1>
+      <Weight2>0.5</Weight2>
+    </WeightedAverage>
+  </Segments>
+</YieldCurve>
+\end{minted}
+\caption{Weighted Average yield curve segment}
+\label{lst:weighted_average_segment}
+\end{listing}
+
+\subsubsection*{Ibor Fallback Segment}
+\label{sec:ibor_fallback_curve_segment}
+
+When the node name is \lstinline!IborFallback!, the \lstinline!Type! node has the only allowable value \emph{Ibor
+  Fallback}, and the node has the structure shown in Listing \ref{lst:ibor_fallback_segment}. This segment is used to
+build a projection curve for an Ibor index based on a risk free rate and a spread.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurve>
+  <CurveId>USD-LIBOR-3M</CurveId>
+  <CurveDescription>USD-Libor-3M built from USD-SOFR plus spread</CurveDescription>
+  <Currency>USD</Currency>
+  <DiscountCurve/>
+  <Segments>
+    <IborFallback>
+      <Type>Ibor Fallback</Type>
+      <IborIndex>USD-LIBOR-3M</IborIndex>
+      <RfrCurve>Yield/USD/USD-SOFR</RfrCurve>
+      <!-- optional, if not given the rfr index and sprad are read from the ibor
+           fallback configuration -->
+      <RfrIndex>USD-SOFR</RfrIndex>
+      <Spread>0.0026161</Spread>
+    </IborFallback>
+  </Segments>
+</YieldCurve>
+\end{minted}
+\caption{Ibor fallback segment}
+\label{lst:ibor_fallback_segment}
 \end{listing}

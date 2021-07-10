@@ -30,6 +30,7 @@ be used in combination with the following leg types:
 \item Fixed
 \item Floating
 \item CMS
+\item DigitalCMS
 \item CMSSpread
 \item DigitalCMSSpread
 \end{itemize}
@@ -89,7 +90,7 @@ The Indexings node contains the following elements:
 \lstinline!FromAssetLeg! is supported for the following trade types:
 
 \begin{itemize}
-\item \lstinline!EquitySwap!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the non-equity funding leg, to the equity leg by deriving equity price, quantity and FX from the equity leg. \\ Note that \lstinline!FromAssetLeg! is only supported for equity swaps where \lstinline!NotionalReset! is \emph{true} on the equity leg - \lstinline!FromAssetLeg!  is ignored otherwise.
+\item \lstinline!EquitySwap!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the non-equity funding leg, to the equity leg by deriving equity price, quantity and FX from the equity leg. \\ Note that \lstinline!FromAssetLeg! is only supported if \lstinline!NotionalReset! is \emph{true} on the equity leg - \lstinline!FromAssetLeg! is ignored otherwise.
 \item \lstinline!BondTRS!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the funding leg (in the \lstinline!FundingData! block), to the total return leg (in the \lstinline!TotalReturnData! block) by deriving bond price, bond notional and FX from the total return leg, bond data and the reference bond. 
 \end{itemize}
 
@@ -148,8 +149,17 @@ The Indexings node contains the following elements:
   Allowable values: any number
 
 \item ValuationSchedule [Optional]: If given the schedule from which the fixing dates are deduced. If not given, it
-  defaults to the original leg's schedule. The $i$th fixing date is derived from the $i$th (inArrears = false) or
-  $i+1$th (inArrears = true) date in the valuation schedule using the FixingDays, FixingCalendar and FixingConvention.
+  defaults to the original leg's schedule.
+
+  If the valuation schedule has the same size as the original leg's schedule,
+  it is assumed that the periods correspond one to one, i.e. the $i$th fixing date is derived from the $i$th (inArrears
+  = false) or $i+1$th (inArrears = true) date in the valuation schedule using the FixingDays, FixingCalendar and
+  FixingConvention.
+
+  If the valuation schedule has a different size than the original leg's schedule, the relevant valuation date for the
+  $i$th original leg's coupon is determined as the latest valuation date that is less or equal to accrual start date
+  (inArrears = false) resp. accrual end date (inArrears = true) of that coupon. The fixing date is derived from the
+  relevant valuation date as above, i.e. using the FixingDays, FixingCalendar and FixingConvention.
 
   Allowable values: a valid schedule definition, see \ref{ss:schedule_data}
 

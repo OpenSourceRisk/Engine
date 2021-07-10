@@ -1,15 +1,18 @@
 \subsubsection{Cap/Floor}
+\label{ss:capfloor}
 
 The \lstinline!CapFloorData! node is the trade data container for the \emph{CapFloor} trade type.  It's a cap, floor or collar
 (i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor or CMS rates. The
 \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
 is long or short, and a \lstinline!LegData!  sub-node where the
-LegType can be set to \emph{Floating}, \emph{CMS}, \emph{CPI}
+LegType can be set to \emph{Floating}, \emph{CMS}, \emph{DurationAdjustedCMS}, \emph{CPI}
 or \emph{YY}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
 \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
 elements, or both. In the case of both (I.e. a collar with long cap and short floor) the sequence is that  \lstinline!Caps! elements must be above the \lstinline!Floors! elements. Note that 
 the \lstinline!Caps! and \lstinline!Floors! elements must be outside the \lstinline!LegData! sub-node, i.e. a \emph{CapFloor} 
 can't have a capped or floored  \emph{Floating}  or \emph{CMS} leg.
+THe \emph{Payer} flag in the LegData subnode is ignored for this instrument. Notice that the signs in the definition of a collar (long cap, short floor) for the CapFloor
+instruments is exactly opposite to \ref{ss:floatingleg_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -24,6 +27,13 @@ can't have a capped or floored  \emph{Floating}  or \emph{CMS} leg.
   <Caps>
     <Cap>0.05</Cap>
   </Caps>
+  <Premiums>
+    <Premium>
+      <Amount>1000</Amount>
+      <Currency>EUR</Currency>
+      <PayDate>2021-01-27</PayDate>
+    </Premium>
+  </Premiums>
 </CapFloorData>
 \end{minted}
 \caption{Cap/Floor data}
@@ -38,7 +48,7 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
 \item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data}. Exactly
   one \lstinline!LegData! node is allowed, and the LegType element must
-  be set to \emph{Floating}, \emph{CMS}, \emph{CPI} or \emph{YY}.
+  be set to \emph{Floating} (Ibor and OIS), \emph{CMS}, \emph{DurationAdjustedCMS}, \emph{CPI} or \emph{YY}.
 
 \item Caps: This node has child elements of type \lstinline!Cap!
   capping the floating leg (after applying spread if any). The first rate value corresponds to the
@@ -63,5 +73,9 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
   Allowable values for each \lstinline!Floor! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
   a rate of 5\%
+
+\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+
+Allowable values:  See section \ref{ss:premiums}
 
 \end{itemize}

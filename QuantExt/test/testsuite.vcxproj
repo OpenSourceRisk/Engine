@@ -87,27 +87,35 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -199,7 +207,6 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -258,7 +265,6 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -318,7 +324,6 @@
       <CompileAs>Default</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -378,7 +383,6 @@
       <CompileAs>Default</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -434,7 +438,6 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -491,7 +494,6 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -549,7 +551,6 @@
       <CompileAs>Default</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -609,7 +610,6 @@
       <CompileAs>Default</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -648,6 +648,7 @@
     <ClCompile Include="commodityforward.cpp" />
     <ClCompile Include="correlationtermstructure.cpp" />
     <ClCompile Include="cpicapfloor.cpp" />
+    <ClCompile Include="crcirpp.cpp" />
     <ClCompile Include="crossassetmodel.cpp" />
     <ClCompile Include="crossassetmodel2.cpp" />
     <ClCompile Include="crossassetmodelparametrizations.cpp" />
@@ -656,21 +657,25 @@
     <ClCompile Include="crossccyfixfloatswap.cpp" />
     <ClCompile Include="crossccyfixfloatswaphelper.cpp" />
     <ClCompile Include="currency.cpp" />
+    <ClCompile Include="dategeneration.cpp" />
     <ClCompile Include="deltagammavar.cpp" />
     <ClCompile Include="deposit.cpp" />
     <ClCompile Include="discountcurve.cpp" />
     <ClCompile Include="discountingcommodityforwardengine.cpp" />
     <ClCompile Include="discountratiomodifiedcurve.cpp" />
+    <ClCompile Include="durationadjustedcmscoupon.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="equityforwardcurvestripper.cpp" />
+    <ClCompile Include="exactbachelierimpliedvolatility.cpp" />
     <ClCompile Include="fillemptymatrix.cpp" />
     <ClCompile Include="forwardbond.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
     <ClCompile Include="logquote.cpp" />
+    <ClCompile Include="normalfreeboundarysabr.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
     <ClCompile Include="piecewiseatmoptionletcurve.cpp" />
@@ -679,7 +684,7 @@
     <ClCompile Include="pricecurve.cpp" />
     <ClCompile Include="pricetermstructureadapter.cpp" />
     <ClCompile Include="qle_calendars.cpp" />
-    <ClCompile Include="quadraticinterpolation.cpp" />
+    <ClCompile Include="quadraticinterpolation.cpp" />    
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />

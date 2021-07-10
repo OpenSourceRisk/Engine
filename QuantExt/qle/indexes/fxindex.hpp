@@ -41,15 +41,16 @@
 #include <ql/currency.hpp>
 #include <ql/exchangerate.hpp>
 #include <ql/handle.hpp>
-#include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
+#include <qle/indexes/eqfxindexbase.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
 //! FX Index
 /*! \ingroup indexes */
-class FxIndex : public Index, public Observer {
+class FxIndex : public EqFxIndexBase {
 public:
     /*! familyName may be e.g. ECB
         settlementDays determine the spot date of the currency pair
@@ -58,7 +59,11 @@ public:
         fixingCalendar is the calendar defining good days for the pair
         this class uses the exchange rate manager to retrieve spot values
 
-        if inverseIndex is true, the returned fixing values are flipped
+        if inverseIndex is true, the returned fixing values are flipped, but all inspectors
+        - sourceCurremcy(), targetCurrency()
+        - sourceCurve(), targetCurve()
+        - fxQuote()
+        will still return results in terms of the original pair.
     */
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
@@ -86,15 +91,25 @@ public:
     const Currency& sourceCurrency() const { return sourceCurrency_; }
     const Currency& targetCurrency() const { return targetCurrency_; }
     const bool inverseIndex() const { return inverseIndex_; }
+    const Handle<YieldTermStructure>& sourceCurve() const { return sourceYts_; }
+    const Handle<YieldTermStructure>& targetCurve() const { return targetYts_; }
+    const Handle<Quote>& fxQuote() const { return fxQuote_; }
+    const bool useQuote() const { return useQuote_; }
     //@}
     /*! \name Date calculations */
     virtual Date valueDate(const Date& fixingDate) const;
     //! \name Fixing calculations
     //@{
     //! It can be overridden to implement particular conventions
+    virtual Real forecastFixing(const Time& fixingTime) const;
     virtual Real forecastFixing(const Date& fixingDate) const;
     Real pastFixing(const Date& fixingDate) const;
     // @}
+
+    //! clone the index, the clone will be linked to the provided handles
+    boost::shared_ptr<FxIndex> clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
+                                     const Handle<YieldTermStructure>& targetYts);
+
 protected:
     std::string familyName_;
     Natural fixingDays_;

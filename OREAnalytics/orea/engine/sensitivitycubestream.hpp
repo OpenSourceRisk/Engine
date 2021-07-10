@@ -65,6 +65,8 @@ private:
                         QuantLib::Size>>::const_iterator itCrossPair_;
     //! Index of current trade Id in the cube
     std::map<std::string, QuantLib::Size>::const_iterator tradeIdx_;
+    //! Can only compute gamma if the up and down risk factors align
+    bool canComputeGamma_;
 };
 
 } // namespace analytics

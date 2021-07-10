@@ -110,7 +110,7 @@ protected:
 namespace detail {
 struct CloseEnoughComparator {
     explicit CloseEnoughComparator(const Real v) : v_(v) {}
-    bool operator()(const Real w) const { return close_enough(v_, w); }
+    bool operator()(const Real w) const { return QuantLib::close_enough(v_, w); }
     Real v_;
 };
 } // namespace detail
@@ -195,7 +195,7 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
             } else {
                 Real sumDiscount = 0.0;
                 for (Size j = 0; j < numYears; ++j)
-                    sumDiscount += nominalTermStructure()->discount(j + 1.0);
+                    sumDiscount += nominalTS_->discount(j + 1.0);
 
                 Real capPrice = capPriceTemp(t, k);
                 Real floorPrice = floorPriceTemp(t, k);
@@ -228,7 +228,7 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
         Size numYears = (Size)(t + 0.5);
         Real sumDiscount = 0.0;
         for (Size k = 0; k < numYears; ++k)
-            sumDiscount += nominalTermStructure()->discount(k + 1.0);
+            sumDiscount += nominalTS_->discount(k + 1.0);
 
         Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat));
         for (Size i = 0; i < cfStrikes_.size(); ++i) {
@@ -301,10 +301,10 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     // for now pick every year
     Size nYears = (Size)(0.5 + timeFromReference(referenceDate() + cfMaturities_.back()));
 
-    Handle<YieldTermStructure> nominalH(nominalTermStructure());
+    Handle<YieldTermStructure> nominalH(nominalTS_);
     std::vector<boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure> > > YYhelpers;
     for (Size i = 1; i <= nYears; i++) {
-        Date maturity = nominalTermStructure()->referenceDate() + Period(i, Years);
+        Date maturity = nominalTS_->referenceDate() + Period(i, Years);
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(atmYoYSwapRate(maturity)))); //!
         boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure> > anInstrument(new YearOnYearInflationSwapHelper(
             quote, observationLag(), maturity, calendar(), bdc_, dayCounter(), yoyIndex(), nominalH));
@@ -316,9 +316,9 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::calculateYoYTermStructur
     // we pick this as the end of the curve
     Rate baseYoYRate = atmYoYSwapRate(referenceDate()); //!
 
-    boost::shared_ptr<PiecewiseYoYInflationCurve<I1D> > pYITS(new PiecewiseYoYInflationCurve<I1D>(
-        nominalTermStructure()->referenceDate(), calendar(), dayCounter(), observationLag(), yoyIndex()->frequency(),
-        yoyIndex()->interpolated(), baseYoYRate, nominalH, YYhelpers));
+    boost::shared_ptr<PiecewiseYoYInflationCurve<I1D>> pYITS(new PiecewiseYoYInflationCurve<I1D>(
+        nominalTS_->referenceDate(), calendar(), dayCounter(), observationLag(), yoyIndex()->frequency(),
+        yoyIndex()->interpolated(), baseYoYRate, YYhelpers));
     pYITS->recalculate();
     yoy_ = pYITS; // store
 

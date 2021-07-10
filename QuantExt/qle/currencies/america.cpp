@@ -29,6 +29,13 @@ MXVCurrency::MXVCurrency() {
     data_ = mxvData;
 }
 
+// Unidad de Valor Real
+COUCurrency::COUCurrency() {
+    static boost::shared_ptr<Data> couData(
+        new Data("Unidad de Valor Real (UVR) (funds code)", "COU", 970, "COU", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = couData;
+}
+
 // Unidad de Fomento
 CLFCurrency::CLFCurrency() {
     static boost::shared_ptr<Data> clfData(

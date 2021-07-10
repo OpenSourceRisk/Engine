@@ -114,11 +114,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->setDiscountCurveNames({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                             5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
-    simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketData->setIndices(
         {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
 
     simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolExpiries(
@@ -126,7 +124,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
-    simMarketData->setSwapVolDayCounters("", "ACT/ACT");
     simMarketData->setFxVolExpiries(
         vector<Period>{6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setFxVolDecayMode(string("ConstantVariance"));
@@ -134,7 +131,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->setFxVolCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"});
     simMarketData->setFxVolIsSurface(false);
     simMarketData->setFxVolMoneyness(vector<Real>{0});
-    simMarketData->setFxVolDayCounters("", "ACT/ACT");
 
     simMarketData->setFxCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY"});
 
@@ -144,7 +140,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->setCapFloorVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->setCapFloorVolStrikes("", {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06});
-    simMarketData->setCapFloorVolDayCounters("", "A365");
 
     return simMarketData;
 }

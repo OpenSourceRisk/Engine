@@ -23,15 +23,14 @@ void Underlying::fromXML(XMLNode* node) {
     if (auto n = XMLUtils::getChildNode(node, "Weight"))
         weight_ = parseReal(XMLUtils::getNodeValue(n));
     else
-        weight_ = Null<Real>();
+        weight_ = 1.0;
 }
 
 XMLNode* Underlying::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(nodeName_);
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Name", name_);
-    if (weight_ != Null<Real>())
-        XMLUtils::addChild(doc, node, "Weight", weight_);
+    XMLUtils::addChild(doc, node, "Weight", weight_);
     return node;
 }
 
@@ -168,6 +167,82 @@ XMLNode* FXUnderlying::toXML(XMLDocument& doc) {
     return node;
 }
 
+void InterestRateUnderlying::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
+        name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
+        Underlying::fromXML(node);
+        isBasic_ = false;
+    } else {
+        QL_FAIL("Need either a Name or Underlying node for InterestRateUnderlying.");
+    }
+    setType("InterestRate");
+}
+
+XMLNode* InterestRateUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node;
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+    }
+    return node;
+}
+
+void CreditUnderlying::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
+        name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
+        Underlying::fromXML(node);
+        isBasic_ = false;
+    } else {
+        QL_FAIL("Need either a Name or Underlying node for CreditUnderlying.");
+    }
+    setType("Credit");
+}
+
+XMLNode* CreditUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node;
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+    }
+    return node;
+}
+
+void InflationUnderlying::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
+        name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
+        Underlying::fromXML(node);
+        // optional
+        std::string interpolationString = XMLUtils::getChildValue(node, "Interpolation", false);
+        if (interpolationString != "")
+            interpolation_ = parseObservationInterpolation(interpolationString);
+        else
+            interpolation_ = QuantLib::CPI::InterpolationType::Flat;
+        isBasic_ = false;
+    } else {
+        QL_FAIL("Need either a Name or Underlying node for InflationUnderlying.");
+    }
+    setType("Inflation");
+}
+
+XMLNode* InflationUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node;
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+        XMLUtils::addChild(doc, node, "Interpolation", std::to_string(interpolation_));
+    }
+    return node;
+}
+
 void UnderlyingBuilder::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         underlying_ = boost::make_shared<BasicUnderlying>();
@@ -179,6 +254,12 @@ void UnderlyingBuilder::fromXML(XMLNode* node) {
             underlying_ = boost::make_shared<CommodityUnderlying>();
         else if (type == "FX")
             underlying_ = boost::make_shared<FXUnderlying>();
+        else if (type == "InterestRate")
+            underlying_ = boost::make_shared<InterestRateUnderlying>();
+        else if (type == "Inflation")
+            underlying_ = boost::make_shared<InflationUnderlying>();
+        else if (type == "Credit")
+            underlying_ = boost::make_shared<CreditUnderlying>();
         else {
             QL_FAIL("Unknown Underlying type " << type);
         }

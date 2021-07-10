@@ -32,4 +32,8 @@ FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixin
     registerWith(FXLinked::fxIndex());
 }
 
+boost::shared_ptr<FXLinked> FXLinkedCashFlow::clone(boost::shared_ptr<FxIndex> fxIndex) {
+    return boost::make_shared<FXLinkedCashFlow>(date(), fxFixingDate(), foreignAmount(), fxIndex);
+}
+
 } // namespace QuantExt

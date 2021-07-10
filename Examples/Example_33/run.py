@@ -6,23 +6,19 @@ from ore_examples_helper import OreExample
 
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
-oreex.print_headline("Run ORE to produce normal xva from BANKs view")
-oreex.run("Input/ore_Normal.xml")
+# oreex.print_headline("Run ORE to produce NPV cube and exposures")
+oreex.run("Input/ore.xml")
 oreex.get_times("Output/log.txt")
-oreex.save_output_to_subdir(
-    "NormalXVA",
-    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
 
-oreex.print_headline("Run ORE to produce flipped xva from CPTY_As view")
-oreex.run("Input/ore_FlipView.xml")
-oreex.get_times("Output/log.txt")
-oreex.save_output_to_subdir(
-    "FlippedXVA",
-    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+oreex.print_headline("Run ORE again to price CDS Options")
+oreex.run("Input/ore_cds_option.xml")
 
-oreex.print_headline("Run ORE to produce normal xva with reversed swap (identical to flipped xva as BANK and CPTY_A have identical Default and fva curves)")
-oreex.run("Input/ore_ReversedNormal.xml")
-oreex.get_times("Output/log.txt")
-oreex.save_output_to_subdir(
-    "ReversedNormalXVA",
-    ["log.txt", "xva.csv"] + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+# oreex.print_headline("Plot results: Simulated exposures vs analytical cds option prices")
+
+oreex.setup_plot("cds options")
+oreex.plot("exposure_trade_CDS.csv", 2, 3, 'b', "CDS EPE")
+oreex.plot("exposure_trade_CDS.csv", 2, 4, 'r', "CDS ENE")
+oreex.plot("cds_option_npv.csv", 3, 4, 'g', "NPV CDS Ooptions", marker='s')
+oreex.decorate_plot(title="Example 35 - Simulated exposures vs analytical cds option prices")
+oreex.save_plot_to_file()
+

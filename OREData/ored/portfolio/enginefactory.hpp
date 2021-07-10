@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/enginedata.hpp>
@@ -120,6 +121,9 @@ public:
         }
     }
 
+    //! reset the builder (e.g. clear cache)
+    virtual void reset() {}
+
     //! Initialise this Builder with the market and parameters to use
     /*! This method should not be called directly, it is called by the EngineFactory
      *  before it is returned.
@@ -137,13 +141,14 @@ public:
     //! return model builders
     const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
-protected:
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string engineParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
                                 const std::string& defaultValue = "");
     /*! retrieve model parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string modelParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
                                const std::string& defaultValue = "");
+
+protected:
     string model_;
     string engine_;
     set<string> tradeTypes_;
@@ -184,7 +189,9 @@ public:
         //! additional leg builders
         const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {},
         //! optional pointer to reference data
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr);
+        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+        //! ibor fallback config
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     //! Return the market used by this EngineFactory
     const boost::shared_ptr<Market>& market() const { return market_; };
@@ -204,6 +211,8 @@ public:
     void registerBuilder(const boost::shared_ptr<EngineBuilder>& builder);
     //! Return the reference data used by this EngineFactory
     const boost::shared_ptr<ReferenceDataManager>& referenceData() const { return referenceData_; };
+    //! Return the ibor fallback config
+    const IborFallbackConfig& iborFallbackConfig() const { return iborFallbackConfig_; }
 
     //! Get a builder by trade type
     /*! This will look up configured model/engine for that trade type
@@ -241,6 +250,7 @@ private:
     map<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> builders_;
     map<string, boost::shared_ptr<LegBuilder>> legBuilders_;
     boost::shared_ptr<ReferenceDataManager> referenceData_;
+    IborFallbackConfig iborFallbackConfig_;
 };
 
 //! Leg builder
@@ -250,7 +260,8 @@ public:
     LegBuilder(const string& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&, RequiredFixings& requiredFixings,
-                         const string& configuration) const = 0;
+                         const string& configuration,
+                         const QuantLib::Date& openEndDateReplacement = Null<Date>()) const = 0;
     const string& legType() const { return legType_; }
 
 private:

@@ -114,7 +114,10 @@ public:
     };
 
     //! Default constructor
-    LgmData() {}
+    LgmData()
+        : calibrationType_(CalibrationType::None), revType_(ReversionType::Hagan), volType_(VolatilityType::Hagan),
+          calibrateH_(false), hType_(ParamType::Constant), calibrateA_(false), aType_(ParamType::Constant),
+          shiftHorizon_(0.0), scaling_(1.0) {}
 
     //! Detailed constructor
     LgmData(std::string qualifier, CalibrationType calibrationType, ReversionType revType, VolatilityType volType,
@@ -168,8 +171,10 @@ public:
     bool operator!=(const LgmData& rhs);
     //@}
 
-private:
+protected:
     std::string qualifier_;
+
+private:
     CalibrationType calibrationType_;
     ReversionType revType_;
     VolatilityType volType_;
@@ -194,5 +199,38 @@ LgmData::VolatilityType parseVolatilityType(const string& s);
 //! Enum to string used in CrossAssetModelBuilder's toXML
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type);
+
+/*! LGM reversion transformation.
+    
+    This class holds values for possibly transforming the reversion parameter of the LGM model. The use of this is 
+    outlined in <em>Modern Derivatives Pricing and Credit Exposure Analysis</em>, Section 16.4.
+
+    \ingroup models
+ */
+class LgmReversionTransformation : public XMLSerializable {
+public:
+    //! Default constructor setting the horizon to 0.0 and the scaling to 1.0.
+    LgmReversionTransformation();
+
+    //! Detailed constructor
+    LgmReversionTransformation(QuantLib::Time horizon, QuantLib::Real scaling);
+
+    //! \name Inspectors
+    //@{
+    QuantLib::Time horizon() const;
+    QuantLib::Real scaling() const;
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+private:
+    QuantLib::Time horizon_;
+    QuantLib::Real scaling_;
+};
+
 } // namespace data
 } // namespace ore

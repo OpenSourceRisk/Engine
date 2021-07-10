@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016-2021 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
@@ -21,8 +21,10 @@
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/capflooredaverageonindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredcpileg.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capfloorednonstandardyoyleg.hpp>
 #include <ored/portfolio/builders/capflooredovernightindexedcouponleg.hpp>
 #include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
@@ -32,16 +34,21 @@
 #include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
+#include <ored/portfolio/builders/creditdefaultswapoption.hpp>
+#include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/quantoequityoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/yoycapfloor.hpp>
+#include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/utilities/log.hpp>
@@ -85,8 +92,10 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
                              const map<MarketContext, string>& configurations,
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
                              const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders,
-                             const boost::shared_ptr<ReferenceDataManager>& referenceData)
-    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData) {
+                             const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                             const IborFallbackConfig& iborFallbackConfig)
+    : market_(market), engineData_(engineData), configurations_(configurations), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();
@@ -163,11 +172,13 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGASEngineBuilder>());
-
+     
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredAverageONIndexedCouponLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredYoYLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredNonStandardYoYLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCouponEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredCpiLegCashFlowEngineBuilder>());
     registerBuilder(boost::make_shared<CmsSpreadCouponPricerBuilder>());
@@ -186,6 +197,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanAsianOptionADGASEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityFutureEuropeanOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
     registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());
@@ -193,10 +205,13 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+    registerBuilder(boost::make_shared<data::LinearTsrDurationAdjustedCmsCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
+    registerBuilder(boost::make_shared<BlackCdsOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityEuropeanForwardOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityAmericanOptionBAWEngineBuilder>());
@@ -206,7 +221,9 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityEuropeanAsianOptionADGASEngineBuilder>());
+    registerBuilder(boost::make_shared<QuantoEquityEuropeanOptionEngineBuilder>());
 
+    registerLegBuilder(boost::make_shared<DurationAdjustedCmsLegBuilder>());
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
     registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
@@ -214,6 +231,7 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<CPILegBuilder>());
     registerLegBuilder(boost::make_shared<YYLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSLegBuilder>());
+    registerLegBuilder(boost::make_shared<DigitalCMSLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<DigitalCMSSpreadLegBuilder>());
     registerLegBuilder(boost::make_shared<EquityLegBuilder>());

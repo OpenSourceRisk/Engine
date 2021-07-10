@@ -29,7 +29,6 @@ if(MSVC)
     add_compiler_flag("-DBOOST_ENABLE_ASSERT_HANDLER" enableAssertionHandler)
     add_compiler_flag("/bigobj" supports_bigobj)
     add_compiler_flag("/W3" supports_w3)
-
 else()
     # build shared libs always
     set(BUILD_SHARED_LIBS ON)
@@ -63,20 +62,6 @@ get_filename_component(OREDATA_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREData"
 get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREAnalytics" ABSOLUTE)
 get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest" ABSOLUTE)
 get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
-
-get_filename_component(QUANTEXTPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantExtPlus" ABSOLUTE)
-get_filename_component(OREDATAPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREDataPlus" ABSOLUTE)
-get_filename_component(OREANALYTICSPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREAnalyticsPlus" ABSOLUTE)
-get_filename_component(OPENSSL_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/openssl" ABSOLUTE)
-get_filename_component(OREPLUSLICENSE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/License" ABSOLUTE)
-get_filename_component(OREPLUSAMC_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/AMC" ABSOLUTE)
-get_filename_component(OREPLUSBASE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Base" ABSOLUTE)
-get_filename_component(OREPLUSCREDIT_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Credit" ABSOLUTE)
-get_filename_component(OREPLUSSENSITIVITY_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Sensitivity" ABSOLUTE)
-get_filename_component(OREPLUSFORMULABASEDCOUPON_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/FormulaBasedCoupon" ABSOLUTE)
-get_filename_component(OREPLUSSCRIPTEDTRADE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/ScriptedTrade" ABSOLUTE)
-option(OREPLUS_LICENSE "Enable ORE+ Licensing" OFF)
-
 
 # convenience function that adds a link directory dir, but only if it exists
 function(add_link_directory_if_exists dir)

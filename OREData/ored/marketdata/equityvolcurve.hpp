@@ -70,19 +70,37 @@ public:
                          const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
                          const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
 
+    //! Build a volatility surface from a collection of expiry and moneyness strike pairs.
+    void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
+                         const VolatilityMoneynessSurfaceConfig& vssc, const Loader& loader,
+                         const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+
+    //! Build a volatility surface from a collection of expiry and strike delta pairs 
+    void buildVolatility(const QuantLib::Date& asof, EquityVolatilityCurveConfig& vc,
+                         const VolatilityDeltaSurfaceConfig& vdsc, const Loader& loader,
+                         const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex);
+
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                          const CurveConfigurations& curveConfigs,
                          const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
                          const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves);
 
-    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
+    //! Build the calibration info
+    void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
+                              const EquityVolatilityCurveConfig& config, const Handle<QuantExt::EquityIndex>& eqIndex);
+
+    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() const { return vol_; }
+    const boost::shared_ptr<FxEqVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
 private:
     EquityVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
     QuantLib::Calendar calendar_;
+    QuantLib::Currency currency_;
     QuantLib::DayCounter dayCounter_;
+    QuantLib::Date maxExpiry_;
+    boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

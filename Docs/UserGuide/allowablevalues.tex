@@ -5,18 +5,43 @@
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+  \begin{tabular} {|p{4cm}|p{11cm}|}
     \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
-    \lstinline!Currency! & \emph{ATS, AUD, BEF, BRL, CAD, CHF, CNY,
-      CZK, DEM, DKK, EUR, ESP, FIM, FRF, GBP, GRD, HKD, HUF, IEP, ITL,
-      INR, ISK, JPY, KRW, LUF, NLG, NOK, NZD, PLN, PTE, RON, SEK, SGD,
-      THB, TRY, TWD, USD, ZAR, ARS, CLP, COP, IDR, ILS, KWD, PEN, MXN,
-      SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
-      AED, PHP, NGN, MAD, UYU, CNH, KES, LKR, PKR, RSD, XAG, XAU, XPD, XPT},  
-    Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+    \lstinline!Currency! &
+% hard coded currencies: 
+%      \emph{AED, AOA, ARS, ATS, AUD, BEF, BGN, BHD,
+%      BRL, CAD, CHF, CLF, CLP, CNH, CNY, COP, COU, CZK, DEM, DKK, EGP,
+%      ESP, ETB, EUR, FIM, FRF, GBP, GEL, GHS, GRD, HKD, HRK, HUF, IDR, 
+%      IEP, ILS, INR, ISK, ITL, JOD, JPY, KES, KRW, KWD, KZT, LKR, LUF, MAD, 
+%      MUR, MXN, MXV, MYR, NGN, NLG, NOK, NZD, OMR, PEN, PHP, PKR, PLN, 
+%      PTE, QAR, RON, RSD, RUB, SAR, SEK, SGD, THB, TND, TRY, TWD, UAH, 
+%      UGX, USD, UYU, VND, XOF, ZAR, ZMW, XAG, XAU, XPD, XPT},
+% hard coded and configured currencies:
+\emph{AED,AFN,ALL,AMD,ANG,AOA,ARS,AUD,AWG,AZN,
+BAM,BBD,BDT,BGN,BHD,BIF,BMD,BND,BOB,BOV,
+BRL,BSD,BTN,BWP,BYN,BZD,CAD,CDF,CHE,CHF,
+CHW,CLF,CLP,CNH,CNT,CNY,COP,COU,CRC,CUC,
+CUP,CVE,CZK,DJF,DKK,DOP,DZD,EGP,ERN,ETB,
+EUR,FJD,FKP,GBP,GEL,GGP,GHS,GIP,GMD,GNF,
+GTQ,GYD,HKD,HNL,HRK,HTG,HUF,IDR,ILS,IMP,
+INR,IQD,IRR,ISK,JEP,JMD,JOD,JPY,KES,KGS,
+KHR,KID,KMF,KPW,KRW,KWD,KYD,KZT,LAK,LBP,
+LKR,LRD,LSL,LYD,MAD,MDL,MGA,MKD,MMK,MNT,
+MOP,MRU,MUR,MVR,MWK,MXN,MXV,MYR,MZN,NAD,
+NGN,NIO,NOK,NPR,NZD,OMR,PAB,PEN,PGK,PHP,
+PKR,PLN,PYG,QAR,RON,RSD,RUB,RWF,SAR,SBD,
+SCR,SDG,SEK,SGD,SHP,SLL,SOS,SRD,SSP,STN,
+SVC,SYP,SZL,THB,TJS,TMT,TND,TOP,TRY,TTD,
+TWD,TZS,UAH,UGX,USD,USN,UYI,UYU,UYW,UZS,
+VES,VND,VUV,WST,XAF,XAG,XAU,XCD,XOF,XPD,
+XPF,XPT,XSU,XUA,YER,ZAR,ZMW,ZWL.}
+This full list of currencies is available via loading the provided {\tt currencies.xml} at start-up.
+Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+\lstinline!Minor Currencies! & \emph{GBp, GBX, ILa, ILX, ZAc, ZAC, ZAX},  
+    Note: Minor Currency codes only supported for Equity products.  \\ \hline
     %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
     \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
 \emph{F,  Following, FOLLOWING}\\ 
@@ -24,10 +49,51 @@
 \emph{P, Preceding, PRECEDING}\\ 
 \emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
 \emph{U, Unadjusted, INDIFF }\end{tabular}  \\ \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for standard trade data.}
   \label{tab:allow_stand_data}
 \end{table}
+
+\newpage
+
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|l|p{6cm}|}
+\begin{longtable}{| p{.23\textwidth} | p{.80\textwidth} |}
+\hline
+\multicolumn{2}{|l|}{\lstinline!Rule!}                    \\ \hline
+\textbf{Allowable Values}                   & \textbf{Effect}                       \\ \hline
+\emph{Backward}   &   Backward from termination date to effective date.   \\ \hline
+\emph{Forward}   &   Forward from effective date to termination date.  \\ \hline
+\emph{Zero}   &   No intermediate dates between effective date and termination date.  \\ \hline
+\emph{ThirdWednesday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          third Wednesday of their month (with forward calculation.) \\ \hline
+\emph{LastWednesday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          last Wednesday of their month (with forward calculation.) \\ \hline
+\emph{ThirdThursday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          third Thursday of their month (with forward calculation.) \\ \hline
+\emph{ThirdFriday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          third Friday of their month (with forward calculation.) \\ \hline
+\emph{MondayAfterThird-} 
+\emph{Friday}  &   All dates but effective date and
+                          termination date are taken to be on the
+                          Monday following the third Friday of their month (with forward calculation.) \\ \hline
+\emph{TuesdayAfterThird-}
+\emph{Friday}   &   All dates but effective date and
+                          termination date are taken to be on the
+                          Tuesday following the third Friday of their month (with forward calculation.) \\ \hline
+\emph{Twentieth}   &   All dates but the effective date are taken to be the twentieth of their month (used for CDS schedules in emerging markets.)  The termination date is also modified. \\ \hline
+\emph{TwentiethIMM}   &   All dates but the effective date are  taken to be the twentieth of an IMM month (used for CDS schedules.)  The termination date is also modified. \\ \hline
+\emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and long/short stub coupon period (old CDS convention).\\ \hline
+\emph{CDS}   &    \makecell[tl]{Credit derivatives standard rule defined in 'Big Bang' changes in 2009. \\ \\ For quarterly periods (\lstinline!Tenor! set to \emph{3M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!) \\ Dates fall on 20th of March, June, September, December. A \emph{Following} \\ roll convention will be applied if the 20th falls on a non-business day. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date, the actual trade termination date will be on the \\ following quarterly CDS date. \\ The first coupon will be paid on the quarterly CDS date following the \\ \lstinline!StartDate!, and be for the period since the previous quarterly CDS \\ date.  \\ \\ For monthly periods (\lstinline!Tenor! set to \emph{1M}): \\ (Assuming no \lstinline!FirstDate!/\lstinline!LastDate!)\\ Dates fall on 20th of each month, but the termination is still adjusted \\ to be in line with quarterly periods. \\ If the \lstinline!EndDate! in the schedule is set to a date beyond the rolled \\ quarterly CDS date (i.e. the 20th+roll Mar, Jun, Sep, Dec), \\ the actual termination date will be on the following quarterly CDS \\ date, causing a long final stub. \\ The first coupon will be paid on the next 20th monthly following the \\ \lstinline!StartDate!, and be for the period since the previous month's 20th.}\\ \hline
+\emph{CDS2015}   &    \makecell[tl]{Credit derivatives standard rule updated in 2015. \\ Same as  \emph{CDS} but with termination dates adjusted to \\ 20th June and 20th December. \\ For schedule \lstinline!EndDates!  from the 20th of March to the 19th September, \\ both included, the termination date will fall on the 20th June (with \\  \emph{Following} roll). \\ For schedule \lstinline!EndDates! from the 20th September to the 19th March, \\ both included, the termination date will fall on the 20th December \\ (with \emph{Following} roll).} \\ \hline
+  \caption{Allowable Values for Rule}
+  \label{tab:rule}
+  \end{longtable}
 
 \begin{longtable}{| p{.30\textwidth} | p{.70\textwidth} |}
     \hline
@@ -135,30 +201,33 @@
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{6cm}|p{6cm}|}
     \hline
     %\multicolumn{2}{|l|}{\lstinline{DayCount Convention} }                             \\ \hline
     \multicolumn{2}{|l|}{\tt DayCount Convention}                          \\ \hline
     \bfseries{Allowable Values} & \bfseries{Resulting DayCount Convention} \\
     \hline
-    \emph{A360, Actual/360, ACT/360}& Actual 360  \\ \hline
-    \emph{A365, A365F, Actual/365, Actual/365 (fixed)} & Actual 365 Fixed \\ \hline
-    \emph{A364, Actual/364, ACT/364}& Actual 364  \\ \hline
-    \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} & Thirty 360 (US) \\ \hline
-    \emph{30E/360, 30E/360 (Eurobond Basis)} & Thirty 360 (European) \\ \hline
+    \emph{A360, Actual/360, ACT/360, Act/360}& Actual 360  \\ \hline
+    \emph{A365, A365F, Actual/365 (Fixed), Actual/365 (fixed), ACT/365.FIXED, ACT/365, ACT/365L, Act/365, Act/365L} & Actual 365 Fixed \\ \hline
+    \emph{A364, Actual/364, Act/364, ACT/364}& Actual 364  \\ \hline
+    \emph{Actual/365 (No Leap), Act/365 (NL), NL/365, Actual/365 (JGB)} & Actual 365 Fixed (No Leap Year)\\ \hline
+    \emph{T360 ,30/360, 30/360 (Bond Basis), ACT/nACT} & Thirty 360 (US) \\ \hline
+    \emph{30E/360 (Eurobond Basis), 30E/360, 30E/360.ISDA} & Thirty 360 (European) \\ \hline
     \emph{30/360 (Italian)} & Thirty 360 (Italian) \\ \hline
-    \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} & Actual Actual (ISDA) \\ \hline
-    \emph{ActActISMA, ActualActual (ISMA)} & Actual Actual (ISMA) \\ \hline
-    \emph{ActActICMA, ActualActual (ICMA)} & Actual Actual (ICMA) \\ \hline
-    \emph{ActActAFB, Actual/Actual (AFB)} & Actual Actual (AFB) \\ \hline           
-  \end{tabu}
+    \emph{ActActISDA, ACT/ACT.ISDA, Actual/Actual (ISDA), ActualActual (ISDA), ACT/ACT, ACT} & Actual Actual (ISDA) \\ \hline
+    \emph{ActActISMA, Actual/Actual (ISMA), ActualActual (ISMA), ACT/ACT.ISMA} & Actual Actual (ISMA) \\ \hline
+    \emph{ActActICMA, Actual/Actual (ICMA), ActualActual (ICMA), ACT/ACT.ICMA} & Actual Actual (ICMA) \\ \hline
+    \emph{ActActAFB, ACT/ACT.AFB, Actual/Actual (AFB)} & Actual Actual (AFB) \\ \hline
+    \emph{BUS/252, Business/252} & Brazilian Bus/252 \\ \hline
+    \emph{1/1} & 1/1  \\ \hline
+  \end{tabular}
   \caption{Allowable Values for DayCount Convention}
   \label{tab:daycount}
 \end{table}
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|l|l|}
+\begin{supertabular}{|l|l|}
 \hline
 %\multicolumn{2}{|l|}{\lstinline!Index!}   \\ \hline
 \multicolumn{2}{|l|}{\tt Index}   \\ \hline
@@ -167,17 +236,18 @@
 \textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
 CCY-INDEX                &
                            \textit{\begin{tabular}[c]{@{}l@{}}
-EUR-EONIA\\ EUR-ESTER \\ EUR-EURIBOR\\ EUR-LIBOR\\ EUR-CMS\\
+EUR-EONIA\\ EUR-ESTER, EUR-ESTR, EUR-STR 
+\\ EUR-EURIBOR\\ EUR-LIBOR\\ EUR-CMS\\
 USD-FedFunds\\ USD-SOFR \\ USD-Prime\\ USD-LIBOR\\ USD-SIFMA\\ USD-CMS\\
-GBP-SONIA\\ GBP-LIBOR\\ GBP-CMS\\ 
-JPY-LIBOR\\ JPY-TIBOR \\ JPY-TONAR \\ JPY-CMS \\
+GBP-SONIA\\ GBP-LIBOR\\ GBP-CMS \\ GBP-BoEBase \\ 
+JPY-LIBOR\\ JPY-TIBOR \\ JPY-EYTIBOR \\ JPY-TONAR \\ JPY-CMS \\
 CHF-LIBOR\\ CHF-SARON\\ 
 AUD-LIBOR\\ AUD-BBSW\\ 
 CAD-CDOR\\ CAD-BA\\ 
-SEK-STIBOR\\ SEK-LIBOR \\ SEK-STINA \\
+SEK-STIBOR\\ SEK-LIBOR\\ SEK-STINA \\ 
 DKK-LIBOR\\ DKK-CIBOR \\ DKK-CITA \\
 SGD-SIBOR\\ SGD-SOR \\
-HKD-HIBOR \\
+HKD-HIBOR \\ HKD-HONIA \\
 NOK-NIBOR \\
 HUF-BUBOR \\
 IDR-IDRFIX \\
@@ -185,12 +255,41 @@ INR-MIFOR \\
 MXN-TIIE \\
 PLN-WIBOR \\
 SKK-BRIBOR \\
+THB-THBFIX\\ THB-BIBOR\\
 NZD-BKBM \\
 \end{tabular}} \\ \hline
 TENOR                    & An integer followed by \emph{D, W, M or Y}                                                                                                                                                                                                                                                 \\ \hline
-\end{tabular}
+\end{supertabular}
   \caption{Allowable values for Index.}
   \label{tab:indices}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\multicolumn{2}{|l|} {Defaults for {\tt FixingDays}}   \\ \hline
+\textbf{Index} &\textbf{Default value}     \\ \hline \hline
+Ibor indices    &   2, except for the Ibor indices below:  \\ \hline
+\emph{USD-SIFMA}    &   1 \\ \hline
+\emph{GBP-LIBOR}    &   0 \\ \hline
+\emph{AUD-BBSW}    &   0 \\ \hline
+\emph{CAD-CDOR}    &   0 \\ \hline
+\emph{CNY-SHIBOR}    &   1 \\ \hline
+\emph{HKD-HIBOR}    &   0 \\ \hline
+\emph{MXN-TIIE}    &   1 \\ \hline
+\emph{MYR-KLIBOR}    &   0 \\ \hline
+\emph{TRY-TRLIBOR}    &   0 \\ \hline
+\emph{ZAR-JIBAR}    &   0 \\ \hline \hline
+Overnight indices    &   0, except for the Overnight indices below:  \\ \hline
+\emph{CHF-TOIS}    &   1 \\ \hline
+\emph{CLP-CAMARA}    &   2 \\ \hline
+\emph{PLN-POLONIA}    &   1 \\ \hline
+\emph{DKK-DKKOIS}    &   1 \\ \hline
+\emph{SEK-SIOR}    &   1 \\ \hline
+\end{tabular}
+  \caption{Defaults for FixingDays}
+  \label{tab:fixingdaysdefaults}
 \end{table}
 
 \begin{table}[H]
@@ -201,12 +300,7 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
 \multicolumn{2}{|l|}{\tt FX Index}   \\ \hline
 \textbf{Index Format} &\textbf{Allowable Values}     \\ \hline
 FX-SOURCE-CCY1-CCY2    &    
-SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
-Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for
-TR20H CCY1 should always be USD, except for FX-TR20H-GBP-USD,
-FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. Note that the FX- part of the
-string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
-(FX-ECB-EUR-USD).\\ \hline
+The FX- part of the string stays constant for all currency pairs. SOURCE is the market data fixing source defined in the market configuration. CCY1 and CCY2 are the ISO currency codes of the fx pair. Fixings are expressed as amount in CCY2 for one unit of CCY1.\\ \hline
 \end{tabular}
   \caption{Allowable values for FX index fixings.}
   \label{tab:fxindex_data}
@@ -214,53 +308,65 @@ string stays constant for all currency pairs. For the USD-EUR pair, ECB is used
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|l|p{8cm}|}
     \hline
     \multicolumn{2}{|l|}{\tt Inflation CPI Index} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Index! for CPI leg & Any string (provided it is the ID of an inflation index in the market configuration) \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for CPI index.}
   \label{tab:cpiindex_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 1.0\linewidth {| X[-1.65,l,m] | X[-5.7,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
-    \multicolumn{2}{|l|}{\tt Equity Name and Credit CreditCurveId} \\ \hline
+    \multicolumn{2}{|l|}{\tt Credit CreditCurveId} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
-    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
-conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  \end{tabular}  \\ \hline
     \lstinline!CreditCurveId!   for credit trades - single name and index & \begin{tabular}[l]{@{}l@{}} Any string (provided it is the ID of a single name or index \\ reference entity in the market 
 conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: \\  \emph{RED:2I65BRHH6}  (CDX N.A. High Yield, Series 13, Version 1) \\ \emph{RED:008CA0\textbar{}SNRFOR\textbar{}USD\textbar{}MR14}  (Agilent Tech Senior USD)
 \end{tabular}  \\ \hline
-  \end{tabu}
-  \caption{Allowable values for equity data.}
+  \end{tabular}
+  \caption{Allowable values for credit \lstinline!CreditCurveId!}
   \label{tab:equity_credit_data}
 \end{table}
 
+\begin{table}[H]
+\centering
+  \begin{tabular} {|l|l|}
+    \hline
+    \multicolumn{2}{|l|}{\tt Equity Name} \\ \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
+conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  
+\end{tabular}  \\ \hline
+  \end{tabular}
+  \caption{Allowable values for equity  \lstinline!Name!.}
+  \label{tab:equity_name}
+\end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\tt Commodity Curve Name} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Name! for commodity trades & Any string (provided it is the ID of an commodity in the market configuration) \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for commodity data.}
   \label{tab:commodity_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\lstinline!Tier!} \\
     \hline
@@ -278,14 +384,14 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
     \lstinline!PREFT1! & Preference shares or Tier 1 capital for banks \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for \lstinline!Tier!}
   \label{tab:tier_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\lstinline!DocClause!} \\
     \hline
@@ -299,7 +405,7 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
     \lstinline!XR! & No restructuring referencing the 2003 ISDA Definitions \\
     \hline
-	\lstinline!CR14! & Full or old restructuring referencing the 2014 ISDA Definitions \\
+    \lstinline!CR14! & Full or old restructuring referencing the 2014 ISDA Definitions \\
     \hline
     \lstinline!MM14! & Modified modified restructuring referencing the 2014 ISDA Definitions \\
     \hline
@@ -307,28 +413,28 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
     \lstinline!XR14! & No restructuring referencing the 2014 ISDA Definitions \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for \lstinline!DocClause!}
   \label{tab:docclause_data}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+  \begin{tabular} {|p{3cm}|p{12cm}|}
     \hline
     \multicolumn{2}{|l|}{\tt Exchange} \\ \hline
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Exchange!  & Any string, typically a MIC code (provided it is the ID of an exchange in the market configuration) \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable Values for Exchange}
   \label{tab:mic}
 \end{table}
 
 \begin{table}[H]
 \centering
-  \begin{tabu} to 0.9\linewidth {| X[1,l,m] | X[1,l,m] |}
+  \begin{tabular} {|l|l|}
     \hline
     \multicolumn{2}{|l|}{Boolean nodes} \\
     \hline
@@ -338,7 +444,7 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \hline
     \lstinline!N!, \lstinline!NO!, \lstinline!FALSE!, \lstinline!false!, \lstinline!0! & \lstinline!false! \\
     \hline
-  \end{tabu}
+  \end{tabular}
   \caption{Allowable values for boolean node}
   \label{tab:boolean_allowable}
 \end{table}

@@ -12,18 +12,20 @@ The EquityLegData block contains the following elements:
 
   Allowable values: Any positive real number
 
-\item ReturnType: \emph{Price} indicates that the coupons on the equity leg are determined by the price movement of the underlying equity, whereas  \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends.
-
-Allowable values:  \emph{Price} or  \emph{Total}
+\item ReturnType: \emph{Price} indicates that the coupons on the equity leg are determined by the  price movement of the underlying equity, i.e.: $Notional \cdot \frac{FinalPrice - InitialPrice} {InitialPrice}$, \\ 
+whereas  \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends, i.e.: \\
+ $Notional \cdot \frac{(FinalPrice + dividends * DividendFactor) - InitialPrice} {InitialPrice}$ 
+ 
+Allowable values:  \emph{Price}, \emph{Total} 
 
 \item Name: The identifier of the underlying equity or equity index.
 
-Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
+Allowable values: See \lstinline!Name! for equity trades in Table \ref{tab:equity_name}. \\
 
 \item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
 
 \item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to
-  determine the initial price. The Initial price can be either given in the currency of the equity or in the leg
+  determine the initial price. If InitialPrice is zero then each coupon's price is just the discounted fixing from the coupon's FixingEndDate. For any divisions we assume the value is one, i.e. when NotionalReset = true we have instead Quantity = Notional. The Initial price can be either given in the currency of the equity or in the leg
   currency, see InitialPriceCurrency.
 
 Allowable values: Any positive real number
@@ -32,7 +34,7 @@ Allowable values: Any positive real number
   or the leg currency (if these are different). This field determines in which currency the initial price is given. If
   omitted, it is assumed that the initial price is given in equity currency.
 
-Allowable values: A valid currency code, see \ref{tab:allow_stand_data}.
+Allowable values: A valid currency code, See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
 
 \item NotionalReset [Optional]: Defaults to \emph{true}.  Notional resets only affect the equity leg. If NotionalReset
   is set to \emph{true} the quantity or number of shares of the underlying equity is fixed for all the coupons on the
@@ -62,11 +64,11 @@ Here, the Notional is taken to be the Notional specified in the leg or - if the 
 
 \item DividendFactor [Optional]: Factor of dividend to be included in return. Note that the DividendFactor is only relevant when the ReturnType is set to  \emph{Total}. It is not used if the ReturnType is set to \emph{Price}.
 
-Allowable values: 0 $\leq$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
+Allowable values: 0 $<$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
 
 \item ValuationSchedule [Optional]: Schedule of dates for equity valuation.
 
-Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
+Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). Note that the number of dates (and periods) in the \lstinline!ValuationSchedule! must be the same as in the \lstinline!ScheduleData!.  If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
 
 \item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
 
@@ -76,7 +78,7 @@ Allowable values: Any non-negative integer.
 \begin{itemize}
 	\item EquityCurrency [Mandatory within \lstinline!FXTerms!]: Currency underlying equity is quoted in. Required if FXTerms is present.
 
-	Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+	Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
 
 	\item FXIndex [Mandatory within \lstinline!FXTerms!]: Name of the index for FX fixings for the leg vs equity currency pair, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
 
@@ -86,9 +88,10 @@ Allowable values: Any non-negative integer.
 
 	Allowable values: Any non-negative integer.
 
-	\item FXIndexCalendar [Optional]: Calendar for FX Index.
+	\item FXIndexCalendar [Optional]: The fixing calendar for the FX Index. Typically the union of the equity leg currency calendar and the
+underlying equity currency calendar.
 
-	Allowable values: See Table \ref{tab:calendar} Calendar.
+	Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
 \end{itemize}
 \end{itemize}
 

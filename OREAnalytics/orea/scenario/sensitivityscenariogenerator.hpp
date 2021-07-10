@@ -94,6 +94,9 @@ using namespace data;
   Conversion into par (flat cap/floor) volatility sensis has to be implemented as a
   postprocessor step.
 
+  If sensitivityData_->generateSpreadScenarios() = true spread scenarios will be generated for
+  supported risk factor types.
+
   \ingroup scenario
  */
 class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
@@ -102,8 +105,10 @@ public:
     SensitivityScenarioGenerator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                                  const boost::shared_ptr<Scenario>& baseScenario,
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                 const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
-                                 const bool overrideTenors, const bool continueOnError = false);
+				 const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+				 const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
+                                 const bool overrideTenors, const bool continueOnError = false,
+                                 const boost::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 
@@ -181,6 +186,8 @@ private:
 
     //! Holds the shift sizes for each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
+
+    boost::shared_ptr<Scenario> baseScenarioAbsolute_;
 };
 } // namespace analytics
 } // namespace ore

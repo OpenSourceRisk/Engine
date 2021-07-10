@@ -27,6 +27,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/currencycheck.hpp>
 #include <ql/errors.hpp>
 #include <qle/instruments/equityforward.hpp>
 
@@ -37,14 +38,34 @@ namespace ore {
 namespace data {
 
 void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    Currency ccy = parseCurrency(currency_);
+    Currency ccy = parseCurrencyWithMinors(currency_);
+
+    // get the equity currency from the market
+    Currency equityCcy = engineFactory->market()->equityCurve(eqName())->currency();
+
+    // ensure forward currency matches the equity currency
+    QL_REQUIRE(!equityCcy.empty(), "No equity currency in equityCurve for equity " << eqName());
+    QL_REQUIRE(ccy == equityCcy, "EquityForward currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+
+    // convert strike to the major currency if needed
+    Real strike;
+    if (!strikeCurrency_.empty()) {
+        Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
+        strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
+        // ensure strike currency matches equity currency
+        QL_REQUIRE(strikeCcy == equityCcy, "Stike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+    } else {        
+        WLOG("No Strike Currency provide for trade " << id() << ", assuming trade currency " << ccy);
+        strike = convertMinorToMajorCurrency(currency_, strike_);
+    }
+
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
 
     string name = eqName();
 
     boost::shared_ptr<Instrument> inst =
-        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike_);
+        boost::make_shared<QuantExt::EquityForward>(name, ccy, longShort, quantity_, maturity, strike);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
@@ -55,14 +76,19 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
 
     // set up other Trade details
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
-    npvCurrency_ = currency_;
+    npvCurrency_ = ccy.code();
     maturity_ = maturity;
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
-    notional_ = strike_ * quantity_;
-    notionalCurrency_ = currency_;
-}
+    notional_ = strike * quantity_;
+    notionalCurrency_ = ccy.code();
 
+    additionalData_["underlyingSecurityId"] = name;
+    additionalData_["strike"] = strike;
+    additionalData_["strikeCurrency"] = strikeCurrency_;
+    additionalData_["quantity"] = quantity_;
+}
+    
 void EquityForward::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* eNode = XMLUtils::getChildNode(node, "EquityForwardData");
@@ -75,6 +101,7 @@ void EquityForward::fromXML(XMLNode* node) {
     equityUnderlying_.fromXML(tmp);
     currency_ = XMLUtils::getChildValue(eNode, "Currency", true);
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
+    strikeCurrency_ = XMLUtils::getChildValue(eNode, "StrikeCurrency", false);
     quantity_ = XMLUtils::getChildValueAsDouble(eNode, "Quantity", true);
 }
 
@@ -88,11 +115,14 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(eNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
+    if (!strikeCurrency_.empty())
+        XMLUtils::addChild(doc, eNode, "StrikeCurrency", strikeCurrency_);
     XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> EquityForward::underlyingIndices() const {
+std::map<AssetClass, std::set<std::string>>
+EquityForward::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     return {{AssetClass::EQ, std::set<std::string>({eqName()})}};
 }
 

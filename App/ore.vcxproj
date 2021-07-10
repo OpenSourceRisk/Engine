@@ -39,6 +39,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ore</RootNamespace>
     <ProjectName>ore</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\ore.props" />
@@ -91,27 +92,35 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.Win32.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\MSVC\ore.x64.user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -166,7 +175,6 @@
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <MinimalRebuild>false</MinimalRebuild>
-      <AdditionalOptions>/MP /bigobj $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -192,7 +200,6 @@
       </PrecompiledHeaderOutputFile>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <MinimalRebuild>false</MinimalRebuild>
-      <AdditionalOptions>/MP /bigobj $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
@@ -217,7 +224,6 @@
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <MinimalRebuild>false</MinimalRebuild>
-      <AdditionalOptions>/MP /bigobj $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -243,7 +249,6 @@
       </PrecompiledHeaderOutputFile>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
       <MinimalRebuild>false</MinimalRebuild>
-      <AdditionalOptions>/MP /bigobj $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AssemblerListingLocation>$(IntDir)\%(RelativeDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\%(RelativeDir)</ObjectFileName>
@@ -269,7 +274,6 @@
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
-      <AdditionalOptions>/MP $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
@@ -303,7 +307,6 @@
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
-      <AdditionalOptions>/MP $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -331,11 +334,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OREAnalytics;..\OREData;..\QuantExt;..\QuantLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OREAnalytics;..\OREData;..\QuantExt;..\OREAnalyticsPlus;..\QuantLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
-      <AdditionalOptions>/MP $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
@@ -369,7 +371,6 @@
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
-      <AdditionalOptions>/MP $(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>

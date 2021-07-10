@@ -1,0 +1,83 @@
+\subsubsection{Default Curves from CDS}
+
+Default curves can be bootstrapped from credit default swap (CDS) market instruments. The CDS market quotes may be given as a par spread or as an upfront price. These market quotes are documented in Sections \ref{md:cds_spread_quote} and \ref{md:cds_price_quote} respectively. The bootstrap also requires a market recovery rate quote and this is documented in Section \ref{md:cds_recovery_rate_quote}.
+
+Listing \ref{lst:defaultcurve_cds_configuration} outlines the configuration required to build a default curve from CDS quotes. The meaning of each of the nodes is as follows:
+
+\begin{itemize}
+\item
+\lstinline!CurveId!: Unique identifier for the bootstrapped default curve.
+
+\item \lstinline!CurveDescription! [Optional]:
+A description of the default curve. It is for information only and may be left blank.
+
+\item \lstinline!Currency!:
+The default curve's currency.
+
+\item \lstinline!Type!:
+For a default curve built from CDS, the \lstinline!Type! should be set to \lstinline!SpreadCDS! if the \lstinline!Quotes! reference CDS spread quotes or \lstinline!Price! if the \lstinline!Quotes! reference upfront price quotes.
+
+\item \lstinline!DiscountCurve!:
+A reference to a valid discount curve specification that will be used to discount cashflows during the bootstrap process. It should be of the form \lstinline!Yield/Currency/curve_name! where \lstinline!curve_name! is the name of a yield curve defined in the yield curve configurations.
+
+\item \lstinline!DayCounter!:
+The day counter used to convert from dates to times in the underlying structure. Allowable values are given in the Table \ref{tab:daycount}.
+
+\item \lstinline!RecoveryRate!:
+A valid recovery rate quote name as documented in Section \ref{md:cds_recovery_rate_quote}.
+
+\item \lstinline!StartDate! [Optional]:
+The \lstinline!StartDate! is optional and is used for index CDS to specify the start date of the index CDS. This is then used to determine the maturity associated with the index CDS spread quotes which are quoted with a tenor. For single name CDS, this should be omitted.
+
+\item \lstinline!Quotes!:
+The \lstinline!Quotes! element should be populated with a list of valid \lstinline!Quote! elements. If the \lstinline!Type! is \lstinline!SpreadCDS!, the quotes should be CDS spread quote strings as documented in Section \ref{md:cds_spread_quote} and if \lstinline!Type! is \lstinline!Price!, the quotes should be CDS upfront price quote strings as documented in Section \ref{md:cds_price_quote}. The attribute \lstinline!optional! in the \lstinline!Quote! element should be set to \lstinline!true! if the associated quote is optional and set to \lstinline!false! if the associated quote is mandatory. If a quote is mandatory and not found in the market, the default curve building will fail. The attribute \lstinline!optional! may be omitted from the quote element. In this case, it defaults to \lstinline!false! and the quote is mandatory. Note also that instead of a list of explicit quotes, a single quote may be provided with the wildcard character \lstinline!*!. In this case, the market is searched for quotes matching the pattern. For example, \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/*! would return all quotes in the market that start with \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14!.
+
+\item \lstinline!Conventions!:
+The name of a valid set of CDS conventions, as documented in Section \ref{sss:cds_conventions}, to use in the bootstrap.
+
+\item \lstinline!Extrapolation! [Optional]:
+A boolean value indicating if the bootstrapped default curve allows for extrapolation past the last pillar date. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. If omitted, it defaults to \lstinline!true!.
+
+\item \lstinline!ImplyDefaultFromMarket! [Optional]:
+A boolean value indicating if a reference entity's default should be implied from the market data. Allowable boolean values are given in the Table \ref{tab:boolean_allowable}. If omitted, it defaults to \lstinline!false!. When a default credit event has been determined for an entity, certain market data providers continue to supply a recovery rate from the credit event determination date up to the credit event auction settlement date. In this period, no CDS spreads or upfront prices are provided. When this flag is \lstinline!true!, we assume an entity is in default and awaiting a credit event auction if we find a recovery rate in the market but no CDS spreads or upfront prices. In this case, we build a survival probability curve with a value of close to but greater than 0.0 for one day after the valuation date. This will give an approximation to the correct price for CDS and index CDS in these cases. When this flag is \lstinline!false!, we make no such assumption and the default curve building will fail.
+
+\item \lstinline!BootstrapConfig! [Optional]:
+This node holds configuration details for the iterative bootstrap that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described in section \ref{sec:bootstrap_config} are used.
+
+\item AllowNegativeRates [Optional]: If set to false (default) negative instantaneous hazard rates implied by the CDS
+  quotes lead to an exception or - if the DontThrow flag in the BootstrapConfig is set to true - to a zero instantaneous
+  hazard rate in the relevant segment of the curve. In the latter case the market CDS instrument associated to the
+  critical curve segment will not match the market quote exactly. If set to true, negative instantaneous hazard rates
+  will be allowed during the bootstrap (in a range that is technically defined by the MaxFactor and MaxAttempts
+  parameters for the survival probability in the bootstrap config).
+
+\end{itemize}
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<DefaultCurve>
+  <CurveId>...</CurveId>
+  <CurveDescription>...</CurveDescription>
+  <Currency>USD</Currency> 
+  <Type>...</Type>
+  <DiscountCurve>...</DiscountCurve>
+  <DayCounter>...</DayCounter>
+  <RecoveryRate>...</RecoveryRate>
+  <StartDate>...</StartDate>
+  <Quotes>
+    <Quote optional="true">...</Quote>
+    ...
+  </Quotes>
+  <Conventions>...</Conventions>
+  <Extrapolation>...</Extrapolation>
+  <ImplyDefaultFromMarket>...</ImplyDefaultFromMarket>
+  <BootstrapConfig>
+    ...
+  </BootstrapConfig>
+  <AllowNegativeRates>...</AllowNegativeRates>
+</DefaultCurve>
+\end{minted}
+\caption{Default curve configuration based on CDS quotes}
+\label{lst:defaultcurve_cds_configuration}
+\end{longlisting}

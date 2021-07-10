@@ -9,7 +9,7 @@
   </xs:complexType>
 
   <xs:complexType name="stresstest">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves"/>
       <xs:element type="yieldcurves" name="YieldCurves"/>
@@ -23,7 +23,7 @@
       <xs:element type="recoveryrates" name="RecoveryRates"/>
       <xs:element type="survivalprobabilities" name="SurvivalProbabilities"/>
 	  
-    </xs:sequence>
+    </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>
 

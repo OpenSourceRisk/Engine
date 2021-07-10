@@ -67,7 +67,7 @@ public:
 
 protected:
     /*! Store the set of ORE index names that appear on this leg.
-        Should be populated by dervied classes.
+        Should be populated by derived classes.
     */
     std::set<std::string> indices_;
 
@@ -182,7 +182,7 @@ public:
     //! Default constructor
     FloatingLegData()
         : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), lookback_(0 * Days), rateCutoff_(Null<Size>()),
-          isInArrears_(true), isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
+          isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
     //! Constructor
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -191,12 +191,15 @@ public:
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
-                    QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>())
+                    QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
+                    bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
+                    const std::string& lastRecentPeriodCalendar = std::string())
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
-          gearingDates_(gearingDates), nakedOption_(nakedOption) {
+          gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
+          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar) {
         indices_.insert(index_);
     }
 
@@ -206,7 +209,7 @@ public:
     QuantLib::Size fixingDays() const { return fixingDays_; }
     QuantLib::Period lookback() const { return lookback_; }
     QuantLib::Size rateCutoff() const { return rateCutoff_; }
-    bool isInArrears() const { return isInArrears_; }
+    boost::optional<bool> isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     bool hasSubPeriods() const { return hasSubPeriods_; }
     bool includeSpread() const { return includeSpread_; }
@@ -219,6 +222,9 @@ public:
     const vector<double>& gearings() const { return gearings_; }
     const vector<string>& gearingDates() const { return gearingDates_; }
     bool nakedOption() const { return nakedOption_; }
+    bool localCapFloor() const { return localCapFloor_; }
+    const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
+    const std::string& lastRecentPeriodCalendar() const { return lastRecentPeriodCalendar_; }
     //@}
 
     //! \name Modifiers
@@ -228,6 +234,7 @@ public:
     vector<double>& floors() { return floors_; }
     vector<string>& floorDates() { return floorDates_; }
     bool& nakedOption() { return nakedOption_; }
+    bool& localCapFloor() { return localCapFloor_; }
     //@}
 
     //! \name Serialisation
@@ -240,7 +247,7 @@ private:
     QuantLib::Size fixingDays_;
     QuantLib::Period lookback_;
     QuantLib::Size rateCutoff_;
-    bool isInArrears_;
+    boost::optional<bool> isInArrears_;
     bool isAveraged_;
     bool hasSubPeriods_;
     bool includeSpread_;
@@ -253,6 +260,9 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
     bool nakedOption_;
+    bool localCapFloor_;
+    boost::optional<Period> lastRecentPeriod_;
+    std::string lastRecentPeriodCalendar_;
 
     static LegDataRegister<FloatingLegData> reg_;
 };
@@ -271,21 +281,24 @@ public:
                const vector<double>& rates, const vector<string>& rateDates = std::vector<string>(),
                bool subtractInflationNominal = true, const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false)
+               const vector<string>& floorDates = vector<string>(), double finalFlowCap = Null<Real>(),
+               double finalFlowFloor = Null<Real>(), bool nakedOption = false,
+               bool subtractInflationNominalCoupons = false)
         : LegAdditionalData("CPI"), index_(index), startDate_(startDate), baseCPI_(baseCPI),
           observationLag_(observationLag), interpolation_(interpolation), rates_(rates), rateDates_(rateDates),
           subtractInflationNominal_(subtractInflationNominal), caps_(caps), capDates_(capDates), floors_(floors),
-          floorDates_(floorDates), nakedOption_(nakedOption) {
+          floorDates_(floorDates), finalFlowCap_(finalFlowCap), finalFlowFloor_(finalFlowFloor),
+          nakedOption_(nakedOption), subtractInflationNominalCoupons_(subtractInflationNominalCoupons) {
         indices_.insert(index_);
     }
 
     //! \name Inspectors
     //@{
-    const string index() const { return index_; }
-    const string startDate() const { return startDate_; }
+    const string& index() const { return index_; }
+    const string& startDate() const { return startDate_; }
     double baseCPI() const { return baseCPI_; }
-    const string observationLag() const { return observationLag_; }
-    const string interpolation() const { return interpolation_; }
+    const string& observationLag() const { return observationLag_; }
+    const string& interpolation() const { return interpolation_; }
     const std::vector<double>& rates() const { return rates_; }
     const std::vector<string>& rateDates() const { return rateDates_; }
     bool subtractInflationNominal() const { return subtractInflationNominal_; }
@@ -293,7 +306,10 @@ public:
     const vector<string>& capDates() const { return capDates_; }
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
+    double finalFlowCap() const { return finalFlowCap_; }
+    double finalFlowFloor() const { return finalFlowFloor_; }
     bool nakedOption() const { return nakedOption_; }
+    bool subtractInflationNominalCoupons() const { return subtractInflationNominalCoupons_; }
     //@}
 
     //! \name Serialisation
@@ -314,7 +330,10 @@ private:
     vector<string> capDates_;
     vector<double> floors_;
     vector<string> floorDates_;
+    double finalFlowCap_;
+    double finalFlowFloor_;
     bool nakedOption_;
+    bool subtractInflationNominalCoupons_;
 
     static LegDataRegister<CPILegData> reg_;
 };
@@ -334,10 +353,12 @@ public:
                const vector<double>& spreads = std::vector<double>(),
                const vector<string>& spreadDates = std::vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>(), bool nakedOption = false)
+               const vector<string>& floorDates = vector<string>(), bool nakedOption = false,
+               bool addInflationNotional = false, bool irregularYoY = false)
         : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), fixingDays_(fixingDays),
           gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates), caps_(caps),
-          capDates_(capDates), floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption) {
+          capDates_(capDates), floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption),
+          addInflationNotional_(addInflationNotional), irregularYoY_(irregularYoY) {
         indices_.insert(index_);
     }
 
@@ -355,6 +376,8 @@ public:
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
     bool nakedOption() const { return nakedOption_; }
+    bool addInflationNotional() const { return addInflationNotional_; };
+    bool irregularYoY() const { return irregularYoY_; };
     //@}
 
     //! \name Serialisation
@@ -376,6 +399,8 @@ private:
     vector<double> floors_;
     vector<string> floorDates_;
     bool nakedOption_;
+    bool addInflationNotional_;
+    bool irregularYoY_;
 
     static LegDataRegister<YoYLegData> reg_;
 };
@@ -436,6 +461,77 @@ private:
     bool nakedOption_;
 
     static LegDataRegister<CMSLegData> reg_;
+};
+
+//! Serializable Digital CMS Leg Data
+/*!
+\ingroup tradedata
+*/
+class DigitalCMSLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    DigitalCMSLegData() : LegAdditionalData("DigitalCMS") {}
+    //! Constructor
+    DigitalCMSLegData(const boost::shared_ptr<CMSLegData>& underlying, Position::Type callPosition = Position::Long,
+                      bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+                      const vector<string> callStrikeDates = vector<string>(),
+                      const vector<double> callPayoffs = vector<double>(),
+                      const vector<string> callPayoffDates = vector<string>(),
+                      Position::Type putPosition = Position::Long, bool isPutATMIncluded = false,
+                      const vector<double> putStrikes = vector<double>(),
+                      const vector<string> putStrikeDates = vector<string>(),
+                      const vector<double> putPayoffs = vector<double>(),
+                      const vector<string> putPayoffDates = vector<string>())
+        : LegAdditionalData("DigitalCMS"), underlying_(underlying), callPosition_(callPosition),
+          isCallATMIncluded_(isCallATMIncluded), callStrikes_(callStrikes), callStrikeDates_(callStrikeDates),
+          callPayoffs_(callPayoffs), callPayoffDates_(callPayoffDates), putPosition_(putPosition),
+          isPutATMIncluded_(isPutATMIncluded), putStrikes_(putStrikes), putStrikeDates_(putStrikeDates),
+          putPayoffs_(putPayoffs), putPayoffDates_(putPayoffDates) {
+        indices_ = underlying_->indices();
+    }
+
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<CMSLegData>& underlying() const { return underlying_; }
+
+    const Position::Type callPosition() const { return callPosition_; }
+    const bool isCallATMIncluded() const { return isCallATMIncluded_; }
+    const vector<double> callStrikes() const { return callStrikes_; }
+    const vector<double> callPayoffs() const { return callPayoffs_; }
+    const vector<string> callStrikeDates() const { return callStrikeDates_; }
+    const vector<string> callPayoffDates() const { return callPayoffDates_; }
+
+    const Position::Type putPosition() const { return putPosition_; }
+    const bool isPutATMIncluded() const { return isPutATMIncluded_; }
+    const vector<double> putStrikes() const { return putStrikes_; }
+    const vector<double> putPayoffs() const { return putPayoffs_; }
+    const vector<string> putStrikeDates() const { return putStrikeDates_; }
+    const vector<string> putPayoffDates() const { return putPayoffDates_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+private:
+    boost::shared_ptr<CMSLegData> underlying_;
+
+    Position::Type callPosition_;
+    bool isCallATMIncluded_;
+    vector<double> callStrikes_;
+    vector<string> callStrikeDates_;
+    vector<double> callPayoffs_;
+    vector<string> callPayoffDates_;
+
+    Position::Type putPosition_;
+    bool isPutATMIncluded_;
+    vector<double> putStrikes_;
+    vector<string> putStrikeDates_;
+    vector<double> putPayoffs_;
+    vector<string> putPayoffDates_;
+
+    static LegDataRegister<DigitalCMSLegData> reg_;
 };
 
 //! Serializable CMS Spread Leg Data
@@ -503,7 +599,7 @@ private:
     static LegDataRegister<CMSSpreadLegData> reg_;
 };
 
-//! Serializable CMS Spread Leg Data
+//! Serializable Digital CMS Spread Leg Data
 /*!
 \ingroup tradedata
 */
@@ -691,7 +787,8 @@ public:
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
-            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false);
+            const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
+            const string& lastPeriodDayCounter = "");
 
     //! \name Serialisation
     //@{
@@ -726,6 +823,7 @@ public:
     const std::vector<std::string>& paymentDates() const { return paymentDates_; }
     const std::vector<Indexing>& indexing() const { return indexing_; }
     const bool indexingFromAssetLeg() const { return indexingFromAssetLeg_; }
+    const string& lastPeriodDayCounter() const { return lastPeriodDayCounter_; }
     //@}
 
     //! \name modifiers
@@ -773,42 +871,58 @@ private:
     std::vector<std::string> paymentDates_;
     std::vector<Indexing> indexing_;
     bool indexingFromAssetLeg_;
+    string lastPeriodDayCounter_;
 };
 
 //! \name Utilities for building QuantLib Legs
 //@{
-Leg makeFixedLeg(const LegData& data);
-Leg makeZCFixedLeg(const LegData& data);
+Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement = Null<Date>());
+Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
-                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
+                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index,
-               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
-Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper);
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow,
                     const BusinessDayConvention paymentConvention, const Calendar paymentCalendar);
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
-               const boost::shared_ptr<EngineFactory>& engineFactory);
-Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
-               const boost::shared_ptr<EngineFactory>& engineFactory);
+               const boost::shared_ptr<EngineFactory>& engineFactory,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& index,
+               const boost::shared_ptr<EngineFactory>& engineFactory,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
-               const vector<double>& floors = vector<double>(), const bool attachPricer = true);
+               const vector<double>& floors = vector<double>(), const bool attachPricer = true,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
+                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+                      const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
-                     const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
+                     const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+                     const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
-                            const boost::shared_ptr<EngineFactory>& engineFactory);
+                            const boost::shared_ptr<EngineFactory>& engineFactory,
+                            const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve,
-                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr);
+                  const boost::shared_ptr<QuantExt::FxIndex>& fxIndex = nullptr,
+                  const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Real currentNotional(const Leg& leg);
+Real originalNotional(const Leg& leg);
 
 //@}
 
 //! Build a full vector of values from the given node.
 //  For use with Notionals, Rates, Spreads, Gearing, Caps and Floor rates.
 //  In all cases we can expand the vector to take the given schedule into account
+//  If checkAllValuesAppearInResult is true, we require that all input values are appearing in the result (in order)
 template <typename T>
-vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule);
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                               const bool checkAllValuesAppearInResult = false);
 
 // extend values to schedule size (if values is empty, the default value is used)
 template <typename T>
@@ -817,7 +931,13 @@ vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule,
 // normaliseToSchedule concat buildScheduledVector
 template <typename T>
 vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
-                                         const T& defaultValue);
+                                         const T& defaultValue, const bool checkAllValuesAppearInResult = false);
+
+/* returns an iterator to the first input value that is not appearing (in order) in the scheduled vector, or an iterator
+   pointing to the end of the input value vector if no such element exists */
+template <typename T>
+typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const vector<T>& scheduledVecotr,
+                                                                         const vector<T>& inputValues);
 
 // notional vector derived from a fixed amortisation amount
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
@@ -844,12 +964,14 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
 
 // apply indexing (if given in LegData) to existing leg
 void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
-                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings);
+                   std::map<std::string, std::string>& qlToOREIndexNames, RequiredFixings& requiredFixings,
+                   const QuantLib::Date& openEndDateReplacement = Null<Date>());
 
 // template implementations
 
 template <typename T>
-vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule) {
+vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
+                               const bool checkAllValuesAppearInResult) {
     if (values.size() < 2 || dates.size() == 0)
         return values;
 
@@ -897,6 +1019,12 @@ vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& da
         data[i] = values[j];
     }
 
+    if (checkAllValuesAppearInResult) {
+        auto it = checkAllValuesAppearInScheduledVector<T>(data, values);
+        QL_REQUIRE(it == values.end(),
+                   "buildScheduledVector: input value '" << *it << " does not appear in the result vector");
+    }
+
     return data;
 }
 
@@ -910,8 +1038,26 @@ vector<T> normaliseToSchedule(const vector<T>& values, const Schedule& schedule,
 
 template <typename T>
 vector<T> buildScheduledVectorNormalised(const vector<T>& values, const vector<string>& dates, const Schedule& schedule,
-                                         const T& defaultValue) {
-    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
+                                         const T& defaultValue, const bool checkAllValuesAppearInResult) {
+    return normaliseToSchedule(buildScheduledVector(values, dates, schedule, checkAllValuesAppearInResult), schedule,
+                               defaultValue);
+}
+
+template <typename T>
+typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const vector<T>& scheduledVector,
+                                                                         const vector<T>& inputValues) {
+    auto s = scheduledVector.begin();
+    auto i = inputValues.begin();
+    while (i != inputValues.end()) {
+        if (s == scheduledVector.end())
+            return i;
+        if (*i == *s) {
+            ++i;
+        } else {
+            ++s;
+        }
+    }
+    return i;
 }
 
 // build an FX Index needed by legbuilders / makeLeg methods
@@ -930,6 +1076,10 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);
+
+// build a notional leg for a given coupon leg, returns an empty Leg if not applicable
+Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requiredFixings,
+                     const boost::shared_ptr<Market>& market, const std::string& configuration);
 
 } // namespace data
 } // namespace ore

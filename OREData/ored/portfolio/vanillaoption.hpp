@@ -47,6 +47,7 @@ public:
     const string& currency() const { return currency_; }
     double strike() const { return strike_; }
     double quantity() const { return quantity_; }
+    const QuantLib::Date forwardDate() const { return forwardDate_; }
     //@}
 
     //! \name Serialisation
@@ -59,15 +60,17 @@ protected:
         : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
     VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
                        string currency, double strike, double quantity,
-                       const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "")
+                       const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "",
+                       QuantLib::Date forwardDate = QuantLib::Date())
         : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
           assetName_(assetName), currency_(currency), strike_(strike), quantity_(quantity), index_(index),
-          indexName_(indexName) {}
+          indexName_(indexName), forwardDate_(forwardDate) {}
 
     AssetClass assetClassUnderlying_;
     OptionData option_;
     string assetName_;
     string currency_;
+    string underlyingCurrency_ = "";
     double strike_;
     double quantity_;
 
@@ -79,6 +82,9 @@ protected:
 
     //! Store the option expiry date.
     QuantLib::Date expiryDate_;
+
+    //! Store the (optional) forward date.
+    QuantLib::Date forwardDate_;
 };
 } // namespace data
 } // namespace ore

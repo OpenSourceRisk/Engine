@@ -17,6 +17,7 @@
 */
 
 #include <ored/configuration/defaultcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -27,19 +28,19 @@ using QuantLib::Date;
 namespace ore {
 namespace data {
 
-DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                       const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
-                                       const DayCounter& dayCounter, const string& conventionID,
-                                       const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
-                                       const string& benchmarkCurveID, const string& sourceCurveID,
-                                       const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
-                                       const Date& startDate, const BootstrapConfig& bootstrapConfig,
-                                       QuantLib::Real runningSpread)
+DefaultCurveConfig::DefaultCurveConfig(
+    const string& curveID, const string& curveDescription, const string& currency, const Type& type,
+    const string& discountCurveID, const string& recoveryRateQuote, const DayCounter& dayCounter,
+    const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
+    const string& benchmarkCurveID, const string& sourceCurveID, const std::vector<string>& pillars,
+    const Calendar& calendar, const Size spotLag, const Date& startDate, const BootstrapConfig& bootstrapConfig,
+    QuantLib::Real runningSpread, const boost::optional<bool>& implyDefaultFromMarket, const bool allowNegativeRates)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
       sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag), startDate_(startDate),
-      bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread) {
+      bootstrapConfig_(bootstrapConfig), runningSpread_(runningSpread), implyDefaultFromMarket_(implyDefaultFromMarket),
+      allowNegativeRates_(allowNegativeRates) {
 
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
@@ -48,6 +49,21 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
 
     if (type_ != Type::SpreadCDS && startDate_ != Date()) {
         WLOG("'StartDate' is only used when type is 'SpreadCDS'");
+    }
+
+    populateRequiredCurveIds();
+}
+
+void DefaultCurveConfig::populateRequiredCurveIds() {
+    if (!discountCurveID().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurveID())->curveConfigID());
+    if (!benchmarkCurveID().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(benchmarkCurveID())->curveConfigID());
+    if (!sourceCurveID().empty())
+        requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(sourceCurveID())->curveConfigID());
+    for (auto const& s : multiSectionSourceCurveIds_) {
+        if (!s.empty())
+            requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(s)->curveConfigID());
     }
 }
 
@@ -71,6 +87,8 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         type_ = Type::Price;
     } else if (type == "Benchmark") {
         type_ = Type::Benchmark;
+    } else if (type == "MultiSection") {
+        type_ = Type::MultiSection;
     } else {
         QL_FAIL("Type " << type << " not recognized");
     }
@@ -79,13 +97,32 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     dayCounter_ = parseDayCounter(dc);
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 
+    allowNegativeRates_ = false;
+    if (XMLNode* n = XMLUtils::getChildNode(node, "AllowNegativeRates")) {
+        allowNegativeRates_ = parseBool(XMLUtils::getNodeValue(n));
+    }
+
     if (type_ == Type::Benchmark) {
         benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", true);
         sourceCurveID_ = XMLUtils::getChildValue(node, "SourceCurve", true);
         pillars_ = XMLUtils::getChildrenValuesAsStrings(node, "Pillars", true);
         spotLag_ = parseInteger(XMLUtils::getChildValue(node, "SpotLag", true));
         calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
-        discountCurveID_ = conventionID_ = recoveryRateQuote_ = "";
+        discountCurveID_ = conventionID_ = "";
+        recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+        // we allow for a numeric recovery rate, in which case we do not add it to the quotes
+        Real dummy;
+        if (!tryParseReal(recoveryRateQuote_, dummy))
+            quotes_.insert(quotes_.end(), recoveryRateQuote_);
+    } else if (type_ == Type::MultiSection) {
+        multiSectionSourceCurveIds_ = XMLUtils::getChildrenValues(node, "SourceCurves", "SourceCurve", true);
+        multiSectionSwitchDates_ = XMLUtils::getChildrenValues(node, "SwitchDates", "SwitchDate", true);
+        discountCurveID_ = conventionID_ = "";
+        recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+        // we allow for a numeric recovery rate, in which case we do not add it to the quotes
+        Real dummy;
+        if (!tryParseReal(recoveryRateQuote_, dummy))
+            quotes_.insert(quotes_.end(), recoveryRateQuote_);
     } else {
         discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
         conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
@@ -118,7 +155,10 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         }
 
         string s = XMLUtils::getChildValue(node, "RunningSpread", false);
-        QL_REQUIRE(s != "" || type_ != Type::Price, "'RunningSpread' required when type is 'Price'")
+        if (s.empty() && type_ == Type::Price) {
+            DLOG("'RunningSpread' is empty and type is 'Price' for default curve " << curveID_ <<
+                " so the running spread will need to be provided in the market quote.");
+        }
         if (s != "") {
             if (type_ == Type::Price) {
                 runningSpread_ = parseReal(s);
@@ -127,11 +167,17 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
             }
         }
 
+        implyDefaultFromMarket_ = boost::none;
+        if (XMLNode* n = XMLUtils::getChildNode(node, "ImplyDefaultFromMarket"))
+            implyDefaultFromMarket_ = parseBool(XMLUtils::getNodeValue(n));
+
         // Optional bootstrap configuration
         if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
             bootstrapConfig_.fromXML(n);
         }
     }
+
+    populateRequiredCurveIds();
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
@@ -162,11 +208,16 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     } else if (type_ == Type::Benchmark) {
         XMLUtils::addChild(doc, node, "Type", "Benchmark");
         XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+        XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);
         XMLUtils::addChild(doc, node, "SourceCurve", sourceCurveID_);
         XMLUtils::addGenericChildAsList(doc, node, "Pillars", pillars_);
         XMLUtils::addChild(doc, node, "SpotLag", (int)spotLag_);
         XMLUtils::addChild(doc, node, "Calendar", calendar_.name());
+    } else if (type_ == Type::MultiSection) {
+        XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
+        XMLUtils::addChildren(doc, node, "SourceCurves", "SourceCurve", multiSectionSourceCurveIds_);
+        XMLUtils::addChildren(doc, node, "SwitchDates", "SwitchDate", multiSectionSwitchDates_);
     } else {
         QL_FAIL("Unkown type in DefaultCurveConfig::toXML()");
     }
@@ -179,7 +230,12 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     if (runningSpread_ != QuantLib::Null<Real>())
         XMLUtils::addChild(doc, node, "RunningSpread", to_string(runningSpread_));
 
+    if (implyDefaultFromMarket_)
+        XMLUtils::addChild(doc, node, "ImplyDefaultFromMarket", *implyDefaultFromMarket_);
+
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+
+    XMLUtils::addChild(doc, node, "AllowNegativeRates", allowNegativeRates_);
 
     return node;
 }

@@ -46,6 +46,8 @@ public:
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
+    QuantLib::Real notional() const override;
+    std::string notionalCurrency() const override;
 
     //! \name Inspectors
     //@{
@@ -63,6 +65,8 @@ public:
     //@{
     bool hasCashflows() const override { return false; }
     //@}
+
+    const std::map<std::string,boost::any>& additionalData() const override;
 
 private:
     OptionData option_;
@@ -83,8 +87,8 @@ private:
     //! Store the name of the underlying swap's floating leg index
     std::string underlyingIndex_, underlyingIndexQlName_;
 
-    //! Store the underlying swap's floating leg
-    QuantLib::Leg underlyingLeg_;
+    //! Store the underlying swap's floating and fixed leg
+    QuantLib::Leg underlyingLeg_, underlyingFixedLeg_;
 };
 } // namespace data
 } // namespace ore

@@ -27,6 +27,7 @@
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
+#include <ored/portfolio/premiumdata.hpp>
 #include <ored/portfolio/tradeactions.hpp>
 #include <ored/utilities/parsers.hpp>
 
@@ -73,7 +74,7 @@ public:
 
         \warning This method will return an empty map if the Trade has not been built.
     */
-    std::map<std::string, std::set<QuantLib::Date>>
+    virtual std::map<std::string, std::set<QuantLib::Date>>
     fixings(const QuantLib::Date& settlementDate = QuantLib::Date()) const {
         return requiredFixings_.fixingDatesIndices(settlementDate);
     }
@@ -81,7 +82,10 @@ public:
     /*! Return the full required fixing information */
     const RequiredFixings& requiredFixings() const { return requiredFixings_; }
 
-    virtual std::map<AssetClass, std::set<std::string>> underlyingIndices() const { return {}; }
+    virtual std::map<AssetClass, std::set<std::string>>
+    underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const {
+        return {};
+    }
 
     //! \name Serialisation
     //@{
@@ -90,19 +94,7 @@ public:
     //@}
 
     //! Reset trade, clear all base class data
-    void reset() {
-        // This is now being done in the build() function.
-        // instrument_ = boost::shared_ptr<QuantLib::Instrument>(); //TODO Wrapper
-        legs_.clear();
-        legCurrencies_.clear();
-        legPayers_.clear();
-        npvCurrency_ = "";
-        notional_ = Null<Real>();
-        notionalCurrency_ = "";
-        maturity_ = Date();
-        tradeActions_.clear();
-        requiredFixings_.clear();
-    }
+    void reset();
 
     //! \name Setters
     //@{
@@ -145,6 +137,12 @@ public:
     virtual string notionalCurrency() const { return notionalCurrency_; }
 
     const Date& maturity() const { return maturity_; }
+
+    //! returns any additional datum.
+    template <typename T> T additionalDatum(const std::string& tag) const;
+    //! returns all additional data returned by the trade once built
+    const virtual std::map<std::string,boost::any>& additionalData() const;
+
     //@}
 
     //! \name Utility
@@ -170,22 +168,33 @@ protected:
     string notionalCurrency_;
     Date maturity_;
 
-    // Utility to add a single (fee, option premium, etc.) payment such that it is taken into account in pricing and
-    // cash flow projection. For example, an option premium flow is not covered by the underlying option instrument in
+    // Utility to add premiums such that they are taken into account in pricing and cash flow projection.
+    // For example, an option premium flow is not covered by the underlying option instrument in
     // QuantLib and needs to be represented separately. This is done by inserting it as an additional instrument
     // into the InstrumentWrapper. This utility creates the additional instrument. The actual insertion into the
     // instrument wrapper is done in the individual trade builders when they instantiate the InstrumentWrapper.
-    void addPayment(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
-                    const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
-                    const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
-                    const string& configuration);
+    void addPremiums(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
+                     const Real tradeMultiplier, const PremiumData& premiumData, const Real premiumMultiplier,
+                     const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                     const string& configuration);
 
     RequiredFixings requiredFixings_;
+    mutable std::map<std::string,boost::any> additionalData_;
 
 private:
     string id_;
     Envelope envelope_;
     TradeActions tradeActions_;
 };
+
+template <class T>
+inline T Trade::additionalDatum(const std::string& tag) const {
+    std::map<std::string,boost::any>::const_iterator value =
+        additionalData_.find(tag);
+    QL_REQUIRE(value != additionalData_.end(),
+               tag << " not provided");
+    return boost::any_cast<T>(value->second);
+}
+
 } // namespace data
 } // namespace ore

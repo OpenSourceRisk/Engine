@@ -64,6 +64,12 @@ public:
     Rate maxStrike() const { return surface_->maxStrike(); }
     //@}
 
+    // override Termstructure deepUpdate to ensure atm_ curve is updatesd
+    void deepUpdate() {
+        atm_->update();
+        update();
+    }
+
 protected:
     Volatility blackVolImpl(Time t, Rate strike) const {
         Real s = surface_->blackVol(t, strike, true) - surface_->blackVol(t, Null<Real>(), true);

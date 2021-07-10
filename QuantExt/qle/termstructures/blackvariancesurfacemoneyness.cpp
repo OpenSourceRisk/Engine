@@ -104,7 +104,7 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const
     if (t == 0.0)
         return 0.0;
 
-    return blackVarianceMoneyness(t, moneyness(t, strike));
+    return std::max(blackVarianceMoneyness(t, moneyness(t, strike)), 0.0);
 }
 
 Real BlackVarianceSurfaceMoneyness::blackVarianceMoneyness(Time t, Real m) const {

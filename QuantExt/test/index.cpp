@@ -1,6 +1,5 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
- Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -28,6 +27,7 @@
 #include <qle/indexes/ibor/chfsaron.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
 #include <qle/indexes/ibor/clpcamara.hpp>
+#include <qle/indexes/ibor/cnyrepofix.hpp>
 #include <qle/indexes/ibor/copibr.hpp>
 #include <qle/indexes/ibor/corra.hpp>
 #include <qle/indexes/ibor/czkpribor.hpp>
@@ -43,6 +43,7 @@
 #include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmiborois.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/jpyeytibor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
@@ -104,6 +105,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { ILSTelbor(pd), "ILS-TELBOR", QuantExt::Israel(QuantExt::Israel::Telbor).name(), ILSCurrency().name() },
         { INRMiborOis(), "INR-MIBOROIS", India().name(), INRCurrency().name() },
         { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
+        { JPYEYTIBOR(pd), "JPY-EYTIBOR", Japan().name(), JPYCurrency().name() },
         { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
         { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
         { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
@@ -121,6 +123,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
         { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() },
         { Ester(), "Ester", TARGET().name(), EURCurrency().name() },
         { Sofr(), "SOFR", UnitedStates(UnitedStates::GovernmentBond).name(), USDCurrency().name() },
+        { CNYRepoFix(pd), "CNY-REPOFIX", China(China::IB).name(), CNYCurrency().name() }
     };
 
     Size size = sizeof(data) / sizeof(data[0]);

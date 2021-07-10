@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2019, 2021 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
@@ -22,6 +22,8 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/export.hpp>
 
 using namespace QuantLib;
@@ -143,7 +145,7 @@ string AtmStrike::toString() const {
 bool AtmStrike::equal_to(const BaseStrike& other) const {
     if (const AtmStrike* p = dynamic_cast<const AtmStrike*>(&other)) {
         return (atmType_ == p->atmType()) &&
-               ((!deltaType_ && !p->deltaType()) || (deltaType_ && p->deltaType() && (*deltaType_ == *p->deltaType())));
+            ((!deltaType_ && !p->deltaType()) || (deltaType_ && p->deltaType() && (*deltaType_ == *p->deltaType())));
     } else {
         return false;
     }
@@ -284,10 +286,45 @@ boost::shared_ptr<BaseStrike> parseBaseStrike(const string& strStrike) {
     return strike;
 }
 
+template <class Archive> void BaseStrike::serialize(Archive& ar, const unsigned int version) {}
+
+template <class Archive> void AbsoluteStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& strike_;
+}
+
+template <class Archive> void DeltaStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& deltaType_;
+    ar& optionType_;
+    ar& delta_;
+}
+
+template <class Archive> void AtmStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& atmType_;
+    ar& deltaType_;
+}
+
+template <class Archive> void MoneynessStrike::serialize(Archive& ar, const unsigned int version) {
+    ar& boost::serialization::base_object<BaseStrike>(*this);
+    ar& type_;
+    ar& moneyness_;
+}
+
+template void BaseStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void BaseStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void DeltaStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void DeltaStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void AtmStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void AtmStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+template void MoneynessStrike::serialize(boost::archive::binary_oarchive& ar, const unsigned int version);
+template void MoneynessStrike::serialize(boost::archive::binary_iarchive& ar, const unsigned int version);
+
 } // namespace data
 } // namespace ore
 
-BOOST_CLASS_EXPORT_GUID(ore::data::AbsoluteStrike, "AbsoluteStrike");
-BOOST_CLASS_EXPORT_GUID(ore::data::DeltaStrike, "DeltaStrike");
-BOOST_CLASS_EXPORT_GUID(ore::data::AtmStrike, "AtmStrike");
-BOOST_CLASS_EXPORT_GUID(ore::data::MoneynessStrike, "MoneynessStrike");
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::AbsoluteStrike);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::DeltaStrike);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::AtmStrike);
+BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::MoneynessStrike);

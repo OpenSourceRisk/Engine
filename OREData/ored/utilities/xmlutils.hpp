@@ -25,6 +25,8 @@
 
 #include <ql/errors.hpp>
 #include <ql/time/period.hpp>
+#include <ql/time/calendar.hpp>
+#include <ql/time/businessdayconvention.hpp>
 #include <ql/types.hpp>
 
 #include <map>
@@ -127,6 +129,7 @@ public:
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, int value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value);
+    static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const Period& value);
 
     //! Adds <code>\<Name>p1,p2,p3\</Name></code>
     template <class T> static void addGenericChild(XMLDocument& doc, XMLNode* n, const char* name, const T& value) {
@@ -178,9 +181,11 @@ public:
 
     // If mandatory == true, we throw if the node is not present, otherwise we return a default vale.
     static string getChildValue(XMLNode* node, const string& name, bool mandatory = false);
-    static Real getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory = false);
-    static int getChildValueAsInt(XMLNode* node, const string& name, bool mandatory = false);
-    static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false); // default is true
+    static Real getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory = false, double defaultValue = 0.0);
+    static int getChildValueAsInt(XMLNode* node, const string& name, bool mandatory = false, int defaultValue = 0);
+    static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false, bool defaultValue = true);
+    static Period getChildValueAsPeriod(XMLNode* node, const string& name, bool mandatory = false,
+                                        const QuantLib::Period& defaultValue = 0 * QuantLib::Days);
     static vector<string> getChildrenValues(XMLNode* node, const string& names, const string& name,
                                             bool mandatory = false);
     static vector<string>

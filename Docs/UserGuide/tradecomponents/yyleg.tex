@@ -31,6 +31,10 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
   the given rate (after applying gearing and spread, if any).
 
 \item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+
+\item AddInflationNotional [Optional]: If true, the payoff will include the notional of the coupon $N \, \tau \, \frac{I_t}{I_{t-1Y}}$.
+
+\item IrregularYoY [Optional]: If true, instead of using a YoY inflation rate the coupon is based on the inflation rate during the actual coupon period, e.g.  for a 6M coupon the inflation rate will be computed as $\frac{I_t}{I_{t-6m}}-1$.  
 \end{itemize}
 
 \begin{listing}[H]
@@ -77,6 +81,8 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
             <Floor>0.01</Floor>
           </Floors>
           <NakedOption>N</NakedOption>
+          <AddInflationNotional>false</AddInflationNotional>
+					<IrregularYoY>false</IrregularYoY>
         </YYLegData>
       </LegData>
 \end{minted}

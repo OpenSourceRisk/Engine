@@ -3205,5 +3205,13 @@
       <OptionTenors>1Y</OptionTenors>
     </Correlation>
   </Correlations>
+  <CDSVolatilities>
+    <CDSVolatility>
+      <CurveId>CPTY_A</CurveId>
+      <CurveDescription>Lognormal option implied vols for CPTY_A</CurveDescription>
+      <Expiries>
+        1M,3M,6M,1Y,2Y,3Y,4Y,5Y
+      </Expiries>
+    </CDSVolatility>
+  </CDSVolatilities>
 </CurveConfiguration>
-

@@ -84,13 +84,13 @@ public:
     virtual void save(const std::string&) const {}
 
     //! Set a value in the cube, assumes normal traversal of the cube (dates then samples)
-    void set(Real value, const AggregationScenarioDataType& type, const string& qualifier = "") {
+    virtual void set(Real value, const AggregationScenarioDataType& type, const string& qualifier = "") {
         set(dIndex_, sIndex_, value, type, qualifier);
     }
     //! Go to the next point on the cube
     /*! Go to the next point on the cube, assumes we do date, then samples
      */
-    void next() {
+    virtual void next() {
         if (++dIndex_ == dimDates()) {
             dIndex_ = 0;
             sIndex_++;

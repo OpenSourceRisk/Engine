@@ -1,9 +1,8 @@
 \subsubsection{Underlying}
 \label{ss:underlying}
 
-This trade component can be used to define the underlying entity for an Equity, Commodity or FX trade. It can be used for a single underlying, or within a basket with associated weight.
+This trade component can be used to define the underlying entity for an Equity, Commodity or FX trade, but it can also define an underlying interest rate, inflation index or credit name. It can be used for a single underlying, or within a basket with associated weight.
 For an equity underlying a string representation is used to match \lstinline!Underlying! node to requied configuration and reference data. The string representation is of the form {IdentifierType}:{Name}:{Currency}:{Exchange}, with all entries optional except for Name.
-
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -26,8 +25,8 @@ For an equity underlying a string representation is used to match \lstinline!Und
 \end{listing}
 
 Example structures of the \lstinline!Underlying! trade component node are shown in Listings \ref{lst:equnderlyingric} and \ref{lst:equnderlyingisin} for
-an equity underlying, in Listing \ref{lst:fxunderlying} for an fx underlying and in Listing \ref{lst:communderlying} for
-a commodity underlying.
+an equity underlying, in Listing \ref{lst:fxunderlying} for an fx underlying, in Listing \ref{lst:communderlying} for
+a commodity underlying, in Listing \ref{lst:irunderlying} for an underlying interest rate index, in Listing \ref{lst:infunderlying} for an underlying inflation index, in Listing \ref{lst:crunderlying} for an underlying credit name.  
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -48,15 +47,39 @@ a commodity underlying.
 \begin{minted}[fontsize=\footnotesize]{xml}
         <Underlying>
             <Type>Equity</Type>
-            <Name>GB00BH4HKS39</Name>
+            <Name>NL0000852580</Name>
             <Weight>1.0</Weight>
             <IdentifierType>ISIN</IdentifierType>
-            <Currency>GBP</Currency>
-	    <Exchange>XLON</Exchange>
+            <Currency>EUR</Currency>
+            <Exchange>XAMS</Exchange>
         </Underlying>
 \end{minted}
 \caption{Equity Underlying - ISIN}
 \label{lst:equnderlyingisin}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+            <Type>Equity</Type>
+            <Name>BBG000BLNNV0</Name>
+            <IdentifierType>FIGI</IdentifierType>
+        </Underlying>
+\end{minted}
+\caption{Equity Underlying - FIGI}
+\label{lst:equnderlyingfigi}
+\end{listing}
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+            <Type>Equity</Type>
+            <Name>BARC LN Equity</Name>
+            <IdentifierType>BBG</IdentifierType>
+        </Underlying>
+\end{minted}
+\caption{Equity Underlying - Bloomberg Identifier (Parsekey)}
+\label{lst:equnderlyingbbg}
 \end{listing}
 
 \begin{listing}[H]
@@ -89,6 +112,47 @@ a commodity underlying.
 \label{lst:communderlying}
 \end{listing}
 
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+          <Type>InterestRate</Type>
+          <Name>USD-CMS-10Y</Name>
+          <Weight>1.0</Weight>
+        </Underlying>
+\end{minted}
+\caption{InterestRate Underlying}
+\label{lst:irunderlying}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+          <Type>Inflation</Type>
+          <Name>USCPI</Name>
+          <Weight>1.0</Weight>
+          <!-- optional -->
+          <Interpolation>Linear</Interpolation>
+</Underlying>
+\end{minted}
+\caption{Inflation Index Underlying}
+\label{lst:infunderlying}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <Underlying>
+          <Type>Credit</Type>
+          <Name>ISSUER_A</Name>
+          <Weight>1.0</Weight>
+        </Underlying>
+\end{minted}
+\caption{Credit Underlying}
+\label{lst:crunderlying}
+\end{listing}
+
 
 The meanings and allowable values of the elements in the \lstinline!Underlying! node are as follows:
 
@@ -96,24 +160,28 @@ The meanings and allowable values of the elements in the \lstinline!Underlying! 
 
 \item \lstinline!Type!: The type of the Underlying asset.
 
-  Allowable values:  \emph{Equity}, \emph{FX}, \emph{Commodity}.
+  Allowable values:  \emph{Equity}, \emph{FX}, \emph{Commodity}, \emph{InterestRate}, \emph{Inflation}, \emph{Credit}.
 
 \item \lstinline!Name!:
   The name of the Underlying asset. 
   
   Allowable values:  
 
-  Equity: See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data} \\
+  \emph{Equity}: See \lstinline!Name! for equity trades in Table \ref{tab:equity_name}
 
-  Fx: A string on the form SOURCE-CCY1-CCY2, where SOURCE is ECB (European Central Bank) for EUR pairs or TR20H (Thomson
-  Reuters 20H) for USD pairs. For ECB CCY1 should always be EUR, and for TR20H CCY1 should always be USD, except for
-  TR20H-GBP-USD, FX-TR20H-AUD-USD and FX-TR20H-NZD-USD. For the USD-EUR pair, ECB is used (ECB-EUR-USD). See Table
-  \ref{tab:fxindex_data}
+  \emph{FX}: A string on the form SOURCE-CCY1-CCY2, where SOURCE is the FX fixing source, and the fixing is expressed as amount in CCY2 per one unit of CCY1.  See Table \ref{tab:fxindex_data}, and note that the FX- prefix is not included in \lstinline!Name! as it is already included in \lstinline!Type!.
 
-  Commodity: An identifier specifying the commodity being referenced in the leg.
+ \emph{InterestRate}: Any valid interest rate index name, see Table \ref{tab:indices}
+
+ \emph{Inflation}: Any valid zero coupon inflation index (CPI) name, See Table \ref{tab:cpiindex_data}
+
+ \emph{Credit}: Any valid credit name with a configured default curve, see Table \ref{tab:equity_credit_data}
+
+ \emph{Commodity}: An identifier specifying the commodity being referenced in the leg.
 % The following needs to move into client-specific documentation of allowable values:
 %The \lstinline!Name! is of the form \lstinline!Prefix:Identifier!. The \lstinline!Prefix! is either \lstinline!PM! for precious metal or a code representing the exchange on which the commodity is traded. For precious metals, the \lstinline!Identifier! is the precious metal code followed by the precious metal price currency. For future contracts, the \lstinline!Identifier! is the exchange code for the future contract.
 Table \ref{tab:commodity_data} lists the allowable values for \lstinline!Name! and gives a description. \\
+
 \item \lstinline!Weight! [Optional]:
 The relative weight of the underlying if part of a basket. For a single underlying this can be omitted or set to 1. 
 
@@ -122,11 +190,11 @@ Allowable values: A number between 0 and 1. Defaults to 1 if left blank or omitt
 \item \lstinline!IdentifierType! [Optional]:
 Only valid when \lstinline!Type! is  \emph{Equity}. The type of the identifier being used.  
 
-Allowable values:  \emph{RIC}, \emph{ISIN}. Defaults to \emph{RIC}, if left blank or omitted, and \lstinline!Type!: is  \emph{Equity}.
+Allowable values:  \emph{RIC}, \emph{ISIN}, \emph{FIGI}, \emph{BBG}. Defaults to \emph{RIC}, if left blank or omitted, and \lstinline!Type!: is  \emph{Equity}.
 
 \item \lstinline!Currency! [Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}]: Only valid when \lstinline!Type! is  \emph{Equity}. The currency the underlying equity is quoted in. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Exchange!  convert a given ISIN to a RIC code.  
 
-Allowable values: See the \lstinline!Currency! section in Table \ref{tab:allow_stand_data}. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}, should not be used when  \lstinline!IdentifierType! is  \emph{RIC}, and ignored otherwise.
+Allowable values: See the \lstinline!Currency! section in Table \ref{tab:allow_stand_data}. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}, should not be used when  \lstinline!IdentifierType! is  \emph{RIC}, and ignored otherwise. When \lstinline!Type! is \emph{Equity}, \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data} are also allowable.
 
 \item \lstinline!Exchange! [Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}]:
 Only valid when \lstinline!Type! is  \emph{Equity}. A string code representing the exchange the equity is traded on. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Currency!  convert a given ISIN to a RIC code.  
@@ -154,5 +222,10 @@ Allowable values: An integer. Defaults to 0 if left blank or omitted, and \lstin
 Only valid when  \lstinline!Type! is  \emph{Commodity}.  The calendar used to roll forward the observation date.
 
 Allowable values: See Table \ref{tab:calendar}. Defaults to the null calendar if left blank or omitted, and \lstinline!Type!: is  \emph{Commodity}.
+
+\item \lstinline!Interpolation! [Optional]:
+Only valid when \lstinline!Type! is  \emph{Inflation}. The index observation interpolation between fixings.
+
+Allowable values: Flat, Linear
 
 \end{itemize}

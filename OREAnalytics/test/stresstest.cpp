@@ -114,8 +114,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->setIndices(
         {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
-    simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
+    simMarketData->extrapolation() = "FlatFwd";
 
     simMarketData->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years});
     simMarketData->setSwapVolExpiries(
@@ -123,7 +122,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
-    simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
     simMarketData->setFxVolExpiries(
         vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
@@ -132,7 +130,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->setFxVolIsSurface(false);
     simMarketData->setFxVolMoneyness(vector<Real>{0.0});
     simMarketData->setFxVolCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY"});
-    simMarketData->setFxVolDayCounters("", "ACT/ACT");
 
     simMarketData->setFxCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY"});
 
@@ -142,7 +139,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->setCapFloorVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->setCapFloorVolStrikes("", {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06});
-    simMarketData->setCapFloorVolDayCounters("", "ACT/ACT");
 
     return simMarketData;
 }
@@ -284,7 +280,7 @@ BOOST_AUTO_TEST_CASE(regression) {
 
     // build scenario generator
     boost::shared_ptr<StressScenarioGenerator> scenarioGenerator =
-        boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, scenarioFactory);
+        boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, simMarket, scenarioFactory);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio

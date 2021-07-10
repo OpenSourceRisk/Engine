@@ -29,4 +29,25 @@ RSDCurrency::RSDCurrency() {
     data_ = rsdData;
 }
 
+// Croatian kuna
+HRKCurrency::HRKCurrency() {
+    static boost::shared_ptr<Data> hrkData(
+        new Data("Croatian kuna", "HRK", 191, "HRK", "", 100, Rounding(), "1$.2f %3%"));
+    data_ = hrkData;
+}
+
+// Bulgarian lev
+BGNCurrency::BGNCurrency() {
+	static boost::shared_ptr<Data> bgnData(
+        new Data("Bulgarian lev", "BGN", 975, "BGN", "", 100, Rounding(), "1$.2F %3%"));
+    data_ = bgnData;
+}
+
+// Georgian lari
+GELCurrency::GELCurrency() {
+    static boost::shared_ptr<Data> gelData(
+        new Data("Georgian lari", "GEL", 981, "GEL", "", 100, Rounding(), "1$.2F %3%"));
+    data_ = gelData;
+}
+
 } // namespace QuantExt

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
+#include <orea/engine/cptycalculator.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <ored/model/modelbuilder.hpp>
@@ -72,12 +73,32 @@ public:
     void buildCube(
         //! Portfolio to be priced
         const boost::shared_ptr<data::Portfolio>& portfolio,
-        //! Object for storing the resulting NPV cube
+        //! Object for storing the results at trade level (e.g. NPVs, close-out NPVs, flows)
         boost::shared_ptr<analytics::NPVCube> outputCube,
         //! Calculators to use
-        std::vector<boost::shared_ptr<ValuationCalculator>> calculators);
+        std::vector<boost::shared_ptr<ValuationCalculator>> calculators,
+        //! Use sticky date in MPOR evaluation?
+        bool mporStickyDate = true,
+        //! Output cube for netting set-level results
+        boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet = nullptr,
+        //! Output cube for storing counterparty-level survival probabilities
+        boost::shared_ptr<analytics::NPVCube> outputCptyCube = nullptr,
+        //! Calculators for filling counterparty-level results
+        std::vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators = {});
 
 private:
+    void recalibrateModels();
+    void runCalculators(bool isCloseOutDate, const std::vector<boost::shared_ptr<Trade>>& trades,
+                        std::vector<bool>& tradeHasError,
+                        const std::vector<boost::shared_ptr<ValuationCalculator>>& calculators,
+                        boost::shared_ptr<analytics::NPVCube>& outputCube,
+                        boost::shared_ptr<analytics::NPVCube>& outputCubeSensis, const Date& d,
+                        const Size cubeDateIndex, const Size sample, const std::string& label = "");
+    void runCalculators(bool isCloseOutDate, const std::vector<string>& counterparties,
+                        const std::vector<boost::shared_ptr<CounterpartyCalculator>>& calculators,
+                        boost::shared_ptr<analytics::NPVCube>& cptyCube, const Date& d,
+                        const Size cubeDateIndex, const Size sample);
+    void tradeExercisable(bool enable, const std::vector<boost::shared_ptr<Trade>>& trades);
     QuantLib::Date today_;
     boost::shared_ptr<DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;

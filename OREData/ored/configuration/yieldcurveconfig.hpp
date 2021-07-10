@@ -70,7 +70,10 @@ public:
         CrossCcyBasis,
         CrossCcyFixFloat,
         DiscountRatio,
-        FittedBond
+        FittedBond,
+        WeightedAverage,
+        YieldPlusDefault,
+        IborFallback
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -368,6 +371,92 @@ private:
     string referenceCurveID_;
 };
 
+//! Weighted average yield curve segment
+/*!
+  A weighted average segment is used to build a yield curve from two source curves and weights. The
+  resulting disount factor is the weighted sum of the source curves' discount factors.
+
+  \ingroup configuration
+*/
+class WeightedAverageYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    WeightedAverageYieldCurveSegment() {}
+    //! Detailed constructor
+    WeightedAverageYieldCurveSegment(const string& typeID, const string& referenceCurveID1,
+                                     const string& referenceCurveID2, const Real weight1, const Real weight2);
+    //! Default destructor
+    virtual ~WeightedAverageYieldCurveSegment() {}
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& referenceCurveID1() const { return referenceCurveID1_; }
+    const string& referenceCurveID2() const { return referenceCurveID2_; }
+    Real weight1() const { return weight1_; }
+    Real weight2() const { return weight2_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    string referenceCurveID1_, referenceCurveID2_;
+    double weight1_, weight2_;
+};
+
+//! Yield plus default curves segment
+/*!
+  A yield plus default curves segment is used to build a yield curve from a source yield curve and
+  a weighted sum of default curves interpreted as zero curves (zero recovery, hazard rate =
+  instantaneous forward rate)
+
+  \ingroup configuration
+*/
+class YieldPlusDefaultYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    YieldPlusDefaultYieldCurveSegment() {}
+    //! Detailed constructor
+    YieldPlusDefaultYieldCurveSegment(const string& typeID, const string& referenceCurveID,
+                                      const std::vector<std::string>& defaultCurveIDs,
+                                      const std::vector<Real>& weights);
+    //! Default destructor
+    virtual ~YieldPlusDefaultYieldCurveSegment() {}
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& referenceCurveID() const { return referenceCurveID_; }
+    const std::vector<std::string>& defaultCurveIDs() { return defaultCurveIDs_; }
+    const std::vector<Real>& weights() { return weights_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    string referenceCurveID_;
+    std::vector<std::string> defaultCurveIDs_;
+    std::vector<Real> weights_;
+};
+
 //! Discount ratio yield curve segment
 /*! Used to configure a QuantExt::DiscountRatioModifiedCurve.
 
@@ -457,6 +546,48 @@ private:
     Size calibrationTrials_;
 };
 
+//! Ibor Fallback yield curve segment
+/*!
+  A curve segment to build a Ibor forwarding curve from an OIS RFR index and a fallback spread
+
+  \ingroup configuration
+*/
+class IborFallbackCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    IborFallbackCurveSegment() {}
+    //! Detailed constructor
+    IborFallbackCurveSegment(const string& typeID, const string& iborIndex, const string& rfrCurve,
+                             const boost::optional<string>& rfrIndex, const boost::optional<Real>& spread);
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& iborIndex() const { return iborIndex_; }
+    const string& rfrCurve() const { return rfrCurve_; }
+    const boost::optional<string>& rfrIndex() const { return rfrIndex_; }
+    const boost::optional<Real>& spread() const { return spread_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    string iborIndex_;
+    string rfrCurve_;
+    boost::optional<string> rfrIndex_;
+    boost::optional<Real> spread_;
+};
+
 //! Yield Curve configuration
 /*!
   Wrapper class containing all yield curve segments needed to build a yield curve.
@@ -495,7 +626,6 @@ public:
     const string& zeroDayCounter() const { return zeroDayCounter_; }
     bool extrapolation() const { return extrapolation_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
-    const set<string>& requiredYieldCurveIDs() const { return requiredYieldCurveIDs_; }
     //@}
 
     //! \name Setters
@@ -510,13 +640,12 @@ public:
     const vector<string>& quotes() override;
 
 private:
-    void populateRequiredYieldCurveIDs();
+    void populateRequiredCurveIds();
 
     // Mandatory members
     string currency_;
     string discountCurveID_;
     vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
-    set<string> requiredYieldCurveIDs_;
 
     // Optional members
     string interpolationVariable_;
@@ -528,5 +657,6 @@ private:
 
 // Map form curveID to YieldCurveConfig
 using YieldCurveConfigMap = std::map<string, boost::shared_ptr<YieldCurveConfig>>;
+
 } // namespace data
 } // namespace ore

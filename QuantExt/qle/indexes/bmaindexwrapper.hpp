@@ -56,7 +56,7 @@ public:
           bma_(new BMAIndex(h)) {}
 
     // overwrite all the virtual methods
-    std::string name() const { return "BMA"; }
+    std::string name() const { return bma_->name(); }
     bool isValidFixingDate(const Date& date) const {
         // this is not the original BMA behaviour!
         return fixingCalendar().isBusinessDay(date);

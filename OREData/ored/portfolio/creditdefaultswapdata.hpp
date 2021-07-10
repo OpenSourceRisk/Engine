@@ -48,7 +48,7 @@ std::ostream& operator<<(std::ostream& out, const CdsDocClause& cdsDocClause);
 class CdsReferenceInformation : public XMLSerializable {
 public:
     //! Default constructor
-    CdsReferenceInformation() {}
+    CdsReferenceInformation();
 
     //! Detailed constructor
     CdsReferenceInformation(const std::string& referenceEntityId, CdsTier tier, const QuantLib::Currency& currency,
@@ -104,31 +104,32 @@ bool tryParseCdsInformation(const std::string& strInfo, CdsReferenceInformation&
 class CreditDefaultSwapData : public XMLSerializable {
 public:
     //! Default constructor
-    CreditDefaultSwapData() {}
+    CreditDefaultSwapData();
+
+    using PPT = QuantExt::CreditDefaultSwap::ProtectionPaymentTime;
 
     //! Constructor that takes an explicit \p creditCurveId
     CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
                           const bool settlesAccrual = true,
-                          const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
-                              QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
+                          const PPT protectionPaymentTime = PPT::atDefault,
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
                           const Real upfrontFee = Null<Real>(),
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
-                          const std::string& referenceObligation = "")
-        : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
-          protectionPaymentTime_(protectionPaymentTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
-          upfrontFee_(upfrontFee), recoveryRate_(recoveryRate), referenceObligation_(referenceObligation) {}
+                          const std::string& referenceObligation = "",
+                          const Date& tradeDate = Date(),
+                          const std::string& cashSettlementDays = "");
 
     //! Constructor that takes a \p referenceInformation object
     CreditDefaultSwapData(const std::string& issuerId, const CdsReferenceInformation& referenceInformation,
                           const LegData& leg, bool settlesAccrual = true,
-                          const QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
-                              QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault,
+                          const PPT protectionPaymentTime = PPT::atDefault,
                           const QuantLib::Date& protectionStart = QuantLib::Date(),
                           const QuantLib::Date& upfrontDate = QuantLib::Date(),
                           QuantLib::Real upfrontFee = QuantLib::Null<QuantLib::Real>(),
                           QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>(),
-                          const std::string& referenceObligation = "");
+                          const std::string& referenceObligation = "",
+                          const Date& tradeDate = Date(),
+                          const std::string& cashSettlementDays = "");
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -137,7 +138,7 @@ public:
     const string& creditCurveId() const;
     const LegData& leg() const { return leg_; }
     bool settlesAccrual() const { return settlesAccrual_; }
-    QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime() const { return protectionPaymentTime_; }
+    PPT protectionPaymentTime() const { return protectionPaymentTime_; }
     const Date& protectionStart() const { return protectionStart_; }
     const Date& upfrontDate() const { return upfrontDate_; }
     Real upfrontFee() const { return upfrontFee_; }
@@ -150,23 +151,34 @@ public:
     //! CDS Reference Obligation
     const std::string& referenceObligation() const { return referenceObligation_; }
 
+    const QuantLib::Date& tradeDate() const { return tradeDate_; }
+    QuantLib::Natural cashSettlementDays() const { return cashSettlementDays_; }
+
     /*! CDS reference information. This will be empty if an explicit credit curve ID has been used.
      */
     const boost::optional<CdsReferenceInformation>& referenceInformation() const { return referenceInformation_; }
 
+protected:
+    virtual void check(XMLNode* node) const;
+    virtual XMLNode* alloc(XMLDocument& doc) const;
+
 private:
-    string issuerId_;
-    string creditCurveId_;
+    std::string issuerId_;
+    std::string creditCurveId_;
     LegData leg_;
     bool settlesAccrual_;
-    QuantExt::CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime_;
-    Date protectionStart_, upfrontDate_;
-    Real upfrontFee_;
+    PPT protectionPaymentTime_;
+    QuantLib::Date protectionStart_;
+    QuantLib::Date upfrontDate_;
+    QuantLib::Real upfrontFee_;
 
     //! Populated if the CDS is a fixed recovery rate CDS, otherwise \c Null<Real>()
     QuantLib::Real recoveryRate_;
 
     std::string referenceObligation_;
+    QuantLib::Date tradeDate_;
+    std::string strCashSettlementDays_;
+    QuantLib::Natural cashSettlementDays_;
 
     boost::optional<CdsReferenceInformation> referenceInformation_;
 };
