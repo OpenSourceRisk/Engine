@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>quantexttestsuite</ProjectName>
+    <ProjectName>QuantExtTestSuite</ProjectName>
     <ProjectGuid>{643BCBE7-4369-42EC-9766-DCB8DAD6615F}</ProjectGuid>
-    <RootNamespace>quantexttestsuite</RootNamespace>
+    <RootNamespace>QuantExtTestSuite</RootNamespace>
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -684,7 +684,7 @@
     <ClCompile Include="pricecurve.cpp" />
     <ClCompile Include="pricetermstructureadapter.cpp" />
     <ClCompile Include="qle_calendars.cpp" />
-    <ClCompile Include="quadraticinterpolation.cpp" />    
+    <ClCompile Include="quadraticinterpolation.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
