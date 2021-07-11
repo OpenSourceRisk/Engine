@@ -426,7 +426,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->discountCurve(ccy)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for discount curve " << ccy << ", using default A365");
         }
 
@@ -522,7 +522,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->iborIndex(indexName)->forwardingTermStructure()->dayCounter();
-        } catch(std::exception& e)  {
+        } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for index " << indexName << ", using default A365");
         }
         
@@ -613,7 +613,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->yieldCurve(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch (const std::exception&) {
             WLOG("Day counter lookup in simulation market failed for yield curve " << name << ", using default A365");
         }
 
@@ -703,7 +703,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->equityDividendCurve(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for dividend yield curve " << name << ", using default A365");
         }
 
@@ -810,7 +810,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->fxVol(ccyPair)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for fx vol surface " << ccyPair << ", using default A365");
         }
         bool valid = true;
@@ -916,7 +916,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->equityVol(equity)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for equity vol surface " << equity << ", using default A365");
         }
         bool valid = true;
@@ -1219,7 +1219,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->capFloorVol(ccy)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for cap/floor vol surface " << ccy << ", using default A365");
         }
 
@@ -1315,7 +1315,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->defaultCurve(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for default curve " << name << ", using default A365");
         }
         Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
@@ -1414,7 +1414,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->cdsVol(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for cds vol surface " << name << ", using default A365");
         }
 
@@ -1496,7 +1496,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->zeroInflationIndex(indexName)->zeroInflationTermStructure()->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for zero inflation index " << indexName << ", using default A365");
         }
         bool valid = true;
@@ -1588,7 +1588,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->yoyInflationIndex(indexName)->yoyInflationTermStructure()->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for yoy inflation index " << indexName << ", using default A365");
         }
         bool valid = true;
@@ -1684,7 +1684,7 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->yoyCapFloorVol(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for yoy cap/floor vol surface " << name << ", using default A365");
         }
 
@@ -1784,7 +1784,7 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->cpiInflationCapFloorVolatilitySurface(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for cpi cap/floor vol surface " << name << ", using default A365");
         }
 
@@ -1882,7 +1882,7 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->baseCorrelation(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for base correlation structure " << name << ", using default A365");
         }
 
@@ -1978,7 +1978,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->commodityPriceCurve(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for commodity price curve " << name << ", using default A365");
         }
 
@@ -2082,7 +2082,7 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->commodityVolatility(name)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for commodity vol surface " << name << ", using default A365");
         }
 
@@ -2181,7 +2181,7 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
         DayCounter dc = Actual365Fixed();
         try {
             dc = simMarket_->correlationCurve(pair.first, pair.second)->dayCounter();
-        } catch(std::exception& e)  {
+        } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for correlation curve " << pair.first << " - " <<  pair.second << ", using default A365");
         }
 
