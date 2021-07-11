@@ -23,7 +23,7 @@ COPY --from=env_ore /usr/local/lib /usr/local/lib
 # Install Python solely to run the examples
 # Can leave out Python and run examples manually for slimmer image
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip libxml2-utils \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip libxml2-utils xsltproc \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && pip3 install matplotlib pandas nose nose_xunitmp datacompy \
