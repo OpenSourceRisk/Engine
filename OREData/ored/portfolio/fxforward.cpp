@@ -110,6 +110,11 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     DLOG("FxForward leg 0: " << legs_[0][0]->date() << " " << legs_[0][0]->amount());
     DLOG("FxForward leg 1: " << legs_[1][0]->date() << " " << legs_[1][0]->amount());
+
+    additionalData_["soldCurrency"] = soldCurrency_;
+    additionalData_["boughtCurrency"] = boughtCurrency_;
+    additionalData_["soldAmount"] = soldAmount_;
+    additionalData_["boughtAmount"] = boughtAmount_;
 }
 
 QuantLib::Real FxForward::notional() const {

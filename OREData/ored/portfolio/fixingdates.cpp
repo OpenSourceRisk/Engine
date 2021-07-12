@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <ored/configuration/iborfallbackconfig.hpp>
 
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
@@ -74,7 +74,7 @@ set<Date> generateLookbackDates(const Period& lookbackPeriod, const Calendar& ca
     return dates;
 }
 
-}
+} // namespace
 
 namespace ore {
 namespace data {
@@ -428,7 +428,7 @@ void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     requiredFixings_.addFixingDate(c.fxFixingDate(), oreIndexName(c.fxIndex()->name()), c.date());
 }
 
-void FixingDateGetter::visit(SubPeriodsCoupon& c) {
+void FixingDateGetter::visit(QuantExt::SubPeriodsCoupon1& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
@@ -482,9 +482,8 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings, const boost::sha
 }
 
 void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
-                          const Conventions& conventions,
-                          const Period& iborLookback, const Period& oisLookback,
-                          const Period& inflationLookback, const string& configuration) {
+                          const Conventions& conventions, const Period& iborLookback, const Period& oisLookback,
+                          const Period& bmaLookback, const Period& inflationLookback, const string& configuration) {
 
     if (mktParams.hasConfiguration(configuration)) {
 
@@ -500,6 +499,7 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
 
             set<Date> iborDates;
             set<Date> oisDates;
+            set<Date> bmaDates;
             WeekendsOnly calendar;
 
             // For each of the IR indices in market parameters, insert the dates
@@ -512,6 +512,11 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                     TLOG("Adding extra fixing dates for overnight index " << kv.first);
                     fixings[kv.first].insert(oisDates.begin(), oisDates.end());
                 } else if (isBmaIndex(kv.first)) {
+                    if (bmaDates.empty()) {
+                        TLOG("Generating fixing dates for bma/sifma indices.");
+                        bmaDates = generateLookbackDates(bmaLookback, calendar);
+                    }
+                    fixings[kv.first].insert(bmaDates.begin(), bmaDates.end());
                     if (iborDates.empty()) {
                         TLOG("Generating fixing dates for ibor indices.");
                         iborDates = generateLookbackDates(iborLookback, calendar);

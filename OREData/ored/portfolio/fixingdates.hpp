@@ -55,7 +55,7 @@ class CappedFlooredOvernightIndexedCoupon;
 class EquityCoupon;
 class FloatingRateFXLinkedNotionalCoupon;
 class FXLinkedCashFlow;
-class SubPeriodsCoupon;
+class SubPeriodsCoupon1;
 class IndexedCoupon;
 class NonStandardYoYInflationCoupon;
 } // namespace QuantExt
@@ -170,7 +170,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::EquityCoupon>,
                          public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
                          public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
-                         public QuantLib::Visitor<QuantExt::SubPeriodsCoupon>,
+                         public QuantLib::Visitor<QuantExt::SubPeriodsCoupon1>,
                          public QuantLib::Visitor<QuantExt::IndexedCoupon>,
                          public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon> {
 
@@ -204,7 +204,7 @@ public:
     void visit(QuantExt::EquityCoupon& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
-    void visit(QuantExt::SubPeriodsCoupon& c);
+    void visit(QuantExt::SubPeriodsCoupon1& c);
     void visit(QuantExt::IndexedCoupon& c);
     //@}
 
@@ -251,10 +251,10 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
     The original \p fixings map may be empty.
 */
 void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
-                          const TodaysMarketParameters& mktParams,
-                          const Conventions& conventions,
+                          const TodaysMarketParameters& mktParams, const Conventions& conventions,
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
+                          const QuantLib::Period& bmaLookback = 2 * QuantLib::Weeks,
                           const QuantLib::Period& inflationLookback = 1 * QuantLib::Years,
                           const std::string& configuration = Market::defaultConfiguration);
 

@@ -121,6 +121,7 @@ struct FxEqVolCalibrationInfo {
     std::vector<std::vector<bool>> moneynessGridCalendarArbitrage;
     std::vector<std::vector<bool>> deltaGridCallSpreadArbitrage;
     std::vector<std::vector<bool>> deltaGridButterflyArbitrage;
+    std::vector<std::string> messages;
 };
 
 // main container

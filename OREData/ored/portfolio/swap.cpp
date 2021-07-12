@@ -187,7 +187,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
                 boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
                 if (coupon) {
-                    additionalData_["notional[" + legID + "]"] = coupon->nominal();
+                    additionalData_["currentNotional[" + legID + "]"] = coupon->nominal();
                     additionalData_["rate[" + legID + "]"] = coupon->rate();
                     boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
                     if (frc) {
@@ -197,6 +197,11 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
                 }
                 break;
             }
+        }
+        if (legs_[i].size() > 0) {
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
+            if (coupon)
+                additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
         }
     }
     return additionalData_;
