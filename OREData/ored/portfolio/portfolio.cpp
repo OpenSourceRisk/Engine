@@ -88,7 +88,9 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                 failedToLoad = true;
             }
         } else {
-            WLOG("Unable to build Trade for tradeType=" << tradeType);
+            //WLOG("Unable to build Trade for tradeType=" << tradeType);
+            ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML"));
+            failedToLoad = true;
         }
 
         // If trade loading failed, then insert a dummy trade with same id and envelope
