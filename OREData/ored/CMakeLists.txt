@@ -105,6 +105,7 @@ portfolio/commodityoption.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
+portfolio/dummytrade.cpp
 portfolio/durationadjustedcmslegbuilder.cpp
 portfolio/durationadjustedcmslegdata.cpp
 portfolio/enginedata.cpp
@@ -306,6 +307,7 @@ portfolio/commodityoption.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp
+portfolio/dummytrade.hpp
 portfolio/durationadjustedcmslegbuilder.hpp
 portfolio/durationadjustedcmslegdata.hpp
 portfolio/enginedata.hpp

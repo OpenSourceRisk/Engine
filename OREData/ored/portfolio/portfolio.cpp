@@ -21,6 +21,7 @@
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/dummytrade.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -73,6 +74,7 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         DLOG("Parsing trade id:" << id);
         boost::shared_ptr<Trade> trade = factory->build(tradeType);
 
+        bool failedToLoad = false;
         if (trade) {
             try {
                 trade->fromXML(nodes[i]);
@@ -83,10 +85,32 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                                     << " type:" << tradeType);
             } catch (std::exception& ex) {
                 ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()));
+                failedToLoad = true;
             }
         } else {
             WLOG("Unable to build Trade for tradeType=" << tradeType);
         }
+
+        // If trade loading failed, then insert a dummy trade with same id and envelope
+        if (failedToLoad)  {
+            try {
+                tradeType = "Dummy";
+                trade = factory->build(tradeType); 
+                // this loads only type, id and envelope, but type will be set to the original trade's type
+                trade->fromXML(nodes[i]);
+                // create a dummy trade of type "Dummy"
+                boost::shared_ptr<Trade> dummyTrade = factory->build("Dummy"); 
+                // copy id and envelope
+                dummyTrade->id() = id;
+                dummyTrade->envelope() = trade->envelope();
+                // and add it to the portfolio
+                add(dummyTrade, checkForDuplicateIds);
+                WLOG("Added trade id " << dummyTrade->id() << " type " << dummyTrade->tradeType()
+                     << " for original trade type " << trade->tradeType());
+            } catch (std::exception& ex) {
+                ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing type and envelope", ex.what()));
+            }
+        } 
     }
     LOG("Finished Parsing XML doc");
 }
@@ -136,11 +160,15 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
-            trade = trades_.erase(trade);
+            boost::shared_ptr<DummyTrade> dummy = boost::make_shared<DummyTrade>();
+            dummy->id() = (*trade)->id();
+            dummy->envelope() = (*trade)->envelope();
+            LOG("Added dummy trade id " << dummy->id());
+            (*trade) = dummy;
         }
     }
     LOG("Built Portfolio. Size now " << trades_.size());
-
+        
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
 }
 
