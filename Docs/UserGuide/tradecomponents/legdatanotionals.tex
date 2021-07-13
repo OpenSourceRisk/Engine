@@ -52,9 +52,15 @@ Allowable values:  \emph{true, false}
 
 Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. When \lstinline!LegType! is \emph{Equity}, \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data} are also allowable.
 
-\item PaymentCalendar [optional]: The payment calendar of the leg coupons. Available for 
-	IBOR leg, OIS leg, BMA leg, CPI leg, YoY leg, CMS leg, digital CMS spread leg, and 
-	equity leg. Default value will be the Calendar under ScheduleData.
+\item PaymentCalendar [optional]: The payment calendar of the leg coupons. 
+		- Floating Leg with IBOR index: Default will be the schedule calendar if the node is not provided
+		- Floating Leg with OIS index: Default will be the index calendar if the node is not provided
+		- Floating Leg with BMA index: Default will be the schedule calendar if the node is not provided
+		- CPI Leg: Default will be the schedule calendar if the node is not provided
+		- YoY Leg: Default will be the schedule calendar if the node is not provided
+		- CMS Leg: Default will be the schedule calendar if the node is not provided
+		- DigitalCMSSpread Leg: Default will be the schedule calendar if the node is not provided
+		- Equity Leg: Default will be the schedule calendar if the node is not provided
 	
 \item PaymentConvention: The payment convention of the leg coupons. Note that the calendar used in conjuction with the PaymentConvention and the PaymentLag to determine the payment date is the calendar in the \lstinline!ScheduleData! node, except for compounding OIS indices where the index calendar is used. If no calendar is set in the \lstinline!ScheduleData! node (for dates-based schedules the calendar field is optional), the \emph{NullCalendar} is used. 
 
