@@ -96,18 +96,18 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
         // If trade loading failed, then insert a dummy trade with same id and envelope
         if (failedToLoad)  {
             try {
-                tradeType = "Dummy";
+                tradeType = "Failed";
                 trade = factory->build(tradeType); 
                 // this loads only type, id and envelope, but type will be set to the original trade's type
                 trade->fromXML(nodes[i]);
                 // create a dummy trade of type "Dummy"
-                boost::shared_ptr<Trade> dummyTrade = factory->build("Dummy"); 
+                boost::shared_ptr<Trade> failedTrade = factory->build(tradeType); 
                 // copy id and envelope
-                dummyTrade->id() = id;
-                dummyTrade->envelope() = trade->envelope();
+                failedTrade->id() = id;
+                failedTrade->envelope() = trade->envelope();
                 // and add it to the portfolio
-                add(dummyTrade, checkForDuplicateIds);
-                WLOG("Added trade id " << dummyTrade->id() << " type " << dummyTrade->tradeType()
+                add(failedTrade, checkForDuplicateIds);
+                WLOG("Added trade id " << failedTrade->id() << " type " << failedTrade->tradeType()
                      << " for original trade type " << trade->tradeType());
             } catch (std::exception& ex) {
                 ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing type and envelope", ex.what()));
@@ -162,11 +162,11 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
-            boost::shared_ptr<DummyTrade> dummy = boost::make_shared<DummyTrade>();
-            dummy->id() = (*trade)->id();
-            dummy->envelope() = (*trade)->envelope();
-            LOG("Added dummy trade id " << dummy->id());
-            (*trade) = dummy;
+            boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
+            failed->id() = (*trade)->id();
+            failed->envelope() = (*trade)->envelope();
+            LOG("Added failed trade with id " << failed->id());
+            (*trade) = failed;
         }
     }
     LOG("Built Portfolio. Size now " << trades_.size());

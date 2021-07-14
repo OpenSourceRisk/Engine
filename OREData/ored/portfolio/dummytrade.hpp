@@ -18,11 +18,11 @@ namespace data {
 /*! Serializable Dummy trade
     \ingroup tradedata
 */
-class DummyTrade : public ore::data::Trade {
+class FailedTrade : public ore::data::Trade {
 public:
-    DummyTrade();
+    FailedTrade();
 
-    DummyTrade(const ore::data::Envelope& env);
+    FailedTrade(const ore::data::Envelope& env);
 
     //! Trade Interface's build.
     void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;

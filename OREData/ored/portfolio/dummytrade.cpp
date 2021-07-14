@@ -18,24 +18,24 @@ using QuantLib::Date;
 namespace ore {
 namespace data {
 
-DummyTrade::DummyTrade()
-    : Trade("Dummy") {}
+FailedTrade::FailedTrade()
+    : Trade("Failed") {}
 
-DummyTrade::DummyTrade(const Envelope& env)
-    : Trade("Dummy", env) {}
+FailedTrade::FailedTrade(const Envelope& env)
+    : Trade("Failed", env) {}
 
-void DummyTrade::build(const boost::shared_ptr<EngineFactory>&) {
+void FailedTrade::build(const boost::shared_ptr<EngineFactory>&) {
     instrument_ = boost::make_shared<VanillaInstrument>(boost::make_shared<NullInstrument>());
     notional_ = 0.0;
     notionalCurrency_ = npvCurrency_ = "USD";
     maturity_ = Date::maxDate();
 }
 
-void DummyTrade::fromXML(XMLNode* node) {
+void FailedTrade::fromXML(XMLNode* node) {
     Trade::fromXML(node);
 }
 
-XMLNode* DummyTrade::toXML(XMLDocument& doc) {
+XMLNode* FailedTrade::toXML(XMLDocument& doc) {
     return Trade::toXML(doc);
 }
 
