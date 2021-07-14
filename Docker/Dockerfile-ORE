@@ -27,6 +27,10 @@ RUN cd /ore \
   && make -j ${num_cores} \
   && make install \
   && cd / \
+  && cd build \
+  && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" \
   && rm -rf ore
 
 CMD bash
