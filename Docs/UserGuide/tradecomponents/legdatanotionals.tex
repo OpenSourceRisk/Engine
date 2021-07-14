@@ -54,16 +54,11 @@ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
 \item PaymentCalendar [Optional]: The payment calendar of the leg coupons. 
 
-Allowable values: \\
-- Floating Leg with IBOR index: Default will be the schedule calendar if the node is not provided \\
-- Floating Leg with OIS index: Default will be the index calendar if the node is not provided \\
-- Floating Leg with BMA index: Default will be the schedule calendar if the node is not provided \\
-- CPI Leg: Default will be the schedule calendar if the node is not provided \\
-- YoY Leg: Default will be the schedule calendar if the node is not provided \\
-- CMS Leg: Default will be the schedule calendar if the node is not provided \\
-- DigitalCMSSpread Leg: Default will be the schedule calendar if the node is not provided \\
-- Equity Leg: Default will be the schedule calendar if the node is not provided 
-	
+Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!. If left blank or omitted, defaults to the schedule calendar, unless
+\lstinline!LegType! is \emph{Floating} and \lstinline!Index! is OIS, in which case this defaults to the index calendar. This is currently only
+supported for \lstinline!LegType! \emph{Floating} (with an IBOR, BMA or OIS underlying index), \emph{CMS}, \emph{CMSSpread}
+\emph{DigitalCMSSpread}, \emph{Equity}, \emph{YY}, \emph{CPI}.
+
 \item PaymentConvention: The payment convention of the leg coupons. Note that the calendar used in conjuction with the PaymentConvention and the PaymentLag to determine the payment date is the calendar in the \lstinline!ScheduleData! node, except for compounding OIS indices where the index calendar is used. If no calendar is set in the \lstinline!ScheduleData! node (for dates-based schedules the calendar field is optional), the \emph{NullCalendar} is used. 
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
