@@ -26,11 +26,10 @@ RUN cd /ore \
   && cmake .. -DBUILD_DOC=OFF -DCMAKE_BUILD_TYPE=Release \
   && make -j ${num_cores} \
   && make install \
-  && cd / \
-  && cd build \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" \
+  && cd / \
   && rm -rf ore
 
 CMD bash
