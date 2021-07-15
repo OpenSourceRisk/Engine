@@ -15,7 +15,7 @@
 namespace ore {
 namespace data {
 
-/*! Serializable Dummy trade
+/*! Serializable skeleton trade to represent trades that failed loading or building
     \ingroup tradedata
 */
 class FailedTrade : public ore::data::Trade {

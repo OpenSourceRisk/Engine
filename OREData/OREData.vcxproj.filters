@@ -168,7 +168,7 @@
     <ClInclude Include="ored\portfolio\capfloor.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\dummytrade.hpp">
+    <ClInclude Include="ored\portfolio\failedtrade.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\enginedata.hpp">
@@ -785,7 +785,7 @@
     <ClCompile Include="ored\portfolio\capfloor.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\dummytrade.cpp">
+    <ClCompile Include="ored\portfolio\failedtrade.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\enginedata.cpp">

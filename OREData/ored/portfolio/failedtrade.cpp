@@ -3,7 +3,7 @@
  All rights reserved.
 */
 
-#include <ored/portfolio/dummytrade.hpp>
+#include <ored/portfolio/failedtrade.hpp>
 #include <qle/instruments/nullinstrument.hpp>
 
 using ore::data::EngineFactory;
