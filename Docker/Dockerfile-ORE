@@ -32,7 +32,10 @@ RUN cd /ore \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" \
-  && cd / \
+  && cd / && mkdir -p html \
+  && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
+  && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
+  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
   && rm -rf ore
 
 CMD bash
