@@ -389,7 +389,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
 
 namespace {
 void checkShiftTenors(const std::vector<Period>& effective, const std::vector<Period>& config,
-                      const std::string& curveLabel) {
+                      const std::string& curveLabel, bool continueOnError = false) {
     if (effective.size() != config.size()) {
         string message = "mismatch between effective shift tenors (" + std::to_string(effective.size()) +
                          ") and configured shift tenors (" + std::to_string(config.size()) + ") for " + curveLabel;
@@ -398,7 +398,8 @@ void checkShiftTenors(const std::vector<Period>& effective, const std::vector<Pe
             ALOG("effetive tenor: " << p);
         for (auto const& p : config)
             ALOG("config   tenor: " << p);
-        QL_FAIL(message);
+        if(!continueOnError)
+            QL_FAIL(message);
     }
 }
 } // namespace
@@ -446,7 +447,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
                                               ? simMarketData_->yieldCurveTenors(ccy)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -541,7 +542,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
                                               ? simMarketData_->yieldCurveTenors(indexName)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Index Curve " + indexName);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Index Curve " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -632,7 +633,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
                                                      ? simMarketData_->yieldCurveTenors(name)
                                                      : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Yield Curve " + name);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Yield Curve " + name, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -722,7 +723,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
                                                      ? simMarketData_->equityDividendTenors(name)
                                                      : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Divident Yield " + name);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Divident Yield " + name, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -1337,7 +1338,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
                                               ? simMarketData_->defaultTenors(name)
                                               : data.shiftTenors;
 
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Default Curve " + name);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Default Curve " + name, continueOnError_);
 
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -1512,7 +1513,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasZeroInflationTenors(indexName)
                                               ? simMarketData_->zeroInflationTenors(indexName)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Zero Inflation " + indexName);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Zero Inflation " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -1604,7 +1605,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
                                               ? simMarketData_->yoyInflationTenors(indexName)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "YoY Inflation " + indexName);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "YoY Inflation " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
