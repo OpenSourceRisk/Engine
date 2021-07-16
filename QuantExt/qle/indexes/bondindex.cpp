@@ -18,7 +18,7 @@
 
 #include <qle/indexes/bondindex.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
-
+#include <ql/cashflows/cpicoupon.hpp>
 #include <ql/settings.hpp>
 
 #include <boost/make_shared.hpp>
@@ -108,6 +108,19 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 
     if (!dirty_) {
         price -= bond_->accruedAmount(fixingDate) / 100.0 * bond_->notional(fixingDate);
+        //check if its inflation bond, assume if we find one inflation coupon that
+        // all coupons are inflatio linked and use the same index, need to make a own bond class like zero coupon
+        for (auto& cf : bond_->cashflows()) {
+            if (auto inflCpn = ext::dynamic_pointer_cast<CPICoupon>(cf)) {
+                auto& inflationIndex = ext::dynamic_pointer_cast<ZeroInflationIndex>(inflCpn->index());
+                auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
+                
+                Real inflationAccualFactor = inflCpn->baseCPI() / inflationIndex->fixing(inflationCurve->baseDate());
+                price *= inflationAccualFactor;
+                break;
+            }
+        }
+
     }
 
     if (relative_) {
@@ -128,7 +141,20 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     if (dirty_) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
         price += bond_->accruedAmount(fixingDate) / 100.0;
+        // check if its inflation bond, assume if we find one inflation coupon that
+        // all coupons are inflatio linked and use the same index, need to make a own bond class like zero coupon
+        for (auto& cf : bond_->cashflows()) {
+            if (auto inflCpn = ext::dynamic_pointer_cast<CPICoupon>(cf)) {
+                auto& inflationIndex = ext::dynamic_pointer_cast<ZeroInflationIndex>(inflCpn->index());
+                auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
+
+                Real inflationAccualFactor = inflationIndex->fixing(inflationCurve->baseDate())  / inflCpn->baseCPI();
+                price *= inflationAccualFactor;
+                break;
+            }
+        }
     }
+
     if (!relative_) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for absolute prices");
         price *= bond_->notional(fixingDate);
