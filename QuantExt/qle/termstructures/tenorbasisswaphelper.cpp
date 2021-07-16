@@ -32,7 +32,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
                                            const boost::shared_ptr<IborIndex> longIndex,
                                            const boost::shared_ptr<IborIndex> shortIndex, const Period& shortPayTenor,
                                            const Handle<YieldTermStructure>& discountingCurve, bool spreadOnShort,
-                                           bool includeSpread, SubPeriodsCoupon::Type type)
+                                           bool includeSpread, QuantExt::SubPeriodsCoupon1::Type type)
     : RelativeDateRateHelper(spread), swapTenor_(swapTenor), longIndex_(longIndex), shortIndex_(shortIndex),
       spreadOnShort_(spreadOnShort), includeSpread_(includeSpread), type_(type), discountHandle_(discountingCurve) {
 
@@ -94,7 +94,7 @@ void TenorBasisSwapHelper::initializeDates() {
     latestDate_ = std::max(latestDate_, endValueDate);
 #else
     /* Subperiods coupons do not have a par approximation either... */
-    if (boost::dynamic_pointer_cast<SubPeriodsCoupon>(lastFloating)) {
+    if (boost::dynamic_pointer_cast<QuantExt::SubPeriodsCoupon1>(lastFloating)) {
         Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
         Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
         latestDate_ = std::max(latestDate_, endValueDate);

@@ -105,7 +105,8 @@ public:
     SensitivityScenarioGenerator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                                  const boost::shared_ptr<Scenario>& baseScenario,
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                 const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
+				 const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+				 const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
                                  const bool overrideTenors, const bool continueOnError = false,
                                  const boost::shared_ptr<Scenario>& baseScenarioAbsolute = nullptr);
     //! Default destructor

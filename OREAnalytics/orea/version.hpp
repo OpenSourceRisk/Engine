@@ -17,7 +17,7 @@
 */
 
 /*! \file orea/version.hpp
-    \brief Version
+    \brief ORE version as defined in QuantExt
 */
 
 #pragma once

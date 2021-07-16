@@ -42,9 +42,10 @@ using RFType = RiskFactorKey::KeyType;
 SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const boost::shared_ptr<Scenario>& baseScenario,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, const bool overrideTenors,
     const bool continueOnError, const boost::shared_ptr<Scenario>& baseScenarioAbsolute)
-    : ShiftScenarioGenerator(baseScenario, simMarketData), sensitivityData_(sensitivityData),
+    : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), sensitivityData_(sensitivityData), 
       sensiScenarioFactory_(sensiScenarioFactory), overrideTenors_(overrideTenors), continueOnError_(continueOnError),
       baseScenarioAbsolute_(baseScenarioAbsolute == nullptr ? baseScenario : baseScenarioAbsolute) {
 
@@ -388,7 +389,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
 
 namespace {
 void checkShiftTenors(const std::vector<Period>& effective, const std::vector<Period>& config,
-                      const std::string& curveLabel) {
+                      const std::string& curveLabel, bool continueOnError = false) {
     if (effective.size() != config.size()) {
         string message = "mismatch between effective shift tenors (" + std::to_string(effective.size()) +
                          ") and configured shift tenors (" + std::to_string(config.size()) + ") for " + curveLabel;
@@ -397,7 +398,8 @@ void checkShiftTenors(const std::vector<Period>& effective, const std::vector<Pe
             ALOG("effetive tenor: " << p);
         for (auto const& p : config)
             ALOG("config   tenor: " << p);
-        QL_FAIL(message);
+        if(!continueOnError)
+            QL_FAIL(message);
     }
 }
 } // namespace
@@ -422,7 +424,12 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->discountCurve(ccy)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for discount curve " << ccy << ", using default A365");
+        }
 
         Real quote = 0.0;
         bool valid = true;
@@ -440,7 +447,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
                                               ? simMarketData_->yieldCurveTenors(ccy)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -513,8 +520,13 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         SensitivityScenarioData::CurveShiftData data = *idx.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
-
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->iborIndex(indexName)->forwardingTermStructure()->dayCounter();
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for index " << indexName << ", using default A365");
+        }
+        
         Real quote = 0.0;
         bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
@@ -530,7 +542,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
                                               ? simMarketData_->yieldCurveTenors(indexName)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Index Curve " + indexName);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Index Curve " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -599,8 +611,12 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = *y.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->yieldCurve(name)->dayCounter();
+        } catch (const std::exception&) {
+            WLOG("Day counter lookup in simulation market failed for yield curve " << name << ", using default A365");
+        }
 
         Real quote = 0.0;
         bool valid = true;
@@ -617,7 +633,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
                                                      ? simMarketData_->yieldCurveTenors(name)
                                                      : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Yield Curve " + name);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Yield Curve " + name, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -685,8 +701,12 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->equityDividendCurve(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for dividend yield curve " << name << ", using default A365");
+        }
 
         Real quote = 0.0;
         bool valid = true;
@@ -703,7 +723,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
                                                      ? simMarketData_->equityDividendTenors(name)
                                                      : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Divident Yield " + name);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Divident Yield " + name, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -788,7 +808,12 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
-        DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccyPair));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->fxVol(ccyPair)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for fx vol surface " << ccyPair << ", using default A365");
+        }
         bool valid = true;
         for (Size j = 0; j < n_fxvol_exp; ++j) {
             Date d = asof + simMarketData_->fxVolExpiries()[j];
@@ -889,7 +914,12 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
         vector<Time> shiftTimes(shiftTenors.size());
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Equity vol shift tenors not specified");
-        DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->equityVol(equity)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for equity vol surface " << equity << ", using default A365");
+        }
         bool valid = true;
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = asof + simMarketData_->equityVolExpiries(equity)[j];
@@ -976,7 +1006,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getVolStrikes = [this](const string& k) { return simMarketData_->swapVolStrikeSpreads(k); };
         getVolExpiries = [this](const string& k) { return simMarketData_->swapVolExpiries(k); };
         getVolTerms = [this](const string& k) { return simMarketData_->swapVolTerms(k); };
-        getDayCounter = [this](const string& k) { return simMarketData_->swapVolDayCounter(k); };
+        getDayCounter = [this](const string& k) { return to_string(simMarket_->swaptionVol(k)->dayCounter()); };
         getScenarioDescription = [this](string q, Size n, Size m, Size k, bool up) {
             return swaptionVolScenarioDescription(q, n, m, k, up);
         };
@@ -988,7 +1018,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getVolStrikes = [](const string& k) { return vector<Real>({0.0}); };
         getVolExpiries = [this](const string& k) { return simMarketData_->yieldVolExpiries(); };
         getVolTerms = [this](const string& k) { return simMarketData_->yieldVolTerms(); };
-        getDayCounter = [this](const string& k) { return simMarketData_->yieldVolDayCounter(k); };
+        getDayCounter = [this](const string& k) { return to_string(simMarket_->yieldVol(k)->dayCounter()); };
         getScenarioDescription = [this](string q, Size n, Size m, Size k, bool up) {
             return yieldVolScenarioDescription(q, n, m, up);
         };
@@ -1187,7 +1217,12 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
             sensiIsAtm = true;
         }
 
-        DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(ccy));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->capFloorVol(ccy)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for cap/floor vol surface " << ccy << ", using default A365");
+        }
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
@@ -1278,7 +1313,12 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         std::vector<Real> shiftedHazardRates(n_ten);
         SensitivityScenarioData::CurveShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->defaultCurve(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for default curve " << name << ", using default A365");
+        }
         Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
 
         Real prob = 0.0;
@@ -1298,7 +1338,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
                                               ? simMarketData_->defaultTenors(name)
                                               : data.shiftTenors;
 
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Default Curve " + name);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Default Curve " + name, continueOnError_);
 
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -1372,7 +1412,12 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
 
         vector<Time> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
-        DayCounter dc = parseDayCounter(simMarketData_->cdsVolDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->cdsVol(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for cds vol surface " << name << ", using default A365");
+        }
 
         // cache original vol data
         for (Size j = 0; j < n_cdsvol_exp; ++j) {
@@ -1449,7 +1494,12 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = *z.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->zeroInflationDayCounter(indexName));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->zeroInflationIndex(indexName)->zeroInflationTermStructure()->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for zero inflation index " << indexName << ", using default A365");
+        }
         bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->zeroInflationTenors(indexName)[j];
@@ -1463,7 +1513,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasZeroInflationTenors(indexName)
                                               ? simMarketData_->zeroInflationTenors(indexName)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Zero Inflation " + indexName);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Zero Inflation " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -1536,7 +1586,12 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
                    "yoyinflation CurveShiftData not found for " << indexName);
         SensitivityScenarioData::CurveShiftData data = *y.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yoyInflationDayCounter(indexName));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->yoyInflationIndex(indexName)->yoyInflationTermStructure()->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for yoy inflation index " << indexName << ", using default A365");
+        }
         bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yoyInflationTenors(indexName)[j];
@@ -1550,7 +1605,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
                                               ? simMarketData_->yoyInflationTenors(indexName)
                                               : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "YoY Inflation " + indexName);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "YoY Inflation " + indexName, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -1627,7 +1682,12 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
         vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
-        DayCounter dc = parseDayCounter(simMarketData_->yoyInflationCapFloorVolDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->yoyCapFloorVol(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for yoy cap/floor vol surface " << name << ", using default A365");
+        }
 
         // cache original vol data
         for (Size j = 0; j < n_yoyvol_exp; ++j) {
@@ -1722,7 +1782,12 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
         vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
-        DayCounter dc = parseDayCounter(simMarketData_->zeroInflationCapFloorVolDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->cpiInflationCapFloorVolatilitySurface(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for cpi cap/floor vol surface " << name << ", using default A365");
+        }
 
         // cache original vol data
         for (Size j = 0; j < n_exp; ++j) {
@@ -1791,7 +1856,7 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some names in simmarket are excluded from the list
-    for (auto name : simMarketData_->baseCorrelationNames()) {
+   for (auto name : simMarketData_->baseCorrelationNames()) {
         if (sensitivityData_->baseCorrelationShiftData().find(name) ==
             sensitivityData_->baseCorrelationShiftData().end()) {
             WLOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
@@ -1815,7 +1880,12 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
         vector<Real> shiftLevels = data.shiftLossLevels;
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-        DayCounter dc = parseDayCounter(simMarketData_->baseCorrelationDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->baseCorrelation(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for base correlation structure " << name << ", using default A365");
+        }
 
         // cache original base correlation data
         for (Size j = 0; j < n_bc_terms; ++j) {
@@ -1906,7 +1976,14 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         string name = c.first;
         // Tenors for this name in simulation market
         vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(name);
-        DayCounter curveDayCounter = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->commodityPriceCurve(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for commodity price curve " << name << ", using default A365");
+        }
+
+
         vector<Real> times(simMarketTenors.size());
         vector<Real> basePrices(times.size());
         vector<Real> shiftedPrices(times.size());
@@ -1914,7 +1991,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         // Get the base prices for this name from the base scenario
         bool valid = true;
         for (Size j = 0; j < times.size(); ++j) {
-            times[j] = curveDayCounter.yearFraction(asof, asof + simMarketTenors[j]);
+            times[j] = dc.yearFraction(asof, asof + simMarketTenors[j]);
             RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, name, j);
             valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, basePrices[j], continueOnError_);
         }
@@ -1930,7 +2007,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         QL_REQUIRE(!data.shiftTenors.empty(), "Commodity curve shift tenors have not been given");
         vector<Time> shiftTimes(data.shiftTenors.size());
         for (Size j = 0; j < data.shiftTenors.size(); ++j) {
-            shiftTimes[j] = curveDayCounter.yearFraction(asof, asof + data.shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + data.shiftTenors[j]);
         }
 
         // Can we store a valid shift size?
@@ -2003,12 +2080,17 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 
         ShiftType shiftType = parseShiftType(sd.shiftType);
         vector<Time> shiftTimes(sd.shiftExpiries.size());
-        DayCounter dayCounter = parseDayCounter(simMarketData_->commodityVolDayCounter(name));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->commodityVolatility(name)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for commodity vol surface " << name << ", using default A365");
+        }
 
         // Get the base scenario volatility values
         bool valid = true;
         for (Size j = 0; j < expiries.size(); j++) {
-            times[j] = dayCounter.yearFraction(asof, asof + expiries[j]);
+            times[j] = dc.yearFraction(asof, asof + expiries[j]);
             for (Size i = 0; i < moneyness.size(); i++) {
                 RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, name, i * expiries.size() + j);
                 valid =
@@ -2020,7 +2102,7 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 
         // Store the shift expiry times
         for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
-            shiftTimes[sj] = dayCounter.yearFraction(asof, asof + sd.shiftExpiries[sj]);
+            shiftTimes[sj] = dc.yearFraction(asof, asof + sd.shiftExpiries[sj]);
         }
 
         // Can we store a valid shift size?
@@ -2097,7 +2179,12 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
         vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
-        DayCounter dc = parseDayCounter(simMarketData_->correlationDayCounter(pair.first, pair.second));
+        DayCounter dc = Actual365Fixed();
+        try {
+            dc = simMarket_->correlationCurve(pair.first, pair.second)->dayCounter();
+        } catch(const std::exception&)  {
+            WLOG("Day counter lookup in simulation market failed for correlation curve " << pair.first << " - " <<  pair.second << ", using default A365");
+        }
 
         // cache original vol data
         for (Size j = 0; j < n_c_exp; ++j) {

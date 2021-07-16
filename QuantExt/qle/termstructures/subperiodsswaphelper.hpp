@@ -41,7 +41,7 @@ public:
                          BusinessDayConvention fixedConvention, const Period& floatPayTenor,
                          const boost::shared_ptr<IborIndex>& iborIndex, const DayCounter& floatDayCount,
                          const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
-                         SubPeriodsCoupon::Type type = SubPeriodsCoupon::Compounding);
+                         QuantExt::SubPeriodsCoupon1::Type type = QuantExt::SubPeriodsCoupon1::Compounding);
 
     //! \name RateHelper interface
     //@{
@@ -70,7 +70,7 @@ private:
     BusinessDayConvention fixedConvention_;
     Period floatPayTenor_;
     DayCounter floatDayCount_;
-    SubPeriodsCoupon::Type type_;
+    QuantExt::SubPeriodsCoupon1::Type type_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
