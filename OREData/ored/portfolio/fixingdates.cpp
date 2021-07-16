@@ -664,7 +664,7 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
         if (mktParams.hasMarketObject(MarketObject::FXSpot)) {
             auto fxLookback = 7 * Days;
 
-            // Dates that will be used for each of the inflation indices
+            // Dates that will be used for each of the FX indices
             Date today = Settings::instance().evaluationDate();
             Date lookback = NullCalendar().advance(today, -fxLookback);
             set<Date> dates;
