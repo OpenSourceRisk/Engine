@@ -102,24 +102,19 @@ string ShiftScenarioGenerator::ScenarioDescription::typeString() const {
         QL_FAIL("ScenarioDescription::Type not covered");
 }
 string ShiftScenarioGenerator::ScenarioDescription::factor1() const {
-    string id1 = indexDesc1_;
-    std::replace(id1.begin(), id1.end(), '/', '\/');
     ostringstream o;
     if (key1_ != RiskFactorKey()) {
         o << key1_;
-        o << "/" << id1;
+        o << "/" << indexDesc1_;
         return o.str();
     }
     return "";
 }
 string ShiftScenarioGenerator::ScenarioDescription::factor2() const {
-    string id2 = indexDesc2_;
-    std::replace(id2.begin(), id2.end(), '/', '\/');
-
     ostringstream o;
     if (key2_ != RiskFactorKey()) {
         o << key2_;
-        o << "/" << id2;
+        o << "/" << indexDesc2_;
         return o.str();
     }
     return "";
@@ -184,13 +179,23 @@ pair<RiskFactorKey, string> deconstructFactor(const string& factor) {
         return make_pair(RiskFactorKey(), "");
     }
 
-    // Expect string of form "a/b/c/<anything>" where "a/b/c" can be parsed as RiskFactorKey
-    // The remainder is the index description
-    auto it = boost::find_nth(factor, "/", 2);
-    QL_REQUIRE(!it.empty(), "Could not find 3 '/' in the string " << factor);
+    boost::escaped_list_separator<char> sep('\\', '/', '\"');
+    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(factor, sep);
 
-    auto pos = distance(factor.begin(), it.begin());
-    return make_pair(parseRiskFactorKey(factor.substr(0, pos)), factor.substr(pos + 1));
+    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
+
+    // first 3 tokens are the risk factor key, the remainder are the description
+    ostringstream o;
+    if (tokens.size() > 3) {
+        o << tokens[3];
+        Size i = 4;
+        while (i < tokens.size()) {
+            o << "/" << tokens[i];
+            i++;
+        }
+    }
+
+    return make_pair(RiskFactorKey(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2])), o.str());
 }
 
 string reconstructFactor(const RiskFactorKey& key, const string& desc) {
@@ -211,7 +216,8 @@ boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<st
     boost::escaped_list_separator<char> sep('\\', '/', '\"');
     boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(p.second, sep);
 
-    addTokens(tokenSplit.begin(), tokenSplit.end());
+    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
+    addTokens = tokens;
 
     // Return the key value
     return boost::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
