@@ -71,7 +71,7 @@ void BondData::fromXML(XMLNode* node) {
 XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLNode* bondNode = doc.allocNode("BondData");
     XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
-    XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
+    XMLUtils::addChild(doc, bondNode, "CreditCurveId", hasCreditRisk_ ? creditCurveId_ : std::string());
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     if (!proxySecurityId_.empty())
