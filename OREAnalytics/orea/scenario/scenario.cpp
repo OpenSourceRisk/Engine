@@ -90,6 +90,9 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
         return out << "";
     }
 
+    string keyStr = key.name;
+    std::replace(keyStr.begin(), keyStr.end(), '/', '\/');
+
     // If not empty key
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }

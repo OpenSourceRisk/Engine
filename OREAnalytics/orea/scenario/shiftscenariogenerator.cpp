@@ -42,6 +42,8 @@ string ShiftScenarioGenerator::ScenarioDescription::keyName(RiskFactorKey key) c
         keyName = tokens[0];
     }
 
+    std::replace(keyName.begin(), keyName.end(), '/', '\/');
+
     std::ostringstream o;
     o << keyType << "/" << keyName;
     return o.str();
@@ -100,19 +102,24 @@ string ShiftScenarioGenerator::ScenarioDescription::typeString() const {
         QL_FAIL("ScenarioDescription::Type not covered");
 }
 string ShiftScenarioGenerator::ScenarioDescription::factor1() const {
+    string id1 = indexDesc1_;
+    std::replace(id1.begin(), id1.end(), '/', '\/');
     ostringstream o;
     if (key1_ != RiskFactorKey()) {
         o << key1_;
-        o << "/" << indexDesc1_;
+        o << "/" << id1;
         return o.str();
     }
     return "";
 }
 string ShiftScenarioGenerator::ScenarioDescription::factor2() const {
+    string id2 = indexDesc2_;
+    std::replace(id2.begin(), id2.end(), '/', '\/');
+
     ostringstream o;
     if (key2_ != RiskFactorKey()) {
         o << key2_;
-        o << "/" << indexDesc2_;
+        o << "/" << id2;
         return o.str();
     }
     return "";
@@ -201,7 +208,10 @@ boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<st
     auto p = deconstructFactor(str);
 
     // The additional tokens
-    boost::split(addTokens, p.second, boost::is_any_of("/"), boost::token_compress_off);
+    boost::escaped_list_separator<char> sep('\\', '/', '\"');
+    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(p.second, sep);
+
+    addTokens(tokenSplit.begin(), tokenSplit.end());
 
     // Return the key value
     return boost::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
