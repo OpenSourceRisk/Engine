@@ -135,9 +135,7 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
 
     // If we want the option contract expiry, do the extra work here.
     if (forOption) {
-        if (convention_.optionExpiryDay() != Null<Natural>()) {
-
-            // Option expiry may be specified as n months before future expiry. Adjust here if necessary.
+        if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::DayOfMonth) {
             auto optionMonth = expiry.month();
             auto optionYear = expiry.year();
 
@@ -148,19 +146,34 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
             }
 
             auto d = convention_.optionExpiryDay();
-            expiry = Date(d, optionMonth, optionYear);
+            Date last = Date::endOfMonth(Date(1, optionMonth, optionYear));
+            if (d > static_cast<Natural>(last.dayOfMonth())) {
+                expiry = last;
+            } else {
+                expiry = Date(d, optionMonth, optionYear);
+            }
             expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
-
-        } else {
-
+        } else if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::BusinessDaysBefore) {
             QL_REQUIRE(convention_.optionExpiryMonthLag() == 0 ||
-                convention_.expiryMonthLag() == convention_.optionExpiryMonthLag(), "The expiry month lag " <<
-                "and the option expiry month lag should be the same if using option expiry offset days.");
+                           convention_.expiryMonthLag() == convention_.optionExpiryMonthLag(),
+                       "The expiry month lag "
+                           << "and the option expiry month lag should be the same if using option expiry offset days.");
 
-            expiry = convention_.expiryCalendar().advance(expiry,
-                -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
+            expiry = convention_.expiryCalendar().advance(
+                expiry, -static_cast<Integer>(convention_.optionExpiryOffset()), Days);
+        } else if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::NthWeekday) {
+            auto optionMonth = expiry.month();
+            auto optionYear = expiry.year();
+
+            if (convention_.optionExpiryMonthLag() != 0) {
+                Date newDate = Date(15, optionMonth, optionYear) - convention_.optionExpiryMonthLag() * Months;
+                optionMonth = newDate.month();
+                optionYear = newDate.year();
+            }
+            expiry = Date::nthWeekday(convention_.optionNth(), convention_.optionWeekday(), optionMonth, optionYear);
+            expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
         }
-
+        
         expiry = avoidProhibited(expiry, true);
 
     } else {
@@ -174,7 +187,8 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
 Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool forOption) const {
 
     // If contract frequency is daily, next expiry is simply the next valid date on expiry calendar.
-    if (convention_.contractFrequency() == Daily) {
+  
+    if ((convention_.contractFrequency() == Daily) && (!forOption || convention_.optionContractFrequency() == Daily)) {
         Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
         return avoidProhibited(expiry, false);
     }
@@ -184,7 +198,11 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     Date expiryDate = expiry(convention_.oneContractMonth(), referenceDate.year() - 1, 0, forOption);
     QL_REQUIRE(expiryDate < referenceDate, "Expected the expiry date in the previous year to be before reference");
     while (expiryDate < referenceDate) {
-        guideDate += Period(convention_.contractFrequency());
+        if (forOption && (convention_.optionContractFrequency() != convention_.contractFrequency())) {
+            guideDate += Period(convention_.optionContractFrequency());
+        } else {
+            guideDate += Period(convention_.contractFrequency());
+        }
         expiryDate = expiry(guideDate.month(), guideDate.year(), 0, forOption);
     }
 
