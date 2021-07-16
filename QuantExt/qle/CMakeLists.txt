@@ -404,6 +404,7 @@ instruments/fxforward.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
+instruments/nullinstrument.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
 instruments/payment.hpp

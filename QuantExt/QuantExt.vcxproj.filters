@@ -147,6 +147,9 @@
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\nullinstrument.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
     <ClInclude Include="qle\models\crossassetanalytics.hpp">
       <Filter>models</Filter>
     </ClInclude>

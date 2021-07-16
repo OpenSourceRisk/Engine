@@ -37,6 +37,7 @@
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/log.hpp>
 
@@ -66,6 +67,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
     addBuilder("CommodityAsianOption", boost::make_shared<TradeBuilder<CommodityAsianOption>>());
     addBuilder("EquityFutureOption", boost::make_shared<TradeBuilder<EquityFutureOption>>());
+    addBuilder("Failed", boost::make_shared<TradeBuilder<FailedTrade>>());
     if (extraBuilders.size() > 0)
         addExtraBuilders(extraBuilders);
 }
