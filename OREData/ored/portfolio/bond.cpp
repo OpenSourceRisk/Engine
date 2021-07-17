@@ -71,7 +71,7 @@ void BondData::fromXML(XMLNode* node) {
 XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLNode* bondNode = doc.allocNode("BondData");
     XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
-    XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
+    XMLUtils::addChild(doc, bondNode, "CreditCurveId", hasCreditRisk_ ? creditCurveId_ : std::string());
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     if (!proxySecurityId_.empty())
@@ -94,11 +94,6 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
 void BondData::initialise() {
 
     isPayer_ = false;
-
-    if (!hasCreditRisk() && !creditCurveId().empty()) {
-        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
-        creditCurveId_ = "";
-    }
 
     if (!zeroBond()) {
 
@@ -203,8 +198,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency currency = parseCurrency(bondData_.currency());
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(
-        bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
+    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
+                                               bondData_.securityId(), bondData_.referenceCurveId()));
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();
