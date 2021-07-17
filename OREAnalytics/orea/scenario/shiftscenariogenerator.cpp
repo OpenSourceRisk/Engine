@@ -42,6 +42,8 @@ string ShiftScenarioGenerator::ScenarioDescription::keyName(RiskFactorKey key) c
         keyName = tokens[0];
     }
 
+    std::replace(keyName.begin(), keyName.end(), '/', '\/');
+
     std::ostringstream o;
     o << keyType << "/" << keyName;
     return o.str();
@@ -177,13 +179,23 @@ pair<RiskFactorKey, string> deconstructFactor(const string& factor) {
         return make_pair(RiskFactorKey(), "");
     }
 
-    // Expect string of form "a/b/c/<anything>" where "a/b/c" can be parsed as RiskFactorKey
-    // The remainder is the index description
-    auto it = boost::find_nth(factor, "/", 2);
-    QL_REQUIRE(!it.empty(), "Could not find 3 '/' in the string " << factor);
+    boost::escaped_list_separator<char> sep('\\', '/', '\"');
+    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(factor, sep);
 
-    auto pos = distance(factor.begin(), it.begin());
-    return make_pair(parseRiskFactorKey(factor.substr(0, pos)), factor.substr(pos + 1));
+    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
+
+    // first 3 tokens are the risk factor key, the remainder are the description
+    ostringstream o;
+    if (tokens.size() > 3) {
+        o << tokens[3];
+        Size i = 4;
+        while (i < tokens.size()) {
+            o << "/" << tokens[i];
+            i++;
+        }
+    }
+
+    return make_pair(RiskFactorKey(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2])), o.str());
 }
 
 string reconstructFactor(const RiskFactorKey& key, const string& desc) {
@@ -201,7 +213,11 @@ boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<st
     auto p = deconstructFactor(str);
 
     // The additional tokens
-    boost::split(addTokens, p.second, boost::is_any_of("/"), boost::token_compress_off);
+    boost::escaped_list_separator<char> sep('\\', '/', '\"');
+    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(p.second, sep);
+
+    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
+    addTokens = tokens;
 
     // Return the key value
     return boost::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
