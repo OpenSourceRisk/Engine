@@ -120,7 +120,12 @@
           "AmountUSD"
         ],
         "col_types" : {
-          "Bucket": "str"
+          "ProductClass" : "str",
+          "RiskType" : "str",
+          "Qualifier" : "str",
+          "Bucket" : "str",
+          "Label1" : "str",
+          "Label2" : "str"
         },
         "drop_rows" : {
           "cols": [

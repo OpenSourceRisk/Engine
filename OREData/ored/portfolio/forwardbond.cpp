@@ -143,7 +143,8 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.securityId(),
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
+                                                     bondData_.hasCreditRisk(), bondData_.securityId(),
                                                      bondData_.referenceCurveId(), bondData_.incomeCurveId()));
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 

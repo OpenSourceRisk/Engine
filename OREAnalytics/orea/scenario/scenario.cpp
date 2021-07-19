@@ -90,8 +90,20 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
         return out << "";
     }
 
+    string keyStr = key.name;
+    size_t index = 0;
+    while (true) {
+        /* Locate the substring to replace. */
+        index = keyStr.find("/", index);
+        if (index == std::string::npos)
+            break;
+
+        keyStr.replace(index, 1, "\\/");
+        index += 2;
+    }
+
     // If not empty key
-    return out << key.keytype << "/" << key.name << "/" << key.index;
+    return out << key.keytype << "/" << keyStr << "/" << key.index;
 }
 
 RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
@@ -150,8 +162,10 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
 }
 
 RiskFactorKey parseRiskFactorKey(const string& str) {
-    std::vector<string> tokens;
-    boost::split(tokens, str, boost::is_any_of("/"), boost::token_compress_on);
+    boost::escaped_list_separator<char> sep('\\', '/', '\"');
+    boost::tokenizer<boost::escaped_list_separator<char> > tokenSplit(str, sep);
+    vector<string> tokens(tokenSplit.begin(), tokenSplit.end());
+
     QL_REQUIRE(tokens.size() == 3, "Could not parse key " << str);
     RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
     return rfk;
