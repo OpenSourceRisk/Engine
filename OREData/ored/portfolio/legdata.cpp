@@ -38,6 +38,7 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/capflooredinflationcoupon.hpp>
+#include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/digitalcmscoupon.hpp>
@@ -47,9 +48,8 @@
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
-#include <ql/version.hpp>
 #include <ql/utilities/vectors.hpp>
-#include <ql/cashflows/cashflowvectors.hpp>
+#include <ql/version.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
@@ -240,10 +240,11 @@ void CPILegData::fromXML(XMLNode* node) {
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
     else
         subtractInflationNominal_ = false;
-    
+
     XMLNode* subNomCpnsNode = XMLUtils::getChildNode(node, "SubtractInflationNotionalAllCoupons");
     if (subNomCpnsNode)
-        subtractInflationNominalCoupons_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotionalAllCoupons", true);
+        subtractInflationNominalCoupons_ =
+            XMLUtils::getChildValueAsBool(node, "SubtractInflationNotionalAllCoupons", true);
     else
         subtractInflationNominalCoupons_ = false;
 
@@ -867,9 +868,9 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     Size numRates = zcFixedLegData->rates().size();
     Size numDates = schedule.size();
     QL_REQUIRE(numDates >= 2, "Incorrect number of schedule dates entered, expected at least 2, got " << numDates);
-    QL_REQUIRE(numNotionals >= 1, "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
+    QL_REQUIRE(numNotionals >= 1,
+               "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
     QL_REQUIRE(numRates >= 1, "Incorrect number of rate values entered, expected at least 1, got " << numRates);
-
 
     vector<Date> dates = schedule.dates();
 
@@ -959,7 +960,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                     } else {
                         coupon = boost::make_shared<QuantExt::SubPeriodsCoupon1>(
                             paymentDate, notionals[i], schedule[i], schedule[i + 1], index,
-                            floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging : QuantExt::SubPeriodsCoupon1::Compounding,
+                            floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging
+                                                    : QuantExt::SubPeriodsCoupon1::Compounding,
                             index->businessDayConvention(), spreads[i], dc, floatData->includeSpread(), gearings[i]);
                         coupon->setPricer(boost::make_shared<QuantExt::SubPeriodsCouponPricer1>());
                     }
@@ -996,7 +998,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                       .withPaymentAdjustment(bdc)
                       .withGearings(gearings)
                       .withSpreads(spreads)
-            .withType(floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging : QuantExt::SubPeriodsCoupon1::Compounding)
+                      .withType(floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging
+                                                        : QuantExt::SubPeriodsCoupon1::Compounding)
                       .includeSpread(floatData->includeSpread());
         QuantExt::setCouponPricer(leg, boost::make_shared<QuantExt::SubPeriodsCouponPricer1>());
         return leg;
@@ -1259,7 +1262,6 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
-    
 
     boost::shared_ptr<CPILegData> cpiLegData = boost::dynamic_pointer_cast<CPILegData>(data.concreteLegData());
     QL_REQUIRE(cpiLegData, "Wrong LegType, expected CPI, got " << data.legType());
@@ -1298,7 +1300,6 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
             .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
             .withSubtractInflationNominalAllCoupons(cpiLegData->subtractInflationNominalCoupons());
 
-
     // the cpi leg uses the first schedule date as the start date, which only makes sense if there are at least
     // two dates in the schedule, otherwise the only date in the schedule is the pay date of the cf and a a separate
     // start date is expected; if both the separate start date and a schedule with more than one date is given
@@ -1309,17 +1310,14 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     } else if (!start.empty()) {
         DLOG("Schedule with more than 2 dates was provided. The first schedule date "
 
-                << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
-                << " is not used.");
-
+             << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
+             << " is not used.");
     }
     if (couponCap)
         cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
 
     if (couponFloor)
         cpiLeg.withFloors(buildScheduledVector(cpiLegData->floors(), cpiLegData->floorDates(), schedule));
-
-       
 
     if (cpiLegData->finalFlowCap() != Null<Real>())
         cpiLeg.withFinalFlowCap(cpiLegData->finalFlowCap());
@@ -1364,7 +1362,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
             boost::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
                 boost::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
-            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size()-1)) {
+            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size() - 1)) {
                 cfCpiCashFlow->setPricer(cashFlowPricer);
             }
         }
@@ -1437,11 +1435,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                 .withRateCurve(engineFactory->market()->discountCurve(
                     data.currency(), engineFactory->configuration(MarketContext::pricing)));
 
-
-
         if (couponCap)
             yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
-
 
         if (couponFloor)
             yoyLeg.withFloors(buildScheduledVector(yoyLegData->floors(), yoyLegData->floorDates(), schedule));
@@ -1780,7 +1775,7 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    
+
     Calendar paymentCalendar;
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1788,9 +1783,8 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
     // replace the value in schedule data
-   /* LegData new_data = data;
-    string hi = new_data.;*/
-
+    /* LegData new_data = data;
+     string hi = new_data.;*/
 
     vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsSpreadData->spreads(),
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);
@@ -2212,11 +2206,10 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     return fxi;
 }
 
-boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
-                                                      const bool relative, const Calendar& fixingCalendar,
-                                                      const bool conditionalOnSurvival,
-                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                      RequiredFixings& requiredFixings) {
+boost::shared_ptr<QuantExt::BondIndex>
+buildBondIndex(const BondData& securityData, const bool dirty, const bool relative, const Calendar& fixingCalendar,
+               const bool conditionalOnSurvival, const boost::shared_ptr<EngineFactory>& engineFactory,
+               RequiredFixings& requiredFixings, const bool inflationAdjustedPrice) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
 
@@ -2274,7 +2267,8 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     // build and return the index
 
     return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, relative, fixingCalendar, qlBond, discountCurve,
-                                                   defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival);
+                                                   defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival,
+                                                   inflationAdjustedPrice);
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {

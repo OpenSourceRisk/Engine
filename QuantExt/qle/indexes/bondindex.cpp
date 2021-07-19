@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/indexes/bondindex.hpp>
-#include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/settings.hpp>
+#include <qle/indexes/bondindex.hpp>
+#include <qle/pricingengines/discountingriskybondengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -30,10 +30,11 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                      const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
-                     const bool conditionalOnSurvival)
+                     const bool conditionalOnSurvival, const bool inflationAdjustedPrice)
     : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
-      securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival) {
+      securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival),
+      inflationAdjustedPrice_(inflationAdjustedPrice) {
 
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
@@ -108,19 +109,25 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 
     if (!dirty_) {
         price -= bond_->accruedAmount(fixingDate) / 100.0 * bond_->notional(fixingDate);
-        //check if its inflation bond, assume if we find one inflation coupon that
-        // all coupons are inflatio linked and use the same index, need to make a own bond class like zero coupon
+    }
+
+    if (inflationAdjustedPrice_) {
+        bool foundInflationCoupon = false;
         for (auto& cf : bond_->cashflows()) {
+            // check if its inflation bond, assume if we find one inflation coupon that
+            // all coupons are inflatio linked and use the same index, need to make a own bond class like zero
+            // coupon
             if (auto inflCpn = ext::dynamic_pointer_cast<CPICoupon>(cf)) {
-                auto& inflationIndex = ext::dynamic_pointer_cast<ZeroInflationIndex>(inflCpn->index());
-                auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
-                
+                foundInflationCoupon = true;
+                const auto& inflationIndex = ext::dynamic_pointer_cast<ZeroInflationIndex>(inflCpn->index());
+                const auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
                 Real inflationAccualFactor = inflCpn->baseCPI() / inflationIndex->fixing(inflationCurve->baseDate());
                 price *= inflationAccualFactor;
                 break;
             }
+            QL_REQUIRE(foundInflationCoupon,
+                       "Can not compute inflation adjusted prices if there is not at least one inflation coupon");
         }
-
     }
 
     if (relative_) {
@@ -141,17 +148,24 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     if (dirty_) {
         QL_REQUIRE(bond_, "BondIndex::pastFixing(): bond required for dirty prices");
         price += bond_->accruedAmount(fixingDate) / 100.0;
-        // check if its inflation bond, assume if we find one inflation coupon that
-        // all coupons are inflatio linked and use the same index, need to make a own bond class like zero coupon
-        for (auto& cf : bond_->cashflows()) {
-            if (auto inflCpn = ext::dynamic_pointer_cast<CPICoupon>(cf)) {
-                auto& inflationIndex = ext::dynamic_pointer_cast<ZeroInflationIndex>(inflCpn->index());
-                auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
+    }
 
-                Real inflationAccualFactor = inflationIndex->fixing(inflationCurve->baseDate())  / inflCpn->baseCPI();
+    if (inflationAdjustedPrice_) {
+        bool foundInflationCoupon = false;
+        for (auto& cf : bond_->cashflows()) {
+            // check if its inflation bond, assume if we find one inflation coupon that
+            // all coupons are inflatio linked and use the same index, need to make a own bond class like zero
+            // coupon
+            if (auto inflCpn = ext::dynamic_pointer_cast<CPICoupon>(cf)) {
+                foundInflationCoupon = true;
+                const auto& inflationIndex = ext::dynamic_pointer_cast<ZeroInflationIndex>(inflCpn->index());
+                const auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
+                Real inflationAccualFactor = inflationIndex->fixing(inflationCurve->baseDate()) / inflCpn->baseCPI();
                 price *= inflationAccualFactor;
                 break;
             }
+            QL_REQUIRE(foundInflationCoupon,
+                       "Can not compute inflation adjusted prices if there is not at least one inflation coupon");
         }
     }
 
