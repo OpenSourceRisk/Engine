@@ -183,12 +183,29 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
             boost::shared_ptr<CashFlow> flow = legs_[i][j];
             // pick flow with earliest future payment date on this leg
             if (flow->date() > asof) {
-                additionalData_["amount[" + legID + "]"] = flow->amount();
+                Real flowAmount = 0.0;
+                try { flowAmount = flow->amount(); }
+                catch(std::exception& e) {
+                    ALOG("flow amount could not be determined for trade " << id() << ", set to zero: " << e.what());
+                }
+                additionalData_["amount[" + legID + "]"] = flowAmount;
                 additionalData_["paymentDate[" + legID + "]"] = to_string(flow->date());
                 boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
                 if (coupon) {
-                    additionalData_["currentNotional[" + legID + "]"] = coupon->nominal();
-                    additionalData_["rate[" + legID + "]"] = coupon->rate();
+                    Real currentNotional = 0;
+                    try { currentNotional = coupon->nominal(); }
+                    catch(std::exception& e) {
+                        ALOG("current notional could not be determined for trade " << id() << ", set to zero: " << e.what());
+                    }
+                    additionalData_["currentNotional[" + legID + "]"] = currentNotional;
+
+                    Real rate = 0;
+                    try { rate = coupon->rate(); }
+                    catch(std::exception& e) {
+                        ALOG("coupon rate could not be determined for trade " << id() << ", set to zero: " << e.what());
+                    }
+                    additionalData_["rate[" + legID + "]"] = rate;
+
                     boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
                     if (frc) {
                         additionalData_["index[" + legID + "]"] = frc->index()->name();
@@ -200,8 +217,14 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
         }
         if (legs_[i].size() > 0) {
             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[i][0]);
-            if (coupon)
-                additionalData_["originalNotional[" + legID + "]"] = coupon->nominal();
+            if (coupon) {
+                Real originalNotional = 0.0;
+                try { originalNotional = coupon->nominal(); }
+                catch(std::exception& e) {
+                    ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
+                }
+                additionalData_["originalNotional[" + legID + "]"] = originalNotional;
+            }
         }
     }
     return additionalData_;

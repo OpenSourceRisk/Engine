@@ -53,11 +53,9 @@ public:
     underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! inspectors
-    const BondData bondData() const { return bondData_; }
+    const BondData& bondData() const { return bondData_; }
     // only available after build() was called
     const string& currency() const { return currency_; }
-    // FIXE remove this, replace by bondData()->creditCurveId()
-    const string& creditCurveId() const { return bondData_.creditCurveId(); }
 
     const string& fwdMaturityDate() const { return fwdMaturityDate_; }
     const string& fwdSettlementDate() const { return fwdSettlementDate_; }

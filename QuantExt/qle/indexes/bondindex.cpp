@@ -111,7 +111,7 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
         price -= bond_->accruedAmount(fixingDate) / 100.0 * bond_->notional(fixingDate);
     }
 
-    if (inflationAdjustedPrice_) {
+    if (!inflationAdjustedPrice_) {
         bool foundInflationCoupon = false;
         for (auto& cf : bond_->cashflows()) {
             // check if its inflation bond, assume if we find one inflation coupon that
@@ -125,8 +125,6 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
                 price *= inflationAccualFactor;
                 break;
             }
-            QL_REQUIRE(foundInflationCoupon,
-                       "Can not compute inflation adjusted prices if there is not at least one inflation coupon");
         }
     }
 

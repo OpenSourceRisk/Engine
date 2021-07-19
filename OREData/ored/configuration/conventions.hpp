@@ -1571,10 +1571,9 @@ private:
     std::string strOptionContractFrequency_;
     std::string strOptionNth_;
     std::string strOptionWeekday_;
-
-
-    QuantLib::Frequency optionContractFrequency_;
+    
     OptionAnchorType optionAnchorType_;
+    QuantLib::Frequency optionContractFrequency_;
     QuantLib::Natural optionNth_;
     QuantLib::Weekday optionWeekday_;
     

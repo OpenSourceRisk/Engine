@@ -669,6 +669,7 @@
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="CMS"/>
+      <xs:enumeration value="Failed"/>
     </xs:restriction>
   </xs:simpleType>
 
