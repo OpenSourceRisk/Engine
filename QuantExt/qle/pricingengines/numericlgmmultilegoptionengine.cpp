@@ -140,7 +140,7 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
                                         und->spread(), und->gearing(), und->lookback(), und->accrualPeriod(),
                                         und->dayCounter(), cfon->cap(), cfon->floor(), cfon->localCapFloor(),
                                         cfon->nakedOption(), t, x) *
-                   RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) *
+                   RandomVariable(x.size(), cfon->accrualPeriod() * cfon->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         } else if (auto cfav = boost::dynamic_pointer_cast<QuantExt::CappedFlooredAverageONIndexedCoupon>(cpn)) {
             auto und = cfav->underlying();
@@ -149,7 +149,7 @@ RandomVariable getUnderlyingCashflowPv(const LgmVectorised& lgm, const Real t, c
                                       und->spread(), und->gearing(), und->lookback(), und->accrualPeriod(),
                                       und->dayCounter(), cfav->cap(), cfav->floor(), cfav->localCapFloor(),
                                       cfav->nakedOption(), t, x) *
-                   RandomVariable(x.size(), ibor->accrualPeriod() * ibor->nominal()) *
+                   RandomVariable(x.size(), cfav->accrualPeriod() * cfav->nominal()) *
                    lgm.reducedDiscountBond(t, T, x, discountCurve);
         }
         THROW_ERROR_CPN_NOT_SUPPORTED;
