@@ -200,12 +200,12 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
         Real T1 = p_->termStructure()->timeFromReference(valueDates[i]);
         Real T2 = p_->termStructure()->timeFromReference(valueDates[n]);
 
-        // the times we use for the projection in the LGM model, if t > T1 they are displaced by (T1-t)
+        // the times we use for the projection in the LGM model, if t > T1 they are displaced by (t-T1)
 
         Real T1_lgm = T1, T2_lgm = T2;
         if (t > T1) {
-            T1_lgm += T1 - t;
-            T2_lgm += T1 - t;
+            T1_lgm += t - T1;
+            T2_lgm += t - T1;
         }
 
         // the discount factors estimated in the lgm model
@@ -320,12 +320,12 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
         Real T1 = p_->termStructure()->timeFromReference(valueDates[i]);
         Real T2 = p_->termStructure()->timeFromReference(valueDates[n]);
 
-        // the times we use for the projection in the LGM model, if t > T1 they are displaced by (T1-t)
+        // the times we use for the projection in the LGM model, if t > T1 they are displaced by (t-T1)
 
         Real T1_lgm = T1, T2_lgm = T2;
         if (t > T1) {
-            T1_lgm += T1 - t;
-            T2_lgm += T1 - t;
+            T1_lgm += t - T1;
+            T2_lgm += t - T1;
         }
 
         // the discount factors estimated in the lgm model
@@ -402,12 +402,12 @@ RandomVariable LgmVectorised::averagedBmaRate(const boost::shared_ptr<BMAIndex>&
             Real T1 = p_->termStructure()->timeFromReference(start);
             Real T2 = p_->termStructure()->timeFromReference(end);
 
-            // the times we use for the projection in the LGM model, if t > T1 they are displaced by (T1-t)
+            // the times we use for the projection in the LGM model, if t > T1 they are displaced by (t-T1)
 
             Real T1_lgm = T1, T2_lgm = T2;
             if (t > T1) {
-                T1_lgm += T1 - t;
-                T2_lgm += T1 - t;
+                T1_lgm += t - T1;
+                T2_lgm += t - T1;
             }
 
             // the discount factors estimated in the lgm model
