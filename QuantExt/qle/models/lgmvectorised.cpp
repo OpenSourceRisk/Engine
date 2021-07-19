@@ -278,7 +278,7 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
 
     Size i = 0, n = dt.size();
     Size nCutoff = n - rateCutoff;
-    Real accumulatedRate = 1.0;
+    Real accumulatedRate = 0.0;
 
     Date today = Settings::instance().evaluationDate();
 
