@@ -685,6 +685,7 @@
     <ClCompile Include="pricetermstructureadapter.cpp" />
     <ClCompile Include="qle_calendars.cpp" />
     <ClCompile Include="quadraticinterpolation.cpp" />
+    <ClCompile Include="randomvariable.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />

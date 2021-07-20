@@ -261,6 +261,7 @@ void BlackAverageONIndexedCouponPricer::initialize(const FloatingRateCoupon& cou
         QL_FAIL("BlackAverageONIndexedCouponPricer: CappedFlooredAverageONIndexedCoupon required");
     }
     swapletRate_ = coupon_->underlying()->rate();
+    forwardRate_ = (swapletRate_ - coupon_->underlying()->spread()) / coupon_->underlying()->gearing();
 }
 
 Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionType, Real effStrike) const {
@@ -294,8 +295,8 @@ Real BlackAverageONIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
                                             std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0);
         Real shift = capletVolatility()->displacement();
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
-        Rate fixing = shiftedLn ? blackFormula(optionType, effStrike, swapletRate_, stdDev, 1.0, shift)
-                                : bachelierBlackFormula(optionType, effStrike, swapletRate_, stdDev, 1.0);
+        Rate fixing = shiftedLn ? blackFormula(optionType, effStrike, forwardRate_, stdDev, 1.0, shift)
+                                : bachelierBlackFormula(optionType, effStrike, forwardRate_, stdDev, 1.0);
         return gearing_ * fixing;
     }
 }
