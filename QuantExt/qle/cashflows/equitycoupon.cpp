@@ -227,12 +227,40 @@ EquityLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
-    
+
     if (valuationSchedule_.size() > 0) {
         QL_REQUIRE(valuationSchedule_.size() == schedule_.size(),
-                   "mismatch in valuationSchedule (" << valuationSchedule_.size() << ") and scheduleData (" <<  schedule_.size() << ") sizes");
+                   "mismatch in valuationSchedule (" << valuationSchedule_.size() << ") and scheduleData ("
+                                                     << schedule_.size() << ") sizes");
     }
-    
+
+    Real quantity = Null<Real>(), notional = Null<Real>();
+    if (notionalReset_) {
+        if (quantity_ != Null<Real>()) {
+            quantity = quantity_;
+            QL_REQUIRE(notionals_.empty(), "EquityLeg: notional and quantity are given at the same time");
+        } else {
+            QL_REQUIRE(initialPrice_ != Null<Real>(),
+                       "EquityLeg: can not compute quantity, since no initialPrice is given");
+            QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
+                       "EquityLeg: can not compute quantity from nominal when fx conversion is required");
+            QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
+            quantity = (initialPrice_ == 0) ? notionals_.front() : notionals_.front() / initialPrice_;
+        }
+    } else {
+        if (!notionals_.empty()) {
+            QL_REQUIRE(quantity_ == Null<Real>(), "EquityLeg: notional and quantity are given at the same time");
+            // notional is determined below in the loop over the periods
+        } else {
+            QL_REQUIRE(initialPrice_ != Null<Real>(),
+                       "EquityLeg: can not compute notional, since no intialPrice is given");
+            QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
+                       "EquityLeg: can not compute notional from quantity when fx conversion is required");
+            QL_REQUIRE(quantity_ != Null<Real>(), "EquityLeg: can not compute notional, since no quantity is given");
+            notional = (initialPrice_ == 0) ? quantity_ : quantity_ * initialPrice_;
+        }
+    }
+
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
@@ -247,38 +275,14 @@ EquityLeg::operator Leg() const {
 
         Real initialPrice = (i == 0) ? initialPrice_ : Null<Real>();
         bool initialPriceIsInTargetCcy = initialPrice != Null<Real>() ? initialPriceIsInTargetCcy_ : false;
-        Real quantity = Null<Real>(), notional = Null<Real>();
-        if (notionalReset_) {
-            if (quantity_ != Null<Real>()) {
-                quantity = quantity_;
-                QL_REQUIRE(notionals_.empty(), "EquityLeg: notional and quantity are given at the same time");
-            } else {
-                QL_REQUIRE(fxIndex_ == nullptr,
-                           "EquityLeg: can not compute quantity from nominal when fx conversion is required");
-                QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
-                QL_REQUIRE(initialPrice_ != Null<Real>(),
-                           "EquityLeg: can not compute quantity, since no initialPrice is given");
-                quantity = (initialPrice_ == 0) ? notionals_.front() : notionals_.front() / initialPrice_;
-            }
-        } else {
-            if (!notionals_.empty()) {
-                notional = detail::get(notionals_, i, 0.0);
-                QL_REQUIRE(quantity_ == Null<Real>(), "EquityLeg: notional and quantity are given at the same time");
-            } else {
-                QL_REQUIRE(fxIndex_ == nullptr,
-                           "EquityLeg: can not compute notional from quantity when fx conversion is required");
-                QL_REQUIRE(quantity_ != Null<Real>(),
-                           "EquityLeg: can not compute notional, since no quantity is given");
-                QL_REQUIRE(initialPrice_ != Null<Real>(),
-                           "EquityLeg: can not compute notional, since no intialPrice is given");
-                notional = (initialPrice_ == 0) ? quantity_ : quantity_ * initialPrice_;
-            }
+        if (!notionalReset_ && !notionals_.empty()) {
+            notional = detail::get(notionals_, i, 0.0);
         }
 
-        boost::shared_ptr<EquityCoupon> cashflow(
-            new EquityCoupon(paymentDate, notional, startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_,
-                             isTotalReturn_, dividendFactor_, notionalReset_, initialPrice, quantity, fixingStartDate,
-                             fixingEndDate, Date(), Date(), Date(), fxIndex_, initialPriceIsInTargetCcy, absoluteReturn_));
+        boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
+            paymentDate, notional, startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_,
+            dividendFactor_, notionalReset_, initialPrice, quantity, fixingStartDate, fixingEndDate, Date(), Date(),
+            Date(), fxIndex_, initialPriceIsInTargetCcy, absoluteReturn_));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);
