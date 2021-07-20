@@ -167,6 +167,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             failed->envelope() = (*trade)->envelope();
             LOG("Added failed trade with id " << failed->id());
             (*trade) = failed;
+	    ++trade;
         }
     }
     LOG("Built Portfolio. Size now " << trades_.size());
