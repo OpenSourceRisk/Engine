@@ -58,10 +58,14 @@ void BondData::fromXML(XMLNode* node) {
         bondNotional_ = 1.0;
     }
     XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
+    isInflationLinked_ = false;
     while (legNode != nullptr) {
         LegData ld;
         ld.fromXML(legNode);
         coupons_.push_back(ld);
+        if (ld.concreteLegData()->legType() == "CPI") {
+            isInflationLinked_ = true;
+        }
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
     hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
@@ -94,6 +98,7 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
 void BondData::initialise() {
 
     isPayer_ = false;
+    isInflationLinked_ = false;
 
     if (!zeroBond()) {
 
@@ -120,6 +125,19 @@ void BondData::initialise() {
                                         << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
             }
         }
+        
+        // fill isInflationLinked
+        for (Size i = 0; i < coupons().size(); ++i) {
+            if (i == 0)
+                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == "CPI";
+            else {
+                bool isIthCouponInflationLinked = coupons()[i].concreteLegData()->legType() == "CPI";
+                QL_REQUIRE(isInflationLinked_ == isIthCouponInflationLinked,
+                           "bond leg #" << i << " isInflationLinked (" << std::boolalpha << isIthCouponInflationLinked
+                                        << ") not equal to leg #0 isInflationLinked (" << isInflationLinked_);
+            }
+        }
+
     }
 }
 

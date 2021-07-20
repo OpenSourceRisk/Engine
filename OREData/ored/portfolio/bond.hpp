@@ -90,6 +90,7 @@ public:
     bool hasCreditRisk() const { return hasCreditRisk_; }
     bool isPayer() const { return isPayer_; }
     bool zeroBond() const { return zeroBond_; }
+    bool isInflationLinked() const { return isInflationLinked_; }
     // only used for zero bonds
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
@@ -130,6 +131,7 @@ private:
     bool zeroBond_;
     Real bondNotional_;
     bool isPayer_;
+    bool isInflationLinked_;
 };
 
 //! Serializable Bond

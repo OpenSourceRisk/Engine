@@ -1071,7 +1071,7 @@ class BondData;
 boost::shared_ptr<QuantExt::BondIndex>
 buildBondIndex(const BondData& securityData, const bool dirty, const bool relative, const Calendar& fixingCalendar,
                const bool conditionalOnSurvival, const boost::shared_ptr<EngineFactory>& engineFactory,
-               RequiredFixings& requiredFixings, const bool inflationAdjustedPrice = false);
+               RequiredFixings& requiredFixings);
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);
