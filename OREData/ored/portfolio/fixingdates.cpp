@@ -428,7 +428,7 @@ void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     requiredFixings_.addFixingDate(c.fxFixingDate(), oreIndexName(c.fxIndex()->name()), c.date());
 }
 
-void FixingDateGetter::visit(SubPeriodsCoupon& c) {
+void FixingDateGetter::visit(QuantExt::SubPeriodsCoupon1& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
@@ -655,6 +655,30 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                     auto indexName = commIdx->name();
                     TLOG("Adding extra fixing dates for commodity spot " << indexName);
                     fixings[indexName].insert(dates.begin(), dates.end());
+                }
+            }
+        }
+
+        // If there are FX indexes we need fixings for the last week in order to handle cases where the evaluation date
+        // is a holiday for one of the currencies.
+        if (mktParams.hasMarketObject(MarketObject::FXSpot)) {
+            auto fxLookback = 7 * Days;
+
+            // Dates that will be used for each of the FX indices
+            Date today = Settings::instance().evaluationDate();
+            Date lookback = NullCalendar().advance(today, -fxLookback);
+            set<Date> dates;
+            do {
+                TLOG("Adding date " << io::iso_date(lookback) << " to fixings for any fx indices");
+                dates.insert(lookback);
+                lookback = NullCalendar().advance(lookback, 1 * Days);
+            } while (lookback <= today);
+
+            for (const auto& kv : fixings) {
+                if (isFxIndex(kv.first)) {
+                // For each of the fx indices in market parameters, insert the dates
+                    TLOG("Adding extra fixing dates for fx index " << kv.first);
+                    fixings[kv.first].insert(dates.begin(), dates.end());
                 }
             }
         }

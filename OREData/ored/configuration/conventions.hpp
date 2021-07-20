@@ -42,6 +42,7 @@ using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 using std::map;
 using std::string;
+using QuantExt::SubPeriodsCoupon1;
 using namespace QuantLib;
 
 //! Abstract base class for convention objects
@@ -517,7 +518,7 @@ public:
     // For sub period
     bool hasSubPeriod() const { return hasSubPeriod_; }
     Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
+    SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
     //! \name Serialisation
@@ -535,7 +536,7 @@ private:
     boost::shared_ptr<IborIndex> index_;
     bool hasSubPeriod_;
     Frequency floatFrequency_;
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType_;
+    SubPeriodsCoupon1::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
     string strFixedCalendar_;
@@ -641,7 +642,7 @@ public:
     const Period& shortPayTenor() const { return shortPayTenor_; }
     bool spreadOnShort() const { return spreadOnShort_; }
     bool includeSpread() const { return includeSpread_; }
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
+    SubPeriodsCoupon1::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
     //! \name Serialisation
@@ -657,7 +658,7 @@ private:
     Period shortPayTenor_;
     bool spreadOnShort_;
     bool includeSpread_;
-    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType_;
+    SubPeriodsCoupon1::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
     string strLongIndex_;
@@ -1280,6 +1281,7 @@ public:
     /*! The anchor day type of commodity future convention
      */
     enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore };
+    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore };
 
     //! Classes to differentiate constructors below
     //@{
@@ -1433,7 +1435,9 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
-                              const std::string& indexName = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "", 
+                              const std::string& optionNth = "",
+                              const std::string& optionWeekday = "");
 
     //! N-th weekday based constructor
     CommodityFutureConvention(const std::string& id, const std::string& nth, const std::string& weekday,
@@ -1451,7 +1455,9 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
-                              const std::string& indexName = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "",
+                              const std::string& optionNth = "",
+                              const std::string& optionWeekday = "");
 
     //! Calendar days before based constructor
     CommodityFutureConvention(const std::string& id, const CalendarDaysBefore& calendarDaysBefore,
@@ -1469,7 +1475,9 @@ public:
                               const AveragingData& averagingData = AveragingData(),
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
-                              const std::string& indexName = "");
+                              const std::string& indexName = "", const std::string& optionFrequency = "",
+                              const std::string& optionNth = "", 
+                              const std::string& optionWeekday = "");
     //@}
 
     //! \name Inspectors
@@ -1505,6 +1513,11 @@ public:
     QuantLib::Natural hoursPerDay() const { return hoursPerDay_; }
     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData() const { return offPeakPowerIndexData_; }
     const std::string& indexName() const { return indexName_; }
+    QuantLib::Frequency optionContractFrequency() const { return optionContractFrequency_; }
+    OptionAnchorType optionAnchorType() const { return optionAnchorType_; }
+    QuantLib::Natural optionNth() const { return optionNth_; }
+    QuantLib::Weekday optionWeekday() const { return optionWeekday_; }
+
     //@}
 
     //! Serialisation
@@ -1555,9 +1568,17 @@ private:
     QuantLib::Natural hoursPerDay_;
     boost::optional<OffPeakPowerIndexData> offPeakPowerIndexData_;
     std::string indexName_;
-
+    std::string strOptionContractFrequency_;
+    std::string strOptionNth_;
+    std::string strOptionWeekday_;
+    
+    OptionAnchorType optionAnchorType_;
+    QuantLib::Frequency optionContractFrequency_;
+    QuantLib::Natural optionNth_;
+    QuantLib::Weekday optionWeekday_;
+    
     //! Populate and check frequency.
-    void populateFrequency();
+    Frequency parseAndValidateFrequency(const std::string& strFrequency);
 
     //! Validate the business day conventions in the ProhibitedExpiry
     bool validateBdc(const ProhibitedExpiry& pe) const;

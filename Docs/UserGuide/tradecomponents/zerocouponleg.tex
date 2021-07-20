@@ -1,7 +1,7 @@
 \subsubsection{ZeroCouponFixed Leg Data}
 \label{ss:zerolegdata}
 
-A Zero Coupon Fixed leg contains a series of Zero Coupon payments, i.e $(1 + r)^t \,N$ for a compounded coupon. The payment can subtracting the uninflated notional $N$, i.e $((1 + r)^t-1) \,N$, see blow.
+A Zero Coupon Fixed leg contains a series of Zero Coupon payments, i.e $(1 + r)^t \,N$ for a compounded coupon. The uninflated notional $N$ can be subtracted from the payment , i.e $((1 + r)^t-1) \,N$, see \lstinline!SubtractNotional! below.
 
 Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fixed. 
 
@@ -41,7 +41,7 @@ Allowable values: \emph{true},  \emph{Y} or \emph{false}, \emph{N}, defaults to 
           <Rules>
             <StartDate>2016-07-18</StartDate>
             <EndDate>2021-07-18</EndDate>
-            <Tenor>5Y</Tenor>
+            <Tenor>0D</Tenor>
             <Calendar>UK</Calendar>
             <Convention>ModifiedFollowing</Convention>
             <TermConvention>ModifiedFollowing</TermConvention>

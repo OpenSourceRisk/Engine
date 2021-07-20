@@ -410,6 +410,7 @@ instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
 instruments/multilegoption.hpp
+instruments/nullinstrument.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
 instruments/payment.hpp
