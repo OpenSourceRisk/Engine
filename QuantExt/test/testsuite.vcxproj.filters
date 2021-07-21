@@ -156,7 +156,7 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="quadraticinterpolation.cpp">
-       <Filter>source</Filter>
+      <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="crcirpp.cpp">
       <Filter>source</Filter>
@@ -171,6 +171,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="dategeneration.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="randomvariable.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

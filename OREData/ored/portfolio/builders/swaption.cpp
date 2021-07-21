@@ -20,8 +20,10 @@
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
+
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
-#include <qle/pricingengines/numericlgmswaptionengine.hpp>
 
 namespace ore {
 namespace data {
@@ -46,8 +48,7 @@ boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const
     }
 }
 
-boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const string& id, bool isNonStandard,
-                                                                         const string& ccy,
+boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const string& id, const string& ccy,
                                                                          const std::vector<Date>& expiries,
                                                                          const Date& maturity,
                                                                          const std::vector<Real>& strikes) {
@@ -170,14 +171,13 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     return model;
 }
 
-boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImpl(const string& id, bool isNonStandard,
-                                                                                  const string& ccy,
+boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImpl(const string& id, const string& ccy,
                                                                                   const std::vector<Date>& expiries,
                                                                                   const Date& maturity,
                                                                                   const std::vector<Real>& strikes) {
     DLOG("Building Bermudan Swaption engine for trade " << id);
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, isNonStandard, ccy, expiries, maturity, strikes);
+    boost::shared_ptr<QuantExt::LGM> lgm = model(id, ccy, expiries, maturity, strikes);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameter("sy"));
@@ -187,12 +187,8 @@ boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImp
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
-    Handle<YieldTermStructure> dscCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
-    boost::shared_ptr<PricingEngine> p;
-    if (isNonStandard)
-        return boost::make_shared<QuantExt::NumericLgmNonstandardSwaptionEngine>(lgm, sy, ny, sx, nx, dscCurve);
-    else
-        return boost::make_shared<QuantExt::NumericLgmSwaptionEngine>(lgm, sy, ny, sx, nx, dscCurve);
+    return boost::make_shared<QuantExt::NumericLgmMultiLegOptionEngine>(
+        lgm, sy, ny, sx, nx, market_->discountCurve(ccy, configuration(MarketContext::pricing)));
 }
 
 } // namespace data
