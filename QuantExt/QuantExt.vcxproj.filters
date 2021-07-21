@@ -219,9 +219,6 @@
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -885,9 +882,6 @@
     <ClInclude Include="qle\calendars\largejointcalendar.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
-    <ClInclude Include="qle\time\actual364.hpp">
-      <Filter>time</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\inrmiborois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -1159,6 +1153,24 @@
     <ClInclude Include="qle\cashflows\nonstandardinflationcouponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\lgmconvolutionsolver2.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\lgmvectorised.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\randomvariable.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\randomvariable_io.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\numericlgmmultilegoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\multilegoption.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1335,9 +1347,6 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp">
@@ -1796,9 +1805,6 @@
     <ClCompile Include="qle\calendars\largejointcalendar.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
-    <ClCompile Include="qle\time\actual364.cpp">
-      <Filter>time</Filter>
-    </ClCompile>
     <ClCompile Include="qle\termstructures\futurepricehelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1972,6 +1978,24 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\nonstandardinflationcouponpricer.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\lgmconvolutionsolver2.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\lgmvectorised.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\randomvariable.cpp">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\randomvariable_io.cpp">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\numericlgmmultilegoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\multilegoption.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

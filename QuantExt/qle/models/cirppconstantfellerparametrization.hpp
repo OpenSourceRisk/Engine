@@ -96,7 +96,7 @@ inline Real CirppConstantWithFellerParametrization<TS>::inverse(const Size i, co
     case 0:
     case 1:
     case 3:
-        return sqrt(y - eps);
+        return std::sqrt(y - eps);
     case 2: {
         const Real fellerBound =
             std::sqrt((relaxed_ ? 4.0 : 2.0) * direct(0, kappa_->params()[0]) * direct(1, theta_->params()[0]));
