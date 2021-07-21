@@ -22,10 +22,10 @@
  */
 #pragma once
 
-#include <utility>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <utility>
 
 namespace ore {
 namespace data {
@@ -182,8 +182,8 @@ class BondFactory : public QuantLib::Singleton<BondFactory> {
 
 public:
     std::pair<boost::shared_ptr<QuantLib::Bond>, Real> build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                              const boost::shared_ptr<ReferenceDataManager>& referenceData, 
-                                                              const std::string& securityId) const;
+                                                             const boost::shared_ptr<ReferenceDataManager>& referenceData, 
+                                                             const std::string& securityId) const;
     void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
 };
 

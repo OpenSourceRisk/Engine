@@ -1068,10 +1068,11 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
 
 // build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
 class BondData;
-boost::shared_ptr<QuantExt::BondIndex>
-buildBondIndex(const BondData& securityData, const bool dirty, const bool relative, const Calendar& fixingCalendar,
-               const bool conditionalOnSurvival, const boost::shared_ptr<EngineFactory>& engineFactory,
-               RequiredFixings& requiredFixings);
+boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
+                                                      const bool relative, const Calendar& fixingCalendar,
+                                                      const bool conditionalOnSurvival,
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                      RequiredFixings& requiredFixings);
 
 // join a vector of legs to a single leg, check if the legs have adjacent periods
 Leg joinLegs(const std::vector<Leg>& legs);

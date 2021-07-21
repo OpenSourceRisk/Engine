@@ -2206,13 +2206,13 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     return fxi;
 }
 
-boost::shared_ptr<QuantExt::BondIndex>
-buildBondIndex(const BondData& securityData, const bool dirty, const bool relative, const Calendar& fixingCalendar,
-               const bool conditionalOnSurvival, const boost::shared_ptr<EngineFactory>& engineFactory,
-               RequiredFixings& requiredFixings) {
+boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
+                                                      const bool relative, const Calendar& fixingCalendar,
+                                                      const bool conditionalOnSurvival,
+                                                      const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                      RequiredFixings& requiredFixings) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
-
     BondData data = securityData;
     data.populateFromBondReferenceData(engineFactory->referenceData());
     Bond bond(Envelope(), data);
@@ -2264,8 +2264,8 @@ buildBondIndex(const BondData& securityData, const bool dirty, const bool relati
     } catch (...) {
     }
 
-    if(!data.hasCreditRisk()) {
-      defaultCurve = Handle<DefaultProbabilityTermStructure>();
+    if (!data.hasCreditRisk()) {
+        defaultCurve = Handle<DefaultProbabilityTermStructure>();
     }
 
     // build and return the index

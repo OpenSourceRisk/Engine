@@ -29,10 +29,10 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
-#include <ql/cashflows/cpicoupon.hpp>
 #include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
@@ -40,8 +40,6 @@ using namespace QuantExt;
 
 namespace ore {
 namespace data {
-
-
 
 void BondData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BondData");
@@ -129,7 +127,7 @@ void BondData::initialise() {
                                         << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
             }
         }
-        
+
         // fill isInflationLinked
         for (Size i = 0; i < coupons().size(); ++i) {
             if (i == 0)
@@ -141,7 +139,6 @@ void BondData::initialise() {
                                         << ") not equal to leg #0 isInflationLinked (" << isInflationLinked_);
             }
         }
-
     }
 }
 
@@ -246,16 +243,15 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>>
-Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+std::map<AssetClass, std::set<std::string>> Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {bondData_.securityId()};
     return result;
 }
 
-std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
-BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                   const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const {
+std::pair<boost::shared_ptr<QuantLib::Bond>, Real> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                                      const boost::shared_ptr<ReferenceDataManager>& referenceData, 
+                                                                      const std::string& securityId) const {
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
             auto bond = b.second->build(engineFactory, referenceData, securityId);
@@ -281,10 +277,9 @@ void BondFactory::addBuilder(const std::string& referenceDataType, const boost::
 
 BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
-boost::shared_ptr<QuantLib::Bond>
-VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                          const std::string& securityId) const {
+boost::shared_ptr<QuantLib::Bond> VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                                            const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
