@@ -243,25 +243,19 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::map<AssetClass, std::set<std::string>> Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
+std::map<AssetClass, std::set<std::string>>
+Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager) const {
     std::map<AssetClass, std::set<std::string>> result;
     result[AssetClass::BOND] = {bondData_.securityId()};
     return result;
 }
 
-std::pair<boost::shared_ptr<QuantLib::Bond>, Real> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                                      const boost::shared_ptr<ReferenceDataManager>& referenceData, 
-                                                                      const std::string& securityId) const {
+std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
+BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                   const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const {
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
-            auto bond = b.second->build(engineFactory, referenceData, securityId);
-            Real inflFactor = 1;
-            BondData data(securityId, 1.0);
-            data.populateFromBondReferenceData(referenceData);
-            if (data.isInflationLinked()) {
-                inflFactor = QuantExt::inflationLinkedBondQuoteFactor(bond);
-            }
-            return std::pair<boost::shared_ptr<QuantLib::Bond>, Real>(bond, inflFactor);
+            return b.second->build(engineFactory, referenceData, securityId);
         }
     }
 
@@ -277,9 +271,10 @@ void BondFactory::addBuilder(const std::string& referenceDataType, const boost::
 
 BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
-boost::shared_ptr<QuantLib::Bond> VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                                            const std::string& securityId) const {
+std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
+VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                          const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
@@ -293,7 +288,11 @@ boost::shared_ptr<QuantLib::Bond> VanillaBondBuilder::build(const boost::shared_
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
-    return qlBond;
+    Real inflFactor = 1;
+    if (data.isInflationLinked()) {
+        inflFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+    }
+    return std::make_pair(qlBond, inflFactor);
 }
 
 } // namespace data

@@ -174,16 +174,16 @@ private:
 
 struct BondBuilder {
     virtual ~BondBuilder() {}
-    virtual boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                    const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                                    const std::string& securityId) const = 0;
+    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
+    build(const boost::shared_ptr<EngineFactory>& engineFactory,
+          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const = 0;
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory> {
     map<std::string, boost::shared_ptr<BondBuilder>> builders_;
 
 public:
-    std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
+    std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
     build(const boost::shared_ptr<EngineFactory>& engineFactory,
           const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const;
     void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
@@ -197,9 +197,9 @@ template <typename T> struct BondBuilderRegister {
 
 struct VanillaBondBuilder : public BondBuilder {
     static BondBuilderRegister<VanillaBondBuilder> reg_;
-    boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                            const std::string& securityId) const override;
+    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
+    build(const boost::shared_ptr<EngineFactory>& engineFactory,
+          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const override;
 };
 
 } // namespace data
