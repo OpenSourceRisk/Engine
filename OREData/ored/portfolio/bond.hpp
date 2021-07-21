@@ -36,12 +36,14 @@ namespace data {
 class BondData : public XMLSerializable {
 public:
     //! Default Contructor
-    BondData() : hasCreditRisk_(true), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false) {}
+    BondData()
+        : hasCreditRisk_(true), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false),
+          isInflationLinked_(false) {}
 
     //! Constructor to set up a bond from reference data
     BondData(string securityId, Real bondNotional, bool hasCreditRisk = true)
         : securityId_(securityId), hasCreditRisk_(hasCreditRisk), faceAmount_(0.0), zeroBond_(false),
-          bondNotional_(bondNotional), isPayer_(false) {}
+          bondNotional_(bondNotional), isPayer_(false), isInflationLinked_(false) {}
 
     //! Constructor for coupon bonds
     BondData(string issuerId, string creditCurveId, string securityId, string referenceCurveId, string settlementDays,
@@ -181,9 +183,9 @@ class BondFactory : public QuantLib::Singleton<BondFactory> {
     map<std::string, boost::shared_ptr<BondBuilder>> builders_;
 
 public:
-    std::pair<boost::shared_ptr<QuantLib::Bond>, Real> build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                             const boost::shared_ptr<ReferenceDataManager>& referenceData, 
-                                                             const std::string& securityId) const;
+    std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
+    build(const boost::shared_ptr<EngineFactory>& engineFactory,
+          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const;
     void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
 };
 
