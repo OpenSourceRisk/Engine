@@ -32,12 +32,16 @@
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 
 namespace ore {
 namespace data {
+
+
 
 void BondData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BondData");
@@ -249,12 +253,20 @@ Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     return result;
 }
 
-boost::shared_ptr<QuantLib::Bond> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                                     const std::string& securityId) const {
+std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
+BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                   const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const {
     for (auto const& b : builders_) {
-        if (referenceData->hasData(b.first, securityId))
-            return b.second->build(engineFactory, referenceData, securityId);
+        if (referenceData->hasData(b.first, securityId)) {
+            auto bond = b.second->build(engineFactory, referenceData, securityId);
+            Real inflFactor = 1;
+            BondData data(securityId, 1.0);
+            data.populateFromBondReferenceData(referenceData);
+            if (data.isInflationLinked()) {
+                inflFactor = QuantExt::inflationLinkedBondQuoteFactor(bond);
+            }
+            return std::pair<boost::shared_ptr<QuantLib::Bond>, Real>(bond, inflFactor);
+        }
     }
 
     QL_FAIL("BondFactory: could not build bond '"

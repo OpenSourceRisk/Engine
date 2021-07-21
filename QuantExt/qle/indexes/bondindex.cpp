@@ -20,7 +20,7 @@
 #include <ql/settings.hpp>
 #include <qle/indexes/bondindex.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
-
+#include <qle/utilities/inflation.hpp>
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
@@ -132,22 +132,7 @@ Real BondIndex::pastFixing(const Date& fixingDate) const {
     }
 
     if (isInflationLinked_) {
-        bool foundInflationCoupon = false;
-        for (auto& cf : bond_->cashflows()) {
-            // check if its inflation bond, assume if we find one inflation coupon that
-            // all coupons are inflatio linked and use the same index, need to make a own bond class like zero
-            // coupon
-            if (auto inflCpn = ext::dynamic_pointer_cast<CPICoupon>(cf)) {
-                foundInflationCoupon = true;
-                const auto& inflationIndex = ext::dynamic_pointer_cast<ZeroInflationIndex>(inflCpn->index());
-                const auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
-                Real inflationAccualFactor = inflationIndex->fixing(inflationCurve->baseDate()) / inflCpn->baseCPI();
-                price *= inflationAccualFactor;
-                break;
-            }
-            QL_REQUIRE(foundInflationCoupon,
-                       "Can not compute inflation adjusted prices if there is not at least one inflation coupon");
-        }
+        price *= QuantExt::inflationLinkedBondQuoteFactor(bond_);
     }
 
     if (!relative_) {
