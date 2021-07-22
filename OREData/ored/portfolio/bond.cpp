@@ -29,9 +29,11 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -58,10 +60,14 @@ void BondData::fromXML(XMLNode* node) {
         bondNotional_ = 1.0;
     }
     XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
+    isInflationLinked_ = false;
     while (legNode != nullptr) {
         LegData ld;
         ld.fromXML(legNode);
         coupons_.push_back(ld);
+        if (ld.concreteLegData()->legType() == "CPI") {
+            isInflationLinked_ = true;
+        }
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
     hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
@@ -94,6 +100,7 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
 void BondData::initialise() {
 
     isPayer_ = false;
+    isInflationLinked_ = false;
 
     if (!zeroBond()) {
 
@@ -118,6 +125,18 @@ void BondData::initialise() {
                 QL_REQUIRE(isPayer_ == coupons()[i].isPayer(),
                            "bond leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
                                         << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
+            }
+        }
+
+        // fill isInflationLinked
+        for (Size i = 0; i < coupons().size(); ++i) {
+            if (i == 0)
+                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == "CPI";
+            else {
+                bool isIthCouponInflationLinked = coupons()[i].concreteLegData()->legType() == "CPI";
+                QL_REQUIRE(isInflationLinked_ == isIthCouponInflationLinked,
+                           "bond leg #" << i << " isInflationLinked (" << std::boolalpha << isIthCouponInflationLinked
+                                        << ") not equal to leg #0 isInflationLinked (" << isInflationLinked_);
             }
         }
     }
@@ -231,12 +250,13 @@ Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     return result;
 }
 
-boost::shared_ptr<QuantLib::Bond> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                                     const std::string& securityId) const {
+std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
+BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                   const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const {
     for (auto const& b : builders_) {
-        if (referenceData->hasData(b.first, securityId))
+        if (referenceData->hasData(b.first, securityId)) {
             return b.second->build(engineFactory, referenceData, securityId);
+        }
     }
 
     QL_FAIL("BondFactory: could not build bond '"
@@ -251,7 +271,7 @@ void BondFactory::addBuilder(const std::string& referenceDataType, const boost::
 
 BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
-boost::shared_ptr<QuantLib::Bond>
+std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
 VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                           const boost::shared_ptr<ReferenceDataManager>& referenceData,
                           const std::string& securityId) const {
@@ -268,7 +288,11 @@ VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
-    return qlBond;
+    Real inflFactor = 1;
+    if (data.isInflationLinked()) {
+        inflFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+    }
+    return std::make_pair(qlBond, inflFactor);
 }
 
 } // namespace data
