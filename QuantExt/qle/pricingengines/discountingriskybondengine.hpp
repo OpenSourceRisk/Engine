@@ -28,6 +28,7 @@
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
+#include <qle/instruments/cashflowresults.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -85,6 +86,7 @@ private:
     boost::optional<bool> includeSettlementDateFlows_;
     // set by calculateNpv()
     mutable Real compoundFactorSettlement_, cashflowsBeforeSettlementValue_;
+    mutable std::vector<CashFlowResults> cashflowResults_;
 };
 } // namespace QuantExt
 

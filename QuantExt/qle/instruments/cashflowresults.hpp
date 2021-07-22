@@ -60,4 +60,9 @@ CashFlowResults standardCashFlowResults(const boost::shared_ptr<QuantLib::CashFl
                                         const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve =
                                             QuantLib::Handle<QuantLib::YieldTermStructure>());
 
+CashFlowResults populateCashFlowResultsFromCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c,
+                                                    const QuantLib::Real multiplier = 1.0,
+                                                    const QuantLib::Size legNo = 0,
+                                                    const QuantLib::Currency& currency = QuantLib::Currency());
+
 } // namespace QuantExt
