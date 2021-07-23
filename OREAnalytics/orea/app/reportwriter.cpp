@@ -294,6 +294,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
                         std::map<Size, Size> cashflowNumber;
                         for (auto const& cf : cfResults) {
+                            string ccy = trades[k]->legCurrencies()[cf.legNumber];
+                            if (!cf.currency.empty()) {
+                                ccy = cf.currency;
+                            }
                             Real effectiveAmount = cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
                             report.next()
                                 .add(trades[k]->id())
@@ -303,7 +307,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(cf.payDate)
                                 .add(cf.type)
                                 .add(effectiveAmount)
-                                .add(cf.currency)
+                                .add(ccy)
                                 .add(cf.rate)
                                 .add(cf.accrualPeriod)
                                 .add(cf.accrualStartDate)
@@ -323,7 +327,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 }
                                 Real presentValue = effectiveAmount * discountFactor;
                                 if (cf.presentValue != Null<Real>()) {
-                                    presentValue = cf.presentValue;
+                                    presentValue = cf.presentValue * multiplier;
                                 }
                                 report.add(discountFactor).add(presentValue);
                             }
