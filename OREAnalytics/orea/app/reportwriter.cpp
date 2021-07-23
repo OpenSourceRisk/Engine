@@ -294,9 +294,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
                         std::map<Size, Size> cashflowNumber;
                         for (auto const& cf : cfResults) {
-                            string ccy = trades[k]->legCurrencies()[cf.legNumber];
+                            string ccy = "";
                             if (!cf.currency.empty()) {
                                 ccy = cf.currency;
+                            } else if(trades[k]->legCurrencies().size()>cf.legNumber)
+                            {
+                                ccy = trades[k]->legCurrencies()[cf.legNumber];
                             }
                             Real effectiveAmount = cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
                             report.next()
