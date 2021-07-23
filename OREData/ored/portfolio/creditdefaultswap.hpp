@@ -38,7 +38,7 @@ public:
     //! Default constructor
     CreditDefaultSwap() : Trade("CreditDefaultSwap") {}
 
-    //! Constructor
+    //xg! Constructor
     CreditDefaultSwap(const Envelope& env, const CreditDefaultSwapData& swap)
         : Trade("CreditDefaultSwap", env), swap_(swap) {}
 
