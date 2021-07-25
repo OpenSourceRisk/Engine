@@ -1188,10 +1188,11 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::boolalpha << boost::any_cast<bool>(anyType);
+            oss << std::boolalpha << "\"" << boost::any_cast<bool>(anyType);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
@@ -1199,21 +1200,23 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << r[0];
+            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
         }
+        oss << "\"";
     } else if (anyType.type() == typeid(std::vector<Date>)) {
         resultType = "vector_date";
         std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << to_string(r[0]);
+            oss << std::fixed << std::setprecision(8) << "\"" << to_string(r[0]);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << to_string(r[i]);
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(std::vector<std::string>)) {
         resultType = "vector_string";
@@ -1221,19 +1224,21 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << r[0];
+            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(std::vector<CashFlowResults>)) {
         resultType = "vector_cashflows";
         std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
         if (!r.empty()) {
-            oss << std::fixed << std::setprecision(8) << r[0];
+            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
             for (Size i = 1; i < r.size(); ++i) {
                 oss << ", " << r[i];
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
@@ -1242,7 +1247,6 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         std::ostringstream tmp;
         tmp << std::setprecision(8) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
-
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";
