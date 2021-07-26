@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/discountingforwardbondengine.hpp>
-
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
@@ -26,6 +24,9 @@
 #include <ql/quotes/compositequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
+
+#include <qle/instruments/cashflowresults.hpp>
+#include <qle/pricingengines/discountingforwardbondengine.hpp>
 
 #include <boost/date_time.hpp>
 #include <boost/make_shared.hpp>
@@ -123,6 +124,8 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
 
     // load the shared pointer into bd
     boost::shared_ptr<Bond> bd = arguments_.underlying;
+
+    std::vector<CashFlowResults> cashFlowResults;
     for (Size i = 0; i < bd->cashflows().size(); i++) {
         // Recovery amount is computed over the whole time interval (npvDate,maturityOfBond)
 
@@ -137,6 +140,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
         boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(bd->cashflows()[i]);
 
         if (coupon) {
+            CashFlowResults recoveryFlow;
             numCoupons++;
             Date startDate = coupon->accrualStartDate();
             Date endDate = coupon->accrualEndDate();
@@ -145,6 +149,16 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
             Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, endDate);
 
             npvValue += coupon->nominal() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
+
+            recoveryFlow.payDate = defaultDate;
+            recoveryFlow.accrualStartDate = effectiveStartDate;
+            recoveryFlow.accrualEndDate = endDate;
+            recoveryFlow.amount = coupon->nominal() * recoveryVal;
+            recoveryFlow.discountFactor = P * bondReferenceYieldCurve_->discount(defaultDate);
+            recoveryFlow.presentValue = recoveryFlow.amount * recoveryFlow.discountFactor;
+            recoveryFlow.legNumber = 0;
+            recoveryFlow.type = "Bond_ExpectedRecovery";
+            cashFlowResults.push_back(recoveryFlow);
         }
 
         hasLiveCashFlow = true; // check if a cashflow  is available after the date of valuation.
@@ -158,6 +172,11 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
         bondCashflowPayDates.push_back(bd->cashflows()[i]->date());
         bondCashflowSurvivalProbabilities.push_back(S);
         bondCashflowDiscountFactors.push_back(bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date()));
+        CashFlowResults cfResult = populateCashFlowResultsFromCashflow(bd->cashflows()[i]);
+        cfResult.type = "Bond_" + cfResult.type;
+        cfResult.discountFactor = S * bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date());
+        cfResult.presentValue = cfResult.amount * cfResult.discountFactor;
+        cashFlowResults.push_back(cfResult);
     }
 
     // the ql instrument might not yet be expired and still have not anything to value if
@@ -182,7 +201,20 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
             bondRecovery += firstCoupon->nominal() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
             startDate = stepDate;
         }
+        if (!close_enough(bondRecovery, 0.0)) {
+            CashFlowResults recoveryFlow;
+            recoveryFlow.payDate = bd->cashflows()[0]->date();
+            recoveryFlow.accrualStartDate = computeDate;
+            recoveryFlow.accrualEndDate = bd->cashflows()[0]->date();
+            recoveryFlow.amount = firstCoupon->nominal() * recoveryVal;
+            recoveryFlow.discountFactor = bondRecovery / recoveryFlow.amount;
+            recoveryFlow.presentValue = bondRecovery;
+            recoveryFlow.legNumber = 0;
+            recoveryFlow.type = "Bond_ExpectedRecovery";
+            cashFlowResults.push_back(recoveryFlow);
+        }
     }
+
     /* If there are no coupon, as in a Zero Bond, we must integrate over the entire period from npv date to
        maturity. The timestepPeriod specified is used as provide the steps for the integration. This only applies
        to bonds with 1 cashflow, identified as a final redemption payment.

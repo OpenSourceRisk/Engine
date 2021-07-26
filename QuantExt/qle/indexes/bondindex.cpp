@@ -102,8 +102,9 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
     // simply discounting its cashflows
 
     if (price == Null<Real>()) {
-        price = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->settlementDate(fixingDate),
+        auto res = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->settlementDate(fixingDate),
                                                  bond_->cashflows(), boost::none, incomeCurve_, conditionalOnSurvival_);
+        price = res.npv;
     }
 
     if (!dirty_) {
@@ -165,9 +166,11 @@ Rate BondFuturesIndex::forecastFixing(const Date& fixingDate) const {
                                         << fixingDate << ") must be >= today (" << today << ")");
     QL_REQUIRE(bond_, "BondFuturesIndex::forecastFixing(): bond required");
 
-    Real price =
+    
+    auto bondNpvResults = 
         vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_), bond()->settlementDate(expiryDate_),
                                          bond()->cashflows(), boost::none, incomeCurve(), conditionalOnSurvival());
+    Real price = bondNpvResults.npv;
 
     if (!dirty()) {
         price -= bond()->accruedAmount(expiryDate_) / 100.0 * bond()->notional(expiryDate_);

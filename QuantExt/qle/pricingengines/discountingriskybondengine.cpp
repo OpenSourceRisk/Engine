@@ -68,19 +68,20 @@ void DiscountingRiskyBondEngine::calculate() const {
 
     // the npv as of today, excluding cashflows before the settlement date
 
-    Real npv = calculateNpv(results_.valuationDate, arguments_.settlementDate, arguments_.cashflows,
+    DiscountingRiskyBondEngine::BondNPVCalculationResults npvResults = calculateNpv(results_.valuationDate, arguments_.settlementDate,
+                                                  arguments_.cashflows,
                             includeSettlementDateFlows_);
 
     // the results value is set to the npv as of today including the cashflows before settlement
 
-    results_.value = npv + cashflowsBeforeSettlementValue_;
+    results_.value = npvResults.npv + npvResults.cashflowsBeforeSettlementValue;
 
     // the settlement value is excluding cashflows before the settlement date and compounded to the settlement date
 
-    results_.settlementValue = npv * compoundFactorSettlement_;
+    results_.settlementValue = npvResults.npv * npvResults.compoundFactorSettlement;
 
     // set a few more additional results
-    results_.additionalResults["cashFlowResults"] = cashflowResults_;
+    results_.additionalResults["cashFlowResults"] = npvResults.cashflowResults;
     results_.additionalResults["securitySpread"] = securitySpread_.empty() ? 0.0 : securitySpread_->value();
     Date maturity = CashFlows::maturityDate(arguments_.cashflows);
     if (maturity > results_.valuationDate) {
@@ -93,7 +94,8 @@ void DiscountingRiskyBondEngine::calculate() const {
     }
 }
 
-Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
+DiscountingRiskyBondEngine::BondNPVCalculationResults
+DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
                                               boost::optional<bool> includeSettlementDateFlows,
                                               const Handle<YieldTermStructure>& incomeCurve,
                                               const bool conditionalOnSurvival) const {
@@ -102,9 +104,12 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
         includeSettlementDateFlows ? *includeSettlementDateFlows_ : Settings::instance().includeReferenceDateEvents();
 
     Real npvValue = 0.0;
-    cashflowsBeforeSettlementValue_ = 0.0;
-    cashflowResults_.clear();
-    cashflowResults_.reserve(cashflows.size());
+    DiscountingRiskyBondEngine::BondNPVCalculationResults calculationResults;
+
+    calculationResults.cashflowsBeforeSettlementValue = 0.0;
+    calculationResults.cashflowResults.clear();
+    calculationResults.cashflowResults.reserve(cashflows.size());
+
     // handle case where we wish to price simply with benchmark curve and scalar security spread
     // i.e. credit curve term structure (and recovery) have not been specified
     // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
@@ -127,7 +132,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
         spSettl /= creditCurvePtr->survivalProbability(npvDate);
 
     // effective compound factor to get settlement npv from npv date npv
-    compoundFactorSettlement_ = (dfNpv * spNpv) / (dfSettl * spSettl);
+    calculationResults.compoundFactorSettlement = (dfNpv * spNpv) / (dfSettl * spSettl);
 
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;
@@ -144,7 +149,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
         if (!cf->hasOccurred(settlementDate, includeRefDateFlows))
             npvValue += tmp;
         else
-            cashflowsBeforeSettlementValue_ += tmp;
+            calculationResults.cashflowsBeforeSettlementValue += tmp;
 
         /* The amount recovered in the case of default is the recoveryrate*Notional*Probability of
            Default; this is added to the NPV value. For coupon bonds the coupon periods are taken
@@ -153,7 +158,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
         CashFlowResults cfRes = populateCashFlowResultsFromCashflow(cf);
         cfRes.discountFactor = S * df;
         cfRes.presentValue = cfRes.amount * cfRes.discountFactor;
-        cashflowResults_.push_back(cfRes);
+        calculationResults.cashflowResults.push_back(cfRes);
 
         boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
         if (coupon) {
@@ -174,7 +179,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
                 recoveryResult.discountFactor = P * recoveryDiscountFactor;
                 recoveryResult.presentValue = recoveryResult.discountFactor * recoveryResult.amount;
                 recoveryResult.type = "ExpectedRecovery";
-                cashflowResults_.push_back(recoveryResult);
+                calculationResults.cashflowResults.push_back(recoveryResult);
             }
             npvValue += expectedRecoveryAmount * P * recoveryDiscountFactor;
         }
@@ -182,9 +187,11 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
 
     // the ql instrument might not yet be expired and still have not anything to value if
     // the npvDate > evaluation date
-    if (!hasLiveCashFlow)
-        return 0.0;
-
+    if (!hasLiveCashFlow) {
+        calculationResults.npv = 0.0;
+        return calculationResults;
+    }
+        
     if (cashflows.size() > 1 && numCoupons == 0) {
         QL_FAIL("DiscountingRiskyBondEngine does not support bonds with multiple cashflows but no coupons");
     }
@@ -202,13 +209,20 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
                 Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
                 Date defaultDate = startDate + (endDate - startDate) / 2;
                 Probability P = creditCurvePtr->defaultProbability(startDate, endDate) / spNpv;
-
+                CashFlowResults recoveryResult;
+                recoveryResult.amount = redemption->amount() * recoveryVal;
+                recoveryResult.payDate = defaultDate;
+                recoveryResult.currency = "";
+                recoveryResult.discountFactor = P * discountCurve_->discount(defaultDate) / dfNpv;
+                recoveryResult.presentValue = recoveryResult.discountFactor * recoveryResult.amount;
+                recoveryResult.type = "ExpectedRecovery";
+                calculationResults.cashflowResults.push_back(recoveryResult);
                 npvValue += redemption->amount() * recoveryVal * P * discountCurve_->discount(defaultDate) / dfNpv;
                 startDate = stepDate;
             }
         }
     }
-
-    return npvValue;
+    calculationResults.npv = npvValue;
+    return calculationResults;
 } // namespace QuantExt
 } // namespace QuantExt
