@@ -172,7 +172,8 @@ Real DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& s
                 recoveryResult.payDate = defaultDate;
                 recoveryResult.currency = "";
                 recoveryResult.discountFactor = P * recoveryDiscountFactor;
-                recoveryResult.presentValue = P * recoveryResult.amount;
+                recoveryResult.presentValue = recoveryResult.discountFactor * recoveryResult.amount;
+                recoveryResult.type = "ExpectedRecovery";
                 cashflowResults_.push_back(recoveryResult);
             }
             npvValue += expectedRecoveryAmount * P * recoveryDiscountFactor;
