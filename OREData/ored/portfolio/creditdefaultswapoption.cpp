@@ -273,7 +273,11 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     // Instrument wrapper depends on the settlement type.
     Position::Type positionType = parsePositionType(option_.longShort());
     Settlement::Type settleType = parseSettlementType(option_.settlement());
-    if (settleType == Settlement::Cash) {
+    // The instrument build should be indpednent of the evaluation date. However, the general behavior
+    // in ORE (e.g. IR swaptions) for normal pricing runs is that the option is considered expired on
+    // the expiry date with no assumptions on an (automatic) exercise. Therefore we build a vanilla
+    // instrument if the exercise date is <= the eval date at build time.
+    if (settleType == Settlement::Cash || exerciseDate <= Settings::instance().evaluationDate()) {
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
         instrument_ = boost::make_shared<VanillaInstrument>(cdsOption, indicatorLongShort,
             additionalInstruments, additionalMultipliers);
@@ -283,7 +287,6 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
         instrument_ = boost::make_shared<EuropeanOptionWrapper>(cdsOption, isLong, exerciseDate,
             isPhysical, cds, 1.0, 1.0, additionalInstruments, additionalMultipliers);
     }
-
 }
 
 void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFactory>& engineFactory) {
