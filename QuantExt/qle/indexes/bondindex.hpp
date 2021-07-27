@@ -85,7 +85,7 @@ public:
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
               const Handle<Quote>& securitySpread = Handle<Quote>(),
               const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-              const bool conditionalOnSurvival = true);
+              const bool conditionalOnSurvival = true, const bool isInflationLinked = false);
 
     //! \name Index interface
     //@{
@@ -120,7 +120,6 @@ public:
     bool conditionalOnSurvival() const { return conditionalOnSurvival_; }
     //@}
 
-
 protected:
     std::string securityName_;
     bool dirty_, relative_;
@@ -132,7 +131,7 @@ protected:
     Handle<Quote> securitySpread_;
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;
-
+    bool isInflationLinked_;
     boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
 };
 
@@ -140,15 +139,15 @@ protected:
 /*! \ingroup indexes */
 class BondFuturesIndex : public BondIndex {
 public:
-    
-    BondFuturesIndex(const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false, const bool relative = true,
-              const Calendar& fixingCalendar = NullCalendar(), const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
-              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-              const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
-              const Handle<Quote>& recoveryRate = Handle<Quote>(),
-              const Handle<Quote>& securitySpread = Handle<Quote>(),
-              const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-              const bool conditionalOnSurvival = true);
+    BondFuturesIndex(
+        const QuantLib::Date& expiryDate, const std::string& securityName, const bool dirty = false,
+        const bool relative = true, const Calendar& fixingCalendar = NullCalendar(),
+        const boost::shared_ptr<QuantLib::Bond>& bond = nullptr,
+        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+        const Handle<DefaultProbabilityTermStructure>& defaultCurve = Handle<DefaultProbabilityTermStructure>(),
+        const Handle<Quote>& recoveryRate = Handle<Quote>(), const Handle<Quote>& securitySpread = Handle<Quote>(),
+        const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
+        const bool conditionalOnSurvival = true);
 
     //! \name Index interface
     //@{

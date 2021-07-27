@@ -25,6 +25,7 @@
 
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
+#include <ql/instruments/bond.hpp>
 
 namespace QuantExt {
 
@@ -50,6 +51,11 @@ QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTer
 */
 QuantLib::Real inflationGrowth(const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts,
     QuantLib::Time t);
+
+/*! Calculate the Compound Factor to compute the nominal price from the real price
+   I(t_s)/I(t_0) with I(t_s) the CPI at settlement date and I(t_0) the bond's base CPI
+*/
+QuantLib::Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bond);
 
 }
 

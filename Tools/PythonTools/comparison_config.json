@@ -30,6 +30,42 @@
           }
         ]
       },
+      "smrcdetail.csv": {
+        "keys": [
+            "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "TradeType",
+                "NettingSet",
+                "NPV",
+                "Notional",
+                "RiskWeight",
+                "SMRC"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "smrc.csv": {
+        "keys": [
+            "TradeType",
+            "CcyBucket"
+        ],
+        "column_settings": [
+          {
+            "names": [
+                "RiskWeight",
+                "SignedNotional",
+                "SMRC"
+            ],
+            "abs_tol": null,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       "simm_sensitivity\\.csv": {
         "keys": [
           "TradeId",

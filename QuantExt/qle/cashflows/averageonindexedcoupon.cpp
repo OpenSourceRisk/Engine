@@ -212,7 +212,9 @@ CappedFlooredAverageONIndexedCoupon::CappedFlooredAverageONIndexedCoupon(
 
 CapFlooredAverageONIndexedCouponPricer::CapFlooredAverageONIndexedCouponPricer(
     const Handle<OptionletVolatilityStructure>& v)
-    : capletVol_(v) {}
+    : capletVol_(v) {
+    registerWith(capletVol_);
+}
 
 Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::capletVolatility() const {
     return capletVol_;
