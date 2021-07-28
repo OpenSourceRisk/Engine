@@ -24,7 +24,6 @@
 #ifndef quantext_discounting_riskybond_engine_hpp
 #define quantext_discounting_riskybond_engine_hpp
 
-#include <tuple>
 #include <ql/instruments/bond.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>

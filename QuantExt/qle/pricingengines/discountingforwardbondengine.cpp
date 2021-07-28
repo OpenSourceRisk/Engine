@@ -257,7 +257,7 @@ Real DiscountingForwardBondEngine::calculateBondNpv(Date npvDate, Date computeDa
     // Add cashflowResults
     if (results_.additionalResults.find("cashFlowResults") != results_.additionalResults.end()) {
         auto tmp = results_.additionalResults["cashFlowResults"];
-        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "cashflowResults type not handlded");
+        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "internal error: cashflowResults type not handlded");
         std::vector<CashFlowResults> prevCfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp);
         prevCfResults.insert(prevCfResults.end(), cashFlowResults.begin(), cashFlowResults.end());
         results_.additionalResults["cashFlowResults"] = prevCfResults;
@@ -507,7 +507,7 @@ boost::tuple<Real, Real> DiscountingForwardBondEngine::calculateForwardContractP
     // Add cashflowResults
     if (results_.additionalResults.find("cashFlowResults") != results_.additionalResults.end()) {
         auto tmp = results_.additionalResults["cashFlowResults"];
-        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "cashflowResults type not handlded");
+        QL_REQUIRE(tmp.type() == typeid(std::vector<CashFlowResults>), "internal error: cashflowResults type not handlded");
         std::vector<CashFlowResults> prevCfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp);
         prevCfResults.insert(prevCfResults.end(), forwardCashFlowResults.begin(), forwardCashFlowResults.end());
         results_.additionalResults["cashFlowResults"] = prevCfResults;
