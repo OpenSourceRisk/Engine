@@ -74,6 +74,10 @@ void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
         // see EquityVolCurve::buildVolatility(...) for proxy surfaces, there we require equity curves for
         // the curveID of the vol curve and the proxy vol curve implicitly
         requiredCurveIds_[CurveSpec::CurveType::Equity].insert(proxySurface());
+        if (!proxyFxVolSurface_.empty())
+            requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(proxyFxVolSurface_);
+        if (!proxyCorrelation_.empty())
+            requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(proxyCorrelation_);
     }
 }
 
@@ -157,7 +161,14 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
             QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
         } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
-            proxySurface_ = XMLUtils::getChildValue(node, "ProxySurface", true);
+            XMLNode* p;
+            if (p = XMLUtils::getChildNode(n, "EquityVolatilityCurve")) {
+                proxySurface_ = XMLUtils::getChildValue(n, "EquityVolatilityCurve", true);
+                proxyFxVolSurface_ = XMLUtils::getChildValue(n, "FXVolatilityCurve", false);
+                proxyCorrelation_ = XMLUtils::getChildValue(n, "CorrelationCurve", false);
+            } else {
+                proxySurface_ = XMLUtils::getChildValue(node, "ProxySurface", true);
+            }
         } else {
             QL_FAIL("EquityVolatility node expects one child node with name in list: Constant,"
                     << " Curve, StrikeSurface, ProxySurface.");
@@ -189,7 +200,13 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLNode* n = volatilityConfig_->toXML(doc);
         XMLUtils::appendNode(node, n);
     } else {
-        XMLUtils::addChild(doc, node, "ProxySurface", proxySurface_);
+        XMLNode* p = doc.allocNode("ProxySurface");
+        XMLUtils::addChild(doc, p, "EquityVolatilityCurve", proxySurface_);
+        if (!proxyFxVolSurface_.empty())
+            XMLUtils::addChild(doc, p, "FXVolatilityCurve", proxyFxVolSurface_);
+        if (!proxyCorrelation_.empty())
+            XMLUtils::addChild(doc, p, "CorrelationCurve", proxyCorrelation_);
+        XMLUtils::appendNode(node, p);
     }
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
