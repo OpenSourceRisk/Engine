@@ -80,6 +80,9 @@ public:
     //! Return shifted NPVs by trade and scenario
     const std::map<std::pair<std::string, std::string>, Real>& shiftedNPV() { return shiftedNPV_; }
 
+    //! Return delta NPV by trade and scenario
+    const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
+
     //! Write NPV by trade/scenario to a file (base and shifted NPVs, delta)
     void writeReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
