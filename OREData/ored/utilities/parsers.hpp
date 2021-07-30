@@ -436,12 +436,5 @@ QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
 */
 QuantLib::Average::Type parseAverageType(const std::string& s);
 
-//! Convert FX pair to market standard dominance
-/*!
- Convert FX pair to market standard dominance, e.g. "USD" & "GBP" -> "GBPUSD", "USD" & "JPY" -> "USDJPY"
-  \ingroup utilities
-*/
-string fxDominance(const string& s1, const string& s2);
-
 } // namespace data
 } // namespace ore

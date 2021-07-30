@@ -1017,6 +1017,8 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
             spec.curveConfigID() << " as proxy currencies if different from equity currency.");
 
         // get the fx vol surface
+        QL_REQUIRE(config.proxyFxVolSurface().size() == 6, "EquityVolCurve: FXVolatilityCurve provided " << config.proxyFxVolSurface() <<
+            " for Equity vol config " << spec.curveConfigID() << " must be of length 6, and of form CC1CCY2 e.g EURUSD");
         string proxyVolForCcy = config.proxyFxVolSurface().substr(0, 3);
         string proxyVolDomCcy = config.proxyFxVolSurface().substr(3, 3);
         FXVolatilityCurveSpec fxSpec(proxyVolForCcy, proxyVolDomCcy, config.proxyFxVolSurface());

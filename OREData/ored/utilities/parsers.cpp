@@ -1506,55 +1506,5 @@ Average::Type parseAverageType(const std::string& s) {
     }
 }
 
-string fxDominance(const string& s1, const string& s2) {
-
-    // This should run even if we don't have s1 or s2 in our table, it should not throw
-    // It will also work if s1 == s2
-
-    static vector<string> dominance = {// Precious Metals (always are before currencies, Metal crosses are not
-                                       // common so the ordering of the actual 4 here is just the standard order we see
-                                       "XAU", "XAG", "XPT", "XPD",
-                                       // The majors (except JPY)
-                                       "EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "ZAR",
-                                       // The rest - not really sure about some of these (MXNSEK anyone)
-                                       "MYR", "SGD",               // not sure of order here
-                                       "DKK", "NOK", "SEK",        // order here is correct
-                                       "HKD", "THB", "TWD", "MXN", // not sure of order here
-                                       "CNY", "CNH",
-
-                                       // JPY at the end (of majors)
-                                       "JPY",
-                                       // JPYIDR and JPYKRW - who knew!
-                                       "IDR", "KRW" };
-
-    auto p1 = std::find(dominance.begin(), dominance.end(), s1);
-    auto p2 = std::find(dominance.begin(), dominance.end(), s2);
-
-    // if both on the list - we return the first one first
-    if (p1 != dominance.end() && p2 != dominance.end()) {
-        if (p1 > p2)
-            return s2 + s1;
-        else
-            return s1 + s2;
-    }
-    // if nether on the list - we return s1+s2
-    if (p1 == dominance.end() && p2 == dominance.end()) {
-        WLOG("No dominance for either " << s1 << " or " << s2 << " assuming " << s1 + s2);
-        return s1 + s2;
-    }
-
-    // if one on the list - we return that first (unless it's JPY - in which case it's last)
-    if (s1 == "JPY")
-        return s2 + s1;
-    else if (s2 == "JPY")
-        return s1 + s2;
-    else {
-        if (p1 != dominance.end())
-            return s1 + s2;
-        else
-            return s2 + s1;
-    }
-}
-
 } // namespace data
 } // namespace ore
