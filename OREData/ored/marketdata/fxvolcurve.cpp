@@ -47,39 +47,21 @@ template <class T, class K> Handle<T> getHandle(const string& spec, const map<st
     return it->second->handle();
 }
 
-// loop-up fx from map
-class FXLookupMap : public ore::data::FXLookup {
-public:
-    FXLookupMap(const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots) : fxSpots_(fxSpots) {}
-
-    Handle<Quote> fxPairLookup(const string& fxPair) const override { return getHandle<Quote>(fxPair, fxSpots_); };
-
-private:
-    // this is a reference
-    const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots_;
-};
-
-// look-u[ fx from triangulation object
-class FXLookupTriangulation : public ore::data::FXLookup {
-public:
-    FXLookupTriangulation(const ore::data::FXTriangulation& fxSpots) : fxSpots_(fxSpots) {}
-
-    Handle<Quote> fxPairLookup(const string& fxPair) const override {
-        // parse ID to get pair
-        QL_REQUIRE(fxPair.size() == 10, "FX Pair should be of the form: FX/CCY/CCY");
-        QL_REQUIRE(fxPair.substr(0, 3) == "FX/", "FX Pair should be of the form: FX/CCY/CCY");
-        return fxSpots_.getQuote(fxPair.substr(3, 3) + fxPair.substr(7, 3));
-    };
-
-private:
-    // this is a reference
-    const ore::data::FXTriangulation& fxSpots_;
-};
-
-} // namespace
+}// namespace
 
 namespace ore {
 namespace data {
+
+Handle<Quote> FXLookupMap::fxPairLookup(const string& fxPair) const {
+    return getHandle<Quote>(fxPair, fxSpots_);
+}
+
+Handle<Quote> FXLookupTriangulation::fxPairLookup(const string& fxPair) const {
+    // parse ID to get pair
+    QL_REQUIRE(fxPair.size() == 10, "FX Pair should be of the form: FX/CCY/CCY");
+    QL_REQUIRE(fxPair.substr(0, 3) == "FX/", "FX Pair should be of the form: FX/CCY/CCY");
+    return fxSpots_.getQuote(fxPair.substr(3, 3) + fxPair.substr(7, 3));
+}
 
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                        const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
