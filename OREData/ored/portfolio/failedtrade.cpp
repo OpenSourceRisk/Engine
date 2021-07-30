@@ -31,6 +31,14 @@ void FailedTrade::build(const boost::shared_ptr<EngineFactory>&) {
     maturity_ = Date::maxDate();
 }
 
+void FailedTrade::setUnderlyingTradeType(const std::string& underlyingTradeType) {
+    underlyingTradeType_ = underlyingTradeType;
+}
+
+const std::string& FailedTrade::underlyingTradeType() const {
+    return underlyingTradeType_;
+}
+
 void FailedTrade::fromXML(XMLNode* node) {
     Trade::fromXML(node);
 }

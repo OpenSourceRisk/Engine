@@ -27,11 +27,20 @@ public:
     //! Trade Interface's build.
     void build(const boost::shared_ptr<ore::data::EngineFactory>&) override;
 
+    //! Set the original trade
+    void setUnderlyingTradeType(const std::string& underlyingTradeType_);
+
+    //! Get the original trade
+    const std::string& underlyingTradeType() const;
+
     //! \name Serialisation
     //@{
     void fromXML(ore::data::XMLNode* node) override;
     ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
     //@}
+
+private:
+    std::string underlyingTradeType_;
 };
 
 }

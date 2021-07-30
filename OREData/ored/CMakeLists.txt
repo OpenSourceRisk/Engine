@@ -105,7 +105,6 @@ portfolio/commodityoption.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
-portfolio/failedtrade.cpp
 portfolio/durationadjustedcmslegbuilder.cpp
 portfolio/durationadjustedcmslegdata.cpp
 portfolio/enginedata.cpp
@@ -116,6 +115,7 @@ portfolio/equityforward.cpp
 portfolio/equityfuturesoption.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
+portfolio/failedtrade.cpp
 portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
@@ -307,7 +307,6 @@ portfolio/commodityoption.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp
-portfolio/failedtrade.hpp
 portfolio/durationadjustedcmslegbuilder.hpp
 portfolio/durationadjustedcmslegdata.hpp
 portfolio/enginedata.hpp
@@ -318,6 +317,7 @@ portfolio/equityforward.hpp
 portfolio/equityfuturesoption.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
+portfolio/failedtrade.hpp
 portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp

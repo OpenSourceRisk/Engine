@@ -42,7 +42,7 @@ string ShiftScenarioGenerator::ScenarioDescription::keyName(RiskFactorKey key) c
         keyName = tokens[0];
     }
 
-    std::replace(keyName.begin(), keyName.end(), '/', '\/');
+    boost::replace_all(keyName, "/", "\\/");
 
     std::ostringstream o;
     o << keyType << "/" << keyName;
