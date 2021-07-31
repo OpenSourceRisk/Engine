@@ -448,10 +448,9 @@ QuantLib::Real Swaption::notional() const {
 }
 
 const std::map<std::string, boost::any>& Swaption::additionalData() const {
-    Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
-    for (Size i = 0; i < numLegs; ++i) {
+    for (Size i = 0; i < std::min(legData_.size(), legs_.size()); ++i) {
         string legID = to_string(i + 1);
         additionalData_["legType[" + legID + "]"] = legData_[i].legType();
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
