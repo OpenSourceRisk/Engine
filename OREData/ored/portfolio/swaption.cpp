@@ -350,9 +350,6 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     boost::shared_ptr<FloatingLegData> floatingLegData =
         boost::dynamic_pointer_cast<FloatingLegData>(legData_[floatingLegIndex].concreteLegData());
 
-    QL_REQUIRE(fixedLegData->rates().size() == 1, "Vanilla Swaption: constant rate required");
-    QL_REQUIRE(floatingLegData->spreads().size() <= 1, "Vanilla Swaption: constant spread required");
-
     boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(tmp);
     QL_REQUIRE(swapBuilder, "No Swap Builder found for Swaption " << id());
