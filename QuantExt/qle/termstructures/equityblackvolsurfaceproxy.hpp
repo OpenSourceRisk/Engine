@@ -27,7 +27,9 @@
 #include <boost/shared_ptr.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -63,7 +65,10 @@ public:
     //! Constructor. This is a floating term structure (settlement days is zero)
     EquityBlackVolatilitySurfaceProxy(const boost::shared_ptr<BlackVolTermStructure>& proxySurface,
                                       const boost::shared_ptr<EquityIndex>& index,
-                                      const boost::shared_ptr<EquityIndex>& proxyIndex);
+                                      const boost::shared_ptr<EquityIndex>& proxyIndex,
+                                      const boost::shared_ptr<BlackVolTermStructure>& fxSurface = nullptr,
+                                      const boost::shared_ptr<FxIndex>& fxIndex = nullptr,
+                                      const boost::shared_ptr<CorrelationTermStructure>& correlation = nullptr);
 
     //! \name TermStructure interface
     //@{
@@ -95,6 +100,9 @@ protected:
 private:
     boost::shared_ptr<BlackVolTermStructure> proxySurface_;
     boost::shared_ptr<EquityIndex> index_, proxyIndex_;
+    boost::shared_ptr<BlackVolTermStructure> fxSurface_;
+    boost::shared_ptr<FxIndex> fxIndex_;
+    boost::shared_ptr<CorrelationTermStructure> correlation_;
 };
 
 } // namespace QuantExt

@@ -24,6 +24,7 @@
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/dependencygraph.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>

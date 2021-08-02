@@ -73,6 +73,8 @@ public:
     const string& calendar() const { return calendar_; }
     const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const { return volatilityConfig_; }
     const string& proxySurface() const { return proxySurface_; }
+    const string& proxyCorrelation() const { return proxyCorrelation_; }
+    const string& proxyFxVolSurface() const { return proxyFxVolSurface_; }
     const string quoteStem() const;
     void populateQuotes();
     bool isProxySurface() { return !proxySurface_.empty(); };
@@ -97,6 +99,8 @@ private:
     string dayCounter_;
     string calendar_;
     string proxySurface_;
+    string proxyCorrelation_;
+    string proxyFxVolSurface_;
     OneDimSolverConfig solverConfig_;
     boost::optional<bool> preferOutOfTheMoney_;
     ReportConfig reportConfig_;

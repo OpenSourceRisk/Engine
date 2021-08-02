@@ -39,7 +39,7 @@ public:
           exceptionWhat_(exceptionWhat) {}
 
     StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
-                                const std::string& exceptionType, const char* exceptionWhat = "")
+                                const std::string& exceptionType, const std::string exceptionWhat = "")
         : tradeId_(tradeId), tradeType_(tradeType), exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
 
     const std::string& tradeId() const { return tradeId_; }
