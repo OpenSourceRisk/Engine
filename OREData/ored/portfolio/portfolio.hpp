@@ -43,7 +43,7 @@ class ReferenceDataManager;
 class Portfolio {
 public:
     //! Default constructor
-    Portfolio() {}
+    Portfolio(bool buildFailedTrades = false) : buildFailedTrades_(buildFailedTrades) {}
 
     //! Add a trade to the portfoliio
     void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
@@ -129,6 +129,7 @@ public:
                       const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
 
 private:
+    bool buildFailedTrades_;
     std::vector<boost::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
 };
