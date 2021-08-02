@@ -161,13 +161,17 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
-            if (buildFailedTrades_)  {
+            if (buildFailedTrades_) {
                 boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
                 failed->id() = (*trade)->id();
                 failed->setUnderlyingTradeType((*trade)->tradeType());
                 failed->envelope() = (*trade)->envelope();
+                failed->build(engineFactory);
                 LOG("Added failed trade with id " << failed->id());
                 (*trade) = failed;
+            }
+            else {
+                trade = trades_.erase(trade);
             }
         }
     }
