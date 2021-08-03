@@ -356,9 +356,9 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                     if (quoteRelevant) {
                         Date tmpDate = getDateFromDateOrPeriod(q->expiry(), asof, calendar_);
                         if (tmpDate <= asof) {
-                            LOG("Warning Stale Marketdata: Equity volatility quote '"
-                                << q->name() << "' has expired in the past (" << io::iso_date(tmpDate)
-                                << ") and is ignored");
+                            LOG("expired Equity volatility quote '"
+                                << q->name() << "' ignored, expired on (" << io::iso_date(tmpDate)
+                                << ")");
                             ++excludedAlreadyExpired;
                             continue;
                         }
