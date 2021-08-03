@@ -43,7 +43,7 @@ class ReferenceDataManager;
 class Portfolio {
 public:
     //! Default constructor
-    Portfolio(bool buildFailedTrades = false) : buildFailedTrades_(buildFailedTrades) {}
+    Portfolio(bool buildFailedTrades = true) : buildFailedTrades_(buildFailedTrades) {}
 
     //! Add a trade to the portfoliio
     void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
