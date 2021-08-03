@@ -100,7 +100,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         vector<boost::shared_ptr<EquityForwardQuote>> qt; // for sorting quotes_/terms_ pairs
         vector<boost::shared_ptr<EquityOptionQuote>> oqt; // store any equity vol quotes
         Size quotesRead = 0;
-
+        Size quotesExpired = 0;
         // in case of wild-card in config
         auto wildcard = getUniqueWildcard(config->fwdQuotes());
 
@@ -111,12 +111,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             LOG("Wild card quote specified for " << config->curveID())
         } else {
             if (config->type() == EquityCurveConfig::Type::OptionPremium) {
-                oqt.resize(config->fwdQuotes().size());
+                oqt.reserve(config->fwdQuotes().size());
             } else {
-                for (Size i = 0; i < config->fwdQuotes().size(); i++) {
-                    quotes_.push_back(Null<Real>());
-                    terms_.push_back(Null<Date>());
-                }
+                quotes_.reserve(config->fwdQuotes().size());
+                terms_.reserve(config->fwdQuotes().size());
             }
         }
 
@@ -156,14 +154,16 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());
 
                     // is the quote one of the list in the config ?
-                    if (it1 != config->fwdQuotes().end()) {
-                        Size pos = it1 - config->fwdQuotes().begin();
-                        QL_REQUIRE(terms_[pos] == Null<Date>(),
-                                   "duplicate market datum found for " << config->fwdQuotes()[pos]);
-                        terms_[pos] = q->expiryDate();
+                    if (it1 != config->fwdQuotes().end() && asof < q->expiryDate()) {
+                        bool isUnique = find(terms_.begin(), terms_.end(), q->expiryDate()) == terms_.end();
+                        QL_REQUIRE(isUnique,
+                                   "duplicate market datum found for " << q->name());
+                        terms_.push_back(q->expiryDate());
                         // convert quote from minor to major currency if needed
-                        quotes_[pos] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
+                        quotes_.push_back(convertMinorToMajorCurrency(q->ccy(), q->quote()->value()));
                         quotesRead++;
+                    } else if (it1 != config->fwdQuotes().end()) {
+                        ++quotesExpired;
                     }
                 }
             }
@@ -189,11 +189,13 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());
 
                     // is the quote one of the list in the config ?
-                    if (it1 != config->fwdQuotes().end()) {
-                        Size pos = it1 - config->fwdQuotes().begin();
-                        QL_REQUIRE(!oqt[pos], "duplicate market datum found for " << config->fwdQuotes()[pos]);
-                        oqt[pos] = q;
+                    if (it1 != config->fwdQuotes().end() && asof < expiryDate) {
+                        QL_REQUIRE(find(oqt.begin(), oqt.end(), q) == oqt.end(),
+                                   "duplicate market datum found for " << q->name());
+                        oqt.push_back(q);
                         quotesRead++;
+                    } else if(it1 != config->fwdQuotes().end()) {
+                        ++quotesExpired;
                     }
                 }
             }
@@ -209,25 +211,28 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it1 != config->fwdQuotes().end()) {
-                    Size pos = it1 - config->fwdQuotes().begin();
-                    QL_REQUIRE(terms_[pos] == Null<Date>(),
-                               "duplicate market datum found for " << config->fwdQuotes()[pos]);
+                if (it1 != config->fwdQuotes().end() && q->tenorDate() > asof) {
+                    bool isUnique = find(terms_.begin(), terms_.end(), q->tenorDate()) == terms_.end();
+                    QL_REQUIRE(isUnique, "duplicate market datum found for " << q->name());
                     DLOG("EquityCurve Dividend Yield found for quote: " << q->name());
-                    terms_[pos] = q->tenorDate();
-                    quotes_[pos] = q->quote()->value();
+                    terms_.push_back(q->tenorDate());
+                    quotes_.push_back(q->quote()->value());
                     quotesRead++;
+                } else if (it1 != config->fwdQuotes().end()) {
+                    ++quotesExpired;
                 }
             }
         }
 
         // some checks on the quotes read
-        LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
+        LOG("EquityCurve: read " << quotesRead + quotesExpired << " quotes of type " << config->type());
+        LOG("EquiteCUrve: ignored " << quotesExpired << " expired quotes.");
         QL_REQUIRE(!equitySpot.empty(), "Equity spot quote not found for " << config->curveID());
 
         if (!wildcard) {
-            QL_REQUIRE(quotesRead == config->fwdQuotes().size(),
-                       "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
+            QL_REQUIRE(quotesRead + quotesExpired == config->fwdQuotes().size(),
+                       "read " << quotesRead << "quotes and " << quotesExpired << " expire quotes, but " << config->fwdQuotes().size()
+                               << " required.");
         }
 
         for (Size i = 0; i < terms_.size(); i++) {
