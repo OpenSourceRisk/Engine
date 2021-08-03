@@ -148,6 +148,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         DLOG("EquityCurve Forward Price found for quote: " << q->name());
                         qt.push_back(q); // terms_ and quotes_
                         quotesRead++;
+                    } else if ((*wildcard).matches(q->name())){
+                        LOG("Ignore expired ForwardPrice/ForwardDividendPrice quote " << q->name() << ", expired at "<<io::iso_date(q->expiryDate()));
                     }
                 } else {
                     vector<string>::const_iterator it1 =
@@ -163,6 +165,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         quotes_.push_back(convertMinorToMajorCurrency(q->ccy(), q->quote()->value()));
                         quotesRead++;
                     } else if (it1 != config->fwdQuotes().end()) {
+                        LOG("Ignore expired ForwardPrice/ForwardDividendPrice quote " << q->name() << ", expired at "
+                                                                                      << io::iso_date(q->expiryDate()));
                         ++quotesExpired;
                     }
                 }
@@ -183,6 +187,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         DLOG("EquityCurve Volatility Price found for quote: " << q->name());
                         oqt.push_back(q);
                         quotesRead++;
+                    } else if ((*wildcard).matches(q->name())) {
+                        LOG("Ignore expired OptionPremium  quote " << q->name() << ", expired at "
+                                                                                      << io::iso_date(expiryDate));
                     }
                 } else {
                     vector<string>::const_iterator it1 =
@@ -195,6 +202,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         oqt.push_back(q);
                         quotesRead++;
                     } else if(it1 != config->fwdQuotes().end()) {
+                        LOG("Ignore expired OptionPremium quote " << q->name() << ", expired at "
+                                                                                      << io::iso_date(expiryDate));
                         ++quotesExpired;
                     }
                 }
@@ -219,6 +228,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     quotes_.push_back(q->quote()->value());
                     quotesRead++;
                 } else if (it1 != config->fwdQuotes().end()) {
+                    LOG("Ignore expired DividendYield quote " << q->name() << ", expired at "
+                                                              << io::iso_date(q->tenorDate()));
                     ++quotesExpired;
                 }
             }
@@ -235,12 +246,32 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                                << " required.");
         }
 
-        for (Size i = 0; i < terms_.size(); i++) {
-            QL_REQUIRE(terms_[i] > asof, "Invalid Fwd Expiry " << terms_[i] << " vs. " << asof);
-            if (i > 0) {
-                QL_REQUIRE(terms_[i] > terms_[i - 1], "terms must be increasing in curve config");
+        // Sort the quotes and terms by date 
+
+        QL_REQUIRE(terms_.size() == quotes_.size(), "Internal error: terms and quotes mismatch");
+        if (!terms_.empty()) {
+            vector<pair<Date, Real>> tmpSort;
+
+            std::transform(terms_.begin(), terms_.end(), quotes_.begin(), back_inserter(tmpSort),
+                           [](const Date& d, const Real& q) { return make_pair(d, q); });
+
+            std::sort(tmpSort.begin(), tmpSort.end(), [](auto& left, auto& right) { return left.first < right.first; });
+
+            for (Size i = 0; i < tmpSort.size(); ++i) {
+                terms_[i] = tmpSort[i].first;
+                quotes_[i] = tmpSort[i].second;
+            }
+
+            for (Size i = 0; i < terms_.size(); i++) {
+                QL_REQUIRE(terms_[i] > asof, "Invalid Fwd Expiry " << terms_[i] << " vs. " << asof);
+                if (i > 0) {
+                    QL_REQUIRE(terms_[i] > terms_[i - 1], "terms must be increasing in curve config");
+                }
             }
         }
+        
+
+
 
         // the curve type that we will build
         EquityCurveConfig::Type buildCurveType = curveType_;
