@@ -258,7 +258,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                            [](const Date& d, const Real& q) { return make_pair(d, q); });
 
             std::sort(tmpSort.begin(), tmpSort.end(),
-                      [](pair<Date, Real>& left, pair<Date, Real>& right) { return left.first < right.first; });
+                      [](const pair<Date, Real>& left, const pair<Date, Real>& right) { return left.first < right.first; });
 
             for (Size i = 0; i < tmpSort.size(); ++i) {
                 terms_[i] = tmpSort[i].first;
