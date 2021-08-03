@@ -149,6 +149,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         qt.push_back(q); // terms_ and quotes_
                         quotesRead++;
                     } else if ((*wildcard).matches(q->name())){
+                        ++quotesExpired;
                         LOG("Ignore expired ForwardPrice/ForwardDividendPrice quote " << q->name() << ", expired at "<<io::iso_date(q->expiryDate()));
                     }
                 } else {
@@ -188,6 +189,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         oqt.push_back(q);
                         quotesRead++;
                     } else if ((*wildcard).matches(q->name())) {
+                        ++quotesExpired;
                         LOG("Ignore expired OptionPremium  quote " << q->name() << ", expired at "
                                                                                       << io::iso_date(expiryDate));
                     }
