@@ -621,9 +621,9 @@
       },
       ".*additional_results.*\\.csv": {
         "keys": [
-          "TradeId",
-          "ResultId",
-          "ResultType"
+          "tradeId",
+          "resultId",
+          "resultType"
         ]
       },
       ".*curves.*\\.csv": {

@@ -350,9 +350,6 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     boost::shared_ptr<FloatingLegData> floatingLegData =
         boost::dynamic_pointer_cast<FloatingLegData>(legData_[floatingLegIndex].concreteLegData());
 
-    QL_REQUIRE(fixedLegData->rates().size() == 1, "Vanilla Swaption: constant rate required");
-    QL_REQUIRE(floatingLegData->spreads().size() <= 1, "Vanilla Swaption: constant spread required");
-
     boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(tmp);
     QL_REQUIRE(swapBuilder, "No Swap Builder found for Swaption " << id());
@@ -448,10 +445,9 @@ QuantLib::Real Swaption::notional() const {
 }
 
 const std::map<std::string, boost::any>& Swaption::additionalData() const {
-    Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
-    for (Size i = 0; i < numLegs; ++i) {
+    for (Size i = 0; i < std::min(legData_.size(), legs_.size()); ++i) {
         string legID = to_string(i + 1);
         additionalData_["legType[" + legID + "]"] = legData_[i].legType();
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
