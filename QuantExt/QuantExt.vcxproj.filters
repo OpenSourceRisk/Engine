@@ -651,6 +651,9 @@
     <ClInclude Include="qle\currencies\metals.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\emirates.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\calendars\france.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
@@ -1633,6 +1636,9 @@
     </ClCompile>
     <ClCompile Include="qle\currencies\metals.cpp">
       <Filter>currencies</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\emirates.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\france.cpp">
       <Filter>time\calendars</Filter>

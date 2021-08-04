@@ -6,6 +6,7 @@ calendars/belgium.cpp
 calendars/chile.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
+calendars/emirates.cpp
 calendars/france.cpp
 calendars/ice.cpp
 calendars/israel.cpp
@@ -264,6 +265,7 @@ calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
 calendars/colombia.hpp
+calendars/emirates.hpp
 calendars/france.hpp
 calendars/ice.hpp
 calendars/israel.hpp

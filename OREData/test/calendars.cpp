@@ -29,6 +29,7 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/emirates.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/luxembourg.hpp>
@@ -95,9 +96,9 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"TWD", Taiwan()},
                             {"TRY", Turkey()},
                             {"UAH", Ukraine()},
+                            {"AED", UnitedArabEmirates()},
                             {"HUF", Hungary()},
                             // Emerging currencies that default to WeekendsOnly
-                            {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
                             {"CLP", Chile()},
                             {"COP", Colombia()},
                             {"ILS", Israel()},

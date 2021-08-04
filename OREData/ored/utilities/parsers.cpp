@@ -40,6 +40,7 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/emirates.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/israel.hpp>
@@ -257,7 +258,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"PL", Poland()},
         {"RO", Romania()},
         {"RU", Russia()},
-        // {"SA", SaudiArabic()}
+        // {"SA", SaudiArabia()},
         {"SG", Singapore()},
         {"ZA", SouthAfrica()},
         {"KR", SouthKorea(SouthKorea::Settlement)},
@@ -267,6 +268,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"TH", Thailand()},
         {"TR", Turkey()},
         {"UA", Ukraine()},
+        {"AE", UnitedArabEmirates()},
         {"GB", UnitedKingdom()},
         {"US", UnitedStates()},
         {"BE", Belgium()},
@@ -317,6 +319,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"THA", Thailand()},
         {"TUR", Turkey()},
         {"UKR", Ukraine()},
+        {"ARE", UnitedArabEmirates()},
         {"GBR", UnitedKingdom()},
         {"USA", UnitedStates()},
         {"BEL", Belgium()},
@@ -365,6 +368,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"THB", Thailand()},
         {"TRY", Turkey()},
         {"UAH", Ukraine()},
+        {"AED", UnitedArabEmirates()},
         {"GBP", UnitedKingdom()},
         {"USD", UnitedStates()},
         {"BEF", Belgium()},
@@ -381,7 +385,6 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"ZAX", SouthAfrica()},
 
         // fallback to WeekendsOnly for these emerging ccys
-        {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
         {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
         {"CLF", AmendedCalendar(WeekendsOnly(), "CLF")},
         {"EGP", AmendedCalendar(WeekendsOnly(), "EGP")},
