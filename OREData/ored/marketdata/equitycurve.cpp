@@ -150,7 +150,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         quotesRead++;
                     } else if ((*wildcard).matches(q->name())){
                         ++quotesExpired;
-                        LOG("Ignore expired ForwardPrice/ForwardDividendPrice quote " << q->name() << ", expired at "<<io::iso_date(q->expiryDate()));
+                        DLOG("Ignore expired ForwardPrice/ForwardDividendPrice quote " << q->name() << ", expired at "<<io::iso_date(q->expiryDate()));
                     }
                 } else {
                     vector<string>::const_iterator it1 =
@@ -166,7 +166,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         quotes_.push_back(convertMinorToMajorCurrency(q->ccy(), q->quote()->value()));
                         quotesRead++;
                     } else if (it1 != config->fwdQuotes().end()) {
-                        LOG("Ignore expired ForwardPrice/ForwardDividendPrice quote " << q->name() << ", expired at "
+                        DLOG("Ignore expired ForwardPrice/ForwardDividendPrice quote " << q->name() << ", expired at "
                                                                                       << io::iso_date(q->expiryDate()));
                         ++quotesExpired;
                     }
@@ -190,7 +190,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         quotesRead++;
                     } else if ((*wildcard).matches(q->name())) {
                         ++quotesExpired;
-                        LOG("Ignore expired OptionPremium  quote " << q->name() << ", expired at "
+                        DLOG("Ignore expired OptionPremium  quote " << q->name() << ", expired at "
                                                                                       << io::iso_date(expiryDate));
                     }
                 } else {
@@ -204,7 +204,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         oqt.push_back(q);
                         quotesRead++;
                     } else if(it1 != config->fwdQuotes().end()) {
-                        LOG("Ignore expired OptionPremium quote " << q->name() << ", expired at "
+                        DLOG("Ignore expired OptionPremium quote " << q->name() << ", expired at "
                                                                                       << io::iso_date(expiryDate));
                         ++quotesExpired;
                     }
@@ -230,7 +230,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     quotes_.push_back(q->quote()->value());
                     quotesRead++;
                 } else if (it1 != config->fwdQuotes().end()) {
-                    LOG("Ignore expired DividendYield quote " << q->name() << ", expired at "
+                    DLOG("Ignore expired DividendYield quote " << q->name() << ", expired at "
                                                               << io::iso_date(q->tenorDate()));
                     ++quotesExpired;
                 }
