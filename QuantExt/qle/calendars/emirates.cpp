@@ -26,22 +26,21 @@ namespace QuantExt {
 
         bool isUaeHoliday(Date d) {
             static std::vector<Date> holidays = {
-                // 2021
+                // 2021, according to https://wam.ae/en/details/1395302896477 and use Python hijri-converter package
                 Date(1, January, 2021),   // New Year's Day
                 Date(11, May, 2021),      // Eid Al Fitr
                 Date(12, May, 2021),
                 Date(13, May, 2021),
-                Date(14, May, 2021),
-                Date(15, May, 2021),
                 Date(19, July, 2021),     // Arafat Day
                 Date(20, July, 2021),     // Eid Al Adha
                 Date(21, July, 2021),   
                 Date(22, July, 2021),   
-                Date(10, August, 2021),   // Islamic New Year
-                Date(19, October, 2021),  // The Prophet's Birthday
-                Date(30, November, 2021), // Marty's Day
-                Date(1, December, 2021),  // UAE National Day
-                // 2022
+                Date(12, August, 2021),   // Islamic New Year
+                Date(21, October, 2021),  // The Prophet's Birthday
+                Date(1, December, 2021),  // Commemoration Day
+                Date(2, December, 2021),  // UAE National Day
+                
+                // 2022 according to https://wam.ae/en/details/1395302896477
                 Date(1, January, 2022),   // New Year's Day
                 Date(1, May, 2022),       // Eid Al Fitr
                 Date(2, May, 2022),
@@ -52,10 +51,11 @@ namespace QuantExt {
                 Date(10, July, 2022),     // Eid Al Adha
                 Date(11, July, 2022),   
                 Date(12, July, 2022),   
-                Date(31, July, 2022),     // Islamic New Year
-                Date(9, October, 2022),   // The Prophet's Birthday
+                Date(30, July, 2022),     // Islamic New Year
+                Date(8, October, 2022),   // The Prophet's Birthday
                 Date(1, December, 2022),  // Marty's Day
-                Date(2, December, 2022)   // UAE National Day                
+                Date(2, December, 2022)   // UAE National Day
+                
                 // Add 2023 onwards as soon as published
             };
 
