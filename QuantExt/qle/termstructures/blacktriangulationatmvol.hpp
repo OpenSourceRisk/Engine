@@ -41,6 +41,7 @@ public:
         registerWith(vol1_);
         registerWith(vol2_);
         registerWith(rho_);
+        enableExtrapolation(vol1_->allowsExtrapolation() && vol2_->allowsExtrapolation());
     }
     //! \name TermStructure interface
     //@{
