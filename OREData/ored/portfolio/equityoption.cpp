@@ -49,9 +49,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     // Set the strike currency - if we have a minor currency, convert the strike
     if (!strikeCurrency_.empty()) {
-        QL_REQUIRE(parseCurrencyWithMinors(strikeCurrency_) == equityCurrency,
-                   "Strike currency " << strikeCurrency_ << " does not match equity currency " << equityCurrency
-                                      << " for trade " << id() << ".");
+        
         strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
     } else {
         // If payoff currency and underlying currency are equivalent (and payoff currency could be a minor currency)
@@ -71,7 +69,91 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     underlyingCurrency_ = equityCurrency.code();
 
     // Build the trade using the shared functionality in the base class.
-    VanillaOptionTrade::build(engineFactory);
+    if (parseCurrencyWithMinors(strikeCurrency_) == parseCurrencyWithMinors(localCurrency_) &&
+        parseCurrencyWithMinors(strikeCurrency_) != equityCurrency) {
+        // We have a composite EQ Trade
+        Option::Type type = parseOptionType(option_.callPut());
+        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
+        QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
+        QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+        expiryDate_ = parseDate(option_.exerciseDates().front());
+        // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
+        // payment after expiry.
+        maturity_ = expiryDate_;
+        // Exercise
+        boost::shared_ptr<Exercise> exercise;
+        switch (exerciseType) {
+        case QuantLib::Exercise::Type::European: {
+            exercise = boost::make_shared<EuropeanExercise>(expiryDate_);
+            break;
+        }
+        default:
+            QL_FAIL("Option Style " << option_.style() << " is not supported for an composite equity option");
+        }
+        Settlement::Type settlementType = parseSettlementType(option_.settlement());
+        // Create the instrument and then populate the name for the engine builder.
+        boost::shared_ptr<Instrument> vanilla;
+        if (exerciseType == Exercise::European && settlementType == Settlement::Cash) {
+            // We have a European cash settled option.
+
+            // Get the payment date.
+            const boost::optional<OptionPaymentData>& opd = option_.paymentData();
+            Date paymentDate = expiryDate_;
+            if (opd) {
+                if (opd->rulesBased()) {
+                    const Calendar& cal = opd->calendar();
+                    QL_REQUIRE(cal != Calendar(), "Need a non-empty calendar for rules based payment date.");
+                    paymentDate = cal.advance(expiryDate_, opd->lag(), Days, opd->convention());
+                } else {
+                    const vector<Date>& dates = opd->dates();
+                    QL_REQUIRE(dates.size() == 1, "Need exactly one payment date for cash settled European option.");
+                    paymentDate = dates[0];
+                }
+                QL_REQUIRE(paymentDate >= expiryDate_, "Payment date must be greater than or equal to expiry date.");
+            }
+
+            QL_REQUIRE(paymentDate <= expiryDate_,
+                       "Payment date must equal expiry date for a Composite payoff. Trade: " << id() << ".");
+        }
+        QL_REQUIRE(forwardDate_ ==
+                    QuantLib::Date(), "Composite payoff is not currently supported for Forward Options: Trade "
+                        << id());
+        vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
+
+        string tradeTypeBuilder = "CompositeOption";
+
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
+
+        // TODO cast and set pricing engine
+
+        string configuration = Market::defaultConfiguration;
+        Position::Type positionType = parsePositionType(option_.longShort());
+        Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+        Real mult = quantity_ * bsInd;
+
+        std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+        std::vector<Real> additionalMultipliers;
+        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, ccy,
+                    engineFactory, configuration);
+
+        instrument_ = boost::shared_ptr<InstrumentWrapper>(
+            new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
+        npvCurrency_ = currency_;
+
+        // Notional - we really need todays spot to get the correct notional.
+        // But rather than having it move around we use strike * quantity
+        notional_ = strike_ * quantity_;
+        notionalCurrency_ = currency_;
+
+
+    } else {
+        QL_REQUIRE(parseCurrencyWithMinors(strikeCurrency_) == equityCurrency,
+                   "Strike currency " << strikeCurrency_ << " does not match equity currency " << equityCurrency
+                                      << " for trade " << id() << ".");
+        VanillaOptionTrade::build(engineFactory);
+    }
+    
 
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
