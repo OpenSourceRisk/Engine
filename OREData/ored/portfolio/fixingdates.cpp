@@ -411,6 +411,8 @@ void FixingDateGetter::visit(AverageONIndexedCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.index()->name()), c.date());
 }
 
+void FixingDateGetter::visit(CappedFlooredAverageONIndexedCoupon& c) { c.underlying()->accept(*this); }
+
 void FixingDateGetter::visit(EquityCoupon& c) {
     requiredFixings_.addFixingDates(c.fixingDates(), oreIndexName(c.equityCurve()->name()), c.date());
     if (c.fxIndex() != nullptr) {
@@ -676,7 +678,7 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
 
             for (const auto& kv : fixings) {
                 if (isFxIndex(kv.first)) {
-                // For each of the fx indices in market parameters, insert the dates
+                    // For each of the fx indices in market parameters, insert the dates
                     TLOG("Adding extra fixing dates for fx index " << kv.first);
                     fixings[kv.first].insert(dates.begin(), dates.end());
                 }
