@@ -834,6 +834,7 @@ public:
     boost::shared_ptr<LegAdditionalData>& concreteLegData() { return concreteLegData_; }
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
+    ScheduleData& schedule() { return schedule_; }
     //@}
 
 protected:
