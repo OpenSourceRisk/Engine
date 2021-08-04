@@ -184,29 +184,30 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
 
-    bondData_.populateFromBondReferenceData(engineFactory->referenceData());
+    BondData bondData = bondData_;
+    bondData.populateFromBondReferenceData(engineFactory->referenceData());
 
-    Date issueDate = parseDate(bondData_.issueDate());
-    Calendar calendar = parseCalendar(bondData_.calendar());
-    QL_REQUIRE(!bondData_.settlementDays().empty(),
+    Date issueDate = parseDate(bondData.issueDate());
+    Calendar calendar = parseCalendar(bondData.calendar());
+    QL_REQUIRE(!bondData.settlementDays().empty(),
                "no bond settlement days given, if reference data is used, check if securityId '"
-                   << bondData_.securityId() << "' is present and of type Bond.");
-    Natural settlementDays = parseInteger(bondData_.settlementDays());
+                   << bondData.securityId() << "' is present and of type Bond.");
+    Natural settlementDays = parseInteger(bondData.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
     std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", "", false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
-    Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
+    Real mult = bondData.bondNotional() * (bondData.isPayer() ? -1.0 : 1.0);
     std::vector<Leg> separateLegs;
-    if (bondData_.zeroBond()) { // Zero coupon bond
-        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, bondData_.faceAmount(),
-                                                parseDate(bondData_.maturityDate())));
+    if (bondData.zeroBond()) { // Zero coupon bond
+        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, bondData.faceAmount(),
+                                                parseDate(bondData.maturityDate())));
     } else { // Coupon bond
-        for (Size i = 0; i < bondData_.coupons().size(); ++i) {
+        for (Size i = 0; i < bondData.coupons().size(); ++i) {
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
-            auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
+            auto legBuilder = engineFactory->legBuilder(bondData.coupons()[i].legType());
+            leg = legBuilder->buildLeg(bondData.coupons()[i], engineFactory, requiredFixings_, configuration,
                                        openEndDateReplacement);
             separateLegs.push_back(leg);
         } // for coupons_
@@ -214,22 +215,22 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
     }
 
-    Currency currency = parseCurrency(bondData_.currency());
+    Currency currency = parseCurrency(bondData.currency());
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
-                                               bondData_.securityId(), bondData_.referenceCurveId()));
+    bond->setPricingEngine(bondBuilder->engine(currency, bondData.creditCurveId(), bondData.hasCreditRisk(),
+                                               bondData.securityId(), bondData.referenceCurveId()));
     instrument_.reset(new VanillaInstrument(bond, mult));
 
-    npvCurrency_ = bondData_.currency();
+    npvCurrency_ = bondData.currency();
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
-    notionalCurrency_ = bondData_.currency();
+    notionalCurrency_ = bondData.currency();
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};
-    legPayers_ = {bondData_.isPayer()};
+    legPayers_ = {bondData.isPayer()};
 }
 
 void Bond::fromXML(XMLNode* node) {
