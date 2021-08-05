@@ -34,6 +34,7 @@
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 namespace ore {
 namespace data {
@@ -59,20 +60,19 @@ protected:
                                                         const Currency& strikeCcy, const Date& expiry) override {
 
         string config = this->configuration(ore::data::MarketContext::pricing);
+
+        // FOR = Underlyign CCY and DOM = Strike Currency 
+        // -> converting underlying ccy into strike ccy by multiply eq spot by fx spot
         string ccyPairCode = equityCcy.code() + strikeCcy.code();
 
         Handle<Quote> equitySpot = this->market_->equitySpot(equityName, config);
         Handle<Quote> fxSpot = this->market_->fxSpot(ccyPairCode, config);
-        LOG("FX Spot " << ccyPairCode << " : " << fxSpot->value());
-        LOG("Eq Spot " << equityName << " in local currency " << equityCcy << " : " << equitySpot->value());
-
+        
         std::function<Real(const Real&, const Real&)> multiply = [](const Real& a, const Real& b) { return a * b; };
 
         using scaledQuoted = CompositeQuote<std::function<Real(const Real&, const Real&)>>;
         
         Handle<Quote> spot(boost::make_shared<scaledQuoted>(equitySpot, fxSpot, multiply));
-
-        LOG("Eq Spot in foreign ccy " << strikeCcy << " : " << spot->value());
 
         auto dividendCurve = this->market_->equityDividendCurve(equityName, config);
 
@@ -83,23 +83,30 @@ protected:
         Handle<BlackVolTermStructure> eqVol = this->market_->equityVol(equityName, config);
         Handle<BlackVolTermStructure> fxVol = this->market_->fxVol(ccyPairCode, config);
         
-        auto domesticCurve = this->market_->discountCurve(strikeCcy.code(), config);
-        auto foreignCurve = this->market_->discountCurve(equityCcy.code(), config);
+        auto strikeCcyDiscountCurve = this->market_->discountCurve(strikeCcy.code(), config);
+        auto underlingCcyDiscountCurve = this->market_->discountCurve(equityCcy.code(), config);
 
         auto fxIndex = boost::make_shared<QuantExt::FxIndex>(
             "FX/GENERIC", 0, equityCcy, strikeCcy, fxVol->calendar(),
                                                   fxSpot, 
-            foreignCurve, domesticCurve, false);
+            underlingCcyDiscountCurve, strikeCcyDiscountCurve, false);
 
         // Try Catch and 0 correlation fallback
-        auto correlation = this->market_->correlationCurve("FX-GENERIC-" + equityCcy.code() + "-" + strikeCcy.code(),
-                                                           "EQ-" + equityName, config);
-
+        Handle<QuantExt::CorrelationTermStructure> correlation;
+        try {
+            correlation = this->market_->correlationCurve(
+                "FX-GENERIC-" + equityCcy.code() + "-" + strikeCcy.code(), "EQ-" + equityName, config);
+        } catch (...) {
+            WLOG("Couldnt find correlation curve "
+                 << " FX - GENERIC - " << equityCcy.code() << " -" << strikeCcy.code() << "&EQ - " << equityName << ". will fallback to zero correlation");
+            correlation = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<QuantExt::FlatCorrelation>(0, WeekendsOnly(), 0, Actual365Fixed()));
+        }
+        
         Handle<BlackVolTermStructure> vol(
             boost::make_shared<QuantExt::EquityBlackVolatilitySurfaceProxy>(*eqVol, *equityIndex, *equityIndex, *fxVol, fxIndex, *correlation));
         
-        auto blackScholesProcess =
-            boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(spot, dividendCurve, domesticCurve, vol);
+        auto blackScholesProcess = boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
+            spot, dividendCurve, strikeCcyDiscountCurve, vol);
         
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(strikeCcy.code(), configuration(MarketContext::pricing));
