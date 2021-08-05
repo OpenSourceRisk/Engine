@@ -35,8 +35,39 @@ namespace data {
 */
 class VolatilityConfig : public ore::data::XMLSerializable {
 public:
+    VolatilityConfig() {}
+};
+
+class EquityProxyVolatilityConfig : public VolatilityConfig {
+public:
+    EquityProxyVolatilityConfig() {}
+    EquityProxyVolatilityConfig(const std::string& equityVolatilityCurve, const std::string& fxVolatilityCurve,
+        const std::string& correlationCurve) : equityVolatilityCurve_(equityVolatilityCurve), fxVolatilityCurve_(fxVolatilityCurve),
+        correlationCurve_(correlationCurve) {}
+
+    //! \name Inspectors
+    //@{
+    const std::string& equityVolatilityCurve() const;
+    const std::string& fxVolatilityCurve() const;
+    const std::string& correlationCurve() const;
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    //@}
+
+private:
+    std::string equityVolatilityCurve_;
+    std::string fxVolatilityCurve_;
+    std::string correlationCurve_;
+};
+
+class QuoteBasedVolatilityConfig : public VolatilityConfig {
+public:
     //! Default constructor
-    VolatilityConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
+    QuoteBasedVolatilityConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
                      QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European)
         : quoteType_(quoteType), exerciseType_(exerciseType) {}
 
@@ -60,7 +91,7 @@ private:
 /*! Volatility configuration for a single constant volatility
     \ingroup configuration
  */
-class ConstantVolatilityConfig : public VolatilityConfig {
+class ConstantVolatilityConfig : public QuoteBasedVolatilityConfig {
 public:
     //! Default constructor
     ConstantVolatilityConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
@@ -89,7 +120,7 @@ private:
 /*! Volatility configuration for a 1-D volatility curve
     \ingroup configuration
  */
-class VolatilityCurveConfig : public VolatilityConfig {
+class VolatilityCurveConfig : public QuoteBasedVolatilityConfig {
 public:
     //! Default constructor
     VolatilityCurveConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
@@ -127,7 +158,7 @@ private:
 /*! Base volatility configuration for a 2-D volatility surface
     \ingroup configuration
  */
-class VolatilitySurfaceConfig : public VolatilityConfig {
+class VolatilitySurfaceConfig : public QuoteBasedVolatilityConfig {
 public:
     //! Default constructor
     VolatilitySurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,

@@ -29,7 +29,7 @@ namespace data {
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency,
-                                                         const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                                         const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
                                                          const string& dayCounter, const string& calendar,
                                                          const OneDimSolverConfig& solverConfig,
                                                          const boost::optional<bool>& preferOutOfTheMoney)
@@ -40,44 +40,46 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, 
     populateRequiredCurveIds();
 }
 
-const string EquityVolatilityCurveConfig::quoteStem() const {
-    string volType = to_string<MarketDatum::QuoteType>(volatilityConfig()->quoteType());
-
+const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const {
     return "EQUITY_OPTION/" + volType + "/" + curveID_ + "/" + ccy_ + "/";
 }
 
 void EquityVolatilityCurveConfig::populateQuotes() {
-
-    // The quotes depend on the type of volatility structure that has been configured.
-    if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
-        quotes_ = {vc->quote()};
-    } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
-        quotes_ = vc->quotes();
-    } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
-        // Clear the quotes_ if necessary and populate with surface quotes
-        quotes_.clear();
-        string quoteStr;
-        for (const pair<string, string>& p : vc->quotes()) {
-            if (p.first == "*" || p.second == "*") {
-                quoteStr = quoteStem() + "*";
-            } else {
-                quoteStr = quoteStem() + p.first + "/" + p.second;
+    // add quotes from all the volatility configs
+    for (auto vc : volatilityConfig_) {
+        if (boost::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
+            // The quotes depend on the type of volatility structure that has been configured.
+            if (auto c = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
+                quotes_.push_back(c->quote());
+            } else if (auto c = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
+                auto qs = c->quotes();
+                quotes_.insert(quotes_.end(), qs.begin(), qs.end());
+            } else if (auto c = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(vc)) {
+                // Clear the quotes_ if necessary and populate with surface quotes
+                string quoteStr;
+                string volType = to_string<MarketDatum::QuoteType>(c->quoteType());
+                for (const pair<string, string>& p : c->quotes()) {
+                    if (p.first == "*" || p.second == "*") {
+                        quoteStr = quoteStem(volType) + "*";
+                    } else {
+                        quoteStr = quoteStem(volType) + p.first + "/" + p.second;
+                    }
+                    quotes_.push_back(quoteStr);
+                }
             }
-            quotes_.push_back(quoteStr);
         }
     }
 }
 
 void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
-    if (!proxySurface().empty()) {
-        requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(proxySurface());
-        // see EquityVolCurve::buildVolatility(...) for proxy surfaces, there we require equity curves for
-        // the curveID of the vol curve and the proxy vol curve implicitly
-        requiredCurveIds_[CurveSpec::CurveType::Equity].insert(proxySurface());
-        if (!proxyFxVolSurface_.empty())
-            requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(proxyFxVolSurface_);
-        if (!proxyCorrelation_.empty())
-            requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(proxyCorrelation_);
+    for (auto vc : volatilityConfig_) {
+        if (auto p = boost::dynamic_pointer_cast<EquityProxyVolatilityConfig>(vc)) {
+            requiredCurveIds_[CurveSpec::CurveType::Equity].insert(p->equityVolatilityCurve());
+            if (!p->fxVolatilityCurve().empty())
+                requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(p->fxVolatilityCurve());
+            if (!p->correlationCurve().empty())
+                requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(p->correlationCurve());
+        }
     }
 }
 
@@ -139,37 +141,57 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
                     i++;
                 }
             }
-            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation);
+            volatilityConfig_.push_back(boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation));
         } else {
             // if Smile create VolatilityStrikeSurfaceConfig
-            volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>(
-                strikes, expiries, "Linear", "Linear", true, timeExtrapolation, strikeExtrapolation);
+            volatilityConfig_.push_back(boost::make_shared<VolatilityStrikeSurfaceConfig>(
+                strikes, expiries, "Linear", "Linear", true, timeExtrapolation, strikeExtrapolation));
         }
 
     } else if (dim == "") {
-        XMLNode* n;
-        if ((n = XMLUtils::getChildNode(node, "Constant"))) {
-            volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
-        } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
-            volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
-        } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
-            volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
-        } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
-            volatilityConfig_ = boost::make_shared<VolatilityDeltaSurfaceConfig>();
-        } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
-            volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
-        } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
-            QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
-        } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
-            proxySurface_ = XMLUtils::getChildValue(n, "EquityVolatilityCurve", true);
-            proxyFxVolSurface_ = XMLUtils::getChildValue(n, "FXVolatilityCurve", false);
-            proxyCorrelation_ = XMLUtils::getChildValue(n, "CorrelationCurve", false);
-        } else {
-            QL_FAIL("EquityVolatility node expects one child node with name in list: Constant,"
-                    << " Curve, StrikeSurface, ProxySurface.");
+        if (XMLNode * n = XMLUtils::getChildNode(node, "Constant")) {
+            auto vc = boost::make_shared<ConstantVolatilityConfig>();
+            vc->fromXML(n);
+            volatilityConfig_.push_back(vc);
         }
-        if (proxySurface_.empty())
-            volatilityConfig_->fromXML(n);
+        
+        if (XMLNode* n = XMLUtils::getChildNode(node, "Curve")) {
+            auto vc = boost::make_shared<VolatilityCurveConfig>();
+            vc->fromXML(n);
+            volatilityConfig_.push_back(vc);
+        }
+        
+        if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface")) {
+            auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+            vc->fromXML(n);
+            volatilityConfig_.push_back(vc);
+        }
+        
+        if (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface")) {
+            auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
+            vc->fromXML(n);
+            volatilityConfig_.push_back(vc);
+        }
+        
+        if (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface")) {
+            auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
+            vc->fromXML(n);
+            volatilityConfig_.push_back(vc);
+        }
+        
+        if (XMLNode* n = XMLUtils::getChildNode(node, "ApoFutureSurface")) {
+            QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
+        }
+        
+        if (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface")) {
+            auto vc = boost::make_shared<EquityProxyVolatilityConfig>();
+            vc->fromXML(n);
+            volatilityConfig_.push_back(vc);
+        } 
+        
+        QL_REQUIRE(volatilityConfig_.size() > 0, "EquityVolatility node expects at least one child node of type: "
+            "Constant, Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ProxySurface.");
+       
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
@@ -191,18 +213,11 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
 
-    if (proxySurface_.empty()) {
-        XMLNode* n = volatilityConfig_->toXML(doc);
+    for (auto vc : volatilityConfig_) {
+        XMLNode* n = vc->toXML(doc);
         XMLUtils::appendNode(node, n);
-    } else {
-        XMLNode* p = doc.allocNode("ProxySurface");
-        XMLUtils::addChild(doc, p, "EquityVolatilityCurve", proxySurface_);
-        if (!proxyFxVolSurface_.empty())
-            XMLUtils::addChild(doc, p, "FXVolatilityCurve", proxyFxVolSurface_);
-        if (!proxyCorrelation_.empty())
-            XMLUtils::addChild(doc, p, "CorrelationCurve", proxyCorrelation_);
-        XMLUtils::appendNode(node, p);
     }
+
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
 
@@ -215,6 +230,15 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
+}
+
+bool EquityVolatilityCurveConfig::isProxySurface() {
+    for (auto vc : volatilityConfig_) {
+        if (auto p = boost::dynamic_pointer_cast<EquityProxyVolatilityConfig>(vc)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 OneDimSolverConfig EquityVolatilityCurveConfig::solverConfig() const {
