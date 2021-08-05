@@ -18,6 +18,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/referencedata.hpp>
@@ -67,10 +68,11 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
     currency_ = parseCurrencyWithMinors(localCurrency_).code();
     underlyingCurrency_ = equityCurrency.code();
+    Currency strikeCurrency = parseCurrencyWithMinors(strikeCurrency_);
 
     // Build the trade using the shared functionality in the base class.
-    if (parseCurrencyWithMinors(strikeCurrency_) == parseCurrencyWithMinors(localCurrency_) &&
-        parseCurrencyWithMinors(strikeCurrency_) != equityCurrency) {
+    if (strikeCurrency == strikeCurrency && strikeCurrency != equityCurrency) {
+   
         // We have a composite EQ Trade
         Option::Type type = parseOptionType(option_.callPut());
         boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
@@ -120,12 +122,15 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                         << id());
         vanilla = boost::make_shared<QuantLib::VanillaOption>(payoff, exercise);
 
-        string tradeTypeBuilder = "CompositeOption";
+        string tradeTypeBuilder = "EquityEuropeanCompositeOption";
 
         boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
         QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
         // TODO cast and set pricing engine
+
+        auto compositeBuilder = boost::dynamic_pointer_cast<EquityEuropeanCompositeEngineBuilder>(builder);
+        vanilla->setPricingEngine(compositeBuilder->engine(assetName_, equityCurrency, strikeCurrency, expiryDate_));
 
         string configuration = Market::defaultConfiguration;
         Position::Type positionType = parsePositionType(option_.longShort());
@@ -134,7 +139,8 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
-        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, ccy,
+        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd,
+                    parseCurrencyWithMinors(currency_),
                     engineFactory, configuration);
 
         instrument_ = boost::shared_ptr<InstrumentWrapper>(
