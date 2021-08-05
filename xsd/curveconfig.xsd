@@ -160,14 +160,14 @@
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation" minOccurs="0" maxOccurs="1"/>
-      <xs:choice minOccurs="0">
-        <xs:element type="constantVolatilityConfig" name="Constant"/>
-        <xs:element type="volatilityCurveConfig" name="Curve"/>
-        <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
-        <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
-        <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
-        <xs:element type="proxySurface" name="ProxySurface"/>
-      </xs:choice>
+      <xs:all minOccurs="0">
+        <xs:element type="constantVolatilityConfig" name="Constant" minOccurs="0"/>
+        <xs:element type="volatilityCurveConfig" name="Curve" minOccurs="0"/>
+        <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface" minOccurs="0"/>
+        <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface" minOccurs="0"/>
+        <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface" minOccurs="0"/>
+        <xs:element type="proxySurface" name="ProxySurface" minOccurs="0"/>
+      </xs:all>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
