@@ -40,9 +40,9 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
-#include <qle/calendars/emirates.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
@@ -268,7 +268,6 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"TH", Thailand()},
         {"TR", Turkey()},
         {"UA", Ukraine()},
-        {"AE", UnitedArabEmirates()},
         {"GB", UnitedKingdom()},
         {"US", UnitedStates()},
         {"BE", Belgium()},
@@ -319,7 +318,6 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"THA", Thailand()},
         {"TUR", Turkey()},
         {"UKR", Ukraine()},
-        {"ARE", UnitedArabEmirates()},
         {"GBR", UnitedKingdom()},
         {"USA", UnitedStates()},
         {"BEL", Belgium()},
@@ -368,7 +366,6 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"THB", Thailand()},
         {"TRY", Turkey()},
         {"UAH", Ukraine()},
-        {"AED", UnitedArabEmirates()},
         {"GBP", UnitedKingdom()},
         {"USD", UnitedStates()},
         {"BEF", Belgium()},
@@ -383,6 +380,11 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"ZAc", SouthAfrica()},
         {"ZAC", SouthAfrica()},
         {"ZAX", SouthAfrica()},
+
+        // fallback to IslamicWeekendsOnly for these ccys and use amendmends
+        {"AED", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"AE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"ARE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
 
         // fallback to WeekendsOnly for these emerging ccys
         {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},

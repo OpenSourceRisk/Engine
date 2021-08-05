@@ -567,6 +567,9 @@
     <ClInclude Include="qle\calendars\wmr.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\islamicweekendsonly.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\equitycoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -650,9 +653,6 @@
     </ClInclude>
     <ClInclude Include="qle\currencies\metals.hpp">
       <Filter>currencies</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\calendars\emirates.hpp">
-      <Filter>time\calendars</Filter>
     </ClInclude>
     <ClInclude Include="qle\calendars\france.hpp">
       <Filter>time\calendars</Filter>
@@ -1589,6 +1589,9 @@
     <ClCompile Include="qle\calendars\wmr.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
+    <ClCompile Include="qle\calendars\islamicweekendsonly.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
     <ClCompile Include="qle\cashflows\equitycoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
@@ -1636,9 +1639,6 @@
     </ClCompile>
     <ClCompile Include="qle\currencies\metals.cpp">
       <Filter>currencies</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\calendars\emirates.cpp">
-      <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\france.cpp">
       <Filter>time\calendars</Filter>
