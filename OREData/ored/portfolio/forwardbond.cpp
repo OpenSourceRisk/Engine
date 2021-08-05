@@ -53,15 +53,15 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
     boost::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
-    BondData bondData = bondData_;
-    bondData.populateFromBondReferenceData(engineFactory->referenceData());
+    bondData_ = originalBondData_;
+    bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
-    QL_REQUIRE(!bondData.referenceCurveId().empty(), "reference curve id required");
-    QL_REQUIRE(!bondData.settlementDays().empty(), "settlement days required");
+    QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
+    QL_REQUIRE(!bondData_.settlementDays().empty(), "settlement days required");
 
-    Date issueDate = parseDate(bondData.issueDate());
-    Calendar calendar = parseCalendar(bondData.calendar());
-    Natural settlementDays = boost::lexical_cast<Natural>(bondData.settlementDays());
+    Date issueDate = parseDate(bondData_.issueDate());
+    Calendar calendar = parseCalendar(bondData_.calendar());
+    Natural settlementDays = boost::lexical_cast<Natural>(bondData_.settlementDays());
 
     Date fwdMaturityDate = parseDate(fwdMaturityDate_);
     Date fwdSettlementDate = fwdSettlementDate_.empty() ? fwdMaturityDate : parseDate(fwdSettlementDate_);
@@ -89,10 +89,10 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (lockRate != Null<Real>())
         isPhysicallySettled = false;
 
-    QL_REQUIRE(!bondData.coupons().empty(), "ForwardBond: No LegData given. If you want to represent a zero bond, "
+    QL_REQUIRE(!bondData_.coupons().empty(), "ForwardBond: No LegData given. If you want to represent a zero bond, "
                                              "set it up as a coupon bond with zero fixed rate");
 
-    bool firstLegIsPayer = bondData.coupons()[0].isPayer();
+    bool firstLegIsPayer = bondData_.coupons()[0].isPayer();
     QL_REQUIRE(firstLegIsPayer == false, "ForwardBond: The underlying bond must be entered with a receiver leg. Use "
                                          "LongInBond to specify pay direction of forward payoff");
     QL_REQUIRE(compensationPayment > 0.0 || close_enough(compensationPayment, 0.0),
@@ -109,19 +109,19 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     compensationPayment = longInForward ? compensationPayment : -compensationPayment;
 
     std::vector<Leg> separateLegs;
-    for (Size i = 0; i < bondData.coupons().size(); ++i) {
+    for (Size i = 0; i < bondData_.coupons().size(); ++i) {
         Leg leg;
         auto configuration = builder_bd->configuration(MarketContext::pricing);
-        auto legBuilder = engineFactory->legBuilder(bondData.coupons()[i].legType());
-        leg = legBuilder->buildLeg(bondData.coupons()[i], engineFactory, requiredFixings_, configuration);
+        auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
+        leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration);
         separateLegs.push_back(leg);
     }
     Leg leg = joinLegs(separateLegs);
     auto bond = boost::make_shared<QuantLib::Bond>(settlementDays, calendar, issueDate, leg);
 
-    npvCurrency_ = currency_ = bondData.coupons().front().currency();
+    npvCurrency_ = currency_ = bondData_.coupons().front().currency();
     maturity_ = bond->cashflows().back()->date();
-    notional_ = currentNotional(bond->cashflows()) * bondData.bondNotional();
+    notional_ = currentNotional(bond->cashflows()) * bondData_.bondNotional();
     notionalCurrency_ = currency_;
 
     // cashflows will be generated as additional results in the pricing engine
@@ -134,23 +134,23 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<QuantLib::Instrument> fwdBond =
         payoff ? boost::make_shared<QuantExt::ForwardBond>(bond, payoff, fwdMaturityDate, fwdSettlementDate,
                                                            isPhysicallySettled, settlementDirty, compensationPayment,
-                                                           compensationPaymentDate, bondData.bondNotional())
+                                                           compensationPaymentDate, bondData_.bondNotional())
                : boost::make_shared<QuantExt::ForwardBond>(bond, lockRate, lockRateDayCounter, longInForward,
                                                            fwdMaturityDate, fwdSettlementDate, isPhysicallySettled,
                                                            settlementDirty, compensationPayment,
-                                                           compensationPaymentDate, bondData.bondNotional());
+                                                           compensationPaymentDate, bondData_.bondNotional());
 
     boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData.creditCurveId(),
-                                                     bondData.hasCreditRisk(), bondData.securityId(),
-                                                     bondData.referenceCurveId(), bondData.incomeCurveId()));
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
+                                                     bondData_.hasCreditRisk(), bondData_.securityId(),
+                                                     bondData_.referenceCurveId(), bondData_.incomeCurveId()));
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
-    additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData.bondNotional();
-    additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData.bondNotional();
+    additionalData_["currentNotional"] = currentNotional(bond->cashflows()) * bondData_.bondNotional();
+    additionalData_["originalNotional"] = originalNotional(bond->cashflows()) * bondData_.bondNotional();
     additionalData_["currency"] = currency_;
 }
 
@@ -158,7 +158,8 @@ void ForwardBond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fwdBondNode = XMLUtils::getChildNode(node, "ForwardBondData");
     QL_REQUIRE(fwdBondNode, "No ForwardBondData Node");
-    bondData_.fromXML(XMLUtils::getChildNode(fwdBondNode, "BondData"));
+    originalBondData_.fromXML(XMLUtils::getChildNode(fwdBondNode, "BondData"));
+    bondData_ = originalBondData_;
 
     XMLNode* fwdSettlementNode = XMLUtils::getChildNode(fwdBondNode, "SettlementData");
     QL_REQUIRE(fwdSettlementNode, "No fwdSettlementNode Node");
@@ -187,7 +188,7 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fwdBondNode = doc.allocNode("ForwardBondData");
     XMLUtils::appendNode(node, fwdBondNode);
-    XMLUtils::appendNode(fwdBondNode, bondData_.toXML(doc));
+    XMLUtils::appendNode(fwdBondNode, originalBondData_.toXML(doc));
 
     XMLNode* fwdSettlementNode = doc.allocNode("SettlementData");
     XMLUtils::appendNode(fwdBondNode, fwdSettlementNode);

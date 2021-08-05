@@ -76,19 +76,25 @@ void BondData::fromXML(XMLNode* node) {
 
 XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLNode* bondNode = doc.allocNode("BondData");
-    XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
-    XMLUtils::addChild(doc, bondNode, "CreditCurveId", hasCreditRisk_ ? creditCurveId_ : std::string());
+    if (!issuerId_.empty())
+        XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
+    if (!creditCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
-    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
+    if (!referenceCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     if (!proxySecurityId_.empty())
         XMLUtils::addChild(doc, bondNode, "ProxySecurityId", proxySecurityId_);
     if (!incomeCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
     if (!volatilityCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "VolatilityCurveId", volatilityCurveId_);
-    XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
-    XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
-    XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
+    if (!settlementDays_.empty())
+        XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
+    if (!calendar_.empty())
+        XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
+    if (!issueDate_.empty())
+        XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
@@ -184,30 +190,30 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
 
-    BondData bondData = bondData_;
-    bondData.populateFromBondReferenceData(engineFactory->referenceData());
+    bondData_ = originalBondData_;
+    bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
-    Date issueDate = parseDate(bondData.issueDate());
-    Calendar calendar = parseCalendar(bondData.calendar());
-    QL_REQUIRE(!bondData.settlementDays().empty(),
+    Date issueDate = parseDate(bondData_.issueDate());
+    Calendar calendar = parseCalendar(bondData_.calendar());
+    QL_REQUIRE(!bondData_.settlementDays().empty(),
                "no bond settlement days given, if reference data is used, check if securityId '"
-                   << bondData.securityId() << "' is present and of type Bond.");
-    Natural settlementDays = parseInteger(bondData.settlementDays());
+                   << bondData_.securityId() << "' is present and of type Bond.");
+    Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
     std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", "", false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
-    Real mult = bondData.bondNotional() * (bondData.isPayer() ? -1.0 : 1.0);
+    Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
     std::vector<Leg> separateLegs;
-    if (bondData.zeroBond()) { // Zero coupon bond
-        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, bondData.faceAmount(),
-                                                parseDate(bondData.maturityDate())));
+    if (bondData_.zeroBond()) { // Zero coupon bond
+        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, bondData_.faceAmount(),
+                                                parseDate(bondData_.maturityDate())));
     } else { // Coupon bond
-        for (Size i = 0; i < bondData.coupons().size(); ++i) {
+        for (Size i = 0; i < bondData_.coupons().size(); ++i) {
             Leg leg;
             auto configuration = builder->configuration(MarketContext::pricing);
-            auto legBuilder = engineFactory->legBuilder(bondData.coupons()[i].legType());
-            leg = legBuilder->buildLeg(bondData.coupons()[i], engineFactory, requiredFixings_, configuration,
+            auto legBuilder = engineFactory->legBuilder(bondData_.coupons()[i].legType());
+            leg = legBuilder->buildLeg(bondData_.coupons()[i], engineFactory, requiredFixings_, configuration,
                                        openEndDateReplacement);
             separateLegs.push_back(leg);
         } // for coupons_
@@ -215,32 +221,33 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
     }
 
-    Currency currency = parseCurrency(bondData.currency());
+    Currency currency = parseCurrency(bondData_.currency());
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, bondData.creditCurveId(), bondData.hasCreditRisk(),
-                                               bondData.securityId(), bondData.referenceCurveId()));
+    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
+                                               bondData_.securityId(), bondData_.referenceCurveId()));
     instrument_.reset(new VanillaInstrument(bond, mult));
 
-    npvCurrency_ = bondData.currency();
+    npvCurrency_ = bondData_.currency();
     maturity_ = bond->cashflows().back()->date();
     notional_ = currentNotional(bond->cashflows());
-    notionalCurrency_ = bondData.currency();
+    notionalCurrency_ = bondData_.currency();
 
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};
-    legPayers_ = {bondData.isPayer()};
+    legPayers_ = {bondData_.isPayer()};
 }
 
 void Bond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
-    bondData_.fromXML(XMLUtils::getChildNode(node, "BondData"));
+    originalBondData_.fromXML(XMLUtils::getChildNode(node, "BondData"));
+    bondData_ = originalBondData_;
 }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLUtils::appendNode(node, bondData_.toXML(doc));
+    XMLUtils::appendNode(node, originalBondData_.toXML(doc));
     return node;
 }
 
@@ -277,6 +284,7 @@ VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                           const boost::shared_ptr<ReferenceDataManager>& referenceData,
                           const std::string& securityId) const {
     BondData data(securityId, 1.0);
+    std::cout << " vanilla bond builder populate from ref data sec id = " << securityId << std::endl;
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
     bond.id() = "VanillaBondBuilder_" + securityId;
