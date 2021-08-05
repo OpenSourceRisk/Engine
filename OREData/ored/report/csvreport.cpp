@@ -68,10 +68,11 @@ private:
 
     // Shared implementation to include the quote character.
     void fprintString(const string& s) const {
-        if (quoteChar_ != '\0')
+        bool quoted = s.size() > 1 && s[0] == quoteChar_ && s[s.size() - 1] == quoteChar_;
+        if (!quoted && quoteChar_ != '\0')
             fputc(quoteChar_, fp_);
         fprintf(fp_, "%s", s.c_str());
-        if (quoteChar_ != '\0')
+        if (!quoted && quoteChar_ != '\0')
             fputc(quoteChar_, fp_);
     }
 
