@@ -41,14 +41,20 @@ order to switch from one kind of amortisation to another etc.
 Within each {\tt AmortisationData} block the meaning of elements is
 
 \begin{itemize}
-\item Type: Amortisation type with allowable values {\em FixedAmount,
-  RelativeToInitialNotional, RelativeToPreviousNotional, Annuity.}
-\item Value: Interpreted depending on {\tt Type}, see below.
-\item StartDate: Amortisation starts on first schedule date on or
-  beyond StartDate.
-\item Frequency, entered as a period: Frequency of amortisations.
-\item Underflow:  Allow amortisation below zero notional if {\tt true},
-  otherwise amortisation stops at zero notional.
+\item Type: Amortisation type with allowable values {\em FixedAmount, RelativeToInitialNotional,
+  RelativeToPreviousNotional, Annuity, LinearToMaturity.}
+\item Value [optional]: Interpreted depending on {\tt Type}, see below. Required for all types except LinearToMaturity.
+\item StartDate [optional]: Amortisation starts on first schedule date on or beyond StartDate. If not given,
+  amortisation starts in first schedule period. If more than one AmortizationData block is specified, the StartDate is
+  mandatory for all blocks except the first.
+\item EndDate [optional]: Amortization is applied for schedule periods with start date before EndDate. If more than one
+  AmortizationData block is specified, the EndDate is mandatory for all blocks except the last.
+\item Frequency, entered as a period [optional]: Frequency of amortisations. If not given, an amortization is applied in
+  each schedule period, otherwise in each $n$th period, where $n$ is determined from Frequency. Amortizations are always
+  applied to whole periods though, i.e. not within a period. The frequency is ignored for type Annuity, in which case an
+  amortisation is applied in each period.
+\item Underflow [optional]: Allow amortisation below zero notional if {\tt true}, otherwise amortisation stops at zero
+  notional. Defaults to false;
 \end{itemize}
 
 The amortisation data block's {\tt Value} element  is interpreted
@@ -64,6 +70,7 @@ depending on the chosen {\tt Type}:
   notional on each amortisation date.
 \item Annuity: The value is interpreted as annuity amount (redemption
   plus coupon).
+\item LinearToMaturity: The value is not relevant, and does not need to be provided.
 \end{itemize}
 
 Annuity type amortisation is supported for fixed rate legs as well as

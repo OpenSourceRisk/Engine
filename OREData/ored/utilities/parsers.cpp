@@ -967,7 +967,8 @@ AmortizationType parseAmortizationType(const std::string& s) {
         {"FixedAmount", AmortizationType::FixedAmount},
         {"RelativeToInitialNotional", AmortizationType::RelativeToInitialNotional},
         {"RelativeToPreviousNotional", AmortizationType::RelativeToPreviousNotional},
-        {"Annuity", AmortizationType::Annuity}};
+        {"Annuity", AmortizationType::Annuity},
+        {"LinearToMaturity", AmortizationType::LinearToMaturity}};
 
     auto it = type.find(s);
     if (it != type.end()) {

@@ -263,7 +263,14 @@ template <class T> std::vector<T> parseVectorOfValues(std::vector<std::string> s
 
 std::vector<string> parseListOfValues(string s);
 
-enum class AmortizationType { None, FixedAmount, RelativeToInitialNotional, RelativeToPreviousNotional, Annuity };
+enum class AmortizationType {
+    None,
+    FixedAmount,
+    RelativeToInitialNotional,
+    RelativeToPreviousNotional,
+    Annuity,
+    LinearToMaturity
+};
 AmortizationType parseAmortizationType(const std::string& s);
 
 //! Convert string to sequence type
