@@ -96,14 +96,14 @@ void EquityVolatilityCurveConfig::loadVolatiltyConfigs(XMLNode* node) {
         volatilityConfig_.push_back(vc);
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface")) {
-        auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface")) {
+        auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface")) {
-        auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
+    if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface")) {
+        auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }

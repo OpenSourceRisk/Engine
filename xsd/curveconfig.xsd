@@ -35,6 +35,7 @@
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
       <xs:element type="xs:string" name="Quote"/>
     </xs:all>
+	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityCurveConfig">
@@ -47,6 +48,7 @@
       <xs:element type="extrapolationType" name="Extrapolation"/>
       <xs:element type="xs:boolean" name="EnforceMontoneVariance" minOccurs="0"/>
     </xs:all>
+	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityStrikeSurfaceConfig">
@@ -62,6 +64,7 @@
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
     </xs:all>
+	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityDeltaSurfaceConfig">
@@ -82,6 +85,7 @@
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
     </xs:all>
+	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityMoneynessSurfaceConfig">
@@ -99,6 +103,16 @@
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
     </xs:all>
+	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+  </xs:complexType>  
+  
+  <xs:complexType name="proxySurface">
+    <xs:all>
+      <xs:element type="xs:string" name="EquityVolatilityCurve"/>
+      <xs:element type="xs:string" name="FXVolatilityCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CorrelationCurve" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
+	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="fxSpots">
@@ -1010,12 +1024,4 @@
     </xs:all>
   </xs:complexType>
   
-  <xs:complexType name="proxySurface">
-    <xs:all>
-      <xs:element type="xs:string" name="EquityVolatilityCurve"/>
-      <xs:element type="xs:string" name="FXVolatilityCurve" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="CorrelationCurve" minOccurs="0" maxOccurs="1"/>
-    </xs:all>
-  </xs:complexType>
-
 </xs:schema>

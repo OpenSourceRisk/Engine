@@ -42,6 +42,7 @@ void VolatilityConfig::addPriority(XMLDocument& doc, XMLNode* node) {
 
 void EquityProxyVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ProxySurface");
+    VolatilityConfig::getPriority(node);
     equityVolatilityCurve_ = XMLUtils::getChildValue(node, "EquityVolatilityCurve", true);
     fxVolatilityCurve_ = XMLUtils::getChildValue(node, "FXVolatilityCurve", false);
     correlationCurve_ = XMLUtils::getChildValue(node, "CorrelationCurve", false);
@@ -49,6 +50,7 @@ void EquityProxyVolatilityConfig::fromXML(XMLNode* node) {
 
 XMLNode* EquityProxyVolatilityConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ProxySurface");
+    VolatilityConfig::addPriority(doc, node);
     XMLUtils::addChild(doc, node, "EquityVolatilityCurve", equityVolatilityCurve_);
     if (!fxVolatilityCurve_.empty())
         XMLUtils::addChild(doc, node, "FXVolatilityCurve", fxVolatilityCurve_);
@@ -70,6 +72,7 @@ const std::string& EquityProxyVolatilityConfig::correlationCurve() const {
 }
 
 void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
+    VolatilityConfig::getPriority(node);
     string qType = XMLUtils::getChildValue(node, "QuoteType", false);
     if (qType == "ImpliedVolatility" || qType == "") {
         string volType = XMLUtils::getChildValue(node, "VolatilityType", false);
@@ -92,6 +95,7 @@ void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
 }
 
 void QuoteBasedVolatilityConfig::addBaseNode(XMLDocument& doc, XMLNode* node) {
+    VolatilityConfig::addPriority(doc, node);
 
     // Check first for premium
     if (quoteType_ == MarketDatum::QuoteType::PRICE) {
