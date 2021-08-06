@@ -97,9 +97,9 @@ protected:
     //! build trade factory
     boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
-    boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
+    boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory, bool buildFailedTrades = false);
     //! load portfolio from file(s)
-    boost::shared_ptr<Portfolio> loadPortfolio();
+    boost::shared_ptr<Portfolio> loadPortfolio(bool loadFailedTrades = false);
 
     //! get the XVA runner
     virtual boost::shared_ptr<XvaRunner> getXvaRunner();
@@ -213,7 +213,7 @@ protected:
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
     Date asof_;
-    std::ostream& out_;
+    std::ostream& out_;    
     bool writeInitialReports_;
     bool simulate_;
     bool buildSimMarket_;
@@ -227,6 +227,7 @@ protected:
     bool lazyMarketBuilding_;
     std::string inputPath_;
     std::string outputPath_;
+    bool buildFailedTrades_;
 
     boost::shared_ptr<Market> market_;               // T0 market
     boost::shared_ptr<EngineFactory> engineFactory_; // engine factory linked to T0 market

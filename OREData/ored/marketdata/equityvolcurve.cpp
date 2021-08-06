@@ -200,6 +200,8 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
         DLOG("Have " << vcc.quotes().size() << " explicit quotes");
 
+        Size excludedAlreadyExpired = 0;
+
         // Loop over quotes and process commodity option quotes that are explicitly specified in the config
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
             // Go to next quote if the market data point's date does not equal our asof
@@ -215,14 +217,16 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
                     TLOG("Found the configured quote " << q->name());
 
                     Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof, calendar_);
-                    QL_REQUIRE(expiryDate > asof, "Equity volatility quote '" << q->name()
-                                                                              << "' has expiry in the past ("
-                                                                              << io::iso_date(expiryDate) << ")");
+                    if (expiryDate <= asof) {
+                        LOG("Warning Stale Marketdata: Equity volatility quote '"
+                            << q->name() << "' has expired in the past (" << io::iso_date(expiryDate) << ") and is ignored");
+                        ++excludedAlreadyExpired;
+                        continue;
+                    }
                     QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the date "
                                                                      << io::iso_date(expiryDate)
                                                                      << " provided by equity volatility config "
                                                                      << vc.curveID());
-
                     // convert quote from minor to major currency if needed
                     curveData[expiryDate] = convertMinorToMajorCurrency(q->ccy(), q->quote()->value());
 
@@ -231,11 +235,12 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
                 }
             }
         }
-
+        QL_REQUIRE(curveData.size() > 0, "No 'live' quotes found");
         // Check that we have found all of the explicitly configured quotes
-        QL_REQUIRE(curveData.size() == vcc.quotes().size(), "Found " << curveData.size() << " quotes, but "
-                                                                     << vcc.quotes().size()
-                                                                     << " quotes were given in config.");
+        QL_REQUIRE((curveData.size() - excludedAlreadyExpired) == vcc.quotes().size(),
+                   "Found " << curveData.size() + excludedAlreadyExpired << " quotes, of which "
+                            << excludedAlreadyExpired << " has been in the past but " << vcc.quotes().size()
+                            << " quotes were given in config.");
     }
 
     // Create the dates and volatility vector
@@ -321,6 +326,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         // We loop over all market data, looking for quotes that match the configuration
         Size callQuotesAdded = 0;
         Size putQuotesAdded = 0;
+        Size excludedAlreadyExpired = 0;
         for (auto& md : loader.loadQuotes(asof)) {
             // skip irrelevant data
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
@@ -349,10 +355,11 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
                     // for every point, or just a vol at every point
                     if (quoteRelevant) {
                         Date tmpDate = getDateFromDateOrPeriod(q->expiry(), asof, calendar_);
-                        QL_REQUIRE(tmpDate >= asof,
-                                   "Option quote for a past date (" << ore::data::to_string(tmpDate) << ")");
-                        if (tmpDate == asof) {
-                            DLOG("Option quote for as of date (" << ore::data::to_string(tmpDate) << ") ignored.");
+                        if (tmpDate <= asof) {
+                            LOG("expired Equity volatility quote '"
+                                << q->name() << "' ignored, expired on (" << io::iso_date(tmpDate)
+                                << ")");
+                            ++excludedAlreadyExpired;
                             continue;
                         }
                         // get values and strikes, convert from minor to major currency if needed
@@ -388,8 +395,10 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         // Check loaded quotes
         if (!wildcard) {
             Size explicitGridSize = vssc.expiries().size() * vssc.strikes().size();
-            QL_REQUIRE(callQuotesAdded == explicitGridSize,
-                       "EquityVolatilityCurve " << vc.curveID() << ": " << callQuotesAdded << " quotes provided but "
+            
+            QL_REQUIRE(callQuotesAdded + excludedAlreadyExpired == explicitGridSize,
+                       "EquityVolatilityCurve " << vc.curveID() << ": " << callQuotesAdded +excludedAlreadyExpired
+                                                << " quotes provided, of which " << excludedAlreadyExpired << "have been excluded, but "
                                                 << explicitGridSize << " expected.");
             if (!callSurfaceOnly) {
                 QL_REQUIRE(callQuotesAdded == putQuotesAdded,
