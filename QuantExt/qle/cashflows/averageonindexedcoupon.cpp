@@ -405,7 +405,7 @@ AverageONLeg::operator Leg() const {
             } else {
                 // otherwise we construct the previous period
                 rateComputationEndDate = start;
-                if (schedule_.hasTenor())
+                if (schedule_.hasTenor() && schedule_.tenor() != 0 * Days)
                     rateComputationStartDate = calendar.adjust(start - schedule_.tenor(), Preceding);
                 else
                     rateComputationStartDate = calendar.adjust(start - (end - start), Preceding);
