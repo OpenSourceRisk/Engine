@@ -84,31 +84,36 @@ void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
 }
 
 void EquityVolatilityCurveConfig::loadVolatiltyConfigs(XMLNode* node) {
-    if (XMLNode* n = XMLUtils::getChildNode(node, "Constant")) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "Constant"); n;
+            n = XMLUtils::getNextSibling(n, "Constant")){
         auto vc = boost::make_shared<ConstantVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "Curve")) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "Curve"); n;
+            n = XMLUtils::getNextSibling(n, "Curve")) {
         auto vc = boost::make_shared<VolatilityCurveConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface")) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface"); n;
+        n = XMLUtils::getNextSibling(n, "DeltaSurface")) {
         auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface")) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface"); n;
+        n = XMLUtils::getNextSibling(n, "StrikeSurface")) {
         auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface")) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface"); n;
+        n = XMLUtils::getNextSibling(n, "MoneynessSurface")) {
         auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
@@ -118,7 +123,8 @@ void EquityVolatilityCurveConfig::loadVolatiltyConfigs(XMLNode* node) {
         QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface")) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface"); n;
+        n = XMLUtils::getNextSibling(n, "ProxySurface")) {
         auto vc = boost::make_shared<EquityProxyVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
@@ -222,11 +228,13 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
-
+    
+    XMLNode* vnode = doc.allocNode("VolatilityConfig");
     for (auto vc : volatilityConfig_) {
         XMLNode* n = vc->toXML(doc);
-        XMLUtils::appendNode(node, n);
+        XMLUtils::appendNode(vnode, n);
     }
+    XMLUtils::appendNode(node, vnode);
 
     if (calendar_ != "NullCalendar")
         XMLUtils::addChild(doc, node, "Calendar", calendar_);
