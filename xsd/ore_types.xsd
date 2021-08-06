@@ -797,6 +797,16 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
+      <xs:element name="DerivedSchedule">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="BaseSchedule" minOccurs="1" maxOccurs="1"/>
+            <xs:element type="xs:string" name="Shift" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+            <xs:element type="businessDayConvention" name="Convention" minOccurs="0" maxOccurs="1"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
     </xs:choice>
   </xs:complexType>
 
