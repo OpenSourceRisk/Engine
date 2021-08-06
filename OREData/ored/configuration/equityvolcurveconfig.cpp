@@ -83,6 +83,55 @@ void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
     }
 }
 
+void EquityVolatilityCurveConfig::loadVolatiltyConfigs(XMLNode* node) {
+    if (XMLNode* n = XMLUtils::getChildNode(node, "Constant")) {
+        auto vc = boost::make_shared<ConstantVolatilityConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "Curve")) {
+        auto vc = boost::make_shared<VolatilityCurveConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface")) {
+        auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface")) {
+        auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface")) {
+        auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "ApoFutureSurface")) {
+        QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
+    }
+
+    if (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface")) {
+        auto vc = boost::make_shared<EquityProxyVolatilityConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    QL_REQUIRE(volatilityConfig_.size() > 0, "EquityVolatility node expects at least one child node of type: "
+        "Constant, Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ProxySurface.");
+
+    // sort the volatility configs by priority
+    if (volatilityConfig_.size() > 1)
+        std::sort(volatilityConfig_.begin(), volatilityConfig_.end());
+}
+
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityVolatility");
 
@@ -149,49 +198,10 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         }
 
     } else if (dim == "") {
-        if (XMLNode * n = XMLUtils::getChildNode(node, "Constant")) {
-            auto vc = boost::make_shared<ConstantVolatilityConfig>();
-            vc->fromXML(n);
-            volatilityConfig_.push_back(vc);
-        }
-        
-        if (XMLNode* n = XMLUtils::getChildNode(node, "Curve")) {
-            auto vc = boost::make_shared<VolatilityCurveConfig>();
-            vc->fromXML(n);
-            volatilityConfig_.push_back(vc);
-        }
-        
-        if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface")) {
-            auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
-            vc->fromXML(n);
-            volatilityConfig_.push_back(vc);
-        }
-        
-        if (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface")) {
-            auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
-            vc->fromXML(n);
-            volatilityConfig_.push_back(vc);
-        }
-        
-        if (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface")) {
-            auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
-            vc->fromXML(n);
-            volatilityConfig_.push_back(vc);
-        }
-        
-        if (XMLNode* n = XMLUtils::getChildNode(node, "ApoFutureSurface")) {
-            QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
-        }
-        
-        if (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface")) {
-            auto vc = boost::make_shared<EquityProxyVolatilityConfig>();
-            vc->fromXML(n);
-            volatilityConfig_.push_back(vc);
-        } 
-        
-        QL_REQUIRE(volatilityConfig_.size() > 0, "EquityVolatility node expects at least one child node of type: "
-            "Constant, Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ProxySurface.");
-       
+        if (XMLNode* n = XMLUtils::getChildNode(node, "VolatilityConfig"))
+            loadVolatiltyConfigs(n);
+        else 
+            loadVolatiltyConfigs(node);     
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }

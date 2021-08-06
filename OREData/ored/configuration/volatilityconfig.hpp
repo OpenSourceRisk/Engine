@@ -35,8 +35,18 @@ namespace data {
 */
 class VolatilityConfig : public ore::data::XMLSerializable {
 public:
-    VolatilityConfig() {}
+    VolatilityConfig() : priority_(0) {}
+
+    void getPriority(ore::data::XMLNode* node);
+    void addPriority(XMLDocument& doc, XMLNode* node);
+
+    QuantLib::Natural priority() const { return priority_; };
+
+private:
+    QuantLib::Natural priority_;
 };
+
+bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2);
 
 class EquityProxyVolatilityConfig : public VolatilityConfig {
 public:

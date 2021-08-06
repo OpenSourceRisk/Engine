@@ -28,6 +28,18 @@ using std::vector;
 namespace ore {
 namespace data {
 
+bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2) {
+    return vc1.priority() < vc2.priority();
+}
+
+void VolatilityConfig::getPriority(XMLNode* node) {
+    priority_ = parseInteger(XMLUtils::getAttribute(node, "priority"));
+}
+
+void VolatilityConfig::addPriority(XMLDocument& doc, XMLNode* node) {
+    XMLUtils::addAttribute(doc, node, "priority", to_string(priority_));
+}
+
 void EquityProxyVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ProxySurface");
     equityVolatilityCurve_ = XMLUtils::getChildValue(node, "EquityVolatilityCurve", true);
@@ -44,7 +56,6 @@ XMLNode* EquityProxyVolatilityConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "CorrelationCurve", correlationCurve_);
     return node;
 }
-
 
 const std::string& EquityProxyVolatilityConfig::equityVolatilityCurve() const { 
     return equityVolatilityCurve_; 
