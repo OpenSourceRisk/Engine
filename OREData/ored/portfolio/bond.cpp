@@ -284,7 +284,6 @@ VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                           const boost::shared_ptr<ReferenceDataManager>& referenceData,
                           const std::string& securityId) const {
     BondData data(securityId, 1.0);
-    std::cout << " vanilla bond builder populate from ref data sec id = " << securityId << std::endl;
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
     bond.id() = "VanillaBondBuilder_" + securityId;
