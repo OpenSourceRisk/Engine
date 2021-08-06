@@ -946,11 +946,11 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     applyAmortization(notionals, data, schedule, true);
     // handle float annuity, which is not done in applyAmortization, for this we can only have one block
     if (!data.amortizationData().empty()) {
-        QL_REQUIRE(data.amortizationData().size() == 1,
-                   "Can have one AmortizationData block only for floating leg annuities");
         AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
         if (amortizationType == AmortizationType::Annuity) {
             LOG("Build floating annuity notional schedule");
+            QL_REQUIRE(data.amortizationData().size() == 1,
+                       "Can have one AmortizationData block only for floating leg annuities");
             QL_REQUIRE(!hasCapsFloors, "Caps/Floors not supported in floating annuity coupons");
             QL_REQUIRE(floatData->gearings().size() == 0, "Gearings not supported in floating annuity coupons");
             DayCounter dc = index->dayCounter();
