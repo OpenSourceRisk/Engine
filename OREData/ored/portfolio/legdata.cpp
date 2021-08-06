@@ -2111,13 +2111,11 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
             continue;
         QL_REQUIRE(i == 0 || !amort.startDate().empty(),
                    "All AmortizationData blocks except the first require a StartDate");
-        QL_REQUIRE(i == data.amortizationData().size() - 1 || !amort.endDate().empty(),
-                   "All AmortizationData blocks except the last require a EndDate");
         Date startDate = amort.startDate().empty() ? Date::minDate() : parseDate(amort.startDate());
         QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
                                                  << startDate << ") is earlier than last end date (" << lastEndDate
                                                  << ")");
-        lastEndDate = amort.endDate().empty() ? Date::maxDate() : parseDate(amort.endDate());
+        lastEndDate = amort.endDate().empty() ? Date::minDate() : parseDate(amort.endDate());
         AmortizationType amortizationType = parseAmortizationType(amort.type());
         if (amortizationType == AmortizationType::FixedAmount)
             notionals = buildAmortizationScheduleFixedAmount(notionals, schedule, amort);
