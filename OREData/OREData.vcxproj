@@ -150,6 +150,7 @@
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswapoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\durationadjustedcms.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equitycompositeoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityfuturesoption.hpp" />
