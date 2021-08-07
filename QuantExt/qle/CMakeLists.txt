@@ -8,6 +8,7 @@ calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
 calendars/ice.cpp
+calendars/islamicweekendsonly.cpp
 calendars/israel.cpp
 calendars/largejointcalendar.cpp
 calendars/luxembourg.cpp
@@ -266,6 +267,7 @@ calendars/cme.hpp
 calendars/colombia.hpp
 calendars/france.hpp
 calendars/ice.hpp
+calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
 calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
