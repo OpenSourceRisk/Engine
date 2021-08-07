@@ -42,6 +42,14 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
             maturity_ = std::max(maturity_, l.back()->date());
     }
 
+    // register with underlying cashflows
+
+    for (auto const& l : legs_) {
+        for (auto const& c : l) {
+            registerWith(c);
+        }
+    }
+
 } // MultiLegOption
 
 Real MultiLegOption::underlyingNpv() const {
