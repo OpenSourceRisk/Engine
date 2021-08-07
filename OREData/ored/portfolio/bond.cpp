@@ -76,19 +76,25 @@ void BondData::fromXML(XMLNode* node) {
 
 XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLNode* bondNode = doc.allocNode("BondData");
-    XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
-    XMLUtils::addChild(doc, bondNode, "CreditCurveId", hasCreditRisk_ ? creditCurveId_ : std::string());
+    if (!issuerId_.empty())
+        XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
+    if (!creditCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
-    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
+    if (!referenceCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     if (!proxySecurityId_.empty())
         XMLUtils::addChild(doc, bondNode, "ProxySecurityId", proxySecurityId_);
     if (!incomeCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
     if (!volatilityCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "VolatilityCurveId", volatilityCurveId_);
-    XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
-    XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
-    XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
+    if (!settlementDays_.empty())
+        XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
+    if (!calendar_.empty())
+        XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
+    if (!issueDate_.empty())
+        XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
@@ -184,6 +190,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
 
+    bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     Date issueDate = parseDate(bondData_.issueDate());
@@ -234,12 +241,13 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
 void Bond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
-    bondData_.fromXML(XMLUtils::getChildNode(node, "BondData"));
+    originalBondData_.fromXML(XMLUtils::getChildNode(node, "BondData"));
+    bondData_ = originalBondData_;
 }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLUtils::appendNode(node, bondData_.toXML(doc));
+    XMLUtils::appendNode(node, originalBondData_.toXML(doc));
     return node;
 }
 

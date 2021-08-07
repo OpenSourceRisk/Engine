@@ -540,6 +540,7 @@
       <xs:enumeration value="RelativeToInitialNotional"/>
       <xs:enumeration value="RelativeToPreviousNotional"/>
       <xs:enumeration value="Annuity"/>
+      <xs:enumeration value="LinearToMaturity"/>
     </xs:restriction>
   </xs:simpleType>
 
