@@ -27,12 +27,10 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                         const string& currency,
-                                                         const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
-                                                         const string& dayCounter, const string& calendar,
-                                                         const OneDimSolverConfig& solverConfig,
-                                                         const boost::optional<bool>& preferOutOfTheMoney)
+EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
+    const string& curveID, const string& curveDescription, const string& currency,
+    const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig, const string& dayCounter,
+    const string& calendar, const OneDimSolverConfig& solverConfig, const boost::optional<bool>& preferOutOfTheMoney)
     : CurveConfig(curveID, curveDescription), ccy_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), solverConfig_(solverConfig),
       preferOutOfTheMoney_(preferOutOfTheMoney) {
@@ -84,36 +82,34 @@ void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
 }
 
 void EquityVolatilityCurveConfig::loadVolatiltyConfigs(XMLNode* node) {
-    for (XMLNode* n = XMLUtils::getChildNode(node, "Constant"); n;
-            n = XMLUtils::getNextSibling(n, "Constant")){
+    for (XMLNode* n = XMLUtils::getChildNode(node, "Constant"); n; n = XMLUtils::getNextSibling(n, "Constant")) {
         auto vc = boost::make_shared<ConstantVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
-    for (XMLNode* n = XMLUtils::getChildNode(node, "Curve"); n;
-            n = XMLUtils::getNextSibling(n, "Curve")) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "Curve"); n; n = XMLUtils::getNextSibling(n, "Curve")) {
         auto vc = boost::make_shared<VolatilityCurveConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface"); n;
-        n = XMLUtils::getNextSibling(n, "DeltaSurface")) {
+         n = XMLUtils::getNextSibling(n, "DeltaSurface")) {
         auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface"); n;
-        n = XMLUtils::getNextSibling(n, "StrikeSurface")) {
+         n = XMLUtils::getNextSibling(n, "StrikeSurface")) {
         auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface"); n;
-        n = XMLUtils::getNextSibling(n, "MoneynessSurface")) {
+         n = XMLUtils::getNextSibling(n, "MoneynessSurface")) {
         auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
@@ -124,14 +120,15 @@ void EquityVolatilityCurveConfig::loadVolatiltyConfigs(XMLNode* node) {
     }
 
     for (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface"); n;
-        n = XMLUtils::getNextSibling(n, "ProxySurface")) {
+         n = XMLUtils::getNextSibling(n, "ProxySurface")) {
         auto vc = boost::make_shared<EquityProxyVolatilityConfig>();
         vc->fromXML(n);
         volatilityConfig_.push_back(vc);
     }
 
-    QL_REQUIRE(volatilityConfig_.size() > 0, "EquityVolatility node expects at least one child node of type: "
-        "Constant, Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ProxySurface.");
+    QL_REQUIRE(volatilityConfig_.size() > 0,
+               "EquityVolatility node expects at least one child node of type: "
+               "Constant, Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ProxySurface.");
 
     // sort the volatility configs by priority
     if (volatilityConfig_.size() > 1)
@@ -196,7 +193,8 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
                     i++;
                 }
             }
-            volatilityConfig_.push_back(boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation));
+            volatilityConfig_.push_back(
+                boost::make_shared<VolatilityCurveConfig>(quotes, timeExtrapolation, timeExtrapolation));
         } else {
             // if Smile create VolatilityStrikeSurfaceConfig
             volatilityConfig_.push_back(boost::make_shared<VolatilityStrikeSurfaceConfig>(
@@ -206,8 +204,8 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     } else if (dim == "") {
         if (XMLNode* n = XMLUtils::getChildNode(node, "VolatilityConfig"))
             loadVolatiltyConfigs(n);
-        else 
-            loadVolatiltyConfigs(node);     
+        else
+            loadVolatiltyConfigs(node);
     } else {
         QL_FAIL("Only ATM and Smile dimensions, or Volatility Config supported for EquityVolatility " << curveID_);
     }
@@ -228,7 +226,7 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
-    
+
     XMLNode* vnode = doc.allocNode("VolatilityConfig");
     for (auto vc : volatilityConfig_) {
         XMLNode* n = vc->toXML(doc);
