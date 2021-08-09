@@ -25,6 +25,7 @@
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/marketdata/marketimpl.hpp>
 
 using QuantExt::CommodityIndex;
 using QuantExt::PriceTermStructure;
@@ -63,9 +64,11 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // Create the underlying commodity index for the forward
     const boost::shared_ptr<Market>& market = engineFactory->market();
+    
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     maturity_ = parseDate(maturityDate_);
-    if (isFuturePrice_ && *isFuturePrice_) {
+    bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions().has(commodityName_, Convention::Type::CommodityFuture);
+    if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
         // Get the commodity index from the market.
         index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
@@ -81,9 +84,8 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
         // Clone the index with the relevant expiry date.
         index = index->clone(expiryDate);
-
     }
-
+        
     Date paymentDate = paymentDate_;
     bool physicallySettled = true;
     if (physicallySettled_ && !(*physicallySettled_)) {

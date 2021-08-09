@@ -147,6 +147,21 @@ private:
     map<string, boost::shared_ptr<Convention>> data_;
 };
 
+//! Singleton to hold conventions
+//
+class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions> {
+    friend class QuantLib::Singleton<InstrumentConventions>;
+
+private:
+    InstrumentConventions() : conventions_() {}
+
+    ore::data::Conventions conventions_;
+
+public:
+    const ore::data::Conventions& conventions() const { return conventions_; }
+    ore::data::Conventions& conventions() { return conventions_; }
+};
+    
 //! Container for storing Zero Rate conventions
 /*!
   \ingroup marketdata
