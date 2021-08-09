@@ -73,6 +73,7 @@ private:
     //! \name DefaultProbabilityTermStructure implementation
     //@{
     Probability survivalProbabilityImpl(Time) const;
+    Real defaultDensityImpl(Time t) const;
     //@}
     mutable std::vector<Date> dates_;
     std::vector<Handle<Quote>> quotes_;
@@ -112,9 +113,25 @@ template <class T> Probability SurvivalProbabilityCurve<T>::survivalProbabilityI
     Probability sMax = this->data_.back();
     if (this->extrapolation_ == Extrapolation::flatFwd) {
         Rate hazardMax = -this->interpolation_.derivative(tMax) / sMax;
-        return sMax * hazardMax * std::exp(-hazardMax * (t - tMax));
+        return sMax * std::exp(-hazardMax * (t - tMax));
     } else {
         return std::pow(sMax, t / tMax);
+    }
+}
+
+template <class T> Real SurvivalProbabilityCurve<T>::defaultDensityImpl(Time t) const {
+    calculate();
+    if (t <= this->times_.back())
+        return -this->interpolation_.derivative(t, true);
+
+    // flat hazard rate extrapolation
+    Time tMax = this->times_.back();
+    Probability sMax = this->data_.back();
+    if (this->extrapolation_ == Extrapolation::flatFwd) {
+        Rate hazardMax = -this->interpolation_.derivative(tMax) / sMax;
+        return sMax * hazardMax * std::exp(-hazardMax * (t - tMax));
+    } else {
+        return -std::log(sMax) / tMax * std::pow(sMax, t / tMax);
     }
 }
 
