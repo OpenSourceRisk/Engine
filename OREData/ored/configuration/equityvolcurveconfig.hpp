@@ -56,6 +56,11 @@ public:
                                 const string& dayCounter = "A365", const string& calendar = "NullCalendar",
                                 const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
                                 const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+    EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
+                                const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                const string& dayCounter = "A365", const string& calendar = "NullCalendar",
+                                const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
+                                const boost::optional<bool>& preferOutOfTheMoney = boost::none);
     //@}
 
     //! \name Serialisation

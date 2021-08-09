@@ -38,6 +38,16 @@ EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
     populateRequiredCurveIds();
 }
 
+EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
+                                                         const string& currency,
+                                                         const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                                         const string& dayCounter, const string& calendar,
+                                                         const OneDimSolverConfig& solverConfig,
+                                                         const boost::optional<bool>& preferOutOfTheMoney)
+    : EquityVolatilityCurveConfig(curveID, curveDescription, currency,
+                                  std::vector<boost::shared_ptr<VolatilityConfig>>{volatilityConfig}, dayCounter,
+                                  calendar, solverConfig, preferOutOfTheMoney) {}
+
 const string EquityVolatilityCurveConfig::quoteStem(const string& volType) const {
     return "EQUITY_OPTION/" + volType + "/" + curveID_ + "/" + ccy_ + "/";
 }
