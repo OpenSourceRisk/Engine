@@ -653,6 +653,7 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+	    <xs:element type="defaultCurveExtrapolation" name="Extrapolation" minOccurs="0"/>
           </xs:all>
         </xs:complexType>
       </xs:element>
@@ -1214,7 +1215,7 @@
 
   <xs:simpleType name="ycExtrapolation">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="FlatForward"/>
+      <xs:enumeration value="FlatFwd"/>
       <xs:enumeration value="FlatZero"/>
       <!-- deprecated, for backwards compatibility only -->
       <xs:enumeration value="Y"/>
@@ -1230,6 +1231,13 @@
       <xs:enumeration value="false"/>
       <xs:enumeration value="0"/>
       <xs:enumeration value=""/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="defaultCurveExtrapolation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="FlatFwd"/>
+      <xs:enumeration value="FlatZero"/>
     </xs:restriction>
   </xs:simpleType>
 
