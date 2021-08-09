@@ -1386,6 +1386,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                 XMLUtils::appendNode(node, c);
             }
         }
+
+        if (!defaultCurveExtrapolation_.empty()) {
+            XMLUtils::addChild(doc, defaultCurvesNode, "Extrapolation", defaultCurveExtrapolation_);
+        }
     }
 
     // equities
