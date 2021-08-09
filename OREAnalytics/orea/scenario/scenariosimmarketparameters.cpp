@@ -140,6 +140,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Default interpolation for yield curves
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
+    defaultCurveExtrapolation_ = "FlatFwd";
 }
 
 void ScenarioSimMarketParameters::reset() {
@@ -583,39 +584,35 @@ const vector<Real>& ScenarioSimMarketParameters::equityVolStandardDevs(const str
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
-        yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ ||
-        yieldCurveTenors_ != rhs.yieldCurveTenors_ || swapIndices_ != rhs.swapIndices_ ||
-        interpolation_ != rhs.interpolation_ || extrapolation_ != rhs.extrapolation_ ||
-        swapVolTerms_ != rhs.swapVolTerms_ ||
+        yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
+        swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
+        extrapolation_ != rhs.extrapolation_ || swapVolTerms_ != rhs.swapVolTerms_ ||
         swapVolIsCube_ != rhs.swapVolIsCube_ || swapVolSimulateATMOnly_ != rhs.swapVolSimulateATMOnly_ ||
         swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ ||
-        swapVolDecayMode_ != rhs.swapVolDecayMode_ || 
-        capFloorVolExpiries_ != rhs.capFloorVolExpiries_ || capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
+        swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
+        capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
         zeroInflationCapFloorVolExpiries_ != rhs.zeroInflationCapFloorVolExpiries_ ||
         zeroInflationCapFloorVolStrikes_ != rhs.zeroInflationCapFloorVolStrikes_ ||
         zeroInflationCapFloorVolDecayMode_ != rhs.zeroInflationCapFloorVolDecayMode_ ||
         capFloorVolIsAtm_ != rhs.capFloorVolIsAtm_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultCurveCalendars_ != rhs.defaultCurveCalendars_ || defaultTenors_ != rhs.defaultTenors_ ||
-        cdsVolExpiries_ != rhs.cdsVolExpiries_ || 
+        defaultCurveExtrapolation_ != rhs.defaultCurveExtrapolation_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ ||
         cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || equityDividendTenors_ != rhs.equityDividendTenors_ ||
         fxVolIsSurface_ != rhs.fxVolIsSurface_ || useMoneyness_ != rhs.useMoneyness_ ||
-        fxVolExpiries_ != rhs.fxVolExpiries_ || 
-        fxVolDecayMode_ != rhs.fxVolDecayMode_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
-        equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
-        equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ ||
-        equityMoneyness_ != rhs.equityMoneyness_ || equityStandardDevs_ != rhs.equityStandardDevs_ ||
+        fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDecayMode_ != rhs.fxVolDecayMode_ ||
+        equityVolExpiries_ != rhs.equityVolExpiries_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
+        equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ || equityMoneyness_ != rhs.equityMoneyness_ ||
+        equityStandardDevs_ != rhs.equityStandardDevs_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ ||
         baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
-	baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
-        zeroInflationTenors_ != rhs.zeroInflationTenors_ || 
-        yoyInflationTenors_ != rhs.yoyInflationTenors_ || commodityCurveTenors_ != rhs.commodityCurveTenors_ ||
-	commodityVolDecayMode_ != rhs.commodityVolDecayMode_ || commodityVolExpiries_ != rhs.commodityVolExpiries_ ||
-        commodityVolMoneyness_ != rhs.commodityVolMoneyness_ ||
-        correlationIsSurface_ != rhs.correlationIsSurface_ ||
-        correlationExpiries_ != rhs.correlationExpiries_ || correlationStrikes_ != rhs.correlationStrikes_ ||
-        cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || yieldVolTerms_ != rhs.yieldVolTerms_ ||
-        yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
+        baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
+        zeroInflationTenors_ != rhs.zeroInflationTenors_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ||
+        commodityCurveTenors_ != rhs.commodityCurveTenors_ || commodityVolDecayMode_ != rhs.commodityVolDecayMode_ ||
+        commodityVolExpiries_ != rhs.commodityVolExpiries_ || commodityVolMoneyness_ != rhs.commodityVolMoneyness_ ||
+        correlationIsSurface_ != rhs.correlationIsSurface_ || correlationExpiries_ != rhs.correlationExpiries_ ||
+        correlationStrikes_ != rhs.correlationStrikes_ || cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ ||
+        yieldVolTerms_ != rhs.yieldVolTerms_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
         yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
         return false;
     } else {
@@ -1070,6 +1067,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
         QL_REQUIRE(defaultCurveCalendars_.find("") != defaultCurveCalendars_.end(),
                    "default calendar is not set for defaultCurves");
+        if (auto n = XMLUtils::getChildNode(nodeChild, "Extrapolation")) {
+            defaultCurveExtrapolation_ = XMLUtils::getNodeValue(n);
+        }
     }
 
     DLOG("Loading Equities Rates");

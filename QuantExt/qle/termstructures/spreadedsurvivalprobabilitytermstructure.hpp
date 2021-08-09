@@ -34,9 +34,11 @@ using namespace QuantLib;
 //! Spreaded Default Term Structure, the spread is given in terms of loglinearly interpolated survival probabilities.
 class SpreadedSurvivalProbabilityTermStructure : public SurvivalProbabilityStructure, public LazyObject {
 public:
+    enum class Extrapolation { flatFwd, flatZero };
     //! times should be consistent with reference ts day counter
     SpreadedSurvivalProbabilityTermStructure(const Handle<DefaultProbabilityTermStructure>& referenceCurve,
-                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& spreads);
+                                             const std::vector<Time>& times, const std::vector<Handle<Quote>>& spreads,
+                                             const Extrapolation extrapolation = Extrapolation::flatFwd);
     //@}
     //! \name TermStructure interface
     //@{
@@ -59,6 +61,7 @@ private:
     std::vector<Handle<Quote>> spreads_;
     mutable std::vector<Real> data_;
     boost::shared_ptr<Interpolation> interpolation_;
+    Extrapolation extrapolation_;
 };
 
 } // namespace QuantExt
