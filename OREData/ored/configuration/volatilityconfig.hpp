@@ -51,8 +51,8 @@ bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2);
 class EquityProxyVolatilityConfig : public VolatilityConfig {
 public:
     EquityProxyVolatilityConfig() {}
-    EquityProxyVolatilityConfig(const std::string& equityVolatilityCurve, const std::string& fxVolatilityCurve,
-        const std::string& correlationCurve, QuantLib::Natural priority = 0) : VolatilityConfig(priority), 
+    EquityProxyVolatilityConfig(const std::string& equityVolatilityCurve, const std::string& fxVolatilityCurve = "",
+        const std::string& correlationCurve = "", QuantLib::Natural priority = 0) : VolatilityConfig(priority), 
         equityVolatilityCurve_(equityVolatilityCurve), fxVolatilityCurve_(fxVolatilityCurve),
         correlationCurve_(correlationCurve) {}
 
