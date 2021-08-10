@@ -47,13 +47,23 @@ Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) 
         Volatility fxVol = fxSurface_->blackVol(t, fxForward);
 
         // Get the ATM vol for the proxy surface
-        Volatility proxyVol = proxySurface_->blackVol(t, proxyIndex_->forecastFixing(t));
+        Volatility proxyAtmVol = proxySurface_->blackVol(t, proxyIndex_->forecastFixing(t));
+        
+        // Convert the atm vol for this surface using sqrt( sigma^2 + sigma_X^2 + 2 rho sigma sigma_X)
+        Volatility atmVol = sqrt(proxyAtmVol * proxyAtmVol + fxVol * fxVol + 2 * correlation_->correlation(t) * proxyAtmVol * fxVol);
 
-        // Convert the vol this surfaces currency using sqrt( sigma^2 + sigma_X^2 + 2 rho sigma sigma_X)
-        Volatility eqVol = sqrt(proxyVol * proxyVol + fxVol * fxVol + 2 * correlation_->correlation(t) * proxyVol * fxVol);
+        // Get the moneyness in this surface of the strike requested
+        Real forward = index_->forecastFixing(t);
+        Real moneyness = std::log(strike / forward) / (atmVol * sqrt(t));
 
-        // just return the ATM value for now
-        vol = eqVol;
+        // Find the strike in the proxy surface that gives the same moneyness
+        Real proxyForward = proxyIndex_->forecastFixing(t);
+        Real proxyStrike = proxyForward * exp(moneyness * proxyAtmVol * sqrt(t));
+
+        // Look up the vol in the proxy surface for the proxyStrike and convert using sqrt( sigma^2 + sigma_X^2 + 2 rho sigma sigma_X)
+        Volatility proxyVol = proxySurface_->blackVol(t, proxyStrike);        
+        vol = sqrt(proxyVol * proxyVol + fxVol * fxVol + 2 * correlation_->correlation(t) * proxyVol * fxVol);
+        
     } else {
         Real adjustedStrike = strike * proxyIndex_->forecastFixing(t) / index_->forecastFixing(t);
         vol = proxySurface_->blackVol(t, adjustedStrike);
