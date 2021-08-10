@@ -1,7 +1,7 @@
 \subsubsection{Equity Option}
 
 The \lstinline!EquityOptionData!  node is the trade data container for the \emph{EquityOption} trade type.  Equity 
-options with exercise styles \emph{European} and \emph{American} are supported. For a Quanto payoff, only \emph{European}
+options with exercise styles \emph{European} and \emph{American} are supported. For a Quanto payoff and Composite Options, only \emph{European}
 exercise is supported. The \lstinline!EquityOptionData!  node includes one and 
 only one \lstinline!OptionData! trade component sub-node plus elements specific to the equity option. The structure of 
 an example \lstinline!EquityOptionData! node for an equity option is shown in Listing
@@ -77,7 +77,9 @@ Allowable values:  See section \ref{ss:premiums}
 	the option is Quanto, then this field must not be left blank, and must equal the currency
 	that the underlying equity is quoted in, up to the minor/major currency. For example, if 
 	the underlying equity is quoted in GBP, then\lstinline!StrikeCurrency! must be either
-	\emph{GBP} or \emph{GBp}. \\
+	\emph{GBP} or \emph{GBp}. If the option is a composite option, then this field must not be 
+	left blank, and it must equal the payment currency of the option and different to the 
+	underlying currency.\\
 	Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table
 	\ref{tab:allow_stand_data}.	Must be the major or minor currency of the \lstinline!Currency!
 	field above.

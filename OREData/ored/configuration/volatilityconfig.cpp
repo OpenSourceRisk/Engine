@@ -28,7 +28,52 @@ using std::vector;
 namespace ore {
 namespace data {
 
-void VolatilityConfig::fromBaseNode(XMLNode* node) {
+bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2) {
+    return vc1.priority() < vc2.priority();
+}
+
+void VolatilityConfig::getPriority(XMLNode* node) {
+    string attr = XMLUtils::getAttribute(node, "priority"); 
+    priority_ = attr.empty() ? 0 : parseInteger(attr);
+}
+
+void VolatilityConfig::addPriority(XMLDocument& doc, XMLNode* node) {
+    XMLUtils::addAttribute(doc, node, "priority", to_string(priority_));
+}
+
+void EquityProxyVolatilityConfig::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "ProxySurface");
+    VolatilityConfig::getPriority(node);
+    equityVolatilityCurve_ = XMLUtils::getChildValue(node, "EquityVolatilityCurve", true);
+    fxVolatilityCurve_ = XMLUtils::getChildValue(node, "FXVolatilityCurve", false);
+    correlationCurve_ = XMLUtils::getChildValue(node, "CorrelationCurve", false);
+}
+
+XMLNode* EquityProxyVolatilityConfig::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("ProxySurface");
+    VolatilityConfig::addPriority(doc, node);
+    XMLUtils::addChild(doc, node, "EquityVolatilityCurve", equityVolatilityCurve_);
+    if (!fxVolatilityCurve_.empty())
+        XMLUtils::addChild(doc, node, "FXVolatilityCurve", fxVolatilityCurve_);
+    if (!correlationCurve_.empty())
+        XMLUtils::addChild(doc, node, "CorrelationCurve", correlationCurve_);
+    return node;
+}
+
+const std::string& EquityProxyVolatilityConfig::equityVolatilityCurve() const { 
+    return equityVolatilityCurve_; 
+}
+
+const std::string& EquityProxyVolatilityConfig::fxVolatilityCurve() const { 
+    return fxVolatilityCurve_; 
+}
+
+const std::string& EquityProxyVolatilityConfig::correlationCurve() const { 
+    return correlationCurve_; 
+}
+
+void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
+    VolatilityConfig::getPriority(node);
     string qType = XMLUtils::getChildValue(node, "QuoteType", false);
     if (qType == "ImpliedVolatility" || qType == "") {
         string volType = XMLUtils::getChildValue(node, "VolatilityType", false);
@@ -50,7 +95,8 @@ void VolatilityConfig::fromBaseNode(XMLNode* node) {
     }
 }
 
-void VolatilityConfig::addBaseNode(XMLDocument& doc, XMLNode* node) {
+void QuoteBasedVolatilityConfig::addBaseNode(XMLDocument& doc, XMLNode* node) {
+    VolatilityConfig::addPriority(doc, node);
 
     // Check first for premium
     if (quoteType_ == MarketDatum::QuoteType::PRICE) {
@@ -73,36 +119,37 @@ void VolatilityConfig::addBaseNode(XMLDocument& doc, XMLNode* node) {
 }
 
 ConstantVolatilityConfig::ConstantVolatilityConfig(MarketDatum::QuoteType quoteType,
-                                                   QuantLib::Exercise::Type exerciseType)
-    : VolatilityConfig(quoteType, exerciseType) {}
+    Exercise::Type exerciseType, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, priority) {}
 
 ConstantVolatilityConfig::ConstantVolatilityConfig(const string& quote, MarketDatum::QuoteType quoteType,
-                                                   QuantLib::Exercise::Type exerciseType)
-    : VolatilityConfig(quoteType, exerciseType), quote_(quote) {}
+    Exercise::Type exerciseType, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, priority), quote_(quote) {}
 
 const string& ConstantVolatilityConfig::quote() const { return quote_; }
 
 void ConstantVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Constant");
-    VolatilityConfig::fromBaseNode(node);
+    QuoteBasedVolatilityConfig::fromBaseNode(node);
     quote_ = XMLUtils::getChildValue(node, "Quote", true);
 }
 
 XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Constant");
-    VolatilityConfig::addBaseNode(doc, node);
+    QuoteBasedVolatilityConfig::addBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "Quote", quote_);
     return node;
 }
 
-VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType,
-                                             bool enforceMontoneVariance)
-    : VolatilityConfig(quoteType, exerciseType), enforceMontoneVariance_(enforceMontoneVariance) {}
+VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType, Exercise::Type exerciseType,
+    bool enforceMontoneVariance, Natural priority) :
+    QuoteBasedVolatilityConfig(quoteType, exerciseType, priority), enforceMontoneVariance_(enforceMontoneVariance) {}
 
 VolatilityCurveConfig::VolatilityCurveConfig(const vector<string>& quotes, const string& interpolation,
-                                             const string& extrapolation, MarketDatum::QuoteType quoteType,
-                                             QuantLib::Exercise::Type exerciseType, bool enforceMontoneVariance)
-    : VolatilityConfig(quoteType, exerciseType), quotes_(quotes), interpolation_(interpolation),
+    const string& extrapolation, MarketDatum::QuoteType quoteType,
+    Exercise::Type exerciseType, bool enforceMontoneVariance, 
+    Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, priority), quotes_(quotes), interpolation_(interpolation),
       extrapolation_(extrapolation), enforceMontoneVariance_(enforceMontoneVariance) {}
 
 const vector<string>& VolatilityCurveConfig::quotes() const { return quotes_; }
@@ -115,7 +162,7 @@ bool VolatilityCurveConfig::enforceMontoneVariance() const { return enforceMonto
 
 void VolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Curve");
-    VolatilityConfig::fromBaseNode(node);
+    QuoteBasedVolatilityConfig::fromBaseNode(node);
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
     extrapolation_ = XMLUtils::getChildValue(node, "Extrapolation", true);
@@ -127,7 +174,7 @@ void VolatilityCurveConfig::fromXML(XMLNode* node) {
 
 XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Curve");
-    VolatilityConfig::addBaseNode(doc, node);
+    QuoteBasedVolatilityConfig::addBaseNode(doc, node);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
@@ -136,14 +183,14 @@ XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(MarketDatum::QuoteType quoteType,
-                                                 QuantLib::Exercise::Type exerciseType)
-    : VolatilityConfig(quoteType, exerciseType) {}
+    Exercise::Type exerciseType, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, priority) {}
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(const string& timeInterpolation, const string& strikeInterpolation,
-                                                 bool extrapolation, const string& timeExtrapolation,
-                                                 const string& strikeExtrapolation, MarketDatum::QuoteType quoteType,
-                                                 QuantLib::Exercise::Type exerciseType)
-    : VolatilityConfig(quoteType, exerciseType), timeInterpolation_(timeInterpolation),
+    bool extrapolation, const string& timeExtrapolation,
+    const string& strikeExtrapolation, MarketDatum::QuoteType quoteType,
+    Exercise::Type exerciseType, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, priority), timeInterpolation_(timeInterpolation),
       strikeInterpolation_(strikeInterpolation), extrapolation_(extrapolation), timeExtrapolation_(timeExtrapolation),
       strikeExtrapolation_(strikeExtrapolation) {}
 
@@ -174,15 +221,16 @@ void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
 }
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(MarketDatum::QuoteType quoteType,
-                                                             QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+    Exercise::Type exerciseType, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, priority) {}
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(
     const vector<string>& strikes, const vector<string>& expiries, const string& timeInterpolation,
     const string& strikeInterpolation, bool extrapolation, const string& timeExtrapolation,
-    const string& strikeExtrapolation, MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType)
+    const string& strikeExtrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, 
+    Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType),
+                              strikeExtrapolation, quoteType, exerciseType, priority),
       strikes_(strikes), expiries_(expiries) {}
 
 const vector<string>& VolatilityStrikeSurfaceConfig::strikes() const { return strikes_; }
@@ -204,7 +252,7 @@ vector<pair<string, string>> VolatilityStrikeSurfaceConfig::quotes() const {
 
 void VolatilityStrikeSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "StrikeSurface");
-    VolatilityConfig::fromBaseNode(node);
+    QuoteBasedVolatilityConfig::fromBaseNode(node);
     strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
     fromNode(node);
@@ -212,7 +260,7 @@ void VolatilityStrikeSurfaceConfig::fromXML(XMLNode* node) {
 
 XMLNode* VolatilityStrikeSurfaceConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("StrikeSurface");
-    VolatilityConfig::addBaseNode(doc, node);
+    QuoteBasedVolatilityConfig::addBaseNode(doc, node);
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     addNodes(doc, node);
@@ -220,17 +268,17 @@ XMLNode* VolatilityStrikeSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(MarketDatum::QuoteType quoteType,
-                                                           QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+     Exercise::Type exerciseType, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, priority) {}
 
 VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
     const string& deltaType, const string& atmType, const vector<string>& putDeltas, const vector<string>& callDeltas,
     const vector<string>& expiries, const string& timeInterpolation, const string& strikeInterpolation,
     bool extrapolation, const string& timeExtrapolation, const string& strikeExtrapolation,
     const std::string& atmDeltaType, bool futurePriceCorrection, MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType)
+    Exercise::Type exerciseType, Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType),
+                              strikeExtrapolation, quoteType, exerciseType, priority),
       deltaType_(deltaType), atmType_(atmType), putDeltas_(putDeltas), callDeltas_(callDeltas), expiries_(expiries),
       atmDeltaType_(atmDeltaType), futurePriceCorrection_(futurePriceCorrection) {}
 
@@ -275,7 +323,7 @@ vector<pair<string, string>> VolatilityDeltaSurfaceConfig::quotes() const {
 
 void VolatilityDeltaSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "DeltaSurface");
-    VolatilityConfig::fromBaseNode(node);
+    QuoteBasedVolatilityConfig::fromBaseNode(node);
     deltaType_ = XMLUtils::getChildValue(node, "DeltaType", true);
     atmType_ = XMLUtils::getChildValue(node, "AtmType", true);
     atmDeltaType_ = XMLUtils::getChildValue(node, "AtmDeltaType", false);
@@ -290,7 +338,7 @@ void VolatilityDeltaSurfaceConfig::fromXML(XMLNode* node) {
 
 XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("DeltaSurface");
-    VolatilityConfig::addBaseNode(doc, node);
+    QuoteBasedVolatilityConfig::addBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "DeltaType", deltaType_);
     XMLUtils::addChild(doc, node, "AtmType", atmType_);
     if (!atmDeltaType_.empty())
@@ -305,16 +353,16 @@ XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(MarketDatum::QuoteType quoteType,
-                                                                   QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+    Exercise::Type exerciseType, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, priority) {}
 
 VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(
     const string& moneynessType, const vector<string>& moneynessLevels, const vector<string>& expiries,
     const string& timeInterpolation, const string& strikeInterpolation, bool extrapolation,
     const string& timeExtrapolation, const string& strikeExtrapolation, bool futurePriceCorrection,
-    MarketDatum::QuoteType quoteType, QuantLib::Exercise::Type exerciseType)
+    MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType),
+                              strikeExtrapolation, quoteType, exerciseType, priority),
       moneynessType_(moneynessType), moneynessLevels_(moneynessLevels), expiries_(expiries),
       futurePriceCorrection_(futurePriceCorrection) {}
 
@@ -344,7 +392,7 @@ vector<pair<string, string>> VolatilityMoneynessSurfaceConfig::quotes() const {
 
 void VolatilityMoneynessSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "MoneynessSurface");
-    VolatilityConfig::fromBaseNode(node);
+    QuoteBasedVolatilityConfig::fromBaseNode(node);
     moneynessType_ = XMLUtils::getChildValue(node, "MoneynessType", true);
     moneynessLevels_ = XMLUtils::getChildrenValuesAsStrings(node, "MoneynessLevels", true);
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
@@ -356,7 +404,7 @@ void VolatilityMoneynessSurfaceConfig::fromXML(XMLNode* node) {
 
 XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("MoneynessSurface");
-    VolatilityConfig::addBaseNode(doc, node);
+    QuoteBasedVolatilityConfig::addBaseNode(doc, node);
     XMLUtils::addChild(doc, node, "MoneynessType", moneynessType_);
     XMLUtils::addGenericChildAsList(doc, node, "MoneynessLevels", moneynessLevels_);
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
@@ -367,17 +415,17 @@ XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(MarketDatum::QuoteType quoteType,
-                                                                   QuantLib::Exercise::Type exerciseType)
-    : VolatilitySurfaceConfig(quoteType, exerciseType) {}
+    Exercise::Type exerciseType, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, priority) {}
 
 VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(
     const std::vector<std::string>& moneynessLevels, const std::string& baseVolatilityId,
     const std::string& basePriceCurveId, const std::string& baseConventionsId, const std::string& timeInterpolation,
     const std::string& strikeInterpolation, bool extrapolation, const std::string& timeExtrapolation,
     const std::string& strikeExtrapolation, Real beta, const std::string& maxTenor, MarketDatum::QuoteType quoteType,
-    QuantLib::Exercise::Type exerciseType)
+    Exercise::Type exerciseType, Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType),
+                              strikeExtrapolation, quoteType, exerciseType, priority),
       moneynessLevels_(moneynessLevels), baseVolatilityId_(baseVolatilityId), basePriceCurveId_(basePriceCurveId),
       baseConventionsId_(baseConventionsId), beta_(beta), maxTenor_(maxTenor) {}
 
@@ -397,7 +445,7 @@ vector<pair<string, string>> VolatilityApoFutureSurfaceConfig::quotes() const { 
 
 void VolatilityApoFutureSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ApoFutureSurface");
-    VolatilityConfig::fromBaseNode(node);
+    QuoteBasedVolatilityConfig::fromBaseNode(node);
     moneynessLevels_ = XMLUtils::getChildrenValuesAsStrings(node, "MoneynessLevels", true);
     baseVolatilityId_ = XMLUtils::getChildValue(node, "VolatilityId", true);
     basePriceCurveId_ = XMLUtils::getChildValue(node, "PriceCurveId", true);
@@ -409,7 +457,7 @@ void VolatilityApoFutureSurfaceConfig::fromXML(XMLNode* node) {
 
 XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ApoFutureSurface");
-    VolatilityConfig::addBaseNode(doc, node);
+    QuoteBasedVolatilityConfig::addBaseNode(doc, node);
     XMLUtils::addGenericChildAsList(doc, node, "MoneynessLevels", moneynessLevels_);
     XMLUtils::addChild(doc, node, "VolatilityId", baseVolatilityId_);
     XMLUtils::addChild(doc, node, "PriceCurveId", basePriceCurveId_);

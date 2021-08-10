@@ -754,8 +754,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
 
     vector<string> eqVolQuotes = {"EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF",
                                   "EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF"};
-    boost::shared_ptr<VolatilityCurveConfig> vcc =
-        boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat");
+    vector<boost::shared_ptr<VolatilityConfig>> vcc;
+    vcc.push_back(boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat"));
 
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>("SP5", "", "USD", vcc);
 

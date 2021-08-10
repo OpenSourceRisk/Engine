@@ -42,6 +42,7 @@
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
@@ -257,7 +258,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"PL", Poland()},
         {"RO", Romania()},
         {"RU", Russia()},
-        // {"SA", SaudiArabic()}
+        // {"SA", SaudiArabia()},
         {"SG", Singapore()},
         {"ZA", SouthAfrica()},
         {"KR", SouthKorea(SouthKorea::Settlement)},
@@ -380,8 +381,12 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"ZAC", SouthAfrica()},
         {"ZAX", SouthAfrica()},
 
+        // fallback to IslamicWeekendsOnly for these ccys and use amendmends
+        {"AED", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"AE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"ARE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+
         // fallback to WeekendsOnly for these emerging ccys
-        {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
         {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
         {"CLF", AmendedCalendar(WeekendsOnly(), "CLF")},
         {"EGP", AmendedCalendar(WeekendsOnly(), "EGP")},
@@ -967,7 +972,8 @@ AmortizationType parseAmortizationType(const std::string& s) {
         {"FixedAmount", AmortizationType::FixedAmount},
         {"RelativeToInitialNotional", AmortizationType::RelativeToInitialNotional},
         {"RelativeToPreviousNotional", AmortizationType::RelativeToPreviousNotional},
-        {"Annuity", AmortizationType::Annuity}};
+        {"Annuity", AmortizationType::Annuity},
+        {"LinearToMaturity", AmortizationType::LinearToMaturity}};
 
     auto it = type.find(s);
     if (it != type.end()) {

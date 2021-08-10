@@ -13,6 +13,7 @@
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>

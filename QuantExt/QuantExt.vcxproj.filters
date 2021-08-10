@@ -567,6 +567,9 @@
     <ClInclude Include="qle\calendars\wmr.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\islamicweekendsonly.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\equitycoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -1584,6 +1587,9 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\wmr.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\islamicweekendsonly.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\equitycoupon.cpp">

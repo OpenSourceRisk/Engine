@@ -147,16 +147,14 @@ public:
     explicit Bond() : Trade("Bond") {}
 
     //! Constructor taking an envelope and bond data
-    Bond(Envelope env, const BondData& bondData) : Trade("Bond", env), bondData_(bondData) {}
+    Bond(Envelope env, const BondData& bondData)
+        : Trade("Bond", env), originalBondData_(bondData), bondData_(bondData) {}
 
     //! Trade interface
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! inspectors
     const BondData& bondData() const { return bondData_; }
-    // FIXME can we remove the following inspectors and use bondData().XXX() instead?
-    const string& currency() const { return bondData_.currency(); }
-    const string& creditCurveId() const { return bondData_.creditCurveId(); }
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
@@ -167,7 +165,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
 private:
-    BondData bondData_;
+    BondData originalBondData_, bondData_;
 };
 
 //! Bond Factory that builds bonds from reference data

@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/failedtrade.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -88,13 +88,12 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                 failedToLoad = true;
             }
         } else {
-            //WLOG("Unable to build Trade for tradeType=" << tradeType);
             ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML"));
             failedToLoad = true;
         }
 
         // If trade loading failed, then insert a dummy trade with same id and envelope
-        if (failedToLoad)  {
+        if (failedToLoad && buildFailedTrades_) {
             try {
                 trade = factory->build("Failed");
                 // this loads only type, id and envelope, but type will be set to the original trade's type
@@ -108,11 +107,11 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                 // and add it to the portfolio
                 add(failedTrade, checkForDuplicateIds);
                 WLOG("Added trade id " << failedTrade->id() << " type " << failedTrade->tradeType()
-                     << " for original trade type " << trade->tradeType());
+                                       << " for original trade type " << trade->tradeType());
             } catch (std::exception& ex) {
                 ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing type and envelope", ex.what()));
             }
-        } 
+        }
     }
     LOG("Finished Parsing XML doc");
 }
@@ -162,16 +161,21 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
-            boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
-            failed->id() = (*trade)->id();
-            failed->setUnderlyingTradeType((*trade)->tradeType());
-            failed->envelope() = (*trade)->envelope();
-            LOG("Added failed trade with id " << failed->id());
-            (*trade) = failed;
+            if (buildFailedTrades_) {
+                boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
+                failed->id() = (*trade)->id();
+                failed->setUnderlyingTradeType((*trade)->tradeType());
+                failed->envelope() = (*trade)->envelope();
+                failed->build(engineFactory);
+                LOG("Added failed trade with id " << failed->id());
+                (*trade) = failed;
+            } else {
+                trade = trades_.erase(trade);
+            }
         }
     }
     LOG("Built Portfolio. Size now " << trades_.size());
-        
+
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
 }
 

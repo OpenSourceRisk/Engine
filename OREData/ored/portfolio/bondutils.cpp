@@ -56,7 +56,7 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
         coupons = bondRefData->bondData().legData;
         TLOG("overwrite coupons with " << coupons.size() << " LegData nodes");
     }
-    DLOG("populating data bond from reference data done.");
+    DLOG("populating bond data from reference data done.");
 }
 
 Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Calendar& calendar) {

@@ -2425,6 +2425,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="observationModel">Disable</Parameter>
   <Parameter name="lazyMarketBuilding">false</Parameter>
   <Parameter name="continueOnError">false</Parameter>
+  <Parameter name="buildFailedTrades">true</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -2480,6 +2481,10 @@ are not used. If not given, the parameter defaults to {\tt true}.
 
 \medskip If the parameter {\tt continueOnError} is set to true, the application will not exit on an error, but try to
 continue the processing. If not given, the parameter defaults to {\tt false}.
+
+\medskip If the parameter {\tt buildFailedTrades} is set to true, the application will build a dummy trade if loading or
+building the original trade fails. The dummy trade has trade type ``Failed'', zero notional and NPV.
+If not given, the parameter defaults to {\tt false}.
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 
@@ -4183,7 +4188,12 @@ If no day counter is specified for a given riskfactor then the default Actual365
 For Yield Curves, there are several choices for the interpolation and extrapolation:
 \begin{itemize}
 \item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
-\item Extrpolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\end{itemize}
+
+For Default Curve, there is a similar choice for the extrapolation:
+\begin{itemize}
+\item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
 \end{itemize}
 
 \begin{longlisting}
@@ -4223,7 +4233,8 @@ For Yield Curves, there are several choices for the interpolation and extrapolat
       </Names> 
       <Tenors>6M,1Y,2Y</Tenors> 
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities> 
-      <DayCounter name="CPTY1">ACT/ACT</DayCounter> 
+      <DayCounter name="CPTY1">ACT/ACT</DayCounter>
+      <Extrapolation>FlatFwd</Extrapolation>
   </DefaultCurves> 
   <SwaptionVolatilities>
     <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>

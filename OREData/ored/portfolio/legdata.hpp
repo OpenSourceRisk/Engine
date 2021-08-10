@@ -733,11 +733,13 @@ private:
 //! Serializable object holding amortization rules
 class AmortizationData : public XMLSerializable {
 public:
-    AmortizationData() : initialized_(false) {}
+    AmortizationData() : value_(0.0), underflow_(false), initialized_(false) {}
 
     AmortizationData(string type, double value, string startDate, string endDate, string frequency, bool underflow)
         : type_(type), value_(value), startDate_(startDate), endDate_(endDate), frequency_(frequency),
-          underflow_(underflow), initialized_(true) {}
+          underflow_(underflow), initialized_(true) {
+        validate();
+    }
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
@@ -757,6 +759,7 @@ public:
     bool initialized() const { return initialized_; }
 
 private:
+    void validate() const;
     string type_;
     double value_;
     string startDate_;
@@ -834,6 +837,7 @@ public:
     boost::shared_ptr<LegAdditionalData>& concreteLegData() { return concreteLegData_; }
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
+    ScheduleData& schedule() { return schedule_; }
     //@}
 
 protected:
