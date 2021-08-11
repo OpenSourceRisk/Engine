@@ -87,6 +87,7 @@ public:
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                          const CurveConfigurations& curveConfigs,
+                         const EquityProxyVolatilityConfig& epvc,
                          const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
                          const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves,
                          const FXLookup& fxSpots,
@@ -109,6 +110,7 @@ private:
     QuantLib::Currency currency_;
     QuantLib::DayCounter dayCounter_;
     QuantLib::Date maxExpiry_;
+    boost::shared_ptr<VolatilityConfig> volatilityConfig_;
     boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data

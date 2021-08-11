@@ -1322,6 +1322,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     else
         conventions_->fromXMLString(conventionsXML);
 
+    InstrumentConventions::instance().conventions() = *conventions_;
+    
     if (todaysMarketXML == "")
         getMarketParameters();
     else

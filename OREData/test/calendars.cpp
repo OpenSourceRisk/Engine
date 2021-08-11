@@ -97,7 +97,6 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"UAH", Ukraine()},
                             {"HUF", Hungary()},
                             // Emerging currencies that default to WeekendsOnly
-                            {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
                             {"CLP", Chile()},
                             {"COP", Colombia()},
                             {"ILS", Israel()},

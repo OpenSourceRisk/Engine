@@ -4188,7 +4188,12 @@ If no day counter is specified for a given riskfactor then the default Actual365
 For Yield Curves, there are several choices for the interpolation and extrapolation:
 \begin{itemize}
 \item Interpolation: This can be LogLinear or LinearZero. If not given, the value defaults to LogLinear.
-\item Extrpolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
+\end{itemize}
+
+For Default Curve, there is a similar choice for the extrapolation:
+\begin{itemize}
+\item Extrapolation: This can be FlatFwd or FlatZero. If not given, the value defaults to FlatFwd.
 \end{itemize}
 
 \begin{longlisting}
@@ -4228,7 +4233,8 @@ For Yield Curves, there are several choices for the interpolation and extrapolat
       </Names> 
       <Tenors>6M,1Y,2Y</Tenors> 
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities> 
-      <DayCounter name="CPTY1">ACT/ACT</DayCounter> 
+      <DayCounter name="CPTY1">ACT/ACT</DayCounter>
+      <Extrapolation>FlatFwd</Extrapolation>
   </DefaultCurves> 
   <SwaptionVolatilities>
     <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>

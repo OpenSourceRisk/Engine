@@ -618,25 +618,33 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
 void AmortizationData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AmortizationData");
     type_ = XMLUtils::getChildValue(node, "Type");
-    value_ = XMLUtils::getChildValueAsDouble(node, "Value");
-    startDate_ = XMLUtils::getChildValue(node, "StartDate");
-    endDate_ = XMLUtils::getChildValue(node, "EndDate", false);     // optional
-    frequency_ = XMLUtils::getChildValue(node, "Frequency", false); // optional
-    underflow_ = XMLUtils::getChildValueAsBool(node, "Underflow");
+    value_ = XMLUtils::getChildValueAsDouble(node, "Value", false, Null<Real>());
+    startDate_ = XMLUtils::getChildValue(node, "StartDate", false);
+    endDate_ = XMLUtils::getChildValue(node, "EndDate", false);
+    frequency_ = XMLUtils::getChildValue(node, "Frequency", false);
+    underflow_ = XMLUtils::getChildValueAsBool(node, "Underflow", false, false);
     initialized_ = true;
+    validate();
 }
 
 XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("AmortizationData");
     XMLUtils::addChild(doc, node, "Type", type_);
-    XMLUtils::addChild(doc, node, "Value", value_);
-    XMLUtils::addChild(doc, node, "StartDate", startDate_);
-    if (endDate_ != "")
+    if (value_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "Value", value_);
+    if (!startDate_.empty())
+        XMLUtils::addChild(doc, node, "StartDate", startDate_);
+    if (!endDate_.empty())
         XMLUtils::addChild(doc, node, "EndDate", endDate_);
-    if (frequency_ != "")
+    if (!frequency_.empty())
         XMLUtils::addChild(doc, node, "Frequency", frequency_);
     XMLUtils::addChild(doc, node, "Underflow", underflow_);
     return node;
+}
+
+void AmortizationData::validate() const {
+    QL_REQUIRE(type_ == "LinearToMaturity" || value_ != Null<Real>(), "AmortizationData requires Value");
+    QL_REQUIRE(type_ == "LinearToMaturity" || value_ != Null<Real>(), "AmortizationData requires Underflow");
 }
 
 LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bool isPayer, const string& currency,
@@ -941,10 +949,14 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
         if (amortizationType == AmortizationType::Annuity) {
             LOG("Build floating annuity notional schedule");
+            QL_REQUIRE(data.amortizationData().size() == 1,
+                       "Can have one AmortizationData block only for floating leg annuities");
             QL_REQUIRE(!hasCapsFloors, "Caps/Floors not supported in floating annuity coupons");
             QL_REQUIRE(floatData->gearings().size() == 0, "Gearings not supported in floating annuity coupons");
             DayCounter dc = index->dayCounter();
-            Date startDate = parseDate(data.amortizationData().front().startDate());
+            Date startDate = data.amortizationData().front().startDate().empty()
+                                 ? Date::minDate()
+                                 : parseDate(data.amortizationData().front().startDate());
             double annuity = data.amortizationData().front().value();
             bool underflow = data.amortizationData().front().underflow();
             vector<boost::shared_ptr<Coupon>> coupons;
@@ -1957,17 +1969,17 @@ Real originalNotional(const Leg& leg) {
 
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
                                                     const AmortizationData& data) {
-    LOG("Build fixed amortization notional schedule");
+    DLOG("Build fixed amortization notional schedule");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
-    Period amortPeriod = parsePeriod(data.frequency());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
     double amort = data.value();
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
-        if (i > 0 && schedule[i] > lastAmortDate + amortPeriod - 4 * Days && schedule[i] >= startDate &&
-            schedule[i] < endDate) { // FIXME: tolerance
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] - amort;
             lastAmortDate = schedule[i];
         } else if (i > 0 && lastAmortDate > Date::minDate()) {
@@ -1976,27 +1988,27 @@ vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notion
         if (amort > nominals[i] && underflow == false)
             amort = std::max(nominals[i], 0.0);
     }
-    LOG("Fixed amortization notional schedule done");
+    DLOG("Fixed amortization notional schedule done");
     return nominals;
 }
 
 vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<double>& notionals,
                                                                   const Schedule& schedule,
                                                                   const AmortizationData& data) {
-    LOG("Build notional schedule with amortizations expressed as percentages of initial notional");
+    DLOG("Build notional schedule with amortizations expressed as percentages of initial notional");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
-    Period amortPeriod = parsePeriod(data.frequency());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
     double fraction = data.value(); // first difference to "FixedAmount"
     QL_REQUIRE(fraction >= 0.0 && fraction <= 1.0,
                "amortization fraction " << fraction << " out of range"); // second difference to "FixedAmount"
     double amort = fraction * nominals.front();                          // third difference to "FixedAmount"
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
-        if (i > 0 && schedule[i] > lastAmortDate + amortPeriod - 4 * Days && schedule[i] >= startDate &&
-            schedule[i] < endDate) { // FIXME: tolerance
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] - amort;
             lastAmortDate = schedule[i];
         } else if (i > 0 && lastAmortDate > Date::minDate())
@@ -2005,40 +2017,40 @@ vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<d
             amort = std::max(nominals[i], 0.0);
         }
     }
-    LOG("Fixed amortization notional schedule done");
+    DLOG("Fixed amortization notional schedule done");
     return nominals;
 }
 
 vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<double>& notionals,
                                                                    const Schedule& schedule,
                                                                    const AmortizationData& data) {
-    LOG("Build notional schedule with amortizations expressed as percentages of previous notionals");
+    DLOG("Build notional schedule with amortizations expressed as percentages of previous notionals");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
-    Period amortPeriod = parsePeriod(data.frequency());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
     double fraction = data.value();
     QL_REQUIRE(fraction >= 0.0 && fraction <= 1.0, "amortization fraction " << fraction << " out of range");
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
-        if (i > 0 && schedule[i] > lastAmortDate + amortPeriod - 4 * Days && schedule[i] >= startDate &&
-            schedule[i] < endDate) { // FIXME: tolerance
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] * (1.0 - fraction);
             lastAmortDate = schedule[i];
         } else if (i > 0 && lastAmortDate > Date::minDate())
             nominals[i] = nominals[i - 1];
     }
-    LOG("Fixed amortization notional schedule done");
+    DLOG("Fixed amortization notional schedule done");
     return nominals;
 }
 
 vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
                                                      const Schedule& schedule, const AmortizationData& data,
                                                      const DayCounter& dc) {
-    LOG("Build fixed annuity notional schedule");
+    DLOG("Build fixed annuity notional schedule");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
     double annuity = data.value();
     Real amort = 0.0;
@@ -2056,21 +2068,54 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
             amort = std::max(nominals[i], 0.0);
         }
     }
-    LOG("Fixed Annuity notional schedule done");
+    DLOG("Fixed Annuity notional schedule done");
+    return nominals;
+}
+
+vector<double> buildAmortizationScheduleLinearToMaturity(const vector<double>& notionals, const Schedule& schedule,
+                                                         const AmortizationData& data) {
+    DLOG("Build linear-to-maturity notional schedule");
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
+    Date lastAmortDate = Date::minDate();
+    Real periodAmortization = Null<Real>();
+    Real accumulatedAmortization = 0.0;
+    for (Size i = 0; i < schedule.size() - 1; ++i) {
+        if (schedule[i] >= startDate && periodAmortization == Null<Real>()) {
+            periodAmortization = nominals[i] / static_cast<Real>(schedule.size() - i);
+        }
+        if (i > 0 && schedule[i] >= startDate && schedule[i] < endDate) {
+            accumulatedAmortization += periodAmortization;
+        }
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) {
+            nominals[i] = nominals[i - 1] - accumulatedAmortization;
+            accumulatedAmortization = 0.0;
+            lastAmortDate = schedule[i];
+        } else if (i > 0 && lastAmortDate > Date::minDate()) {
+            nominals[i] = nominals[i - 1];
+        }
+    }
+    DLOG("Linear-to-maturity notional schedule done");
     return nominals;
 }
 
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed, const std::vector<Real>& rates) {
     Date lastEndDate = Date::minDate();
-    for (auto const& amort : data.amortizationData()) {
+    for (Size i = 0; i < data.amortizationData().size(); ++i) {
+        const AmortizationData& amort = data.amortizationData()[i];
         if (!amort.initialized())
             continue;
-        Date startDate = parseDate(amort.startDate());
+        QL_REQUIRE(i == 0 || !amort.startDate().empty(),
+                   "All AmortizationData blocks except the first require a StartDate");
+        Date startDate = amort.startDate().empty() ? Date::minDate() : parseDate(amort.startDate());
         QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
                                                  << startDate << ") is earlier than last end date (" << lastEndDate
                                                  << ")");
-        lastEndDate = parseDate(amort.endDate());
+        lastEndDate = amort.endDate().empty() ? Date::minDate() : parseDate(amort.endDate());
         AmortizationType amortizationType = parseAmortizationType(amort.type());
         if (amortizationType == AmortizationType::FixedAmount)
             notionals = buildAmortizationScheduleFixedAmount(notionals, schedule, amort);
@@ -2083,8 +2128,11 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
             if (!rates.empty())
                 notionals = buildAmortizationScheduleFixedAnnuity(notionals, rates, schedule, amort,
                                                                   parseDayCounter(data.dayCounter()));
-        } else
+        } else if (amortizationType == AmortizationType::LinearToMaturity) {
+            notionals = buildAmortizationScheduleLinearToMaturity(notionals, schedule, amort);
+        } else {
             QL_FAIL("AmortizationType " << amort.type() << " not supported");
+        }
         // check that for a floating leg we only have one amortization block, if the type is annuity
         // we recognise a floating leg by an empty (fixed) rates vector
         if (rates.empty() && amortizationType == AmortizationType::Annuity) {

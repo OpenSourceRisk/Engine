@@ -60,6 +60,11 @@ public:
     const string& lastDate() const { return lastDate_; }
     //@}
 
+    //! \name Modifiers
+    //@{
+    string& modifyEndDate() { return endDate_; }
+    //@}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
@@ -100,6 +105,11 @@ public:
     const vector<string>& dates() const { return dates_; }
     //@}
 
+    //! \name Modifiers
+    //@{
+    vector<string>& modifyDates() { return dates_; }
+    //@}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
@@ -137,6 +147,12 @@ public:
     //@{
     const vector<ScheduleDates>& dates() const { return dates_; }
     const vector<ScheduleRules>& rules() const { return rules_; }
+    //@}
+
+    //! \name Modifiers
+    //@{
+    vector<ScheduleDates>& modifyDates() { return dates_; }
+    vector<ScheduleRules>& modifyRules() { return rules_; }
     //@}
 
     //! \name Serialisation
