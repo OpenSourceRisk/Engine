@@ -5139,7 +5139,7 @@ see \ref{md:equity_option_iv} for details of the market data.
 \label{lst:eqoptionvol_mny_surface}
 \end{longlisting}
 
-Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!ProxySurface! field, which must match the \lstinline!CurveId! of another configuration. The proxy surface looks up the volatility in the reference surface bases on moneyness.
+Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!EquityVolatilityCurve! field, which must match the \lstinline!CurveId! of another configuration.  \lstinline!FXVolatilityCurve! and \lstinline!CorrelationCurve! must be provided if the currency of the proxy surface is different to that of current surface, that can be omitted otherwise.
  
 \begin{longlisting}
 %\hrule\medskip
@@ -5150,7 +5150,11 @@ Finally, the volatility proxy surface configuration layout is given in Listing \
     <CurveDescription>Lognormal option implied vols for APC - proxied from SP5</CurveDescription>
     <Currency>USD</Currency>
     <DayCounter>Actual/365 (Fixed)</DayCounter>
-    <ProxySurface>SP5</PROXYSurface>
+    <ProxySurface>
+      <EquityVolatilityCurve>RIC:.SPX</EquityVolatilityCurve>
+      <FXVolatilityCurve>GBPUSD</FXVolatilityCurve>
+      <CorrelationCurve>FX-GENERIC-GBP-USD&amp;EQ-RIC:VOD.L</CorrelationCurve>
+    </ProxySurface>
   </EquityVolatility>
   <EquityVolatility>
     ...
