@@ -8,11 +8,11 @@ services:
     image: env_ore:${ORE_TAG}
     environment:
       - CCACHE_DIR=/ccache
+    volumes:
+      - ccache_volume:ccache
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE
-      volumes:
-        - ccache_volume:ccache
       args:
         - quantlib_version=${QL_TAG}
         - num_cores=${NUM_CORES}
