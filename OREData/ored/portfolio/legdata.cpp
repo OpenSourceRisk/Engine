@@ -38,6 +38,7 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/capflooredinflationcoupon.hpp>
+#include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/digitalcmscoupon.hpp>
@@ -47,9 +48,8 @@
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/digitalcmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
-#include <ql/version.hpp>
 #include <ql/utilities/vectors.hpp>
-#include <ql/cashflows/cashflowvectors.hpp>
+#include <ql/version.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
@@ -240,10 +240,11 @@ void CPILegData::fromXML(XMLNode* node) {
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
     else
         subtractInflationNominal_ = false;
-    
+
     XMLNode* subNomCpnsNode = XMLUtils::getChildNode(node, "SubtractInflationNotionalAllCoupons");
     if (subNomCpnsNode)
-        subtractInflationNominalCoupons_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotionalAllCoupons", true);
+        subtractInflationNominalCoupons_ =
+            XMLUtils::getChildValueAsBool(node, "SubtractInflationNotionalAllCoupons", true);
     else
         subtractInflationNominalCoupons_ = false;
 
@@ -617,25 +618,33 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
 void AmortizationData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AmortizationData");
     type_ = XMLUtils::getChildValue(node, "Type");
-    value_ = XMLUtils::getChildValueAsDouble(node, "Value");
-    startDate_ = XMLUtils::getChildValue(node, "StartDate");
-    endDate_ = XMLUtils::getChildValue(node, "EndDate", false);     // optional
-    frequency_ = XMLUtils::getChildValue(node, "Frequency", false); // optional
-    underflow_ = XMLUtils::getChildValueAsBool(node, "Underflow");
+    value_ = XMLUtils::getChildValueAsDouble(node, "Value", false, Null<Real>());
+    startDate_ = XMLUtils::getChildValue(node, "StartDate", false);
+    endDate_ = XMLUtils::getChildValue(node, "EndDate", false);
+    frequency_ = XMLUtils::getChildValue(node, "Frequency", false);
+    underflow_ = XMLUtils::getChildValueAsBool(node, "Underflow", false, false);
     initialized_ = true;
+    validate();
 }
 
 XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("AmortizationData");
     XMLUtils::addChild(doc, node, "Type", type_);
-    XMLUtils::addChild(doc, node, "Value", value_);
-    XMLUtils::addChild(doc, node, "StartDate", startDate_);
-    if (endDate_ != "")
+    if (value_ != Null<Real>())
+        XMLUtils::addChild(doc, node, "Value", value_);
+    if (!startDate_.empty())
+        XMLUtils::addChild(doc, node, "StartDate", startDate_);
+    if (!endDate_.empty())
         XMLUtils::addChild(doc, node, "EndDate", endDate_);
-    if (frequency_ != "")
+    if (!frequency_.empty())
         XMLUtils::addChild(doc, node, "Frequency", frequency_);
     XMLUtils::addChild(doc, node, "Underflow", underflow_);
     return node;
+}
+
+void AmortizationData::validate() const {
+    QL_REQUIRE(type_ == "LinearToMaturity" || value_ != Null<Real>(), "AmortizationData requires Value");
+    QL_REQUIRE(type_ == "LinearToMaturity" || value_ != Null<Real>(), "AmortizationData requires Underflow");
 }
 
 LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bool isPayer, const string& currency,
@@ -867,9 +876,9 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     Size numRates = zcFixedLegData->rates().size();
     Size numDates = schedule.size();
     QL_REQUIRE(numDates >= 2, "Incorrect number of schedule dates entered, expected at least 2, got " << numDates);
-    QL_REQUIRE(numNotionals >= 1, "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
+    QL_REQUIRE(numNotionals >= 1,
+               "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
     QL_REQUIRE(numRates >= 1, "Incorrect number of rate values entered, expected at least 1, got " << numRates);
-
 
     vector<Date> dates = schedule.dates();
 
@@ -916,6 +925,12 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
@@ -934,15 +949,19 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
         if (amortizationType == AmortizationType::Annuity) {
             LOG("Build floating annuity notional schedule");
+            QL_REQUIRE(data.amortizationData().size() == 1,
+                       "Can have one AmortizationData block only for floating leg annuities");
             QL_REQUIRE(!hasCapsFloors, "Caps/Floors not supported in floating annuity coupons");
             QL_REQUIRE(floatData->gearings().size() == 0, "Gearings not supported in floating annuity coupons");
             DayCounter dc = index->dayCounter();
-            Date startDate = parseDate(data.amortizationData().front().startDate());
+            Date startDate = data.amortizationData().front().startDate().empty()
+                                 ? Date::minDate()
+                                 : parseDate(data.amortizationData().front().startDate());
             double annuity = data.amortizationData().front().value();
             bool underflow = data.amortizationData().front().underflow();
             vector<boost::shared_ptr<Coupon>> coupons;
             for (Size i = 0; i < schedule.size() - 1; i++) {
-                Date paymentDate = schedule.calendar().adjust(schedule[i + 1], bdc);
+                Date paymentDate = paymentCalendar.adjust(schedule[i + 1], bdc);
                 if (schedule[i] < startDate || i == 0) {
                     boost::shared_ptr<FloatingRateCoupon> coupon;
                     if (!floatData->hasSubPeriods()) {
@@ -953,7 +972,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                     } else {
                         coupon = boost::make_shared<QuantExt::SubPeriodsCoupon1>(
                             paymentDate, notionals[i], schedule[i], schedule[i + 1], index,
-                            floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging : QuantExt::SubPeriodsCoupon1::Compounding,
+                            floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging
+                                                    : QuantExt::SubPeriodsCoupon1::Compounding,
                             index->businessDayConvention(), spreads[i], dc, floatData->includeSpread(), gearings[i]);
                         coupon->setPricer(boost::make_shared<QuantExt::SubPeriodsCouponPricer1>());
                     }
@@ -990,7 +1010,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                       .withPaymentAdjustment(bdc)
                       .withGearings(gearings)
                       .withSpreads(spreads)
-            .withType(floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging : QuantExt::SubPeriodsCoupon1::Compounding)
+                      .withType(floatData->isAveraged() ? QuantExt::SubPeriodsCoupon1::Averaging
+                                                        : QuantExt::SubPeriodsCoupon1::Compounding)
                       .includeSpread(floatData->includeSpread());
         QuantExt::setCouponPricer(leg, boost::make_shared<QuantExt::SubPeriodsCouponPricer1>());
         return leg;
@@ -999,6 +1020,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     IborLeg iborLeg = IborLeg(schedule, index)
                           .withNotionals(notionals)
                           .withSpreads(spreads)
+                          .withPaymentCalendar(paymentCalendar)
                           .withPaymentDayCounter(dc)
                           .withPaymentAdjustment(bdc)
                           .withFixingDays(fixingDays)
@@ -1054,7 +1076,13 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Natural paymentLag = data.paymentLag();
-    Calendar paymentCalendar = index->fixingCalendar();
+    Calendar paymentCalendar;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = index->fixingCalendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
@@ -1083,6 +1111,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
             QuantExt::AverageONLeg(schedule, index)
                 .withNotionals(notionals)
                 .withSpreads(spreads)
+                .withPaymentCalendar(paymentCalendar)
                 .withGearings(gearings)
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(bdc)
@@ -1161,6 +1190,12 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<Real> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
@@ -1172,6 +1207,7 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
                             .withNotionals(notionals)
                             .withSpreads(spreads)
                             .withPaymentDayCounter(dc)
+                            .withPaymentCalendar(paymentCalendar)
                             .withPaymentAdjustment(bdc)
                             .withGearings(gearings);
 
@@ -1238,13 +1274,18 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index,
                const boost::shared_ptr<EngineFactory>& engineFactory, const QuantLib::Date& openEndDateReplacement) {
-    
 
     boost::shared_ptr<CPILegData> cpiLegData = boost::dynamic_pointer_cast<CPILegData>(data.concreteLegData());
     QL_REQUIRE(cpiLegData, "Wrong LegType, expected CPI, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
+    Calendar paymentCalendar;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Period observationLag = parsePeriod(cpiLegData->observationLag());
     CPI::InterpolationType interpolationMethod = parseObservationInterpolation(cpiLegData->interpolation());
@@ -1265,7 +1306,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
             .withNotionals(notionals)
             .withPaymentDayCounter(dc)
             .withPaymentAdjustment(bdc)
-            .withPaymentCalendar(schedule.calendar())
+            .withPaymentCalendar(paymentCalendar)
             .withFixedRates(rates)
             .withObservationInterpolation(interpolationMethod)
             .withSubtractInflationNominal(cpiLegData->subtractInflationNominal())
@@ -1280,16 +1321,15 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         cpiLeg.withStartDate(parseDate(start));
     } else if (!start.empty()) {
         DLOG("Schedule with more than 2 dates was provided. The first schedule date "
-                << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
-                << " is not used.");
+
+             << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
+             << " is not used.");
     }
     if (couponCap)
         cpiLeg.withCaps(buildScheduledVector(cpiLegData->caps(), cpiLegData->capDates(), schedule));
 
     if (couponFloor)
         cpiLeg.withFloors(buildScheduledVector(cpiLegData->floors(), cpiLegData->floorDates(), schedule));
-
-       
 
     if (cpiLegData->finalFlowCap() != Null<Real>())
         cpiLeg.withFinalFlowCap(cpiLegData->finalFlowCap());
@@ -1334,7 +1374,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
             boost::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
                 boost::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
-            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size()-1)) {
+            if (cfCpiCashFlow && finalFlowCapFloor && i == (leg.size() - 1)) {
                 cfCpiCashFlow->setPricer(cashFlowPricer);
             }
         }
@@ -1371,6 +1411,13 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Period observationLag = parsePeriod(yoyLegData->observationLag());
+    Calendar paymentCalendar;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     vector<double> gearings =
         buildScheduledVectorNormalised(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule, 1.0);
     vector<double> spreads =
@@ -1389,7 +1436,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
         auto yoyIndex = boost::dynamic_pointer_cast<YoYInflationIndex>(index);
         QL_REQUIRE(yoyIndex, "Need a YoY Inflation Index");
         QuantExt::yoyInflationLeg yoyLeg =
-            QuantExt::yoyInflationLeg(schedule, schedule.calendar(), yoyIndex, observationLag)
+            QuantExt::yoyInflationLeg(schedule, paymentCalendar, yoyIndex, observationLag)
                 .withNotionals(notionals)
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(bdc)
@@ -1495,8 +1542,14 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
     bool couponCapFloor = cmsData->caps().size() > 0 || cmsData->floors().size() > 0;
     bool nakedCapFloor = caps.size() > 0 || floors.size() > 0;
+
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
 
     vector<double> spreads =
         ore::data::buildScheduledVectorNormalised(cmsData->spreads(), cmsData->spreadDates(), schedule, 0.0);
@@ -1511,6 +1564,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                         .withNotionals(notionals)
                         .withSpreads(spreads)
                         .withGearings(gearings)
+                        .withPaymentCalendar(paymentCalendar)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(bdc)
                         .withFixingDays(fixingDays)
@@ -1652,6 +1706,12 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsSpreadData->spreads(),
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);
     vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsSpreadData->gearings(),
@@ -1666,6 +1726,7 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
                                     .withNotionals(notionals)
                                     .withSpreads(spreads)
                                     .withGearings(gearings)
+                                    .withPaymentCalendar(paymentCalendar)
                                     .withPaymentDayCounter(dc)
                                     .withPaymentAdjustment(bdc)
                                     .withFixingDays(fixingDays)
@@ -1726,6 +1787,17 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
+    // replace the value in schedule data
+    /* LegData new_data = data;
+     string hi = new_data.;*/
+
     vector<double> spreads = ore::data::buildScheduledVectorNormalised(cmsSpreadData->spreads(),
                                                                        cmsSpreadData->spreadDates(), schedule, 0.0);
     vector<double> gearings = ore::data::buildScheduledVectorNormalised(cmsSpreadData->gearings(),
@@ -1760,6 +1832,7 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
                                                   .withSpreads(spreads)
                                                   .withGearings(gearings)
                                                   .withPaymentDayCounter(dc)
+                                                  .withPaymentCalendar(paymentCalendar)
                                                   .withPaymentAdjustment(bdc)
                                                   .withFixingDays(fixingDays)
                                                   .inArrears(cmsSpreadData->isInArrears())
@@ -1805,6 +1878,12 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     bool isTotalReturn = eqLegData->returnType() == "Total";
     bool isAbsoluteReturn = eqLegData->returnType() == "Absolute";
     Real dividendFactor = eqLegData->dividendFactor();
@@ -1847,6 +1926,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withQuantity(eqLegData->quantity())
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
+                  .withPaymentCalendar(paymentCalendar)
                   .withPaymentLag(paymentLag)
                   .withTotalReturn(isTotalReturn)
                   .withAbsoluteReturn(isAbsoluteReturn)
@@ -1889,17 +1969,17 @@ Real originalNotional(const Leg& leg) {
 
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
                                                     const AmortizationData& data) {
-    LOG("Build fixed amortization notional schedule");
+    DLOG("Build fixed amortization notional schedule");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
-    Period amortPeriod = parsePeriod(data.frequency());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
     double amort = data.value();
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
-        if (i > 0 && schedule[i] > lastAmortDate + amortPeriod - 4 * Days && schedule[i] >= startDate &&
-            schedule[i] < endDate) { // FIXME: tolerance
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] - amort;
             lastAmortDate = schedule[i];
         } else if (i > 0 && lastAmortDate > Date::minDate()) {
@@ -1908,27 +1988,27 @@ vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notion
         if (amort > nominals[i] && underflow == false)
             amort = std::max(nominals[i], 0.0);
     }
-    LOG("Fixed amortization notional schedule done");
+    DLOG("Fixed amortization notional schedule done");
     return nominals;
 }
 
 vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<double>& notionals,
                                                                   const Schedule& schedule,
                                                                   const AmortizationData& data) {
-    LOG("Build notional schedule with amortizations expressed as percentages of initial notional");
+    DLOG("Build notional schedule with amortizations expressed as percentages of initial notional");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
-    Period amortPeriod = parsePeriod(data.frequency());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
     double fraction = data.value(); // first difference to "FixedAmount"
     QL_REQUIRE(fraction >= 0.0 && fraction <= 1.0,
                "amortization fraction " << fraction << " out of range"); // second difference to "FixedAmount"
     double amort = fraction * nominals.front();                          // third difference to "FixedAmount"
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
-        if (i > 0 && schedule[i] > lastAmortDate + amortPeriod - 4 * Days && schedule[i] >= startDate &&
-            schedule[i] < endDate) { // FIXME: tolerance
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] - amort;
             lastAmortDate = schedule[i];
         } else if (i > 0 && lastAmortDate > Date::minDate())
@@ -1937,40 +2017,40 @@ vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<d
             amort = std::max(nominals[i], 0.0);
         }
     }
-    LOG("Fixed amortization notional schedule done");
+    DLOG("Fixed amortization notional schedule done");
     return nominals;
 }
 
 vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<double>& notionals,
                                                                    const Schedule& schedule,
                                                                    const AmortizationData& data) {
-    LOG("Build notional schedule with amortizations expressed as percentages of previous notionals");
+    DLOG("Build notional schedule with amortizations expressed as percentages of previous notionals");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
-    Period amortPeriod = parsePeriod(data.frequency());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
     double fraction = data.value();
     QL_REQUIRE(fraction >= 0.0 && fraction <= 1.0, "amortization fraction " << fraction << " out of range");
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
-        if (i > 0 && schedule[i] > lastAmortDate + amortPeriod - 4 * Days && schedule[i] >= startDate &&
-            schedule[i] < endDate) { // FIXME: tolerance
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) { // FIXME: tolerance
             nominals[i] = nominals[i - 1] * (1.0 - fraction);
             lastAmortDate = schedule[i];
         } else if (i > 0 && lastAmortDate > Date::minDate())
             nominals[i] = nominals[i - 1];
     }
-    LOG("Fixed amortization notional schedule done");
+    DLOG("Fixed amortization notional schedule done");
     return nominals;
 }
 
 vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
                                                      const Schedule& schedule, const AmortizationData& data,
                                                      const DayCounter& dc) {
-    LOG("Build fixed annuity notional schedule");
+    DLOG("Build fixed annuity notional schedule");
     vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
-    Date startDate = parseDate(data.startDate());
-    Date endDate = data.endDate() == "" ? Date::maxDate() : parseDate(data.endDate());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
     double annuity = data.value();
     Real amort = 0.0;
@@ -1988,21 +2068,54 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
             amort = std::max(nominals[i], 0.0);
         }
     }
-    LOG("Fixed Annuity notional schedule done");
+    DLOG("Fixed Annuity notional schedule done");
+    return nominals;
+}
+
+vector<double> buildAmortizationScheduleLinearToMaturity(const vector<double>& notionals, const Schedule& schedule,
+                                                         const AmortizationData& data) {
+    DLOG("Build linear-to-maturity notional schedule");
+    vector<double> nominals = normaliseToSchedule(notionals, schedule, (Real)Null<Real>());
+    Date startDate = data.startDate().empty() ? Date::minDate() : parseDate(data.startDate());
+    Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
+    Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
+    Date lastAmortDate = Date::minDate();
+    Real periodAmortization = Null<Real>();
+    Real accumulatedAmortization = 0.0;
+    for (Size i = 0; i < schedule.size() - 1; ++i) {
+        if (schedule[i] >= startDate && periodAmortization == Null<Real>()) {
+            periodAmortization = nominals[i] / static_cast<Real>(schedule.size() - i);
+        }
+        if (i > 0 && schedule[i] >= startDate && schedule[i] < endDate) {
+            accumulatedAmortization += periodAmortization;
+        }
+        if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
+            schedule[i] >= startDate && schedule[i] < endDate) {
+            nominals[i] = nominals[i - 1] - accumulatedAmortization;
+            accumulatedAmortization = 0.0;
+            lastAmortDate = schedule[i];
+        } else if (i > 0 && lastAmortDate > Date::minDate()) {
+            nominals[i] = nominals[i - 1];
+        }
+    }
+    DLOG("Linear-to-maturity notional schedule done");
     return nominals;
 }
 
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
                        const bool annuityAllowed, const std::vector<Real>& rates) {
     Date lastEndDate = Date::minDate();
-    for (auto const& amort : data.amortizationData()) {
+    for (Size i = 0; i < data.amortizationData().size(); ++i) {
+        const AmortizationData& amort = data.amortizationData()[i];
         if (!amort.initialized())
             continue;
-        Date startDate = parseDate(amort.startDate());
+        QL_REQUIRE(i == 0 || !amort.startDate().empty(),
+                   "All AmortizationData blocks except the first require a StartDate");
+        Date startDate = amort.startDate().empty() ? Date::minDate() : parseDate(amort.startDate());
         QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
                                                  << startDate << ") is earlier than last end date (" << lastEndDate
                                                  << ")");
-        lastEndDate = parseDate(amort.endDate());
+        lastEndDate = amort.endDate().empty() ? Date::minDate() : parseDate(amort.endDate());
         AmortizationType amortizationType = parseAmortizationType(amort.type());
         if (amortizationType == AmortizationType::FixedAmount)
             notionals = buildAmortizationScheduleFixedAmount(notionals, schedule, amort);
@@ -2015,8 +2128,11 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
             if (!rates.empty())
                 notionals = buildAmortizationScheduleFixedAnnuity(notionals, rates, schedule, amort,
                                                                   parseDayCounter(data.dayCounter()));
-        } else
+        } else if (amortizationType == AmortizationType::LinearToMaturity) {
+            notionals = buildAmortizationScheduleLinearToMaturity(notionals, schedule, amort);
+        } else {
             QL_FAIL("AmortizationType " << amort.type() << " not supported");
+        }
         // check that for a floating leg we only have one amortization block, if the type is annuity
         // we recognise a floating leg by an empty (fixed) rates vector
         if (rates.empty() && amortizationType == AmortizationType::Annuity) {
@@ -2145,7 +2261,6 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
                                                       RequiredFixings& requiredFixings) {
 
     // build the bond, we would not need a full build with a pricing engine attached, but this is the easiest
-
     BondData data = securityData;
     data.populateFromBondReferenceData(engineFactory->referenceData());
     Bond bond(Envelope(), data);
@@ -2197,10 +2312,15 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     } catch (...) {
     }
 
+    if (!data.hasCreditRisk()) {
+        defaultCurve = Handle<DefaultProbabilityTermStructure>();
+    }
+
     // build and return the index
 
     return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, relative, fixingCalendar, qlBond, discountCurve,
-                                                   defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival);
+                                                   defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival,
+                                                   data.isInflationLinked());
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {

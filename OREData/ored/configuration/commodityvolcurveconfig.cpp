@@ -197,7 +197,7 @@ void CommodityVolatilityConfig::populateQuotes() {
     } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
         // Clear the quotes_ if necessary and populate with surface quotes
         quotes_.clear();
-        string quoteType = to_string(volatilityConfig()->quoteType());
+        string quoteType = to_string(vc->quoteType());
         string stem = "COMMODITY_OPTION/" + quoteType + "/" + curveID_ + "/" + currency_ + "/";
         for (const pair<string, string>& p : vc->quotes()) {
             string q = stem + p.first + "/" + p.second;

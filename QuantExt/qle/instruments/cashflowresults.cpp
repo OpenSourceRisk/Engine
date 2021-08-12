@@ -18,8 +18,12 @@
 
 #include <qle/instruments/cashflowresults.hpp>
 
+#include <ql/cashflows/averagebmacoupon.hpp>
+#include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-
+#include <ql/cashflows/indexedcashflow.hpp>
+#include <ql/cashflows/inflationcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 namespace QuantExt {
 
 using namespace QuantLib;
@@ -39,6 +43,23 @@ CashFlowResults standardCashFlowResults(const boost::shared_ptr<CashFlow>& c, co
                                         const std::string& type, const Size legNo, const Currency& currency,
                                         const Handle<YieldTermStructure>& discountCurve) {
 
+    CashFlowResults cfResults = populateCashFlowResultsFromCashflow(c, multiplier, legNo, currency);
+
+    if (!type.empty()) {
+        cfResults.type = type;
+    }
+
+    if (!discountCurve.empty()) {
+        cfResults.discountFactor = discountCurve->discount(cfResults.payDate);
+        cfResults.presentValue = cfResults.amount * cfResults.discountFactor;
+    }
+    return cfResults;
+}
+
+CashFlowResults populateCashFlowResultsFromCashflow(const boost::shared_ptr<QuantLib::CashFlow>& c,
+                                                    const QuantLib::Real multiplier, const QuantLib::Size legNo,
+                                                    const QuantLib::Currency& currency) {
+
     Date today = Settings::instance().evaluationDate();
 
     CashFlowResults cfResults;
@@ -50,26 +71,44 @@ CashFlowResults standardCashFlowResults(const boost::shared_ptr<CashFlow>& c, co
         cfResults.currency = currency.code();
 
     cfResults.legNumber = legNo;
-    cfResults.type = type;
 
     if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c)) {
         cfResults.rate = cpn->rate();
         cfResults.accrualStartDate = cpn->accrualStartDate();
         cfResults.accrualEndDate = cpn->accrualEndDate();
+        cfResults.accrualPeriod = cpn->accrualPeriod();
         cfResults.accruedAmount = cpn->accruedAmount(today);
         cfResults.notional = cpn->nominal();
+        cfResults.type = "Interest";
+        if (auto ptrFloat = boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(cpn)) {
+            cfResults.fixingDate = ptrFloat->fixingDate();
+            cfResults.fixingValue = ptrFloat->index()->fixing(cfResults.fixingDate);
+            if (cfResults.fixingDate > today)
+                cfResults.type = "InterestProjected";
+        } else if (auto ptrInfl = boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(cpn)) {
+            // We return the last fixing inside the coupon period
+            cfResults.fixingDate = ptrInfl->fixingDate();
+            cfResults.fixingValue = ptrInfl->indexFixing();
+            cfResults.type = "Inflation";
+        } else if (auto ptrBMA = boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(cpn)) {
+            // We return the last fixing inside the coupon period
+            cfResults.fixingDate = ptrBMA->fixingDates().end()[-2];
+            cfResults.fixingValue = ptrBMA->pricer()->swapletRate();
+            if (cfResults.fixingDate > today)
+                cfResults.type = "BMAaverage";
+        }
+    } else {
+        cfResults.type = "Notional";
+        if (auto ptrIndCf = boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(c)) {
+            cfResults.fixingDate = ptrIndCf->fixingDate();
+            cfResults.fixingValue = ptrIndCf->index()->fixing(cfResults.fixingDate);
+            cfResults.type = "Index";
+        } else if (auto ptrFxlCf = boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(c)) {
+            // We return the last fixing inside the coupon period
+            cfResults.fixingDate = ptrFxlCf->fxFixingDate();
+            cfResults.fixingValue = ptrFxlCf->fxRate();
+        }
     }
-
-    if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
-        cfResults.fixingDate = cpn->fixingDate();
-    }
-
-    if (!discountCurve.empty()) {
-        cfResults.discountFactor = discountCurve->discount(c->date());
-        cfResults.presentValue = cfResults.amount * cfResults.discountFactor;
-    }
-
     return cfResults;
 }
-
 } // namespace QuantExt

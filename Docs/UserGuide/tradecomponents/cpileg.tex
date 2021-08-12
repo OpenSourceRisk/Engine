@@ -90,12 +90,29 @@ expressed in decimal form, e.g. 0.01 is a cap of 1\%.
 \item FinalFlowCap [Optional]: The cap to be applied to the final notional flow of the cpi leg. If not given, no cap
   is applied.
 
-Allowable values: A real number.
+Note that final and non-final inflation cap/floor strikes are quoted as a number K and converted to a price via:
+
+$
+(1+K)^t
+$
+
+ where
+
+K = the cap/floor rate
+
+t = time to expiry.
+
+So inflation caps/floors are caps/floors on the inflation rate and not the inflation index ratio. For example, to cap the final flow at the initial notional  it should be K=0, i.e. FinalFlowCap should be 0.  
+
+
+Allowable values: A real number. The FinalFlowCap is expressed in decimal form, e.g. 0.01 is a cap on the final flow at 1\% of the inflation rate over the life of the trade.
+
 
 \item FinalFlowFloor [Optional]: The floor to be applied to the final notional flow of the cpi leg. If not given, no floor
   is applied.
 
-Allowable values: A real number.
+
+Allowable values: A real number. The FinalFlowFloor is expressed in decimal form, e.g. 0.01 is a floor on the final flow at 1\% of the inflation rate over the life of the trade.
 
 \item NakedOption [Optional]: Optional node, if \emph{true} the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 

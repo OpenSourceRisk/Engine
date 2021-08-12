@@ -544,11 +544,11 @@
   <xs:complexType name="amortizationData">
     <xs:all>
       <xs:element type="amortizationType" name="Type"/>
-      <xs:element type="xs:float" name="Value"/>
-      <xs:element type="xs:string" name="StartDate"/>
+      <xs:element type="xs:float" name="Value" minOccurs="0"/>
+      <xs:element type="xs:string" name="StartDate" minOccurs="0"/>
       <xs:element type="xs:string" name="EndDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Frequency" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:boolean" name="Underflow"/>
+      <xs:element type="xs:boolean" name="Underflow" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -669,6 +669,7 @@
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CreditDefaultSwapOption"/>
       <xs:enumeration value="CMS"/>
+      <xs:enumeration value="Failed"/>
     </xs:restriction>
   </xs:simpleType>
 

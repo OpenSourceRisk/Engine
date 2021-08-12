@@ -101,7 +101,7 @@ XMLNode* ScheduleData::toXML(XMLDocument& doc) {
 Schedule makeSchedule(const ScheduleDates& data) {
     QL_REQUIRE(data.dates().size() > 0, "Must provide at least 1 date for Schedule");
     Calendar calendar = parseCalendar(data.calendar());
-    BusinessDayConvention convention = Unadjusted;
+    BusinessDayConvention convention = ModifiedFollowing;
     if (data.convention() != "")
         convention = parseBusinessDayConvention(data.convention());
     // Avoid compiler warning on gcc

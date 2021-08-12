@@ -29,9 +29,11 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -58,10 +60,14 @@ void BondData::fromXML(XMLNode* node) {
         bondNotional_ = 1.0;
     }
     XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
+    isInflationLinked_ = false;
     while (legNode != nullptr) {
         LegData ld;
         ld.fromXML(legNode);
         coupons_.push_back(ld);
+        if (ld.concreteLegData()->legType() == "CPI") {
+            isInflationLinked_ = true;
+        }
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
     hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false, true);
@@ -70,19 +76,25 @@ void BondData::fromXML(XMLNode* node) {
 
 XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLNode* bondNode = doc.allocNode("BondData");
-    XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
-    XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
+    if (!issuerId_.empty())
+        XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
+    if (!creditCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
-    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
+    if (!referenceCurveId_.empty())
+        XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     if (!proxySecurityId_.empty())
         XMLUtils::addChild(doc, bondNode, "ProxySecurityId", proxySecurityId_);
     if (!incomeCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
     if (!volatilityCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "VolatilityCurveId", volatilityCurveId_);
-    XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
-    XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
-    XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
+    if (!settlementDays_.empty())
+        XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
+    if (!calendar_.empty())
+        XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
+    if (!issueDate_.empty())
+        XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
     XMLUtils::addChild(doc, bondNode, "BondNotional", bondNotional_);
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
@@ -94,11 +106,7 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
 void BondData::initialise() {
 
     isPayer_ = false;
-
-    if (!hasCreditRisk() && !creditCurveId().empty()) {
-        WLOG("BondData: CreditCurveId provided, but CreditRisk set to False, continuing without CreditRisk");
-        creditCurveId_ = "";
-    }
+    isInflationLinked_ = false;
 
     if (!zeroBond()) {
 
@@ -123,6 +131,18 @@ void BondData::initialise() {
                 QL_REQUIRE(isPayer_ == coupons()[i].isPayer(),
                            "bond leg #" << i << " isPayer (" << std::boolalpha << coupons()[i].isPayer()
                                         << ") not equal to leg #0 isPayer (" << coupons()[0].isPayer());
+            }
+        }
+
+        // fill isInflationLinked
+        for (Size i = 0; i < coupons().size(); ++i) {
+            if (i == 0)
+                isInflationLinked_ = coupons()[i].concreteLegData()->legType() == "CPI";
+            else {
+                bool isIthCouponInflationLinked = coupons()[i].concreteLegData()->legType() == "CPI";
+                QL_REQUIRE(isInflationLinked_ == isIthCouponInflationLinked,
+                           "bond leg #" << i << " isInflationLinked (" << std::boolalpha << isIthCouponInflationLinked
+                                        << ") not equal to leg #0 isInflationLinked (" << isInflationLinked_);
             }
         }
     }
@@ -170,6 +190,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
     QL_REQUIRE(builder, "Bond::build(): internal error, builder is null");
 
+    bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     Date issueDate = parseDate(bondData_.issueDate());
@@ -203,8 +224,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency currency = parseCurrency(bondData_.currency());
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(
-        bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.securityId(), bondData_.referenceCurveId()));
+    bond->setPricingEngine(bondBuilder->engine(currency, bondData_.creditCurveId(), bondData_.hasCreditRisk(),
+                                               bondData_.securityId(), bondData_.referenceCurveId()));
     instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = bondData_.currency();
@@ -220,12 +241,13 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
 void Bond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
-    bondData_.fromXML(XMLUtils::getChildNode(node, "BondData"));
+    originalBondData_.fromXML(XMLUtils::getChildNode(node, "BondData"));
+    bondData_ = originalBondData_;
 }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLUtils::appendNode(node, bondData_.toXML(doc));
+    XMLUtils::appendNode(node, originalBondData_.toXML(doc));
     return node;
 }
 
@@ -236,12 +258,13 @@ Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     return result;
 }
 
-boost::shared_ptr<QuantLib::Bond> BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                     const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                                     const std::string& securityId) const {
+std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
+BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                   const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const {
     for (auto const& b : builders_) {
-        if (referenceData->hasData(b.first, securityId))
+        if (referenceData->hasData(b.first, securityId)) {
             return b.second->build(engineFactory, referenceData, securityId);
+        }
     }
 
     QL_FAIL("BondFactory: could not build bond '"
@@ -256,7 +279,7 @@ void BondFactory::addBuilder(const std::string& referenceDataType, const boost::
 
 BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
-boost::shared_ptr<QuantLib::Bond>
+std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
 VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                           const boost::shared_ptr<ReferenceDataManager>& referenceData,
                           const std::string& securityId) const {
@@ -273,7 +296,11 @@ VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
-    return qlBond;
+    Real inflFactor = 1;
+    if (data.isInflationLinked()) {
+        inflFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+    }
+    return std::make_pair(qlBond, inflFactor);
 }
 
 } // namespace data

@@ -1081,8 +1081,9 @@ void YieldCurve::buildFittedBondCurve() {
             string securityID = bondQuote->securityID();
 
             QL_REQUIRE(referenceData_ != nullptr, "reference data required to build fitted bond curve");
-            auto qlInstr = BondFactory::instance().build(engineFactory, referenceData_, securityID);
-
+            auto qlBondAndInflationQuoteFactor = BondFactory::instance().build(engineFactory, referenceData_, securityID);
+            auto qlInstr = qlBondAndInflationQuoteFactor.first;
+            auto inflationQuoteFactor = qlBondAndInflationQuoteFactor.second;
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
             if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
                 bonds.push_back(qlInstr);
@@ -1090,11 +1091,12 @@ void YieldCurve::buildFittedBondCurve() {
                 Date thisMaturity = qlInstr->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value(), ActualActual(), Continuous, NoFrequency);
+                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor, ActualActual(),
+                                                  Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
-                                   << ", clean price = " << rescaledBondQuote->value()
+                                   << ", clean price = " << rescaledBondQuote->value() * inflationQuoteFactor
                                    << ", yield (cont,act/act) = " << marketYield);
-                marketPrices.push_back(bondQuote->quote()->value());
+                marketPrices.push_back(bondQuote->quote()->value() * inflationQuoteFactor);
                 securityIDs.push_back(securityID);
                 marketYields.push_back(marketYield);
                 securityMaturityDates.push_back(thisMaturity);

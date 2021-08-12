@@ -13,6 +13,7 @@
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
@@ -156,6 +157,8 @@
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
+#include <qle/instruments/multilegoption.hpp>
+#include <qle/instruments/nullinstrument.hpp>
 #include <qle/instruments/oibasisswap.hpp>
 #include <qle/instruments/oiccbasisswap.hpp>
 #include <qle/instruments/payment.hpp>
@@ -171,6 +174,8 @@
 #include <qle/math/logquadraticinterpolation.hpp>
 #include <qle/math/nadarayawatson.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
+#include <qle/math/randomvariable.hpp>
+#include <qle/math/randomvariable_io.hpp>
 #include <qle/math/stabilisedglls.hpp>
 #include <qle/math/trace.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
@@ -213,8 +218,10 @@
 #include <qle/models/jyimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmcalibrationinfo.hpp>
+#include <qle/models/lgmconvolutionsolver2.hpp>
 #include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/lgmvectorised.hpp>
 #include <qle/models/linearannuitymapping.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/normalsabr.hpp>
@@ -255,7 +262,7 @@
 #include <qle/pricingengines/inflationcapfloorengines.hpp>
 #include <qle/pricingengines/lgmconvolutionsolver.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
-#include <qle/pricingengines/numericlgmswaptionengine.hpp>
+#include <qle/pricingengines/numericlgmmultilegoptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/processes/crcirppstateprocess.hpp>

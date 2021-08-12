@@ -17,6 +17,7 @@
 */
 
 #include <qle/utilities/inflation.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 
 using QuantLib::Date;
 using QuantLib::DayCounter;
@@ -51,6 +52,31 @@ Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const
 
 Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
     return inflationGrowth(ts, t, ts->dayCounter());
+}
+
+Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bond) {
+    QuantLib::Real inflFactor = 1;
+    for (auto& cf : bond->cashflows()) {
+        if (auto inflCpn = boost::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
+            const auto& inflationIndex = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(inflCpn->index());
+            const auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
+            Date settlementDate = bond->settlementDate();
+            std::pair<Date, Date> currentInflationPeriod = inflationPeriod(settlementDate, inflationIndex->frequency());
+            Date curveBaseDate = inflationCurve->baseDate();
+            Real todaysCPI = inflationIndex->fixing(curveBaseDate);
+            if (inflCpn->observationInterpolation() == QuantLib::CPI::Linear) {
+                std::pair<Date, Date> observationPeriod = inflationPeriod(curveBaseDate, inflationIndex->frequency());
+                Real indexStart = inflationIndex->fixing(observationPeriod.first);
+                Real indexEnd = inflationIndex->fixing(observationPeriod.second + 1 * QuantLib::Days);
+                todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) /
+                                             (Real)(currentInflationPeriod.second - currentInflationPeriod.first) *
+                                             (indexEnd - indexStart);
+            }
+            inflFactor = todaysCPI / inflCpn->baseCPI();
+            break;
+        }
+    }
+    return inflFactor;
 }
 
 }

@@ -27,6 +27,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/equitycurve.hpp>
+#include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
@@ -49,8 +50,11 @@ public:
     //! Detailed constructor
     EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
                    const CurveConfigurations& curveConfigs, const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex,
-                   const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
-                   const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {});
+                   const std::map<std::string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
+                   const std::map<std::string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {},
+                   const FXTriangulation& fxSpots = {},
+                   const std::map<std::string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves = {},
+                   const std::map<std::string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves = {});
     //@}
 
     //! \name Inspectors
@@ -83,8 +87,12 @@ public:
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                          const CurveConfigurations& curveConfigs,
+                         const EquityProxyVolatilityConfig& epvc,
                          const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
-                         const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves);
+                         const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves,
+                         const FXLookup& fxSpots,
+                         const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
+                         const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves);
 
     //! Build the calibration info
     void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,
@@ -93,6 +101,8 @@ public:
     const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() const { return vol_; }
     const boost::shared_ptr<FxEqVolCalibrationInfo>& calibrationInfo() const { return calibrationInfo_; }
     //@}
+
+
 private:
     EquityVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
@@ -100,6 +110,7 @@ private:
     QuantLib::Currency currency_;
     QuantLib::DayCounter dayCounter_;
     QuantLib::Date maxExpiry_;
+    boost::shared_ptr<VolatilityConfig> volatilityConfig_;
     boost::shared_ptr<FxEqVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data

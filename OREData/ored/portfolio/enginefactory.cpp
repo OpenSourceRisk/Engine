@@ -40,6 +40,7 @@
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
@@ -188,6 +189,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityEuropeanCompositeEngineBuilder>());
     registerBuilder(boost::make_shared<EquityEuropeanCSOptionEngineBuilder>());
     registerBuilder(boost::make_shared<EquityAmericanOptionFDEngineBuilder>());
     registerBuilder(boost::make_shared<EquityAmericanOptionBAWEngineBuilder>());

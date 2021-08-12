@@ -26,7 +26,7 @@ FixedRateFXLinkedNotionalCoupon::FixedRateFXLinkedNotionalCoupon(
     const QuantLib::Date& fxFixingDate, QuantLib::Real foreignAmount,
     boost::shared_ptr<FxIndex> fxIndex,
     const boost::shared_ptr<FixedRateCoupon>& underlying)
-    : FixedRateCoupon(underlying->date(), foreignAmount, underlying_->rate(),
+    : FixedRateCoupon(underlying->date(), foreignAmount, underlying->rate(),
         underlying->dayCounter(), underlying->accrualStartDate(),
         underlying->accrualEndDate(), underlying->referencePeriodStart(),
         underlying->referencePeriodEnd()),

@@ -143,6 +143,7 @@ public:
     const string& defaultCurveCalendar(const string& key) const;
     const vector<Period>& defaultTenors(const string& key) const;
     bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
+    const string& defaultCurveExtrapolation() const { return defaultCurveExtrapolation_; }
 
     bool simulateCdsVols() const { return paramsSimulate(RiskFactorKey::KeyType::CDSVolatility); }
     const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
@@ -287,6 +288,7 @@ public:
     void setDefaultNames(vector<string> names);
     void setDefaultTenors(const string& key, const vector<Period>& p);
     void setDefaultCurveCalendars(const string& key, const string& p);
+    void setDefaultCurveExtrapolation(const std::string& e) { defaultCurveExtrapolation_ = e; }
 
     void setSimulateCdsVols(bool simulate);
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
@@ -423,6 +425,7 @@ private:
 
     map<string, string> defaultCurveCalendars_;
     map<string, vector<Period>> defaultTenors_;
+    string defaultCurveExtrapolation_;
 
     vector<Period> cdsVolExpiries_;
     string cdsVolDecayMode_;

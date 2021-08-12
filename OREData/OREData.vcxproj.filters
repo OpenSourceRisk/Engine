@@ -168,6 +168,9 @@
     <ClInclude Include="ored\portfolio\capfloor.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\failedtrade.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\enginedata.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -648,6 +651,9 @@
     <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\equitycompositeoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -780,6 +786,9 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\capfloor.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\failedtrade.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\enginedata.cpp">

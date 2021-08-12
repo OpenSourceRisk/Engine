@@ -18,14 +18,18 @@
 
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 
+using namespace QuantLib;
+
 namespace QuantExt {
 
 EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(
     const boost::shared_ptr<BlackVolTermStructure>& proxySurface, const boost::shared_ptr<EquityIndex>& index,
-    const boost::shared_ptr<EquityIndex>& proxyIndex)
+    const boost::shared_ptr<EquityIndex>& proxyIndex, const boost::shared_ptr<BlackVolTermStructure>& fxSurface,
+    const boost::shared_ptr<FxIndex>& fxIndex, const boost::shared_ptr<CorrelationTermStructure>& correlation)
     : BlackVolatilityTermStructure(0, proxySurface->calendar(), proxySurface->businessDayConvention(),
                                    proxySurface->dayCounter()),
-      proxySurface_(proxySurface), index_(index), proxyIndex_(proxyIndex) {
+      proxySurface_(proxySurface), index_(index), proxyIndex_(proxyIndex), fxSurface_(fxSurface), 
+      fxIndex_(fxIndex), correlation_(correlation) {
 
     if (proxySurface->allowsExtrapolation())
         this->enableExtrapolation();
@@ -36,8 +40,35 @@ EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(
 }
 
 Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) const {
-    Real adjustedStrike = strike * proxyIndex_->forecastFixing(t) / index_->forecastFixing(t);
-    return proxySurface_->blackVol(t, adjustedStrike);
+    Volatility vol;
+    if (fxSurface_) {
+        // Get the Fx forward value at time t, and hence the ATM vol
+        Real fxForward = fxIndex_->forecastFixing(t);
+        Volatility fxVol = fxSurface_->blackVol(t, fxForward);
+
+        // Get the ATM vol for the proxy surface
+        Volatility proxyAtmVol = proxySurface_->blackVol(t, proxyIndex_->forecastFixing(t));
+        
+        // Convert the atm vol for this surface using sqrt( sigma^2 + sigma_X^2 + 2 rho sigma sigma_X)
+        Volatility atmVol = sqrt(proxyAtmVol * proxyAtmVol + fxVol * fxVol + 2 * correlation_->correlation(t) * proxyAtmVol * fxVol);
+
+        // Get the moneyness in this surface of the strike requested
+        Real forward = index_->forecastFixing(t);
+        Real moneyness = std::log(strike / forward) / (atmVol * sqrt(t));
+
+        // Find the strike in the proxy surface that gives the same moneyness
+        Real proxyForward = proxyIndex_->forecastFixing(t);
+        Real proxyStrike = proxyForward * exp(moneyness * proxyAtmVol * sqrt(t));
+
+        // Look up the vol in the proxy surface for the proxyStrike and convert using sqrt( sigma^2 + sigma_X^2 + 2 rho sigma sigma_X)
+        Volatility proxyVol = proxySurface_->blackVol(t, proxyStrike);        
+        vol = sqrt(proxyVol * proxyVol + fxVol * fxVol + 2 * correlation_->correlation(t) * proxyVol * fxVol);
+        
+    } else {
+        Real adjustedStrike = strike * proxyIndex_->forecastFixing(t) / index_->forecastFixing(t);
+        vol = proxySurface_->blackVol(t, adjustedStrike);
+    } 
+    return vol;
 }
 
 Rate EquityBlackVolatilitySurfaceProxy::minStrike() const {

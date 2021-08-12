@@ -39,11 +39,13 @@ class SurvivalProbabilityCurve : public SurvivalProbabilityStructure,
                                  protected InterpolatedCurve<Interpolator>,
                                  public LazyObject {
 public:
-    SurvivalProbabilityCurve(const std::vector<Date>& dates, const std::vector<Handle<Quote> >& quotes,
+    enum class Extrapolation { flatFwd, flatZero };
+    SurvivalProbabilityCurve(const std::vector<Date>& dates, const std::vector<Handle<Quote>>& quotes,
                              const DayCounter& dayCounter, const Calendar& calendar = Calendar(),
-                             const std::vector<Handle<Quote> >& jumps = std::vector<Handle<Quote> >(),
+                             const std::vector<Handle<Quote>>& jumps = std::vector<Handle<Quote>>(),
                              const std::vector<Date>& jumpDates = std::vector<Date>(),
-                             const Interpolator& interpolator = Interpolator());
+                             const Interpolator& interpolator = Interpolator(),
+                             const Extrapolation extrpolation = Extrapolation::flatFwd);
     //! \name TermStructure interface
     //@{
     Date maxDate() const;
@@ -54,8 +56,8 @@ public:
     const std::vector<Date>& dates() const;
     const std::vector<Real>& data() const;
     const std::vector<Probability>& survivalProbabilities() const;
-    const std::vector<Handle<Quote> >& quotes() const;
-    std::vector<std::pair<Date, Real> > nodes() const;
+    const std::vector<Handle<Quote>>& quotes() const;
+    std::vector<std::pair<Date, Real>> nodes() const;
     //@}
     //! \name Observer interface
     //@{
@@ -71,10 +73,11 @@ private:
     //! \name DefaultProbabilityTermStructure implementation
     //@{
     Probability survivalProbabilityImpl(Time) const;
-    Real defaultDensityImpl(Time) const;
+    Real defaultDensityImpl(Time t) const;
     //@}
     mutable std::vector<Date> dates_;
-    std::vector<Handle<Quote> > quotes_;
+    std::vector<Handle<Quote>> quotes_;
+    Extrapolation extrapolation_;
 };
 
 // inline definitions
@@ -91,8 +94,8 @@ template <class T> inline const std::vector<Probability>& SurvivalProbabilityCur
     return this->data_;
 }
 
-template <class T> inline std::vector<std::pair<Date, Real> > SurvivalProbabilityCurve<T>::nodes() const {
-    std::vector<std::pair<Date, Real> > results(dates_.size());
+template <class T> inline std::vector<std::pair<Date, Real>> SurvivalProbabilityCurve<T>::nodes() const {
+    std::vector<std::pair<Date, Real>> results(dates_.size());
     for (Size i = 0; i < dates_.size(); ++i)
         results[i] = std::make_pair(dates_[i], this->data_[i]);
     return results;
@@ -108,8 +111,12 @@ template <class T> Probability SurvivalProbabilityCurve<T>::survivalProbabilityI
     // flat hazard rate extrapolation
     Time tMax = this->times_.back();
     Probability sMax = this->data_.back();
-    Rate hazardMax = -this->interpolation_.derivative(tMax) / sMax;
-    return sMax * std::exp(-hazardMax * (t - tMax));
+    if (this->extrapolation_ == Extrapolation::flatFwd) {
+        Rate hazardMax = -this->interpolation_.derivative(tMax) / sMax;
+        return sMax * std::exp(-hazardMax * (t - tMax));
+    } else {
+        return std::pow(sMax, t / tMax);
+    }
 }
 
 template <class T> Real SurvivalProbabilityCurve<T>::defaultDensityImpl(Time t) const {
@@ -120,18 +127,24 @@ template <class T> Real SurvivalProbabilityCurve<T>::defaultDensityImpl(Time t) 
     // flat hazard rate extrapolation
     Time tMax = this->times_.back();
     Probability sMax = this->data_.back();
-    Rate hazardMax = -this->interpolation_.derivative(tMax) / sMax;
-    return sMax * hazardMax * std::exp(-hazardMax * (t - tMax));
+    if (this->extrapolation_ == Extrapolation::flatFwd) {
+        Rate hazardMax = -this->interpolation_.derivative(tMax) / sMax;
+        return sMax * hazardMax * std::exp(-hazardMax * (t - tMax));
+    } else {
+        return -std::log(sMax) / tMax * std::pow(sMax, t / tMax);
+    }
 }
 
 template <class T>
 SurvivalProbabilityCurve<T>::SurvivalProbabilityCurve(const std::vector<Date>& dates,
-                                                      const std::vector<Handle<Quote> >& quotes,
+                                                      const std::vector<Handle<Quote>>& quotes,
                                                       const DayCounter& dayCounter, const Calendar& calendar,
-                                                      const std::vector<Handle<Quote> >& jumps,
-                                                      const std::vector<Date>& jumpDates, const T& interpolator)
+                                                      const std::vector<Handle<Quote>>& jumps,
+                                                      const std::vector<Date>& jumpDates, const T& interpolator,
+                                                      const Extrapolation extrapolation)
     : SurvivalProbabilityStructure(dates.front(), calendar, dayCounter, jumps, jumpDates),
-      InterpolatedCurve<T>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates), quotes_(quotes) {
+      InterpolatedCurve<T>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates), quotes_(quotes),
+      extrapolation_(extrapolation) {
     QL_REQUIRE(dates_.size() >= T::requiredPoints, "not enough input dates given");
     QL_REQUIRE(quotes_.size() == dates_.size(), "dates/data count mismatch");
     for (Size i = 0; i < quotes_.size(); i++)

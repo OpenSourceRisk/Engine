@@ -6,6 +6,10 @@ services:
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE
+      environment:
+        - CCACHE_DIR=/ccache
+      volumes_from:
+        - cachev
       args:
         - quantlib_version=${QL_TAG}
         - num_cores=${NUM_CORES}

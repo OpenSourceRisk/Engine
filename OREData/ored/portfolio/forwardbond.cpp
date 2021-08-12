@@ -53,6 +53,7 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
     boost::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
+    bondData_ = originalBondData_;
     bondData_.populateFromBondReferenceData(engineFactory->referenceData());
 
     QL_REQUIRE(!bondData_.referenceCurveId().empty(), "reference curve id required");
@@ -143,7 +144,8 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
     QL_REQUIRE(fwdBondBuilder, "ForwardBond::build(): could not cast builder: " << id());
 
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(), bondData_.securityId(),
+    fwdBond->setPricingEngine(fwdBondBuilder->engine(id(), currency, bondData_.creditCurveId(),
+                                                     bondData_.hasCreditRisk(), bondData_.securityId(),
                                                      bondData_.referenceCurveId(), bondData_.incomeCurveId()));
     instrument_.reset(new VanillaInstrument(fwdBond, 1.0));
 
@@ -156,7 +158,8 @@ void ForwardBond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fwdBondNode = XMLUtils::getChildNode(node, "ForwardBondData");
     QL_REQUIRE(fwdBondNode, "No ForwardBondData Node");
-    bondData_.fromXML(XMLUtils::getChildNode(fwdBondNode, "BondData"));
+    originalBondData_.fromXML(XMLUtils::getChildNode(fwdBondNode, "BondData"));
+    bondData_ = originalBondData_;
 
     XMLNode* fwdSettlementNode = XMLUtils::getChildNode(fwdBondNode, "SettlementData");
     QL_REQUIRE(fwdSettlementNode, "No fwdSettlementNode Node");
@@ -185,7 +188,7 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fwdBondNode = doc.allocNode("ForwardBondData");
     XMLUtils::appendNode(node, fwdBondNode);
-    XMLUtils::appendNode(fwdBondNode, bondData_.toXML(doc));
+    XMLUtils::appendNode(fwdBondNode, originalBondData_.toXML(doc));
 
     XMLNode* fwdSettlementNode = doc.allocNode("SettlementData");
     XMLUtils::appendNode(fwdBondNode, fwdSettlementNode);
