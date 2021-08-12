@@ -3,11 +3,11 @@ version: '3'
 services:
   env_ore:
     image: env_ore:${ORE_TAG}
+    environment:
+      - CCACHE_DIR=/ccache
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE
-      environment:
-        - CCACHE_DIR=/ccache
       volumes_from:
         - cachev
       args:
