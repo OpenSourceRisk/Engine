@@ -77,7 +77,7 @@ private:
 
     Real gearing_;
     ext::shared_ptr<IborIndex> index_;
-    Real swapletRate_;
+    Real swapletRate_, forwardRate_;
 
     const CappedFlooredAverageONIndexedCoupon* coupon_;
 };

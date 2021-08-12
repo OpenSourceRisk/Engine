@@ -8,6 +8,7 @@ calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
 calendars/ice.cpp
+calendars/islamicweekendsonly.cpp
 calendars/israel.cpp
 calendars/largejointcalendar.cpp
 calendars/luxembourg.cpp
@@ -93,6 +94,7 @@ instruments/fxforward.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
+instruments/multilegoption.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
 instruments/payment.cpp
@@ -101,6 +103,8 @@ instruments/subperiodsswap.cpp
 instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
 math/fillemptymatrix.cpp
+math/randomvariable.cpp
+math/randomvariable_io.cpp
 methods/multipathgeneratorbase.cpp
 models/annuitymapping.cpp
 models/carrmadanarbitragecheck.cpp
@@ -129,8 +133,10 @@ models/jyimpliedyoyinflationtermstructure.cpp
 models/jyimpliedzeroinflationtermstructure.cpp
 models/lgm.cpp
 models/lgmcalibrationinfo.cpp
+models/lgmconvolutionsolver2.cpp
 models/lgmimplieddefaulttermstructure.cpp
 models/lgmimpliedyieldtermstructure.cpp
+models/lgmvectorised.cpp
 models/linearannuitymapping.cpp
 models/linkablecalibratedmodel.cpp
 models/normalsabr.cpp
@@ -169,7 +175,7 @@ pricingengines/discountingswapenginemulticurve.cpp
 pricingengines/inflationcapfloorengines.cpp
 pricingengines/lgmconvolutionsolver.cpp
 pricingengines/midpointcdsengine.cpp
-pricingengines/numericlgmswaptionengine.cpp
+pricingengines/numericlgmmultilegoptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
 pricingengines/paymentdiscountingengine.cpp
 processes/crcirppstateprocess.cpp
@@ -261,6 +267,7 @@ calendars/cme.hpp
 calendars/colombia.hpp
 calendars/france.hpp
 calendars/ice.hpp
+calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
 calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
@@ -404,6 +411,8 @@ instruments/fxforward.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
+instruments/multilegoption.hpp
+instruments/nullinstrument.hpp
 instruments/oibasisswap.hpp
 instruments/oiccbasisswap.hpp
 instruments/payment.hpp
@@ -419,6 +428,8 @@ math/flatextrapolation.hpp
 math/logquadraticinterpolation.hpp
 math/nadarayawatson.hpp
 math/quadraticinterpolation.hpp
+math/randomvariable.hpp
+math/randomvariable_io.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
@@ -461,8 +472,10 @@ models/jyimpliedyoyinflationtermstructure.hpp
 models/jyimpliedzeroinflationtermstructure.hpp
 models/lgm.hpp
 models/lgmcalibrationinfo.hpp
+models/lgmconvolutionsolver2.hpp
 models/lgmimplieddefaulttermstructure.hpp
 models/lgmimpliedyieldtermstructure.hpp
+models/lgmvectorised.hpp
 models/linearannuitymapping.hpp
 models/linkablecalibratedmodel.hpp
 models/normalsabr.hpp
@@ -503,7 +516,7 @@ pricingengines/discountingswapenginemulticurve.hpp
 pricingengines/inflationcapfloorengines.hpp
 pricingengines/lgmconvolutionsolver.hpp
 pricingengines/midpointcdsengine.hpp
-pricingengines/numericlgmswaptionengine.hpp
+pricingengines/numericlgmmultilegoptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 processes/crcirppstateprocess.hpp

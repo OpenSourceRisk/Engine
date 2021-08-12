@@ -6,7 +6,7 @@ node has one and exactly one \lstinline!OptionData! trade component sub-node, an
 component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
 \ref{ss:leg_data}.\\
 \vspace{5mm}
-Supported swaption exercise styles are \emph{European} and \emph{Bermudan}.  Swaptions of both exercise styles must have two legs, with
+Supported swaption exercise styles are \emph{European} and \emph{Bermudan}. Swaptions of both exercise styles can have an arbitrary number of legs, with
 each leg represented by a \lstinline!LegData! sub-node.  Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
 have the same value for all \lstinline!LegData! sub-nodes of a swaption. There must be at least one full coupon period after the exercise date for European 
 Swaptions, and after the last exercise date for Bermudan Swaptions. See Table \ref{tab:swaption_requirements} for further details on requirements for
@@ -59,16 +59,11 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
     \hline
         & \bfseries{A  Swaption requires:} \\  \hline
     \lstinline!OptionData! & One \lstinline!OptionData! sub-node  \\  \hline
-   \lstinline!Style! &  \emph{Bermudan} or \emph{European}\\ \hline
-    \lstinline!ExerciseDates! & \emph{Bermudan} swaptions  require at least two \lstinline!ExerciseDate! child elements.  \emph{European} swaptions can only have one \lstinline!ExerciseDate! child element. Note that the exercise date of a \emph{European} swaption must be before or on the start date of the underlying swap. \\ \hline
-    \lstinline!LegData! &  Two \lstinline!LegData! sub-nodes \\ \hline 
-    \lstinline!Currency! & The same currency for both nodes.\\ \hline 
-    \lstinline!LegType! & \emph{Bermudan} swaptions must have: \emph{Fixed} on one node and \emph{Floating} on the other.  No such requirement for \emph{European} swaptions.     \\ \hline   
-%    \lstinline!Notionals! & No accretion or amortisation, just a constant notional. Exactly one \lstinline!Notional! child element for each node.\\ \hline
-%   \lstinline!Rates! & A constant rate. The fixed rate node should have exactly one \lstinline!Rate! child element.\\ \hline
-%    \lstinline!Spreads! &  A constant spread. The floating rate node should have exactly one \lstinline!Spread! child element.\\ \hline
-%    \bfseries{ScheduleData} &   \\ \hline   
-%    \lstinline!IsRuleBased! & Must be \emph{true} for both nodes. TBC: Fixed by Henning?\\ \hline      
+    \lstinline!Style! &  \emph{Bermudan} or \emph{European}\\ \hline
+    \lstinline!ExerciseDates! & \emph{European} swaptions can only have one \lstinline!ExerciseDate! child element. \\ \hline
+    \lstinline!LegData! &  At least one \lstinline!LegData! sub-node \\ \hline
+    \lstinline!Currency! & The same currency for all \lstinline!LegData! sub-nodes.\\ \hline
+    \lstinline!LegType! & Allowed types are \emph{Cashflow}, \emph{Fixed} or \emph{Floating}. Floating coupons can be (capped / floored) Ibor, (capped / floored) compounded or averaged OIS, or BMA/SIFMA. Standalone options (nakedOption = true) are not allowed, neither are local OIS cap/floors. \\ \hline
   \end{tabular}
   \caption{Requirements for Swaptions}
   \label{tab:swaption_requirements}
@@ -149,7 +144,7 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 
 \item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given for \emph{European} style swaptions, and for \emph{Bermudan} style swaptions  at least two \lstinline!ExerciseDate! date elements must be given. \\
 
-\item Premiums [Optional]: Option premium amounts paid by the option buyer to the option seller.
+\item \lstinline!Premiums! [Optional]: Option premium node with amounts paid by the option buyer to the option seller.
 
 Allowable values:  See section \ref{ss:premiums}
 

@@ -115,6 +115,7 @@ portfolio/equityforward.cpp
 portfolio/equityfuturesoption.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
+portfolio/failedtrade.cpp
 portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
@@ -316,6 +317,7 @@ portfolio/equityforward.hpp
 portfolio/equityfuturesoption.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
+portfolio/failedtrade.hpp
 portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp

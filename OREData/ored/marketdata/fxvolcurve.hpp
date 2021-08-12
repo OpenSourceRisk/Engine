@@ -44,8 +44,34 @@ using QuantLib::Date;
 class FXLookup {
 public:
     virtual ~FXLookup() {}
-    virtual Handle<Quote> fxPairLookup(const string& fxPair) const = 0;
+    virtual QuantLib::Handle<QuantLib::Quote> fxPairLookup(const std::string& fxPair) const = 0;
 };
+
+// loop-up fx from map
+class FXLookupMap : public ore::data::FXLookup {
+public:
+    FXLookupMap(const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots) : fxSpots_(fxSpots) {}
+
+    QuantLib::Handle<QuantLib::Quote> fxPairLookup(const std::string& fxPair) const override;
+
+private:
+    // this is a reference
+    const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots_;
+};
+
+// look-u[ fx from triangulation object
+class FXLookupTriangulation : public ore::data::FXLookup {
+public:
+    FXLookupTriangulation(const ore::data::FXTriangulation& fxSpots) : fxSpots_(fxSpots) {}
+
+    QuantLib::Handle<QuantLib::Quote> fxPairLookup(const std::string& fxPair) const override;
+
+private:
+    // this is a reference
+    const ore::data::FXTriangulation& fxSpots_;
+};
+
+
 
 //! Wrapper class for building FX volatility structures
 /*!

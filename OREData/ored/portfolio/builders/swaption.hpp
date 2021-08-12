@@ -62,15 +62,14 @@ protected:
     \ingroup builders
  */
 class BermudanSwaptionEngineBuilder
-    : public CachingPricingEngineBuilder<string, const string&, const bool, const string&, const std::vector<Date>&,
-                                         const Date&, const std::vector<Real>&> {
+    : public CachingPricingEngineBuilder<string, const string&, const string&, const std::vector<Date>&, const Date&,
+                                         const std::vector<Real>&> {
 public:
     BermudanSwaptionEngineBuilder(const string& model, const string& engine)
         : CachingEngineBuilder(model, engine, {"BermudanSwaption"}) {}
 
 protected:
-    virtual string keyImpl(const string& id, const bool isNonStandard, const string& ccy,
-                           const std::vector<Date>& dates, const Date& maturity,
+    virtual string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const Date& maturity,
                            const std::vector<Real>& strikes) override {
         return id;
     }
@@ -86,9 +85,8 @@ public:
     LGMBermudanSwaptionEngineBuilder(const string& engine) : BermudanSwaptionEngineBuilder("LGM", engine) {}
 
 protected:
-    boost::shared_ptr<QuantExt::LGM> model(const string& id, bool isNonStandard, const string& ccy,
-                                           const std::vector<Date>& dates, const Date& maturity,
-                                           const std::vector<Real>& strikes);
+    boost::shared_ptr<QuantExt::LGM> model(const string& id, const string& ccy, const std::vector<Date>& dates,
+                                           const Date& maturity, const std::vector<Real>& strikes);
 };
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
@@ -102,8 +100,6 @@ protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(
         //! a unique (trade) id, for caching
         const string& id,
-        //! is this a standard swaption
-        const bool isNonStandard,
         //! the currency
         const string& ccy,
         //! Excercise dates

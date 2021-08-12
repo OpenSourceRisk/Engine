@@ -153,6 +153,7 @@
 #include <ored/portfolio/equityfuturesoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityswap.hpp>
+#include <ored/portfolio/failedtrade.hpp>
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>

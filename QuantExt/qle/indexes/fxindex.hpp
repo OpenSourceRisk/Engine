@@ -63,6 +63,8 @@ public:
         - sourceCurremcy(), targetCurrency()
         - sourceCurve(), targetCurve()
         - fxQuote()
+        - forecastFixing()
+        - pastFixing()
         will still return results in terms of the original pair.
     */
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,

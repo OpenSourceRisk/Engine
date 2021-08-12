@@ -149,7 +149,7 @@ Rate CappedFlooredAverageONIndexedCoupon::effectiveCap() const {
     */
     if (localCapFloor_) {
         if (includeSpread()) {
-            // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau}
+            // A = \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i + s , F), C)) - 1}{\tau}
             return cap_ - underlying_->spread();
         } else {
             // A = g \cdot \frac{\prod (1 + \tau_i \min ( \max ( f_i , F), C)) - 1}{\tau} + s
@@ -157,7 +157,7 @@ Rate CappedFlooredAverageONIndexedCoupon::effectiveCap() const {
         }
     } else {
         if (includeSpread()) {
-            // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)
+            // A = \min \left( \max \left( \cdot \frac{\prod (1 + \tau_i(f_i + s)) - 1}{\tau}, F \right), C \right)
             return (cap_ / gearing() - underlying_->spread());
         } else {
             // A = \min \left( \max \left( g \cdot \frac{\prod (1 + \tau_i f_i) - 1}{\tau} + s, F \right), C \right)
@@ -212,7 +212,9 @@ CappedFlooredAverageONIndexedCoupon::CappedFlooredAverageONIndexedCoupon(
 
 CapFlooredAverageONIndexedCouponPricer::CapFlooredAverageONIndexedCouponPricer(
     const Handle<OptionletVolatilityStructure>& v)
-    : capletVol_(v) {}
+    : capletVol_(v) {
+    registerWith(capletVol_);
+}
 
 Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::capletVolatility() const {
     return capletVol_;
@@ -403,7 +405,7 @@ AverageONLeg::operator Leg() const {
             } else {
                 // otherwise we construct the previous period
                 rateComputationEndDate = start;
-                if (schedule_.hasTenor())
+                if (schedule_.hasTenor() && schedule_.tenor() != 0 * Days)
                     rateComputationStartDate = calendar.adjust(start - schedule_.tenor(), Preceding);
                 else
                     rateComputationStartDate = calendar.adjust(start - (end - start), Preceding);

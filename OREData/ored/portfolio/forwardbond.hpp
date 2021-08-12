@@ -37,11 +37,11 @@ public:
     ForwardBond(Envelope env, const BondData& bondData, string fwdMaturityDate, string fwdSettlementDate,
                 string settlement, string amount, string lockRate, string lockRateDayCounter, string settlementDirty,
                 string compensationPayment, string compensationPaymentDate, string longInForward)
-        : Trade("ForwardBond", env), bondData_(bondData), fwdMaturityDate_(fwdMaturityDate),
-          fwdSettlementDate_(fwdSettlementDate), settlement_(settlement), amount_(amount), lockRate_(lockRate),
-          lockRateDayCounter_(lockRateDayCounter), settlementDirty_(settlementDirty),
-          compensationPayment_(compensationPayment), compensationPaymentDate_(compensationPaymentDate),
-          longInForward_(longInForward) {}
+        : Trade("ForwardBond", env), originalBondData_(bondData), bondData_(bondData),
+          fwdMaturityDate_(fwdMaturityDate), fwdSettlementDate_(fwdSettlementDate), settlement_(settlement),
+          amount_(amount), lockRate_(lockRate), lockRateDayCounter_(lockRateDayCounter),
+          settlementDirty_(settlementDirty), compensationPayment_(compensationPayment),
+          compensationPaymentDate_(compensationPaymentDate), longInForward_(longInForward) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
@@ -53,11 +53,7 @@ public:
     underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr) const override;
 
     //! inspectors
-    const BondData bondData() const { return bondData_; }
-    // only available after build() was called
-    const string& currency() const { return currency_; }
-    // FIXE remove this, replace by bondData()->creditCurveId()
-    const string& creditCurveId() const { return bondData_.creditCurveId(); }
+    const BondData& bondData() const { return bondData_; }
 
     const string& fwdMaturityDate() const { return fwdMaturityDate_; }
     const string& fwdSettlementDate() const { return fwdSettlementDate_; }
@@ -71,7 +67,7 @@ public:
     const string& longInForward() const { return longInForward_; }
 
 protected:
-    BondData bondData_;
+    BondData originalBondData_, bondData_;
     string currency_;
 
     string fwdMaturityDate_;

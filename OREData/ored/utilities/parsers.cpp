@@ -42,6 +42,7 @@
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
 #include <qle/calendars/luxembourg.hpp>
@@ -257,7 +258,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"PL", Poland()},
         {"RO", Romania()},
         {"RU", Russia()},
-        // {"SA", SaudiArabic()}
+        // {"SA", SaudiArabia()},
         {"SG", Singapore()},
         {"ZA", SouthAfrica()},
         {"KR", SouthKorea(SouthKorea::Settlement)},
@@ -380,8 +381,12 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"ZAC", SouthAfrica()},
         {"ZAX", SouthAfrica()},
 
+        // fallback to IslamicWeekendsOnly for these ccys and use amendmends
+        {"AED", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"AE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+        {"ARE", AmendedCalendar(IslamicWeekendsOnly(), "AED")},
+
         // fallback to WeekendsOnly for these emerging ccys
-        {"AED", AmendedCalendar(WeekendsOnly(), "AED")},
         {"BHD", AmendedCalendar(WeekendsOnly(), "BHD")},
         {"CLF", AmendedCalendar(WeekendsOnly(), "CLF")},
         {"EGP", AmendedCalendar(WeekendsOnly(), "EGP")},
@@ -967,7 +972,8 @@ AmortizationType parseAmortizationType(const std::string& s) {
         {"FixedAmount", AmortizationType::FixedAmount},
         {"RelativeToInitialNotional", AmortizationType::RelativeToInitialNotional},
         {"RelativeToPreviousNotional", AmortizationType::RelativeToPreviousNotional},
-        {"Annuity", AmortizationType::Annuity}};
+        {"Annuity", AmortizationType::Annuity},
+        {"LinearToMaturity", AmortizationType::LinearToMaturity}};
 
     auto it = type.find(s);
     if (it != type.end()) {
@@ -1188,10 +1194,11 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::boolalpha << boost::any_cast<bool>(anyType);
+            oss << std::boolalpha << "\"" << boost::any_cast<bool>(anyType);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(std::vector<double>)) {
         resultType = "vector_double";
@@ -1199,21 +1206,23 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << r[0];
+            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
         }
+        oss << "\"";
     } else if (anyType.type() == typeid(std::vector<Date>)) {
         resultType = "vector_date";
         std::vector<Date> r = boost::any_cast<std::vector<Date>>(anyType);
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << to_string(r[0]);
+            oss << std::fixed << std::setprecision(8) << "\"" << to_string(r[0]);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << to_string(r[i]);
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(std::vector<std::string>)) {
         resultType = "vector_string";
@@ -1221,19 +1230,21 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << r[0];
+            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(std::vector<CashFlowResults>)) {
         resultType = "vector_cashflows";
         std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
         if (!r.empty()) {
-            oss << std::fixed << std::setprecision(8) << r[0];
+            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
             for (Size i = 1; i < r.size(); ++i) {
                 oss << ", " << r[i];
             }
+            oss << "\"";
         }
     } else if (anyType.type() == typeid(QuantLib::Matrix)) {
         resultType = "matrix";
@@ -1242,7 +1253,6 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         std::ostringstream tmp;
         tmp << std::setprecision(8) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
-
     } else {
         ALOG("Unsupported Boost::Any type");
         resultType = "unsupported_type";

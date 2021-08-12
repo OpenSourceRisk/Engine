@@ -22,9 +22,9 @@ namespace QuantExt {
 
 SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructure(
     const Handle<DefaultProbabilityTermStructure>& referenceCurve, const std::vector<Time>& times,
-    const std::vector<Handle<Quote>>& spreads)
+    const std::vector<Handle<Quote>>& spreads, const Extrapolation extrapolation)
     : SurvivalProbabilityStructure(referenceCurve->dayCounter()), referenceCurve_(referenceCurve), times_(times),
-      spreads_(spreads), data_(times.size(), 1.0) {
+      spreads_(spreads), data_(times.size(), 1.0), extrapolation_(extrapolation) {
     QL_REQUIRE(times_.size() > 1, "at least two times required");
     QL_REQUIRE(times_.size() == spreads_.size(), "size of time and quote vectors do not match");
     QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
@@ -34,6 +34,7 @@ SpreadedSurvivalProbabilityTermStructure::SpreadedSurvivalProbabilityTermStructu
     interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
     interpolation_->enableExtrapolation();
     registerWith(Settings::instance().evaluationDate());
+    registerWith(referenceCurve_);
 }
 
 void SpreadedSurvivalProbabilityTermStructure::update() {
@@ -59,8 +60,12 @@ Probability SpreadedSurvivalProbabilityTermStructure::survivalProbabilityImpl(Ti
     // flat fwd extrapolation
     Real tMax = this->times_.back();
     Real dMax = this->data_.back();
-    Real instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
-    return referenceCurve_->survivalProbability(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+    if (extrapolation_ == Extrapolation::flatFwd) {
+        Real instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
+        return referenceCurve_->survivalProbability(t) * dMax * std::exp(-instFwdMax * (t - tMax));
+    } else {
+        return referenceCurve_->survivalProbability(t) * std::pow(dMax, t / tMax);
+    }
 }
 
 DayCounter SpreadedSurvivalProbabilityTermStructure::dayCounter() const { return referenceCurve_->dayCounter(); }
@@ -75,4 +80,9 @@ Calendar SpreadedSurvivalProbabilityTermStructure::calendar() const { return ref
 
 Natural SpreadedSurvivalProbabilityTermStructure::settlementDays() const { return referenceCurve_->settlementDays(); }
 
+std::vector<Time> SpreadedSurvivalProbabilityTermStructure::times() { return times_; }
+
+Handle<DefaultProbabilityTermStructure> SpreadedSurvivalProbabilityTermStructure::referenceCurve() const {
+    return referenceCurve_;
+}
 } // namespace QuantExt

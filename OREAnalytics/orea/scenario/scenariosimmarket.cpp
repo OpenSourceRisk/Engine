@@ -283,8 +283,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                "ScenarioSimMarket: Interpolation (" << parameters_->interpolation()
                                                     << ") must be set to 'LogLinear' or 'LinearZero'");
     QL_REQUIRE(parameters_->extrapolation() == "FlatZero" || parameters_->extrapolation() == "FlatFwd",
-               "ScenarioSimMarket: Extrapolation ('" << parameters_->extrapolation()
-                                                     << "') must be set to 'FlatZero' or 'FlatFwd'");
+               "ScenarioSimMarket: YieldCurves / Extrapolation ('" << parameters_->extrapolation()
+                                                                   << "') must be set to 'FlatZero' or 'FlatFwd'");
+    QL_REQUIRE(parameters_->defaultCurveExtrapolation() == "FlatZero" ||
+                   parameters_->defaultCurveExtrapolation() == "FlatFwd",
+               "ScenarioSimMarket: DefaultCurves / Extrapolation ('" << parameters_->extrapolation()
+                                                                     << "') must be set to 'FlatZero' or 'FlatFwd'");
 
     for (const auto& param : parameters->parameters()) {
         try {
@@ -968,12 +972,19 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<DefaultProbabilityTermStructure> defaultCurve;
                         if (useSpreadedTermStructures_) {
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
-                                boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(wrapper, times,
-                                                                                                       quotes));
+                                boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(
+                                    wrapper, times, quotes,
+                                    parameters->defaultCurveExtrapolation() == "FlatZero"
+                                        ? QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatZero
+                                        : QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatFwd));
                         } else {
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
-                                boost::make_shared<QuantExt::SurvivalProbabilityCurve<LogLinear>>(dates, quotes, dc,
-                                                                                                  cal));
+                                boost::make_shared<QuantExt::SurvivalProbabilityCurve<LogLinear>>(
+                                    dates, quotes, dc, cal, std::vector<Handle<Quote>>(), std::vector<Date>(),
+                                    LogLinear(),
+                                    parameters->defaultCurveExtrapolation() == "FlatZero"
+                                        ? QuantExt::SurvivalProbabilityCurve<LogLinear>::Extrapolation::flatZero
+                                        : QuantExt::SurvivalProbabilityCurve<LogLinear>::Extrapolation::flatFwd));
                         }
                         defaultCurve->enableExtrapolation();
                         defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(

@@ -25,6 +25,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <utility>
 
 namespace ore {
 namespace data {
@@ -35,12 +36,14 @@ namespace data {
 class BondData : public XMLSerializable {
 public:
     //! Default Contructor
-    BondData() : hasCreditRisk_(true), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false) {}
+    BondData()
+        : hasCreditRisk_(true), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false),
+          isInflationLinked_(false) {}
 
     //! Constructor to set up a bond from reference data
     BondData(string securityId, Real bondNotional, bool hasCreditRisk = true)
         : securityId_(securityId), hasCreditRisk_(hasCreditRisk), faceAmount_(0.0), zeroBond_(false),
-          bondNotional_(bondNotional), isPayer_(false) {}
+          bondNotional_(bondNotional), isPayer_(false), isInflationLinked_(false) {}
 
     //! Constructor for coupon bonds
     BondData(string issuerId, string creditCurveId, string securityId, string referenceCurveId, string settlementDays,
@@ -90,6 +93,7 @@ public:
     bool hasCreditRisk() const { return hasCreditRisk_; }
     bool isPayer() const { return isPayer_; }
     bool zeroBond() const { return zeroBond_; }
+    bool isInflationLinked() const { return isInflationLinked_; }
     // only used for zero bonds
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
@@ -130,6 +134,7 @@ private:
     bool zeroBond_;
     Real bondNotional_;
     bool isPayer_;
+    bool isInflationLinked_;
 };
 
 //! Serializable Bond
@@ -142,16 +147,14 @@ public:
     explicit Bond() : Trade("Bond") {}
 
     //! Constructor taking an envelope and bond data
-    Bond(Envelope env, const BondData& bondData) : Trade("Bond", env), bondData_(bondData) {}
+    Bond(Envelope env, const BondData& bondData)
+        : Trade("Bond", env), originalBondData_(bondData), bondData_(bondData) {}
 
     //! Trade interface
     virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! inspectors
     const BondData& bondData() const { return bondData_; }
-    // FIXME can we remove the following inspectors and use bondData().XXX() instead?
-    const string& currency() const { return bondData_.currency(); }
-    const string& creditCurveId() const { return bondData_.creditCurveId(); }
 
     //! Add underlying Bond names
     std::map<AssetClass, std::set<std::string>>
@@ -162,25 +165,25 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
 
 private:
-    BondData bondData_;
+    BondData originalBondData_, bondData_;
 };
 
 //! Bond Factory that builds bonds from reference data
 
 struct BondBuilder {
     virtual ~BondBuilder() {}
-    virtual boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                                    const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                                    const std::string& securityId) const = 0;
+    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
+    build(const boost::shared_ptr<EngineFactory>& engineFactory,
+          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const = 0;
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory> {
     map<std::string, boost::shared_ptr<BondBuilder>> builders_;
 
 public:
-    boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                            const std::string& securityId) const;
+    std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
+    build(const boost::shared_ptr<EngineFactory>& engineFactory,
+          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const;
     void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
 };
 
@@ -192,9 +195,9 @@ template <typename T> struct BondBuilderRegister {
 
 struct VanillaBondBuilder : public BondBuilder {
     static BondBuilderRegister<VanillaBondBuilder> reg_;
-    boost::shared_ptr<QuantLib::Bond> build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                            const std::string& securityId) const override;
+    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
+    build(const boost::shared_ptr<EngineFactory>& engineFactory,
+          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const override;
 };
 
 } // namespace data

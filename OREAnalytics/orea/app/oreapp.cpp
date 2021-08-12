@@ -118,7 +118,7 @@ int OREApp::run() {
          * Load and Build the Portfolio
          */
         out_ << setw(tab_) << left << "Portfolio... " << flush;
-        portfolio_ = buildPortfolio(engineFactory_);
+        portfolio_ = buildPortfolio(engineFactory_, buildFailedTrades_);
         out_ << "OK" << endl;
 
         /******************************
@@ -375,7 +375,7 @@ void OREApp::readSetup() {
         CurrencyConfig currencyConfig;
         string currencyConfigFile = inputPath_ + "/" + params_->get("setup", "currencyConfiguration");
         LOG("Load currency configurations from file " << currencyConfigFile);
-	currencyConfig.fromFile(currencyConfigFile);
+        currencyConfig.fromFile(currencyConfigFile);
     }
 
     iborFallbackConfig_ = IborFallbackConfig::defaultConfig();
@@ -408,6 +408,11 @@ void OREApp::readSetup() {
     lazyMarketBuilding_ = true;
     if (params_->has("setup", "lazyMarketBuilding"))
         lazyMarketBuilding_ = parseBool(params_->get("setup", "lazyMarketBuilding"));
+
+    buildFailedTrades_ = false;
+    if (params_->has("setup", "buildFailedTrades"))
+        buildFailedTrades_ = parseBool(params_->get("setup", "buildFailedTrades"));
+
 }
 
 void OREApp::setupLog() {
@@ -506,19 +511,19 @@ boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
     return tf;
 }
 
-boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
+boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory, bool buildFailedTrades) {
     MEM_LOG;
     LOG("Building portfolio");
-    boost::shared_ptr<Portfolio> portfolio = loadPortfolio();
+    boost::shared_ptr<Portfolio> portfolio = loadPortfolio(buildFailedTrades);
     portfolio->build(factory);
     LOG("Portfolio built");
     MEM_LOG;
     return portfolio;
 }
 
-boost::shared_ptr<Portfolio> OREApp::loadPortfolio() {
+boost::shared_ptr<Portfolio> OREApp::loadPortfolio(bool buildFailedTrades) {
     string portfoliosString = params_->get("setup", "portfolioFile");
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>(buildFailedTrades);
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
     vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath_);
@@ -1317,6 +1322,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     else
         conventions_->fromXMLString(conventionsXML);
 
+    InstrumentConventions::instance().conventions() = *conventions_;
+    
     if (todaysMarketXML == "")
         getMarketParameters();
     else

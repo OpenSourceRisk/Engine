@@ -35,7 +35,7 @@ def create_df(file, col_types=None):
 
     if file_extension == '.csv' or file_extension == '.txt':
         logger.debug('Creating DataFrame from csv file %s.', file)
-        return pd.read_csv(file, dtype=col_types)
+        return pd.read_csv(file, dtype=col_types, quotechar='"', quoting=2)
     elif file_extension == '.json':
         if filename == 'simm.json':
             with open(file, 'r') as json_file:
