@@ -712,6 +712,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 atm = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
                                     wrapper->calendar(), wrapper->businessDayConvention(), optionTenors,
                                     underlyingTenors, atmQuotes, dc, flatExtrapolation, volType, shift));
+				atm->enableExtrapolation(); // see below for svp, take this from T0 config?
                                 if (simulateAtmOnly) {
                                     if (isAtm) {
                                         svp = atm;
