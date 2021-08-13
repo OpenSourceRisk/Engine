@@ -1136,8 +1136,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
 
                             // get vol matrix to feed to surface
-                            if (parameters->useMoneyness(name) ||
-                                !(parameters->fxVolIsSurface(name))) { // if moneyness or ATM
+                            if (parameters->useMoneyness(name)) { // if moneyness
                                 for (Size i = 0; i < n; i++) {
                                     Date date = asof_ + parameters->fxVolExpiries()[i];
 
@@ -1145,7 +1144,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                                     for (Size j = 0; j < m; j++) {
                                         Size idx = j * n + i;
-                                        Real mon = parameters->fxVolMoneyness(name)[j]; // 0 if ATM
+                                        Real mon = parameters->fxVolMoneyness(name)[j];
 
                                         // strike (assuming forward prices)
                                         Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
@@ -1270,7 +1269,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     if (useSpreadedTermStructures_) {
                                         fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->fxVolStdDevs(name), quotes,
+                                            parameters->fxVolMoneyness(name), quotes,
                                             Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())), initForTS,
                                             initDomTS, forTS, domTS, stickyStrike);
                                     } else {
