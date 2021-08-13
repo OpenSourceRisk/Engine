@@ -8,9 +8,6 @@ LABEL Description="Build ORE and add to the QuantLib build environment"
 # Argument for number of cores to use while building
 ARG num_cores
 
-ENV CCACHE_DIR="/ccache"
-
-
 # Copy ORE sources for libs and app
 COPY QuantExt /ore/QuantExt
 COPY OREData /ore/OREData
@@ -23,12 +20,6 @@ COPY Docker /ore/Docker
 
 # Need the dos2unix all if building from Windows because the shell 
 # scripts fail if there are CRLF present in the files
-RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz ccache \
-  && apt-get clean
-
-ENV PATH="/usr/lib/ccache:$PATH"
-
 RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
@@ -36,7 +27,7 @@ RUN cd /ore \
   && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release 
 
 WORKDIR /ore/build.ore
-RUN --mount=type=cache,target=/ccache/  make -j ${num_cores} \
+RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && make install 
   
 RUN  make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
