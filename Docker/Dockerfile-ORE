@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:experimental
 ARG quantlib_version=${QL_TAG}
 FROM env_quantlib:${quantlib_version}
 
@@ -6,6 +7,9 @@ LABEL Description="Build ORE and add to the QuantLib build environment"
 
 # Argument for number of cores to use while building
 ARG num_cores
+
+ENV CCACHE_DIR=/ccache
+
 
 # Copy ORE sources for libs and app
 COPY QuantExt /ore/QuantExt
@@ -19,14 +23,16 @@ COPY Docker /ore/Docker
 
 # Need the dos2unix all if building from Windows because the shell 
 # scripts fail if there are CRLF present in the files
-RUN cd /ore \
-  && apt-get update \
+RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz ccache \
-  && apt-get clean \  
+  && apt-get clean \ 
+  && PATH=/usr/lib/ccache:$PATH 
+
+RUN --mount=type=cache,target=/ccache/ cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release \
+  && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release \ 
   && make -j ${num_cores} \
   && make install \
   && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \

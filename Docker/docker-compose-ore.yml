@@ -1,15 +1,10 @@
 version: '3'
 
-volumes:
-    ccache_volume:
-
 services:
   env_ore:
     image: env_ore:${ORE_TAG}
-    environment:
-      - CCACHE_DIR=/ccache
     volumes:
-      - ccache_volume:ccache
+      - /home/shared/cache/ore_env:/ccache
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE
