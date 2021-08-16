@@ -231,7 +231,6 @@ void DateGrid::addCloseOutDates(const QuantLib::Period& p) {
                 // adjust the grid to ensure no overlap in valuation and closeout dates
                 if (c >= dates_[i + 1]) {
                     dates_[i + 1] = calendar_.advance(c, QuantLib::Period(1, QuantLib::Days));
-                    std::cout << QuantLib::io::iso_date(dates_[i + 1]) << std::endl;
                     // check that the grid is still monotonic
                     if ((i + 2) < dates_.size()) {
                         QL_REQUIRE(dates_[i + 1] < dates_[i + 2],
