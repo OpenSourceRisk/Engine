@@ -26,17 +26,15 @@ RUN cd /ore \
   && mkdir -p build.ore && cd build.ore \
   && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release 
 
-ENV PATH="/usr/lib/ccache:$PATH"
-ENV CCACHE_DIR="/ccache"
-
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
-  && make install 
-  
-RUN  make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
+  && make install \
+  && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
   && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
-  && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" \
-  && cd / && mkdir -p html \
+  && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" 
+  
+WORKDIR / 
+RUN mkdir -p html \
   && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
   && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
   && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
