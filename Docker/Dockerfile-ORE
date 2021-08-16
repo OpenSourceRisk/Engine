@@ -26,6 +26,9 @@ RUN cd /ore \
   && mkdir -p build.ore && cd build.ore \
   && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release 
 
+ENV PATH="/usr/lib/ccache:$PATH"
+ENV CCACHE_DIR="/ccache"
+
 WORKDIR /ore/build.ore
 RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && make install 
