@@ -131,7 +131,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     defaultCurveCalendars_[""] = "TARGET";
     // Default fxVol params
     fxVolIsSurface_[""] = false;
-    fxMoneyness_[""] = {0.0};
+    fxMoneyness_[""] = {1.0};
     fxStandardDevs_[""] = {0.0};
     hasFxPairWithSurface_ = false;
     useMoneyness_[""] = true; // moneyness vs stdDevs - default to moneyness
@@ -1098,6 +1098,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     DLOG("Loading FXVolatilities");
     nodeChild = XMLUtils::getChildNode(node, "FxVolatilities");
+    hasFxPairWithSurface_ = false;
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         setSimulateFXVols(false);
         XMLNode* fxVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
@@ -1108,19 +1109,20 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setFxVolCcyPairs(XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true));
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (fxSurfaceNode) {
-            hasFxPairWithSurface_ = true;
             for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "Moneyness"); child;
                  child = XMLUtils::getNextSibling(child, "Moneyness")) {
                 string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
                 fxMoneyness_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
-                fxVolIsSurface_[label] = true;
+                fxVolIsSurface_[label] = fxMoneyness_[label].size() > 1;
+		hasFxPairWithSurface_ = hasFxPairWithSurface_ || fxMoneyness_[label].size() > 1;
                 useMoneyness_[label] = true;
             }
             for (XMLNode* child = XMLUtils::getChildNode(fxSurfaceNode, "StandardDeviations"); child;
                  child = XMLUtils::getNextSibling(child, "StandardDeviations")) {
                 string label = XMLUtils::getAttribute(child, "ccyPair"); // will be "" if no attr
                 fxStandardDevs_[label] = XMLUtils::getNodeValueAsDoublesCompact(child);
-                fxVolIsSurface_[label] = true;
+                fxVolIsSurface_[label] = fxStandardDevs_[label].size() > 1;
+                hasFxPairWithSurface_ = hasFxPairWithSurface_ || fxStandardDevs_[label].size() > 1;
                 useMoneyness_[label] = false;
             }
         }
@@ -1522,36 +1524,22 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
             map<string, vector<Real>>::const_iterator it;
             for (it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
-                if (it->first == "") {
-                    // only print default moneyness if it's not ATM (so it was specifically changed)
-                    if (useMoneyness_[it->first]) {
-                        if (fxMoneyness_[""].size() > 1 ||
-                            !(close(fxMoneyness_[""][0], 0.0) || close(fxMoneyness_[""][0], 1.0))) {
-                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness",
-                                                            fxMoneyness_[it->first]); // default not atm
-                        }
-                    }
-                } else {
-                    if (useMoneyness_[it->first]) {
+                if (useMoneyness_[it->first]) {
+                    if (it->first == "")
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first]);
+                    else
                         XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_[it->first],
                                                         "ccyPair", it->first);
-                    }
                 }
             }
             for (it = fxStandardDevs_.begin(); it != fxStandardDevs_.end(); it++) {
-                if (it->first == "") {
-                    // only print default standard deviation if it's not ATM (so it was specifically changed)
-                    if (!useMoneyness_[it->first]) {
-                        if (fxStandardDevs_[""].size() > 1 || !close(fxStandardDevs_[""][0], 0.0)) {
-                            XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations",
-                                                            fxStandardDevs_[it->first]); // default not atm
-                        }
-                    }
-                } else {
-                    if (!useMoneyness_[it->first]) {
+                if (!useMoneyness_[it->first]) {
+                    if (it->first == "")
+                        XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations",
+                                                        fxStandardDevs_[it->first]); // default not atm
+                    else
                         XMLUtils::addGenericChildAsList(doc, surfaceNode, "StandardDeviations",
                                                         fxStandardDevs_[it->first], "ccyPair", it->first);
-                    }
                 }
             }
         }
