@@ -61,7 +61,7 @@ void CPIBachelierCapFloorEngine::calculate() const {
     DiscountFactor d = arguments_.nominal * discountCurve_->discount(arguments_.payDate);
 
     Date baseDate = arguments_.infIndex->zeroInflationTermStructure()->baseDate();
-    Real baseFixing = indexFixing(baseDate);
+    Real baseFixing = indexFixing(baseDate, baseDate);
 
     Date effectiveStart = arguments_.startDate - arguments_.observationLag;
     if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
@@ -75,7 +75,7 @@ void CPIBachelierCapFloorEngine::calculate() const {
     Real timeFromBase =
         arguments_.infIndex->zeroInflationTermStructure()->dayCounter().yearFraction(baseDate, effectiveMaturity);
     Real K = pow(1.0 + arguments_.strike, timeFromStart);
-    Real F = indexFixing(effectiveMaturity) / arguments_.baseCPI;
+    Real F = indexFixing(effectiveMaturity, maturity) / arguments_.baseCPI;
 
     // For reading volatility in the current market volatiltiy structure
     // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t), solve
@@ -88,25 +88,27 @@ void CPIBachelierCapFloorEngine::calculate() const {
     results_.value = bachelierBlackFormula(arguments_.type, K, F, stdDev, d);
 }
 
-Rate CPIBachelierCapFloorEngine::indexFixing(const Date& d) const {
+Rate CPIBachelierCapFloorEngine::indexFixing(const Date& observationDate, const Date& payDate) const {
     // you may want to modify the interpolation of the index
     // this gives you the chance
-
     Rate I1;
     // what interpolation do we use? Index / flat / linear
     if (arguments_.observationInterpolation == CPI::AsIndex) {
-        I1 = arguments_.infIndex->fixing(d);
+        I1 = arguments_.infIndex->fixing(observationDate);
 
     } else {
         // work out what it should be
-        std::pair<Date, Date> dd = inflationPeriod(d, arguments_.infIndex->frequency());
+
+        std::pair<Date, Date> dd = inflationPeriod(observationDate, arguments_.infIndex->frequency());
         Real indexStart = arguments_.infIndex->fixing(dd.first);
         if (arguments_.observationInterpolation == CPI::Linear) {
-            Real indexEnd = arguments_.infIndex->fixing(dd.second + Period(1, Days));
+            std::pair<Date, Date> cpnInflationPeriod = inflationPeriod(payDate, arguments_.infIndex->frequency());
             // linear interpolation
-            I1 = indexStart + (indexEnd - indexStart) * (d - dd.first) /
-                                  (Real)((dd.second + Period(1, Days)) -
-                                         dd.first); // can't get to next period's value within current period
+            Real indexEnd = arguments_.infIndex->fixing(dd.second + Period(1, Days));
+            I1 = indexStart +
+                 (indexEnd - indexStart) * (payDate - cpnInflationPeriod.first) /
+                     (Real)((cpnInflationPeriod.second + Period(1, Days)) -
+                            cpnInflationPeriod.first); // can't get to next period's value within current period
         } else {
             // no interpolation, i.e. flat = constant, so use start-of-period value
             I1 = indexStart;
