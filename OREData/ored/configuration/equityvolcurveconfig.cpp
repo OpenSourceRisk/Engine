@@ -83,6 +83,7 @@ void EquityVolatilityCurveConfig::populateRequiredCurveIds() {
     for (auto vc : volatilityConfig_) {
         if (auto p = boost::dynamic_pointer_cast<EquityProxyVolatilityConfig>(vc)) {
             requiredCurveIds_[CurveSpec::CurveType::Equity].insert(p->equityVolatilityCurve());
+            requiredCurveIds_[CurveSpec::CurveType::EquityVolatility].insert(p->equityVolatilityCurve());
             if (!p->fxVolatilityCurve().empty())
                 requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(p->fxVolatilityCurve());
             if (!p->correlationCurve().empty())
