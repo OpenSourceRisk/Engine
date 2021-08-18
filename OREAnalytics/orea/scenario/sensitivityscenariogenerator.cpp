@@ -831,8 +831,8 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         // Can we store a valid shift size?
-        bool validShiftSize = vectorEqual(times, shiftTimes);
-        validShiftSize = validShiftSize && vectorEqual(vol_strikes, shiftStrikes);
+        bool validShiftSize = vectorEqual(times, shiftTimes) && (vectorEqual(vol_strikes, shiftStrikes) ||
+                                                                 (vol_strikes.size() == 1 && shiftStrikes.size() == 1));
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             for (Size strikeBucket = 0; strikeBucket < shiftStrikes.size(); ++strikeBucket) {
