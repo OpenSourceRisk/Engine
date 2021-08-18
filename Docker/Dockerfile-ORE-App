@@ -13,11 +13,15 @@ COPY OREAnalytics/test /ore/OREAnalytics/test
 RUN mkdir /ore/App
 
 COPY --from=env_ore /usr/local/bin /ore/App
+
+RUN true
+
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 
 RUN cd /ore \
   && find -regex ".*\.\(sh\|txt\|in\|ac\|am\)" -exec dos2unix {} ';'
 
 WORKDIR /ore
+ENV LD_LIBRARY_PATH=/usr/local/lib:./
 
 CMD bash
