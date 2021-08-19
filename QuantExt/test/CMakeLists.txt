@@ -67,3 +67,8 @@ target_link_libraries(quantext-test-suite ${QLE_LIB_NAME})
 target_link_libraries(quantext-test-suite ${Boost_LIBRARIES})
 
 add_test(NAME quantext-test-suite COMMAND quantext-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+
+install(TARGETS quantext-test-suite
+        RUNTIME DESTINATION bin
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )

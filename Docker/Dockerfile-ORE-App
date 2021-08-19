@@ -1,31 +1,27 @@
 ARG ore_version=latest
-ARG debian_tag=latest
+ARG test_tag=latest
 
 FROM env_ore:${ore_version} as env_ore
-
-FROM debian:${debian_tag}
+FROM env_ore_test:${test_tag}
 
 COPY Examples /ore/Examples
+COPY Tools /ore/Tools
+COPY xsd /ore/xsd
+COPY OREData/test /ore/OREData/test
+COPY OREAnalytics/test /ore/OREAnalytics/test
 
 RUN mkdir /ore/App
 
 COPY --from=env_ore /usr/local/bin /ore/App
 
-# Without this, the build fails: https://github.com/moby/moby/issues/37965
 RUN true
 
 COPY --from=env_ore /usr/local/lib /usr/local/lib
 
-# Install Python solely to run the examples
-# Can leave out Python and run examples manually for slimmer image
-RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y dos2unix python3 python3-pip \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
-  && pip3 install matplotlib pandas nose nose_xunitmp datacompy \
-  && cd /ore \
+RUN cd /ore \
   && find -regex ".*\.\(sh\|txt\|in\|ac\|am\)" -exec dos2unix {} ';'
 
-WORKDIR /ore/Examples/Example_1
+WORKDIR /ore
+ENV LD_LIBRARY_PATH=/usr/local/lib:./
 
 CMD bash

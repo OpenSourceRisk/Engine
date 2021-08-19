@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:experimental
 ARG boost_version=latest
 FROM build_env_boost:${boost_version}
 
@@ -10,13 +11,22 @@ ARG num_cores
 # Exclusions are performed by .dockerignore
 COPY QuantLib /ore/QuantLib
 
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y doxygen graphviz ccache \
+  && apt-get clean
+
+ENV PATH="/usr/lib/ccache:$PATH"
+ENV CCACHE_DIR="/ccache"
+
 # Need the dos2unix all if building from Windows because the shell 
 # scripts fail if there are CRLF present in the files
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && mkdir -p build.ql && cd build.ql \
-  && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_FLAGS="-D QL_USE_STD_UNIQUE_PTR -D BOOST_ENABLE_ASSERT_HANDLER" \
-  && make -j ${num_cores} \
+  && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_FLAGS="-D QL_USE_STD_UNIQUE_PTR -D BOOST_ENABLE_ASSERT_HANDLER"
+ 
+WORKDIR /ore/QuantLib/build.ql
+RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && make install \
   && cd / \
   && rm -rf ore \

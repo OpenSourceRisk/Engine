@@ -3,6 +3,8 @@ version: '3'
 services:
   env_ore:
     image: env_ore:${ORE_TAG}
+    volumes:
+      - /home/shared/cache/ore_env:/ccache
     build:
       context: ../
       dockerfile: Docker/Dockerfile-ORE

@@ -1003,9 +1003,10 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
                                      const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves) {
 
+    DLOG("Build Proxy Vol surface");
     // get all the configurations and the curve needed for proxying
     auto config = *curveConfigs.equityVolCurveConfig(spec.curveConfigID());
-
+    
     auto proxy = epvc.equityVolatilityCurve();
     auto eqConfig = *curveConfigs.equityCurveConfig(spec.curveConfigID());
     auto proxyConfig = *curveConfigs.equityCurveConfig(proxy);
