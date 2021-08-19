@@ -255,7 +255,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                  << trades[i]->id() << "' since there was at least one error during simulation");
             for (Size index = 0; index < outputCube->depth(); ++index) {
                 outputCube->setT0(0.0, i, index);
-                for (Size dateIndex = 0; dateIndex < dates.size(); ++dateIndex) {
+                for (Size dateIndex = 0; dateIndex < outputCube->numDates(); ++dateIndex) {
                     for (Size sample = 0; sample < outputCube->samples(); ++sample) {
                         outputCube->set(0.0, i, dateIndex, sample, index);
                     }
