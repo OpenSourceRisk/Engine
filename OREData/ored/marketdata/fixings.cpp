@@ -38,6 +38,8 @@ namespace ore {
 namespace data {
 
 void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::Conventions>& conventions) {
+    
+    ObservableSettings::instance().disableUpdates(true);
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
     cpu_timer timer;
@@ -58,6 +60,7 @@ void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::C
             WLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
     }
+    ObservableSettings::instance().enableUpdates();
     timer.stop();
     LOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.format(default_places, "%w")
                  << " seconds");
