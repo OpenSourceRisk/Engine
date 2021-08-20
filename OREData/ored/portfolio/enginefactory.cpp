@@ -80,12 +80,12 @@ std::string getParameter(const std::map<std::string, std::string>& m, const std:
 } // namespace
 
 std::string EngineBuilder::engineParameter(const std::string& p, const std::string qualifier, const bool mandatory,
-                                           const std::string& defaultValue) {
+                                           const std::string& defaultValue) const {
     return getParameter(engineParameters_, p, qualifier, mandatory, defaultValue);
 }
 
 std::string EngineBuilder::modelParameter(const std::string& p, const std::string qualifier, const bool mandatory,
-                                          const std::string& defaultValue) {
+                                          const std::string& defaultValue) const {
     return getParameter(modelParameters_, p, qualifier, mandatory, defaultValue);
 }
 
