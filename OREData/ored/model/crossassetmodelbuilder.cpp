@@ -78,13 +78,13 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(
     const std::string& configurationEqCalibration, const std::string& configurationInfCalibration,
     const std::string& configurationCrCalibration, const std::string& configurationFinalModel,
     const DayCounter& dayCounter, const bool dontCalibrate, const bool continueOnError,
-    const std::string& referenceCalibrationGrid)
+    const std::string& referenceCalibrationGrid, const SalvagingAlgorithm::Type salvaging)
     : market_(market), config_(config), configurationLgmCalibration_(configurationLgmCalibration),
       configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationInfCalibration_(configurationInfCalibration),
       configurationCrCalibration_(configurationCrCalibration), configurationFinalModel_(configurationFinalModel),
       dayCounter_(dayCounter), dontCalibrate_(dontCalibrate), continueOnError_(continueOnError),
-      referenceCalibrationGrid_(referenceCalibrationGrid),
+      referenceCalibrationGrid_(referenceCalibrationGrid), salvaging_(salvaging),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
     buildModel();
@@ -394,9 +394,7 @@ void CrossAssetModelBuilder::buildModel() const {
      * Build the cross asset model
      */
 
-    SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None;
-
-    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging, measure));
+    model_.linkTo(boost::make_shared<QuantExt::CrossAssetModel>(parametrizations, corrMatrix, salvaging_, measure));
 
     /*************************
      * Calibrate IR components
