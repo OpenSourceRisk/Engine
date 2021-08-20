@@ -25,3 +25,8 @@ target_link_libraries(orea-test-suite ${OREA_LIB_NAME})
 target_link_libraries(orea-test-suite ${Boost_LIBRARIES})
 
 add_test(NAME orea-test-suite COMMAND orea-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+
+install(TARGETS orea-test-suite
+        RUNTIME DESTINATION bin
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )

@@ -1,3 +1,4 @@
+# syntax = docker/dockerfile:experimental
 ARG quantlib_version=${QL_TAG}
 FROM env_quantlib:${quantlib_version}
 
@@ -23,10 +24,20 @@ RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cp Docker/CMakeLists_ORE.txt CMakeLists.txt \
   && mkdir -p build.ore && cd build.ore \
-  && cmake .. -DBUILD_DOC=OFF -DCMAKE_BUILD_TYPE=Release \
-  && make -j ${num_cores} \
+  && cmake .. -DBUILD_DOC=ON -DCMAKE_BUILD_TYPE=Release 
+
+WORKDIR /ore/build.ore
+RUN --mount=type=cache,target=/ccache/ make -j ${num_cores} \
   && make install \
-  && cd / \
+  && make doc_quantext 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_ored 2>&1 | grep -v "ignoring unsupported tag" \
+  && make doc_orea 2>&1 | grep -v "ignoring unsupported tag" 
+  
+WORKDIR / 
+RUN mkdir -p html \
+  && mkdir /html/ored && cp -r /ore/OREData/doc/html/* /html/ored \
+  && mkdir /html/orea && cp -r /ore/OREAnalytics/doc/html/* /html/orea \
+  && mkdir /html/qle && cp -r /ore/QuantExt/doc/html/* /html/qle \
   && rm -rf ore
 
 CMD bash

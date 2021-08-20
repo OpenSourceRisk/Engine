@@ -23,8 +23,6 @@
 
 #pragma once
 
-#pragma once
-
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>

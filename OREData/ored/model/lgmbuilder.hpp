@@ -102,6 +102,7 @@ private:
     // which swaptions in data->optionExpries() are actually in the basket?
     mutable std::vector<bool> swaptionActive_;
     mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
+    mutable std::vector<Real> swaptionStrike_;
     mutable std::vector<boost::shared_ptr<SimpleQuote>> swaptionBasketVols_;
     mutable Array swaptionExpiries_;
     mutable Array swaptionMaturities_;

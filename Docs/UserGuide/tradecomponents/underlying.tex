@@ -185,7 +185,7 @@ Table \ref{tab:commodity_data} lists the allowable values for \lstinline!Name! a
 \item \lstinline!Weight! [Optional]:
 The relative weight of the underlying if part of a basket. For a single underlying this can be omitted or set to 1. 
 
-Allowable values: A number between 0 and 1. Defaults to 1 if left blank or omitted
+Allowable values: A number between -1 and 1. Defaults to 1 if left blank or omitted. Note that negative weights are used to represent short EquityOptionPositions.
 
 \item \lstinline!IdentifierType! [Optional]:
 Only valid when \lstinline!Type! is  \emph{Equity}. The type of the identifier being used.  
