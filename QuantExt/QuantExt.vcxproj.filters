@@ -1174,6 +1174,9 @@
     <ClInclude Include="qle\instruments\multilegoption.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\emptycalendar.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
