@@ -21,8 +21,7 @@
     \ingroup termstructures
 */
 
-#ifndef quantext_blackvolsurfacewithatm_hpp
-#define quantext_blackvolsurfacewithatm_hpp
+#pragma once
 
 #include <boost/shared_ptr.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -106,5 +105,3 @@ private:
 };
 
 } // namespace QuantExt
-
-#endif

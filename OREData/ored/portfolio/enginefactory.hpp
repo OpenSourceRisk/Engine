@@ -143,10 +143,10 @@ public:
 
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string engineParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
-                                const std::string& defaultValue = "");
+                                const std::string& defaultValue = "") const;
     /*! retrieve model parameter p, first look for p_qualifier, if this does not exist fall back to p */
     std::string modelParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
-                               const std::string& defaultValue = "");
+                               const std::string& defaultValue = "") const;
 
 protected:
     string model_;

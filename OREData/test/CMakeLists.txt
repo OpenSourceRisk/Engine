@@ -63,3 +63,8 @@ target_link_libraries(ored-test-suite ${Boost_LIBRARIES})
 # under windows our unit test code switches to .. since it assumes the test executable is run from /bin
 # we work around that by explicitly specifying the base_data_path to be the current directory
 add_test(NAME ored-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} COMMAND ored-test-suite -- --base_data_path=.)
+
+install(TARGETS ored-test-suite
+        RUNTIME DESTINATION bin
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
