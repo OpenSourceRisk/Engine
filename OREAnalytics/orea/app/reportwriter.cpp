@@ -29,10 +29,12 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -139,12 +141,27 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
 
+    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+
+    bool hasCapsFloors = false;
+    for (Size k = 0; k < trades.size(); k++) {
+        if (trades[k]->tradeType() == "CapFloor") {
+            hasCapsFloors = true;
+            break;
+        }
+    }
+
     if (write_discount_factor) {
         report.addColumn("DiscountFactor", double(), 10);
         report.addColumn("PresentValue", double(), 10);
     }
 
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+    if (hasCapsFloors && market) {
+        report.addColumn("FloorStrike", double(), 6);
+        report.addColumn("CapStrike", double(), 6);
+        report.addColumn("FloorVolatility", double(), 6);
+        report.addColumn("CapVolatility", double(), 6);
+    }
 
     for (Size k = 0; k < trades.size(); k++) {
 
@@ -276,6 +293,44 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 report.add(discountFactor);
                                 Real presentValue = discountFactor * effectiveAmount;
                                 report.add(presentValue);
+                            }
+                            
+                            if (hasCapsFloors && market) {
+                                // scan for known capped / floored coupons and extract cap / floor strike and fixing date
+                                
+                                // unpack stripped cap/floor coupon
+                                boost::shared_ptr<CashFlow> c;
+                                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
+                                    c = tmp->underlying();
+                                }
+                                Real floorStrike = Null<Real>(), capStrike = Null<Real>();
+                                Real floorVolatility = Null<Real>(), capVolatility = Null<Real>();
+                                Date fixingDate;
+                                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                }
+                                
+                                // get market volaility for cap / floor - ORE only has one cf vol surface per currency,
+                                // so this is easy, but once we support tenor dependent cf vol surfaces we need to
+                                // refine the vol retrieval here as well. 
+                                
+                                if (fixingDate != Date() && fixingDate > market->asofDate()) {
+                                    if (floorStrike != Null<Real>()) {
+                                        floorVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, floorStrike);
+                                    }
+                                    if (capStrike != Null<Real>()) {
+                                        capVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, capStrike);
+                                    }
+                                }
+
+                                report.add(floorStrike).add(capStrike).add(floorVolatility).add(capVolatility);
+                                
                             }
                         }
                     }

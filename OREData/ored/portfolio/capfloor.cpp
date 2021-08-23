@@ -25,6 +25,7 @@
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
@@ -427,5 +428,48 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(capFloorNode, premiumData_.toXML(doc));
     return node;
 }
+
+const std::map<std::string,boost::any>& CapFloor::additionalData() const {
+    // use the build time as of date to determine current notionals
+    Date asof = Settings::instance().evaluationDate();
+    additionalData_["legType"] = legData_.legType();
+    additionalData_["isPayer"] = legData_.isPayer();
+    additionalData_["notionalCurrency"] = legData_.currency();
+    for (Size j = 0; j < legs_[0].size(); ++j) {
+        boost::shared_ptr<CashFlow> flow = legs_[0][j];
+        // pick flow with earliest future payment date on this leg
+        if (flow->date() > asof) {
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+            if (coupon) {
+                Real currentNotional = 0;
+                try { currentNotional = coupon->nominal(); }
+                catch(std::exception& e) {
+                    ALOG("current notional could not be determined for trade " << id() << ", set to zero: " << e.what());
+                }
+                additionalData_["currentNotional"] = currentNotional;
+                                
+                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                if (frc) {
+                    additionalData_["index"] = frc->index()->name();
+                }
+            }
+            break;
+        }
+    }
+    if (legs_[0].size() > 0) {
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][0]);
+        if (coupon) {
+            Real originalNotional = 0.0;
+            try { originalNotional = coupon->nominal(); }
+            catch(std::exception& e) {
+                ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
+            }
+            additionalData_["originalNotional"] = originalNotional;
+        }
+    }
+
+    return additionalData_;
+}
+
 } // namespace data
 } // namespace ore
