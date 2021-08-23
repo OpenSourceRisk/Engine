@@ -36,10 +36,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CC051A76-5ABD-49EF-8C88-4C2C6A04D292}</ProjectGuid>
-    <Keyword>Win32Proj</Keyword>
     <RootNamespace>ore</RootNamespace>
     <ProjectName>ore</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\ore.props" />
