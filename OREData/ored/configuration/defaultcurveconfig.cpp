@@ -89,6 +89,8 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         type_ = Type::Benchmark;
     } else if (type == "MultiSection") {
         type_ = Type::MultiSection;
+    } else if (type == "Null") {
+        type_ = Type::Null;
     } else {
         QL_FAIL("Type " << type << " not recognized");
     }
@@ -218,6 +220,8 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLUtils::addChildren(doc, node, "SourceCurves", "SourceCurve", multiSectionSourceCurveIds_);
         XMLUtils::addChildren(doc, node, "SwitchDates", "SwitchDate", multiSectionSwitchDates_);
+    } else if (type_ == Type::Null) {
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     } else {
         QL_FAIL("Unkown type in DefaultCurveConfig::toXML()");
     }
