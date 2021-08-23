@@ -234,48 +234,50 @@ const set<CreditIndexConstituent>& CreditIndexReferenceDatum::constituents() con
 
 void BasicReferenceDataManager::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ReferenceData");
-
     for (XMLNode* child = XMLUtils::getChildNode(node, "ReferenceDatum"); child;
          child = XMLUtils::getNextSibling(child, "ReferenceDatum")) {
-
-        string refDataType = XMLUtils::getChildValue(child, "Type", false);
-
-        if (refDataType.empty()) {
-            ALOG("Found referenceDatum without Type - skipping");
-            continue;
-        }
-
-        string id = XMLUtils::getAttribute(child, "id");
-
-        if (id.empty()) {
-            ALOG("Found referenceDatum without id - skipping");
-            continue;
-        }
-
-        if (data_.find(make_pair(refDataType, id)) != data_.end()) {
-            duplicates_.insert(make_pair(refDataType, id));
-            ALOG("Found duplicate referenceDatum for type='" << refDataType << "', id='" << id << "'");
-            continue;
-        }
-
-        try {
-            boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);
-            refData->fromXML(child);
-            // set the type and id at top level (is this needed?)
-            refData->setType(refDataType);
-            refData->setId(id);
-            data_[make_pair(refDataType, id)] = refData;
-            TLOG("added referenceDatum for type='" << refDataType << "', id='" << id << "'");
-        } catch (const std::exception& e) {
-            buildErrors_[make_pair(refDataType, id)] = e.what();
-            ALOG("Error building referenceDatum for type='" << refDataType << "', id='" << id << "': " << e.what());
-        }
+	addFromXMLNode(child);
     }
 }
 
 void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd) {
     // Add reference datum, it is overwritten if it is already present.
     data_[make_pair(rd->type(), rd->id())] = rd;
+}
+
+void BasicReferenceDataManager::addFromXMLNode(XMLNode* node) {
+    string refDataType = XMLUtils::getChildValue(node, "Type", false);
+
+    if (refDataType.empty()) {
+        ALOG("Found referenceDatum without Type - skipping");
+        return;
+    }
+
+    string id = XMLUtils::getAttribute(node, "id");
+
+    if (id.empty()) {
+        ALOG("Found referenceDatum without id - skipping");
+        return;
+    }
+
+    if (data_.find(make_pair(refDataType, id)) != data_.end()) {
+        duplicates_.insert(make_pair(refDataType, id));
+        ALOG("Found duplicate referenceDatum for type='" << refDataType << "', id='" << id << "'");
+        return;
+    }
+
+    try {
+        boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);
+        refData->fromXML(node);
+        // set the type and id at top level (is this needed?)
+        refData->setType(refDataType);
+        refData->setId(id);
+        data_[make_pair(refDataType, id)] = refData;
+        TLOG("added referenceDatum for type='" << refDataType << "', id='" << id << "'");
+    } catch (const std::exception& e) {
+        buildErrors_[make_pair(refDataType, id)] = e.what();
+        ALOG("Error building referenceDatum for type='" << refDataType << "', id='" << id << "': " << e.what());
+    }
 }
 
 boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {

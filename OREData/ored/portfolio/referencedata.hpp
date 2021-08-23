@@ -231,6 +231,7 @@ public:
     bool hasData(const string& type, const string& id) const override;
     boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) override;
     void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) override;
+    void addFromXMLNode(XMLNode* node);
 
 protected:
     void check(const string& type, const string& id) const;
