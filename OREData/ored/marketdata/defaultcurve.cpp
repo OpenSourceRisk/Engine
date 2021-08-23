@@ -548,6 +548,7 @@ void DefaultCurve::buildMultiSectionCurve(DefaultCurveConfig& config, const Date
 void DefaultCurve::buildNullCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec) {
     LOG("Start building null default curve for " << config.curveID());
     curve_ = boost::make_shared<QuantLib::FlatHazardRate>(asof, 0.0, config.dayCounter());
+    recoveryRate_ = 0.0;
 }
 
 } // namespace data
