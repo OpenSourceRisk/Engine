@@ -45,14 +45,14 @@ ReferenceDatumRegister<ReferenceDatumBuilder<BondReferenceDatum>> BondReferenceD
 void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     QL_REQUIRE(node, "BondReferenceDatum::BondData::fromXML(): no node given");
     issuerId = XMLUtils::getChildValue(node, "IssuerId", true);
-    settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
-    calendar = XMLUtils::getChildValue(node, "Calendar", true);
-    issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
     creditCurveId = XMLUtils::getChildValue(node, "CreditCurveId", false);
     referenceCurveId = XMLUtils::getChildValue(node, "ReferenceCurveId", true);
     proxySecurityId = XMLUtils::getChildValue(node, "ProxySecurityId", false);
     incomeCurveId = XMLUtils::getChildValue(node, "IncomeCurveId", false);
     volatilityCurveId = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
+    settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
+    calendar = XMLUtils::getChildValue(node, "Calendar", true);
+    issueDate = XMLUtils::getChildValue(node, "IssueDate", true);
 
     legData.clear();
     XMLNode* legNode = XMLUtils::getChildNode(node, "LegData");
@@ -67,13 +67,14 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
 XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("BondData");
     XMLUtils::addChild(doc, node, "IssuerId", issuerId);
-    XMLUtils::addChild(doc, node, "SettlementDays", issuerId);
-    XMLUtils::addChild(doc, node, "Calendar", issuerId);
-    XMLUtils::addChild(doc, node, "IssueDate", issuerId);
     XMLUtils::addChild(doc, node, "CreditCurveId", issuerId);
     XMLUtils::addChild(doc, node, "ReferenceCurveId", issuerId);
     XMLUtils::addChild(doc, node, "ProxySecurityId", proxySecurityId);
+    XMLUtils::addChild(doc, node, "IncomeCurveId", incomeCurveId);
     XMLUtils::addChild(doc, node, "VolatilityCurveId", volatilityCurveId);
+    XMLUtils::addChild(doc, node, "SettlementDays", issuerId);
+    XMLUtils::addChild(doc, node, "Calendar", issuerId);
+    XMLUtils::addChild(doc, node, "IssueDate", issuerId);
     for (auto& bd : legData)
         XMLUtils::appendNode(node, bd.toXML(doc));
     return node;
