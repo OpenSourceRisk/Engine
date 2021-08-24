@@ -245,7 +245,7 @@ void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd)
     data_[make_pair(rd->type(), rd->id())] = rd;
 }
 
-void BasicReferenceDataManager::addFromXMLNode(XMLNode* node) {
+void BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId) {
     string refDataType = XMLUtils::getChildValue(node, "Type", false);
 
     if (refDataType.empty()) {
@@ -253,7 +253,7 @@ void BasicReferenceDataManager::addFromXMLNode(XMLNode* node) {
         return;
     }
 
-    string id = XMLUtils::getAttribute(node, "id");
+    string id = inputId.empty() ? XMLUtils::getAttribute(node, "id") : inputId;
 
     if (id.empty()) {
         ALOG("Found referenceDatum without id - skipping");
