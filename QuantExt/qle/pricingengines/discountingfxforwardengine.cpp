@@ -99,6 +99,7 @@ void DiscountingFxForwardEngine::calculate() const {
         if (!arguments_.isPhysicallySettled && arguments_.payDate > arguments_.fixingDate) {
             fx1 = settleCcy1 ? 1.0 : arguments_.fxIndex->fixing(arguments_.fixingDate);
             fx2 = settleCcy1 ? arguments_.fxIndex->fixing(arguments_.fixingDate) : 1.0;
+            fxfwd = arguments_.fxIndex->fixing(arguments_.fixingDate);
         }
 
         results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (tmpNominal1 / fx1 - tmpNominal2 / fx2);
