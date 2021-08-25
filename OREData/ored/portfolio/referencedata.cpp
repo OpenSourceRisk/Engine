@@ -46,6 +46,7 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     QL_REQUIRE(node, "BondReferenceDatum::BondData::fromXML(): no node given");
     issuerId = XMLUtils::getChildValue(node, "IssuerId", true);
     creditCurveId = XMLUtils::getChildValue(node, "CreditCurveId", false);
+    creditGroup = XMLUtils::getChildValue(node, "CreditGroup", false);
     referenceCurveId = XMLUtils::getChildValue(node, "ReferenceCurveId", true);
     proxySecurityId = XMLUtils::getChildValue(node, "ProxySecurityId", false);
     incomeCurveId = XMLUtils::getChildValue(node, "IncomeCurveId", false);
@@ -68,6 +69,7 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("BondData");
     XMLUtils::addChild(doc, node, "IssuerId", issuerId);
     XMLUtils::addChild(doc, node, "CreditCurveId", issuerId);
+    XMLUtils::addChild(doc, node, "CreditGroup", creditGroup);
     XMLUtils::addChild(doc, node, "ReferenceCurveId", issuerId);
     XMLUtils::addChild(doc, node, "ProxySecurityId", proxySecurityId);
     XMLUtils::addChild(doc, node, "IncomeCurveId", incomeCurveId);
@@ -246,29 +248,30 @@ void BasicReferenceDataManager::add(const boost::shared_ptr<ReferenceDatum>& rd)
     data_[make_pair(rd->type(), rd->id())] = rd;
 }
 
-void BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId) {
+boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string& inputId) {
     string refDataType = XMLUtils::getChildValue(node, "Type", false);
+    boost::shared_ptr<ReferenceDatum> refData;
 
     if (refDataType.empty()) {
         ALOG("Found referenceDatum without Type - skipping");
-        return;
+        return refData;
     }
 
     string id = inputId.empty() ? XMLUtils::getAttribute(node, "id") : inputId;
 
     if (id.empty()) {
         ALOG("Found referenceDatum without id - skipping");
-        return;
+        return refData;
     }
 
     if (data_.find(make_pair(refDataType, id)) != data_.end()) {
         duplicates_.insert(make_pair(refDataType, id));
         ALOG("Found duplicate referenceDatum for type='" << refDataType << "', id='" << id << "'");
-        return;
+        return refData;
     }
 
     try {
-        boost::shared_ptr<ReferenceDatum> refData = buildReferenceDatum(refDataType);
+        refData = buildReferenceDatum(refDataType);
         refData->fromXML(node);
         // set the type and id at top level (is this needed?)
         refData->setType(refDataType);
@@ -279,6 +282,8 @@ void BasicReferenceDataManager::addFromXMLNode(XMLNode* node, const std::string&
         buildErrors_[make_pair(refDataType, id)] = e.what();
         ALOG("Error building referenceDatum for type='" << refDataType << "', id='" << id << "': " << e.what());
     }
+
+    return refData;
 }
 
 boost::shared_ptr<ReferenceDatum> BasicReferenceDataManager::buildReferenceDatum(const string& refDataType) {
