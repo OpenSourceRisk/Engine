@@ -1116,7 +1116,7 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
             calibrationInfo_->expiryDates.push_back(d);
             times.push_back(vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
                                                        : vol_->timeFromReference(d));
-            forwards.push_back(eqIndex->fixing(d));
+            forwards.push_back(eqIndex->forecastFixing(d));
             rfDisc.push_back(eqIndex->equityForecastCurve()->discount(d));
             divDisc.push_back(eqIndex->equityDividendCurve()->discount(d));
         }
