@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ql/types.hpp>
+#include <ql/termstructures/volatility/volatilitytype.hpp>
 
 #include <vector>
 #include <string>
@@ -36,11 +37,14 @@ class CarrMadanMarginalProbability {
 public:
     /*! The callPrices should be non-discounted */
     CarrMadanMarginalProbability(const std::vector<Real>& strikes, const Real forward,
-                                 const std::vector<Real>& callPrices);
+                                 const std::vector<Real>& callPrices, const VolatilityType volType = ShiftedLognormal,
+                                 const Real shift = 0.0);
 
     const std::vector<Real>& strikes() const;
     Real forward() const;
     const std::vector<Real>& callPrices() const;
+    VolatilityType volatilityType() const;
+    Real shift() const;
 
     bool arbitrageFree() const;
 
@@ -52,6 +56,8 @@ private:
     std::vector<Real> strikes_;
     Real forward_;
     std::vector<Real> callPrices_;
+    VolatilityType volType_;
+    Real shift_;
 
     std::vector<bool> callSpreadArbitrage_, butterflyArbitrage_;
     std::vector<Real> q_;

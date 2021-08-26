@@ -27,10 +27,14 @@
 namespace QuantExt {
 
 CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Real>& strikes, const Real forward,
-                                                           const std::vector<Real>& callPrices)
-    : strikes_(strikes), forward_(forward), callPrices_(callPrices) {
+                                                           const std::vector<Real>& callPrices,
+                                                           const VolatilityType volType, const Real shift)
+    : strikes_(strikes), forward_(forward), callPrices_(callPrices), volType_(volType), shift_(shift) {
 
     // check input
+
+    QL_REQUIRE(close_enough(shift_, 0.0) || shift_ > 0.0,
+               "CarrMadanMarginalProbability: shift (" << shift_ << ") must be non-negative");
 
     QL_REQUIRE(strikes_.size() == callPrices_.size(), "CarrMadanMarginalProbability: strikes ("
                                                           << strikes_.size() << ") inconsistent to callPrices ("
@@ -55,18 +59,20 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
     QL_REQUIRE(strikes_[perm[0]] > 0.0 || close_enough(strikes_[perm[0]], 0.0),
                "CarrMadanMarginalProbability: all input strikes must be positive or zero, got " << strikes_[perm[0]]);
 
-    // add strike 0 and corresponding call price (= forward), if not already present
-
-    bool zeroStrikeAdded = false;
-    if (!close_enough(strikes_[perm[0]], 0.0)) {
-        strikes_.push_back(0.0);
-        callPrices_.push_back(forward_);
-        perm.insert(perm.begin(), strikes_.size() - 1);
-        zeroStrikeAdded = true;
-    } else {
-        QL_REQUIRE(close_enough(callPrices_[perm[0]], forward_),
-                   "CarrMadanMarginalProbability: call price for strike 0 ("
-                       << callPrices_.front() << ") should match forward (" << forward_ << ")");
+    /* add strike -shift and corresponding call price (= forward + shift), if not already present
+       this is only done for ShiftedLognormal vols, not for Normal */
+    bool minusShiftStrikeAdded = false;
+    if (volType_ == ShiftedLognormal) {
+        if (!close_enough(strikes_[perm[0]], 0.0)) {
+            strikes_.push_back(0.0);
+            callPrices_.push_back(forward_);
+            perm.insert(perm.begin(), strikes_.size() - 1);
+            minusShiftStrikeAdded = true;
+        } else {
+            QL_REQUIRE(close_enough(callPrices_[perm[0]], forward_ + shift_),
+                       "CarrMadanMarginalProbability: call price for strike 0 ("
+                           << callPrices_.front() << ") should match forward (" << forward_ << ")");
+        }
     }
 
     // check we have two strikes at least
@@ -130,7 +136,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     // remove zero strike again, if not present from the start
 
-    if (zeroStrikeAdded) {
+    if (minusShiftStrikeAdded) {
         strikes_.erase(std::next(strikes_.end(), -1));
         callPrices_.erase(std::next(callPrices_.end(), -1));
         callSpreadArbitrage_.erase(std::next(callSpreadArbitrage_.begin(), perm.front()));
@@ -142,6 +148,8 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 const std::vector<Real>& CarrMadanMarginalProbability::strikes() const { return strikes_; }
 Real CarrMadanMarginalProbability::forward() const { return forward_; }
 const std::vector<Real>& CarrMadanMarginalProbability::callPrices() const { return callPrices_; }
+VolatilityType CarrMadanMarginalProbability::volatilityType() const { return volType_; }
+Real CarrMadanMarginalProbability::shift() const { return shift_; }
 
 bool CarrMadanMarginalProbability::arbitrageFree() const { return smileIsArbitrageFree_; }
 
