@@ -40,7 +40,6 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
-#include <qle/calendars/emptycalendar.hpp>
 #include <qle/calendars/france.hpp>
 #include <qle/calendars/ice.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
@@ -475,7 +474,6 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"WeekendsOnly", WeekendsOnly()},
         {"UNMAPPED", WeekendsOnly()},
         {"NullCalendar", NullCalendar()},
-        {"EmptyCalendar", EmptyCalendar()},
         {"", NullCalendar()}};
     static bool isInitialised = false;
     if (!isInitialised) {
