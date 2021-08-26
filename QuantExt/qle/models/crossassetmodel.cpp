@@ -500,10 +500,13 @@ void CrossAssetModel::checkCorrelationMatrix() const {
                                                       << rho_[i][i] << " for i=" << i);
     }
 
-    SymmetricSchurDecomposition ssd(rho_);
-    for (Size i = 0; i < ssd.eigenvalues().size(); ++i) {
-        QL_REQUIRE(ssd.eigenvalues()[i] >= 0.0,
-                   "correlation matrix has negative eigenvalue at " << i << " (" << ssd.eigenvalues()[i] << ")");
+    // if we salvage the matrix there is no point in checking for negative eigenvalues prior to that
+    if (salvaging_ == SalvagingAlgorithm::None) {
+        SymmetricSchurDecomposition ssd(rho_);
+        for (Size i = 0; i < ssd.eigenvalues().size(); ++i) {
+            QL_REQUIRE(ssd.eigenvalues()[i] >= 0.0,
+                       "correlation matrix has negative eigenvalue at " << i << " (" << ssd.eigenvalues()[i] << ")");
+        }
     }
 }
 
