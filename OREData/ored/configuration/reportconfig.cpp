@@ -40,6 +40,18 @@ void ReportConfig::fromXML(XMLNode* node) {
         reportOnMoneynessGrid_ = boost::none;
     }
 
+    if (auto tmp = XMLUtils::getChildNode(node, "ReportOnStrikeGrid")) {
+        reportOnStrikeGrid_ = parseBool(XMLUtils::getNodeValue(tmp));
+    } else {
+        reportOnStrikeGrid_ = boost::none;
+    }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "ReportOnStrikeSpreadGrid")) {
+        reportOnStrikeSpreadGrid_ = parseBool(XMLUtils::getNodeValue(tmp));
+    } else {
+        reportOnStrikeGrid_ = boost::none;
+    }
+
     if (auto tmp = XMLUtils::getChildNode(node, "Deltas")) {
         deltas_ = parseListOfValues(XMLUtils::getNodeValue(tmp));
     } else {
@@ -50,6 +62,18 @@ void ReportConfig::fromXML(XMLNode* node) {
         moneyness_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp), &parseReal);
     } else {
         moneyness_ = boost::none;
+    }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Strikes")) {
+        strikes_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp), &parseReal);
+    } else {
+        strikes_ = boost::none;
+    }
+
+    if (auto tmp = XMLUtils::getChildNode(node, "StrikeSpreads")) {
+        strikeSpreads_ = parseListOfValues<Real>(XMLUtils::getNodeValue(tmp), &parseReal);
+    } else {
+        strikeSpreads_ = boost::none;
     }
 
     if (auto tmp = XMLUtils::getChildNode(node, "Expiries")) {
@@ -77,8 +101,12 @@ XMLNode* ReportConfig::toXML(XMLDocument& doc) {
 ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const ReportConfig& localConfig) {
     bool reportOnDeltaGrid = false;
     bool reportOnMoneynessGrid = false;
+    bool reportOnStrikeGrid = false;
+    bool reportOnStrikeSpreadGrid = false;
     std::vector<Real> moneyness;
     std::vector<std::string> deltas;
+    std::vector<Real> strikes;
+    std::vector<Real> strikeSpreads;
     std::vector<Period> expiries;
 
     if (localConfig.reportOnDeltaGrid())
@@ -91,6 +119,16 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     else if (globalConfig.reportOnMoneynessGrid())
         reportOnMoneynessGrid = *globalConfig.reportOnMoneynessGrid();
 
+    if (localConfig.reportOnStrikeGrid())
+        reportOnStrikeGrid = *localConfig.reportOnStrikeGrid();
+    else if (globalConfig.reportOnStrikeGrid())
+        reportOnStrikeGrid = *globalConfig.reportOnStrikeGrid();
+
+    if (localConfig.reportOnStrikeSpreadGrid())
+        reportOnStrikeSpreadGrid = *localConfig.reportOnStrikeSpreadGrid();
+    else if (globalConfig.reportOnStrikeSpreadGrid())
+        reportOnStrikeSpreadGrid = *globalConfig.reportOnStrikeSpreadGrid();
+
     if (localConfig.moneyness())
         moneyness = *localConfig.moneyness();
     else if (globalConfig.moneyness())
@@ -101,12 +139,23 @@ ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const Repor
     else if (globalConfig.deltas())
         deltas = *globalConfig.deltas();
 
+    if (localConfig.strikes())
+        strikes = *localConfig.strikes();
+    else if (globalConfig.strikes())
+        strikes = *globalConfig.strikes();
+
+    if (localConfig.strikeSpreads())
+        strikeSpreads = *localConfig.strikeSpreads();
+    else if (globalConfig.strikeSpreads())
+        strikeSpreads = *globalConfig.strikeSpreads();
+
     if (localConfig.expiries())
         expiries = *localConfig.expiries();
     else if (globalConfig.expiries())
         expiries = *globalConfig.expiries();
 
-    return ReportConfig(reportOnDeltaGrid, reportOnMoneynessGrid, deltas, moneyness, expiries);
+    return ReportConfig(reportOnDeltaGrid, reportOnMoneynessGrid, reportOnStrikeGrid, reportOnStrikeSpreadGrid, deltas,
+                        moneyness, strikes, strikeSpreads, expiries);
 }
 
 } // namespace data

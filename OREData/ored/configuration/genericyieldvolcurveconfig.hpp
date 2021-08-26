@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -100,6 +101,7 @@ public:
     const vector<string>& smileUnderlyingTenors() const { return smileUnderlyingTenors_; }
     const vector<string>& smileSpreads() const { return smileSpreads_; }
     const vector<string>& quotes() override;
+    const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
     //! \name Setters
@@ -139,6 +141,7 @@ private:
     vector<string> smileOptionTenors_;
     vector<string> smileUnderlyingTenors_;
     vector<string> smileSpreads_;
+    ReportConfig reportConfig_;
 };
 
 std::ostream& operator<<(std::ostream& out, GenericYieldVolatilityCurveConfig::VolatilityType t);

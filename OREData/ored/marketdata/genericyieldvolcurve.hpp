@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
@@ -48,7 +49,8 @@ public:
     virtual ~GenericYieldVolCurve() {}
     //! Detailed constructor
     GenericYieldVolCurve(
-        const Date& asof, const Loader& loader, const boost::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
+        const Date& asof, const Loader& loader, const CurveConfigurations& curveConfigs,
+        const boost::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
         const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices,
         const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>&
             matchAtmQuote,

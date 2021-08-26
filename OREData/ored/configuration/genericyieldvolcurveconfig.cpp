@@ -194,6 +194,10 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     // derive qualifier (=ccy) from swapIndexBase if not given explicitly
     if (qualifier_ == "")
         qualifier_ = ccyFromSwapIndexBase();
+
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
 }
 
 XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -242,6 +246,8 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, node, "Smile" + underlyingLabel_ + "Tenors", smileUnderlyingTenors_);
         XMLUtils::addGenericChildAsList(doc, node, "SmileSpreads", smileSpreads_);
     }
+
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }

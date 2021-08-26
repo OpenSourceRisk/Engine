@@ -487,6 +487,14 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
                 reportConfigFxVols_.fromXML(tmp3);
         }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "IrCapFloorVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigIrCapFloorVols_.fromXML(tmp3);
+        }
+        if (auto tmp2 = XMLUtils::getChildNode(tmp, "IrSwaptionVolatilities")) {
+            if (auto tmp3 = XMLUtils::getChildNode(tmp2, "Report"))
+                reportConfigIrSwaptionVols_.fromXML(tmp3);
+        }
     }
 
     // Load YieldCurves, FXVols, etc, etc

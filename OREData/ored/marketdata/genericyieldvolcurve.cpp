@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ored/marketdata/genericyieldvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -34,7 +35,8 @@ namespace ore {
 namespace data {
 
 GenericYieldVolCurve::GenericYieldVolCurve(
-    const Date& asof, const Loader& loader, const boost::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
+    const Date& asof, const Loader& loader, const CurveConfigurations& curveConfigs,
+    const boost::shared_ptr<GenericYieldVolatilityCurveConfig>& config,
     const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices,
     const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term)>& matchAtmQuote,
     const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
