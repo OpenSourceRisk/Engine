@@ -35,6 +35,7 @@
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -149,6 +150,23 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
             hasCapsFloors = true;
             break;
         }
+        const vector<Leg>& legs = trades[k]->legs();
+        for (size_t i = 0; i < legs.size(); i++) {
+            const QuantLib::Leg& leg = legs[i];
+            for (size_t j = 0; j < leg.size(); j++) {
+                boost::shared_ptr<QuantLib::CashFlow> flow = leg[j];
+                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(flow)) {
+                    WLOG("Found capped floored coupon 1");
+                    hasCapsFloors = true;
+                    break;
+                }
+                // check this separately as it does not derive from CappedFlooredCoupon
+                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
+                    hasCapsFloors = true;
+                    break;
+                }
+            }
+        }        
     }
 
     if (write_discount_factor) {
@@ -299,7 +317,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 // scan for known capped / floored coupons and extract cap / floor strike and fixing date
                                 
                                 // unpack stripped cap/floor coupon
-                                boost::shared_ptr<CashFlow> c;
+                                boost::shared_ptr<CashFlow> c = ptrFlow;
                                 if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
                                     c = tmp->underlying();
                                 }
@@ -314,6 +332,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
+                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
                                 }
                                 
                                 // get market volaility for cap / floor - ORE only has one cf vol surface per currency,
@@ -322,10 +344,16 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 
                                 if (fixingDate != Date() && fixingDate > market->asofDate()) {
                                     if (floorStrike != Null<Real>()) {
-                                        floorVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, floorStrike);
+                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                            floorVolatility = market->swaptionVol(ccy, configuration)->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
+                                        else
+                                            floorVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, floorStrike);
                                     }
                                     if (capStrike != Null<Real>()) {
-                                        capVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, capStrike);
+                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                            capVolatility = market->swaptionVol(ccy, configuration)->volatility(fixingDate, tmp->index()->tenor(), capStrike);
+                                        else
+                                            capVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, capStrike);
                                     }
                                 }
 
