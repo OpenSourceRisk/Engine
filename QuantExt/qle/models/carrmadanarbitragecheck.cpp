@@ -110,7 +110,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
     // check 1: Q(i,j) in [0,1]
 
     for (Size i = 0; i < Q.size(); ++i) {
-        if ((Q[i] < 0.0 && !close_enough(Q[i], 0.0)) || (Q[i] > 1.0 && !close_enough(Q[i], 1.0))) {
+        if (Q[i] < -1.0E-10 || Q[i] > 1.0 + 1.0E-10) {
             callSpreadArbitrage_[perm[i]] = true;
             callSpreadArbitrage_[perm[i + 1]] = true;
             smileIsArbitrageFree_ = false;
