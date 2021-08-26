@@ -153,11 +153,9 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     ccy_ = XMLUtils::getChildValue(node, "Currency", true);
 
+    calendar_ = XMLUtils::getChildValue(node, "Calendar", false);
+    
     XMLNode* n;
-    calendar_ = "NullCalendar";
-    if ((n = XMLUtils::getChildNode(node, "Calendar")))
-        calendar_ = XMLUtils::getNodeValue(n);
-
     dayCounter_ = "A365";
     if ((n = XMLUtils::getChildNode(node, "DayCounter")))
         dayCounter_ = XMLUtils::getNodeValue(n);
