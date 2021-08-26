@@ -67,10 +67,12 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
         auto config = *curveConfigs.equityVolCurveConfig(spec.curveConfigID());
 
-        calendar_ = parseCalendar(config.calendar());
-        // if calendar is null use currency
-        if (calendar_ == NullCalendar())
+        // if calendar was omitted or left blank, use ccy calendar instead
+        if (config.calendar() == "")
             calendar_ = parseCalendar(config.ccy());
+        else
+            calendar_ = parseCalendar(config.calendar());
+
         dayCounter_ = parseDayCounter(config.dayCounter());
 
         // loop over the volatility configs attempting to build in the order provided
