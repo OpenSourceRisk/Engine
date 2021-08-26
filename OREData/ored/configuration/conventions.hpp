@@ -1261,6 +1261,7 @@ public:
     Natural spotDays() const { return spotDays_; }
     Real pointsFactor() const { return pointsFactor_; }
     const Calendar& advanceCalendar() const { return advanceCalendar_; }
+    const string& strAdvanceCalendar() const { return strAdvanceCalendar_; }
     bool spotRelative() const { return spotRelative_; }
     BusinessDayConvention bdc() const { return bdc_; }
     bool outright() const { return outright_; }

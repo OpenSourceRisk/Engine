@@ -178,7 +178,8 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
     // Some default conventions for building the commodity curve
     Period spotTenor = 2 * Days;
     Real pointsFactor = 1.0;
-    Calendar cal = parseCalendar(config->currency());
+
+    Calendar cal;
     bool spotRelative = true;
     BusinessDayConvention bdc = Following;
     bool outright = true;
@@ -194,7 +195,9 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
 
         spotTenor = convention->spotDays() * Days;
         pointsFactor = convention->pointsFactor();
-        if (convention->advanceCalendar() != NullCalendar())
+        if (convention->strAdvanceCalendar() == "")
+            cal = parseCalendar(config->currency());
+        else
             cal = convention->advanceCalendar();
         spotRelative = convention->spotRelative();
         bdc = convention->bdc();
