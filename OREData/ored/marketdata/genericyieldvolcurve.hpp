@@ -28,6 +28,7 @@
 #include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 
 namespace ore {
@@ -62,10 +63,12 @@ public:
     //! \name Inspectors
     //@{
     const boost::shared_ptr<SwaptionVolatilityStructure>& volTermStructure() { return vol_; }
+    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
     boost::shared_ptr<SwaptionVolatilityStructure> vol_;
+    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo_;
 };
 } // namespace data
 } // namespace ore

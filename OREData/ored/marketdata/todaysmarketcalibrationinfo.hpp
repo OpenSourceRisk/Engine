@@ -133,18 +133,21 @@ struct IrVolCalibrationInfo {
     bool isArbitrageFree;
     std::vector<QuantLib::Date> expiryDates;
     std::vector<QuantLib::Period> underlyingTenors;
+    std::string volatilityType;
     std::vector<double> times;
     std::vector<double> strikeSpreads;
     std::vector<double> strikes;
-    std::vector<double> forwards;
-    std::vector<std::vector<std::vector<double>>> spreadGridStrikes;
-    std::vector<std::vector<std::vector<double>>> spreadGridProb;
-    std::vector<std::vector<std::vector<double>>> spreadGridImpliedVolatility;
+    std::vector<std::vector<double>> forwards;
+    std::vector<std::vector<std::vector<double>>> strikeSpreadGridStrikes;
+    std::vector<std::vector<std::vector<double>>> strikeSpreadGridProb;
+    std::vector<std::vector<std::vector<double>>> strikeSpreadGridImpliedVolatility;
     std::vector<std::vector<std::vector<double>>> strikeGridStrikes;
     std::vector<std::vector<std::vector<double>>> strikeGridProb;
     std::vector<std::vector<std::vector<double>>> strikeGridImpliedVolatility;
-    std::vector<std::vector<std::vector<bool>>> spreadGridCallSpreadArbitrage;
-    std::vector<std::vector<std::vector<bool>>> spreadGridButterflyArbitrage;
+    std::vector<std::vector<std::vector<bool>>> strikeSpreadGridCallSpreadArbitrage;
+    std::vector<std::vector<std::vector<bool>>> strikeSpreadGridButterflyArbitrage;
+    std::vector<std::vector<std::vector<bool>>> strikeGridCallSpreadArbitrage;
+    std::vector<std::vector<std::vector<bool>>> strikeGridButterflyArbitrage;
     std::vector<std::string> messages;
 };
 
@@ -162,7 +165,7 @@ struct TodaysMarketCalibrationInfo {
     std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> fxVolCalibrationInfo;
     // eq vols
     std::map<std::string, boost::shared_ptr<FxEqVolCalibrationInfo>> eqVolCalibrationInfo;
-    // ir vols
+    // ir vols (swaption, capfloor)
     std::map<std::string, boost::shared_ptr<IrVolCalibrationInfo>> irVolCalibrationInfo;
 };
 
