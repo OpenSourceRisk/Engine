@@ -41,7 +41,7 @@ namespace data {
 void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::Conventions>& conventions) {
     
     QuantExt::SavedObservableSettings savedObservableSettings;
-    ObservableSettings::instance().disableUpdates(savedObservableSettings.updatesDeferred());
+    ObservableSettings::instance().disableUpdates(true);
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
     cpu_timer timer;
