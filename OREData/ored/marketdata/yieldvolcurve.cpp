@@ -28,7 +28,7 @@ namespace data {
 YieldVolCurve::YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loader& loader,
                              const CurveConfigurations& curveConfigs)
     : GenericYieldVolCurve(
-          asof, loader, curveConfigs.yieldVolCurveConfig(spec.curveConfigID()), {},
+          asof, loader, curveConfigs, curveConfigs.yieldVolCurveConfig(spec.curveConfigID()), {},
           [](const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term) -> bool {
               boost::shared_ptr<BondOptionQuote> q = boost::dynamic_pointer_cast<BondOptionQuote>(md);
               if (q == nullptr)

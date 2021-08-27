@@ -29,7 +29,7 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                                    const CurveConfigurations& curveConfigs,
                                    const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices)
     : GenericYieldVolCurve(
-          asof, loader, curveConfigs.swaptionVolCurveConfig(spec.curveConfigID()), requiredSwapIndices,
+          asof, loader, curveConfigs, curveConfigs.swaptionVolCurveConfig(spec.curveConfigID()), requiredSwapIndices,
           [](const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term) -> bool {
               boost::shared_ptr<SwaptionQuote> q = boost::dynamic_pointer_cast<SwaptionQuote>(md);
               if (q == nullptr)

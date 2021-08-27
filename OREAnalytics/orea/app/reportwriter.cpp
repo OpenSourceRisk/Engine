@@ -1,3 +1,4 @@
+
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  Copyright (C) 2017 Aareal Bank AG
@@ -297,8 +298,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             string ccy = "";
                             if (!cf.currency.empty()) {
                                 ccy = cf.currency;
-                            } else if(trades[k]->legCurrencies().size()>cf.legNumber)
-                            {
+                            } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
                                 ccy = trades[k]->legCurrencies()[cf.legNumber];
                             }
                             Real effectiveAmount = cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
@@ -1089,6 +1089,70 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
     }
 }
 
+void addIrVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
+                             boost::shared_ptr<IrVolCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    addRowMktCalReport(report, type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, type, id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+    addRowMktCalReport(report, type, id, "volatilityType", "", "", "", info->volatilityType);
+    for (Size i = 0; i < info->messages.size(); ++i)
+        addRowMktCalReport(report, type, id, "message_" + std::to_string(i), "", "", "", info->messages[i]);
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        addRowMktCalReport(report, type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+    }
+
+    for (Size i = 0; i < info->underlyingTenors.size(); ++i) {
+        addRowMktCalReport(report, type, id, "tenor", std::to_string(i), "", "",
+                           ore::data::to_string(info->underlyingTenors.at(i)));
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size u = 0; u < info->underlyingTenors.size(); ++u) {
+            std::string uStr = ore::data::to_string(info->underlyingTenors[u]);
+            for (Size j = 0; j < info->strikes.size(); ++j) {
+                std::string kStr = std::to_string(info->strikes.at(j));
+                addRowMktCalReport(report, type, id, "forward", tStr, kStr, uStr, info->forwards.at(i).at(u));
+                addRowMktCalReport(report, type, id, "strike", tStr, kStr, uStr,
+                                   info->strikeGridStrikes.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "vol", tStr, kStr, uStr,
+                                   info->strikeGridImpliedVolatility.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "prob", tStr, kStr, uStr, info->strikeGridProb.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "callSpreadArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeGridCallSpreadArbitrage.at(i).at(u).at(j)));
+                addRowMktCalReport(report, type, id, "butterflyArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeGridButterflyArbitrage.at(i).at(u).at(j)));
+            }
+        }
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size u = 0; u < info->underlyingTenors.size(); ++u) {
+            std::string uStr = ore::data::to_string(info->underlyingTenors[u]);
+            for (Size j = 0; j < info->strikeSpreads.size(); ++j) {
+                std::string kStr = std::to_string(info->strikeSpreads.at(j));
+                addRowMktCalReport(report, type, id, "forward", tStr, kStr, uStr, info->forwards.at(i).at(u));
+                addRowMktCalReport(report, type, id, "strike", tStr, kStr, uStr,
+                                   info->strikeSpreadGridStrikes.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "vol", tStr, kStr, uStr,
+                                   info->strikeSpreadGridImpliedVolatility.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "prob", tStr, kStr, uStr,
+                                   info->strikeSpreadGridProb.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "callSpreadArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeSpreadGridCallSpreadArbitrage.at(i).at(u).at(j)));
+                addRowMktCalReport(report, type, id, "butterflyArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeSpreadGridButterflyArbitrage.at(i).at(u).at(j)));
+            }
+        }
+    }
+}
+
 } // namespace
 
 void ReportWriter::writeTodaysMarketCalibrationReport(
@@ -1128,6 +1192,11 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
     // eq vol results
     for (auto const& r : calibrationInfo->eqVolCalibrationInfo) {
         addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
+    }
+
+    // ir vol results
+    for (auto const& r : calibrationInfo->irVolCalibrationInfo) {
+        addIrVolCalibrationInfo(report, "irVol", r.first, r.second);
     }
 
     report.end();

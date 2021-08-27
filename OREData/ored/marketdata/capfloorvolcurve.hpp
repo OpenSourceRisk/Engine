@@ -26,6 +26,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/todaysmarketcalibrationinfo.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
 #include <qle/termstructures/capfloortermvolcurve.hpp>
@@ -56,11 +57,13 @@ public:
 
     //! The result of building the optionlet structure that has been configured
     const boost::shared_ptr<QuantLib::OptionletVolatilityStructure>& capletVolStructure() const { return capletVol_; }
+    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
     //@}
 
 private:
     CapFloorVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantLib::OptionletVolatilityStructure> capletVol_;
+    boost::shared_ptr<IrVolCalibrationInfo> calibrationInfo_;
 
     //! Build ATM optionlet curve
     void atmOptCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
@@ -93,6 +96,11 @@ private:
               const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
               boost::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
               QuantLib::VolatilityType type, QuantLib::Real displacement) const;
+
+    //! Build calibration info
+    void buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
+                              const boost::shared_ptr<CapFloorVolatilityCurveConfig> config,
+                              const boost::shared_ptr<IborIndex>& iborIndex);
 };
 
 } // namespace data

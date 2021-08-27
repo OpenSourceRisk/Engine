@@ -157,6 +157,11 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     // Set type_
     configureType();
 
+    // Optional report config
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
+    }
+
     // Check that we have a valid configuration
     validate();
 
@@ -191,6 +196,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "TimeInterpolation", timeInterpolation_);
     XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
     XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }

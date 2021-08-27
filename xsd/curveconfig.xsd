@@ -226,6 +226,7 @@
       <xs:element type="xs:string" name="SmileOptionTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSwapTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSpreads" minOccurs="0"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -247,6 +248,7 @@
       <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
       <xs:element type="xs:string" name="OptionTenors"/>
       <xs:element type="xs:string" name="BondTenors"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -337,6 +339,7 @@
         </xs:simpleType>
       </xs:element>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -1005,6 +1008,20 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="EquityVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="IRSwaptionVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="IRCapFloorVolatilities" minOccurs="0">
         <xs:complexType>
           <xs:all>
             <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>

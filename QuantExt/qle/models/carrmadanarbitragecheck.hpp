@@ -23,10 +23,11 @@
 
 #pragma once
 
+#include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/types.hpp>
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace QuantExt {
 
@@ -36,11 +37,14 @@ class CarrMadanMarginalProbability {
 public:
     /*! The callPrices should be non-discounted */
     CarrMadanMarginalProbability(const std::vector<Real>& strikes, const Real forward,
-                                 const std::vector<Real>& callPrices);
+                                 const std::vector<Real>& callPrices, const VolatilityType volType = ShiftedLognormal,
+                                 const Real shift = 0.0);
 
     const std::vector<Real>& strikes() const;
     Real forward() const;
     const std::vector<Real>& callPrices() const;
+    VolatilityType volatilityType() const;
+    Real shift() const;
 
     bool arbitrageFree() const;
 
@@ -52,6 +56,42 @@ private:
     std::vector<Real> strikes_;
     Real forward_;
     std::vector<Real> callPrices_;
+    VolatilityType volType_;
+    Real shift_;
+
+    std::vector<bool> callSpreadArbitrage_, butterflyArbitrage_;
+    std::vector<Real> q_;
+    bool smileIsArbitrageFree_;
+};
+
+// accepts invalid forward and/or strikes (lt -shift) and performs the computation on the valid strikes only
+class CarrMadanMarginalProbabilitySafeStrikes {
+public:
+    /*! The callPrices should be non-discounted */
+    CarrMadanMarginalProbabilitySafeStrikes(const std::vector<Real>& strikes, const Real forward,
+                                            const std::vector<Real>& callPrices,
+                                            const VolatilityType volType = ShiftedLognormal, const Real shift = 0.0);
+
+    const std::vector<Real>& strikes() const;
+    Real forward() const;
+    const std::vector<Real>& callPrices() const;
+    VolatilityType volatilityType() const;
+    Real shift() const;
+
+    bool arbitrageFree() const;
+
+    const std::vector<bool>& callSpreadArbitrage() const;
+    const std::vector<bool>& butterflyArbitrage() const;
+    const std::vector<Real>& density() const;
+
+private:
+    std::vector<Real> strikes_;
+    Real forward_;
+    std::vector<Real> callPrices_;
+    VolatilityType volType_;
+    Real shift_;
+
+    std::vector<bool> validStrike_;
 
     std::vector<bool> callSpreadArbitrage_, butterflyArbitrage_;
     std::vector<Real> q_;
@@ -93,7 +133,9 @@ private:
     std::vector<std::vector<bool>> callSpreadArbitrage_, butterflyArbitrage_, calendarArbitrage_;
 };
 
-std::string arbitrageAsString(const CarrMadanMarginalProbability& cm);
+template <class CarrMadanMarginalProbabilityClass>
+std::string arbitrageAsString(const CarrMadanMarginalProbabilityClass& cm);
+
 std::string arbitrageAsString(const CarrMadanSurface& cm);
 
 } // namespace QuantExt

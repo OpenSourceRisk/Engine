@@ -25,6 +25,7 @@
 
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/reportconfig.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -92,6 +93,7 @@ public:
     Type type() const { return type_; }
     const string& currency() const;
     string iborTenor() const;
+    const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
     //! Convert VolatilityType \p type to string
@@ -119,6 +121,7 @@ private:
     BootstrapConfig bootstrapConfig_;
     Type type_;
     std::string extrapolation_;
+    ReportConfig reportConfig_;
 
     //! Populate required curve ids
     void populateRequiredCurveIds();
