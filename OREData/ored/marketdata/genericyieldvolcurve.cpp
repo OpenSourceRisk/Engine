@@ -366,7 +366,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 TLOG("Underlying tenor " << underlyingTenorsReport[u]);
                 for (Size i = 0; i < times.size(); ++i) {
                     Real t = times[i];
-                    Real shift = vol_->shift(expiries[i], underlyingTenorsReport[u]);
+                    Real shift =
+                        vol_->volatilityType() == Normal ? 0.0 : vol_->shift(expiries[i], underlyingTenorsReport[u]);
                     bool validSlice = true;
                     for (Size j = 0; j < strikes.size(); ++j) {
                         try {
@@ -438,7 +439,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 TLOG("Underlying tenor " << underlyingTenorsReport[u]);
                 for (Size i = 0; i < times.size(); ++i) {
                     Real t = times[i];
-                    Real shift = vol_->shift(expiries[i], underlyingTenorsReport[u]);
+                    Real shift =
+                        vol_->volatilityType() == Normal ? 0.0 : vol_->shift(expiries[i], underlyingTenorsReport[u]);
                     bool validSlice = true;
                     for (Size j = 0; j < strikeSpreads.size(); ++j) {
                         Real strike = forwards[i][u] + strikeSpreads[j];
@@ -469,8 +471,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         try {
                             QuantExt::CarrMadanMarginalProbabilitySafeStrikes cm(
                                 calibrationInfo_->strikeSpreadGridStrikes[i][u], forwards[i][u],
-                                callPricesStrikeSpread[i][u], vol_->volatilityType(),
-                                vol_->shift(expiries[i], underlyingTenorsReport[u]));
+                                callPricesStrikeSpread[i][u], vol_->volatilityType(), shift);
                             calibrationInfo_->strikeSpreadGridCallSpreadArbitrage[i][u] = cm.callSpreadArbitrage();
                             calibrationInfo_->strikeSpreadGridButterflyArbitrage[i][u] = cm.butterflyArbitrage();
                             if (!cm.arbitrageFree())
