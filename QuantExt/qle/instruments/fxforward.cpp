@@ -35,9 +35,6 @@ FxForward::FxForward(const Real& nominal1, const Currency& currency1, const Real
     if (payDate_ == Date())
         payDate_ = maturityDate_;
 
-    if (payCcy_.empty())
-        payCcy_ = currency2_;
-
     if (fixingDate_ == Date())
         fixingDate_ = maturityDate_;
 
@@ -65,9 +62,6 @@ FxForward::FxForward(const Money& nominal1, const ExchangeRate& forwardRate, con
     if (payDate_ == Date())
         payDate_ = maturityDate_;
 
-    if (payCcy_.empty())
-        payCcy_ = currency2_;
-
     if (fixingDate_ == Date())
         fixingDate_ = maturityDate_;
 
@@ -92,9 +86,6 @@ FxForward::FxForward(const Money& nominal1, const Handle<Quote>& fxForwardQuote,
 
     if (payDate_ == Date())
         payDate_ = maturityDate_;
-
-    if (payCcy_.empty())
-        payCcy_ = currency2_;
 
     if (fixingDate_ == Date())
         fixingDate_ = maturityDate_;

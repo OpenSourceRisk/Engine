@@ -83,7 +83,9 @@ public:
         //! continue if bootstrap error exceeds tolerance
         const bool continueOnError = false,
         //! reference calibration grid
-        const std::string& referenceCalibrationGrid_ = "");
+        const std::string& referenceCalibrationGrid_ = "",
+	//! salvaging algorithm to apply to correlation matrix
+	const SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     //! Default destructor
     ~CrossAssetModelBuilder() {}
@@ -135,6 +137,7 @@ private:
     const bool dontCalibrate_;
     const bool continueOnError_;
     const std::string referenceCalibrationGrid_;
+    const SalvagingAlgorithm::Type salvaging_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;

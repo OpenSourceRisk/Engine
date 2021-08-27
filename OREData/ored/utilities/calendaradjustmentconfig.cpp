@@ -110,15 +110,23 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
 
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
         for (auto holiday : holidayDates) {
-            Date h = parseDate(holiday);
-            addHolidays(calname, h);
-            cal.addHoliday(h);
+            try {
+                Date h = parseDate(holiday);
+                addHolidays(calname, h);
+                cal.addHoliday(h);
+            } catch(std::exception& e) {
+                ALOG("error parsing holiday " << holiday << " for calendar " << calname);
+            }
         }
         vector<string> businessDates = XMLUtils::getChildrenValues(calnode, "AdditionalBusinessDays", "Date");
         for (auto businessDay : businessDates) {
-            Date b = parseDate(businessDay);
-            addBusinessDays(calname, b);
-            cal.removeHoliday(b);
+            try {
+                Date b = parseDate(businessDay);
+                addBusinessDays(calname, b);
+                cal.removeHoliday(b);
+            } catch(std::exception& e) {
+                ALOG("error parsing business day " << businessDay << " for calendar " << calname);
+            }
         }
     }
     //then loop again adding the new calendars
@@ -131,15 +139,24 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
 
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
         for (auto holiday : holidayDates) {
-            Date h = parseDate(holiday);
-            addHolidays(calname, h);
-            cal.addHoliday(h);
+            try {
+                Date h = parseDate(holiday);
+                addHolidays(calname, h);
+                cal.addHoliday(h);
+            } catch(std::exception& e) {
+                ALOG("error parsing business day " << holiday << " for calendar " << calname);
+            }
+
         }
         vector<string> businessDates = XMLUtils::getChildrenValues(calnode, "AdditionalBusinessDays", "Date");
         for (auto businessDay : businessDates) {
-            Date b = parseDate(businessDay);
-            addBusinessDays(calname, b);
-            cal.removeHoliday(b);
+            try {
+                Date b = parseDate(businessDay);
+                addBusinessDays(calname, b);
+                cal.removeHoliday(b);
+            } catch(std::exception& e) {
+                ALOG("error parsing business day " << businessDay << " for calendar " << calname);
+            }
         }
 
         addBaseCalendar(calname, baseCalendar);
