@@ -27,7 +27,9 @@
 #include <ql/indexes/indexmanager.hpp>
 #include <ql/patterns/observable.hpp>
 #include <ql/settings.hpp>
+#include <qle/utilities/savedobservablesettings.hpp>
 
+using QuantExt::SavedObservableSettings;
 using QuantLib::IndexManager;
 using QuantLib::ObservableSettings;
 using QuantLib::SavedSettings;
@@ -39,30 +41,23 @@ namespace test {
 class TopLevelFixture {
 public:
     SavedSettings savedSettings;
-    bool updatesEnabled;
-    bool updatesDeferred;
+    SavedObservableSettings savedObservableSettings;
 
     /*! Constructor
         Add things here that you want to happen at the start of every test case
     */
-    TopLevelFixture() {
-        updatesEnabled = ObservableSettings::instance().updatesEnabled();
-        updatesDeferred = ObservableSettings::instance().updatesDeferred();
-    }
+    TopLevelFixture() {}
 
     /*! Destructor
         Add things here that you want to happen after _every_ test case
     */
     virtual ~TopLevelFixture() {
-        // Restore observable settings
-        if (updatesEnabled)
-            ObservableSettings::instance().enableUpdates();
-        else
-            ObservableSettings::instance().disableUpdates(updatesDeferred);
-
         // Clear and fixings that have been added
         IndexManager::instance().clearHistories();
     }
+
+    bool updatesEnabled() { return savedObservableSettings.updatesEnabled() }
+    bool updatesDeferred() { return savedObservableSettings.updatesDeferred() }
 };
 } // namespace test
 } // namespace ore
