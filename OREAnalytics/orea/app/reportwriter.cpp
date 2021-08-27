@@ -146,22 +146,25 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
     bool hasCapsFloors = false;
     for (Size k = 0; k < trades.size(); k++) {
-        if (trades[k]->tradeType() == "CapFloor") {
-            hasCapsFloors = true;
-            break;
-        }
         const vector<Leg>& legs = trades[k]->legs();
         for (size_t i = 0; i < legs.size(); i++) {
             const QuantLib::Leg& leg = legs[i];
             for (size_t j = 0; j < leg.size(); j++) {
                 boost::shared_ptr<QuantLib::CashFlow> flow = leg[j];
                 if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(flow)) {
-                    WLOG("Found capped floored coupon 1");
                     hasCapsFloors = true;
                     break;
                 }
                 // check this separately as it does not derive from CappedFlooredCoupon
                 if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
+                    hasCapsFloors = true;
+                    break;
+                }
+                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
+                    hasCapsFloors = true;
+                    break;
+                }
+                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
                     hasCapsFloors = true;
                     break;
                 }
