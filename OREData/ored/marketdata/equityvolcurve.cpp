@@ -79,6 +79,10 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         DLOG("EquityVolCurve: Attempting to build equity vol curve from volatilityConfig, " << config.volatilityConfig().size() << " volatility configs provided.");
         for (auto vc : config.volatilityConfig()) {
             try {
+                // if the volatility config has it's own calendar, we use that.
+                if (!vc->calendar().empty())
+                    calendar_ = vc->calendar();
+
                 if (auto eqvc = boost::dynamic_pointer_cast<EquityProxyVolatilityConfig>(vc)) {
                     buildVolatility(asof, spec, curveConfigs, *eqvc, requiredEquityCurves, requiredEquityVolCurves,
                         FXLookupTriangulation(fxSpots), requiredFxVolCurves, requiredCorrelationCurves);
