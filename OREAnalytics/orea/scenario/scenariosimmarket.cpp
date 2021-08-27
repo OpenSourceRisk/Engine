@@ -1354,7 +1354,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Calendar cal;
                             if (curveConfigs.hasEquityVolCurveConfig(name)) {
                                 auto cfg = curveConfigs.equityVolCurveConfig(name);
-                                if (cfg->calendar() == "")
+                                if (cfg->calendar().empty())
                                     cal = parseCalendar(cfg->ccy());
                                 else
                                     cal = parseCalendar(cfg->calendar());

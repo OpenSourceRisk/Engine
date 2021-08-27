@@ -118,8 +118,8 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
 
         boost::shared_ptr<CommodityCurveConfig> config = curveConfigs.commodityCurveConfig(spec_.curveConfigID());
 
-        dayCounter_ = config->dayCountId() == "" ? Actual365Fixed() : parseDayCounter(config->dayCountId());
-        interpolationMethod_ = config->interpolationMethod() == "" ? "Linear" : config->interpolationMethod();
+        dayCounter_ = config->dayCountId().empty() ? Actual365Fixed() : parseDayCounter(config->dayCountId());
+        interpolationMethod_ = config->interpolationMethod().empty() ? "Linear" : config->interpolationMethod();
 
         if (config->type() == CommodityCurveConfig::Type::Direct) {
 
@@ -195,7 +195,7 @@ void CommodityCurve::populateData(map<Date, Handle<Quote>>& data, const Date& as
 
         spotTenor = convention->spotDays() * Days;
         pointsFactor = convention->pointsFactor();
-        if (convention->strAdvanceCalendar() != "")
+        if (!convention->strAdvanceCalendar().empty())
             cal = convention->advanceCalendar();
         spotRelative = convention->spotRelative();
         bdc = convention->bdc();

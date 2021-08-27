@@ -68,7 +68,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         auto config = *curveConfigs.equityVolCurveConfig(spec.curveConfigID());
 
         // if calendar was omitted or left blank, use ccy calendar instead
-        if (config.calendar() == "")
+        if (config.calendar().empty())
             calendar_ = parseCalendar(config.ccy());
         else
             calendar_ = parseCalendar(config.calendar());
