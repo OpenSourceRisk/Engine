@@ -1534,8 +1534,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
 }
 
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
-               const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps,
-               const vector<double>& floors, const bool attachPricer, const QuantLib::Date& openEndDateReplacement) {
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer,
+               const QuantLib::Date& openEndDateReplacement) {
     boost::shared_ptr<CMSLegData> cmsData = boost::dynamic_pointer_cast<CMSLegData>(data.concreteLegData());
     QL_REQUIRE(cmsData, "Wrong LegType, expected CMS, got " << data.legType());
 
@@ -1543,8 +1543,6 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar;
-    bool couponCapFloor = cmsData->caps().size() > 0 || cmsData->floors().size() > 0;
-    bool nakedCapFloor = caps.size() > 0 || floors.size() > 0;
 
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();
@@ -1570,21 +1568,11 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                         .withFixingDays(fixingDays)
                         .inArrears(cmsData->isInArrears());
 
-    if (nakedCapFloor) {
-        vector<string> capFloorDates;
+    if (cmsData->caps().size() > 0)
+        cmsLeg.withCaps(buildScheduledVector(cmsData->caps(), cmsData->capDates(), schedule));
 
-        if (caps.size() > 0)
-            cmsLeg.withCaps(buildScheduledVector(caps, capFloorDates, schedule));
-
-        if (floors.size() > 0)
-            cmsLeg.withFloors(buildScheduledVector(floors, capFloorDates, schedule));
-    } else if (couponCapFloor) {
-        if (cmsData->caps().size() > 0)
-            cmsLeg.withCaps(buildScheduledVector(cmsData->caps(), cmsData->capDates(), schedule));
-
-        if (cmsData->floors().size() > 0)
-            cmsLeg.withFloors(buildScheduledVector(cmsData->floors(), cmsData->floorDates(), schedule));
-    }
+    if (cmsData->floors().size() > 0)
+        cmsLeg.withFloors(buildScheduledVector(cmsData->floors(), cmsData->floorDates(), schedule));
 
     if (!attachPricer)
         return cmsLeg;
