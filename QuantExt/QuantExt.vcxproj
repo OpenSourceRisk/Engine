@@ -873,6 +873,7 @@
     <ClInclude Include="qle\time\futureexpirycalculator.hpp" />
     <ClInclude Include="qle\time\yearcounter.hpp" />
     <ClInclude Include="qle\utilities\inflation.hpp" />
+    <ClInclude Include="qle\utilities\savedobservablesettings.hpp" />
     <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>

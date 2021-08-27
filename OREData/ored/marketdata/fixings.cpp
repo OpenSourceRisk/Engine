@@ -27,6 +27,7 @@
 #include <ored/utilities/log.hpp>
 #include <ql/index.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/utilities/savedobservablesettings.hpp>
 
 using boost::timer::cpu_timer;
 using boost::timer::default_places;
@@ -38,6 +39,9 @@ namespace ore {
 namespace data {
 
 void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::Conventions>& conventions) {
+    
+    QuantExt::SavedObservableSettings savedObservableSettings;
+    ObservableSettings::instance().disableUpdates(true);
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
     cpu_timer timer;
