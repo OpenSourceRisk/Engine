@@ -96,6 +96,11 @@ private:
               const QuantLib::Calendar& cal, QuantLib::BusinessDayConvention bdc,
               boost::shared_ptr<QuantLib::IborIndex> iborIndex, const QuantLib::DayCounter& dc,
               QuantLib::VolatilityType type, QuantLib::Real displacement) const;
+
+    //! Build calibration info
+    void buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
+                              const boost::shared_ptr<CapFloorVolatilityCurveConfig> config,
+                              const boost::shared_ptr<IborIndex>& iborIndex);
 };
 
 } // namespace data
