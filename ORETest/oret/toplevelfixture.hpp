@@ -56,8 +56,8 @@ public:
         IndexManager::instance().clearHistories();
     }
 
-    bool updatesEnabled() { return savedObservableSettings.updatesEnabled() }
-    bool updatesDeferred() { return savedObservableSettings.updatesDeferred() }
+    bool updatesEnabled() { return savedObservableSettings.updatesEnabled(); }
+    bool updatesDeferred() { return savedObservableSettings.updatesDeferred(); }
 };
 } // namespace test
 } // namespace ore
