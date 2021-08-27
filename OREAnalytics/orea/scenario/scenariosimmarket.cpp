@@ -1354,7 +1354,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Calendar cal;
                             if (curveConfigs.hasEquityVolCurveConfig(name)) {
                                 auto cfg = curveConfigs.equityVolCurveConfig(name);
-                                cal = parseCalendar(cfg->calendar());
+                                if (cfg->calendar().empty())
+                                    cal = parseCalendar(cfg->ccy());
+                                else
+                                    cal = parseCalendar(cfg->calendar());
                             }
                             if (cal.empty() || cal == NullCalendar()) {
                                 // take the equity curves calendar - this at least ensures fixings align
