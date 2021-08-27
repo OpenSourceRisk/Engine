@@ -641,6 +641,7 @@ termstructures/zeroinflationcurveobserverstatic.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 utilities/inflation.hpp
+utilities/savedobservablesettings.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
