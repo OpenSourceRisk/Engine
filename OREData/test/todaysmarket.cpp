@@ -757,7 +757,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     vector<boost::shared_ptr<VolatilityConfig>> vcc;
     vcc.push_back(boost::make_shared<VolatilityCurveConfig>(eqVolQuotes, "Flat", "Flat"));
 
-    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>("SP5", "", "USD", vcc);
+    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>("SP5", "", "USD", vcc, "A365", "USD");
 
     // clang-format off
     vector<string> commodityQuotes{
