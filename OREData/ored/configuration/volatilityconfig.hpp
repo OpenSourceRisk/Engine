@@ -35,15 +35,19 @@ namespace data {
 */
 class VolatilityConfig : public ore::data::XMLSerializable {
 public:
-    VolatilityConfig(QuantLib::Natural priority = 0) : priority_(priority) {}
+    VolatilityConfig(Calendar calendar = Calendar(), QuantLib::Natural priority = 0)
+        : calendar_(calendar), priority_(priority) {}
 
-    void getPriority(ore::data::XMLNode* node);
-    void addPriority(XMLDocument& doc, XMLNode* node);
+    void fromXMLNode(ore::data::XMLNode* node);
+    void toXMLNode(XMLDocument& doc, XMLNode* node);
 
     QuantLib::Natural priority() const { return priority_; };
+    Calendar calendar() const { return calendar_; };
 
 private:
+    Calendar calendar_;
     QuantLib::Natural priority_;
+    string calendarStr_;
 };
 
 bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2);
@@ -52,7 +56,9 @@ class EquityProxyVolatilityConfig : public VolatilityConfig {
 public:
     EquityProxyVolatilityConfig() {}
     EquityProxyVolatilityConfig(const std::string& equityVolatilityCurve, const std::string& fxVolatilityCurve = "",
-        const std::string& correlationCurve = "", QuantLib::Natural priority = 0) : VolatilityConfig(priority), 
+                                const std::string& correlationCurve = "", Calendar calendar = Calendar(),
+                                QuantLib::Natural priority = 0)
+        : VolatilityConfig(calendar, priority), 
         equityVolatilityCurve_(equityVolatilityCurve), fxVolatilityCurve_(fxVolatilityCurve),
         correlationCurve_(correlationCurve) {}
 
@@ -79,8 +85,9 @@ class QuoteBasedVolatilityConfig : public VolatilityConfig {
 public:
     //! Default constructor
     QuoteBasedVolatilityConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
-        QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European, QuantLib::Natural priority = 0) : 
-        VolatilityConfig(priority), quoteType_(quoteType), exerciseType_(exerciseType) {}
+                               QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
+                               Calendar calendar = Calendar(), QuantLib::Natural priority = 0)
+        : VolatilityConfig(calendar, priority), quoteType_(quoteType), exerciseType_(exerciseType) {}
 
     //! \name Inspectors
     //@{
@@ -91,7 +98,7 @@ public:
     //! \name Serialisation
     //@{
     void fromBaseNode(ore::data::XMLNode* node);
-    void addBaseNode(ore::data::XMLDocument& doc, ore::data::XMLNode* node);
+    void toBaseNode(ore::data::XMLDocument& doc, ore::data::XMLNode* node);
     //@}
 
 private:
@@ -107,13 +114,13 @@ public:
     //! Default constructor
     ConstantVolatilityConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European, 
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! Explicit constructor
     ConstantVolatilityConfig(const std::string& quote,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European, 
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! \name Inspectors
     //@{
@@ -138,7 +145,7 @@ public:
     //! Default constructor
     VolatilityCurveConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        bool enforceMontoneVariance = true,
+        bool enforceMontoneVariance = true, Calendar calendar = Calendar(),
         QuantLib::Natural priority = 0);
 
     //! Explicit constructor
@@ -146,7 +153,8 @@ public:
         const std::string& extrapolation,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        bool enforceMontoneVariance = true, QuantLib::Natural priority = 0);
+        bool enforceMontoneVariance = true, Calendar calendar = Calendar(),
+        QuantLib::Natural priority = 0);
 
     //! \name Inspectors
     //@{
@@ -177,7 +185,7 @@ public:
     //! Default constructor
     VolatilitySurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! Explicit constructor
     VolatilitySurfaceConfig(const std::string& timeInterpolation, const std::string& strikeInterpolation,
@@ -185,7 +193,7 @@ public:
         const std::string& strikeExtrapolation,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! \name Inspectors
     //@{
@@ -227,7 +235,7 @@ public:
     //! Default constructor
     VolatilityStrikeSurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! Explicit constructor
     VolatilityStrikeSurfaceConfig(const std::vector<std::string>& strikes, const std::vector<std::string>& expiries,
@@ -236,7 +244,7 @@ public:
         const std::string& strikeExtrapolation,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! \name Inspectors
     //@{
@@ -268,7 +276,7 @@ public:
     //! Default constructor
     VolatilityDeltaSurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! Explicit constructor
     VolatilityDeltaSurfaceConfig(const std::string& deltaType, const std::string& atmType,
@@ -279,7 +287,7 @@ public:
         const std::string& atmDeltaType = "", bool futurePriceCorrection = true,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! \name Inspectors
     //@{
@@ -321,7 +329,7 @@ public:
     //! Default constructor
     VolatilityMoneynessSurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! Explicit constructor
     VolatilityMoneynessSurfaceConfig(const std::string& moneynessType, const std::vector<std::string>& moneynessLevels,
@@ -331,7 +339,7 @@ public:
         bool futurePriceCorrection = true,
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! \name Inspectors
     //@{
@@ -367,7 +375,7 @@ public:
     //! Default constructor
     VolatilityApoFutureSurfaceConfig(MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! Explicit constructor
     VolatilityApoFutureSurfaceConfig(const std::vector<std::string>& moneynessLevels,
@@ -378,7 +386,7 @@ public:
         QuantLib::Real beta = 0.0, const std::string& maxTenor = "",
         MarketDatum::QuoteType quoteType = MarketDatum::QuoteType::RATE_LNVOL,
         QuantLib::Exercise::Type exerciseType = QuantLib::Exercise::Type::European,
-        QuantLib::Natural priority = 0);
+        Calendar calendar = Calendar(), QuantLib::Natural priority = 0);
 
     //! \name Inspectors
     //@{

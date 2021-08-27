@@ -34,6 +34,7 @@
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
       <xs:element type="xs:string" name="Quote"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
 	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
@@ -47,6 +48,7 @@
       <xs:element type="interpolationMethodType" name="Interpolation"/>
       <xs:element type="extrapolationType" name="Extrapolation"/>
       <xs:element type="xs:boolean" name="EnforceMontoneVariance" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
 	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
@@ -63,6 +65,7 @@
       <xs:element type="bool" name="Extrapolation"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
 	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
@@ -84,6 +87,7 @@
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
 	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
@@ -102,6 +106,7 @@
       <xs:element type="extrapolationType" name="TimeExtrapolation"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
 	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>  
