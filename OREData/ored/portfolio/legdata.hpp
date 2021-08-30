@@ -441,6 +441,15 @@ public:
     bool nakedOption() const { return nakedOption_; }
     //@}
 
+    //! \name Modifiers
+    //@{
+    vector<double>& caps() { return caps_; }
+    vector<string>& capDates() { return capDates_; }
+    vector<double>& floors() { return floors_; }
+    vector<string>& floorDates() { return floorDates_; }
+    bool& nakedOption() { return nakedOption_; }
+    //@}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node) override;
@@ -900,8 +909,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
-               const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
-               const vector<double>& floors = vector<double>(), const bool attachPricer = true,
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
                       const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,

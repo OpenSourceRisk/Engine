@@ -166,7 +166,7 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
     string swapIndexName = cmsData->swapIndex();
     auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
-    Leg result = makeCMSLeg(data, index, engineFactory, {}, {}, true, openEndDateReplacement);
+    Leg result = makeCMSLeg(data, index, engineFactory, true, openEndDateReplacement);
     std::map<std::string, std::string> qlToOREIndexNames;
     applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
     qlToOREIndexNames[index->name()] = swapIndexName;

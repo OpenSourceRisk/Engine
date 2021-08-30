@@ -34,17 +34,27 @@ class ReportConfig : public XMLSerializable {
 public:
     ReportConfig() {}
     ReportConfig(const boost::optional<bool>& reportOnDeltaGrid, const boost::optional<bool>& reportOnMoneynessGrid,
+                 const boost::optional<bool>& reportOnStrikeGrid, const boost::optional<bool>& reportOnStrikeSpreadGrid,
                  const boost::optional<std::vector<std::string>>& deltas,
-                 const boost::optional<std::vector<Real>>& moneyness,
-                 const boost::optional<std::vector<Period>>& expiries)
-        : reportOnDeltaGrid_(reportOnDeltaGrid), reportOnMoneynessGrid_(reportOnMoneynessGrid), deltas_(deltas),
-          moneyness_(moneyness), expiries_(expiries) {}
+                 const boost::optional<std::vector<Real>>& moneyness, const boost::optional<std::vector<Real>>& strikes,
+                 const boost::optional<std::vector<Real>>& strikeSpreads,
+                 const boost::optional<std::vector<Period>>& expiries,
+                 const boost::optional<std::vector<Period>>& underlyingTenors)
+        : reportOnDeltaGrid_(reportOnDeltaGrid), reportOnMoneynessGrid_(reportOnMoneynessGrid),
+          reportOnStrikeGrid_(reportOnStrikeGrid), reportOnStrikeSpreadGrid_(reportOnStrikeSpreadGrid), deltas_(deltas),
+          moneyness_(moneyness), strikes_(strikes), strikeSpreads_(strikeSpreads), expiries_(expiries),
+          underlyingTenors_(underlyingTenors) {}
 
     const boost::optional<bool> reportOnDeltaGrid() const { return reportOnDeltaGrid_; }
     const boost::optional<bool> reportOnMoneynessGrid() const { return reportOnMoneynessGrid_; }
+    const boost::optional<bool> reportOnStrikeGrid() const { return reportOnStrikeGrid_; }
+    const boost::optional<bool> reportOnStrikeSpreadGrid() const { return reportOnStrikeSpreadGrid_; }
     const boost::optional<std::vector<std::string>>& deltas() const { return deltas_; }
     const boost::optional<std::vector<Real>>& moneyness() const { return moneyness_; }
+    const boost::optional<std::vector<Real>>& strikes() const { return strikes_; }
+    const boost::optional<std::vector<Real>>& strikeSpreads() const { return strikeSpreads_; }
     const boost::optional<std::vector<Period>>& expiries() const { return expiries_; }
+    const boost::optional<std::vector<Period>>& underlyingTenors() const { return underlyingTenors_; }
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -52,10 +62,15 @@ public:
 private:
     boost::optional<bool> reportOnDeltaGrid_;
     boost::optional<bool> reportOnMoneynessGrid_;
+    boost::optional<bool> reportOnStrikeGrid_;
+    boost::optional<bool> reportOnStrikeSpreadGrid_;
 
     boost::optional<std::vector<std::string>> deltas_;
     boost::optional<std::vector<Real>> moneyness_;
+    boost::optional<std::vector<Real>> strikes_;
+    boost::optional<std::vector<Real>> strikeSpreads_;
     boost::optional<std::vector<Period>> expiries_;
+    boost::optional<std::vector<Period>> underlyingTenors_;
 };
 
 ReportConfig effectiveReportConfig(const ReportConfig& globalConfig, const ReportConfig& localConfig);

@@ -1,3 +1,4 @@
+
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  Copyright (C) 2017 Aareal Bank AG
@@ -29,10 +30,13 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -139,12 +143,47 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
 
+    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+
+    bool hasCapsFloors = false;
+    for (Size k = 0; k < trades.size(); k++) {
+        const vector<Leg>& legs = trades[k]->legs();
+        for (size_t i = 0; i < legs.size(); i++) {
+            const QuantLib::Leg& leg = legs[i];
+            for (size_t j = 0; j < leg.size(); j++) {
+                boost::shared_ptr<QuantLib::CashFlow> flow = leg[j];
+                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(flow)) {
+                    hasCapsFloors = true;
+                    break;
+                }
+                // check this separately as it does not derive from CappedFlooredCoupon
+                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
+                    hasCapsFloors = true;
+                    break;
+                }
+                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
+                    hasCapsFloors = true;
+                    break;
+                }
+                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
+                    hasCapsFloors = true;
+                    break;
+                }
+            }
+        }        
+    }
+
     if (write_discount_factor) {
         report.addColumn("DiscountFactor", double(), 10);
         report.addColumn("PresentValue", double(), 10);
     }
 
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+    if (hasCapsFloors && market) {
+        report.addColumn("FloorStrike", double(), 6);
+        report.addColumn("CapStrike", double(), 6);
+        report.addColumn("FloorVolatility", double(), 6);
+        report.addColumn("CapVolatility", double(), 6);
+    }
 
     for (Size k = 0; k < trades.size(); k++) {
 
@@ -277,6 +316,54 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 Real presentValue = discountFactor * effectiveAmount;
                                 report.add(presentValue);
                             }
+                            
+                            if (hasCapsFloors && market) {
+                                // scan for known capped / floored coupons and extract cap / floor strike and fixing date
+                                
+                                // unpack stripped cap/floor coupon
+                                boost::shared_ptr<CashFlow> c = ptrFlow;
+                                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
+                                    c = tmp->underlying();
+                                }
+                                Real floorStrike = Null<Real>(), capStrike = Null<Real>();
+                                Real floorVolatility = Null<Real>(), capVolatility = Null<Real>();
+                                Date fixingDate;
+                                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                }
+                                
+                                // get market volaility for cap / floor - ORE only has one cf vol surface per currency,
+                                // so this is easy, but once we support tenor dependent cf vol surfaces we need to
+                                // refine the vol retrieval here as well. 
+                                
+                                if (fixingDate != Date() && fixingDate > market->asofDate()) {
+                                    if (floorStrike != Null<Real>()) {
+                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                            floorVolatility = market->swaptionVol(ccy, configuration)->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
+                                        else
+                                            floorVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, floorStrike);
+                                    }
+                                    if (capStrike != Null<Real>()) {
+                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                            capVolatility = market->swaptionVol(ccy, configuration)->volatility(fixingDate, tmp->index()->tenor(), capStrike);
+                                        else
+                                            capVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, capStrike);
+                                    }
+                                }
+
+                                report.add(floorStrike).add(capStrike).add(floorVolatility).add(capVolatility);
+                                
+                            }
                         }
                     }
                 }
@@ -297,8 +384,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             string ccy = "";
                             if (!cf.currency.empty()) {
                                 ccy = cf.currency;
-                            } else if(trades[k]->legCurrencies().size()>cf.legNumber)
-                            {
+                            } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
                                 ccy = trades[k]->legCurrencies()[cf.legNumber];
                             }
                             Real effectiveAmount = cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
@@ -1089,6 +1175,70 @@ void addFxEqVolCalibrationInfo(ore::data::Report& report, const std::string& typ
     }
 }
 
+void addIrVolCalibrationInfo(ore::data::Report& report, const std::string& type, const std::string& id,
+                             boost::shared_ptr<IrVolCalibrationInfo> info) {
+    if (info == nullptr)
+        return;
+
+    addRowMktCalReport(report, type, id, "dayCounter", "", "", "", info->dayCounter);
+    addRowMktCalReport(report, type, id, "calendar", "", "", "", info->calendar);
+    addRowMktCalReport(report, type, id, "isArbitrageFree", "", "", "", info->isArbitrageFree);
+    addRowMktCalReport(report, type, id, "volatilityType", "", "", "", info->volatilityType);
+    for (Size i = 0; i < info->messages.size(); ++i)
+        addRowMktCalReport(report, type, id, "message_" + std::to_string(i), "", "", "", info->messages[i]);
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        addRowMktCalReport(report, type, id, "expiry", tStr, "", "", info->expiryDates.at(i));
+    }
+
+    for (Size i = 0; i < info->underlyingTenors.size(); ++i) {
+        addRowMktCalReport(report, type, id, "tenor", std::to_string(i), "", "",
+                           ore::data::to_string(info->underlyingTenors.at(i)));
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size u = 0; u < info->underlyingTenors.size(); ++u) {
+            std::string uStr = ore::data::to_string(info->underlyingTenors[u]);
+            for (Size j = 0; j < info->strikes.size(); ++j) {
+                std::string kStr = std::to_string(info->strikes.at(j));
+                addRowMktCalReport(report, type, id, "forward", tStr, kStr, uStr, info->forwards.at(i).at(u));
+                addRowMktCalReport(report, type, id, "strike", tStr, kStr, uStr,
+                                   info->strikeGridStrikes.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "vol", tStr, kStr, uStr,
+                                   info->strikeGridImpliedVolatility.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "prob", tStr, kStr, uStr, info->strikeGridProb.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "callSpreadArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeGridCallSpreadArbitrage.at(i).at(u).at(j)));
+                addRowMktCalReport(report, type, id, "butterflyArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeGridButterflyArbitrage.at(i).at(u).at(j)));
+            }
+        }
+    }
+
+    for (Size i = 0; i < info->times.size(); ++i) {
+        std::string tStr = std::to_string(info->times.at(i));
+        for (Size u = 0; u < info->underlyingTenors.size(); ++u) {
+            std::string uStr = ore::data::to_string(info->underlyingTenors[u]);
+            for (Size j = 0; j < info->strikeSpreads.size(); ++j) {
+                std::string kStr = std::to_string(info->strikeSpreads.at(j));
+                addRowMktCalReport(report, type, id, "forward", tStr, kStr, uStr, info->forwards.at(i).at(u));
+                addRowMktCalReport(report, type, id, "strike", tStr, kStr, uStr,
+                                   info->strikeSpreadGridStrikes.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "vol", tStr, kStr, uStr,
+                                   info->strikeSpreadGridImpliedVolatility.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "prob", tStr, kStr, uStr,
+                                   info->strikeSpreadGridProb.at(i).at(u).at(j));
+                addRowMktCalReport(report, type, id, "callSpreadArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeSpreadGridCallSpreadArbitrage.at(i).at(u).at(j)));
+                addRowMktCalReport(report, type, id, "butterflyArb", tStr, kStr, uStr,
+                                   static_cast<bool>(info->strikeSpreadGridButterflyArbitrage.at(i).at(u).at(j)));
+            }
+        }
+    }
+}
+
 } // namespace
 
 void ReportWriter::writeTodaysMarketCalibrationReport(
@@ -1128,6 +1278,11 @@ void ReportWriter::writeTodaysMarketCalibrationReport(
     // eq vol results
     for (auto const& r : calibrationInfo->eqVolCalibrationInfo) {
         addFxEqVolCalibrationInfo(report, "eqVol", r.first, r.second);
+    }
+
+    // ir vol results
+    for (auto const& r : calibrationInfo->irVolCalibrationInfo) {
+        addIrVolCalibrationInfo(report, "irVol", r.first, r.second);
     }
 
     report.end();

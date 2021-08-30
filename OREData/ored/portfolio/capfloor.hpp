@@ -55,8 +55,10 @@ public:
 
     //! \name Trade
     //@{
-    bool hasCashflows() const override { return false; }
+    bool hasCashflows() const override { return true; }
     //@}
+
+    const std::map<std::string,boost::any>& additionalData() const override;
 
 private:
     string longShort_;

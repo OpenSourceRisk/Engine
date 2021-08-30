@@ -27,10 +27,14 @@
 namespace QuantExt {
 
 CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Real>& strikes, const Real forward,
-                                                           const std::vector<Real>& callPrices)
-    : strikes_(strikes), forward_(forward), callPrices_(callPrices) {
+                                                           const std::vector<Real>& callPrices,
+                                                           const VolatilityType volType, const Real shift)
+    : strikes_(strikes), forward_(forward), callPrices_(callPrices), volType_(volType), shift_(shift) {
 
     // check input
+
+    QL_REQUIRE(close_enough(shift_, 0.0) || shift_ > 0.0,
+               "CarrMadanMarginalProbability: shift (" << shift_ << ") must be non-negative");
 
     QL_REQUIRE(strikes_.size() == callPrices_.size(), "CarrMadanMarginalProbability: strikes ("
                                                           << strikes_.size() << ") inconsistent to callPrices ("
@@ -52,27 +56,32 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
                        << perm[i - 1] << ", " << perm[i] << ": " << strikes[perm[i - 1]] << ", " << strikes[perm[i]]);
     }
 
-    QL_REQUIRE(strikes_[perm[0]] > 0.0 || close_enough(strikes_[perm[0]], 0.0),
-               "CarrMadanMarginalProbability: all input strikes must be positive or zero, got " << strikes_[perm[0]]);
+    QL_REQUIRE(volType_ == Normal || strikes_[perm[0]] > -shift_ || close_enough(strikes_[perm[0]], -shift_),
+               "CarrMadanMarginalProbability: all input strikes (" << strikes_[perm[0]] << ") plus shift (" << shift
+                                                                   << ") must be positive or zero, got "
+                                                                   << strikes_[perm[0]] + shift);
 
-    // add strike 0 and corresponding call price (= forward), if not already present
-
-    bool zeroStrikeAdded = false;
-    if (!close_enough(strikes_[perm[0]], 0.0)) {
-        strikes_.push_back(0.0);
-        callPrices_.push_back(forward_);
-        perm.insert(perm.begin(), strikes_.size() - 1);
-        zeroStrikeAdded = true;
-    } else {
-        QL_REQUIRE(close_enough(callPrices_[perm[0]], forward_),
-                   "CarrMadanMarginalProbability: call price for strike 0 ("
-                       << callPrices_.front() << ") should match forward (" << forward_ << ")");
+    /* add strike -shift and corresponding call price (= forward + shift), if not already present
+       this is only done for ShiftedLognormal vols, not for Normal */
+    bool minusShiftStrikeAdded = false;
+    if (volType_ == ShiftedLognormal) {
+        if (!close_enough(strikes_[perm[0]], 0.0)) {
+            strikes_.push_back(-shift);
+            callPrices_.push_back(forward_);
+            perm.insert(perm.begin(), strikes_.size() - 1);
+            minusShiftStrikeAdded = true;
+        } else {
+            QL_REQUIRE(close_enough(callPrices_[perm[0]], forward_ + shift_),
+                       "CarrMadanMarginalProbability: call price ("
+                           << callPrices_.front() << ") for strike -shift (" << -shift_ << ") should match forward ("
+                           << forward_ << ") + shift (" << shift_ << ") = " << forward_ + shift_);
+        }
     }
 
     // check we have two strikes at least
 
     QL_REQUIRE(strikes_.size() >= 2,
-               "CarrMadanMarginalProbability: at least two strikes levels required (after adding 0)");
+               "CarrMadanMarginalProbability: at least two strikes levels required (after adding -shift)");
 
     // compute Q
 
@@ -101,7 +110,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
     // check 1: Q(i,j) in [0,1]
 
     for (Size i = 0; i < Q.size(); ++i) {
-        if ((Q[i] < 0.0 && !close_enough(Q[i], 0.0)) || (Q[i] > 1.0 && !close_enough(Q[i], 1.0))) {
+        if (Q[i] < -1.0E-10 || Q[i] > 1.0 + 1.0E-10) {
             callSpreadArbitrage_[perm[i]] = true;
             callSpreadArbitrage_[perm[i + 1]] = true;
             smileIsArbitrageFree_ = false;
@@ -130,7 +139,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     // remove zero strike again, if not present from the start
 
-    if (zeroStrikeAdded) {
+    if (minusShiftStrikeAdded) {
         strikes_.erase(std::next(strikes_.end(), -1));
         callPrices_.erase(std::next(callPrices_.end(), -1));
         callSpreadArbitrage_.erase(std::next(callSpreadArbitrage_.begin(), perm.front()));
@@ -142,6 +151,8 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 const std::vector<Real>& CarrMadanMarginalProbability::strikes() const { return strikes_; }
 Real CarrMadanMarginalProbability::forward() const { return forward_; }
 const std::vector<Real>& CarrMadanMarginalProbability::callPrices() const { return callPrices_; }
+VolatilityType CarrMadanMarginalProbability::volatilityType() const { return volType_; }
+Real CarrMadanMarginalProbability::shift() const { return shift_; }
 
 bool CarrMadanMarginalProbability::arbitrageFree() const { return smileIsArbitrageFree_; }
 
@@ -149,7 +160,8 @@ const std::vector<bool>& CarrMadanMarginalProbability::callSpreadArbitrage() con
 const std::vector<bool>& CarrMadanMarginalProbability::butterflyArbitrage() const { return butterflyArbitrage_; }
 const std::vector<Real>& CarrMadanMarginalProbability::density() const { return q_; }
 
-std::string arbitrageAsString(const CarrMadanMarginalProbability& cm) {
+template <class CarrMadanMarginalProbabilityClass>
+std::string arbitrageAsString(const CarrMadanMarginalProbabilityClass& cm) {
     std::ostringstream out;
     for (Size i = 0; i < cm.strikes().size(); ++i) {
         Size code = 0;
@@ -161,6 +173,10 @@ std::string arbitrageAsString(const CarrMadanMarginalProbability& cm) {
     }
     return out.str();
 }
+
+// template instantiations
+template std::string arbitrageAsString(const CarrMadanMarginalProbability& cm);
+template std::string arbitrageAsString(const CarrMadanMarginalProbabilitySafeStrikes& cm);
 
 CarrMadanSurface::CarrMadanSurface(const std::vector<Real>& times, const std::vector<Real>& moneyness, const Real spot,
                                    const std::vector<Real>& forwards, const std::vector<std::vector<Real>>& callPrices)
@@ -254,5 +270,110 @@ std::string arbitrageAsString(const CarrMadanSurface& cm) {
     }
     return out.str();
 }
+
+CarrMadanMarginalProbabilitySafeStrikes::CarrMadanMarginalProbabilitySafeStrikes(const std::vector<Real>& strikes,
+                                                                                 const Real forward,
+                                                                                 const std::vector<Real>& callPrices,
+                                                                                 const VolatilityType volType,
+                                                                                 const Real shift)
+    : strikes_(strikes), forward_(forward), callPrices_(callPrices), volType_(volType), shift_(shift) {
+
+    QL_REQUIRE(strikes_.size() == callPrices_.size(), "CarrMadanMarginalProbabilitySafeStrikes: strike size ("
+                                                          << strikes_.size() << ") must match callPrices size ("
+                                                          << callPrices_.size() << ")");
+
+    // handle edge cases (no strikes given, invalid forward given)
+
+    if (strikes_.empty()) {
+        smileIsArbitrageFree_ = true;
+        return;
+    }
+
+    if (volType == ShiftedLognormal && forward < -shift && !close_enough(forward, -shift)) {
+        smileIsArbitrageFree_ = true;
+        callSpreadArbitrage_ = std::vector<bool>(strikes_.size(), false);
+        butterflyArbitrage_ = std::vector<bool>(strikes_.size(), false);
+        q_ = std::vector<Real>(strikes_.size(), 0.0);
+        return;
+    }
+
+    // identify the strikes that are not valid (i.e. < -shift)
+
+    validStrike_.resize(strikes_.size(), true);
+    for (Size i = 0; i < strikes_.size(); ++i) {
+        if (volType_ == ShiftedLognormal && (strikes_[i] < -shift && !close_enough(strikes[i], -shift))) {
+            validStrike_[i] = false;
+        }
+    }
+
+    // build input for regular CM class
+
+    std::vector<Real> regStrikes;
+    std::vector<Real> regCallPrices;
+
+    for (Size i = 0; i < validStrike_.size(); ++i) {
+        if (validStrike_[i]) {
+            regStrikes.push_back(strikes_[i]);
+            regCallPrices.push_back(callPrices_[i]);
+        }
+    }
+
+    // check if we have at least one strike > -shift
+
+    bool haveNonBoundaryStrike = false;
+    if (volType == Normal) {
+        haveNonBoundaryStrike = true;
+    } else {
+        for (auto const& k : regStrikes) {
+            if (volType_ == ShiftedLognormal && k > -shift && !close_enough(k, -shift)) {
+                haveNonBoundaryStrike = true;
+            }
+        }
+    }
+
+    // if no such strike exists, the result is trivial
+
+    if (!haveNonBoundaryStrike) {
+        smileIsArbitrageFree_ = true;
+        callSpreadArbitrage_ = std::vector<bool>(1, false);
+        butterflyArbitrage_ = std::vector<bool>(1, false);
+        q_ = std::vector<Real>(1, 1.0);
+    }
+
+    // otherwise we call the regular CM class on the regular strikes
+
+    CarrMadanMarginalProbability cm(regStrikes, forward_, regCallPrices, volType_, shift_);
+
+    // the results are set for the regular strikes and filled with reasonable values for invalid strike positions
+
+    smileIsArbitrageFree_ = cm.arbitrageFree();
+    callSpreadArbitrage_ = std::vector<bool>(strikes_.size(), false);
+    butterflyArbitrage_ = std::vector<bool>(strikes_.size(), false);
+    q_ = std::vector<Real>(strikes_.size(), 0.0);
+
+    for (Size i = 0; i < validStrike_.size(); ++i) {
+        if (validStrike_[i]) {
+            callSpreadArbitrage_[i] = cm.callSpreadArbitrage()[i];
+            butterflyArbitrage_[i] = cm.butterflyArbitrage()[i];
+            q_[i] = cm.density()[i];
+        }
+    }
+}
+
+const std::vector<Real>& CarrMadanMarginalProbabilitySafeStrikes::strikes() const { return strikes_; }
+Real CarrMadanMarginalProbabilitySafeStrikes::forward() const { return forward_; }
+const std::vector<Real>& CarrMadanMarginalProbabilitySafeStrikes::callPrices() const { return callPrices_; }
+VolatilityType CarrMadanMarginalProbabilitySafeStrikes::volatilityType() const { return volType_; }
+Real CarrMadanMarginalProbabilitySafeStrikes::shift() const { return shift_; }
+
+bool CarrMadanMarginalProbabilitySafeStrikes::arbitrageFree() const { return smileIsArbitrageFree_; }
+
+const std::vector<bool>& CarrMadanMarginalProbabilitySafeStrikes::callSpreadArbitrage() const {
+    return callSpreadArbitrage_;
+}
+const std::vector<bool>& CarrMadanMarginalProbabilitySafeStrikes::butterflyArbitrage() const {
+    return butterflyArbitrage_;
+}
+const std::vector<Real>& CarrMadanMarginalProbabilitySafeStrikes::density() const { return q_; }
 
 } // namespace QuantExt

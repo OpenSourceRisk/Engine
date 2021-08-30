@@ -23,6 +23,7 @@
 #include <ored/utilities/to_string.hpp>
 
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
@@ -87,6 +88,9 @@ CapFloorVolCurve::CapFloorVolCurve(const Date& asof, const CapFloorVolatilityCur
 
         // Turn on or off extrapolation
         capletVol_->enableExtrapolation(config->extrapolate());
+
+	// Build calibration info
+        buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
 
     } catch (exception& e) {
         QL_FAIL("cap/floor vol curve building failed :" << e.what());
@@ -808,6 +812,194 @@ CapFloorVolCurve::transform(const Date& asof, vector<Date> dates, const vector<V
     res->unregisterWithAll();
 
     return res;
+}
+
+void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigurations& curveConfigs,
+                                            const boost::shared_ptr<CapFloorVolatilityCurveConfig> config,
+                                            const boost::shared_ptr<IborIndex>& iborIndex) {
+    DLOG("Building calibration info for cap floor vols");
+
+    ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigIrCapFloorVols(), config->reportConfig());
+    bool reportOnStrikeGrid = *rc.reportOnStrikeGrid();
+    bool reportOnStrikeSpreadGrid = *rc.reportOnStrikeSpreadGrid();
+    std::vector<Real> strikes = *rc.strikes();
+    std::vector<Real> strikeSpreads = *rc.strikeSpreads();
+    std::vector<Period> expiries = *rc.expiries();
+    std::vector<Period> underlyingTenorsReport(1, iborIndex->tenor());
+
+    calibrationInfo_ = boost::make_shared<IrVolCalibrationInfo>();
+
+    calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
+    calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
+    calibrationInfo_->volatilityType = ore::data::to_string(capletVol_->volatilityType());
+    calibrationInfo_->underlyingTenors = underlyingTenorsReport;
+
+    std::vector<Real> times;
+    std::vector<std::vector<Real>> forwards;
+    for (auto const& p : expiries) {
+        Date d = capletVol_->optionDateFromTenor(p);
+        calibrationInfo_->expiryDates.push_back(d);
+        times.push_back(capletVol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
+                                                         : capletVol_->timeFromReference(d));
+        forwards.push_back(std::vector<Real>(1, iborIndex->fixing(iborIndex->fixingCalendar().adjust(d))));
+    }
+
+    calibrationInfo_->times = times;
+    calibrationInfo_->forwards = forwards;
+
+    std::vector<std::vector<std::vector<Real>>> callPricesStrike(
+        times.size(),
+        std::vector<std::vector<Real>>(underlyingTenorsReport.size(), std::vector<Real>(strikes.size(), 0.0)));
+    std::vector<std::vector<std::vector<Real>>> callPricesStrikeSpread(
+        times.size(),
+        std::vector<std::vector<Real>>(underlyingTenorsReport.size(), std::vector<Real>(strikeSpreads.size(), 0.0)));
+
+    calibrationInfo_->isArbitrageFree = true;
+
+    if (reportOnStrikeGrid) {
+        calibrationInfo_->strikes = strikes;
+        calibrationInfo_->strikeGridStrikes = std::vector<std::vector<std::vector<Real>>>(
+            times.size(),
+            std::vector<std::vector<Real>>(underlyingTenorsReport.size(), std::vector<Real>(strikes.size(), 0.0)));
+        calibrationInfo_->strikeGridProb = std::vector<std::vector<std::vector<Real>>>(
+            times.size(),
+            std::vector<std::vector<Real>>(underlyingTenorsReport.size(), std::vector<Real>(strikes.size(), 0.0)));
+        calibrationInfo_->strikeGridImpliedVolatility = std::vector<std::vector<std::vector<Real>>>(
+            times.size(),
+            std::vector<std::vector<Real>>(underlyingTenorsReport.size(), std::vector<Real>(strikes.size(), 0.0)));
+        calibrationInfo_->strikeGridCallSpreadArbitrage = std::vector<std::vector<std::vector<bool>>>(
+            times.size(),
+            std::vector<std::vector<bool>>(underlyingTenorsReport.size(), std::vector<bool>(strikes.size(), true)));
+        calibrationInfo_->strikeGridButterflyArbitrage = std::vector<std::vector<std::vector<bool>>>(
+            times.size(),
+            std::vector<std::vector<bool>>(underlyingTenorsReport.size(), std::vector<bool>(strikes.size(), true)));
+        TLOG("Strike surface arbitrage analysis result:");
+        for (Size u = 0; u < underlyingTenorsReport.size(); ++u) {
+            TLOG("Underlying tenor " << underlyingTenorsReport[u]);
+            for (Size i = 0; i < times.size(); ++i) {
+                Real t = times[i];
+                Real shift = capletVol_->volatilityType() == Normal ? 0.0 : capletVol_->displacement();
+                bool validSlice = true;
+                for (Size j = 0; j < strikes.size(); ++j) {
+                    try {
+                        Real stddev = 0.0;
+                        if (capletVol_->volatilityType() == ShiftedLognormal) {
+                            if ((strikes[j] > -shift || close_enough(strikes[j], -shift)) &&
+                                (forwards[i][u] > -shift || close_enough(forwards[i][u], -shift))) {
+                                stddev =
+                                    std::sqrt(capletVol_->blackVariance(expiries[i], strikes[j]));
+                                callPricesStrike[i][u][j] =
+                                    blackFormula(Option::Type::Call, strikes[j], forwards[i][u], stddev);
+                            }
+                        } else {
+                            stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strikes[j]));
+                            callPricesStrike[i][u][j] =
+                                bachelierBlackFormula(Option::Type::Call, strikes[j], forwards[i][u], stddev);
+                        }
+                        calibrationInfo_->strikeGridStrikes[i][u][j] = strikes[j];
+                        calibrationInfo_->strikeGridImpliedVolatility[i][u][j] = stddev / std::sqrt(t);
+                    } catch (const std::exception& e) {
+                        validSlice = false;
+                        TLOG("error for time " << t << " strike " << strikes[j] << ": " << e.what());
+                    }
+                }
+                if (validSlice) {
+                    try {
+                        QuantExt::CarrMadanMarginalProbabilitySafeStrikes cm(calibrationInfo_->strikeGridStrikes[i][u],
+                                                                             forwards[i][u], callPricesStrike[i][u],
+                                                                             capletVol_->volatilityType(), shift);
+                        calibrationInfo_->strikeGridCallSpreadArbitrage[i][u] = cm.callSpreadArbitrage();
+                        calibrationInfo_->strikeGridButterflyArbitrage[i][u] = cm.butterflyArbitrage();
+                        if (!cm.arbitrageFree())
+                            calibrationInfo_->isArbitrageFree = false;
+                        calibrationInfo_->strikeGridProb[i][u] = cm.density();
+                        TLOGGERSTREAM << arbitrageAsString(cm);
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << ": " << e.what());
+                        calibrationInfo_->isArbitrageFree = false;
+                        TLOGGERSTREAM << "..(invalid slice)..";
+                    }
+                } else {
+                    TLOGGERSTREAM << "..(invalid slice)..";
+                }
+            }
+        }
+        TLOG("Strike cube arbitrage analysis completed.");
+    }
+
+    if (reportOnStrikeSpreadGrid) {
+        calibrationInfo_->strikeSpreads = strikeSpreads;
+        calibrationInfo_->strikeSpreadGridStrikes = std::vector<std::vector<std::vector<Real>>>(
+            times.size(), std::vector<std::vector<Real>>(underlyingTenorsReport.size(),
+                                                         std::vector<Real>(strikeSpreads.size(), 0.0)));
+        calibrationInfo_->strikeSpreadGridProb = std::vector<std::vector<std::vector<Real>>>(
+            times.size(), std::vector<std::vector<Real>>(underlyingTenorsReport.size(),
+                                                         std::vector<Real>(strikeSpreads.size(), 0.0)));
+        calibrationInfo_->strikeSpreadGridImpliedVolatility = std::vector<std::vector<std::vector<Real>>>(
+            times.size(), std::vector<std::vector<Real>>(underlyingTenorsReport.size(),
+                                                         std::vector<Real>(strikeSpreads.size(), 0.0)));
+        calibrationInfo_->strikeSpreadGridCallSpreadArbitrage = std::vector<std::vector<std::vector<bool>>>(
+            times.size(), std::vector<std::vector<bool>>(underlyingTenorsReport.size(),
+                                                         std::vector<bool>(strikeSpreads.size(), true)));
+        calibrationInfo_->strikeSpreadGridButterflyArbitrage = std::vector<std::vector<std::vector<bool>>>(
+            times.size(), std::vector<std::vector<bool>>(underlyingTenorsReport.size(),
+                                                         std::vector<bool>(strikeSpreads.size(), true)));
+        TLOG("Strike Spread surface arbitrage analysis result:");
+        for (Size u = 0; u < underlyingTenorsReport.size(); ++u) {
+            TLOG("Underlying tenor " << underlyingTenorsReport[u]);
+            for (Size i = 0; i < times.size(); ++i) {
+                Real t = times[i];
+                Real shift = capletVol_->volatilityType() == Normal ? 0.0 : capletVol_->displacement();
+                bool validSlice = true;
+                for (Size j = 0; j < strikeSpreads.size(); ++j) {
+                    Real strike = forwards[i][u] + strikeSpreads[j];
+                    try {
+                        Real stddev = 0.0;
+                        if (capletVol_->volatilityType() == ShiftedLognormal) {
+                            if ((strike > -shift || close_enough(strike, -shift)) &&
+                                (forwards[i][u] > -shift || close_enough(forwards[i][u], -shift))) {
+                                stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strike));
+                                callPricesStrikeSpread[i][u][j] =
+                                    blackFormula(Option::Type::Call, strike, forwards[i][u], stddev);
+                            }
+                        } else {
+                            stddev = std::sqrt(capletVol_->blackVariance(expiries[i], strike));
+                            callPricesStrikeSpread[i][u][j] =
+                                bachelierBlackFormula(Option::Type::Call, strike, forwards[i][u], stddev);
+                        }
+                        calibrationInfo_->strikeSpreadGridStrikes[i][u][j] = strike;
+                        calibrationInfo_->strikeSpreadGridImpliedVolatility[i][u][j] = stddev / std::sqrt(t);
+                    } catch (const std::exception& e) {
+                        validSlice = false;
+                        TLOG("error for time " << t << " strike spread " << strikeSpreads[j] << " strike " << strike
+                                               << ": " << e.what());
+                    }
+                }
+                if (validSlice) {
+                    try {
+                        QuantExt::CarrMadanMarginalProbabilitySafeStrikes cm(
+                            calibrationInfo_->strikeSpreadGridStrikes[i][u], forwards[i][u],
+                            callPricesStrikeSpread[i][u], capletVol_->volatilityType(), shift);
+                        calibrationInfo_->strikeSpreadGridCallSpreadArbitrage[i][u] = cm.callSpreadArbitrage();
+                        calibrationInfo_->strikeSpreadGridButterflyArbitrage[i][u] = cm.butterflyArbitrage();
+                        if (!cm.arbitrageFree())
+                            calibrationInfo_->isArbitrageFree = false;
+                        calibrationInfo_->strikeSpreadGridProb[i][u] = cm.density();
+                        TLOGGERSTREAM << arbitrageAsString(cm);
+                    } catch (const std::exception& e) {
+                        TLOG("error for time " << t << ": " << e.what());
+                        calibrationInfo_->isArbitrageFree = false;
+                        TLOGGERSTREAM << "..(invalid slice)..";
+                    }
+                } else {
+                    TLOGGERSTREAM << "..(invalid slice)..";
+                }
+            }
+        }
+        TLOG("Strike Spread cube arbitrage analysis completed.");
+    }
+
+    DLOG("Building calibration info cap floor vols completed.");
 }
 
 } // namespace data

@@ -369,6 +369,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building Swaption Volatility for asof " << asof_);
                 boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve = boost::make_shared<SwaptionVolCurve>(
                     asof_, *swvolspec, *loader_, *curveConfigs_, requiredSwapIndices_[configuration]);
+                calibrationInfo_->irVolCalibrationInfo[swvolspec->name()] = swaptionVolCurve->calibrationInfo();
                 itr = requiredSwaptionVolCurves_.insert(make_pair(swvolspec->name(), swaptionVolCurve)).first;
             }
 
@@ -394,6 +395,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building Yield Volatility for asof " << asof_);
                 boost::shared_ptr<YieldVolCurve> yieldVolCurve =
                     boost::make_shared<YieldVolCurve>(asof_, *ydvolspec, *loader_, *curveConfigs_);
+                calibrationInfo_->irVolCalibrationInfo[ydvolspec->name()] = yieldVolCurve->calibrationInfo();
                 itr = requiredYieldVolCurves_.insert(make_pair(ydvolspec->name(), yieldVolCurve)).first;
             }
             DLOG("Adding YieldVol (" << node.name << ") with spec " << *ydvolspec << " to configuration "
@@ -428,6 +430,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // Now create cap/floor vol curve
                 boost::shared_ptr<CapFloorVolCurve> capFloorVolCurve = boost::make_shared<CapFloorVolCurve>(
                     asof_, *cfVolSpec, *loader_, *curveConfigs_, iborIndex.currentLink(), discountCurve);
+                calibrationInfo_->irVolCalibrationInfo[cfVolSpec->name()] = capFloorVolCurve->calibrationInfo();
                 itr = requiredCapFloorVolCurves_.insert(make_pair(cfVolSpec->name(), capFloorVolCurve)).first;
             }
 

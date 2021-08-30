@@ -25,6 +25,7 @@
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
@@ -117,9 +118,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // - BMA coupons
             // - Ibor coupons with sub periods (hasSubPeriods = true)
 
-            ALOG("CapFloor trade " << id()
-                                   << " on a) BMA or b) sub periods Ibor or c) averaged ON underlying (index = '"
-                                   << underlyingIndex
+            ALOG("CapFloor trade " << id() << " on a) BMA or b) sub periods Ibor (index = '" << underlyingIndex
                                    << "') built, will treat the index approximately as an ibor index");
             builder = engineFactory->builder(tradeType_);
             legs_.push_back(makeIborLeg(legData_, index, engineFactory));
@@ -166,25 +165,22 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
         qlIndexName = index->name();
 
-        vector<bool> legPayers;
-        if (capFloorType == QuantLib::CapFloor::Collar)
-            // long cap, short floor
-            legPayers = {true, false};
-        else if(capFloorType == QuantLib::CapFloor::Cap)
-            // long cap
-            legPayers = {true, false};
-        else if(capFloorType == QuantLib::CapFloor::Floor)
-            // long floor
-            legPayers = {false, true};
-        legs_.push_back(makeCMSLeg(legData_, index, engineFactory, caps_, floors_));
-        legs_.push_back(makeCMSLeg(legData_, index, engineFactory));
-
-        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, legPayers);
-        boost::shared_ptr<SwapEngineBuilderBase> cmsCapFloorBuilder =
-            boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
-        qlInstrument->setPricingEngine(cmsCapFloorBuilder->engine(parseCurrency(legData_.currency())));
-
-        maturity_ = boost::dynamic_pointer_cast<QuantLib::Swap>(qlInstrument)->maturityDate();
+        LegData tmpLegData = legData_;
+        boost::shared_ptr<CMSLegData> tmpFloatData = boost::make_shared<CMSLegData>(*cmsData);
+        tmpFloatData->floors() = floors_;
+        tmpFloatData->caps() = caps_;
+        tmpFloatData->nakedOption() = true;
+        tmpLegData.concreteLegData() = tmpFloatData;
+        legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
+                            ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
+                                       engineFactory->configuration(MarketContext::pricing)));
+        // if both caps and floors are given, we have to use a payer leg, since in this case
+        // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
+        // and a short cap while we have documented a collar to be a short floor and long cap
+        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+        qlInstrument->setPricingEngine(
+            boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        maturity_ = CashFlows::maturityDate(legs_.front());
 
     } else if (legData_.legType() == "DurationAdjustedCMS") {
         auto cmsData = boost::dynamic_pointer_cast<DurationAdjustedCmsLegData>(legData_.concreteLegData());
@@ -229,9 +225,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             QL_REQUIRE(!start.empty(), "Only one schedule date, a 'StartDate' must be given.");
             startDate = parseDate(start);
         } else if (!start.empty()) {
-            DLOG("Schedule with more than 2 dates was provided. The first schedule date " <<
-                io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " <<
-                start << " is not used.");
+            DLOG("Schedule with more than 2 dates was provided. The first schedule date "
+                 << io::iso_date(schedule.dates().front()) << " is used as the start date. The 'StartDate' of " << start
+                 << " is not used.");
             startDate = schedule.dates().front();
         }
 
@@ -375,6 +371,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Invalid legType " << legData_.legType() << " for CapFloor");
     }
 
+    // Fill in remaining Trade member data
+
+    QL_REQUIRE(legs_.size() == 1, "internal error, expected one leg in cap floor builder, got " << legs_.size());
+
+    legCurrencies_.push_back(legData_.currency());
+    legPayers_.push_back(false); // already accounted for via the instrument multiplier
+    npvCurrency_ = legData_.currency();
+    notionalCurrency_ = legData_.currency();
+    notional_ = currentNotional(legs_[0]);
+
+    // add premiums
+
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_, -multiplier,
@@ -397,13 +405,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         for (auto const& l : legs_)
             addToRequiredFixings(l, fdg);
     }
-
-    // Fill in remaining Trade member data
-    legCurrencies_.push_back(legData_.currency());
-    legPayers_.push_back(false); // already accounted for via the instrument multiplier
-    npvCurrency_ = legData_.currency();
-    notionalCurrency_ = legData_.currency();
-    notional_ = currentNotional(legs_[0]);
 }
 
 void CapFloor::fromXML(XMLNode* node) {
@@ -427,5 +428,51 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(capFloorNode, premiumData_.toXML(doc));
     return node;
 }
+
+const std::map<std::string, boost::any>& CapFloor::additionalData() const {
+    // use the build time as of date to determine current notionals
+    Date asof = Settings::instance().evaluationDate();
+    additionalData_["legType"] = legData_.legType();
+    additionalData_["isPayer"] = legData_.isPayer();
+    additionalData_["notionalCurrency"] = legData_.currency();
+    for (Size j = 0; j < legs_[0].size(); ++j) {
+        boost::shared_ptr<CashFlow> flow = legs_[0][j];
+        // pick flow with earliest future payment date on this leg
+        if (flow->date() > asof) {
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+            if (coupon) {
+                Real currentNotional = 0;
+                try {
+                    currentNotional = coupon->nominal();
+                } catch (std::exception& e) {
+                    ALOG("current notional could not be determined for trade " << id()
+                                                                               << ", set to zero: " << e.what());
+                }
+                additionalData_["currentNotional"] = currentNotional;
+
+                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                if (frc) {
+                    additionalData_["index"] = frc->index()->name();
+                }
+            }
+            break;
+        }
+    }
+    if (legs_[0].size() > 0) {
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][0]);
+        if (coupon) {
+            Real originalNotional = 0.0;
+            try {
+                originalNotional = coupon->nominal();
+            } catch (std::exception& e) {
+                ALOG("original nominal could not be determined for trade " << id() << ", set to zero: " << e.what());
+            }
+            additionalData_["originalNotional"] = originalNotional;
+        }
+    }
+
+    return additionalData_;
+}
+
 } // namespace data
 } // namespace ore

@@ -65,6 +65,8 @@ public:
     //@{
     const ReportConfig& reportConfigEqVols() const { return reportConfigEqVols_; }
     const ReportConfig& reportConfigFxVols() const { return reportConfigFxVols_; }
+    const ReportConfig& reportConfigIrCapFloorVols() const { return reportConfigIrCapFloorVols_; }
+    const ReportConfig& reportConfigIrSwaptionVols() const { return reportConfigIrSwaptionVols_; }
 
     bool hasYieldCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) { return yieldCurveConfigs_[curveID]; }
@@ -196,6 +198,8 @@ public:
 private:
     ReportConfig reportConfigEqVols_;
     ReportConfig reportConfigFxVols_;
+    ReportConfig reportConfigIrCapFloorVols_;
+    ReportConfig reportConfigIrSwaptionVols_;
 
     std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;
     std::map<std::string, boost::shared_ptr<FXVolatilityCurveConfig>> fxVolCurveConfigs_;
