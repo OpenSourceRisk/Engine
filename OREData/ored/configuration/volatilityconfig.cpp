@@ -34,7 +34,7 @@ bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2) {
 
 VolatilityConfig::VolatilityConfig(string calendarStr, QuantLib::Natural priority)
     : calendarStr_(calendarStr), priority_(priority) {
-    calendar_ = parseCalendar(calendarStr_);
+    calendar_ = calendarStr_.empty() ? Calendar() : parseCalendar(calendarStr_);
 }
 
 void VolatilityConfig::fromXMLNode(XMLNode* node) {
