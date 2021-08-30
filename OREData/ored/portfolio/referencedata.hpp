@@ -88,6 +88,7 @@ public:
         string calendar;
         string issueDate;
         string creditCurveId;
+        string creditGroup;
         string referenceCurveId;
         string proxySecurityId;
         string incomeCurveId;
@@ -231,6 +232,8 @@ public:
     bool hasData(const string& type, const string& id) const override;
     boost::shared_ptr<ReferenceDatum> getData(const string& type, const string& id) override;
     void add(const boost::shared_ptr<ReferenceDatum>& referenceDatum) override;
+    // adds a datum from an xml node and returns it (or nullptr if nothing was added due to an error)
+    boost::shared_ptr<ReferenceDatum> addFromXMLNode(XMLNode* node, const std::string& id = std::string());
 
 protected:
     void check(const string& type, const string& id) const;

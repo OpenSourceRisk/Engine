@@ -33,8 +33,6 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
     try {
         const boost::shared_ptr<SecurityConfig>& config = curveConfigs.securityConfig(spec.securityID());
 
-        // get spread quote, this may be specified but not existent in loader, because it is implied from
-        // a liquid price and added to the loader in a subsequent step
         string spreadQuote = config->spreadQuote();
         if (spreadQuote != "" && loader.has(spreadQuote, asof)) {
             boost::shared_ptr<SecuritySpreadQuote> q =
@@ -45,9 +43,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get recovery quote
         string recoveryQuote = config->recoveryRatesQuote();
-        if (recoveryQuote != "") {
-            QL_REQUIRE(loader.has(recoveryQuote, asof),
-                       "required recovery quote " << recoveryQuote << " not found for " << spec);
+        if (recoveryQuote != "" && loader.has(recoveryQuote, asof)) {
             boost::shared_ptr<RecoveryRateQuote> q =
                 boost::dynamic_pointer_cast<RecoveryRateQuote>(loader.get(recoveryQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << recoveryQuote << " to RecoveryRateQuote");
@@ -56,8 +52,7 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get cpr quote
         string cprQuote = config->cprQuote();
-        if (cprQuote != "") {
-            QL_REQUIRE(loader.has(cprQuote, asof), "required cpr quote " << cprQuote << " not found for " << spec);
+        if (cprQuote != "" && loader.has(cprQuote,asof)) {
             boost::shared_ptr<CPRQuote> q = boost::dynamic_pointer_cast<CPRQuote>(loader.get(cprQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << cprQuote << " to CPRQuote");
             cpr_ = q->quote();
@@ -65,23 +60,12 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, co
 
         // get price quote
         string priceQuote = config->priceQuote();
-        if (priceQuote != "") {
-            QL_REQUIRE(loader.has(priceQuote, asof),
-                       "required price quote " << priceQuote << " not found for " << spec);
+        if (priceQuote != "" && loader.has(priceQuote,asof)) {
             boost::shared_ptr<BondPriceQuote> q =
                 boost::dynamic_pointer_cast<BondPriceQuote>(loader.get(priceQuote, asof));
             QL_REQUIRE(q, "Failed to cast " << priceQuote << " to BondPriceQuote");
             price_ = q->quote();
         }
-
-        if (recoveryRate_.empty())
-            WLOG("No security-specific recovery rate found for " << spec);
-        if (cpr_.empty())
-            WLOG("No security-specific cpr found for " << spec);
-        if (price_.empty())
-            WLOG("No security-specific price found for " << spec);
-        if (spread_.empty())
-            WLOG("No security-specific spread found for " << spec);
 
     } catch (std::exception& e) {
         QL_FAIL("Security building failed for curve " << spec.curveConfigID() << " on date " << io::iso_date(asof)

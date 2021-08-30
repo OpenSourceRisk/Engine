@@ -83,6 +83,9 @@ private:
     void buildMultiSectionCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
                                 const Loader& loader, const Conventions& conventions,
                                 map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
+
+    //! Build a null curve (null rate, null recovery)
+    void buildNullCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec);
 };
 
 } // namespace data
