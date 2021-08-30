@@ -32,6 +32,11 @@ bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2) {
     return vc1.priority() < vc2.priority();
 }
 
+VolatilityConfig::VolatilityConfig(string calendarStr, QuantLib::Natural priority)
+    : calendarStr_(calendarStr), priority_(priority) {
+    calendar_ = parseCalendar(calendarStr_);
+}
+
 void VolatilityConfig::fromXMLNode(XMLNode* node) {
     string attr = XMLUtils::getAttribute(node, "priority"); 
     priority_ = attr.empty() ? 0 : parseInteger(attr);
@@ -124,12 +129,12 @@ void QuoteBasedVolatilityConfig::toBaseNode(XMLDocument& doc, XMLNode* node) {
 }
 
 ConstantVolatilityConfig::ConstantVolatilityConfig(MarketDatum::QuoteType quoteType, 
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendar, priority) {}
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority) {}
 
 ConstantVolatilityConfig::ConstantVolatilityConfig(const string& quote, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendar, priority), quote_(quote) {}
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), quote_(quote) {}
 
 const string& ConstantVolatilityConfig::quote() const { return quote_; }
 
@@ -147,14 +152,15 @@ XMLNode* ConstantVolatilityConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityCurveConfig::VolatilityCurveConfig(MarketDatum::QuoteType quoteType, Exercise::Type exerciseType,
-    bool enforceMontoneVariance, Calendar calendar, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendar, priority), 
+    bool enforceMontoneVariance, string calendarStr, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), 
     enforceMontoneVariance_(enforceMontoneVariance) {}
 
 VolatilityCurveConfig::VolatilityCurveConfig(const vector<string>& quotes, const string& interpolation,
     const string& extrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, 
-    bool enforceMontoneVariance, Calendar calendar, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendar, priority), quotes_(quotes), interpolation_(interpolation),
+    bool enforceMontoneVariance, string calendarStr, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), quotes_(quotes),
+      interpolation_(interpolation),
       extrapolation_(extrapolation), enforceMontoneVariance_(enforceMontoneVariance) {}
 
 const vector<string>& VolatilityCurveConfig::quotes() const { return quotes_; }
@@ -188,14 +194,14 @@ XMLNode* VolatilityCurveConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(MarketDatum::QuoteType quoteType, 
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendar, priority) {}
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority) {}
 
 VolatilitySurfaceConfig::VolatilitySurfaceConfig(const string& timeInterpolation, const string& strikeInterpolation,
     bool extrapolation, const string& timeExtrapolation,
     const string& strikeExtrapolation, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendar, priority), timeInterpolation_(timeInterpolation),
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : QuoteBasedVolatilityConfig(quoteType, exerciseType, calendarStr, priority), timeInterpolation_(timeInterpolation),
       strikeInterpolation_(strikeInterpolation), extrapolation_(extrapolation), timeExtrapolation_(timeExtrapolation),
       strikeExtrapolation_(strikeExtrapolation) {}
 
@@ -226,16 +232,16 @@ void VolatilitySurfaceConfig::addNodes(XMLDocument& doc, XMLNode* node) const {
 }
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : VolatilitySurfaceConfig(quoteType, exerciseType, calendar, priority) {}
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, calendarStr, priority) {}
 
 VolatilityStrikeSurfaceConfig::VolatilityStrikeSurfaceConfig(
     const vector<string>& strikes, const vector<string>& expiries, const string& timeInterpolation,
     const string& strikeInterpolation, bool extrapolation, const string& timeExtrapolation,
     const string& strikeExtrapolation, MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, 
-    Calendar calendar, Natural priority)
+    string calendarStr, Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendar, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
       strikes_(strikes), expiries_(expiries) {}
 
 const vector<string>& VolatilityStrikeSurfaceConfig::strikes() const { return strikes_; }
@@ -273,17 +279,17 @@ XMLNode* VolatilityStrikeSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : VolatilitySurfaceConfig(quoteType, exerciseType, calendar, priority) {}
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, calendarStr, priority) {}
 
 VolatilityDeltaSurfaceConfig::VolatilityDeltaSurfaceConfig(
     const string& deltaType, const string& atmType, const vector<string>& putDeltas, const vector<string>& callDeltas,
     const vector<string>& expiries, const string& timeInterpolation, const string& strikeInterpolation,
     bool extrapolation, const string& timeExtrapolation, const string& strikeExtrapolation,
     const std::string& atmDeltaType, bool futurePriceCorrection, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendar, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
       deltaType_(deltaType), atmType_(atmType), putDeltas_(putDeltas), callDeltas_(callDeltas), expiries_(expiries),
       atmDeltaType_(atmDeltaType), futurePriceCorrection_(futurePriceCorrection) {}
 
@@ -358,16 +364,16 @@ XMLNode* VolatilityDeltaSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : VolatilitySurfaceConfig(quoteType, exerciseType, calendar, priority) {}
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, calendarStr, priority) {}
 
 VolatilityMoneynessSurfaceConfig::VolatilityMoneynessSurfaceConfig(
     const string& moneynessType, const vector<string>& moneynessLevels, const vector<string>& expiries,
     const string& timeInterpolation, const string& strikeInterpolation, bool extrapolation,
     const string& timeExtrapolation, const string& strikeExtrapolation, bool futurePriceCorrection,
-    MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, Calendar calendar, Natural priority)
+    MarketDatum::QuoteType quoteType, Exercise::Type exerciseType, string calendarStr, Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendar, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
       moneynessType_(moneynessType), moneynessLevels_(moneynessLevels), expiries_(expiries),
       futurePriceCorrection_(futurePriceCorrection) {}
 
@@ -420,17 +426,17 @@ XMLNode* VolatilityMoneynessSurfaceConfig::toXML(XMLDocument& doc) {
 }
 
 VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
-    : VolatilitySurfaceConfig(quoteType, exerciseType, calendar, priority) {}
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
+    : VolatilitySurfaceConfig(quoteType, exerciseType, calendarStr, priority) {}
 
 VolatilityApoFutureSurfaceConfig::VolatilityApoFutureSurfaceConfig(
     const std::vector<std::string>& moneynessLevels, const std::string& baseVolatilityId,
     const std::string& basePriceCurveId, const std::string& baseConventionsId, const std::string& timeInterpolation,
     const std::string& strikeInterpolation, bool extrapolation, const std::string& timeExtrapolation,
     const std::string& strikeExtrapolation, Real beta, const std::string& maxTenor, MarketDatum::QuoteType quoteType,
-    Exercise::Type exerciseType, Calendar calendar, Natural priority)
+    Exercise::Type exerciseType, string calendarStr, Natural priority)
     : VolatilitySurfaceConfig(timeInterpolation, strikeInterpolation, extrapolation, timeExtrapolation,
-                              strikeExtrapolation, quoteType, exerciseType, calendar, priority),
+                              strikeExtrapolation, quoteType, exerciseType, calendarStr, priority),
       moneynessLevels_(moneynessLevels), baseVolatilityId_(baseVolatilityId), basePriceCurveId_(basePriceCurveId),
       baseConventionsId_(baseConventionsId), beta_(beta), maxTenor_(maxTenor) {}
 
