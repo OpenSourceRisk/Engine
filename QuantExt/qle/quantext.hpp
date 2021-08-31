@@ -56,6 +56,7 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
@@ -387,4 +388,5 @@
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <qle/utilities/savedobservablesettings.hpp>
 #include <qle/version.hpp>
