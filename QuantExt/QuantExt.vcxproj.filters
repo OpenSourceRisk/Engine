@@ -1177,6 +1177,9 @@
     <ClInclude Include="qle\utilities\savedobservablesettings.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="qle\time\dateutilities.hpp">
+      <Filter>time</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2005,6 +2008,9 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\multilegoption.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\time\dateutilities.cpp">
+      <Filter>time</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

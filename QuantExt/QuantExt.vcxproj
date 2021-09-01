@@ -870,6 +870,7 @@
     <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
+    <ClInclude Include="qle\time\dateutilities.hpp" />
     <ClInclude Include="qle\time\futureexpirycalculator.hpp" />
     <ClInclude Include="qle\time\yearcounter.hpp" />
     <ClInclude Include="qle\utilities\inflation.hpp" />
@@ -1130,6 +1131,7 @@
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
+    <ClCompile Include="qle\time\dateutilities.cpp" />
     <ClCompile Include="qle\time\yearcounter.cpp" />
     <ClCompile Include="qle\utilities\inflation.cpp" />
   </ItemGroup>

@@ -18,6 +18,7 @@
 
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/time/dateutilities.hpp>
 
 using namespace QuantLib;
 using std::string;
@@ -121,7 +122,10 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         expiry = Date::nthWeekday(convention_.nth(), convention_.weekday(), contractMonth, contractYear);
     } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::CalendarDaysBefore) {
         expiry = Date(1, contractMonth, contractYear) - convention_.calendarDaysBefore() * Days;
-    } else {
+    } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::LastWeekday) {
+        expiry = QuantExt::DateUtilities::lastWeekday(convention_.weekday(), contractMonth, contractYear);
+    } 
+    else {
         QL_FAIL("Did not recognise the commodity future convention's anchor type");
     }
 
@@ -171,6 +175,17 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
                 optionYear = newDate.year();
             }
             expiry = Date::nthWeekday(convention_.optionNth(), convention_.optionWeekday(), optionMonth, optionYear);
+            expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
+        } else if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::LastWeekday) {
+            auto optionMonth = expiry.month();
+            auto optionYear = expiry.year();
+
+            if (convention_.optionExpiryMonthLag() != 0) {
+                Date newDate = Date(15, optionMonth, optionYear) - convention_.optionExpiryMonthLag() * Months;
+                optionMonth = newDate.month();
+                optionYear = newDate.year();
+            }
+            expiry = QuantExt::DateUtilities::lastWeekday(convention_.optionWeekday(), optionMonth, optionYear);
             expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
         }
         

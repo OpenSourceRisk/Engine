@@ -183,9 +183,11 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionConstruction) {
  
     boost::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
+    CommodityFutureConvention::CalendarDaysBefore optionExpiryBusinessDayBefore("3");
+    CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore);
     BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
                              "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
-                             false, "3", prohibitedExpiries));
+                             false, optionExpiryDateRule, prohibitedExpiries));
 
     // Check object
     BOOST_CHECK_EQUAL(convention->id(), "ICE:B");
@@ -291,9 +293,11 @@ BOOST_AUTO_TEST_CASE(testDayOfMonthCommodityFutureConventionToXml) {
 
     boost::shared_ptr<CommodityFutureConvention> convention;
     CommodityFutureConvention::DayOfMonth dayOfMonth("31");
+    CommodityFutureConvention::CalendarDaysBefore optionExpiryBusinessDayBefore("3");
+    CommodityFutureConvention::OptionExpiryAnchorDateRule optionExpiryDateRule(optionExpiryBusinessDayBefore);
     BOOST_CHECK_NO_THROW(convention = boost::make_shared<CommodityFutureConvention>(
                              "ICE:B", dayOfMonth, "Monthly", "ICE_FuturesEU", "UK", 2, "Jan", "0", "Preceding", true,
-                             false, "3", prohibitedExpiries));
+                             false, optionExpiryDateRule, prohibitedExpiries));
 
     // Write the convention to a string
     string xml = convention->toXMLString();
