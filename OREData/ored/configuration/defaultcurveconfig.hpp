@@ -49,13 +49,13 @@ using std::vector;
 class DefaultCurveConfig : public CurveConfig {
 public:
     //! Supported default curve types
-    enum class Type { SpreadCDS, HazardRate, Benchmark, Price, MultiSection };
+    enum class Type { SpreadCDS, HazardRate, Benchmark, Price, MultiSection, Null };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
     DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
                        const string& discountCurveID, const string& recoveryRateQuote, const DayCounter& dayCounter,
-                       const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes,
+                       const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes = {},
                        bool extrapolation = true, const string& benchmarkCurveID = "", const string& sourceCurveID = "",
                        const std::vector<string>& pillars = std::vector<string>(),
                        const Calendar& calendar = Calendar(), const Size spotLag = 0,

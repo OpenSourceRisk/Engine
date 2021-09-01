@@ -79,6 +79,7 @@ public:
     //! Inspectors
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const { return creditCurveId_; }
+    const string& creditGroup() const { return creditGroup_; }
     const string& securityId() const { return securityId_; }
     const string& referenceCurveId() const { return referenceCurveId_; }
     const string& proxySecurityId() const { return proxySecurityId_; }
@@ -118,6 +119,7 @@ private:
     void initialise();
     string issuerId_;
     string creditCurveId_;
+    string creditGroup_;
     string securityId_;
     string referenceCurveId_;
     string proxySecurityId_;

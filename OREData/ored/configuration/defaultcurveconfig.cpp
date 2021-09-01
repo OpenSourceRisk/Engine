@@ -45,7 +45,8 @@ DefaultCurveConfig::DefaultCurveConfig(
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
     }
-    quotes_.insert(quotes_.begin(), recoveryRateQuote_);
+    if (!recoveryRateQuote_.empty())
+        quotes_.insert(quotes_.begin(), recoveryRateQuote_);
 
     if (type_ != Type::SpreadCDS && startDate_ != Date()) {
         WLOG("'StartDate' is only used when type is 'SpreadCDS'");
@@ -89,6 +90,8 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         type_ = Type::Benchmark;
     } else if (type == "MultiSection") {
         type_ = Type::MultiSection;
+    } else if (type == "Null") {
+        type_ = Type::Null;
     } else {
         QL_FAIL("Type " << type << " not recognized");
     }
@@ -218,6 +221,10 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLUtils::addChildren(doc, node, "SourceCurves", "SourceCurve", multiSectionSourceCurveIds_);
         XMLUtils::addChildren(doc, node, "SwitchDates", "SwitchDate", multiSectionSwitchDates_);
+    } else if (type_ == Type::Null) {
+        XMLUtils::addChild(doc, node, "Type", "Null");
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
     } else {
         QL_FAIL("Unkown type in DefaultCurveConfig::toXML()");
     }

@@ -420,6 +420,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 }
                                 report.add(discountFactor).add(presentValue);
                             }
+                            if (hasCapsFloors && market) {
+                                // add null values
+                                Real floorStrike = Null<Real>(), capStrike = Null<Real>();
+                                Real floorVolatility = Null<Real>(), capVolatility = Null<Real>();
+                                report.add(floorStrike).add(capStrike).add(floorVolatility).add(capVolatility);
+                            }
                         }
                     }
                 }

@@ -31,6 +31,7 @@
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/termstructures/credit/flathazardrate.hpp>
 
 #include <algorithm>
 #include <set>
@@ -224,6 +225,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         case DefaultCurveConfig::Type::MultiSection:
             buildMultiSectionCurve(*config, asof, spec, loader, conventions, defaultCurves);
             break;
+        case DefaultCurveConfig::Type::Null:
+            buildNullCurve(*config, asof, spec);
+	    break;
         default:
             QL_FAIL("The DefaultCurveConfig type " << static_cast<int>(config->type()) << " was not recognised");
         }
@@ -539,6 +543,12 @@ void DefaultCurve::buildMultiSectionCurve(DefaultCurveConfig& config, const Date
                                                                     config.dayCounter(), config.extrapolation());
 
     LOG("Finished building default curve of type MultiSection for curve " << config.curveID());
+}
+
+void DefaultCurve::buildNullCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec) {
+    LOG("Start building null default curve for " << config.curveID());
+    curve_ = boost::make_shared<QuantLib::FlatHazardRate>(asof, 0.0, config.dayCounter());
+    recoveryRate_ = 0.0;
 }
 
 } // namespace data

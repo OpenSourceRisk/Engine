@@ -185,6 +185,7 @@
     <xs:sequence>
       <xs:element type="xs:string" name="IssuerId" minOccurs="0"/>
       <xs:element type="xs:string" name="CreditCurveId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CreditGroup" minOccurs="0"/>
       <xs:element type="xs:string" name="SecurityId"/>
       <xs:element type="xs:string" name="ReferenceCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="ProxySecurityId" minOccurs="0"/>

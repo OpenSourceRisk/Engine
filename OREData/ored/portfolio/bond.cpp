@@ -46,6 +46,7 @@ void BondData::fromXML(XMLNode* node) {
     QL_REQUIRE(node, "No BondData Node");
     issuerId_ = XMLUtils::getChildValue(node, "IssuerId", false);
     creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", false);
+    creditGroup_ = XMLUtils::getChildValue(node, "CreditGroup", false);
     securityId_ = XMLUtils::getChildValue(node, "SecurityId", true);
     referenceCurveId_ = XMLUtils::getChildValue(node, "ReferenceCurveId", false);
     proxySecurityId_ = XMLUtils::getChildValue(node, "ProxySecurityId", false);
@@ -80,6 +81,8 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
     if (!creditCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
+    if (!creditGroup_.empty())
+        XMLUtils::addChild(doc, bondNode, "CreditGroup", creditGroup_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     if (!referenceCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
@@ -151,8 +154,8 @@ void BondData::initialise() {
 void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
-                                             referenceCurveId_, proxySecurityId_, incomeCurveId_, volatilityCurveId_,
-                                             coupons_, securityId_, referenceDatum);
+                                             creditGroup_, referenceCurveId_, proxySecurityId_, incomeCurveId_,
+                                             volatilityCurveId_, coupons_, securityId_, referenceDatum);
     initialise();
     checkData();
 }
