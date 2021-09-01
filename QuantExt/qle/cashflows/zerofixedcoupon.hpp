@@ -39,9 +39,10 @@ using namespace QuantLib;
 class ZeroFixedCoupon : public Coupon {
 public:
     ZeroFixedCoupon(Real nominal,
-                    const Schedule& schedule,
+                    const Date& periodStart,
+                    const Date& periodEnd,
+                    const Date& paymentDate,
                     const DayCounter& dc,
-                    const BusinessDayConvention& bdc,
                     Real fixedRate,
                     Compounding comp,
                     bool subtractNotional);
@@ -63,10 +64,12 @@ public:
 private:
 
     Real nominal_;
+    Date periodStart_;
+    Date periodEnd_;
+    Date paymentDate_;
+    DayCounter dc_;
     Real fixedRate_;
     Compounding comp_;
-    Schedule schedule_;
-    DayCounter dc_;
     bool subtractNotional_;
 
 };

@@ -870,10 +870,14 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     QL_REQUIRE(zcFixedLegData, "Wrong LegType, expected Zero Coupon Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+    vector<Date> dates = schedule.dates();
+    vector<double> rates = buildScheduledVector(zcFixedLegData->rates(), zcFixedLegData->rateDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Compounding comp = parseCompounding(zcFixedLegData->compounding());
+
     // check we have a single notional and two dates in the schedule
-    vector<double> notionals = data.notionals();
     Size numNotionals = notionals.size();
     Size numRates = zcFixedLegData->rates().size();
     Size numDates = schedule.size();
@@ -882,13 +886,19 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
                "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
     QL_REQUIRE(numRates >= 1, "Incorrect number of rate values entered, expected at least 1, got " << numRates);
 
-    Rate fixedRate = zcFixedLegData->rates()[0];
-    Compounding comp = parseCompounding(zcFixedLegData->compounding());
-
     Leg leg;
-    leg.push_back(boost::shared_ptr<CashFlow>(new QuantExt::ZeroFixedCoupon(notionals[0], schedule, dc, bdc, fixedRate, comp, zcFixedLegData->subtractNotional())));
+    for (Size i = 0; i < numDates - 1; i++) {
 
+        double notional = i < notionals.size() ? notionals[i] : notionals.back();
+        double fixedRate = i < rates.size() ? rates[i] : rates.back();
+        Date fixedPayDate = schedule.calendar().adjust(dates[i + 1], bdc);
+
+        leg.push_back(boost::shared_ptr<CashFlow>(
+                new QuantExt::ZeroFixedCoupon(notional, dates[i], dates[i + 1], fixedPayDate,
+                    dc, fixedRate, comp, zcFixedLegData->subtractNotional())));
+    }
     return leg;
+
 }
 
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
