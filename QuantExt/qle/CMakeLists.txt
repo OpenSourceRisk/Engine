@@ -254,6 +254,7 @@ termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
 time/yearcounter.cpp
+time/dateutilities.cpp
 utilities/inflation.cpp)
 
 # hpp files, this list is maintained manually
@@ -640,6 +641,7 @@ termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
+time/dateutilities.hpp
 utilities/inflation.hpp
 utilities/savedobservablesettings.hpp
 version.hpp)
