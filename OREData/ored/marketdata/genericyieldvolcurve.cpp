@@ -252,7 +252,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                         if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k] &&
                             !close_enough(spreads[spreads.size() - 1 - k], 0.0)) {
                             q->setValue(lastNonZeroValue);
-                            WLOG("Overwrite vol spread for "
+                            DLOG("Overwrite vol spread for "
                                  << config->curveID() << "/" << smileOptionTenors[i] << "/" << smileUnderlyingTenors[j]
                                  << "/" << spreads[spreads.size() - 1 - k] << " with " << lastNonZeroValue
                                  << " since market quote is zero");

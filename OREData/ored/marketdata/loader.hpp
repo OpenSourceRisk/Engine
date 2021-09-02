@@ -69,7 +69,7 @@ public:
             return get(name.first, d);
         } else {
             if (name.second) {
-                WLOG("Could not find quote for ID " << name.first << " with as of date " << QuantLib::io::iso_date(d)
+                DLOG("Could not find quote for ID " << name.first << " with as of date " << QuantLib::io::iso_date(d)
                                                     << ".");
                 return boost::shared_ptr<MarketDatum>();
             } else {
