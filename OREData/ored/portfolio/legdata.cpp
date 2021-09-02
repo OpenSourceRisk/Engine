@@ -870,15 +870,9 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     QL_REQUIRE(zcFixedLegData, "Wrong LegType, expected Zero Coupon Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
-    vector<Date> dates = schedule.dates();
-    vector<double> rates = buildScheduledVector(zcFixedLegData->rates(), zcFixedLegData->rateDates(), schedule);
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    Compounding comp = parseCompounding(zcFixedLegData->compounding());
-
     // check we have a single notional and two dates in the schedule
-    Size numNotionals = notionals.size();
+    Size numNotionals = data.notionals().size();
     Size numRates = zcFixedLegData->rates().size();
     Size numDates = schedule.size();
     QL_REQUIRE(numDates >= 2, "Incorrect number of schedule dates entered, expected at least 2, got " << numDates);
@@ -886,19 +880,37 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
                "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
     QL_REQUIRE(numRates >= 1, "Incorrect number of rate values entered, expected at least 1, got " << numRates);
 
+    vector<Date> dates = schedule.dates();
+    vector<double> rates = buildScheduledVector(zcFixedLegData->rates(), zcFixedLegData->rateDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    // we loop over the dates in the schedule, computing the compound factor.
+    // For the Compounded rule:
+    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
+    // So we compute the sum of all DayCountFractions in the loop.
+    // For the Simple rule:
+    // (1 + r * dcf_0) * (1 + r * dcf_1)...
+
     Leg leg;
     for (Size i = 0; i < numDates - 1; i++) {
 
-        double notional = i < notionals.size() ? notionals[i] : notionals.back();
-        double fixedRate = i < rates.size() ? rates[i] : rates.back();
-        Date fixedPayDate = schedule.calendar().adjust(dates[i + 1], bdc);
+        Date periodStart = dates[i];
+        Date periodEnd = dates[i+1];
 
-        leg.push_back(boost::shared_ptr<CashFlow>(
-                new QuantExt::ZeroFixedCoupon(notional, dates[i], dates[i + 1], fixedPayDate,
-                    dc, fixedRate, comp, zcFixedLegData->subtractNotional())));
+        Date fixedPayDate = schedule.calendar().adjust(periodEnd, bdc);
+        leg.push_back(boost::shared_ptr<CashFlow>(new ZeroFixedCoupon(
+                                    periodStart,
+                                    periodEnd,
+                                    fixedPayDate,
+                                    notionals,
+                                    rates,
+                                    dates,
+                                    parseDayCounter(data.dayCounter()),
+                                    parseCompounding(zcFixedLegData->compounding()),
+                                    zcFixedLegData->subtractNotional())));
+
     }
     return leg;
-
 }
 
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,

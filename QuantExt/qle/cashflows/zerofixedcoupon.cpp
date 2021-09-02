@@ -20,20 +20,37 @@
 
 namespace QuantExt {
 
- ZeroFixedCoupon::ZeroFixedCoupon(Real nominal,
-                    const Date& periodStart,
-                    const Date& periodEnd,
-                    const Date& paymentDate,
-                    const DayCounter& dc,
-                    Real fixedRate,
-                    Compounding comp,
-                    bool subtractNotional) :
-                    Coupon(paymentDate, nominal, periodStart, periodEnd),
-                    nominal_(nominal), periodStart_(periodStart), periodEnd_(periodEnd), paymentDate_(paymentDate),
-                    dc_(dc), fixedRate_(fixedRate), comp_(comp), subtractNotional_(subtractNotional){
+ ZeroFixedCoupon::ZeroFixedCoupon(const Date& periodStart,
+                                    const Date& periodEnd,
+                                    const Date& paymentDate,
+                                    std::vector<double>& notionals,
+                                    std::vector<double>& rates,
+                                    std::vector<Date> dates,
+                                    const DayCounter& dc,
+                                    Compounding comp,
+                                    bool subtractNotional) :
+                    Coupon(paymentDate, notionals.back(), periodStart, periodEnd),
+                    periodStart_(periodStart), periodEnd_(periodEnd), paymentDate_(paymentDate),
+                    notionals_(notionals), rates_(rates), dates_(dates), dc_(dc), comp_(comp), subtractNotional_(subtractNotional)
+                    {
 
                         QL_REQUIRE(comp_ == QuantLib::Compounded || comp_ == QuantLib::Simple,
                             "Compounding method " << comp_ << " not supported");
+
+                            for (Size i = 0; i < dates_.size() - 1; i++) {
+
+                                Date periodStart = dates_[i];
+                                if(periodStart > periodEnd_)
+                                    continue;
+
+                                Date periodEnd = dates_[i+1];
+                                if(periodEnd_ < periodEnd)
+                                    periodEnd = periodEnd_;
+
+                                nominal_ = i < notionals_.size() ? notionals_[i] : notionals_.back();
+                                rate_ = i < rates_.size() ? rates_[i] : rates_.back();
+
+                            }
 
                     };
 
@@ -41,15 +58,18 @@ Real ZeroFixedCoupon::amount() const { return accruedAmount(periodEnd_); }
 
 Real ZeroFixedCoupon::nominal() const { return nominal_; }
 
-Real ZeroFixedCoupon::rate() const { return fixedRate_; }
+Real ZeroFixedCoupon::rate() const { return rate_; }
 
 DayCounter ZeroFixedCoupon::dayCounter() const { return dc_; }
 
 Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
 
-    Real fixedAmount = nominal_;
-    //std::vector<Date> dates = schedule_.dates();
-
+    // we loop over the dates in the schedule, computing the compound factor.
+    // For the Compounded rule:
+    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
+    // So we compute the sum of all DayCountFractions in the loop.
+    // For the Simple rule:
+    // (1 + r * dcf_0) * (1 + r * dcf_1)...
     // we loop over the dates in the schedule, computing the compound factor.
     // For the Compounded rule:
     // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
@@ -59,28 +79,32 @@ Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
 
     double totalDCF = 0.0;
     double compoundFactor = 1.0;
+    double fixedAmount = 0.0;
 
-    if(periodStart_ > accrualEnd)
-        return 0.0;
+    for (Size i = 0; i < dates_.size() - 1; i++) {
 
-    Date periodEnd = periodEnd_;
-        if(periodEnd > accrualEnd)
+        Date periodStart = dates_[i];
+        if(periodStart > periodEnd_)
+            continue;
+
+        Date periodEnd = dates_[i+1];
+        if(accrualEnd < periodEnd)
             periodEnd = accrualEnd;
 
-    double dcf = dc_.yearFraction(periodStart_, periodEnd);
-
-    if (comp_ == QuantLib::Simple)
-        compoundFactor *= (1 + fixedRate_ * dcf);
-    else
-        totalDCF += dcf;
-
-    if (comp_ == QuantLib::Compounded)
-        compoundFactor = pow(1.0 + fixedRate_, totalDCF);
-
-    if (subtractNotional_)
-        fixedAmount *= (compoundFactor - 1);
-    else
-        fixedAmount *= compoundFactor;
+        double dcf = dc_.yearFraction(periodStart, periodEnd);
+        fixedAmount = i < notionals_.size() ? notionals_[i] : notionals_.back();
+        double fixedRate = i < rates_.size() ? rates_[i] : rates_.back();
+        if (comp_ == QuantLib::Simple)
+            compoundFactor *= (1 + fixedRate * dcf);
+        else
+            totalDCF += dcf;
+        if (comp_ == QuantLib::Compounded)
+            compoundFactor = pow(1.0 + fixedRate, totalDCF);
+        if (subtractNotional_)
+            fixedAmount *= (compoundFactor - 1);
+        else
+            fixedAmount *= compoundFactor;
+    }
 
     return fixedAmount;
 

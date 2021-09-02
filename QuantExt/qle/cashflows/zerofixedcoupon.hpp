@@ -30,6 +30,7 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/compounding.hpp>
+#include <vector>
 
 namespace QuantExt {
 
@@ -38,14 +39,15 @@ using namespace QuantLib;
 //! \ingroup cashflows
 class ZeroFixedCoupon : public Coupon {
 public:
-    ZeroFixedCoupon(Real nominal,
-                    const Date& periodStart,
+    ZeroFixedCoupon(const Date& periodStart,
                     const Date& periodEnd,
                     const Date& paymentDate,
+                    std::vector<double>& notionals,
+                    std::vector<double>& rates,
+                    std::vector<Date> dates_,
                     const DayCounter& dc,
-                    Real fixedRate,
                     Compounding comp,
-                    bool subtractNotional);
+                    bool subtractNotiona);
 
     //! \name Coupon interface
     //@{
@@ -63,14 +65,18 @@ public:
 
 private:
 
-    Real nominal_;
     Date periodStart_;
     Date periodEnd_;
     Date paymentDate_;
+    std::vector<double> notionals_;
+    std::vector<double> rates_;
+    std::vector<Date> dates_;
     DayCounter dc_;
-    Real fixedRate_;
     Compounding comp_;
     bool subtractNotional_;
+
+    double nominal_;
+    double rate_;
 
 };
 
