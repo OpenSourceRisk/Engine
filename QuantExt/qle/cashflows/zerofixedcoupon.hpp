@@ -42,12 +42,13 @@ public:
     ZeroFixedCoupon(const Date& periodStart,
                     const Date& periodEnd,
                     const Date& paymentDate,
-                    std::vector<double>& notionals,
-                    std::vector<double>& rates,
-                    std::vector<Date> dates_,
+                    double nominal,
+                    double rate,
+                    double amount,
+                    double currentAccural,
                     const DayCounter& dc,
                     Compounding comp,
-                    bool subtractNotiona);
+                    bool subtractNotional);
 
     //! \name Coupon interface
     //@{
@@ -68,15 +69,13 @@ private:
     Date periodStart_;
     Date periodEnd_;
     Date paymentDate_;
-    std::vector<double> notionals_;
-    std::vector<double> rates_;
-    std::vector<Date> dates_;
+    double nominal_;
+    double rate_;
+    double amount_;
+    double currentAccrual_;
     DayCounter dc_;
     Compounding comp_;
     bool subtractNotional_;
-
-    double nominal_;
-    double rate_;
 
 };
 

@@ -870,7 +870,6 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     QL_REQUIRE(zcFixedLegData, "Wrong LegType, expected Zero Coupon Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
-    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     // check we have a single notional and two dates in the schedule
     Size numNotionals = data.notionals().size();
     Size numRates = zcFixedLegData->rates().size();
@@ -884,6 +883,11 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     vector<double> rates = buildScheduledVector(zcFixedLegData->rates(), zcFixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    Compounding comp = parseCompounding(zcFixedLegData->compounding());
+    bool subtractNotional = zcFixedLegData->subtractNotional();
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+
     // we loop over the dates in the schedule, computing the compound factor.
     // For the Compounded rule:
     // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
@@ -892,22 +896,49 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     // (1 + r * dcf_0) * (1 + r * dcf_1)...
 
     Leg leg;
+    double totalDCF = 0.0;
+    double compoundFactor = 1.0;
+
     for (Size i = 0; i < numDates - 1; i++) {
 
         Date periodStart = dates[i];
         Date periodEnd = dates[i+1];
 
+        double dcf = dc.yearFraction(periodStart, periodEnd);
+        double nominal = i < notionals.size() ? notionals[i] : notionals.back();
+        double fixedRate = i < rates.size() ? rates[i] : rates.back();
+
+        double fixedAmount = nominal;
+        double currentAccrual = 0.0;
+
+        if (comp == QuantLib::Simple){
+            currentAccrual = compoundFactor;
+            compoundFactor *= (1 + fixedRate * dcf);
+        } else {
+            currentAccrual = totalDCF;
+            totalDCF += dcf;
+        }
+        if (comp == QuantLib::Compounded)
+            compoundFactor = pow(1.0 + fixedRate, totalDCF);
+
+        if (subtractNotional)
+            fixedAmount *= (compoundFactor - 1);
+        else
+            fixedAmount *= compoundFactor;
+
         Date fixedPayDate = schedule.calendar().adjust(periodEnd, bdc);
+
         leg.push_back(boost::shared_ptr<CashFlow>(new ZeroFixedCoupon(
                                     periodStart,
                                     periodEnd,
                                     fixedPayDate,
-                                    notionals,
-                                    rates,
-                                    dates,
-                                    parseDayCounter(data.dayCounter()),
-                                    parseCompounding(zcFixedLegData->compounding()),
-                                    zcFixedLegData->subtractNotional())));
+                                    nominal,
+                                    fixedRate,
+                                    fixedAmount,
+                                    currentAccrual,
+                                    dc,
+                                    comp,
+                                    subtractNotional)));
 
     }
     return leg;
