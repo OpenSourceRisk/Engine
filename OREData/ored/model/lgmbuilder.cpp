@@ -95,8 +95,6 @@ createSwaptionHelper(const E& expiry, const T& term, const Handle<SwaptionVolati
         strike = sd.atmForward;
         helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                     floatDayCounter, yts, errorType, strike, 1.0, vt, shift);
-        helper = boost::make_shared<SwaptionHelper>(expiry, term, vol, iborIndex, fixedLegTenor, fixedDayCounter,
-                                                    floatDayCounter, yts, errorType, strike, 1.0, vt, shift);
         DLOG("Helper with expiry " << expiry << " and term " << term << " has an absolute market value of "
                                    << std::scientific << mv << " which is lower than minimum market value " << mmv
                                    << " so switching to helper with atm rate " << strike);
