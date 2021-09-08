@@ -25,7 +25,10 @@
 
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
+
 #include <vector>
+
+#include <boost/timer/timer.hpp>
 
 namespace ore {
 namespace data {
@@ -87,8 +90,17 @@ public:
 
     //! Inspectors
     //@{
-    /*! The "QuantLib" instrument */
-    boost::shared_ptr<QuantLib::Instrument> qlInstrument() const { return instrument_; }
+    /*! The "QuantLib" instrument
+        Pass true if you trigger a calculation on the returned instrument and want to record
+        the timing for that calculation. If in doubt whether a calculation is triggered, pass false. */
+    boost::shared_ptr<QuantLib::Instrument> qlInstrument(const bool calculate = false) const {
+        if (calculate && instrument_ != nullptr) {
+            startPricingTiming(instrument_);
+            instrument_->NPV();
+            stopPricingTiming();
+        }
+        return instrument_;
+    }
     /*! The multiplier */
     const Real& multiplier() const { return multiplier_; }
     /*! additional instruments */
@@ -99,11 +111,45 @@ public:
     const std::vector<Real>& additionalMultipliers() const { return additionalMultipliers_; }
     //@}
 
+    //! Get cumulative timing spent on pricing
+    boost::timer::nanosecond_type getCumulativePricingTime() const { return cumulativePricingTime_; }
+
+    //! Get number of pricings
+    std::size_t getNumberOfPricings() const { return numberOfPricings_; }
+
+    //! Reset pricing statistics
+    void resetPricingStats() const {
+        numberOfPricings_ = 0;
+        cumulativePricingTime_ = 0;
+    }
+
 protected:
     boost::shared_ptr<QuantLib::Instrument> instrument_;
     Real multiplier_;
     std::vector<boost::shared_ptr<QuantLib::Instrument>> additionalInstruments_;
     std::vector<Real> additionalMultipliers_;
+
+    void startPricingTiming(const boost::shared_ptr<QuantLib::Instrument>& instr) const {
+        if (instr == nullptr || instr->isCalculated() || instr->isExpired()) {
+            recordingPricingTime_ = false;
+            return;
+        }
+        timer_ = boost::timer::cpu_timer();
+        recordingPricingTime_ = true;
+    }
+
+    void stopPricingTiming() const {
+        if (recordingPricingTime_) {
+            cumulativePricingTime_ += timer_.elapsed().wall;
+            ++numberOfPricings_;
+            recordingPricingTime_ = false;
+        }
+    }
+
+    mutable std::size_t numberOfPricings_ = 0;
+    mutable boost::timer::nanosecond_type cumulativePricingTime_ = 0;
+    mutable boost::timer::cpu_timer timer_;
+    mutable bool recordingPricingTime_ = false;
 };
 
 //! Vanilla Instrument Wrapper
@@ -124,7 +170,12 @@ public:
     void initialise(const std::vector<QuantLib::Date>&) override{};
     void reset() override {}
 
-    QuantLib::Real NPV() const override { return instrument_->NPV() * multiplier_ + additionalInstrumentsNPV(); }
+    QuantLib::Real NPV() const override {
+        startPricingTiming(instrument_);
+        Real tmp = instrument_->NPV() * multiplier_ + additionalInstrumentsNPV();
+        stopPricingTiming();
+        return tmp;
+    }
 };
 } // namespace data
 } // namespace ore

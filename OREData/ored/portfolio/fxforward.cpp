@@ -120,7 +120,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 QuantLib::Real FxForward::notional() const {
     // try to get the notional from the additional results of the instrument
     try {
-        return instrument_->qlInstrument()->result<Real>("currentNotional");
+        return instrument_->qlInstrument(true)->result<Real>("currentNotional");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "currentNotional not provided"))
             ALOG("error when retrieving notional: " << e.what());
@@ -132,7 +132,7 @@ QuantLib::Real FxForward::notional() const {
 std::string FxForward::notionalCurrency() const {
     // try to get the notional ccy from the additional results of the instrument
     try {
-        return instrument_->qlInstrument()->result<std::string>("notionalCurrency");
+        return instrument_->qlInstrument(true)->result<std::string>("notionalCurrency");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "notionalCurrency not provided"))
             ALOG("error when retrieving notional ccy: " << e.what());

@@ -105,6 +105,8 @@ public:
 
     virtual void writeFixings(ore::data::Report& report, const boost::shared_ptr<ore::data::Loader>& loader);
 
+    virtual void writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio);
+
     const std::string& nullString() const { return nullString_; }
 
 protected:
