@@ -72,9 +72,7 @@ public:
         the timing for that calculation. If in doubt whether a calculation is triggered, pass false. */
     const boost::shared_ptr<QuantLib::Instrument>& activeUnderlyingInstrument(const bool calculate = false) const {
         if (calculate && activeUnderlyingInstrument_ != nullptr) {
-            startPricingTiming(activeUnderlyingInstrument_);
-            activeUnderlyingInstrument_->NPV();
-            stopPricingTiming();
+            getTimedNPV(activeUnderlyingInstrument_);
         }
         return activeUnderlyingInstrument_;
     }

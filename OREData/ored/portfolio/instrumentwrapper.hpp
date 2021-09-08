@@ -95,9 +95,7 @@ public:
         the timing for that calculation. If in doubt whether a calculation is triggered, pass false. */
     boost::shared_ptr<QuantLib::Instrument> qlInstrument(const bool calculate = false) const {
         if (calculate && instrument_ != nullptr) {
-            startPricingTiming(instrument_);
-            instrument_->NPV();
-            stopPricingTiming();
+            getTimedNPV(instrument_);
         }
         return instrument_;
     }
@@ -129,27 +127,19 @@ protected:
     std::vector<boost::shared_ptr<QuantLib::Instrument>> additionalInstruments_;
     std::vector<Real> additionalMultipliers_;
 
-    void startPricingTiming(const boost::shared_ptr<QuantLib::Instrument>& instr) const {
-        if (instr == nullptr || instr->isCalculated() || instr->isExpired()) {
-            recordingPricingTime_ = false;
-            return;
-        }
-        timer_ = boost::timer::cpu_timer();
-        recordingPricingTime_ = true;
-    }
-
-    void stopPricingTiming() const {
-        if (recordingPricingTime_) {
-            cumulativePricingTime_ += timer_.elapsed().wall;
-            ++numberOfPricings_;
-            recordingPricingTime_ = false;
-        }
+    // all NPV calls to be logged in the timings should go through this method
+    Real getTimedNPV(const boost::shared_ptr<QuantLib::Instrument>& instr) const {
+        if (instr->isCalculated() || instr->isExpired())
+            return instr->NPV();
+        boost::timer::cpu_timer timer_;
+        Real tmp = instr->NPV();
+        cumulativePricingTime_ += timer_.elapsed().wall;
+        ++numberOfPricings_;
+        return tmp;
     }
 
     mutable std::size_t numberOfPricings_ = 0;
     mutable boost::timer::nanosecond_type cumulativePricingTime_ = 0;
-    mutable boost::timer::cpu_timer timer_;
-    mutable bool recordingPricingTime_ = false;
 };
 
 //! Vanilla Instrument Wrapper
@@ -170,12 +160,7 @@ public:
     void initialise(const std::vector<QuantLib::Date>&) override{};
     void reset() override {}
 
-    QuantLib::Real NPV() const override {
-        startPricingTiming(instrument_);
-        Real tmp = instrument_->NPV() * multiplier_ + additionalInstrumentsNPV();
-        stopPricingTiming();
-        return tmp;
-    }
+    QuantLib::Real NPV() const override { return getTimedNPV(instrument_) * multiplier_ + additionalInstrumentsNPV(); }
 };
 } // namespace data
 } // namespace ore

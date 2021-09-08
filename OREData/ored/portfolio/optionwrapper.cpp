@@ -89,17 +89,13 @@ Real OptionWrapper::NPV() const {
         // by introducing the cash settlement date into the option wrapper (note
         // that we will probably need an effective cash settlement date then to
         // maintain the relative position to the effective exercise date).
-        startPricingTiming(activeUnderlyingInstrument_);
         Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
-                       ? (isLong_ ? 1.0 : -1.0) * activeUnderlyingInstrument_->NPV() * undMultiplier_
+                       ? (isLong_ ? 1.0 : -1.0) * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
                        : 0.0;
-        stopPricingTiming();
         return npv + addNPV;
     } else {
         // if not exercised we just return the original option's NPV
-        startPricingTiming(instrument_);
-        Real npv = (isLong_ ? 1.0 : -1.0) * instrument_->NPV() * multiplier_;
-        stopPricingTiming();
+        Real npv = (isLong_ ? 1.0 : -1.0) * getTimedNPV(instrument_) * multiplier_;
         return npv + addNPV;
     }
 }
@@ -109,9 +105,7 @@ bool EuropeanOptionWrapper::exercise() const {
         return false;
 
     // for European Exercise, we only require that underlying has positive PV
-    startPricingTiming(activeUnderlyingInstrument_);
-    bool res = activeUnderlyingInstrument_->NPV() * undMultiplier_ > 0.0;
-    stopPricingTiming();
+    bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > 0.0;
     return res;
 }
 
@@ -120,14 +114,10 @@ bool AmericanOptionWrapper::exercise() const {
         return false;
 
     if (Settings::instance().evaluationDate() == effectiveExerciseDates_.back()) {
-        startPricingTiming(activeUnderlyingInstrument_);
-        bool res = activeUnderlyingInstrument_->NPV() * undMultiplier_ > 0.0;
-        stopPricingTiming();
+        bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > 0.0;
         return res;
     } else {
-        startPricingTiming(activeUnderlyingInstrument_);
-        bool res = activeUnderlyingInstrument_->NPV() * undMultiplier_ > instrument_->NPV() * multiplier_;
-        stopPricingTiming();
+        bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
         return res;
     }
 }
@@ -144,9 +134,7 @@ bool BermudanOptionWrapper::exercise() const {
             break;
         }
     }
-    startPricingTiming(activeUnderlyingInstrument_);
-    bool exercise = activeUnderlyingInstrument_->NPV() * undMultiplier_ > instrument_->NPV() * multiplier_;
-    stopPricingTiming();
+    bool exercise = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
     return exercise;
 }
 } // namespace data
