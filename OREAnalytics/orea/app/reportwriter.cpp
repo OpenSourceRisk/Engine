@@ -196,9 +196,16 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
         // if trade provides cashflows as additional results, we use that information instead of the legs
 
-        auto qlInstr = trades[k]->instrument()->qlInstrument(true);
-        bool useAdditionalResults = qlInstr != nullptr && qlInstr->additionalResults().find("cashFlowResults") !=
-                                                              qlInstr->additionalResults().end();
+        bool useAdditionalResults = false;
+	boost::shared_ptr<QuantLib::Instrument> qlInstr;
+        try {
+            // trigger calculation before getting additional resuls, is a call to calculate() missing in
+            // QuantLib::Instrument::additionalResults()?
+            qlInstr = trades[k]->instrument()->qlInstrument(true);
+            useAdditionalResults = qlInstr != nullptr && qlInstr->additionalResults().find("cashFlowResults") !=
+                                                             qlInstr->additionalResults().end();
+        } catch (...) {
+        }
 
         try {
 
