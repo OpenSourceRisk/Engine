@@ -32,7 +32,8 @@ namespace QuantExt {
                                     bool subtractNotional) :
                     Coupon(paymentDate, nominal, periodStart, periodEnd),
                     periodStart_(periodStart), periodEnd_(periodEnd), paymentDate_(paymentDate),
-                    nominal_(nominal), rate_(rate), amount_(amount), currentAccrual_(currentAccrual), dc_(dc), comp_(comp), subtractNotional_(subtractNotional)
+                    nominal_(nominal), rate_(rate), amount_(amount), currentAccrual_(currentAccrual),
+                    dc_(dc), comp_(comp), subtractNotional_(subtractNotional)
                     {
 
                         QL_REQUIRE(comp_ == QuantLib::Compounded || comp_ == QuantLib::Simple,
@@ -50,49 +51,28 @@ DayCounter ZeroFixedCoupon::dayCounter() const { return dc_; }
 
 Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
 
-    // we loop over the dates in the schedule, computing the compound factor.
-    // For the Compounded rule:
-    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
-    // So we compute the sum of all DayCountFractions in the loop.
-    // For the Simple rule:
-    // (1 + r * dcf_0) * (1 + r * dcf_1)...
-    // we loop over the dates in the schedule, computing the compound factor.
-    // For the Compounded rule:
-    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
-    // So we compute the sum of all DayCountFractions in the loop.
-    // For the Simple rule:
-    // (1 + r * dcf_0) * (1 + r * dcf_1)...
-
-    Date periodEnd = periodEnd_;
-
-    if(periodStart_ > accrualEnd)
+    //outside this period, return zero
+    if(periodStart_ > accrualEnd || periodEnd_ < accrualEnd)
         return 0.0;
 
-    if(periodEnd < accrualEnd)
-        return 0.0;
+    Date appliedPeriodEnd = periodEnd_;
 
-    if(periodEnd > accrualEnd)
-        periodEnd = accrualEnd;
+    if(appliedPeriodEnd > accrualEnd)
+        appliedPeriodEnd = accrualEnd;
 
-    double dcf = dc_.yearFraction(periodStart_, periodEnd);
-    double fixedAmount = nominal_;
+    double dcf = dc_.yearFraction(periodStart_, appliedPeriodEnd);
     double compoundFactor = 1.0;
-    double totalDCF = 0.0;
 
     if (comp_ == QuantLib::Simple)
-        compoundFactor = (1 + rate_ * dcf) * currentAccrual_;
-    else
-        totalDCF = dcf + currentAccrual_;
+        compoundFactor = (1.0 + rate_ * dcf) * currentAccrual_; //currentAccrual_ used as a (previous) compound factor
 
     if (comp_ == QuantLib::Compounded)
-        compoundFactor = pow(1.0 + rate_, totalDCF);
+        compoundFactor = pow(1.0 + rate_, currentAccrual_ + dcf); //currentAccrual_ used as a (previous) daycount fraction
 
     if (subtractNotional_)
-        fixedAmount *= (compoundFactor - 1);
-    else
-        fixedAmount *= compoundFactor;
+        compoundFactor -= 1.0;
 
-    return fixedAmount;
+    return nominal_ * compoundFactor;
 
 }
 

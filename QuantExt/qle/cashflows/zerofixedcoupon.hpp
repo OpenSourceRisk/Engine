@@ -45,6 +45,10 @@ public:
                     double nominal,
                     double rate,
                     double amount,
+                    // depending on the compounding rule, currentAccural is :
+                    // either a daycount fraction (Compounded)
+                    // or a compound factor (Simple)
+                    // to be used in the accrued amount method
                     double currentAccural,
                     const DayCounter& dc,
                     Compounding comp,
