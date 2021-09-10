@@ -34,41 +34,78 @@ namespace data {
 
 using namespace std;
 
-Wildcard::Wildcard(const std::string& s) : s_(s) {
+Wildcard::Wildcard(const std::string& inputString) : inputString_(inputString) {
 
-    if (s_.find("*") == std::string::npos)
+    std::size_t wildCardPos = s_.find("*");
+
+    if (wildCardPos == std::string::npos)
         return;
 
-    static std::vector<std::string> specialChars = {"\\", ".", "+", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|"};
-
-    for (auto const& c : specialChars) {
-        boost::replace_all(s_, c, "\\" + c);
+    if (usePrefixes && (aggresivePrefixes || s_.find("*", wildCardPos + 1) == std::string::npos)) {
+        prefixString_ = s_.substr(0, wildCardPos);
+    } else {
+        regexString_ = inputString_;
+        static std::vector<std::string> specialChars = {"\\", ".", "+", "?", "^", "$", "(",
+                                                        ")",  "[", "]", "{", "}", "|"};
+        for (auto const& c : specialChars) {
+            boost::replace_all(regexString_, c, "\\" + c);
+        }
+        boost::replace_all(regexString_, "*", ".*");
     }
-
-    boost::replace_all(s_, "*", ".*");
-
-    regex_ = boost::make_shared<std::regex>(s_);
 }
 
-bool Wildcard::hasWildcard() const { return regex_ != nullptr; }
+bool Wildcard::hasWildcard() const { return hasWildCard_; }
+
+bool Wildcard::isPrefix() const { return !prefixStr_.empty(); }
 
 bool Wildcard::matches(const std::string& s) const {
-    if (regex_ != nullptr) {
+    if (!prefixStr_.empty()) {
+        return s.substr(0, prefixStr_.size()) == prefixStr_;
+    } else if (!regexStr_.empty()) {
+        if (regex_ == nullptr)
+            regex_ = boost::make_shared<std::regex>(regexStr_);
         return std::regex_match(s, *regex_);
     } else {
         return s == s_;
     }
 }
 
-const std::string& Wildcard::regex() const { return s_; }
+const std::string& Wildcard::regex() const {
+    QL_REQUIRE(!regexStr_.empy(), "string '" << s << "' is not a regex (usePrefixes = " << std::boolalpha
+                                             << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
+                                             << ", isPrefix = " << !prefixString.empty());
+    return regexStr_;
+}
+
+const std::string& Wildcard::prefix() const {
+    QL_REQUIRE(!prefixStr_.empy(), "string '" << s << "' is not a prefix (usePrefixes = " << std::boolalpha
+                                              << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
+                                              << ", isRegex = " << !regexString.empty());
+    return prefixStr_;
+}
 
 void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<string>& regexes) {
 
     for (const string& n : quoteNames) {
-        ore::data::Wildcard w(n);
+        ore::data::Wildcard w(n, false);
         if (w.hasWildcard())
             regexes.insert(w.regex());
         else
+            names.insert(n);
+    }
+}
+
+void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<string>& regexes,
+                     std::set<std::string>& prefixes, const bool aggressivePrefixes) {
+
+    for (const string& n : quoteNames) {
+        ore::data::Wildcard w(n, true, aggresivePrefixes);
+        if (w.hasWildcard()) {
+            if (w.isPrefix())
+                prefixes.insert(w.prefix());
+            else
+                regexes.insert(w.regex());
+        } else
             names.insert(n);
     }
 }
