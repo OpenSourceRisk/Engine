@@ -23,6 +23,8 @@
 
 #include <ored/utilities/wildcard.hpp>
 
+#include <ql/errors.hpp>
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/make_shared.hpp>
 
@@ -34,15 +36,18 @@ namespace data {
 
 using namespace std;
 
-Wildcard::Wildcard(const std::string& inputString) : inputString_(inputString) {
+Wildcard::Wildcard(const std::string& inputString, const bool usePrefixes, const bool aggressivePrefixes)
+    : inputString_(inputString), usePrefixes_(usePrefixes), aggressivePrefixes_(aggressivePrefixes) {
 
-    std::size_t wildCardPos = s_.find("*");
+    std::size_t wildCardPos = inputString_.find("*");
 
     if (wildCardPos == std::string::npos)
         return;
 
-    if (usePrefixes && (aggresivePrefixes || s_.find("*", wildCardPos + 1) == std::string::npos)) {
-        prefixString_ = s_.substr(0, wildCardPos);
+    hasWildCard_ = true;
+
+    if (usePrefixes && (aggressivePrefixes || wildCardPos == inputString_.size() - 1)) {
+        prefixString_ = inputString_.substr(0, wildCardPos);
     } else {
         regexString_ = inputString_;
         static std::vector<std::string> specialChars = {"\\", ".", "+", "?", "^", "$", "(",
@@ -56,32 +61,33 @@ Wildcard::Wildcard(const std::string& inputString) : inputString_(inputString) {
 
 bool Wildcard::hasWildcard() const { return hasWildCard_; }
 
-bool Wildcard::isPrefix() const { return !prefixStr_.empty(); }
+bool Wildcard::isPrefix() const { return !prefixString_.empty(); }
 
 bool Wildcard::matches(const std::string& s) const {
-    if (!prefixStr_.empty()) {
-        return s.substr(0, prefixStr_.size()) == prefixStr_;
-    } else if (!regexStr_.empty()) {
+    if (!prefixString_.empty()) {
+        return s.substr(0, prefixString_.size()) == prefixString_;
+    } else if (!regexString_.empty()) {
         if (regex_ == nullptr)
-            regex_ = boost::make_shared<std::regex>(regexStr_);
+            regex_ = boost::make_shared<std::regex>(regexString_);
         return std::regex_match(s, *regex_);
     } else {
-        return s == s_;
+        return s == inputString_;
     }
 }
 
 const std::string& Wildcard::regex() const {
-    QL_REQUIRE(!regexStr_.empy(), "string '" << s << "' is not a regex (usePrefixes = " << std::boolalpha
-                                             << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
-                                             << ", isPrefix = " << !prefixString.empty());
-    return regexStr_;
+    QL_REQUIRE(!regexString_.empty(), "string '" << inputString_ << "' is not a regex (usePrefixes = " << std::boolalpha
+                                                 << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
+                                                 << ", isPrefix = " << !prefixString_.empty() << ")");
+    return regexString_;
 }
 
 const std::string& Wildcard::prefix() const {
-    QL_REQUIRE(!prefixStr_.empy(), "string '" << s << "' is not a prefix (usePrefixes = " << std::boolalpha
-                                              << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
-                                              << ", isRegex = " << !regexString.empty());
-    return prefixStr_;
+    QL_REQUIRE(!prefixString_.empty(), "string '" << inputString_
+                                                  << "' is not a prefix (usePrefixes = " << std::boolalpha
+                                                  << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
+                                                  << ", isRegex = " << !regexString_.empty() << ")");
+    return prefixString_;
 }
 
 void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<string>& regexes) {
@@ -99,7 +105,7 @@ void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<stri
                      std::set<std::string>& prefixes, const bool aggressivePrefixes) {
 
     for (const string& n : quoteNames) {
-        ore::data::Wildcard w(n, true, aggresivePrefixes);
+        ore::data::Wildcard w(n, true, aggressivePrefixes);
         if (w.hasWildcard()) {
             if (w.isPrefix())
                 prefixes.insert(w.prefix());

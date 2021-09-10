@@ -38,7 +38,7 @@ public:
     /*! all characters in s keep their original meaning except * which is a placeholder for zero or
       more characters not equal to newline */
     explicit Wildcard(const std::string& inputString, const bool usePrefixes = true,
-                      const bool aggresivePrefixes = false);
+                      const bool aggressivePrefixes = false);
 
     bool hasWildcard() const;
     bool isPrefix() const;
@@ -49,10 +49,14 @@ public:
     const std::string& prefix() const;
 
 private:
-    std::stirng inputString_;
+    std::string inputString_;
+    bool usePrefixes_;
+    bool aggressivePrefixes_;
+
+    bool hasWildCard_ = false;
     std::string regexString_;
     std::string prefixString_;
-    boost::shared_ptr<std::regex> regex_;
+    mutable boost::shared_ptr<std::regex> regex_;
 };
 
 //! checks if at most one element in C has a wild card and returns it in this case
