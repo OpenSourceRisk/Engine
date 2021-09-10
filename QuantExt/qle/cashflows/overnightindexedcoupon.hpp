@@ -101,6 +101,10 @@ public:
     const Period& lookback() const { return lookback_; }
     //! rate cutoff
     Natural rateCutoff() const { return rateCutoff_; }
+    //! rate computation start date
+    const Date& rateComputationStartDate() const { return rateComputationStartDate_; }
+    //! rate computation end date
+    const Date& rateComputationEndDate() const { return rateComputationEndDate_; }
     //@}
     //! \name FloatingRateCoupon interface
     //@{
