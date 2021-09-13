@@ -41,17 +41,12 @@ class ZeroFixedCoupon : public Coupon {
 public:
     ZeroFixedCoupon(const Date& periodStart,
                     const Date& periodEnd,
-                    const Date& paymentDate,
-                    double nominal,
-                    double rate,
-                    double amount,
-                    // depending on the compounding rule, currentAccural is :
-                    // either a daycount fraction (Compounded)
-                    // or a compound factor (Simple)
-                    // to be used in the accrued amount method
-                    double currentAccural,
+                    const std::vector<double>& rates,
+                    const std::vector<double>& notionals,
+                    const Schedule& schedule,
                     const DayCounter& dc,
-                    Compounding comp,
+                    const BusinessDayConvention& bdc,
+                    const Compounding& comp,
                     bool subtractNotional);
 
     //! \name Coupon interface
@@ -72,14 +67,17 @@ private:
 
     Date periodStart_;
     Date periodEnd_;
-    Date paymentDate_;
-    double nominal_;
-    double rate_;
-    double amount_;
-    double currentAccrual_;
+    std::vector<double> rates_;
+    std::vector<double> notionals_;
+    Schedule schedule_;
     DayCounter dc_;
+    BusinessDayConvention bdc_;
     Compounding comp_;
     bool subtractNotional_;
+
+    double rate_;
+    double nominal_;
+    double amount_;
 
 };
 

@@ -888,59 +888,25 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     bool subtractNotional = zcFixedLegData->subtractNotional();
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
-    // we loop over the dates in the schedule, computing the compound factor.
-    // For the Compounded rule:
-    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
-    // So we compute the sum of all DayCountFractions in the loop.
-    // For the Simple rule:
-    // (1 + r * dcf_0) * (1 + r * dcf_1)...
-
     Leg leg;
-    double totalDCF = 0.0;
-    double compoundFactor = 1.0;
+    for (Size i = 0; i < dates.size() - 1; i++) {
 
-    for (Size i = 0; i < numDates - 1; i++) {
+        Date startDate = dates[i];
+        Date endDate = dates[i+1];
 
-        Date periodStart = dates[i];
-        Date periodEnd = dates[i+1];
-
-        double dcf = dc.yearFraction(periodStart, periodEnd);
-        double nominal = i < notionals.size() ? notionals[i] : notionals.back();
-        double fixedRate = i < rates.size() ? rates[i] : rates.back();
-
-        double fixedAmount = nominal;
-        double currentAccrual = 0.0;
-
-        if (comp == QuantLib::Simple){
-            currentAccrual = compoundFactor;
-            compoundFactor *= (1 + fixedRate * dcf);
-        } else {
-            currentAccrual = totalDCF;
-            totalDCF += dcf;
-        }
-        if (comp == QuantLib::Compounded)
-            compoundFactor = pow(1.0 + fixedRate, totalDCF);
-
-        if (subtractNotional)
-            fixedAmount *= (compoundFactor - 1);
-        else
-            fixedAmount *= compoundFactor;
-
-        Date fixedPayDate = schedule.calendar().adjust(periodEnd, bdc);
-
-        leg.push_back(boost::shared_ptr<CashFlow>(new ZeroFixedCoupon(
-                                    periodStart,
-                                    periodEnd,
-                                    fixedPayDate,
-                                    nominal,
-                                    fixedRate,
-                                    fixedAmount,
-                                    currentAccrual,
-                                    dc,
-                                    comp,
-                                    subtractNotional)));
+        leg.push_back(boost::shared_ptr<Coupon>(new ZeroFixedCoupon(
+                                        startDate,
+                                        endDate,
+                                        rates,
+                                        notionals,
+                                        schedule,
+                                        dc,
+                                        bdc,
+                                        comp,
+                                        subtractNotional)));
 
     }
+
     return leg;
 }
 
