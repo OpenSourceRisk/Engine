@@ -103,7 +103,8 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         if (arguments.leg[i]->hasOccurred(settlementDate, includeSettlementDateFlows_))
             continue;
 
-        boost::shared_ptr<FixedRateCoupon> coupon = boost::dynamic_pointer_cast<FixedRateCoupon>(arguments.leg[i]);
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(arguments.leg[i]);
+        QL_REQUIRE(coupon, "MidPointCdsEngine: expected coupon, simple cashflows are not allowed");
 
         // In order to avoid a few switches, we calculate the NPV
         // of both legs as a positive quantity. We'll give them

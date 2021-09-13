@@ -841,16 +841,18 @@ public:
     //! \name modifiers
     //@{
     vector<double>& notionals() { return notionals_; }
+    ScheduleData& schedule() { return schedule_; }
     vector<string>& notionalDates() { return notionalDates_; }
+    string& dayCounter() { return dayCounter_; }
     bool& isPayer() { return isPayer_; }
     boost::shared_ptr<LegAdditionalData>& concreteLegData() { return concreteLegData_; }
     std::vector<Indexing>& indexing() { return indexing_; }
     bool& indexingFromAssetLeg() { return indexingFromAssetLeg_; }
-    ScheduleData& schedule() { return schedule_; }
     //@}
 
-protected:
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
+
+protected:
 
     /*! Store the set of ORE index names that appear on this leg.
 
