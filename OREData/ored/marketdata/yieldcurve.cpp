@@ -631,7 +631,7 @@ void YieldCurve::buildZeroCurve() {
                                            "segment not supported yet.");
     QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::Zero, "The curve segment is not of type Zero.");
 
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
 
     // Fill a vector of zero quotes.
     vector<boost::shared_ptr<ZeroQuote>> zeroQuotes;

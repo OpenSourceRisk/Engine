@@ -76,7 +76,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
         const boost::shared_ptr<InflationCurveConfig>& config = curveConfigs.inflationCurveConfig(spec.curveConfigID());
 
-        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
         boost::shared_ptr<InflationSwapConvention> conv =
             boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
 

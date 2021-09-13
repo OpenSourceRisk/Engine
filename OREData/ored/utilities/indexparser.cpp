@@ -517,7 +517,7 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
     bool isInterpolated,
     const Handle<ZeroInflationTermStructure>& h) {
     
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
 
     // If conventions are non-null and we have provided a convention of type InflationIndex with a name equal to the 
     // string s, we use that convention to construct the inflation index.
@@ -702,7 +702,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
 }
 
 boost::shared_ptr<Index> parseIndex(const string& s) {
-    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<QuantLib::Index> ret_idx;
     // if we have an ibor index convention we parse s using this (and throw if we don't succeed)
     if (conventions && (conventions->has(s, Convention::Type::IborIndex) || 
