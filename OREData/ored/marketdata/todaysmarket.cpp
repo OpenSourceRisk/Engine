@@ -68,18 +68,17 @@ namespace data {
 TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarketParameters>& params,
                            const boost::shared_ptr<Loader>& loader,
                            const boost::shared_ptr<CurveConfigurations>& curveConfigs,
-                           const boost::shared_ptr<Conventions>& conventions, const bool continueOnError,
+                           const bool continueOnError,
                            const bool loadFixings, const bool lazyBuild,
                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
                            const bool preserveQuoteLinkage, const IborFallbackConfig& iborFallbackConfig)
-    : MarketImpl(conventions), params_(params), loader_(loader), curveConfigs_(curveConfigs), conventions_(conventions),
+    : MarketImpl(), params_(params), loader_(loader), curveConfigs_(curveConfigs),
       continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
       preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig) {
     QL_REQUIRE(params_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_, "TodaysMarket: CurveConfigurations are null");
-    QL_REQUIRE(conventions_, "TodaysMarket: Conventions are null");
     initialise(asof);
 }
 
@@ -95,7 +94,7 @@ void TodaysMarket::initialise(const Date& asof) {
     if (loadFixings_) {
         // Apply them now in case a curve builder needs them
         LOG("Todays Market Loading Fixings");
-        applyFixings(loader_->loadFixings(), conventions_);
+        applyFixings(loader_->loadFixings());
         LOG("Todays Market Loading Fixing done.");
     }
 
@@ -116,7 +115,7 @@ void TodaysMarket::initialise(const Date& asof) {
     }
 
     // build the dependency graph for all configurations and  build all FX Spots
-    DependencyGraph dg(asof_, params_, curveConfigs_, conventions_, iborFallbackConfig_);
+    DependencyGraph dg(asof_, params_, curveConfigs_, iborFallbackConfig_);
     map<string, string> buildErrors;
 
     for (const auto& configuration : params_->configurations()) {
@@ -247,11 +246,13 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             boost::shared_ptr<YieldCurveSpec> ycspec = boost::dynamic_pointer_cast<YieldCurveSpec>(spec);
             QL_REQUIRE(ycspec, "Failed to convert spec " << *spec << " to yield curve spec");
 
+            boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+
             auto itr = requiredYieldCurves_.find(ycspec->name());
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
                 boost::shared_ptr<YieldCurve> yieldCurve =
-                    boost::make_shared<YieldCurve>(asof_, *ycspec, *curveConfigs_, *loader_, *conventions_,
+                    boost::make_shared<YieldCurve>(asof_, *ycspec, *curveConfigs_, *loader_,
                                                    requiredYieldCurves_, requiredDefaultCurves_, fxT_, referenceData_,
                                                    iborFallbackConfig_, preserveQuoteLinkage_, requiredDiscountCurves_);
                 calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
@@ -280,9 +281,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                                      << configuration);
                 // ibor fallback handling
                 auto tmpIndex = parseIborIndex(node.name, itr->second->handle(),
-                                               conventions_->has(node.name, Convention::Type::IborIndex) ||
-                                                       conventions_->has(node.name, Convention::Type::OvernightIndex)
-                                                   ? conventions_->get(node.name)
+                                               conventions->has(node.name, Convention::Type::IborIndex) ||
+                                                       conventions->has(node.name, Convention::Type::OvernightIndex)
+                                                   ? conventions->get(node.name)
                                                    : nullptr);
                 if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
                     auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
@@ -346,7 +347,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building FXVolatility for asof " << asof_);
                 boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
                     asof_, *fxvolspec, *loader_, *curveConfigs_, fxT_, requiredYieldCurves_, requiredFxVolCurves_,
-                    requiredCorrelationCurves_, *conventions_);
+                    requiredCorrelationCurves_);
                 calibrationInfo_->fxVolCalibrationInfo[fxvolspec->name()] = fxVolCurve->calibrationInfo();
                 itr = requiredFxVolCurves_.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
             }
@@ -450,7 +451,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // build the curve
                 DLOG("Building DefaultCurve for asof " << asof_);
                 boost::shared_ptr<DefaultCurve> defaultCurve =
-                    boost::make_shared<DefaultCurve>(asof_, *defaultspec, *loader_, *curveConfigs_, *conventions_,
+                    boost::make_shared<DefaultCurve>(asof_, *defaultspec, *loader_, *curveConfigs_,
                                                      requiredYieldCurves_, requiredDefaultCurves_);
                 itr = requiredDefaultCurves_.insert(make_pair(defaultspec->name(), defaultCurve)).first;
             }
@@ -513,7 +514,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredInflationCurves_.end()) {
                 DLOG("Building InflationCurve " << inflationspec->name() << " for asof " << asof_);
                 boost::shared_ptr<InflationCurve> inflationCurve = boost::make_shared<InflationCurve>(
-                    asof_, *inflationspec, *loader_, *curveConfigs_, *conventions_, requiredYieldCurves_);
+                    asof_, *inflationspec, *loader_, *curveConfigs_, requiredYieldCurves_);
                 itr = requiredInflationCurves_.insert(make_pair(inflationspec->name(), inflationCurve)).first;
                 calibrationInfo_->inflationCurveCalibrationInfo[inflationspec->name()] =
                     inflationCurve->calibrationInfo();
@@ -528,7 +529,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                            "expected zero inflation term structure for index " << node.name << ", but could not cast");
                 // index is not interpolated
                 auto tmp =
-                    parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts), conventions_);
+                    parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(ts));
                 zeroInflationIndices_[make_pair(configuration, node.name)] = Handle<ZeroInflationIndex>(tmp);
             }
 
@@ -541,7 +542,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                            "expected yoy inflation term structure for index " << node.name << ", but could not cast");
                 yoyInflationIndices_[make_pair(configuration, node.name)] =
                     Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>(), conventions_),
+                        parseZeroInflationIndex(node.name, false, Handle<ZeroInflationTermStructure>()),
                         false, Handle<YoYInflationTermStructure>(ts)));
             }
             break;
@@ -557,8 +558,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building InflationCapFloorVolatilitySurface for asof " << asof_);
                 boost::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
                     boost::make_shared<InflationCapFloorVolCurve>(asof_, *infcapfloorspec, *loader_, *curveConfigs_,
-                                                                  requiredYieldCurves_, requiredInflationCurves_,
-                                                                  conventions_);
+                                                                  requiredYieldCurves_, requiredInflationCurves_);
                 itr = requiredInflationCapFloorVolCurves_
                           .insert(make_pair(infcapfloorspec->name(), inflationCapFloorVolCurve))
                           .first;
@@ -588,7 +588,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredEquityCurves_.end()) {
                 DLOG("Building EquityCurve for asof " << asof_);
                 boost::shared_ptr<EquityCurve> equityCurve = boost::make_shared<EquityCurve>(
-                    asof_, *equityspec, *loader_, *curveConfigs_, *conventions_, requiredYieldCurves_);
+                    asof_, *equityspec, *loader_, *curveConfigs_, requiredYieldCurves_);
                 itr = requiredEquityCurves_.insert(make_pair(equityspec->name(), equityCurve)).first;
                 calibrationInfo_->dividendCurveCalibrationInfo[equityspec->name()] = equityCurve->calibrationInfo();
             }
@@ -673,7 +673,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredCommodityCurves_.end()) {
                 DLOG("Building CommodityCurve for asof " << asof_);
                 boost::shared_ptr<CommodityCurve> commodityCurve = boost::make_shared<CommodityCurve>(
-                    asof_, *commodityCurveSpec, *loader_, *curveConfigs_, *conventions_, fxT_, requiredYieldCurves_,
+                    asof_, *commodityCurveSpec, *loader_, *curveConfigs_, fxT_, requiredYieldCurves_,
                     requiredCommodityCurves_);
                 itr = requiredCommodityCurves_.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
             }
@@ -681,7 +681,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             DLOG("Adding CommodityCurve, " << node.name << ", with spec " << *commodityCurveSpec << " to configuration "
                                            << configuration);
             Handle<PriceTermStructure> pts(itr->second->commodityPriceCurve());
-            Handle<CommodityIndex> commIdx(parseCommodityIndex(node.name, *conventions_, false, pts));
+            Handle<CommodityIndex> commIdx(parseCommodityIndex(node.name, false, pts));
             commodityIndices_[make_pair(configuration, node.name)] = commIdx;
             break;
         }
@@ -696,7 +696,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredCommodityVolCurves_.end()) {
                 DLOG("Building commodity volatility for asof " << asof_);
                 boost::shared_ptr<CommodityVolCurve> commodityVolCurve = boost::make_shared<CommodityVolCurve>(
-                    asof_, *commodityVolSpec, *loader_, *curveConfigs_, *conventions_, requiredYieldCurves_,
+                    asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_,
                     requiredCommodityCurves_, requiredCommodityVolCurves_);
                 itr = requiredCommodityVolCurves_.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
             }
@@ -725,7 +725,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredCorrelationCurves_.end()) {
                 DLOG("Building CorrelationCurve for asof " << asof_);
                 boost::shared_ptr<CorrelationCurve> corrCurve = boost::make_shared<CorrelationCurve>(
-                    asof_, *corrspec, *loader_, *curveConfigs_, *conventions_, requiredSwapIndices_[configuration],
+                    asof_, *corrspec, *loader_, *curveConfigs_, requiredSwapIndices_[configuration],
                     requiredYieldCurves_, requiredSwaptionVolCurves_);
                 itr = requiredCorrelationCurves_.insert(make_pair(corrspec->name(), corrCurve)).first;
             }

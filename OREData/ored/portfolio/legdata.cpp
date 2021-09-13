@@ -2160,8 +2160,9 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
-                    parseCommodityIndex(indexing.index(), true, tmp->fixingCalendar(),
-                                        engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
+                    parseCommodityIndex(indexing.index(), true,
+                                        engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config),
+                                        tmp->fixingCalendar());
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying
                 boost::shared_ptr<BondIndex> bi = parseBondIndex(indexing.index());

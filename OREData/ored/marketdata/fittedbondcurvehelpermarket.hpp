@@ -40,8 +40,7 @@ namespace data {
 
 class FittedBondCurveHelperMarket : public MarketImpl {
 public:
-    explicit FittedBondCurveHelperMarket(const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves = {},
-                                         const Conventions& conventions = Conventions());
+    explicit FittedBondCurveHelperMarket(const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves = {});
 
     Handle<YieldTermStructure> yieldCurve(const string& name,
                                           const string& configuration = Market::defaultConfiguration) const override;

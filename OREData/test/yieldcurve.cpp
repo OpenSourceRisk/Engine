@@ -147,7 +147,8 @@ struct TodaysMarketArguments {
 
         string filename = inputDir + "/conventions.xml";
         conventions->fromFile(TEST_INPUT_FILE(filename));
-
+        InstrumentConventions::instance().conventions() = conventions;
+        
         filename = inputDir + "/" + curveConfigFile;
         curveConfigs->fromFile(TEST_INPUT_FILE(filename));
 
@@ -238,18 +239,20 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
 
     // QL >= 1.19 should not throw, no matter if the float convention has the correct calendar
 
-    Conventions conventions;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    InstrumentConventions::instance().conventions() = conventions;
+    
     boost::shared_ptr<Convention> convention =
         boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
-    conventions.add(convention);
+    conventions->add(convention);
 
-    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
+    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader));
 
-    conventions.clear();
+    conventions->clear();
     convention = boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP,UK", "Semiannual", "MF", "A365",
                                                       "JPY-LIBOR-6M");
-    conventions.add(convention);
-    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
+    conventions->add(convention);
+    BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader));
 }
 
 // Test ARS-IN-USD failures using the old QuantLib::IterativeBootstrap parameters
@@ -262,7 +265,7 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDFailures, bdata::make(curveConfigFiles
     boost::shared_ptr<TodaysMarket> todaysMarket;
     BOOST_CHECK_EXCEPTION(todaysMarket =
                               boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
-                                                               tma.curveConfigs, tma.conventions, false, false),
+                                                               tma.curveConfigs, false, false),
                           Error, ExpErrorPred("yield curve building failed for curve ARS-IN-USD"));
 }
 
@@ -276,7 +279,7 @@ BOOST_DATA_TEST_CASE(testBootstrapARSinUSDPasses, bdata::make(curveConfigFiles),
     boost::shared_ptr<TodaysMarket> todaysMarket;
     BOOST_REQUIRE_NO_THROW(todaysMarket =
                                boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
-                                                                tma.curveConfigs, tma.conventions, false, false));
+                                                                tma.curveConfigs, false, false));
 
     Handle<YieldTermStructure> yts = todaysMarket->discountCurve("ARS");
     BOOST_TEST_MESSAGE("Discount: " << std::fixed << std::setprecision(14) << yts->discount(1.0));
@@ -293,7 +296,7 @@ BOOST_DATA_TEST_CASE(testOiFirstFutureDateVsValuationDate, bdata::make(oiFutureC
         boost::shared_ptr<TodaysMarket> todaysMarket;
         BOOST_REQUIRE_NO_THROW(todaysMarket =
                                    boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
-                                                                    tma.curveConfigs, tma.conventions, false, true));
+                                                                    tma.curveConfigs, false, true));
 
         Handle<YieldTermStructure> yts;
         BOOST_REQUIRE_NO_THROW(yts = todaysMarket->discountCurve("USD"));
@@ -312,7 +315,7 @@ BOOST_DATA_TEST_CASE(testMmFirstFutureDateVsValuationDate, bdata::make(mmFutureC
         boost::shared_ptr<TodaysMarket> todaysMarket;
         BOOST_REQUIRE_NO_THROW(todaysMarket =
                                    boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters, tma.loader,
-                                                                    tma.curveConfigs, tma.conventions, false, true));
+                                                                    tma.curveConfigs, false, true));
 
         Handle<YieldTermStructure> yts;
         BOOST_REQUIRE_NO_THROW(yts = todaysMarket->discountCurve("USD"));
@@ -367,11 +370,13 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
                                              "Discount", "LogQuadratic");
     curveConfigs.yieldCurveConfig("CHF-OIS") = chfYieldConfig;
     
-    Conventions conventions;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();;
+    InstrumentConventions::instance().conventions() = conventions;
+    
     boost::shared_ptr<Convention> convention =
         boost::make_shared<ZeroRateConvention>("CHF-ZERO-CONVENTIONS", "A365",
                                                "CHF", "Compounded", "Annual");
-    conventions.add(convention);
+    conventions->add(convention);
     
     vector<string> data(zero_data.size());
     for (Size i=0; i < zero_data.size(); ++i) {
@@ -380,7 +385,7 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
     }
     
     MarketDataLoader loader(data);
-    YieldCurve chfYieldCurve(asof, spec, curveConfigs, loader, conventions);
+    YieldCurve chfYieldCurve(asof, spec, curveConfigs, loader);
     
     BOOST_TEST_MESSAGE("Test zeroRate from YieldCurve against input");
     for (Size i=0; i < zero_data.size(); ++i) {

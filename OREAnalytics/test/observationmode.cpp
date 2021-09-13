@@ -77,6 +77,8 @@ boost::shared_ptr<data::Conventions> conventions() {
         new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(swapConv);
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 
@@ -283,10 +285,10 @@ void simulation(string dateGridString, bool checkFixings) {
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
 
-    // build scenario sim market
-    Conventions conv = *conventions();
+    // set conventions and build scenario sim market
+    conventions();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters, conv);
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters);
 
     // build scenario generator
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);

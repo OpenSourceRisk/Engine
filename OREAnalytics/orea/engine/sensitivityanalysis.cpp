@@ -57,7 +57,7 @@ SensitivityAnalysis::SensitivityAnalysis(
     const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
     const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const Conventions& conventions,
+    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, 
     const bool recalibrateModels, const CurveConfigurations& curveConfigs,
     const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
@@ -65,7 +65,7 @@ SensitivityAnalysis::SensitivityAnalysis(
     const boost::shared_ptr<ReferenceDataManager>& referenceData, const IborFallbackConfig& iborFallbackConfig,
     const bool continueOnError, bool xccyDiscounting, bool analyticFxSensis)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
-      simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
+      simMarketData_(simMarketData), sensitivityData_(sensitivityData), 
       recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
       extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), referenceData_(referenceData),
@@ -132,7 +132,7 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
                                                                            << ")");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(
-        market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_,
+        market_, simMarketData_, marketConfiguration_, curveConfigs_, todaysMarketParams_,
         continueOnError_, sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
 
     LOG("Sim market initialised for sensitivity analysis");

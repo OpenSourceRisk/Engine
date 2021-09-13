@@ -203,14 +203,14 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 };
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
-                       const Loader& loader, const Conventions& conventions,
+                       const Loader& loader,
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
                        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, const bool preserveQuoteLinkage,
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves)
-    : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
+    : asofDate_(asof), curveSpec_(curveSpec), loader_(loader),
       requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
       fxTriangulation_(fxTriangulation), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       preserveQuoteLinkage_(preserveQuoteLinkage), requiredDiscountCurves_(requiredDiscountCurves) {
@@ -631,6 +631,8 @@ void YieldCurve::buildZeroCurve() {
                                            "segment not supported yet.");
     QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::Zero, "The curve segment is not of type Zero.");
 
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+
     // Fill a vector of zero quotes.
     vector<boost::shared_ptr<ZeroQuote>> zeroQuotes;
     boost::shared_ptr<DirectYieldCurveSegment> zeroCurveSegment =
@@ -649,7 +651,7 @@ void YieldCurve::buildZeroCurve() {
 
     // Create the (date, zero) pairs.
     map<Date, Rate> data;
-    boost::shared_ptr<Convention> convention = conventions_.get(curveSegments_[0]->conventionsID());
+    boost::shared_ptr<Convention> convention = conventions->get(curveSegments_[0]->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << curveSegments_[0]->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::Zero, "Conventions ID does not give zero rate conventions.");
     boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
@@ -746,6 +748,8 @@ void YieldCurve::buildZeroSpreadedCurve() {
     QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::ZeroSpread,
                "The curve segment is not of type Zero Spread.");
 
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    
     // Fill a vector of zero spread quotes.
     vector<boost::shared_ptr<ZeroQuote>> quotes;
     boost::shared_ptr<ZeroSpreadedYieldCurveSegment> segment =
@@ -786,7 +790,7 @@ void YieldCurve::buildZeroSpreadedCurve() {
         }
     }
 
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::Zero, "Conventions ID does not give zero rate conventions.");
     boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
@@ -1024,6 +1028,8 @@ void YieldCurve::buildFittedBondCurve() {
     QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::FittedBond,
                "The curve segment is not of type 'FittedBond'.");
 
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    
     boost::shared_ptr<FittedBondYieldCurveSegment> curveSegment =
         boost::dynamic_pointer_cast<FittedBondYieldCurveSegment>(curveSegments_[0]);
     QL_REQUIRE(curveSegment != nullptr, "could not cast to FittedBondYieldCurveSegment, this is unexpected");
@@ -1055,7 +1061,7 @@ void YieldCurve::buildFittedBondCurve() {
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
         auto index = parseIborIndex(c.first, Handle<YieldTermStructure>(),
-                                    conventions_.has(c.first) ? conventions_.get(c.first) : nullptr);
+                                    conventions->has(c.first) ? conventions->get(c.first) : nullptr);
         auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
         auto y = requiredYieldCurves_.find(key);
         QL_REQUIRE(y != requiredYieldCurves_.end(), "required yield curve '" << key << "' for iborIndex '" << c.first
@@ -1064,7 +1070,7 @@ void YieldCurve::buildFittedBondCurve() {
     }
 
     auto engineFactory = boost::make_shared<EngineFactory>(
-        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping, conventions_),
+        engineData, boost::make_shared<FittedBondCurveHelperMarket>(iborCurveMapping),
         std::map<MarketContext, string>(), std::vector<boost::shared_ptr<EngineBuilder>>(),
         std::vector<boost::shared_ptr<LegBuilder>>(), referenceData_, iborFallbackConfig_);
 
@@ -1277,7 +1283,8 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::Deposit,
                "Conventions ID does not give deposit rate conventions.");
@@ -1312,11 +1319,11 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                 // EUR-EONIA, USD-FedFunds, EUR-EURIBOR, USD-LIBOR, etc.
                 string indexName = depositConvention->index();
                 boost::shared_ptr<IborIndex> index;
-                if (isOvernightIndex(indexName, conventions_)) {
+                if (isOvernightIndex(indexName)) {
                     // No need for the term here
                     index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
-                                           conventions_.has(indexName, Convention::Type::OvernightIndex)
-                                               ? conventions_.get(indexName)
+                                           conventions->has(indexName, Convention::Type::OvernightIndex)
+                                               ? conventions->get(indexName)
                                                : nullptr);
                 } else {
                     // Note that a depositTerm with units Days here could end up as a string with another unit
@@ -1328,8 +1335,8 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                     ss << indexName << "-" << io::short_period(depositTerm);
                     indexName = ss.str();
                     index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
-                                           conventions_.has(indexName, Convention::Type::IborIndex)
-                                               ? conventions_.get(indexName)
+                                           conventions->has(indexName, Convention::Type::IborIndex)
+                                               ? conventions->get(indexName)
                                                : nullptr);
                 }
                 depositHelper = boost::make_shared<DepositRateHelper>(
@@ -1351,7 +1358,8 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::Future,
                "Conventions ID does not give deposit rate conventions.");
@@ -1446,7 +1454,8 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::FRA, "Conventions ID does not give FRA conventions.");
     boost::shared_ptr<FraConvention> fraConvention = boost::dynamic_pointer_cast<FraConvention>(convention);
@@ -1495,7 +1504,8 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::OIS, "Conventions ID does not give OIS conventions.");
     boost::shared_ptr<OisConvention> oisConvention = boost::dynamic_pointer_cast<OisConvention>(convention);
@@ -1562,7 +1572,8 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::Swap, "Conventions ID does not give swap conventions.");
     boost::shared_ptr<IRSwapConvention> swapConvention = boost::dynamic_pointer_cast<IRSwapConvention>(convention);
@@ -1615,7 +1626,8 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::AverageOIS,
                "Conventions ID does not give average OIS conventions.");
@@ -1692,7 +1704,8 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::TenorBasisSwap,
                "Conventions ID does not give tenor basis swap conventions.");
@@ -1780,7 +1793,8 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::TenorBasisTwoSwap,
                "Conventions ID does not give tenor basis two swap conventions.");
@@ -1860,7 +1874,8 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::BMABasisSwap,
                "Conventions ID does not give bma basis swap conventions.");
@@ -1923,7 +1938,8 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
 
     // LOG("YieldCurve::addFXForwards() called");
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::FX, "Conventions ID does not give FX forward conventions.");
 
@@ -2035,7 +2051,8 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment.
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::CrossCcyBasis, "Conventions ID does not give cross currency "
                                                                       "basis swap conventions.");
@@ -2209,7 +2226,8 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment
-    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::CrossCcyFixFloat,
                "Conventions ID does not give cross currency fix float swap conventions.");

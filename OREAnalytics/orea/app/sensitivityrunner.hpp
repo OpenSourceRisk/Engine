@@ -65,7 +65,7 @@ public:
     virtual ~SensitivityRunner(){};
 
     virtual void runSensitivityAnalysis(
-        boost::shared_ptr<ore::data::Market> market, Conventions& conventions,
+        boost::shared_ptr<ore::data::Market> market, 
         const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
         const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters());
 

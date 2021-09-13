@@ -53,7 +53,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
                        const boost::shared_ptr<ore::data::EngineData>& engineData,
                        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                       const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
+                       const boost::shared_ptr<StressTestScenarioData>& stressData, 
                        const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams,
                        boost::shared_ptr<ScenarioFactory> scenarioFactory,
                        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
@@ -63,7 +63,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
     LOG("Build Simulation Market");
     boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
-        market, simMarketData, conventions, Market::defaultConfiguration, curveConfigs, todaysMarketParams,
+        market, simMarketData, Market::defaultConfiguration, curveConfigs, todaysMarketParams,
         continueOnError, false, false, false, iborFallbackConfig);
 
     LOG("Build Stress Scenario Generator");

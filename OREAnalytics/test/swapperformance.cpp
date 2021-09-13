@@ -90,6 +90,8 @@ boost::shared_ptr<data::Conventions> convs() {
         new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(swapConv);
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 
@@ -395,8 +397,8 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
         model, pathGen, scenarioFactory, parameters, today, dg, initMarket);
 
     // build scenario sim market
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters, conventions);
+    convs();
+    auto simMarket = boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // Build Porfolio

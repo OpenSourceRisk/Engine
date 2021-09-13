@@ -61,7 +61,8 @@ public:
         Settings::instance().evaluationDate() = today;
 
         conventions->fromFile(TEST_INPUT_FILE("conventions.xml"));
-
+        InstrumentConventions::instance().conventions() = conventions;
+        
         auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
         todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket.xml"));
 
@@ -74,7 +75,7 @@ public:
 
         bool continueOnError = false;
         boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
-            today, todaysMarketParams, loader, curveConfigs, conventions, continueOnError);
+            today, todaysMarketParams, loader, curveConfigs, continueOnError);
 
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         engineData->fromFile(TEST_INPUT_FILE("pricingengine.xml"));

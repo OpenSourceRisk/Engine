@@ -27,15 +27,17 @@ namespace ore {
 namespace data {
 
 FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
-    const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves, const Conventions& conventions) {
+    const std::map<std::string, Handle<YieldTermStructure>>& iborIndexCurves) {
+    
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     // populate the ibor index curves
     for (auto const& c : iborIndexCurves)
         iborIndices_[std::make_pair(Market::defaultConfiguration, c.first)] =
             Handle<IborIndex>(parseIborIndex(c.first, c.second,
-                                             conventions.has(c.first, Convention::Type::IborIndex) ||
-                                                     conventions.has(c.first, Convention::Type::OvernightIndex)
-                                                 ? conventions.get(c.first)
+                                             conventions->has(c.first, Convention::Type::IborIndex) ||
+                                                     conventions->has(c.first, Convention::Type::OvernightIndex)
+                                                 ? conventions->get(c.first)
                                                  : nullptr));
 }
 

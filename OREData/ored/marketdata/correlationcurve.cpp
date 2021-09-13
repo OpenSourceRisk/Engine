@@ -93,10 +93,12 @@ private:
 void CorrelationCurve::calibrateCMSSpreadCorrelations(
     const boost::shared_ptr<CorrelationCurveConfig>& config, Date asof, const vector<Handle<Quote>>& prices,
     vector<Handle<Quote>>& correlations, boost::shared_ptr<QuantExt::CorrelationTermStructure>& curve,
-    const Conventions& conventions, map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
+    map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
     map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
     map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
 
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    
     // build cms pricingengine
     string ccy = config->currency();
     string swaptionVol = "SwaptionVolatility/" + ccy + "/" + config->swaptionVolatility();
@@ -147,7 +149,7 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(
 
     vector<boost::shared_ptr<QuantExt::CmsCapHelper>> instruments;
 
-    boost::shared_ptr<Convention> tmp = conventions.get(config->conventions());
+    boost::shared_ptr<Convention> tmp = conventions->get(config->conventions());
     QL_REQUIRE(tmp, "no conventions found with id " << config->conventions());
 
     boost::shared_ptr<CmsSpreadOptionConvention> conv = boost::dynamic_pointer_cast<CmsSpreadOptionConvention>(tmp);
@@ -190,7 +192,7 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(
 }
 
 CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const Loader& loader,
-                                   const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                                   const CurveConfigurations& curveConfigs,
                                    map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
                                    map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                    map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
@@ -325,7 +327,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             if (config->quoteType() == MarketDatum::QuoteType::PRICE) {
 
                 if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread) {
-                    calibrateCMSSpreadCorrelations(config, asof, quotes, corrs, corr, conventions, swapIndices,
+                    calibrateCMSSpreadCorrelations(config, asof, quotes, corrs, corr, swapIndices,
                                                    yieldCurves, swaptionVolCurves);
                 } else {
                     QL_FAIL("price calibration only supported for CMSSpread correlations");

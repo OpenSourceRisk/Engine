@@ -155,11 +155,11 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions> 
 private:
     InstrumentConventions() : conventions_() {}
 
-    ore::data::Conventions conventions_;
+    boost::shared_ptr<ore::data::Conventions> conventions_;
 
 public:
-    const ore::data::Conventions& conventions() const { return conventions_; }
-    ore::data::Conventions& conventions() { return conventions_; }
+    const boost::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
+    boost::shared_ptr<ore::data::Conventions>& conventions() { return conventions_; }
 };
     
 //! Container for storing Zero Rate conventions

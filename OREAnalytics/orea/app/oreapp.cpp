@@ -147,7 +147,7 @@ int OREApp::run() {
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
             sensitivityRunner_ = getSensitivityRunner();
-            sensitivityRunner_->runSensitivityAnalysis(market_, *conventions_, *curveConfigs_, *marketParameters_);
+            sensitivityRunner_->runSensitivityAnalysis(market_, *curveConfigs_, *marketParameters_);
             out_ << "OK" << endl;
         } else {
             LOG("skip sensitivity analysis");
@@ -345,7 +345,7 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
     }
 
     boost::shared_ptr<XvaRunner> xva = boost::make_shared<XvaRunner>(
-        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, conventions_, marketParameters,
+        asof_, baseCcy, portfolio_, nettingSetManager, engineData, curveConfigs_, marketParameters,
         simMarketParameters, scenarioGeneratorData, modelData, getExtraLegBuilders(), getExtraEngineBuilders(),
         referenceData, iborFallbackConfig_, dimQuantile, dimHorizonCalendarDays, analytics, calculationType, dvaName,
         fvaBorrowingCurve, fvaLendingCurve, fullInitialCollateralisation, storeFlows);
@@ -733,7 +733,7 @@ void OREApp::runStressTest() {
     LOG("Build Stress Test");
     string marketConfiguration = params_->get("markets", "pricing");
     boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
-        portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, *conventions_, *curveConfigs_,
+        portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, *curveConfigs_,
         *marketParameters_, nullptr, getExtraEngineBuilders(), getExtraLegBuilders(), referenceData_,
         iborFallbackConfig_, continueOnError_);
 
@@ -820,7 +820,7 @@ void OREApp::writeBaseScenario() {
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(marketConfigFile);
 
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, *conventions_, marketConfiguration,
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, marketConfiguration,
                                                            *curveConfigs_, *marketParameters_, continueOnError_, false,
                                                            false, false, iborFallbackConfig_);
     boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
@@ -935,7 +935,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         LOG("Build Simulation Market");
 
         simMarket_ = boost::make_shared<ScenarioSimMarket>(
-            market_, simMarketData, *conventions_, boost::make_shared<FixingManager>(asof_),
+            market_, simMarketData, boost::make_shared<FixingManager>(asof_),
             params_->get("markets", "simulation"), *curveConfigs_, *marketParameters_, continueOnError_, false, true,
             false, iborFallbackConfig_);
         string groupName = "simulation";
@@ -1322,7 +1322,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     else
         conventions_->fromXMLString(conventionsXML);
 
-    InstrumentConventions::instance().conventions() = *conventions_;
+    InstrumentConventions::instance().conventions() = conventions_;
     
     if (todaysMarketXML == "")
         getMarketParameters();
@@ -1384,7 +1384,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
 
     // build market
     out_ << setw(tab_) << left << "Market... " << flush;
-    market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_, conventions_,
+    market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, jointLoader, curveConfigs_,
                                                continueOnError_, true, lazyMarketBuilding_, referenceData_, false,
                                                iborFallbackConfig_);
     out_ << "OK" << endl;

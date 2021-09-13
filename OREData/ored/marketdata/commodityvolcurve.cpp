@@ -156,7 +156,7 @@ namespace ore {
 namespace data {
 
 CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
-                                     const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                                     const CurveConfigurations& curveConfigs,
                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                      const map<string, boost::shared_ptr<CommodityCurve>>& commodityCurves,
                                      const map<string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves) {
@@ -166,11 +166,13 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
 
         auto config = *curveConfigs.commodityVolatilityConfig(spec.curveConfigID());
 
+        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        
         if (!config.futureConventionsId().empty()) {
             const auto& cId = config.futureConventionsId();
-            QL_REQUIRE(conventions.has(cId), "Conventions, " << cId <<
+            QL_REQUIRE(conventions->has(cId), "Conventions, " << cId <<
                 " for config " << config.curveID() << " not found.");
-            convention_ = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(cId));
+            convention_ = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(cId));
             QL_REQUIRE(convention_, "Convention with ID '" << cId << "' should be of type CommodityFutureConvention");
             expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(*convention_);
         }
@@ -203,11 +205,11 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
             // Get the base conventions and create the associated expiry calculator.
             QL_REQUIRE(!vapo->baseConventionsId().empty(),
                        "The APO FutureConventions must be populated to build a future APO surface");
-            QL_REQUIRE(conventions.has(vapo->baseConventionsId()), "Conventions, " << vapo->baseConventionsId()
+            QL_REQUIRE(conventions->has(vapo->baseConventionsId()), "Conventions, " << vapo->baseConventionsId()
                                                                                    << " for config " << config.curveID()
                                                                                    << " not found.");
             auto convention =
-                boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(vapo->baseConventionsId()));
+                boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(vapo->baseConventionsId()));
             QL_REQUIRE(convention, "Convention with ID '" << config.futureConventionsId()
                                                           << "' should be of type CommodityFutureConvention");
             auto baseExpCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
@@ -230,7 +232,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
             // Need a yield curve and price curve to create an APO surface.
             populateCurves(config, yieldCurves, commodityCurves, true);
 
-            buildVolatility(asof, config, *vapo, baseVs, basePts, conventions);
+            buildVolatility(asof, config, *vapo, baseVs, basePts);
 
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
@@ -1269,7 +1271,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityConfig& vc,
                                         const VolatilityApoFutureSurfaceConfig& vapo,
                                         const Handle<BlackVolTermStructure>& baseVts,
-                                        const Handle<PriceTermStructure>& basePts, const Conventions& conventions) {
+                                        const Handle<PriceTermStructure>& basePts) {
 
     LOG("CommodityVolCurve: start building the APO surface");
 
@@ -1277,12 +1279,13 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
         " RATE_LNVOL is currently supported for an APO surface.");
 
     // Get the base conventions and create the associated expiry calculator.
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     QL_REQUIRE(!vapo.baseConventionsId().empty(),
                "The APO FutureConventions must be populated to build a future APO surface");
-    QL_REQUIRE(conventions.has(vapo.baseConventionsId()),
+    QL_REQUIRE(conventions->has(vapo.baseConventionsId()),
                "Conventions, " << vapo.baseConventionsId() << " for config " << vc.curveID() << " not found.");
     auto baseConvention =
-        boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(vapo.baseConventionsId()));
+        boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(vapo.baseConventionsId()));
     QL_REQUIRE(baseConvention,
                "Convention with ID '" << vapo.baseConventionsId() << "' should be of type CommodityFutureConvention");
 
@@ -1300,7 +1303,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     Real beta = vapo.beta();
 
     // Construct the commodity index.
-    auto index = parseCommodityIndex(baseConvention->id(), conventions, false, basePts);
+    auto index = parseCommodityIndex(baseConvention->id(), false, basePts);
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurfaceMoneyness, which underlies the ApoFutureSurface, has time extrapolation hard-coded to

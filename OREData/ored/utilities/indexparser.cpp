@@ -221,9 +221,22 @@ boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s) {
     return boost::make_shared<GenericIndex>(s);
 }
 
-bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index, const boost::shared_ptr<Convention>& c) {
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index, bool useConventions) {
+    boost::shared_ptr<Conventions> cs = InstrumentConventions::instance().conventions();
+    const boost::shared_ptr<Convention>& c = cs->has(s, Convention::Type::IborIndex) ? cs->get(s) : nullptr;
     try {
-        index = parseIborIndex(s, Handle<YieldTermStructure>(), c);
+        index = parseIborIndex(s, Handle<YieldTermStructure>(), useConventions ? c : nullptr);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
+
+bool tryParseOvernightIndex(const string& s, boost::shared_ptr<IborIndex>& index, bool useConventions) {
+    boost::shared_ptr<Conventions> cs = InstrumentConventions::instance().conventions();
+    const boost::shared_ptr<Convention>& c = cs->has(s, Convention::Type::OvernightIndex) ? cs->get(s) : nullptr;
+    try {
+        index = parseIborIndex(s, Handle<YieldTermStructure>(), useConventions ? c : nullptr);
     } catch (...) {
         return false;
     }
@@ -388,13 +401,12 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
 
 bool isGenericIborIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
 
-pair<bool, boost::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string& indexName,
-    const boost::shared_ptr<Conventions>& conventions) {
+pair<bool, boost::shared_ptr<ZeroInflationIndex>> isInflationIndex(const string& indexName) {
 
     boost::shared_ptr<ZeroInflationIndex> index;
     try {
         // Currently, only way to have an inflation index is to have a ZeroInflationIndex
-        index = parseZeroInflationIndex(indexName, false, Handle<ZeroInflationTermStructure>(), conventions);
+        index = parseZeroInflationIndex(indexName, false, Handle<ZeroInflationTermStructure>());
     } catch (...) {
         return make_pair(false, nullptr);
     }
@@ -503,8 +515,9 @@ private:
 
 boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s,
     bool isInterpolated,
-    const Handle<ZeroInflationTermStructure>& h,
-    const boost::shared_ptr<Conventions>& conventions) {
+    const Handle<ZeroInflationTermStructure>& h) {
+    
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     // If conventions are non-null and we have provided a convention of type InflationIndex with a name equal to the 
     // string s, we use that convention to construct the inflation index.
@@ -594,9 +607,7 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& name) {
 }
 
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, bool hasPrefix,
-                                                                const Calendar& cal,
-                                                                const Handle<PriceTermStructure>& ts,
-                                                                const Conventions& conventions) {
+                                                                const Handle<PriceTermStructure>& ts, const Calendar& cal) {
 
     // Whether we check for "COMM-" prefix depends on hasPrefix.
     string commName = name;
@@ -636,7 +647,8 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     string indexName = commName;
 
     // Do we have a commodity future convention for the commodity.
-    pair<bool, boost::shared_ptr<Convention>> p = conventions.get(commName, Convention::Type::CommodityFuture);
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    pair<bool, boost::shared_ptr<Convention>> p = conventions->get(commName, Convention::Type::CommodityFuture);
     boost::shared_ptr<CommodityFutureConvention> convention;
     if (p.first) {
 
@@ -657,9 +669,9 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
             string suffix = "-" + to_string(expiry);
 
             auto offPeakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
-                oppIdxData.offPeakIndex() + suffix, conventions, false));
+                oppIdxData.offPeakIndex() + suffix, false));
             auto peakIndex = boost::dynamic_pointer_cast<CommodityFuturesIndex>(parseCommodityIndex(
-                oppIdxData.peakIndex() + suffix, conventions, false));
+                oppIdxData.peakIndex() + suffix, false));
 
             return boost::make_shared<OffPeakPowerIndex>(indexName, expiry, offPeakIndex, peakIndex,
                 oppIdxData.offPeakHours(), oppIdxData.peakCalendar(), ts);
@@ -689,12 +701,8 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     }
 }
 
-boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name,
-    const Conventions& conventions, bool hasPrefix, const Handle<PriceTermStructure>& ts) {
-    return parseCommodityIndex(name, hasPrefix, NullCalendar(), ts, conventions);
-}
-
-boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Conventions>& conventions) {
+boost::shared_ptr<Index> parseIndex(const string& s) {
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<QuantLib::Index> ret_idx;
     // if we have an ibor index convention we parse s using this (and throw if we don't succeed)
     if (conventions && (conventions->has(s, Convention::Type::IborIndex) || 
@@ -727,7 +735,7 @@ boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Con
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseZeroInflationIndex(s, false, Handle<ZeroInflationTermStructure>(), conventions);
+            ret_idx = parseZeroInflationIndex(s, false, Handle<ZeroInflationTermStructure>());
         } catch (...) {
         }
     }
@@ -751,7 +759,7 @@ boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Con
     }
     if (!ret_idx) {
         try {
-            ret_idx = conventions ? parseCommodityIndex(s, *conventions) : parseCommodityIndex(s);
+            ret_idx = parseCommodityIndex(s);
         } catch (...) {
         }
     }
@@ -765,12 +773,10 @@ boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Con
     return ret_idx;
 }
 
-bool isOvernightIndex(const string& indexName, const Conventions& conventions) {
-
+bool isOvernightIndex(const string& indexName) {
+    
     boost::shared_ptr<IborIndex> index;
-    if (tryParseIborIndex(indexName, index,
-                          conventions.has(indexName, Convention::Type::OvernightIndex) ? conventions.get(indexName)
-                                                                                       : nullptr)) {
+    if (tryParseOvernightIndex(indexName, index)) {
         auto onIndex = boost::dynamic_pointer_cast<OvernightIndex>(index);
         if (onIndex)
             return true;

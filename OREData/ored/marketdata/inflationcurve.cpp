@@ -69,15 +69,16 @@ namespace ore {
 namespace data {
 
 InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader,
-                               const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                               const CurveConfigurations& curveConfigs,
                                map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     try {
 
         const boost::shared_ptr<InflationCurveConfig>& config = curveConfigs.inflationCurveConfig(spec.curveConfigID());
 
+        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
         boost::shared_ptr<InflationSwapConvention> conv =
-            boost::dynamic_pointer_cast<InflationSwapConvention>(conventions.get(config->conventions()));
+            boost::dynamic_pointer_cast<InflationSwapConvention>(conventions->get(config->conventions()));
 
         QL_REQUIRE(conv != nullptr, "convention " << config->conventions() << " could not be found.");
 
