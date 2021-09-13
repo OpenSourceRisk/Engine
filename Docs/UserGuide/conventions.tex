@@ -516,6 +516,19 @@ structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
   <EOM> </EOM>
   <IsResettable> </IsResettable>
   <FlatIndexIsResettable> </FlatIndexIsResettable>>
+  <PaymentLag> </PaymentLag>
+  <FlatPaymentLag> </FlatPaymentLag>
+  <!-- for OIS only -->
+  <IncludeSpread> </IncludeSpread>
+  <Lookback> </Lookback>
+  <FixingDays> </FixingDays>
+  <RateCutoff> </RateCutoff>
+  <IsAveraged> </IsAveraged>
+  <FlatIncludeSpread> </FlatIncludeSpread>
+  <FlatLookback> </FlatLookback>
+  <FlatFixingDays> </FlatFixingDays>
+  <FlatRateCutoff> </FlatRateCutoff>
+  <FlatIsAveraged> </FlatIsAveraged>
 </CrossCurrencyBasis>
 \end{minted}
 \caption{Cross currency basis swap conventions}
@@ -534,6 +547,18 @@ SettlementDays above.
 \item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs, and \emph{False} if not. If not provided, it defaults to \emph{False}.
 \item IsResettable [Optional]: \emph{True} if the swap is mark-to-market resetting, and \emph{False} otherwise. If not provided, it defaults to \emph{False}.
 \item FlatIndexIsResettable [Optional]: \emph{True} if it is the notional on the leg paying the flat index that resets, and \emph{False} otherwise. If not provided, it defaults to \emph{True}.
+\item PaymentLag [Optional]: the payment lag for the spread leg, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatPaymentLag [Optional]: the payment lag for the flat leg, allowable values are 0, 1, 2, ..., defaults to 0 if nove given
+\item IncludeSpread [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item Lookback [Optional]: Only relevant if spread leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
+\item FixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item RateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item IsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatIncludeSpread [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatLookback [Optional]: Only relevant if spread leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
+\item FlatFixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatRateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatIsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
 \end{itemize}
 
 \subsubsection{Inflation Swap Conventions}

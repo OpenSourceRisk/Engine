@@ -864,7 +864,13 @@ public:
                                 const string& strRollConvention, const string& flatIndex, const string& spreadIndex,
                                 const string& strEom = "", const string& strIsResettable = "",
                                 const string& strFlatIndexIsResettable = "", const std::string& strFlatTenor = "",
-                                const std::string& strSpreadTenor = "", const Conventions* conventions = nullptr);
+                                const std::string& strSpreadTenor = "", const string& strPaymentLag = "",
+                                const string& strFlatPaymentLag = "", const string& strIncludeSpread = "",
+                                const string& strLookback = "", const string& strFixingDays = "",
+                                const string& strRateCutoff = "", const string& strIsAveraged = "",
+                                const string& strFlatIncludeSpread = "", const string& strFlatLookback = "",
+                                const string& strFlatFixingDays = "", const string& strFlatRateCutoff = "",
+                                const string& strFlatIsAveraged = "", const Conventions* conventions = nullptr);
     //@}
 
     //! \name Inspectors
@@ -882,6 +888,18 @@ public:
     bool flatIndexIsResettable() const { return flatIndexIsResettable_; }
     const QuantLib::Period& flatTenor() const { return flatTenor_; }
     const QuantLib::Period& spreadTenor() const { return spreadTenor_; }
+
+    // only OIS
+    boost::optional<bool> includeSpread() const { return includeSpread_; }
+    boost::optional<QuantLib::Period> lookback() const { return lookback_; }
+    boost::optional<QuantLib::Size> fixingDays() const { return fixingDays_; }
+    boost::optional<Size> rateCutoff() const { return rateCutoff_; }
+    boost::optional<bool> isAveraged() const { return isAveraged_; }
+    boost::optional<bool> flatIncludeSpread() const { return flatIncludeSpread_; }
+    boost::optional<QuantLib::Period> flatLookback() const { return flatLookback_; }
+    boost::optional<QuantLib::Size> flatFixingDays() const { return flatFixingDays_; }
+    boost::optional<Size> flatRateCutoff() const { return flatRateCutoff_; }
+    boost::optional<bool> flatIsAveraged() const { return flatIsAveraged_; }
     //@}
 
     //! \name Serialisation
@@ -901,6 +919,19 @@ private:
     bool flatIndexIsResettable_;
     QuantLib::Period flatTenor_;
     QuantLib::Period spreadTenor_;
+    QuantLib::Size paymentLag_;
+    QuantLib::Size flatPaymentLag_;
+    // OIS only
+    boost::optional<bool> includeSpread_;
+    boost::optional<QuantLib::Period> lookback_;
+    boost::optional<QuantLib::Size> fixingDays_;
+    boost::optional<Size> rateCutoff_;
+    boost::optional<bool> isAveraged_;
+    boost::optional<bool> flatIncludeSpread_;
+    boost::optional<QuantLib::Period> flatLookback_;
+    boost::optional<QuantLib::Size> flatFixingDays_;
+    boost::optional<Size> flatRateCutoff_;
+    boost::optional<bool> flatIsAveraged_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -911,8 +942,21 @@ private:
     string strEom_;
     string strIsResettable_;
     string strFlatIndexIsResettable_;
-    std::string strFlatTenor_;
-    std::string strSpreadTenor_;
+    string strFlatTenor_;
+    string strSpreadTenor_;
+    string strPaymentLag_;
+    string strFlatPaymentLag_;
+    // OIS only
+    string strIncludeSpread_;
+    string strLookback_;
+    string strFixingDays_;
+    string strRateCutoff_;
+    string strIsAveraged_;
+    string strFlatIncludeSpread_;
+    string strFlatLookback_;
+    string strFlatFixingDays_;
+    string strFlatRateCutoff_;
+    string strFlatIsAveraged_;
 
     const Conventions* conventions_;
 };

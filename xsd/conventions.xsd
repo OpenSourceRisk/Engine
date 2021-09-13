@@ -196,6 +196,18 @@
       <xs:element type="bool" name="FlatIndexIsResettable" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="FlatTenor" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SpreadTenor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="PaymentLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="FlatPaymentLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:period" name="Lookback" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="RateCutoff" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IsAveraged" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="FlatIncludeSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:period" name="FlatLookback" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="FlatFixingDays" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="FlatRateCutoff" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="FlatIsAveraged" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
