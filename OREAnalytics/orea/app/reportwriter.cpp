@@ -196,9 +196,16 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
         // if trade provides cashflows as additional results, we use that information instead of the legs
 
-        auto qlInstr = trades[k]->instrument()->qlInstrument();
-        bool useAdditionalResults = qlInstr != nullptr && qlInstr->additionalResults().find("cashFlowResults") !=
-                                                              qlInstr->additionalResults().end();
+        bool useAdditionalResults = false;
+	boost::shared_ptr<QuantLib::Instrument> qlInstr;
+        try {
+            // trigger calculation before getting additional resuls, is a call to calculate() missing in
+            // QuantLib::Instrument::additionalResults()?
+            qlInstr = trades[k]->instrument()->qlInstrument(true);
+            useAdditionalResults = qlInstr != nullptr && qlInstr->additionalResults().find("cashFlowResults") !=
+                                                             qlInstr->additionalResults().end();
+        } catch (...) {
+        }
 
         try {
 
@@ -965,7 +972,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 notional2Ccy = trade->additionalDatum<string>("notionalCurrency[2]");
             }
 
-            if (trade->instrument()->qlInstrument()) {
+            if (trade->instrument()->qlInstrument(true)) {
                 auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
                 if (additionalResults.count("notional[2]") != 0 &&
                     additionalResults.count("notionalCurrency[2]") != 0) {
@@ -993,7 +1000,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                        "Expected the number of "
                            << "additional instruments (" << instruments.size() << ") to equal the number of "
                            << "additional multipliers (" << multipliers.size() << ").");
-            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument());
+            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument(true));
             multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
 
             for (Size i = 0; i < instruments.size(); ++i) {
@@ -1356,6 +1363,27 @@ void ReportWriter::writeFixings(Report& report, const boost::shared_ptr<Loader>&
 
     report.end();
     LOG("Fixings report written");
+}
+
+void ReportWriter::writePricingStats(ore::data::Report& report, const boost::shared_ptr<Portfolio>& portfolio) {
+
+    LOG("Writing Pricing stats report");
+
+    report.addColumn("TradeId", string())
+        .addColumn("TradeType", string())
+        .addColumn("NumberOfPricings", Size())
+        .addColumn("CumulativeTiming", Size())
+        .addColumn("AverageTiming", Size());
+
+    for (auto const& t : portfolio->trades()) {
+        std::size_t num = t->getNumberOfPricings();
+        Size cumulative = t->getCumulativePricingTime() / 1000;
+        Size average = num > 0 ? cumulative / num : 0;
+        report.next().add(t->id()).add(t->tradeType()).add(num).add(cumulative).add(average);
+    }
+
+    report.end();
+    LOG("Pricing stats report written");
 }
 
 } // namespace analytics

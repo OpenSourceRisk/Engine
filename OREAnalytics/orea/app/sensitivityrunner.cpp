@@ -131,6 +131,9 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
     ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold, outputPrecision);
+
+    CSVFileReport pricingStatsReport(params_->get("setup", "outputPath") + "/pricingstats_sensi.csv");
+    ore::analytics::ReportWriter().writePricingStats(pricingStatsReport, sensiAnalysis->portfolio());
 }
 
 } // namespace analytics

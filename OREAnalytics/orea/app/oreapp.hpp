@@ -209,6 +209,8 @@ protected:
      * generated data as a new loader, a nullptr can be returned if no data is generated */
     virtual boost::shared_ptr<Loader> generateMarketData(const boost::shared_ptr<Loader>& loader) { return nullptr; }
 
+    void writePricingStats(const std::string& filename, const boost::shared_ptr<Portfolio>& portfolio);
+
     Size tab_, progressBarWidth_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
