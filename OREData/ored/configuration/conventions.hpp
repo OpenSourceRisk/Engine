@@ -889,6 +889,9 @@ public:
     const QuantLib::Period& flatTenor() const { return flatTenor_; }
     const QuantLib::Period& spreadTenor() const { return spreadTenor_; }
 
+    Size paymentLag() const { return paymentLag_; }
+    Size flatPaymentLag() const { return flatPaymentLag_; }
+
     // only OIS
     boost::optional<bool> includeSpread() const { return includeSpread_; }
     boost::optional<QuantLib::Period> lookback() const { return lookback_; }

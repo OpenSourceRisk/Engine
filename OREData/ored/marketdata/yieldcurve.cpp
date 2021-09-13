@@ -2167,12 +2167,18 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
             Period basisSwapTenor = basisSwapQuote->maturity();
             bool isResettableSwap = basisSwapConvention->isResettable();
             if (!isResettableSwap) {
-                boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisSwapHelper(
+                instruments.push_back(boost::make_shared<CrossCcyBasisSwapHelper>(
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     flatIndex, spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
-                    flatIndex->currency().code() != fxSpotQuote->unitCcy(), flatTenor, spreadTenor));
-                instruments.push_back(basisSwapHelper);
+                    flatIndex->currency().code() != fxSpotQuote->unitCcy(), flatTenor, spreadTenor, 0.0, 1.0, 1.0,
+                    Calendar(), Calendar(), std::vector<Natural>(), std::vector<Calendar>(),
+                    basisSwapConvention->paymentLag(), basisSwapConvention->flatPaymentLag(),
+                    basisSwapConvention->includeSpread(), basisSwapConvention->lookback(),
+                    basisSwapConvention->fixingDays(), basisSwapConvention->rateCutoff(),
+                    basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
+                    basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
+                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged()));
             } else { // the quote is for a cross currency basis swap with a resetting notional
                 bool resetsOnFlatLeg = basisSwapConvention->flatIndexIsResettable();
                 // the convention here is to call the resetting leg the "domestic leg",
@@ -2192,13 +2198,17 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                 Period domesticTenor = resetsOnFlatLeg ? flatTenor : spreadTenor;
 
                 // Use foreign and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
-                boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisMtMResetSwapHelper(
+                instruments.push_back(boost::make_shared<CrossCcyBasisMtMResetSwapHelper>(
                     basisSwapQuote->quote(), finalFxSpotQuote, basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
                     Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, foreignTenor,
-                    domesticTenor));
-                instruments.push_back(basisSwapHelper);
+                    domesticTenor, basisSwapConvention->paymentLag(), basisSwapConvention->flatPaymentLag(),
+                    basisSwapConvention->includeSpread(), basisSwapConvention->lookback(),
+                    basisSwapConvention->fixingDays(), basisSwapConvention->rateCutoff(),
+                    basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
+                    basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
+                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged()));
             }
         }
     }

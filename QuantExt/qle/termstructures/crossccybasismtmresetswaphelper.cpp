@@ -39,7 +39,11 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
     const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
     const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve, bool eom, bool spreadOnForeignCcy,
-    boost::optional<Period> foreignTenor, boost::optional<Period> domesticTenor)
+    boost::optional<Period> foreignTenor, boost::optional<Period> domesticTenor, Size paymentLag, Size flatPaymentLag,
+    boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
+    boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged, boost::optional<bool> flatIncludeSpread,
+    boost::optional<Period> flatLookback, boost::optional<Size> flatFixingDays, boost::optional<Size> flatRateCutoff,
+    boost::optional<bool> flatIsAveraged)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex),
@@ -47,7 +51,11 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
       foreignCcyFxFwdRateCurve_(foreignCcyFxFwdRateCurve), domesticCcyFxFwdRateCurve_(domesticCcyFxFwdRateCurve),
       eom_(eom), spreadOnForeignCcy_(spreadOnForeignCcy),
       foreignTenor_(foreignTenor ? *foreignTenor : foreignCcyIndex_->tenor()),
-      domesticTenor_(domesticTenor ? *domesticTenor : domesticCcyIndex_->tenor()) {
+      domesticTenor_(domesticTenor ? *domesticTenor : domesticCcyIndex_->tenor()), paymentLag_(paymentLag),
+      flatPaymentLag_(flatPaymentLag), includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays),
+      rateCutoff_(rateCutoff), isAveraged_(isAveraged), flatIncludeSpread_(flatIncludeSpread),
+      flatLookback_(flatLookback), flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff),
+      flatIsAveraged_(flatIsAveraged) {
 
     foreignCurrency_ = foreignCcyIndex_->currency();
     domesticCurrency_ = domesticCcyIndex_->currency();

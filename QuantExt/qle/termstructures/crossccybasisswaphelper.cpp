@@ -38,7 +38,11 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     bool eom, bool flatIsDomestic, boost::optional<Period> flatTenor, boost::optional<Period> spreadTenor,
     Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing, const Calendar& flatCalendar,
     const Calendar& spreadCalendar, const std::vector<Natural>& spotFXSettleDaysVec,
-    const std::vector<Calendar>& spotFXSettleCalendarVec)
+    const std::vector<Calendar>& spotFXSettleCalendarVec, Size paymentLag, Size flatPaymentLag,
+    boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
+    boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged, boost::optional<bool> flatIncludeSpread,
+    boost::optional<Period> flatLookback, boost::optional<Size> flatFixingDays, boost::optional<Size> flatRateCutoff,
+    boost::optional<bool> flatIsAveraged)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -46,7 +50,11 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
       flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()),
       spreadTenor_(spreadTenor ? *spreadTenor : spreadIndex_->tenor()), spreadOnFlatLeg_(spreadOnFlatLeg),
       flatGearing_(flatGearing), spreadGearing_(spreadGearing), flatCalendar_(flatCalendar),
-      spreadCalendar_(spreadCalendar), spotFXSettleDaysVec_(spotFXSettleDaysVec), spotFXSettleCalendarVec_(spotFXSettleCalendarVec)  {
+      spreadCalendar_(spreadCalendar), spotFXSettleDaysVec_(spotFXSettleDaysVec),
+      spotFXSettleCalendarVec_(spotFXSettleCalendarVec), paymentLag_(paymentLag), flatPaymentLag_(flatPaymentLag),
+      includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
+      isAveraged_(isAveraged), flatIncludeSpread_(flatIncludeSpread), flatLookback_(flatLookback),
+      flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff), flatIsAveraged_(flatIsAveraged) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();

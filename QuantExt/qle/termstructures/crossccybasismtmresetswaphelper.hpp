@@ -62,7 +62,12 @@ public:
         const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
         const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
         bool spreadOnForeignCcy = true, boost::optional<QuantLib::Period> foreignTenor = boost::none,
-        boost::optional<QuantLib::Period> domesticTenor = boost::none);
+        boost::optional<QuantLib::Period> domesticTenor = boost::none, Size paymentLag = 0, Size flatPaymentLag = 0,
+        boost::optional<bool> includeSpread = boost::none, boost::optional<Period> lookback = boost::none,
+        boost::optional<Size> fixingDays = boost::none, boost::optional<Size> rateCutoff = boost::none,
+        boost::optional<bool> isAveraged = boost::none, boost::optional<bool> flatIncludeSpread = boost::none,
+        boost::optional<Period> flatLookback = boost::none, boost::optional<Size> flatFixingDays = boost::none,
+        boost::optional<Size> flatRateCutoff = boost::none, boost::optional<bool> flatIsAveraged = boost::none);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -94,6 +99,20 @@ protected:
     bool eom_, spreadOnForeignCcy_;
     QuantLib::Period foreignTenor_;
     QuantLib::Period domesticTenor_;
+
+    Size paymentLag_;
+    Size flatPaymentLag_;
+    // OIS only
+    boost::optional<bool> includeSpread_;
+    boost::optional<QuantLib::Period> lookback_;
+    boost::optional<QuantLib::Size> fixingDays_;
+    boost::optional<Size> rateCutoff_;
+    boost::optional<bool> isAveraged_;
+    boost::optional<bool> flatIncludeSpread_;
+    boost::optional<QuantLib::Period> flatLookback_;
+    boost::optional<QuantLib::Size> flatFixingDays_;
+    boost::optional<Size> flatRateCutoff_;
+    boost::optional<bool> flatIsAveraged_;
 
     Currency foreignCurrency_;
     Currency domesticCurrency_;
