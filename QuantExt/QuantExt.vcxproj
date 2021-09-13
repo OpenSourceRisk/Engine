@@ -497,6 +497,7 @@
     <ClInclude Include="qle\calendars\colombia.hpp" />
     <ClInclude Include="qle\calendars\france.hpp" />
     <ClInclude Include="qle\calendars\ice.hpp" />
+    <ClInclude Include="qle\calendars\ireland.hpp" />
     <ClInclude Include="qle\calendars\islamicweekendsonly.hpp" />
     <ClInclude Include="qle\calendars\israel.hpp" />
     <ClInclude Include="qle\calendars\largejointcalendar.hpp" />
@@ -885,6 +886,7 @@
     <ClCompile Include="qle\calendars\colombia.cpp" />
     <ClCompile Include="qle\calendars\france.cpp" />
     <ClCompile Include="qle\calendars\ice.cpp" />
+    <ClCompile Include="qle\calendars\ireland.cpp" />
     <ClCompile Include="qle\calendars\islamicweekendsonly.cpp" />
     <ClCompile Include="qle\calendars\israel.cpp" />
     <ClCompile Include="qle\calendars\largejointcalendar.cpp" />
