@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/calendars/ireland.hpp
-    \brief Ireland Calendar
+/*! \file qle/calendars/greece.hpp
+    \brief Greece Calendars
 */
 
 #pragma once
@@ -26,39 +26,43 @@
 
 namespace QuantExt {
 
-//! United Kingdom calendars
-/*! Public holidays (data from http://www.dti.gov.uk/er/bankhol.htm):
+//! Greece Calendar
+/*! Public holidays (data from https://www.centralbank.cy/en/the-bank/working-hours-bank-holidays):
+
+    Fixed Dates
     <ul>
     <li>Saturdays</li>
     <li>Sundays</li>
-    <li>New Year's Day, January 1st (possibly moved to Monday)</li>
-    <li>Good Friday</li>
-    <li>Easter Monday</li>
-    <li>May Bank Holiday, first Monday of May</li>
-    <li>June Bank Holiday, first Monday of June</li>
-    <li>August Bank Holiday, first Monday of August</li>
-    <li>October Bank Holiday, last Monday of August</li>
-    <li>Christmas Day, December 25th (possibly moved to Monday or
-        Tuesday)</li>
-    <li>Boxing Day, December 26th (possibly moved to Monday or
-        Tuesday)</li>
+    <li>New Year's Day, January 1st</li>
+    <li>Ephiphany Day, 6th January</li>
+    <li>Greek Independence Day, 25th March</li>
+    <li>Labour Day, 1st May</li>
+    <li>Greece National Day, 28th October</li>
+    <li>Christmas Day, December 25th</li>
     </ul>
 
+    Variable days
+    <ul>
+    <li>Clean Monday</li>
+    <li>Good Friday</li>
+    <li>Easter Monday</li>
+    <li>Orthodox Pentecost (Whit) Monday</li>
+    </ul>
 
     \ingroup calendars
 
     \test the correctness of the returned results is tested
           against a list of known holidays.
 */
-class Ireland : public QuantLib::Calendar {
+class Greece : public QuantLib::Calendar {
 private:
-    class DublinImpl : public QuantLib::Calendar::WesternImpl {
+    class Impl : public QuantLib::Calendar::OrthodoxImpl {
     public:
-        std::string name() const override { return "Ireland"; }
-        bool isBusinessDay(const Date&) const override;
+        std::string name() const override { return "Greece"; }
+        bool isBusinessDay(const QuantLib::Date&) const override;
     };
 
 public:
-    Ireland();
+    Greece();
 };
 } // namespace QuantExt

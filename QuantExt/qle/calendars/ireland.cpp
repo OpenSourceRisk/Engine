@@ -47,7 +47,7 @@ namespace QuantExt {
             // Easter Monday
             || (dd == em)
             // St. Patrick's Day (possibly moved to Monday)
-            || (m == Mar && ((d == 13) || ((d == 14 || d == 15) && w == Monday)))
+            || (m == Mar && ((d == 17) || ((d == 18 || d == 19) && w == Monday)))
             // first Monday of May 
             || (m == May && d == Date::nthWeekday(1, Monday, May, y).dayOfMonth())
             // first Monday of June 

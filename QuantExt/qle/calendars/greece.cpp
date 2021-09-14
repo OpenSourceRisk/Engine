@@ -15,56 +15,49 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-#include <qle/calendars/ireland.hpp>
-#include <qle/time/dateutilities.hpp>
 #include <ql/errors.hpp>
+#include <qle/calendars/greece.hpp>
+#include <qle/time/dateutilities.hpp>
 
 namespace QuantExt {
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    Ireland::Ireland() {
-        // all calendar instances on the same market share the same
-        // implementation instance
-        impl_ = boost::make_shared<Ireland::DublinImpl>();
-    }
-
-    bool Ireland::DublinImpl::isBusinessDay(const Date& date) const {
-        Weekday w = date.weekday();
-        Day d = date.dayOfMonth(), dd = date.dayOfYear();
-        Month m = date.month();
-        Year y = date.year();
-        Day em = easterMonday(y);
-
-        auto firstMondayMay = Date::nthWeekday(1, Monday, May, y);
-        auto firstMondayJune = Date::nthWeekday(1, Monday, June, y);
-
-        if (isWeekend(w)
-            // New Year's Day (possibly moved to Monday)
-            || ((d == 1 || ((d == 2 || d == 3) && w == Monday)) &&
-                m == January)
-            // Good Friday
-            || (dd == em-3)
-            // Easter Monday
-            || (dd == em)
-            // St. Patrick's Day (possibly moved to Monday)
-            || (m == Mar && ((d == 13) || ((d == 14 || d == 15) && w == Monday)))
-            // first Monday of May 
-            || (m == May && d == Date::nthWeekday(1, Monday, May, y).dayOfMonth())
-            // first Monday of June 
-            || (m == June && d == Date::nthWeekday(1, Monday, June, y).dayOfMonth())
-            // first Monday of August 
-            || (m == August && d == Date::nthWeekday(1, Monday, August, y).dayOfMonth())
-            // last Monday of October
-            || (m == October && d == DateUtilities::lastWeekday(Monday, October, y).dayOfMonth())
-            // Christmas (possibly moved to Monday or Tuesday)
-            || ((d == 25 || (d == 27 && (w == Monday || w == Tuesday)))
-                && m == December)
-            // Boxing Day (possibly moved to Monday or Tuesday)
-            || ((d == 26 || (d == 28 && (w == Monday || w == Tuesday)))
-                && m == December))
-            return false; // NOLINT(readability-simplify-boolean-expr)
-        return true;
-    }
-
+Greece::Greece() {
+    // all calendar instances on the same market share the same
+    // implementation instance
+    impl_ = boost::make_shared<Greece::Impl>();
 }
 
+bool Greece::Impl::isBusinessDay(const Date& date) const {
+    Weekday w = date.weekday();
+    Day d = date.dayOfMonth(), dd = date.dayOfYear();
+    Month m = date.month();
+    Year y = date.year();
+    Day em = easterMonday(y);
+
+    if (isWeekend(w)
+        // New Year's Day
+        || (d == 1 && m == January)
+        // Ephiphany Day
+        || (d == 6 && m == January)
+        // Clean Monday
+        || (dd == em - 49)
+        // Good Friday
+        || (dd == em - 3)
+        // Easter Monday
+        || (dd == em)
+        // Greek Independence Day
+        || (m == Mar && d == 25)
+        // Labour Day
+        || (m == May && d == 1)
+        // Orthodox Pentecoast (Whit) Monday
+        || (dd == em + 49)
+        // Greek National Day
+        || (m == October && d == 28)
+        // Christmas Day
+        || (m == December && d == 25))
+        return false; // NOLINT(readability-simplify-boolean-expr)
+    return true;
+}
+
+} // namespace QuantExt

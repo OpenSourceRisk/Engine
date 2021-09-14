@@ -64,7 +64,7 @@ private:
     class Impl : public QuantLib::Calendar::OrthodoxImpl {
     public:
         std::string name() const override { return "Cyprus"; }
-        bool isBusinessDay(const Date&) const override;
+        bool isBusinessDay(const QuantLib::Date&) const override;
     };
 
 public:

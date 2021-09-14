@@ -34,6 +34,7 @@ namespace QuantExt {
     <li>New Year's Day, January 1st (possibly moved to Monday)</li>
     <li>Good Friday</li>
     <li>Easter Monday</li>
+    <li>St. Patricks Day,March 17th</li>
     <li>May Bank Holiday, first Monday of May</li>
     <li>June Bank Holiday, first Monday of June</li>
     <li>August Bank Holiday, first Monday of August</li>
@@ -55,7 +56,7 @@ private:
     class DublinImpl : public QuantLib::Calendar::WesternImpl {
     public:
         std::string name() const override { return "Ireland"; }
-        bool isBusinessDay(const Date&) const override;
+        bool isBusinessDay(const QuantLib::Date&) const override;
     };
 
 public:

@@ -23,8 +23,11 @@
 #include <ql/time/calendars/thailand.hpp>
 #include <qle/calendars/belgium.hpp>
 #include <qle/calendars/chile.hpp>
+#include <qle/calendars/cyprus.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/greece.hpp>
+#include <qle/calendars/ireland.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/luxembourg.hpp>
 #include <qle/calendars/malaysia.hpp>
@@ -402,6 +405,66 @@ BOOST_AUTO_TEST_CASE(testBelgianCalendar) {
 
     check::checkCalendars(expectedHolidays, hol);
 }
+
+BOOST_AUTO_TEST_CASE(testCyprusCalendar) {
+
+    BOOST_TEST_MESSAGE("Testing Cyprus holiday list");
+
+    std::vector<Date> expectedHolidays;
+
+    //expectedHolidays.push_back(Date(1, January, 2022)); //weekend
+    expectedHolidays.push_back(Date(6, January, 2022));
+    expectedHolidays.push_back(Date(7, March, 2022));
+    expectedHolidays.push_back(Date(25, March, 2022));
+    expectedHolidays.push_back(Date(1, April, 2022));
+    expectedHolidays.push_back(Date(22, April, 2022));
+    expectedHolidays.push_back(Date(25, April, 2022));
+    expectedHolidays.push_back(Date(26, April, 2022));
+    //expectedHolidays.push_back(Date(1, May, 2022)); //weekend
+    expectedHolidays.push_back(Date(13, June, 2022));
+    expectedHolidays.push_back(Date(15, August, 2022));
+    //expectedHolidays.push_back(Date(1, October, 2022)); weekend
+    expectedHolidays.push_back(Date(28, October, 2022));
+    //expectedHolidays.push_back(Date(25, December, 2022));weekend
+    expectedHolidays.push_back(Date(26, December, 2022));
+    
+    Calendar c = Cyprus();
+
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2022), Date(31, December, 2022));
+
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    check::checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testIrishCalendar) {
+
+    BOOST_TEST_MESSAGE("Testing Irish holiday list");
+
+    std::vector<Date> expectedHolidays;
+
+    expectedHolidays.push_back(Date(1, January, 2021));
+    expectedHolidays.push_back(Date(17, March, 2021));
+    expectedHolidays.push_back(Date(2, April, 2021));
+    expectedHolidays.push_back(Date(5, April, 2021));
+    expectedHolidays.push_back(Date(3, May, 2021));
+    expectedHolidays.push_back(Date(7, June, 2021));
+    expectedHolidays.push_back(Date(2, August, 2021));
+    expectedHolidays.push_back(Date(25, October, 2021));
+    //expectedHolidays.push_back(Date(25, December, 2021)); Falls on weekend
+    //expectedHolidays.push_back(Date(26, December, 2021)); Falls on weekend
+    expectedHolidays.push_back(Date(27, December, 2021));
+    expectedHolidays.push_back(Date(28, December, 2021));
+
+    Calendar c = Ireland();
+
+    std::vector<Date> hol = c.holidayList(Date(1, January, 2021), Date(31, December, 2021));
+
+    BOOST_CHECK(hol.size() == expectedHolidays.size());
+
+    check::checkCalendars(expectedHolidays, hol);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
