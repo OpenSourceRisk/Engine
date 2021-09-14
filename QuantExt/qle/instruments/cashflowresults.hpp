@@ -49,6 +49,10 @@ struct CashFlowResults {
     QuantLib::Real notional = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real discountFactor = QuantLib::Null<QuantLib::Real>();
     QuantLib::Real presentValue = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real floorStrike = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real capStrike = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real floorVolatility = QuantLib::Null<QuantLib::Real>();
+    QuantLib::Real capVolatility = QuantLib::Null<QuantLib::Real>();
 };
 
 std::ostream& operator<<(std::ostream& out, const CashFlowResults& t);
