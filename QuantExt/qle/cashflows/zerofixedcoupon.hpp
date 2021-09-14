@@ -39,13 +39,13 @@ using namespace QuantLib;
 //! \ingroup cashflows
 class ZeroFixedCoupon : public Coupon {
 public:
-    ZeroFixedCoupon(const Date& periodStart,
-                    const Date& periodEnd,
-                    const std::vector<double>& rates,
-                    const std::vector<double>& notionals,
-                    const Schedule& schedule,
+    ZeroFixedCoupon(const Date& periodEnd,
+                    double notional,
+                    double rate,
                     const DayCounter& dc,
-                    const BusinessDayConvention& bdc,
+                    const BusinessDayConvention& payConvention,
+                    const Calendar& paymentCalendar,
+                    const std::vector<Date>& dates,
                     const Compounding& comp,
                     bool subtractNotional);
 
@@ -65,7 +65,8 @@ public:
 
 private:
 
-    Date periodStart_;
+
+    /*
     Date periodEnd_;
     std::vector<double> rates_;
     std::vector<double> notionals_;
@@ -77,8 +78,16 @@ private:
 
     double rate_;
     double nominal_;
-    double amount_;
+    */
+    Date periodEnd_;
+    double notional_;
+    double rate_;
+    std::vector<Date> dates_;
+    DayCounter dc_;
+    Compounding comp_;
+    bool subtractNotional_;
 
+    double amount_;
 };
 
 } // namespace QuantExt

@@ -20,18 +20,17 @@
 #include <iostream>
 namespace QuantExt {
 
- ZeroFixedCoupon::ZeroFixedCoupon(const Date& periodStart,
-                    const Date& periodEnd,
-                    const std::vector<double>& rates,
-                    const std::vector<double>& notionals,
-                    const Schedule& schedule,
-                    const DayCounter& dc,
-                    const BusinessDayConvention& bdc,
-                    const Compounding& comp,
-                    bool subtractNotional) :
-                    Coupon(schedule.calendar().adjust(periodEnd, bdc), notionals.back(), periodStart, periodEnd),
-                    periodStart_(periodStart), periodEnd_(periodEnd), rates_(rates),
-                    notionals_(notionals), schedule_(schedule), dc_(dc), bdc_(bdc),
+ ZeroFixedCoupon::ZeroFixedCoupon(  const Date& periodEnd,
+                                    double notional,
+                                    double rate,
+                                    const DayCounter& dc,
+                                    const BusinessDayConvention& payConvention,
+                                    const Calendar& paymentCalendar,
+                                    const std::vector<Date>& dates,
+                                    const Compounding& comp,
+                                    bool subtractNotional) :
+                    Coupon(paymentCalendar.adjust(periodEnd, payConvention), notional, dates.front(), periodEnd),
+                    periodEnd_(periodEnd), notional_(notional), rate_(rate), dc_(dc), dates_(dates),
                     comp_(comp), subtractNotional_(subtractNotional)
                     {
 
@@ -45,32 +44,27 @@ namespace QuantExt {
                         // For the Simple rule:
                         // (1 + r * dcf_0) * (1 + r * dcf_1)...
 
-                        std::vector<Date> dates = schedule_.dates();
-
                         double totalDCF = 0.0;
                         double compoundFactor = 1.0;
 
-                        nominal_ = 0.0;
-                        rate_ = 0.0;
                         amount_ = 0.0;
 
-                        for (Size i = 0; i < dates.size() - 1; i++) {
+                        for (Size i = 0; i < dates_.size() - 1; i++) {
 
-                            Date startDate = dates[i];
-                            Date endDate = dates[i+1];
+                            Date startDate = dates_[i];
+                            Date endDate = dates_[i+1];
 
-                            if(startDate > periodStart_ || endDate > periodEnd_)
+                            if(endDate > periodEnd_)
                                 break;
 
                             double dcf = dc_.yearFraction(startDate, endDate);
-                            nominal_ = i < notionals_.size() ? notionals_[i] : notionals_.back();
-                            rate_ = i < rates_.size() ? rates_[i] : rates_.back();
 
                             if (comp_ == QuantLib::Simple){
                                 compoundFactor *= (1 + rate_ * dcf);
                             } else {
                                 totalDCF += dcf;
                             }
+
                             if (comp_ == QuantLib::Compounded)
                                 compoundFactor = pow(1.0 + rate_, totalDCF);
 
@@ -98,52 +92,47 @@ DayCounter ZeroFixedCoupon::dayCounter() const { return dc_; }
 Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
 
     //outside this period, return zero
-    if(periodStart_ > accrualEnd || periodEnd_ < accrualEnd)
+    if(dates_.front() > accrualEnd || periodEnd_ < accrualEnd)
         return 0.0;
-
-    Date appliedPeriodEnd = periodEnd_;
-
-    if(appliedPeriodEnd > accrualEnd)
-        appliedPeriodEnd = accrualEnd;
-
-    std::vector<Date> dates = schedule_.dates();
 
     double totalDCF = 0.0;
     double compoundFactor = 1.0;
-    double fixedAmount = 0.0;
+    double result = 0.0;
 
-    for (Size i = 0; i < dates.size() - 1; i++) {
+    for (Size i = 0; i < dates_.size() - 1; i++) {
 
-        Date startDate = dates[i];
-        Date endDate = dates[i+1];
+        Date startDate = dates_[i];
+        Date endDate = dates_[i+1];
 
-        if(startDate > appliedPeriodEnd)
+        if(startDate > accrualEnd)
             break;
 
-        if(endDate > appliedPeriodEnd)
-            endDate = appliedPeriodEnd;
+        if(endDate > accrualEnd)
+            endDate = accrualEnd;
 
 
         double dcf = dc_.yearFraction(startDate, endDate);
-        fixedAmount = i < notionals_.size() ? notionals_[i] : notionals_.back();
-        double fixedRate = i < rates_.size() ? rates_[i] : rates_.back();
 
         if (comp_ == QuantLib::Simple){
-            compoundFactor *= (1 + fixedRate * dcf);
+            compoundFactor *= (1 + rate_ * dcf);
         } else {
             totalDCF += dcf;
         }
         if (comp_ == QuantLib::Compounded)
-            compoundFactor = pow(1.0 + fixedRate, totalDCF);
+            compoundFactor = pow(1.0 + rate_, totalDCF);
+
+        double fixedAmount = nominal_;
 
         if (subtractNotional_)
             fixedAmount *= (compoundFactor - 1);
         else
             fixedAmount *= compoundFactor;
 
+        result = fixedAmount; 
+
     }
 
-    return fixedAmount;
+    return result;
 
 }
 
