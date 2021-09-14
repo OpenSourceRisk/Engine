@@ -65,20 +65,6 @@ public:
 
 private:
 
-
-    /*
-    Date periodEnd_;
-    std::vector<double> rates_;
-    std::vector<double> notionals_;
-    Schedule schedule_;
-    DayCounter dc_;
-    BusinessDayConvention bdc_;
-    Compounding comp_;
-    bool subtractNotional_;
-
-    double rate_;
-    double nominal_;
-    */
     Date periodEnd_;
     double notional_;
     double rate_;

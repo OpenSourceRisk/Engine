@@ -906,12 +906,15 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     // So we compute the sum of all DayCountFractions in the loop.
     // For the Simple rule:
     // (1 + r * dcf_0) * (1 + r * dcf_1)...
+
     Leg leg;
     for (Size i = 0; i < numDates - 1; i++) {
+
         double currentNotional = i < notionals.size() ? notionals[i] : notionals.back();
         double currentRate = i < rates.size() ? rates[i] : rates.back();
-        leg.push_back(boost::make_shared<ZeroFixedCoupon>(dates[i], currentNotional, currentRate, dc, payConvention, paymentCalendar, dates, comp,
+        leg.push_back(boost::make_shared<ZeroFixedCoupon>(dates[i+1], currentNotional, currentRate, dc, payConvention, paymentCalendar, dates, comp,
                                                           zcFixedLegData->subtractNotional()));
+
     }
     return leg;
 }

@@ -68,7 +68,7 @@ namespace QuantExt {
                             if (comp_ == QuantLib::Compounded)
                                 compoundFactor = pow(1.0 + rate_, totalDCF);
 
-                            double fixedAmount = nominal_;
+                            double fixedAmount = notional_;
 
                             if (subtractNotional_)
                                 fixedAmount *= (compoundFactor - 1);
@@ -83,7 +83,7 @@ namespace QuantExt {
 
 Real ZeroFixedCoupon::amount() const { return amount_; }
 
-Real ZeroFixedCoupon::nominal() const { return nominal_; }
+Real ZeroFixedCoupon::nominal() const { return notional_; }
 
 Real ZeroFixedCoupon::rate() const { return rate_; }
 
@@ -110,7 +110,6 @@ Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
         if(endDate > accrualEnd)
             endDate = accrualEnd;
 
-
         double dcf = dc_.yearFraction(startDate, endDate);
 
         if (comp_ == QuantLib::Simple){
@@ -121,14 +120,14 @@ Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
         if (comp_ == QuantLib::Compounded)
             compoundFactor = pow(1.0 + rate_, totalDCF);
 
-        double fixedAmount = nominal_;
+        double fixedAmount = notional_;
 
         if (subtractNotional_)
             fixedAmount *= (compoundFactor - 1);
         else
             fixedAmount *= compoundFactor;
 
-        result = fixedAmount; 
+        result = fixedAmount;
 
     }
 
