@@ -53,13 +53,20 @@ namespace QuantExt {
 */
 class Ireland : public QuantLib::Calendar {
 private:
-    class DublinImpl : public QuantLib::Calendar::WesternImpl {
+    class IrishStockExchangeImpl : public QuantLib::Calendar::WesternImpl {
+    public:
+        std::string name() const override { return "IrishStockExchange"; }
+        bool isBusinessDay(const QuantLib::Date&) const override;
+    };
+    class DublinImpl : public IrishStockExchangeImpl {
     public:
         std::string name() const override { return "Ireland"; }
         bool isBusinessDay(const QuantLib::Date&) const override;
     };
 
 public:
-    Ireland();
+    enum Market {IrishStockExchange, Dublin};
+
+    Ireland(const Market market=IrishStockExchange);
 };
 } // namespace QuantExt

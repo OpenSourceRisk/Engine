@@ -34,6 +34,7 @@ bool Greece::Impl::isBusinessDay(const Date& date) const {
     Month m = date.month();
     Year y = date.year();
     Day em = easterMonday(y);
+    Day laborDay = Date(1, May, y).dayOfYear();
 
     if (isWeekend(w)
         // New Year's Day
@@ -49,13 +50,17 @@ bool Greece::Impl::isBusinessDay(const Date& date) const {
         // Greek Independence Day
         || (m == Mar && d == 25)
         // Labour Day
-        || (m == May && d == 1)
+        || (m == May && ((d == 1) || ((w==Tuesday) && (d<=5) && (em-3 <= laborDay <= em))))
         // Orthodox Pentecoast (Whit) Monday
         || (dd == em + 49)
+        // Assumption Day
+        || (m == August && d == 15)
         // Greek National Day
         || (m == October && d == 28)
         // Christmas Day
-        || (m == December && d == 25))
+        || (m == December && d == 25)
+        // Christmas Day
+        || (m == December && d == 26))
         return false; // NOLINT(readability-simplify-boolean-expr)
     return true;
 }
