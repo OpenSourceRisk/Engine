@@ -22,7 +22,9 @@ using boost::assign::list_of;
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 
 namespace QuantExt {
@@ -31,12 +33,22 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
     Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
     const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
     const Schedule& domesticSchedule, const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-    const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic)
+    const boost::shared_ptr<FxIndex>& fxIdx, bool receiveDomestic, Size foreignPaymentLag, Size domesticPaymentLag,
+    boost::optional<bool> foreignIncludeSpread, boost::optional<Period> foreignLookback,
+    boost::optional<Size> foreignFixingDays, boost::optional<Size> foreignRateCutoff,
+    boost::optional<bool> foreignIsAveraged, boost::optional<bool> domesticIncludeSpread,
+    boost::optional<Period> domesticLookback, boost::optional<Size> domesticFixingDays,
+    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged)
     : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
       foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
       domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
-      domesticSpread_(domesticSpread), fxIndex_(fxIdx), receiveDomestic_(receiveDomestic) {
-
+      domesticSpread_(domesticSpread), fxIndex_(fxIdx), receiveDomestic_(receiveDomestic),
+      foreignPaymentLag_(foreignPaymentLag), domesticPaymentLag_(domesticPaymentLag),
+      foreignIncludeSpread_(foreignIncludeSpread), foreignLookback_(foreignLookback),
+      foreignFixingDays_(foreignFixingDays), foreignRateCutoff_(foreignRateCutoff),
+      foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
+      domesticLookback_(domesticLookback), domesticFixingDays_(domesticFixingDays),
+      domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged) {
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
     registerWith(fxIndex_);
@@ -45,7 +57,33 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
 
 void CrossCcyBasisMtMResetSwap::initialize() {
     // Pay (foreign) leg
-    legs_[0] = IborLeg(foreignSchedule_, foreignIndex_).withNotionals(foreignNominal_).withSpreads(foreignSpread_);
+    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(foreignIndex_)) {
+        // ON leg
+        if (foreignIsAveraged_ && *foreignIsAveraged_) {
+            legs_[0] = QuantExt::AverageONLeg(foreignSchedule_, on)
+                           .withNotional(foreignNominal_)
+                           .withSpread(foreignSpread_)
+                           .withPaymentLag(foreignPaymentLag_)
+                           .withLookback(foreignLookback_ ? *foreignLookback_ : 0 * Days)
+                           .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : 0)
+                           .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0);
+        } else {
+            legs_[0] = QuantExt::OvernightLeg(foreignSchedule_, on)
+                           .withNotionals(foreignNominal_)
+                           .withSpreads(foreignSpread_)
+                           .withPaymentLag(foreignPaymentLag_)
+                           .includeSpread(foreignIncludeSpread_ ? *foreignIncludeSpread_ : false)
+                           .withLookback(foreignLookback_ ? *foreignLookback_ : 0 * Days)
+                           .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : 0)
+                           .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0);
+        }
+    } else {
+        // Ibor leg
+        legs_[0] = IborLeg(foreignSchedule_, foreignIndex_)
+                       .withNotionals(foreignNominal_)
+                       .withSpreads(foreignSpread_)
+                       .withPaymentLag(foreignPaymentLag_);
+    }
     receiveDomestic_ ? payer_[0] = -1.0 : payer_[0] = +1.0;
 
     currencies_[0] = foreignCurrency_;
@@ -60,7 +98,33 @@ void CrossCcyBasisMtMResetSwap::initialize() {
 
     // Receive (domestic/resettable) leg
     // start by creating a dummy vanilla floating leg
-    legs_[1] = IborLeg(domesticSchedule_, domesticIndex_).withNotionals(0).withSpreads(domesticSpread_);
+    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(domesticIndex_)) {
+        // ON leg
+        if (domesticIsAveraged_ && *domesticIsAveraged_) {
+            legs_[0] = QuantExt::AverageONLeg(domesticSchedule_, on)
+                           .withNotional(0.0)
+                           .withSpread(domesticSpread_)
+                           .withPaymentLag(domesticPaymentLag_)
+                           .withLookback(domesticLookback_ ? *domesticLookback_ : 0 * Days)
+                           .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : 0)
+                           .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0);
+        } else {
+            legs_[0] = QuantExt::OvernightLeg(domesticSchedule_, on)
+                           .withNotionals(0.0)
+                           .withSpreads(domesticSpread_)
+                           .withPaymentLag(domesticPaymentLag_)
+                           .includeSpread(domesticIncludeSpread_ ? *domesticIncludeSpread_ : false)
+                           .withLookback(domesticLookback_ ? *domesticLookback_ : 0 * Days)
+                           .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : 0)
+                           .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0);
+        }
+    } else {
+        // Ibor leg
+        legs_[0] = IborLeg(domesticSchedule_, domesticIndex_)
+                       .withNotionals(0.0)
+                       .withSpreads(domesticSpread_)
+                       .withPaymentLag(domesticPaymentLag_);
+    }
     receiveDomestic_ ? payer_[1] = +1.0 : payer_[1] = -1.0;
     currencies_[1] = domesticCurrency_;
     // replace the coupons with a FloatingRateFXLinkedNotionalCoupon

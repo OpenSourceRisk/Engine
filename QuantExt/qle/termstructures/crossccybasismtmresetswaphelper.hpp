@@ -62,12 +62,13 @@ public:
         const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
         const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
         bool spreadOnForeignCcy = true, boost::optional<QuantLib::Period> foreignTenor = boost::none,
-        boost::optional<QuantLib::Period> domesticTenor = boost::none, Size paymentLag = 0, Size flatPaymentLag = 0,
-        boost::optional<bool> includeSpread = boost::none, boost::optional<Period> lookback = boost::none,
-        boost::optional<Size> fixingDays = boost::none, boost::optional<Size> rateCutoff = boost::none,
-        boost::optional<bool> isAveraged = boost::none, boost::optional<bool> flatIncludeSpread = boost::none,
-        boost::optional<Period> flatLookback = boost::none, boost::optional<Size> flatFixingDays = boost::none,
-        boost::optional<Size> flatRateCutoff = boost::none, boost::optional<bool> flatIsAveraged = boost::none);
+        boost::optional<QuantLib::Period> domesticTenor = boost::none, Size foreignPaymentLag = 0,
+        Size domesticPaymentLag = 0, boost::optional<bool> foreignIncludeSpread = boost::none,
+        boost::optional<Period> foreignLookback = boost::none, boost::optional<Size> foreignFixingDays = boost::none,
+        boost::optional<Size> foreignRateCutoff = boost::none, boost::optional<bool> foreignIsAveraged = boost::none,
+        boost::optional<bool> domesticIncludeSpread = boost::none,
+        boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
+        boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -100,19 +101,19 @@ protected:
     QuantLib::Period foreignTenor_;
     QuantLib::Period domesticTenor_;
 
-    Size paymentLag_;
-    Size flatPaymentLag_;
+    Size foreignPaymentLag_;
+    Size domesticPaymentLag_;
     // OIS only
-    boost::optional<bool> includeSpread_;
-    boost::optional<QuantLib::Period> lookback_;
-    boost::optional<QuantLib::Size> fixingDays_;
-    boost::optional<Size> rateCutoff_;
-    boost::optional<bool> isAveraged_;
-    boost::optional<bool> flatIncludeSpread_;
-    boost::optional<QuantLib::Period> flatLookback_;
-    boost::optional<QuantLib::Size> flatFixingDays_;
-    boost::optional<Size> flatRateCutoff_;
-    boost::optional<bool> flatIsAveraged_;
+    boost::optional<bool> foreignIncludeSpread_;
+    boost::optional<QuantLib::Period> foreignLookback_;
+    boost::optional<QuantLib::Size> foreignFixingDays_;
+    boost::optional<Size> foreignRateCutoff_;
+    boost::optional<bool> foreignIsAveraged_;
+    boost::optional<bool> domesticIncludeSpread_;
+    boost::optional<QuantLib::Period> domesticLookback_;
+    boost::optional<QuantLib::Size> domesticFixingDays_;
+    boost::optional<Size> domesticRateCutoff_;
+    boost::optional<bool> domesticIsAveraged_;
 
     Currency foreignCurrency_;
     Currency domesticCurrency_;

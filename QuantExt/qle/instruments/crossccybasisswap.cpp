@@ -17,32 +17,73 @@
 */
 
 #include <boost/assign/list_of.hpp>
-using boost::assign::list_of;
 
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
+
+using boost::assign::list_of;
 
 namespace QuantExt {
 
 CrossCcyBasisSwap::CrossCcyBasisSwap(Real payNominal, const Currency& payCurrency, const Schedule& paySchedule,
                                      const boost::shared_ptr<IborIndex>& payIndex, Spread paySpread, Real payGearing,
                                      Real recNominal, const Currency& recCurrency, const Schedule& recSchedule,
-                                     const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing)
+                                     const boost::shared_ptr<IborIndex>& recIndex, Spread recSpread, Real recGearing,
+                                     Size payPaymentLag, Size recPaymentLag, boost::optional<bool> payIncludeSpread,
+                                     boost::optional<Period> payLookback, boost::optional<Size> payFixingDays,
+                                     boost::optional<Size> payRateCutoff, boost::optional<bool> payIsAveraged,
+                                     boost::optional<bool> recIncludeSpread, boost::optional<Period> recLookback,
+                                     boost::optional<Size> recFixingDays, boost::optional<Size> recRateCutoff,
+                                     boost::optional<bool> recIsAveraged)
     : CrossCcySwap(2), payNominal_(payNominal), payCurrency_(payCurrency), paySchedule_(paySchedule),
       payIndex_(payIndex), paySpread_(paySpread), payGearing_(payGearing), recNominal_(recNominal),
       recCurrency_(recCurrency), recSchedule_(recSchedule), recIndex_(recIndex), recSpread_(recSpread),
-      recGearing_(recGearing) {
-    registerWith(payIndex);
-    registerWith(recIndex);
+      recGearing_(recGearing), payPaymentLag_(payPaymentLag), recPaymentLag_(recPaymentLag),
+      payIncludeSpread_(payIncludeSpread), payLookback_(payLookback), payFixingDays_(payFixingDays),
+      payRateCutoff_(payRateCutoff), payIsAveraged_(payIsAveraged), recIncludeSpread_(recIncludeSpread),
+      recLookback_(recLookback), recFixingDays_(recFixingDays), recRateCutoff_(recRateCutoff),
+      recIsAveraged_(recIsAveraged) {
+    registerWith(payIndex_);
+    registerWith(recIndex_);
     initialize();
 }
 
 void CrossCcyBasisSwap::initialize() {
     // Pay leg
-    legs_[0] =
-        IborLeg(paySchedule_, payIndex_).withNotionals(payNominal_).withSpreads(paySpread_).withGearings(payGearing_);
+    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(payIndex_)) {
+        // ON leg
+        if (payIsAveraged_ && *payIsAveraged_) {
+            legs_[0] = QuantExt::AverageONLeg(paySchedule_, on)
+                           .withNotional(payNominal_)
+                           .withSpread(paySpread_)
+                           .withGearing(payGearing_)
+                           .withPaymentLag(payPaymentLag_)
+                           .withLookback(payLookback_ ? *payLookback_ : 0 * Days)
+                           .withFixingDays(payFixingDays_ ? *payFixingDays_ : 0)
+                           .withRateCutoff(payRateCutoff_ ? *payRateCutoff_ : 0);
+        } else {
+            legs_[0] = QuantExt::OvernightLeg(paySchedule_, on)
+                           .withNotionals(payNominal_)
+                           .withSpreads(paySpread_)
+                           .withGearings(payGearing_)
+                           .withPaymentLag(payPaymentLag_)
+                           .includeSpread(payIncludeSpread_ ? *payIncludeSpread_ : false)
+                           .withLookback(payLookback_ ? *payLookback_ : 0 * Days)
+                           .withFixingDays(payFixingDays_ ? *payFixingDays_ : 0)
+                           .withRateCutoff(payRateCutoff_ ? *payRateCutoff_ : 0);
+        }
+    } else {
+        // Ibor leg
+        legs_[0] = IborLeg(paySchedule_, payIndex_)
+                       .withNotionals(payNominal_)
+                       .withSpreads(paySpread_)
+                       .withGearings(payGearing_)
+                       .withPaymentLag(payPaymentLag_);
+    }
     payer_[0] = -1.0;
     currencies_[0] = payCurrency_;
     // Pay leg notional exchange at start.
@@ -55,8 +96,36 @@ void CrossCcyBasisSwap::initialize() {
     legs_[0].push_back(finalPayCF);
 
     // Receive leg
-    legs_[1] =
-        IborLeg(recSchedule_, recIndex_).withNotionals(recNominal_).withSpreads(recSpread_).withGearings(recGearing_);
+    if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(recIndex_)) {
+        // ON leg
+        if (recIsAveraged_ && *recIsAveraged_) {
+            legs_[0] = QuantExt::AverageONLeg(recSchedule_, on)
+                           .withNotional(recNominal_)
+                           .withSpread(recSpread_)
+                           .withGearing(recGearing_)
+                           .withPaymentLag(recPaymentLag_)
+                           .withLookback(recLookback_ ? *recLookback_ : 0 * Days)
+                           .withFixingDays(recFixingDays_ ? *recFixingDays_ : 0)
+                           .withRateCutoff(recRateCutoff_ ? *recRateCutoff_ : 0);
+        } else {
+            legs_[0] = QuantExt::OvernightLeg(recSchedule_, on)
+                           .withNotionals(recNominal_)
+                           .withSpreads(recSpread_)
+                           .withGearings(recGearing_)
+                           .withPaymentLag(recPaymentLag_)
+                           .includeSpread(recIncludeSpread_ ? *recIncludeSpread_ : false)
+                           .withLookback(recLookback_ ? *recLookback_ : 0 * Days)
+                           .withFixingDays(recFixingDays_ ? *recFixingDays_ : 0)
+                           .withRateCutoff(recRateCutoff_ ? *recRateCutoff_ : 0);
+        }
+    } else {
+        // Ibor leg
+        legs_[1] = IborLeg(recSchedule_, recIndex_)
+                       .withNotionals(recNominal_)
+                       .withSpreads(recSpread_)
+                       .withGearings(recGearing_)
+                       .withPaymentLag(recPaymentLag_);
+    }
     payer_[1] = +1.0;
     currencies_[1] = recCurrency_;
     // Receive leg notional exchange at start.
