@@ -8,7 +8,7 @@ calendars/cyprus.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
-calendars/greek.cpp
+calendars/greece.cpp
 calendars/ice.cpp
 calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
@@ -271,7 +271,7 @@ calendars/cme.hpp
 calendars/cyprus.hpp
 calendars/colombia.hpp
 calendars/france.hpp
-calendars/greek.hpp
+calendars/greece.hpp
 calendars/ice.hpp
 calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
