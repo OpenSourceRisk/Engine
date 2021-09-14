@@ -108,6 +108,12 @@ void Trade::validate() const {
 }
 
 void Trade::reset() {
+    // save accumulated timings from wrapper to trade before resetting
+    if (instrument_ != nullptr) {
+        savedNumberOfPricings_ += instrument_->getNumberOfPricings();
+        savedCumulativePricingTime_ += instrument_->getCumulativePricingTime();
+    }
+    // reset members
     instrument_ = boost::shared_ptr<InstrumentWrapper>();
     legs_.clear();
     legCurrencies_.clear();

@@ -67,8 +67,13 @@ public:
         return underlyingInstruments_;
     }
 
-    //! return the active underlying instrument
-    const boost::shared_ptr<QuantLib::Instrument>& activeUnderlyingInstrument() const {
+    /*! return the active underlying instrument
+        Pass true if you trigger a calculation on the returned instrument and want to record
+        the timing for that calculation. If in doubt whether a calculation is triggered, pass false. */
+    const boost::shared_ptr<QuantLib::Instrument>& activeUnderlyingInstrument(const bool calculate = false) const {
+        if (calculate && activeUnderlyingInstrument_ != nullptr) {
+            getTimedNPV(activeUnderlyingInstrument_);
+        }
         return activeUnderlyingInstrument_;
     }
 

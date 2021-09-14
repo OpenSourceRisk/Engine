@@ -126,6 +126,12 @@ int OREApp::run() {
          */
         writeInitialReports();
 
+	/**********************
+         * Output pricing stats
+         */
+
+        writePricingStats("pricingstats_npv.csv", portfolio_);
+
         /**************************
          * Write base scenario file
          */
@@ -269,6 +275,7 @@ int OREApp::run() {
                 out_ << "SKIP" << endl;
             }
         }
+
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
@@ -281,6 +288,13 @@ int OREApp::run() {
 
     LOG("ORE done.");
     return 0;
+}
+
+void OREApp::writePricingStats(const std::string& filename, const boost::shared_ptr<Portfolio>& portfolio) {
+    LOG("write pricing stats report");
+    CSVFileReport pricingStatsReport(outputPath_ + "/" + filename);
+    ore::analytics::ReportWriter().writePricingStats(pricingStatsReport, portfolio);
+    LOG("pricing stats report written");
 }
 
 boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
@@ -746,6 +760,8 @@ void OREApp::runStressTest() {
 
     LOG("Stress test completed");
     MEM_LOG;
+
+    writePricingStats("pricingstats_stress.csv", portfolio);
 }
 
 void OREApp::runParametricVar() {
@@ -1005,6 +1021,7 @@ void OREApp::generateNPVCube() {
 
     LOG("NPV cube generation completed");
     MEM_LOG;
+    writePricingStats("pricingstats_xva.csv", portfolio);
 }
 
 void OREApp::writeCube(boost::shared_ptr<NPVCube> cube, const std::string& cubeFileParam) {

@@ -233,7 +233,7 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
 QuantLib::Real Swap::notional() const {
     // try to get the notional from the additional results of the instrument
     try {
-        return instrument_->qlInstrument()->result<Real>("currentNotional");
+        return instrument_->qlInstrument(true)->result<Real>("currentNotional");
     } catch (const std::exception& e) {
         WLOG("swap engine does not provide current notional: " << e.what() << ", using fallback");
         // Try getting current notional from coupons
@@ -252,7 +252,7 @@ QuantLib::Real Swap::notional() const {
 std::string Swap::notionalCurrency() const {
     // try to get the notional ccy from the additional results of the instrument
     try {
-        return instrument_->qlInstrument()->result<std::string>("notionalCurrency");
+        return instrument_->qlInstrument(true)->result<std::string>("notionalCurrency");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "notionalCurrency not provided"))
             WLOG("swap engine does not provide notional ccy: " << e.what() << ", using fallback");
