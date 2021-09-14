@@ -442,7 +442,16 @@ BOOST_AUTO_TEST_CASE(testGreeceCalendar) {
     BOOST_TEST_MESSAGE("Testing Greece holiday list");
 
     std::vector<Date> expectedHolidays;
-
+    
+    expectedHolidays.push_back(Date(1, January, 2021));
+    expectedHolidays.push_back(Date(6, January, 2021));
+    expectedHolidays.push_back(Date(15, March, 2021));
+    expectedHolidays.push_back(Date(25, March, 2021));
+    expectedHolidays.push_back(Date(30, April, 2021));
+    expectedHolidays.push_back(Date(3, May, 2021));
+    expectedHolidays.push_back(Date(4, May, 2021));
+    expectedHolidays.push_back(Date(21, June, 2021)); 
+    expectedHolidays.push_back(Date(28, October, 2021));
  
     expectedHolidays.push_back(Date(6, January, 2022));
     expectedHolidays.push_back(Date(7, March, 2022));
@@ -454,16 +463,7 @@ BOOST_AUTO_TEST_CASE(testGreeceCalendar) {
     expectedHolidays.push_back(Date(28, October, 2022));
     expectedHolidays.push_back(Date(26, December, 2022));
 
-    expectedHolidays.push_back(Date(1, January, 2021)); //weekend
-    expectedHolidays.push_back(Date(6, January, 2021));
-    expectedHolidays.push_back(Date(15, March, 2021));
-    expectedHolidays.push_back(Date(25, March, 2021));
-    expectedHolidays.push_back(Date(30, April, 2021));
-    expectedHolidays.push_back(Date(3, May, 2021));
-    expectedHolidays.push_back(Date(4, May, 2021));
-    expectedHolidays.push_back(Date(21, June, 2021)); //weekend
-    expectedHolidays.push_back(Date(13, June, 2021));
-    expectedHolidays.push_back(Date(28, October, 2021));
+    
 
     Calendar c = Greece();
 

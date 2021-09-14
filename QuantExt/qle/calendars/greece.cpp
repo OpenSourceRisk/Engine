@@ -50,7 +50,7 @@ bool Greece::Impl::isBusinessDay(const Date& date) const {
         // Greek Independence Day
         || (m == Mar && d == 25)
         // Labour Day
-        || (m == May && ((d == 1) || ((w==Tuesday) && (d<=5) && (em-3 <= laborDay <= em))))
+        || (m == May && ((d == 1) || ((w==Tuesday) && (d<=5) && (em-3 <= laborDay && laborDay <= em))))
         // Orthodox Pentecoast (Whit) Monday
         || (dd == em + 49)
         // Assumption Day
