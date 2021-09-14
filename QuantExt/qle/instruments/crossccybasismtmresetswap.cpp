@@ -101,7 +101,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(domesticIndex_)) {
         // ON leg
         if (domesticIsAveraged_ && *domesticIsAveraged_) {
-            legs_[0] = QuantExt::AverageONLeg(domesticSchedule_, on)
+            legs_[1] = QuantExt::AverageONLeg(domesticSchedule_, on)
                            .withNotional(0.0)
                            .withSpread(domesticSpread_)
                            .withPaymentLag(domesticPaymentLag_)
@@ -109,7 +109,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : 0)
                            .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0);
         } else {
-            legs_[0] = QuantExt::OvernightLeg(domesticSchedule_, on)
+            legs_[1] = QuantExt::OvernightLeg(domesticSchedule_, on)
                            .withNotionals(0.0)
                            .withSpreads(domesticSpread_)
                            .withPaymentLag(domesticPaymentLag_)
@@ -120,7 +120,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         }
     } else {
         // Ibor leg
-        legs_[0] = IborLeg(domesticSchedule_, domesticIndex_)
+        legs_[1] = IborLeg(domesticSchedule_, domesticIndex_)
                        .withNotionals(0.0)
                        .withSpreads(domesticSpread_)
                        .withPaymentLag(domesticPaymentLag_);

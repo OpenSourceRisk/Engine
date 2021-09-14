@@ -99,7 +99,7 @@ void CrossCcyBasisSwap::initialize() {
     if (auto on = boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(recIndex_)) {
         // ON leg
         if (recIsAveraged_ && *recIsAveraged_) {
-            legs_[0] = QuantExt::AverageONLeg(recSchedule_, on)
+            legs_[1] = QuantExt::AverageONLeg(recSchedule_, on)
                            .withNotional(recNominal_)
                            .withSpread(recSpread_)
                            .withGearing(recGearing_)
@@ -108,7 +108,7 @@ void CrossCcyBasisSwap::initialize() {
                            .withFixingDays(recFixingDays_ ? *recFixingDays_ : 0)
                            .withRateCutoff(recRateCutoff_ ? *recRateCutoff_ : 0);
         } else {
-            legs_[0] = QuantExt::OvernightLeg(recSchedule_, on)
+            legs_[1] = QuantExt::OvernightLeg(recSchedule_, on)
                            .withNotionals(recNominal_)
                            .withSpreads(recSpread_)
                            .withGearings(recGearing_)
