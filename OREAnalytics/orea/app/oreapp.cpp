@@ -71,6 +71,8 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
 
     // initialise some pointers
     conventions_ = boost::make_shared<Conventions>();
+    InstrumentConventions::instance().conventions() = conventions_;
+    
     marketParameters_ = boost::make_shared<TodaysMarketParameters>();
     curveConfigs_ = boost::make_shared<CurveConfigurations>();
 
@@ -1339,8 +1341,6 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     else
         conventions_->fromXMLString(conventionsXML);
 
-    InstrumentConventions::instance().conventions() = conventions_;
-    
     if (todaysMarketXML == "")
         getMarketParameters();
     else
