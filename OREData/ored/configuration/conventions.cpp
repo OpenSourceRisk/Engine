@@ -806,8 +806,13 @@ void CrossCcyBasisSwapConvention::build() {
     flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
     flatTenor_ = strFlatTenor_.empty() ? flatIndex_->tenor() : parsePeriod(strFlatTenor_);
     spreadTenor_ = strSpreadTenor_.empty() ? spreadIndex_->tenor() : parsePeriod(strSpreadTenor_);
-    paymentLag_ = parseInteger(strPaymentLag_);
-    flatPaymentLag_ = parseInteger(strFlatPaymentLag_);
+
+    paymentLag_ = flatPaymentLag_ = 0;
+    if (!strPaymentLag_.empty())
+        paymentLag_ = parseInteger(strPaymentLag_);
+    if (!strFlatPaymentLag_.empty())
+        flatPaymentLag_ = parseInteger(strFlatPaymentLag_);
+
     // only OIS
     if (!strIncludeSpread_.empty())
         includeSpread_ = parseBool(strIncludeSpread_);
