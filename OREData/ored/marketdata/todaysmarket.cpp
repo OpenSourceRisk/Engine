@@ -280,11 +280,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Adding Index(" << node.name << ") with spec " << *ycspec << " to configuration "
                                      << configuration);
                 // ibor fallback handling
-                auto tmpIndex = parseIborIndex(node.name, itr->second->handle(),
-                                               conventions->has(node.name, Convention::Type::IborIndex) ||
-                                                       conventions->has(node.name, Convention::Type::OvernightIndex)
-                                                   ? conventions->get(node.name)
-                                                   : nullptr);
+                auto tmpIndex = parseIborIndex(node.name, itr->second->handle());
                 if (iborFallbackConfig_.isIndexReplaced(node.name, asof_)) {
                     auto fallbackData = iborFallbackConfig_.fallbackData(node.name);
                     boost::shared_ptr<IborIndex> rfrIndex;

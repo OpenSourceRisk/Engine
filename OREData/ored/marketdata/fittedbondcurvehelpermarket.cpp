@@ -34,11 +34,7 @@ FittedBondCurveHelperMarket::FittedBondCurveHelperMarket(
     // populate the ibor index curves
     for (auto const& c : iborIndexCurves)
         iborIndices_[std::make_pair(Market::defaultConfiguration, c.first)] =
-            Handle<IborIndex>(parseIborIndex(c.first, c.second,
-                                             conventions->has(c.first, Convention::Type::IborIndex) ||
-                                                     conventions->has(c.first, Convention::Type::OvernightIndex)
-                                                 ? conventions->get(c.first)
-                                                 : nullptr));
+            Handle<IborIndex>(parseIborIndex(c.first, c.second));
 }
 
 Handle<YieldTermStructure> FittedBondCurveHelperMarket::yieldCurve(const string& name,

@@ -221,36 +221,21 @@ boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s) {
     return boost::make_shared<GenericIndex>(s);
 }
 
-bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index, bool useConventions) {
-    boost::shared_ptr<Conventions> cs = InstrumentConventions::instance().conventions();
-    const boost::shared_ptr<Convention>& c = cs->has(s, Convention::Type::IborIndex) ? cs->get(s) : nullptr;
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
     try {
-        index = parseIborIndex(s, Handle<YieldTermStructure>(), useConventions ? c : nullptr);
+        index = parseIborIndex(s, Handle<YieldTermStructure>());
     } catch (...) {
         return false;
     }
     return true;
 }
 
-bool tryParseOvernightIndex(const string& s, boost::shared_ptr<IborIndex>& index, bool useConventions) {
-    boost::shared_ptr<Conventions> cs = InstrumentConventions::instance().conventions();
-    const boost::shared_ptr<Convention>& c = cs->has(s, Convention::Type::OvernightIndex) ? cs->get(s) : nullptr;
-    try {
-        index = parseIborIndex(s, Handle<YieldTermStructure>(), useConventions ? c : nullptr);
-    } catch (...) {
-        return false;
-    }
-    return true;
-}
-
-boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h,
-                                            const boost::shared_ptr<Convention>& c) {
+boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
     string dummy;
-    return parseIborIndex(s, dummy, h, c);
+    return parseIborIndex(s, dummy, h);
 }
 
-boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, const Handle<YieldTermStructure>& h,
-                                            const boost::shared_ptr<Convention>& c) {
+boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, const Handle<YieldTermStructure>& h) {
 
     // Check the index string is of the required form before doing anything
     vector<string> tokens;
@@ -265,6 +250,11 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     } else {
         tenor = "";
     }
+
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> c;
+    if (conventions->has(s, Convention::Type::IborIndex) || conventions->has(s, Convention::Type::OvernightIndex))
+        c = conventions->get(s); 
 
     // if we have a convention given, set up the index using this convention, this overrides the parsing from
     // hardcoded strings below if there is an overlap
@@ -707,11 +697,11 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     // if we have an ibor index convention we parse s using this (and throw if we don't succeed)
     if (conventions && (conventions->has(s, Convention::Type::IborIndex) || 
         conventions->has(s, Convention::Type::OvernightIndex))) {
-        ret_idx = parseIborIndex(s, Handle<YieldTermStructure>(), conventions->get(s));
+        ret_idx = parseIborIndex(s);
     } else {
         // otherwise we try to parse the ibor index without conventions
         try {
-            ret_idx = parseIborIndex(s, Handle<YieldTermStructure>(), nullptr);
+            ret_idx = parseIborIndex(s);
         } catch (...) {
         }
     }
@@ -776,7 +766,7 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
 bool isOvernightIndex(const string& indexName) {
     
     boost::shared_ptr<IborIndex> index;
-    if (tryParseOvernightIndex(indexName, index)) {
+    if (tryParseIborIndex(indexName, index)) {
         auto onIndex = boost::dynamic_pointer_cast<OvernightIndex>(index);
         if (onIndex)
             return true;

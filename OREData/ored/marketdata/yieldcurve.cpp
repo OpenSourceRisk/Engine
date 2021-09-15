@@ -1060,8 +1060,7 @@ void YieldCurve::buildFittedBondCurve() {
 
     std::map<std::string, Handle<YieldTermStructure>> iborCurveMapping;
     for (auto const& c : curveSegment->iborIndexCurves()) {
-        auto index = parseIborIndex(c.first, Handle<YieldTermStructure>(),
-                                    conventions->has(c.first) ? conventions->get(c.first) : nullptr);
+        auto index = parseIborIndex(c.first);
         auto key = yieldCurveKey(index->currency(), c.second, asofDate_);
         auto y = requiredYieldCurves_.find(key);
         QL_REQUIRE(y != requiredYieldCurves_.end(), "required yield curve '" << key << "' for iborIndex '" << c.first
@@ -1321,10 +1320,7 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                 boost::shared_ptr<IborIndex> index;
                 if (isOvernightIndex(indexName)) {
                     // No need for the term here
-                    index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
-                                           conventions->has(indexName, Convention::Type::OvernightIndex)
-                                               ? conventions->get(indexName)
-                                               : nullptr);
+                    index = parseIborIndex(indexName);
                 } else {
                     // Note that a depositTerm with units Days here could end up as a string with another unit
                     // For example:
@@ -1334,10 +1330,7 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                     stringstream ss;
                     ss << indexName << "-" << io::short_period(depositTerm);
                     indexName = ss.str();
-                    index = parseIborIndex(indexName, Handle<YieldTermStructure>(),
-                                           conventions->has(indexName, Convention::Type::IborIndex)
-                                               ? conventions->get(indexName)
-                                               : nullptr);
+                    index = parseIborIndex(indexName);
                 }
                 depositHelper = boost::make_shared<DepositRateHelper>(
                     hQuote, depositTerm, fwdStartDays, index->fixingCalendar(), index->businessDayConvention(),
