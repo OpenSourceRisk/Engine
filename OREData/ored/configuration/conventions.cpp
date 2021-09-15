@@ -854,16 +854,16 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strFlatTenor_ = XMLUtils::getChildValue(node, "FlatTenor", false);
     strSpreadTenor_ = XMLUtils::getChildValue(node, "SpreadTenor", false);
 
-    strPaymentLag_ = XMLUtils::getChildValue(node, "PaymentLag", false);
+    strPaymentLag_ = XMLUtils::getChildValue(node, "SpreadPaymentLag", false);
     strFlatPaymentLag_ = XMLUtils::getChildValue(node, "FlatPaymentLag", false);
 
     // OIS specific conventions
 
-    strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
-    strLookback_ = XMLUtils::getChildValue(node, "Lookback", false);
-    strFixingDays_ = XMLUtils::getChildValue(node, "FixingDays", false);
-    strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", false);
-    strIsAveraged_ = XMLUtils::getChildValue(node, "IsAveraged", false);
+    strIncludeSpread_ = XMLUtils::getChildValue(node, "SpreadIncludeSpread", false);
+    strLookback_ = XMLUtils::getChildValue(node, "SpreadLookback", false);
+    strFixingDays_ = XMLUtils::getChildValue(node, "SpreadFixingDays", false);
+    strRateCutoff_ = XMLUtils::getChildValue(node, "SpreadRateCutoff", false);
+    strIsAveraged_ = XMLUtils::getChildValue(node, "SpreadIsAveraged", false);
 
     strFlatIncludeSpread_ = XMLUtils::getChildValue(node, "FlatIncludeSpread", false);
     strFlatLookback_ = XMLUtils::getChildValue(node, "FlatLookback", false);
