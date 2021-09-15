@@ -29,8 +29,8 @@ Ireland::Ireland(const Market market) {
     case IrishStockExchange:
         impl_ = boost::make_shared<Ireland::IrishStockExchangeImpl>();
         break;
-    case Dublin:
-        impl_ = boost::make_shared<Ireland::DublinImpl>();
+    case BankHolidays:
+        impl_ = boost::make_shared<Ireland::BankHolidaysImpl>();
         break;
     default:
         QL_FAIL("Internal error, unexpected market " << market);
@@ -69,14 +69,14 @@ bool Ireland::IrishStockExchangeImpl::isBusinessDay(const Date& date) const {
     return true;
 }
 
-bool Ireland::DublinImpl::isBusinessDay(const Date& date) const {
+bool Ireland::BankHolidaysImpl::isBusinessDay(const Date& date) const {
     Weekday w = date.weekday();
-    Day d = date.dayOfMonth(), dd = date.dayOfYear();
+    Day d = date.dayOfMonth();
     Month m = date.month();
-    Year y = date.year();
-    if ((m == December) && ((d == 27) || (d == 29 && (w == Mon || w == Tue || w == Wed) || (d == 28 && w == Wed))))
-        return true;
+    if (!IrishStockExchangeImpl::isBusinessDay(date) ||
+        ((m == December) && ((d == 27) || (d == 29 && (w == Mon || w == Tue || w == Wed) || (d == 28 && w == Wed)))))
+        return false;
     else
-        return IrishStockExchangeImpl::isBusinessDay(date);
+        return true;
 }
 } // namespace QuantExt

@@ -58,14 +58,14 @@ private:
         std::string name() const override { return "IrishStockExchange"; }
         bool isBusinessDay(const QuantLib::Date&) const override;
     };
-    class DublinImpl : public IrishStockExchangeImpl {
+    class BankHolidaysImpl : public IrishStockExchangeImpl {
     public:
         std::string name() const override { return "Ireland"; }
         bool isBusinessDay(const QuantLib::Date&) const override;
     };
 
 public:
-    enum Market {IrishStockExchange, Dublin};
+    enum Market {IrishStockExchange, BankHolidays};
 
     Ireland(const Market market=IrishStockExchange);
 };
