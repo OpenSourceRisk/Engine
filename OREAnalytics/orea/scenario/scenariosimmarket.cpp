@@ -495,7 +495,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (forecastTs.empty()) {
                             string ccy = curve->currency().code();
                             TLOG("Falling back on the discount curve for currency '"
-                                 << ccy << "', the currency of inflation index '" << name << "'");
+                                 << ccy << "' for equity forecast curve '" << name << "'");
                             forecastTs = discountCurve(ccy);
                         }
                         boost::shared_ptr<EquityIndex> ei(
