@@ -44,7 +44,6 @@ public:
               const boost::shared_ptr<ore::data::NettingSetManager>& netting,
               const boost::shared_ptr<ore::data::EngineData>& engineData,
               const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
-              const boost::shared_ptr<ore::data::Conventions>& conventions,
               const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams,
               const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
               const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
@@ -132,7 +131,6 @@ protected:
     boost::shared_ptr<ore::data::NettingSetManager> netting_;
     boost::shared_ptr<ore::data::EngineData> engineData_;
     boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
-    boost::shared_ptr<ore::data::Conventions> conventions_;
     boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<ScenarioGeneratorData> scenarioGeneratorData_;

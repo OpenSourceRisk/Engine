@@ -191,7 +191,7 @@ namespace ore {
 namespace data {
 
 DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader,
-                           const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                           const CurveConfigurations& curveConfigs,
                            map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                            map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
 
@@ -214,16 +214,16 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         switch (config->type()) {
         case DefaultCurveConfig::Type::SpreadCDS:
         case DefaultCurveConfig::Type::Price:
-            buildCdsCurve(*config, asof, spec, loader, conventions, yieldCurves);
+            buildCdsCurve(*config, asof, spec, loader, yieldCurves);
             break;
         case DefaultCurveConfig::Type::HazardRate:
-            buildHazardRateCurve(*config, asof, spec, loader, conventions);
+            buildHazardRateCurve(*config, asof, spec, loader);
             break;
         case DefaultCurveConfig::Type::Benchmark:
-            buildBenchmarkCurve(*config, asof, spec, loader, conventions, yieldCurves);
+            buildBenchmarkCurve(*config, asof, spec, loader, yieldCurves);
             break;
         case DefaultCurveConfig::Type::MultiSection:
-            buildMultiSectionCurve(*config, asof, spec, loader, conventions, defaultCurves);
+            buildMultiSectionCurve(*config, asof, spec, loader, defaultCurves);
             break;
         case DefaultCurveConfig::Type::Null:
             buildNullCurve(*config, asof, spec);
@@ -240,8 +240,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 }
 
 void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
-                                 const Loader& loader, const Conventions& conventions,
-                                 map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                                 const Loader& loader,  map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     LOG("Start building default curve of type SpreadCDS for curve " << config.curveID());
 
@@ -250,9 +249,10 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: recovery rate needed to build SpreadCDS curve");
 
     // Get the CDS curve conventions
-    QL_REQUIRE(conventions.has(config.conventionID()), "No conventions found with id " << config.conventionID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QL_REQUIRE(conventions->has(config.conventionID()), "No conventions found with id " << config.conventionID());
     boost::shared_ptr<CdsConvention> cdsConv =
-        boost::dynamic_pointer_cast<CdsConvention>(conventions.get(config.conventionID()));
+        boost::dynamic_pointer_cast<CdsConvention>(conventions->get(config.conventionID()));
     QL_REQUIRE(cdsConv, "SpreadCDS curves require CDS convention");
 
     // Get the discount curve for use in the CDS spread curve bootstrap
@@ -395,17 +395,18 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
 }
 
 void DefaultCurve::buildHazardRateCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
-                                        const Loader& loader, const Conventions& conventions) {
+                                        const Loader& loader) {
 
     LOG("Start building default curve of type HazardRate for curve " << config.curveID());
 
     QL_REQUIRE(config.type() == DefaultCurveConfig::Type::HazardRate,
                "DefaultCurve::buildHazardRateCurve expected a default curve configuration with type HazardRate");
-
+    
     // Get the hazard rate curve conventions
-    QL_REQUIRE(conventions.has(config.conventionID()), "No conventions found with id " << config.conventionID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    QL_REQUIRE(conventions->has(config.conventionID()), "No conventions found with id " << config.conventionID());
     boost::shared_ptr<CdsConvention> cdsConv =
-        boost::dynamic_pointer_cast<CdsConvention>(conventions.get(config.conventionID()));
+        boost::dynamic_pointer_cast<CdsConvention>(conventions->get(config.conventionID()));
     QL_REQUIRE(cdsConv, "HazardRate curves require CDS convention");
 
     // Get the hazard rate quotes
@@ -449,8 +450,7 @@ void DefaultCurve::buildHazardRateCurve(DefaultCurveConfig& config, const Date& 
 }
 
 void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
-                                       const Loader& loader, const Conventions& conventions,
-                                       map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                                       const Loader& loader, map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     LOG("Start building default curve of type Benchmark for curve " << config.curveID());
 
@@ -517,8 +517,7 @@ void DefaultCurve::buildBenchmarkCurve(DefaultCurveConfig& config, const Date& a
 }
 
 void DefaultCurve::buildMultiSectionCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
-                                          const Loader& loader, const Conventions& conventions,
-                                          map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
+                                          const Loader& loader, map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves) {
     LOG("Start building default curve of type MultiSection for curve " << config.curveID());
 
     std::vector<Handle<DefaultProbabilityTermStructure>> curves;

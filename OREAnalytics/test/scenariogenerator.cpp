@@ -90,6 +90,8 @@ boost::shared_ptr<data::Conventions> convs() {
         new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(swapConv);
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 
@@ -512,8 +514,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    convs();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
     // Basic Martingale tests
@@ -658,8 +660,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    convs();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
     // set up model based simulation (mimicking exactly the scenario generator builder above)
@@ -800,8 +802,8 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    convs();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
     // swaps for expsoure generation
@@ -944,8 +946,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    convs();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
     Size samples = 5000;
@@ -1069,8 +1071,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    convs();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
     Size samples = 10000;
@@ -1198,8 +1200,8 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    convs();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
     Size samples = 5000;

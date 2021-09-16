@@ -108,6 +108,8 @@ boost::shared_ptr<data::Conventions> conv() {
     conventions->add(boost::make_shared<data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 
@@ -579,7 +581,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     }
 
     // build scenario sim market
-    Conventions conventions = *conv();
+    conv();
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
@@ -593,7 +595,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     cpu_timer t2;
     t2.start();
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     t2.stop();
     Real elapsed = t2.elapsed().wall * 1e-9;

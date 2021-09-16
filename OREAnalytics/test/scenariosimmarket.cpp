@@ -47,8 +47,9 @@ using testsuite::TestMarket;
 namespace {
 
 boost::shared_ptr<data::Conventions> convs() {
-    boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
-
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    conventions->clear();
+    
     boost::shared_ptr<data::Convention> swapIndexConv(
         new data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
     conventions->add(swapIndexConv);
@@ -288,10 +289,10 @@ BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
 
     // build scenario
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters = scenarioParameters();
-    Conventions conventions = *convs();
+    convs();
     // build scenario sim market
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket(
-        new analytics::ScenarioSimMarket(initMarket, parameters, conventions));
+        new analytics::ScenarioSimMarket(initMarket, parameters));
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // test

@@ -70,8 +70,7 @@ Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, co
     // we allow for standard (i.e. not convention based) ibor index names as keys and return the index forward curve in
     // case of a match
     boost::shared_ptr<IborIndex> notUsed;
-    if (tryParseIborIndex(key, notUsed, conventions_.has(key, Convention::Type::IborIndex)
-        ? conventions_.get(key) : nullptr)) {
+    if (tryParseIborIndex(key, notUsed)) {
         return iborIndex(key, configuration)->forwardingTermStructure();
     }
     // no ibor index found under key => look for a genuine yield curve
@@ -352,9 +351,10 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         else
             discounting = yieldCurve(discountIndex, configuration);
 
-        auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions_.get(swapIndex));
+        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();        
+        auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
         QL_REQUIRE(swapCon, "expected SwapIndexConvention for " << swapIndex);
-        auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions_.get(swapCon->conventions()));
+        auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
         QL_REQUIRE(con, "expected IRSwapConvention for " << swapCon->conventions());
         
         string fi = con->indexName();

@@ -103,6 +103,8 @@ boost::shared_ptr<data::Conventions> conv() {
     conventions->add(boost::make_shared<data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 
@@ -268,7 +270,7 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
 
     // build scenario sim market
-    Conventions conventions = *conv();
+    conv();
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
@@ -942,7 +944,7 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
         {"7_FxOption_EUR_USD DiscountCurve/USD/9/15Y DiscountCurve/USD/11/30Y", 0}};
     // sensitivity analysis
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;

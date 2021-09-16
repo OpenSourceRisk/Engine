@@ -51,7 +51,7 @@ public:
 
     //! Detailed constructor
     DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                 const Conventions& conventions, map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                 map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                  map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
     //@}
     //! \name Inspectors
@@ -67,21 +67,21 @@ private:
 
     //! Build a default curve from CDS spread quotes
     void buildCdsCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-                       const Loader& loader, const Conventions& conventions,
+                       const Loader& loader, 
                        std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Build a default curve from hazard rate quotes
     void buildHazardRateCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-                              const Loader& loader, const Conventions& conventions);
+                              const Loader& loader);
 
     //! Build a default curve implied from a spread over a benchmark curve
     void buildBenchmarkCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-                             const Loader& loader, const Conventions& conventions,
+                             const Loader& loader,
                              std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Build a multi section curve
     void buildMultiSectionCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
-                                const Loader& loader, const Conventions& conventions,
+                                const Loader& loader,
                                 map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
 
     //! Build a null curve (null rate, null recovery)

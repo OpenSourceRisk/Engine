@@ -87,8 +87,6 @@ public:
         const boost::shared_ptr<Loader>& loader,
         //! Description of curve compositions
         const boost::shared_ptr<CurveConfigurations>& curveConfigs,
-        //! Repository of market conventions
-        const boost::shared_ptr<Conventions>& conventions,
         //! Continue even if build errors occur
         const bool continueOnError = false,
         //! Optional Load Fixings
@@ -113,7 +111,6 @@ private:
     const boost::shared_ptr<TodaysMarketParameters> params_;
     const boost::shared_ptr<Loader> loader_;
     const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
-    const boost::shared_ptr<Conventions> conventions_;
 
     const bool continueOnError_;
     const bool loadFixings_;
