@@ -881,7 +881,27 @@ void YieldCurve::buildDiscountCurve() {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
                        "Market quote not of type Discount.");
             boost::shared_ptr<DiscountQuote> discountQuote = boost::dynamic_pointer_cast<DiscountQuote>(marketQuote);
-            data[discountQuote->date()] = discountQuote->quote()->value();
+
+            if(discountQuote->date() != Date()){
+
+                data[discountQuote->date()] = discountQuote->quote()->value();
+
+            } else if (discountQuote->tenor() != Period()){
+
+                boost::shared_ptr<Convention> convention = conventions_.get(discountCurveSegment->conventionsID());
+                boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+                QL_REQUIRE(zeroConvention, "could not cast to zeroconvention");
+                Calendar cal = zeroConvention->tenorCalendar();
+                BusinessDayConvention rollConvention = zeroConvention->rollConvention();
+                Date date = cal.adjust(asofDate_ + discountQuote->tenor(), rollConvention);
+                DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
+                data[date] = discountQuote->quote()->value();
+
+            } else {
+                QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
+
+            }
+
         }
     }
 
