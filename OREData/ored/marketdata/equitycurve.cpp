@@ -42,7 +42,6 @@ namespace ore {
 namespace data {
 
 EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                         const Conventions& conventions,
                          const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves) {
 
     try {

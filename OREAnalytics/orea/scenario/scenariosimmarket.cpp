@@ -253,23 +253,23 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
 
 ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-                                     const Conventions& conventions, const std::string& configuration,
+                                     const std::string& configuration,
                                      const CurveConfigurations& curveConfigs,
                                      const TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
                                      const bool useSpreadedTermStructures, const bool cacheSimData,
                                      const bool allowPartialScenarios, const IborFallbackConfig& iborFallbackConfig)
-    : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
+    : ScenarioSimMarket(initMarket, parameters, boost::make_shared<FixingManager>(initMarket->asofDate()),
                         configuration, curveConfigs, todaysMarketParams, continueOnError, useSpreadedTermStructures,
                         cacheSimData, allowPartialScenarios, iborFallbackConfig) {}
 
 ScenarioSimMarket::ScenarioSimMarket(
     const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-    const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
+    const boost::shared_ptr<FixingManager>& fixingManager,
     const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
     const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
     const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios,
     const IborFallbackConfig& iborFallbackConfig)
-    : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
+    : SimMarket(), parameters_(parameters), fixingManager_(fixingManager),
       filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
       cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
       iborFallbackConfig_(iborFallbackConfig) {
@@ -495,7 +495,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (forecastTs.empty()) {
                             string ccy = curve->currency().code();
                             TLOG("Falling back on the discount curve for currency '"
-                                 << ccy << "', the currency of inflation index '" << name << "'");
+                                 << ccy << "' for equity forecast curve '" << name << "'");
                             forecastTs = discountCurve(ccy);
                         }
                         boost::shared_ptr<EquityIndex> ei(
@@ -1747,8 +1747,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         Handle<ZeroInflationTermStructure> its(zeroCurve);
                         its->enableExtrapolation();
                         boost::shared_ptr<ZeroInflationIndex> i =
-                            parseZeroInflationIndex(name, false, Handle<ZeroInflationTermStructure>(its),
-                                                    boost::make_shared<Conventions>(conventions_));
+                            parseZeroInflationIndex(name, false, Handle<ZeroInflationTermStructure>(its));
                         Handle<ZeroInflationIndex> zh(i);
                         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>(
                             make_pair(Market::defaultConfiguration, name), zh));
@@ -2091,7 +2090,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         pts->enableExtrapolation(allowsExtrapolation);
 
-                        Handle<CommodityIndex> commIdx(parseCommodityIndex(name, conventions_, false, pts));
+                        Handle<CommodityIndex> commIdx(parseCommodityIndex(name, false, pts));
                         commodityIndices_.emplace(piecewise_construct,
                                                   forward_as_tuple(Market::defaultConfiguration, name),
                                                   forward_as_tuple(commIdx));

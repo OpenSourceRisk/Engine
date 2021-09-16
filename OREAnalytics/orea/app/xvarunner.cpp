@@ -35,7 +35,6 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      const boost::shared_ptr<NettingSetManager>& netting,
                      const boost::shared_ptr<EngineData>& engineData,
                      const boost::shared_ptr<CurveConfigurations>& curveConfigs,
-                     const boost::shared_ptr<Conventions>& conventions,
                      const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams,
                      const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                      const boost::shared_ptr<ScenarioGeneratorData>& scenarioGeneratorData,
@@ -47,7 +46,7 @@ XvaRunner::XvaRunner(Date asof, const string& baseCurrency, const boost::shared_
                      map<string, bool> analytics, string calculationType, string dvaName, string fvaBorrowingCurve,
                      string fvaLendingCurve, bool fullInitialCollateralisation, bool storeFlows)
     : asof_(asof), baseCurrency_(baseCurrency), portfolio_(portfolio), netting_(netting), engineData_(engineData),
-      curveConfigs_(curveConfigs), conventions_(conventions), todaysMarketParams_(todaysMarketParams),
+      curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
       simMarketData_(simMarketData), scenarioGeneratorData_(scenarioGeneratorData),
       crossAssetModelData_(crossAssetModelData), extraLegBuilders_(extraLegBuilders),
       extraEngineBuilders_(extraEngineBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
@@ -136,7 +135,7 @@ void XvaRunner::buildSimMarket(const boost::shared_ptr<ore::data::Market>& marke
     boost::shared_ptr<ScenarioGenerator> sg =
         getProjectedScenarioGenerator(currencyFilter, market, projectedSsmData, sf, continueOnErr);
     simMarket_ = boost::make_shared<ScenarioSimMarket>(
-        market, projectedSsmData, *conventions_, Market::defaultConfiguration, *curveConfigs_, *todaysMarketParams_,
+        market, projectedSsmData, Market::defaultConfiguration, *curveConfigs_, *todaysMarketParams_,
         true, false, true, false, iborFallbackConfig_);
     simMarket_->scenarioGenerator() = sg;
 

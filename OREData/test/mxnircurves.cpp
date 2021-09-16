@@ -57,6 +57,8 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     // Market
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_01.xml"));
+    InstrumentConventions::instance().conventions() = conventions;
+
     auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_01.xml"));
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
@@ -64,7 +66,7 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     auto loader =
         boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market_01.txt"), TEST_INPUT_FILE("fixings.txt"), false);
     boost::shared_ptr<TodaysMarket> market =
-        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -90,6 +92,8 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     // Market
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_02.xml"));
+    InstrumentConventions::instance().conventions() = conventions;
+    
     auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_02.xml"));
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
@@ -97,7 +101,7 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     auto loader =
         boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market_02.txt"), TEST_INPUT_FILE("fixings.txt"), false);
     boost::shared_ptr<TodaysMarket> market =
-        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -124,6 +128,8 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     // Market
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_03.xml"));
+    InstrumentConventions::instance().conventions() = conventions;
+    
     auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_03.xml"));
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
@@ -131,7 +137,7 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     auto loader =
         boost::make_shared<CSVLoader>(TEST_INPUT_FILE("market_03.txt"), TEST_INPUT_FILE("fixings.txt"), false);
     boost::shared_ptr<TodaysMarket> market =
-        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+        boost::make_shared<TodaysMarket>(asof, todaysMarketParams, loader, curveConfigs, false);
 
     // Portfolio to test market
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

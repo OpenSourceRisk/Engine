@@ -49,7 +49,7 @@ class InflationCurve {
 public:
     InflationCurve() : interpolatedIndex_(false) {}
     InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                   const Conventions& conventions, map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+                   map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! getters
     const InflationCurveSpec& spec() const { return spec_; }

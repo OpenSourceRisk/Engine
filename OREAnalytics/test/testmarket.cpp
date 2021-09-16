@@ -43,6 +43,8 @@ namespace testsuite {
 TestMarket::TestMarket(Date asof) {
     asof_ = asof;
 
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+    
     // add conventions
     boost::shared_ptr<ore::data::Convention> swapIndexEURConv(
         new ore::data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
@@ -65,16 +67,16 @@ TestMarket::TestMarket(Date asof) {
     boost::shared_ptr<ore::data::Convention> swapIndexJPYLongConv(
         new ore::data::SwapIndexConvention("JPY-CMS-30Y", "JPY-LIBOR-6M-SWAP-CONVENTIONS"));
 
-    conventions_.add(swapIndexEURConv);
-    conventions_.add(swapIndexEURLongConv);
-    conventions_.add(swapIndexUSDConv);
-    conventions_.add(swapIndexUSDLongConv);
-    conventions_.add(swapIndexGBPConv);
-    conventions_.add(swapIndexGBPLongConv);
-    conventions_.add(swapIndexCHFConv);
-    conventions_.add(swapIndexCHFLongConv);
-    conventions_.add(swapIndexJPYConv);
-    conventions_.add(swapIndexJPYLongConv);
+    conventions->add(swapIndexEURConv);
+    conventions->add(swapIndexEURLongConv);
+    conventions->add(swapIndexUSDConv);
+    conventions->add(swapIndexUSDLongConv);
+    conventions->add(swapIndexGBPConv);
+    conventions->add(swapIndexGBPLongConv);
+    conventions->add(swapIndexCHFConv);
+    conventions->add(swapIndexCHFLongConv);
+    conventions->add(swapIndexJPYConv);
+    conventions->add(swapIndexJPYLongConv);
 
     boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
         "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
@@ -91,14 +93,16 @@ TestMarket::TestMarket(Date asof) {
     boost::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
         "JPY-LIBOR-6M-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M"));
 
-    conventions_.add(swapEURConv);
-    conventions_.add(swapUSDConv);
-    conventions_.add(swapGBPConv);
-    conventions_.add(swapGBPLongConv);
-    conventions_.add(swapCHFConv);
-    conventions_.add(swapCHFLongConv);
-    conventions_.add(swapJPYConv);
+    conventions->add(swapEURConv);
+    conventions->add(swapUSDConv);
+    conventions->add(swapGBPConv);
+    conventions->add(swapGBPLongConv);
+    conventions->add(swapCHFConv);
+    conventions->add(swapCHFLongConv);
+    conventions->add(swapJPYConv);
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     // build discount
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.03);
@@ -385,6 +389,8 @@ boost::shared_ptr<ore::data::Conventions> TestConfigurationObjects::conv() {
     conventions->add(boost::make_shared<ore::data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<ore::data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 

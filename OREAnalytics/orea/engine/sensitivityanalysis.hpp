@@ -66,7 +66,7 @@ public:
         const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
         const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const Conventions& conventions,
+        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, 
         const bool recalibrateModels,
         const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
         const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
@@ -101,9 +101,6 @@ public:
 
     //! A getter for SensitivityScenarioData
     virtual const boost::shared_ptr<SensitivityScenarioData> sensitivityData() const { return sensitivityData_; }
-
-    //! A getter for Conventions
-    virtual const Conventions& conventions() const { return conventions_; }
 
     //! override shift tenors with sim market tenors
     void overrideTenors(const bool b) { overrideTenors_ = b; }
@@ -142,7 +139,6 @@ protected:
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
-    Conventions conventions_;
     bool recalibrateModels_;
     //! Optional curve configurations. Used in building the scenario sim market.
     ore::data::CurveConfigurations curveConfigs_;

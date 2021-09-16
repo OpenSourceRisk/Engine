@@ -82,9 +82,11 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
     // As of date
     Date asof(29, Jul, 2019);
 
-    Conventions conventions;
+    boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
     string filename = inputDir + "/conventions.xml";
-    conventions.fromFile(TEST_INPUT_FILE(filename));
+    conventions->fromFile(TEST_INPUT_FILE(filename));
+    InstrumentConventions::instance().conventions() = conventions;
+
     CurveConfigurations curveConfigs;
     filename = inputDir + "/" + curveConfigFile;
     curveConfigs.fromFile(TEST_INPUT_FILE(filename));
@@ -96,8 +98,7 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
 
     // Check commodity curve construction works
     boost::shared_ptr<CommodityCurve> curve;
-    BOOST_REQUIRE_NO_THROW(curve =
-                               boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, conventions));
+    BOOST_REQUIRE_NO_THROW(curve = boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs));
 
     return curve;
 }
@@ -106,6 +107,7 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
 
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
+    InstrumentConventions::instance().conventions() = conventions;
 
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));
@@ -117,7 +119,7 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
     auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/market.txt")),
                                                 TEST_INPUT_FILE(fixingsFile), false);
 
-    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
+    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }
 
 void checkCurve(const boost::shared_ptr<PriceTermStructure>& priceCurve, const map<Date, Real>& expectedValues) {
