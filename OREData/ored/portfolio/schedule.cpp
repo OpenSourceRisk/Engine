@@ -168,7 +168,7 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement) {
             ScheduleData& dsSchedData = ds.second;
             vector<string> baseNames = dsSchedData.baseScheduleNames();
             for (string& base : baseNames) {
-                const auto& derivedName = builtSchedules.find(base);
+                auto derivedName = builtSchedules.find(base);
                 if (derivedName != builtSchedules.end()) {
                     Schedule schedule;
                     schedule = makeSchedule(dsSchedData, openEndDateReplacement, builtSchedules);
@@ -341,7 +341,7 @@ Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplaceme
         schedules.push_back(makeSchedule(r, openEndDateReplacement));
     if (!baseSchedules.empty())
         for (auto& dv : data.derived()) {
-            const auto& baseSchedule = baseSchedules.find(dv.baseSchedule());
+            auto baseSchedule = baseSchedules.find(dv.baseSchedule());
             QL_REQUIRE(baseSchedule != baseSchedules.end(), "makeSchedule(): could not find base schedule \"" << dv.baseSchedule() << "\"");
             schedules.push_back(makeSchedule(dv, baseSchedule->second));
     }
