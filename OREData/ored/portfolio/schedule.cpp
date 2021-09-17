@@ -341,7 +341,7 @@ Schedule makeSchedule(const ScheduleData& data, const Date& openEndDateReplaceme
         schedules.push_back(makeSchedule(r, openEndDateReplacement));
     if (!baseSchedules.empty())
         for (auto& dv : data.derived()) {
-            auto& baseSchedule = baseSchedules.find(dv.baseSchedule());
+            const auto& baseSchedule = baseSchedules.find(dv.baseSchedule());
             QL_REQUIRE(baseSchedule != baseSchedules.end(), "makeSchedule(): could not find base schedule \"" << dv.baseSchedule() << "\"");
             schedules.push_back(makeSchedule(dv, baseSchedule->second));
     }
