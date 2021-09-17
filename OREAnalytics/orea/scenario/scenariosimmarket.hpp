@@ -120,7 +120,7 @@ class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
-                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
+                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                       const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
@@ -129,7 +129,7 @@ public:
                       const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
-                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
+                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                       const boost::shared_ptr<FixingManager>& fixingManager,
                       const std::string& configuration = Market::defaultConfiguration,
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),

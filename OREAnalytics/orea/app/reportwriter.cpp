@@ -30,13 +30,13 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
-#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/errors.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
-#include <qle/cashflows/overnightindexedcoupon.hpp>
-#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <stdio.h>
 
 using ore::data::to_string;
@@ -123,8 +123,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
 void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
                                  boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
                                  const bool includePastCashflows) {
+
     Date asof = Settings::instance().evaluationDate();
-    bool write_discount_factor = market ? true : false;
+
     LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
@@ -141,49 +142,15 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("AccruedAmount", double(), 4)
         .addColumn("fixingDate", Date())
         .addColumn("fixingValue", double(), 10)
-        .addColumn("Notional", double(), 4);
+        .addColumn("Notional", double(), 4)
+        .addColumn("DiscountFactor", double(), 10)
+        .addColumn("PresentValue", double(), 10)
+        .addColumn("FloorStrike", double(), 6)
+        .addColumn("CapStrike", double(), 6)
+        .addColumn("FloorVolatility", double(), 6)
+        .addColumn("CapVolatility", double(), 6);
 
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
-
-    bool hasCapsFloors = false;
-    for (Size k = 0; k < trades.size(); k++) {
-        const vector<Leg>& legs = trades[k]->legs();
-        for (size_t i = 0; i < legs.size(); i++) {
-            const QuantLib::Leg& leg = legs[i];
-            for (size_t j = 0; j < leg.size(); j++) {
-                boost::shared_ptr<QuantLib::CashFlow> flow = leg[j];
-                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(flow)) {
-                    hasCapsFloors = true;
-                    break;
-                }
-                // check this separately as it does not derive from CappedFlooredCoupon
-                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(flow)) {
-                    hasCapsFloors = true;
-                    break;
-                }
-                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(flow)) {
-                    hasCapsFloors = true;
-                    break;
-                }
-                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow)) {
-                    hasCapsFloors = true;
-                    break;
-                }
-            }
-        }        
-    }
-
-    if (write_discount_factor) {
-        report.addColumn("DiscountFactor", double(), 10);
-        report.addColumn("PresentValue", double(), 10);
-    }
-
-    if (hasCapsFloors && market) {
-        report.addColumn("FloorStrike", double(), 6);
-        report.addColumn("CapStrike", double(), 6);
-        report.addColumn("FloorVolatility", double(), 6);
-        report.addColumn("CapVolatility", double(), 6);
-    }
 
     for (Size k = 0; k < trades.size(); k++) {
 
@@ -197,7 +164,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         // if trade provides cashflows as additional results, we use that information instead of the legs
 
         bool useAdditionalResults = false;
-	boost::shared_ptr<QuantLib::Instrument> qlInstr;
+        boost::shared_ptr<QuantLib::Instrument> qlInstr;
         try {
             // trigger calculation before getting additional resuls, is a call to calculate() missing in
             // QuantLib::Instrument::additionalResults()?
@@ -221,7 +188,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     bool payer = trades[k]->legPayers()[i];
                     string ccy = trades[k]->legCurrencies()[i];
                     Handle<YieldTermStructure> discountCurve;
-                    if (write_discount_factor)
+                    if (market)
                         discountCurve = market->discountCurve(ccy, configuration);
                     for (size_t j = 0; j < leg.size(); j++) {
                         boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
@@ -297,7 +264,74 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
                             }
-                            Real effectiveAmount = amount * (amount == Null<Real>() ? 1.0 : multiplier);
+
+                            Real effectiveAmount = Null<Real>();
+                            Real discountFactor = Null<Real>();
+                            Real presentValue = Null<Real>();
+                            Real floorStrike = Null<Real>();
+                            Real capStrike = Null<Real>();
+                            Real floorVolatility = Null<Real>();
+                            Real capVolatility = Null<Real>();
+
+                            if (amount != Null<Real>())
+                                effectiveAmount = amount * multiplier;
+
+                            if (market) {
+                                discountFactor = ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
+				if(effectiveAmount != Null<Real>())
+				    presentValue = discountFactor * effectiveAmount;
+
+                                // scan for known capped / floored coupons and extract cap / floor strike and fixing
+                                // date
+
+                                // unpack stripped cap/floor coupon
+                                boost::shared_ptr<CashFlow> c = ptrFlow;
+                                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
+                                    c = tmp->underlying();
+                                }
+                                Date fixingDate;
+                                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                } else if (auto tmp =
+                                               boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                } else if (auto tmp =
+                                               boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
+                                    floorStrike = tmp->effectiveFloor();
+                                    capStrike = tmp->effectiveCap();
+                                    fixingDate = tmp->fixingDate();
+                                }
+
+                                // get market volaility for cap / floor - ORE only has one cf vol surface per currency,
+                                // so this is easy, but once we support tenor dependent cf vol surfaces we need to
+                                // refine the vol retrieval here as well.
+
+                                if (fixingDate != Date() && fixingDate > market->asofDate()) {
+                                    if (floorStrike != Null<Real>()) {
+                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                            floorVolatility =
+                                                market->swaptionVol(ccy, configuration)
+                                                    ->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
+                                        else
+                                            floorVolatility = market->capFloorVol(ccy, configuration)
+                                                                  ->volatility(fixingDate, floorStrike);
+                                    }
+                                    if (capStrike != Null<Real>()) {
+                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                            capVolatility =
+                                                market->swaptionVol(ccy, configuration)
+                                                    ->volatility(fixingDate, tmp->index()->tenor(), capStrike);
+                                        else
+                                            capVolatility = market->capFloorVol(ccy, configuration)
+                                                                ->volatility(fixingDate, capStrike);
+                                    }
+                                }
+                            }
+
                             report.next()
                                 .add(trades[k]->id())
                                 .add(trades[k]->tradeType())
@@ -314,63 +348,13 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(accruedAmount * (accruedAmount == Null<Real>() ? 1.0 : multiplier))
                                 .add(fixingDate)
                                 .add(fixingValue)
-                                .add(notional * (notional == Null<Real>() ? 1.0 : multiplier));
-
-                            if (write_discount_factor) {
-                                Real discountFactor =
-                                    ptrFlow->hasOccurred(asof) ? 0.0 : discountCurve->discount(payDate);
-                                report.add(discountFactor);
-                                Real presentValue = discountFactor * effectiveAmount;
-                                report.add(presentValue);
-                            }
-                            
-                            if (hasCapsFloors && market) {
-                                // scan for known capped / floored coupons and extract cap / floor strike and fixing date
-                                
-                                // unpack stripped cap/floor coupon
-                                boost::shared_ptr<CashFlow> c = ptrFlow;
-                                if (auto tmp = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(ptrFlow)) {
-                                    c = tmp->underlying();
-                                }
-                                Real floorStrike = Null<Real>(), capStrike = Null<Real>();
-                                Real floorVolatility = Null<Real>(), capVolatility = Null<Real>();
-                                Date fixingDate;
-                                if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
-                                    floorStrike = tmp->effectiveFloor();
-                                    capStrike = tmp->effectiveCap();
-                                    fixingDate = tmp->fixingDate();
-                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
-                                    floorStrike = tmp->effectiveFloor();
-                                    capStrike = tmp->effectiveCap();
-                                    fixingDate = tmp->fixingDate();
-                                } else if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
-                                    floorStrike = tmp->effectiveFloor();
-                                    capStrike = tmp->effectiveCap();
-                                    fixingDate = tmp->fixingDate();
-                                }
-                                
-                                // get market volaility for cap / floor - ORE only has one cf vol surface per currency,
-                                // so this is easy, but once we support tenor dependent cf vol surfaces we need to
-                                // refine the vol retrieval here as well. 
-                                
-                                if (fixingDate != Date() && fixingDate > market->asofDate()) {
-                                    if (floorStrike != Null<Real>()) {
-                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
-                                            floorVolatility = market->swaptionVol(ccy, configuration)->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
-                                        else
-                                            floorVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, floorStrike);
-                                    }
-                                    if (capStrike != Null<Real>()) {
-                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
-                                            capVolatility = market->swaptionVol(ccy, configuration)->volatility(fixingDate, tmp->index()->tenor(), capStrike);
-                                        else
-                                            capVolatility = market->capFloorVol(ccy, configuration)->volatility(fixingDate, capStrike);
-                                    }
-                                }
-
-                                report.add(floorStrike).add(capStrike).add(floorVolatility).add(capVolatility);
-                                
-                            }
+                                .add(notional * (notional == Null<Real>() ? 1.0 : multiplier))
+                                .add(discountFactor)
+                                .add(presentValue)
+                                .add(floorStrike)
+                                .add(capStrike)
+                                .add(floorVolatility)
+                                .add(capVolatility);
                         }
                     }
                 }
@@ -394,7 +378,37 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
                                 ccy = trades[k]->legCurrencies()[cf.legNumber];
                             }
-                            Real effectiveAmount = cf.amount * (cf.amount == Null<Real>() ? 1.0 : multiplier);
+
+                            Real effectiveAmount = Null<Real>();
+                            Real discountFactor = Null<Real>();
+                            Real presentValue = Null<Real>();
+                            Real floorStrike = Null<Real>();
+                            Real capStrike = Null<Real>();
+                            Real floorVolatility = Null<Real>();
+                            Real capVolatility = Null<Real>();
+
+                            if (cf.amount != Null<Real>())
+                                effectiveAmount = cf.amount * multiplier;
+                            if (cf.discountFactor != Null<Real>())
+                                discountFactor = cf.discountFactor;
+                            else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
+                                discountFactor =
+                                    cf.payDate < asof ? 0.0 : market->discountCurve(cf.currency)->discount(cf.payDate);
+                            }
+                            if (cf.presentValue != Null<Real>()) {
+                                presentValue = cf.presentValue * multiplier;
+                            } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
+                                presentValue = effectiveAmount * discountFactor;
+                            }
+                            if (cf.floorStrike != Null<Real>())
+                                floorStrike = cf.floorStrike;
+                            if (cf.capStrike != Null<Real>())
+                                capStrike = cf.capStrike;
+                            if (cf.floorVolatility != Null<Real>())
+                                floorVolatility = cf.floorVolatility;
+                            if (cf.capVolatility != Null<Real>())
+                                capVolatility = cf.capVolatility;
+
                             report.next()
                                 .add(trades[k]->id())
                                 .add(trades[k]->tradeType())
@@ -411,28 +425,13 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
                                 .add(cf.fixingDate)
                                 .add(cf.fixingValue)
-                                .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier));
-                            if (write_discount_factor) {
-                                Real discountFactor = 1.0;
-                                if (cf.discountFactor != Null<Real>()) {
-                                    discountFactor = cf.discountFactor;
-                                } else if (!cf.currency.empty() && cf.payDate != Null<Date>()) {
-                                    discountFactor = cf.payDate < asof
-                                                         ? 0.0
-                                                         : market->discountCurve(cf.currency)->discount(cf.payDate);
-                                }
-                                Real presentValue = effectiveAmount * discountFactor;
-                                if (cf.presentValue != Null<Real>()) {
-                                    presentValue = cf.presentValue * multiplier;
-                                }
-                                report.add(discountFactor).add(presentValue);
-                            }
-                            if (hasCapsFloors && market) {
-                                // add null values
-                                Real floorStrike = Null<Real>(), capStrike = Null<Real>();
-                                Real floorVolatility = Null<Real>(), capVolatility = Null<Real>();
-                                report.add(floorStrike).add(capStrike).add(floorVolatility).add(capVolatility);
-                            }
+                                .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier))
+                                .add(discountFactor)
+                                .add(presentValue)
+                                .add(floorStrike)
+                                .add(capStrike)
+                                .add(floorVolatility)
+                                .add(capVolatility);
                         }
                     }
                 }

@@ -57,7 +57,8 @@ struct TodaysMarketArguments {
 
         string filename = inputDir + "/" + conventionsFile;
         conventions->fromFile(TEST_INPUT_FILE(filename));
-
+        InstrumentConventions::instance().conventions() = conventions;
+        
         filename = inputDir + "/curveconfig.xml";
         curveConfigs->fromFile(TEST_INPUT_FILE(filename));
 
@@ -114,7 +115,7 @@ BOOST_DATA_TEST_CASE(testAuCpiZcInflationCurve, bdata::make(auCpiTestDates) * bd
     // Check that the market builds without error.
     boost::shared_ptr<TodaysMarket> market;
     BOOST_REQUIRE_NO_THROW(market = boost::make_shared<TodaysMarket>(tma.asof, tma.todaysMarketParameters,
-        tma.loader, tma.curveConfigs, tma.conventions, false, true, false));
+        tma.loader, tma.curveConfigs, false, true, false));
 
     // Portfolio containing 2 AU CPI zero coupon swaps, AUD 10M, that should price at 0, i.e. NPV < AUD 0.01.
     // Similar to the fixing file, the helpers on the release date depend on the publication roll setting.

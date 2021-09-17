@@ -206,7 +206,8 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
 
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.conventions)));
-
+    InstrumentConventions::instance().conventions() = conventions;
+    
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.curveConfig)));
 
@@ -216,7 +217,7 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
     auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + tmf.market)),
                                                 TEST_INPUT_FILE(string(inputDir + "/" + tmf.fixings)), false);
 
-    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
+    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }
 
 } // namespace

@@ -459,10 +459,10 @@ void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<Fixi
     }
 }
 
-void amendInflationFixingDates(map<string, set<Date>>& fixings, const boost::shared_ptr<Conventions>& conventions) {
+void amendInflationFixingDates(map<string, set<Date>>& fixings) {
     // Loop over indices and amend any that are of type InflationIndex
     for (auto& kv : fixings) {
-        auto p = isInflationIndex(kv.first, conventions);
+        auto p = isInflationIndex(kv.first);
         if (p.first) {
             // We have an inflation index
             set<Date> newDates;
@@ -484,13 +484,15 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings, const boost::sha
 }
 
 void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
-                          const Conventions& conventions, const Period& iborLookback, const Period& oisLookback,
+                          const Period& iborLookback, const Period& oisLookback,
                           const Period& bmaLookback, const Period& inflationLookback, const string& configuration) {
 
     if (mktParams.hasConfiguration(configuration)) {
 
         LOG("Start adding market fixing dates for configuration '" << configuration << "'");
 
+        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        
         // If there are ibor indices in the market parameters, add the lookback fixings
         // IF there are SIFMA / BMA indices, add lookback fixings for the Libor basis index
         if (mktParams.hasMarketObject(MarketObject::IndexCurve)) {
@@ -524,7 +526,7 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
                         iborDates = generateLookbackDates(iborLookback, calendar);
                     }
                     std::set<string> liborNames;
-                    for (auto const& c : conventions.get(Convention::Type::BMABasisSwap)) {
+                    for (auto const& c : conventions->get(Convention::Type::BMABasisSwap)) {
                         auto bma = boost::dynamic_pointer_cast<BMABasisSwapConvention>(c);
                         QL_REQUIRE(
                             bma, "internal error, could not cast to BMABasisSwapConvention in addMarketFixingDates()");
@@ -617,11 +619,11 @@ void addMarketFixingDates(map<string, set<Date>>& fixings, const TodaysMarketPar
             for (const auto& kv : mktParams.mapping(MarketObject::CommodityCurve, configuration)) {
 
                 boost::shared_ptr<CommodityFutureConvention> cfc;
-                if (conventions.has(kv.first)) {
-                    cfc = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions.get(kv.first));
+                if (conventions->has(kv.first)) {
+                    cfc = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(kv.first));
                 }
 
-                auto commIdx = parseCommodityIndex(kv.first, conventions, false);
+                auto commIdx = parseCommodityIndex(kv.first, false);
                 if (cfc) {
                     if (auto oppIdx = boost::dynamic_pointer_cast<OffPeakPowerIndex>(commIdx)) {
                         DLOG("Commodity " << kv.first << " is off-peak power so adding underlying daily contracts.");

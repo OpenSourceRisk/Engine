@@ -57,6 +57,7 @@ struct TodaysMarketArguments {
 
         string filename = "conventions.xml";
         conventions->fromFile(TEST_INPUT_FILE(filename));
+        InstrumentConventions::instance().conventions() = conventions;
 
         filename = curveconfigFile;
         curveConfigs->fromFile(TEST_INPUT_FILE(filename));
@@ -98,9 +99,9 @@ BOOST_AUTO_TEST_CASE(testFxVolWildCards) {
 
         // Check that the market builds without error.
         boost::shared_ptr<TodaysMarket> market_full = boost::make_shared<TodaysMarket>(tma_full.asof, tma_full.todaysMarketParameters,
-            tma_full.loader, tma_full.curveConfigs, tma_full.conventions, false, true, false);
+            tma_full.loader, tma_full.curveConfigs, false, true, false);
         boost::shared_ptr<TodaysMarket> market_wc = boost::make_shared<TodaysMarket>(tma_wc.asof, tma_wc.todaysMarketParameters,
-            tma_wc.loader, tma_wc.curveConfigs, tma_wc.conventions, false, true, false);
+            tma_wc.loader, tma_wc.curveConfigs, false, true, false);
 
         // Portfolio containing 2 AU CPI zero coupon swaps, AUD 10M, that should price at 0, i.e. NPV < AUD 0.01.
         // Similar to the fixing file, the helpers on the release date depend on the publication roll setting.
