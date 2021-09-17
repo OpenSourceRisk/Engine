@@ -90,6 +90,8 @@ boost::shared_ptr<data::Conventions> convs() {
         new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(swapConv);
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 
@@ -246,8 +248,8 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
 
-    Conventions conventions = *convs();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    convs();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
     // Basic Martingale tests

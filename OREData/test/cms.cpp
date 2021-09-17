@@ -60,13 +60,18 @@ public:
             "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
         iborIndices_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = hEUR;
 
+        boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
+        
         // add swap index
         boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
             "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
-        conventions_.add(swapEURConv);
+        conventions->add(swapEURConv);
         boost::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
             new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
-        conventions_.add(swapIndexEURLongConv);
+        conventions->add(swapIndexEURLongConv);
+
+        InstrumentConventions::instance().conventions() = conventions;
+        
         addSwapIndex("EUR-CMS-30Y", "EUR-EURIBOR-6M", Market::defaultConfiguration);
     }
 

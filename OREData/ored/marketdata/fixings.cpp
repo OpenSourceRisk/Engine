@@ -38,7 +38,7 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::Conventions>& conventions) {
+void applyFixings(const vector<Fixing>& fixings) {
     
     QuantExt::SavedObservableSettings savedObservableSettings;
     ObservableSettings::instance().disableUpdates(true);
@@ -50,7 +50,7 @@ void applyFixings(const vector<Fixing>& fixings, const boost::shared_ptr<data::C
         try {
             auto it = cache.find(f.name);
             if (it == cache.end()) {
-                index = parseIndex(f.name, conventions);
+                index = parseIndex(f.name);
                 cache[f.name] = index;
             } else {
                 index = it->second;

@@ -153,13 +153,14 @@ class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions> 
     friend class QuantLib::Singleton<InstrumentConventions>;
 
 private:
-    InstrumentConventions() : conventions_() {}
+    // may be empty but never uninitialised
+    InstrumentConventions() : conventions_(boost::make_shared<ore::data::Conventions>()) {}
 
-    ore::data::Conventions conventions_;
+    boost::shared_ptr<ore::data::Conventions> conventions_;
 
 public:
-    const ore::data::Conventions& conventions() const { return conventions_; }
-    ore::data::Conventions& conventions() { return conventions_; }
+    const boost::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
+    boost::shared_ptr<ore::data::Conventions>& conventions() { return conventions_; }
 };
     
 //! Container for storing Zero Rate conventions
@@ -293,15 +294,13 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    FutureConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit FutureConvention(const Conventions* conventions) : conventions_(conventions) {}
+    FutureConvention() {}
     //! Index based constructor
-    FutureConvention(const string& id, const string& index, const Conventions* conventions = nullptr);
+    FutureConvention(const string& id, const string& index);
     //! Index based constructor taking in addition a netting type for ON indices and a date generation rule
     FutureConvention(const string& id, const string& index,
                      const QuantLib::RateAveraging::Type overnightIndexFutureNettingType,
-                     const DateGenerationRule dateGeneration, const Conventions* conventions = nullptr);
+                     const DateGenerationRule dateGeneration);
     //@}
     //! \name Inspectors
     //@{
@@ -322,7 +321,6 @@ private:
     boost::shared_ptr<IborIndex> index_;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType_;
     DateGenerationRule dateGenerationRule_;
-    const Conventions* conventions_;
 };
 
 //! Container for storing Forward rate Agreement conventions
@@ -334,11 +332,9 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    FraConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit FraConvention(const Conventions* conventions) : conventions_(conventions) {}
+    FraConvention() {}
     //! Index based constructor
-    FraConvention(const string& id, const string& index, const Conventions* conventions = nullptr);
+    FraConvention(const string& id, const string& index);
     //@}
 
     //! \name Inspectors
@@ -357,7 +353,6 @@ public:
 private:
     string strIndex_;
     boost::shared_ptr<IborIndex> index_;
-    const Conventions* conventions_;
 };
 
 //! Container for storing Overnight Index Swap conventions
@@ -369,15 +364,12 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    OisConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit OisConvention(const Conventions* conventions) : conventions_(conventions) {}
+    OisConvention() {}
     //! Detailed constructor
     OisConvention(const string& id, const string& spotLag, const string& index, const string& fixedDayCounter,
                   const string& paymentLag = "", const string& eom = "", const string& fixedFrequency = "",
                   const string& fixedConvention = "", const string& fixedPaymentConvention = "",
-                  const string& rule = "", const std::string& paymentCalendar = "",
-                  const Conventions* conventions = nullptr);
+                  const string& rule = "", const std::string& paymentCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -425,8 +417,6 @@ private:
     string strFixedPaymentConvention_;
     string strRule_;
     std::string strPaymentCal_;
-
-    const Conventions* conventions_;
 };
 
 //! Container for storing Ibor Index conventions
@@ -512,14 +502,12 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    IRSwapConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit IRSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
+    IRSwapConvention() {}
     //! Detailed constructor
     IRSwapConvention(const string& id, const string& fixedCalendar, const string& fixedFrequency,
                      const string& fixedConvention, const string& fixedDayCounter, const string& index,
                      bool hasSubPeriod = false, const string& floatFrequency = "",
-                     const string& subPeriodsCouponType = "", const Conventions* conventions = nullptr);
+                     const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
@@ -561,8 +549,6 @@ private:
     string strIndex_;
     string strFloatFrequency_;
     string strSubPeriodsCouponType_;
-
-    const Conventions* conventions_;
 };
 
 //! Container for storing Average OIS conventions
@@ -574,14 +560,12 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    AverageOisConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit AverageOisConvention(const Conventions* conventions) : conventions_(conventions) {}
+    AverageOisConvention() {}
     //! Detailed constructor
     AverageOisConvention(const string& id, const string& spotLag, const string& fixedTenor,
                          const string& fixedDayCounter, const string& fixedCalendar, const string& fixedConvention,
                          const string& fixedPaymentConvention, const string& index, const string& onTenor,
-                         const string& rateCutoff, const Conventions* conventions = nullptr);
+                         const string& rateCutoff);
     //@}
 
     //! \name Inspectors
@@ -625,8 +609,6 @@ private:
     string strIndex_;
     string strOnTenor_;
     string strRateCutoff_;
-
-    const Conventions* conventions_;
 };
 
 //! Container for storing Tenor Basis Swap conventions
@@ -638,14 +620,11 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    TenorBasisSwapConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit TenorBasisSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
+    TenorBasisSwapConvention() {}
     //! Detailed constructor
     TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
                              const string& shortPayTenor = "", const string& spreadOnShort = "",
-                             const string& includeSpread = "", const string& subPeriodsCouponType = "",
-                             const Conventions* conventions = nullptr);
+                             const string& includeSpread = "", const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
@@ -682,8 +661,6 @@ private:
     string strSpreadOnShort_;
     string strIncludeSpread_;
     string strSubPeriodsCouponType_;
-
-    const Conventions* conventions_;
 };
 
 //! Container for storing conventions for Tenor Basis Swaps quoted as a spread of two interest rate swaps
@@ -695,16 +672,13 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    TenorBasisTwoSwapConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit TenorBasisTwoSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
+    TenorBasisTwoSwapConvention() {}
     //! Detailed constructor
     TenorBasisTwoSwapConvention(const string& id, const string& calendar, const string& longFixedFrequency,
                                 const string& longFixedConvention, const string& longFixedDayCounter,
                                 const string& longIndex, const string& shortFixedFrequency,
                                 const string& shortFixedConvention, const string& shortFixedDayCounter,
-                                const string& shortIndex, const string& longMinusShort = "",
-                                const Conventions* conventions = nullptr);
+                                const string& shortIndex, const string& longMinusShort = "");
     //@}
 
     //! \name Inspectors
@@ -751,8 +725,6 @@ private:
     string strShortFixedDayCounter_;
     string strShortIndex_;
     string strLongMinusShort_;
-
-    const Conventions* conventions_;
 };
 
 //! Container for storing Libor-BMA Basis Swap conventions
@@ -764,12 +736,9 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    BMABasisSwapConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit BMABasisSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
+    BMABasisSwapConvention() {}
     //! Detailed constructor
-    BMABasisSwapConvention(const string& id, const string& liborIndex, const string& bmaIndex,
-                           const Conventions* conventions = nullptr);
+    BMABasisSwapConvention(const string& id, const string& liborIndex, const string& bmaIndex);
     //@}
 
     //! \name Inspectors
@@ -794,8 +763,6 @@ private:
     // Strings to store the inputs
     string strLiborIndex_;
     string strBmaIndex_;
-
-    const Conventions* conventions_;
 };
 
 //! Container for storing FX Spot quote conventions
@@ -856,9 +823,7 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossCcyBasisSwapConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit CrossCcyBasisSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
+    CrossCcyBasisSwapConvention() {}
     //! Detailed constructor
     CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays, const string& strSettlementCalendar,
                                 const string& strRollConvention, const string& flatIndex, const string& spreadIndex,
@@ -972,16 +937,14 @@ public:
     //! \name Constructors
     //@{
     //! Default constructor
-    CrossCcyFixFloatSwapConvention() : conventions_(nullptr) {}
-    //! Constructor taking conventions only
-    explicit CrossCcyFixFloatSwapConvention(const Conventions* conventions) : conventions_(conventions) {}
+    CrossCcyFixFloatSwapConvention() {}
     //! Detailed constructor
     CrossCcyFixFloatSwapConvention(const std::string& id, const std::string& settlementDays,
                                    const std::string& settlementCalendar, const std::string& settlementConvention,
                                    const std::string& fixedCurrency, const std::string& fixedFrequency,
                                    const std::string& fixedConvention, const std::string& fixedDayCounter,
                                    const std::string& index, const std::string& eom = "",
-                                   const Conventions* conventions = nullptr, const std::string& strIsResettable = "",
+                                   const std::string& strIsResettable = "",
                                    const std::string& strFloatIndexIsResettable = "");
     //@}
 
@@ -1035,7 +998,6 @@ private:
     std::string strIndex_;
     std::string strEom_;
 
-    const Conventions* conventions_;
     std::string strIsResettable_;
     std::string strFloatIndexIsResettable_;
 };
@@ -1112,13 +1074,12 @@ public:
         AfterPublicationDate
     };
 
-    InflationSwapConvention(const boost::shared_ptr<Conventions>& conventions = nullptr);
+    InflationSwapConvention();
 
     InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
                             const string& strDayCounter, const string& strIndex, const string& strInterpolated,
                             const string& strObservationLag, const string& strAdjustInfObsDates,
                             const string& strInfCalendar, const string& strInfConvention,
-                            const boost::shared_ptr<Conventions>& conventions = nullptr,
                             PublicationRoll publicationRoll = PublicationRoll::None,
                             const boost::shared_ptr<ScheduleData>& publicationScheduleData = nullptr);
 
@@ -1161,7 +1122,6 @@ private:
     string strAdjustInfObsDates_;
     string strInfCalendar_;
     string strInfConvention_;
-    boost::shared_ptr<Conventions> conventions_;
     PublicationRoll publicationRoll_;
     boost::shared_ptr<ScheduleData> publicationScheduleData_;
 };

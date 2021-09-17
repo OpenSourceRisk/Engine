@@ -88,9 +88,6 @@ public:
         // TODO shared_ptr or ref?
         //! Market data loader
         const Loader& loader,
-        // TODO shared_ptr or ref?
-        //! Repository of market conventions for building bootstrap helpers
-        const Conventions& conventions,
         //! Map of underlying yield curves if required
         const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves =
             map<string, boost::shared_ptr<YieldCurve>>(),
@@ -129,7 +126,6 @@ private:
 
     // TODO: const refs for now, only used during ctor
     const Loader& loader_;
-    const Conventions& conventions_;
     RelinkableHandle<YieldTermStructure> h_;
     boost::shared_ptr<YieldTermStructure> p_;
     boost::shared_ptr<YieldCurveCalibrationInfo> calibrationInfo_;

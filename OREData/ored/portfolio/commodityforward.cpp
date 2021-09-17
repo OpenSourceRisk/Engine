@@ -67,7 +67,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     maturity_ = parseDate(maturityDate_);
-    bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions().has(commodityName_, Convention::Type::CommodityFuture);
+    bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
         // Get the commodity index from the market.

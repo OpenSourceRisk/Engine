@@ -54,6 +54,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
     Graph& g = dependencies_[configuration];
     IndexMap index = boost::get(boost::vertex_index, g);
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
 
     // add the vertices
     std::set<MarketObject> t = getMarketObjectTypes(); // from todaysmarket parameter
@@ -213,9 +214,9 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::SwapIndexCurve) {
             bool foundIbor = false, foundDiscount = false;
             std::string swapIndex = g[*v].name;
-            auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions_->get(swapIndex));
+            auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
             QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << swapIndex);
-            auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions_->get(swapCon->conventions()));
+            auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
             QL_REQUIRE(con, "Cannot find IRSwapConventions " << swapCon->conventions());
             std::string iborIndex = con->indexName();
             std::string discountIndex = g[*v].mapping;
