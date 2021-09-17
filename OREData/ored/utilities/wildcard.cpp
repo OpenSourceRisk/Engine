@@ -36,58 +36,59 @@ namespace data {
 
 using namespace std;
 
-Wildcard::Wildcard(const std::string& inputString, const bool usePrefixes, const bool aggressivePrefixes)
-    : inputString_(inputString), usePrefixes_(usePrefixes), aggressivePrefixes_(aggressivePrefixes) {
+Wildcard::Wildcard(const std::string& pattern, const bool usePrefixes, const bool aggressivePrefixes)
+    : pattern_(pattern), usePrefixes_(usePrefixes), aggressivePrefixes_(aggressivePrefixes) {
 
-    std::size_t wildCardPos = inputString_.find("*");
+    std::size_t wildCardPos = pattern_.find("*");
 
     if (wildCardPos == std::string::npos)
         return;
 
     hasWildCard_ = true;
 
-    if (usePrefixes && (aggressivePrefixes || wildCardPos == inputString_.size() - 1)) {
-        prefixString_ = inputString_.substr(0, wildCardPos);
+    if (usePrefixes && (aggressivePrefixes || wildCardPos == pattern_.size() - 1)) {
+        prefixString_ = pattern_.substr(0, wildCardPos);
     } else {
-        regexString_ = inputString_;
+        regexString_ = pattern_;
         static std::vector<std::string> specialChars = {"\\", ".", "+", "?", "^", "$", "(",
                                                         ")",  "[", "]", "{", "}", "|"};
         for (auto const& c : specialChars) {
-            boost::replace_all(regexString_, c, "\\" + c);
+            boost::replace_all(*regexString_, c, "\\" + c);
         }
-        boost::replace_all(regexString_, "*", ".*");
+        boost::replace_all(*regexString_, "*", ".*");
     }
 }
 
 bool Wildcard::hasWildcard() const { return hasWildCard_; }
 
-bool Wildcard::isPrefix() const { return !prefixString_.empty(); }
+bool Wildcard::isPrefix() const { return prefixString_ ? true : false; }
 
 bool Wildcard::matches(const std::string& s) const {
-    if (!prefixString_.empty()) {
-        return s.substr(0, prefixString_.size()) == prefixString_;
-    } else if (!regexString_.empty()) {
+    if (prefixString_) {
+        return s.substr(0, (*prefixString_).size()) == (*prefixString_);
+    } else if (regexString_) {
         if (regex_ == nullptr)
-            regex_ = boost::make_shared<std::regex>(regexString_);
+            regex_ = boost::make_shared<std::regex>(*regexString_);
         return std::regex_match(s, *regex_);
     } else {
-        return s == inputString_;
+        return s == pattern_;
     }
 }
 
+const std::string& Wildcard::pattern() const { return pattern_; }
+
 const std::string& Wildcard::regex() const {
-    QL_REQUIRE(!regexString_.empty(), "string '" << inputString_ << "' is not a regex (usePrefixes = " << std::boolalpha
-                                                 << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
-                                                 << ", isPrefix = " << !prefixString_.empty() << ")");
-    return regexString_;
+    QL_REQUIRE(regexString_, "string '" << pattern_ << "' is not a regex (usePrefixes = " << std::boolalpha
+                                        << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
+                                        << ", isPrefix = " << !prefixString_ << ")");
+    return *regexString_;
 }
 
 const std::string& Wildcard::prefix() const {
-    QL_REQUIRE(!prefixString_.empty(), "string '" << inputString_
-                                                  << "' is not a prefix (usePrefixes = " << std::boolalpha
-                                                  << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
-                                                  << ", isRegex = " << !regexString_.empty() << ")");
-    return prefixString_;
+    QL_REQUIRE(prefixString_, "string '" << pattern_ << "' is not a prefix (usePrefixes = " << std::boolalpha
+                                         << usePrefixes_ << ", aggressivePrefixes = " << aggressivePrefixes_
+                                         << ", isRegex = " << !regexString_ << ")");
+    return *prefixString_;
 }
 
 void partitionQuotes(const set<string>& quoteNames, set<string>& names, set<string>& regexes) {
