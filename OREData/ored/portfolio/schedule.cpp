@@ -168,7 +168,7 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement) {
             ScheduleData& dsSchedData = ds.second;
             vector<string> baseNames = dsSchedData.baseScheduleNames();
             for (string& base : baseNames) {
-                auto& derivedName = builtSchedules.find(base);
+                const auto& derivedName = builtSchedules.find(base);
                 if (derivedName != builtSchedules.end()) {
                     Schedule schedule;
                     schedule = makeSchedule(dsSchedData, openEndDateReplacement, builtSchedules);
