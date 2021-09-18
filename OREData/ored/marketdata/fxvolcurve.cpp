@@ -711,7 +711,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 DLOG(e);
             }
         } else {
-            DLOG("expiry wildcard is used: " << (*expiriesWildcard_).regex());
+            DLOG("expiry wildcard is used: " << (*expiriesWildcard_).pattern());
         }
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated || expiriesWildcard_ ||
