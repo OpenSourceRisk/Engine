@@ -144,6 +144,8 @@ IndexedCouponLeg::operator Leg() const {
         }
 
         fixingDate = fixingCalendar_.advance(fixingDate, -static_cast<int>(fixingDays_), Days, fixingConvention_);
+	if(index_ != nullptr)
+	    fixingDate = fixingCalendar_.adjust(fixingDate, Preceding);
 
         if (firstValuationDate && initialFixing_ != Null<Real>()) {
             resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_));
