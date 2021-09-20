@@ -744,11 +744,20 @@ CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(
     const string& id, const string& strSettlementDays, const string& strSettlementCalendar,
     const string& strRollConvention, const string& flatIndex, const string& spreadIndex, const string& strEom,
     const string& strIsResettable, const string& strFlatIndexIsResettable, const string& strFlatTenor,
-    const string& strSpreadTenor)
+    const string& strSpreadTenor, const string& strPaymentLag, const string& strFlatPaymentLag,
+    const string& strIncludeSpread, const string& strLookback, const string& strFixingDays, const string& strRateCutoff,
+    const string& strIsAveraged, const string& strFlatIncludeSpread, const string& strFlatLookback,
+    const string& strFlatFixingDays, const string& strFlatRateCutoff, const string& strFlatIsAveraged,
+    const Conventions* conventions)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
       strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
       strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable),
-      strFlatIndexIsResettable_(strFlatIndexIsResettable), strFlatTenor_(strFlatTenor), strSpreadTenor_(strSpreadTenor) {
+      strFlatIndexIsResettable_(strFlatIndexIsResettable), strFlatTenor_(strFlatTenor), strSpreadTenor_(strSpreadTenor),
+      strPaymentLag_(strPaymentLag), strFlatPaymentLag_(strFlatPaymentLag), strIncludeSpread_(strIncludeSpread),
+      strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
+      strIsAveraged_(strIsAveraged), strFlatIncludeSpread_(strFlatIncludeSpread), strFlatLookback_(strFlatLookback),
+      strFlatFixingDays_(strFlatFixingDays), strFlatRateCutoff_(strFlatRateCutoff),
+      strFlatIsAveraged_(strFlatIsAveraged), conventions_(conventions) {
     build();
 }
 
@@ -763,6 +772,34 @@ void CrossCcyBasisSwapConvention::build() {
     flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
     flatTenor_ = strFlatTenor_.empty() ? flatIndex_->tenor() : parsePeriod(strFlatTenor_);
     spreadTenor_ = strSpreadTenor_.empty() ? spreadIndex_->tenor() : parsePeriod(strSpreadTenor_);
+
+    paymentLag_ = flatPaymentLag_ = 0;
+    if (!strPaymentLag_.empty())
+        paymentLag_ = parseInteger(strPaymentLag_);
+    if (!strFlatPaymentLag_.empty())
+        flatPaymentLag_ = parseInteger(strFlatPaymentLag_);
+
+    // only OIS
+    if (!strIncludeSpread_.empty())
+        includeSpread_ = parseBool(strIncludeSpread_);
+    if (!strLookback_.empty())
+        lookback_ = parsePeriod(strLookback_);
+    if (!strFixingDays_.empty())
+        fixingDays_ = parseInteger(strFixingDays_);
+    if (!strRateCutoff_.empty())
+        rateCutoff_ = parseInteger(strRateCutoff_);
+    if (!strIsAveraged_.empty())
+        isAveraged_ = parseBool(strIsAveraged_);
+    if (!strFlatIncludeSpread_.empty())
+        flatIncludeSpread_ = parseBool(strFlatIncludeSpread_);
+    if (!strFlatLookback_.empty())
+        flatLookback_ = parsePeriod(strFlatLookback_);
+    if (!strFlatFixingDays_.empty())
+        flatFixingDays_ = parseInteger(strFlatFixingDays_);
+    if (!strFlatRateCutoff_.empty())
+        flatRateCutoff_ = parseInteger(strFlatRateCutoff_);
+    if (!strFlatIsAveraged_.empty())
+        flatIsAveraged_ = parseBool(strFlatIsAveraged_);
 }
 
 void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
@@ -783,6 +820,23 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strFlatTenor_ = XMLUtils::getChildValue(node, "FlatTenor", false);
     strSpreadTenor_ = XMLUtils::getChildValue(node, "SpreadTenor", false);
 
+    strPaymentLag_ = XMLUtils::getChildValue(node, "SpreadPaymentLag", false);
+    strFlatPaymentLag_ = XMLUtils::getChildValue(node, "FlatPaymentLag", false);
+
+    // OIS specific conventions
+
+    strIncludeSpread_ = XMLUtils::getChildValue(node, "SpreadIncludeSpread", false);
+    strLookback_ = XMLUtils::getChildValue(node, "SpreadLookback", false);
+    strFixingDays_ = XMLUtils::getChildValue(node, "SpreadFixingDays", false);
+    strRateCutoff_ = XMLUtils::getChildValue(node, "SpreadRateCutoff", false);
+    strIsAveraged_ = XMLUtils::getChildValue(node, "SpreadIsAveraged", false);
+
+    strFlatIncludeSpread_ = XMLUtils::getChildValue(node, "FlatIncludeSpread", false);
+    strFlatLookback_ = XMLUtils::getChildValue(node, "FlatLookback", false);
+    strFlatFixingDays_ = XMLUtils::getChildValue(node, "FlatFixingDays", false);
+    strFlatRateCutoff_ = XMLUtils::getChildValue(node, "FlatRateCutoff", false);
+    strFlatIsAveraged_ = XMLUtils::getChildValue(node, "FlatIsAveraged", false);
+
     build();
 }
 
@@ -800,6 +854,31 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FlatIndexIsResettable", strFlatIndexIsResettable_);
     XMLUtils::addChild(doc, node, "FlatTenor", strFlatTenor_);
     XMLUtils::addChild(doc, node, "SpreadTenor", strSpreadTenor_);
+
+    XMLUtils::addChild(doc, node, "PaymentLag", strPaymentLag_);
+    XMLUtils::addChild(doc, node, "FlatPaymentLag", strFlatPaymentLag_);
+
+    if (!strIncludeSpread_.empty())
+        XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
+    if (!strLookback_.empty())
+        XMLUtils::addChild(doc, node, "Lookback", strLookback_);
+    if (!strFixingDays_.empty())
+        XMLUtils::addChild(doc, node, "FixingDays", strFixingDays_);
+    if (!strRateCutoff_.empty())
+        XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
+    if (!strIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "IsAveraged", strIsAveraged_);
+
+    if (!strFlatIncludeSpread_.empty())
+        XMLUtils::addChild(doc, node, "FlatIncludeSpread", strFlatIncludeSpread_);
+    if (!strFlatLookback_.empty())
+        XMLUtils::addChild(doc, node, "FlatLookback", strFlatLookback_);
+    if (!strFlatFixingDays_.empty())
+        XMLUtils::addChild(doc, node, "FlatFixingDays", strFlatFixingDays_);
+    if (!strFlatRateCutoff_.empty())
+        XMLUtils::addChild(doc, node, "FlatRateCutoff", strFlatRateCutoff_);
+    if (!strFlatIsAveraged_.empty())
+        XMLUtils::addChild(doc, node, "FlatIsAveraged", strFlatIsAveraged_);
 
     return node;
 }

@@ -1180,6 +1180,15 @@
     <ClInclude Include="qle\time\dateutilities.hpp">
       <Filter>time</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\ireland.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\cyprus.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\greece.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2011,6 +2020,15 @@
     </ClCompile>
     <ClCompile Include="qle\time\dateutilities.cpp">
       <Filter>time</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\ireland.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\cyprus.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\greece.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
