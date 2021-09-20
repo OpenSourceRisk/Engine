@@ -40,8 +40,11 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/cyprus.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/greece.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
@@ -199,7 +202,10 @@ Calendar parseCalendar(const string& s, const string& newName) {
         // Country full name to Settlement/Default
         {"Australia", Australia()},
         {"Canada", Canada()},
+        {"Cyprus", Cyprus()},
         {"Denmark", Denmark()},
+        {"Greece", Greece()},
+        {"Ireland", Ireland()},
         {"Japan", Japan()},
         {"Norway", Norway()},
         {"Switzerland", QuantExt::Switzerland()},
@@ -235,13 +241,17 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"CL", Chile()},
         {"CN", China()},
         {"CO", Colombia()},
+        {"CY", Cyprus()},
         {"CZ", CzechRepublic()},
         {"DK", Denmark()},
         {"FI", Finland()},
         {"FR", QuantExt::France()},
+        {"GR", Greece()},
         {"DE", Germany(Germany::Settlement)},
         {"HK", HongKong()},
         {"HU", Hungary()},
+        {"IE", Ireland()},
+        {"IE-BankHolidays", Ireland(Ireland::BankHolidays)},
         {"IS", Iceland()},
         {"IN", India()},
         {"ID", Indonesia()},
@@ -285,14 +295,18 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"CHL", Chile()},
         {"CHN", China()},
         {"COL", Colombia()},
+        {"CYP", Cyprus()},
         {"CZE", CzechRepublic()},
         {"DNK", Denmark()},
         {"FIN", Finland()},
+        {"GRC", Greece()},
         //{"FRA", QuantExt::France()},
         {"DEU", Germany(Germany::Settlement)},
         {"HKG", HongKong()},
         {"HUN", Hungary()},
         {"ISL", Iceland()},
+        {"IRL", Ireland()},
+        {"IRL-BankHolidays", Ireland(Ireland::BankHolidays)},
         {"IND", India()},
         {"IDN", Indonesia()},
         {"ISR", QuantLib::Israel()},
