@@ -167,18 +167,16 @@ void ScheduleBuilder::makeSchedules(const Date& openEndDateReplacement) {
             string dsName = ds.first;
             ScheduleData& dsSchedData = ds.second;
             vector<string> baseNames = dsSchedData.baseScheduleNames();
-            for (string& base : baseNames) {
-                const auto& derivedName = builtSchedules.find(base);
-                if (derivedName != builtSchedules.end()) {
-                    Schedule schedule;
-                    schedule = makeSchedule(dsSchedData, openEndDateReplacement, builtSchedules);
-                    schedules_.find(dsName)->second.second = schedule;
-                    builtSchedules[dsName] = schedule;
-                    derivedSchedules.erase(dsName);
-                    calculated = true;
-                    break;
-                }
+            for (string& bn : baseNames) {
+                QL_REQUIRE(builtSchedules.find(bn) != builtSchedules.end(), "Could not find base schedule \" " << bn << "\" for derived schedule \" " << dsName << "\"");
             }
+            Schedule schedule;
+            schedule = makeSchedule(dsSchedData, openEndDateReplacement, builtSchedules);
+            schedules_.find(dsName)->second.second = schedule;
+            builtSchedules[dsName] = schedule;
+            derivedSchedules.erase(dsName);
+            calculated = true;
+            break;
         }
 
         // If we go through the whole list without having built a schedule, then assume that we cannot build them
