@@ -225,7 +225,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             if (wildcard) {
                 QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM, 
                     "CorrelationCurve: Wildcards only supported for curve dimension ATM");
-                LOG("Have single quote with pattern " << (*wildcard).regex());
+                LOG("Have single quote with pattern " << (*wildcard).pattern());
 
                 // Loop over quotes and process commodity option quotes matching pattern on asof
                 for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {

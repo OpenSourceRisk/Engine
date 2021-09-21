@@ -97,7 +97,8 @@ struct RandomVariable {
     // modifiers
     void clear();
     void set(const Size i, const Real v);
-    void setTime(const Real time) { time_ = time; }
+    // all negative times are treated as 0 ( = deterministic value )
+    void setTime(const Real time) { time_ = std::max(time, 0.0); }
 
     void setAll(const Real v);
     // inspectors
