@@ -151,7 +151,11 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         string marginCallFreqStr, marginPostFreqStr;
         if (XMLNode* freqChild = XMLUtils::getChildNode(csaChild, "MarginingFrequency")) {
             marginCallFreqStr = XMLUtils::getChildValue(freqChild, "CallFrequency", false);
+            if (marginCallFreqStr.empty())
+                marginCallFreqStr = "1D";
             marginPostFreqStr = XMLUtils::getChildValue(freqChild, "PostFrequency", false);
+            if (marginPostFreqStr.empty())
+                marginPostFreqStr = "1D";
         }
         string iaType;
         Real iaHeld;
