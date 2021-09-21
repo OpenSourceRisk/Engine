@@ -205,7 +205,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"Cyprus", Cyprus()},
         {"Denmark", Denmark()},
         {"Greece", Greece()},
-        {"Ireland", Ireland()},
+        {"Ireland", Ireland(Ireland::BankHolidays)},
         {"Japan", Japan()},
         {"Norway", Norway()},
         {"Switzerland", QuantExt::Switzerland()},
@@ -250,8 +250,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"DE", Germany(Germany::Settlement)},
         {"HK", HongKong()},
         {"HU", Hungary()},
-        {"IE", Ireland()},
-        {"IE-BankHolidays", Ireland(Ireland::BankHolidays)},
+        {"IE", Ireland(Ireland::BankHolidays)},
         {"IS", Iceland()},
         {"IN", India()},
         {"ID", Indonesia()},
@@ -305,8 +304,8 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"HKG", HongKong()},
         {"HUN", Hungary()},
         {"ISL", Iceland()},
-        {"IRL", Ireland()},
-        {"IRL-BankHolidays", Ireland(Ireland::BankHolidays)},
+        
+        {"IRL", Ireland(Ireland::BankHolidays)},
         {"IND", India()},
         {"IDN", Indonesia()},
         {"ISR", QuantLib::Israel()},
@@ -449,6 +448,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
         {"XLME", UnitedKingdom(UnitedKingdom::Metals)},
         {"XNYS", UnitedStates(UnitedStates::NYSE)},
+        {"XDUB", Ireland()},
 
         // Other / Legacy
         {"DEN", Denmark()}, // TODO: consider remove it, not ISO
