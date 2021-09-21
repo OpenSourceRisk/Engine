@@ -10,7 +10,7 @@
             <xs:element type="xs:string" name="NettingSetId"/>
             <xs:element type="xs:string" name="Counterparty"/>
             <xs:element type="xs:boolean" name="ActiveCSAFlag" minOccurs="0"/>
-            <xs:element name="CSADetails">
+            <xs:element name="CSADetails" minOccurs="0">
               <xs:complexType mixed="true">
                 <xs:all>
                   <xs:element type="csaType" name="Bilateral" minOccurs="0"/>
