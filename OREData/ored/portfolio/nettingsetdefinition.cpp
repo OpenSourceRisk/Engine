@@ -126,45 +126,45 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     // Read in the mandatory nodes.
     nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", true);
     ctp_ = XMLUtils::getChildValue(node, "Counterparty", true);
-    activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", true);
+    activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", false, true);
 
     // Load "CSA" information, if necessary
     if (activeCsaFlag_) {
         XMLNode* csaChild = XMLUtils::getChildNode(node, "CSADetails");
         XMLUtils::checkNode(csaChild, "CSADetails");
 
-        string csaTypeStr = XMLUtils::getChildValue(csaChild, "Bilateral", true);
-        string csaCurrency = XMLUtils::getChildValue(csaChild, "CSACurrency", true);
-        string index = XMLUtils::getChildValue(csaChild, "Index", true);
-        Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", true);
-        Real thresholdRcv = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdReceive", true);
-        Real mtaPay = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountPay", true);
-        Real mtaRcv = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountReceive", true);
-        string mprStr = XMLUtils::getChildValue(csaChild, "MarginPeriodOfRisk", true);
-        Real collatSpreadRcv = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", true);
-        Real collatSpreadPay = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", true);
+        string csaTypeStr = XMLUtils::getChildValue(csaChild, "Bilateral", false);
+        string csaCurrency = XMLUtils::getChildValue(csaChild, "CSACurrency", false);
+        string index = XMLUtils::getChildValue(csaChild, "Index", false);
+        Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", false);
+        Real thresholdRcv = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdReceive", false);
+        Real mtaPay = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountPay", false);
+        Real mtaRcv = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountReceive", false);
+        string mprStr = XMLUtils::getChildValue(csaChild, "MarginPeriodOfRisk", false);
+        Real collatSpreadRcv = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", false);
+        Real collatSpreadPay = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", false);
 
-        XMLNode* freqChild = XMLUtils::getChildNode(csaChild, "MarginingFrequency");
-        XMLUtils::checkNode(freqChild, "MarginingFrequency");
-        string marginCallFreqStr = XMLUtils::getChildValue(freqChild, "CallFrequency", true);
-        string marginPostFreqStr = XMLUtils::getChildValue(freqChild, "PostFrequency", true);
+        string marginCallFreqStr, marginPostFreqStr;
+        if (XMLNode* freqChild = XMLUtils::getChildNode(csaChild, "MarginingFrequency")) {
+            marginCallFreqStr = XMLUtils::getChildValue(freqChild, "CallFrequency", false);
+            marginPostFreqStr = XMLUtils::getChildValue(freqChild, "PostFrequency", false);
+        }
+        string iaType;
+        Real iaHeld;
+        if (XMLNode* iaChild = XMLUtils::getChildNode(csaChild, "IndependentAmount")) {
+            iaHeld = XMLUtils::getChildValueAsDouble(iaChild, "IndependentAmountHeld", false, 0.0);
+            iaType = XMLUtils::getChildValue(iaChild, "IndependentAmountType", false);
+        }
 
-        XMLNode* iaChild = XMLUtils::getChildNode(csaChild, "IndependentAmount");
-        XMLUtils::checkNode(iaChild, "IndependentAmount");
-        Real iaHeld = XMLUtils::getChildValueAsDouble(iaChild, "IndependentAmountHeld", true);
-        string iaType = XMLUtils::getChildValue(iaChild, "IndependentAmountType", true);
-
-        XMLNode* collatChild = XMLUtils::getChildNode(csaChild, "EligibleCollaterals");
-        XMLUtils::checkNode(collatChild, "EligibleCollaterals");
-        vector<string> eligCollatCcys = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", true);
-
-        bool applyInitialMargin = false;
-        XMLNode* applyInitialMarginNode = XMLUtils::getChildNode(csaChild, "ApplyInitialMargin");
-        if (applyInitialMarginNode)
-            applyInitialMargin = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", true);
+        vector<string> eligCollatCcys;
+        if (XMLNode* collatChild = XMLUtils::getChildNode(csaChild, "EligibleCollaterals")) {
+            eligCollatCcys = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", false);
+        }
+       
+        bool applyInitialMargin = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", false, false);
 
         string initialMarginType = XMLUtils::getChildValue(csaChild, "InitialMarginType", false);
-        if (initialMarginType == "")
+        if (initialMarginType.empty())
             initialMarginType = "Bilateral";
 
         csa_ = boost::make_shared<CSA>(parseCsaType(csaTypeStr), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay,
