@@ -757,7 +757,7 @@ CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(
       strLookback_(strLookback), strFixingDays_(strFixingDays), strRateCutoff_(strRateCutoff),
       strIsAveraged_(strIsAveraged), strFlatIncludeSpread_(strFlatIncludeSpread), strFlatLookback_(strFlatLookback),
       strFlatFixingDays_(strFlatFixingDays), strFlatRateCutoff_(strFlatRateCutoff),
-      strFlatIsAveraged_(strFlatIsAveraged), conventions_(conventions) {
+      strFlatIsAveraged_(strFlatIsAveraged) {
     build();
 }
 

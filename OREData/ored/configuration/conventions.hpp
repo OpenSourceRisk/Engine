@@ -925,8 +925,6 @@ private:
     string strFlatFixingDays_;
     string strFlatRateCutoff_;
     string strFlatIsAveraged_;
-
-    const Conventions* conventions_;
 };
 
 /*! Container for storing Cross Currency Fix vs Float Swap quote conventions
