@@ -134,6 +134,8 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         XMLUtils::checkNode(csaChild, "CSADetails");
 
         string csaTypeStr = XMLUtils::getChildValue(csaChild, "Bilateral", false);
+        if (csaTypeStr.empty())
+            csaTypeStr = "Bilateral";
         string csaCurrency = XMLUtils::getChildValue(csaChild, "CSACurrency", false);
         string index = XMLUtils::getChildValue(csaChild, "Index", false);
         Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", false, 0.0);
