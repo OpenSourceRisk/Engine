@@ -199,12 +199,12 @@
       <xs:element type="xs:integer" name="SpreadPaymentLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="FlatPaymentLag" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpreadIncludeSpread" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:period" name="SpreadLookback" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SpreadLookback" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="SpreadFixingDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="SpreadRateCutoff" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpreadIsAveraged" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FlatIncludeSpread" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:period" name="FlatLookback" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FlatLookback" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="FlatFixingDays" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:integer" name="FlatRateCutoff" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="FlatIsAveraged" minOccurs="0" maxOccurs="1"/>
