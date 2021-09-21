@@ -136,15 +136,15 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         string csaTypeStr = XMLUtils::getChildValue(csaChild, "Bilateral", false);
         string csaCurrency = XMLUtils::getChildValue(csaChild, "CSACurrency", false);
         string index = XMLUtils::getChildValue(csaChild, "Index", false);
-        Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", false);
-        Real thresholdRcv = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdReceive", false);
-        Real mtaPay = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountPay", false);
-        Real mtaRcv = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountReceive", false);
+        Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", false, 0.0);
+        Real thresholdRcv = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdReceive", false, 0.0);
+        Real mtaPay = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountPay", false, 0.0);
+        Real mtaRcv = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountReceive", false, 0.0);
         string mprStr = XMLUtils::getChildValue(csaChild, "MarginPeriodOfRisk", false);
         if (mprStr.empty())
             mprStr = "2W";
-        Real collatSpreadRcv = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", false);
-        Real collatSpreadPay = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", false);
+        Real collatSpreadRcv = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", false, 0.0);
+        Real collatSpreadPay = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", false, 0.0);
 
         string marginCallFreqStr, marginPostFreqStr;
         if (XMLNode* freqChild = XMLUtils::getChildNode(csaChild, "MarginingFrequency")) {
