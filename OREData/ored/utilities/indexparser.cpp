@@ -379,7 +379,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
 
     // Ibor indices with a tenor, this includes OIS term rates like USD-SOFR-3M
     auto it = iborIndices.find(indexStem);
-    if (it != iborIndices.end()) {
+    if (it != iborIndices.end() && !tenor.empty()) {
         Period p = parsePeriod(tenor);
         return it->second->build(p, h);
     }
