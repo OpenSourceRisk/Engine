@@ -137,6 +137,8 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         if (csaTypeStr.empty())
             csaTypeStr = "Bilateral";
         string csaCurrency = XMLUtils::getChildValue(csaChild, "CSACurrency", false);
+        if (csaCurrency.empty())
+            csaCurrency = "USD";
         string index = XMLUtils::getChildValue(csaChild, "Index", false);
         Real thresholdPay = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdPay", false, 0.0);
         Real thresholdRcv = XMLUtils::getChildValueAsDouble(csaChild, "ThresholdReceive", false, 0.0);
@@ -157,12 +159,15 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
             marginCallFreqStr = "1D";
         if (marginPostFreqStr.empty())
             marginPostFreqStr = "1D";
-        string iaType;
+        
         Real iaHeld;
+        string iaType;
         if (XMLNode* iaChild = XMLUtils::getChildNode(csaChild, "IndependentAmount")) {
             iaHeld = XMLUtils::getChildValueAsDouble(iaChild, "IndependentAmountHeld", false, 0.0);
             iaType = XMLUtils::getChildValue(iaChild, "IndependentAmountType", false);
         }
+        if (iaType.empty())
+            iaType = "FIXED";
 
         vector<string> eligCollatCcys;
         if (XMLNode* collatChild = XMLUtils::getChildNode(csaChild, "EligibleCollaterals")) {
