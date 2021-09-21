@@ -141,6 +141,8 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         Real mtaPay = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountPay", false);
         Real mtaRcv = XMLUtils::getChildValueAsDouble(csaChild, "MinimumTransferAmountReceive", false);
         string mprStr = XMLUtils::getChildValue(csaChild, "MarginPeriodOfRisk", false);
+        if (mprStr.empty())
+            mprStr = "2W";
         Real collatSpreadRcv = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", false);
         Real collatSpreadPay = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", false);
 
