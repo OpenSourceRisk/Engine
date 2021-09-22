@@ -32,7 +32,7 @@ StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressT
                                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                                  const boost::shared_ptr<ScenarioSimMarket>& simMarket,
 						 const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory)
-    : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), stressData_(stressData),
+    : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket.get()), stressData_(stressData),
       stressScenarioFactory_(stressScenarioFactory) {
 
     QL_REQUIRE(stressData_, "StressScenarioGenerator: stressData is null");
