@@ -862,12 +862,11 @@
     </xs:sequence>
   </xs:complexType>
 
-<xs:element name="DerivedScheduleGroup" abstract="true"/>
-<xs:element name="DerivedSchedule" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
-<xs:element name="Derived" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
+  <xs:element name="DerivedScheduleGroup" abstract="true"/>
+  <xs:element name="DerivedSchedule" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
+  <xs:element name="Derived" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
 
-<xs:element name="DerivedScheduleType">
-  <xs:complexType>
+  <xs:complexType name="DerivedScheduleType">
     <xs:all>
       <xs:element type="xs:string" name="BaseSchedule"/>
       <xs:element type="xs:string" name="Shift" minOccurs="0"/>
@@ -875,6 +874,5 @@
       <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
-</xs:element>
 
 </xs:schema>
