@@ -798,16 +798,7 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
-      <xs:element name="DerivedSchedule">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="xs:string" name="BaseSchedule" minOccurs="1" maxOccurs="1"/>
-            <xs:element type="xs:string" name="Shift" minOccurs="0" maxOccurs="1"/>
-            <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
-            <xs:element type="businessDayConvention" name="Convention" minOccurs="0" maxOccurs="1"/>
-          </xs:all>
-        </xs:complexType>
-      </xs:element>
+      <xs:element ref="DerivedScheduleGroup"/>
     </xs:choice>
   </xs:complexType>
 
@@ -870,5 +861,20 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+
+<xs:element name="DerivedScheduleGroup" abstract="true"/>
+<xs:element name="DerivedSchedule" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
+<xs:element name="Derived" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
+
+<xs:element name="DerivedScheduleType">
+  <xs:complexType>
+    <xs:all>
+      <xs:element type="xs:string" name="BaseSchedule"/>
+      <xs:element type="xs:string" name="Shift" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+</xs:element>
 
 </xs:schema>

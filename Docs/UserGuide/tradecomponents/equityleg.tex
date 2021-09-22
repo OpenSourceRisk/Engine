@@ -68,7 +68,7 @@ Allowable values: 0 $<$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left
 
 \item ValuationSchedule [Optional]: Schedule of dates for equity valuation.
 
-Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). Note that the number of dates (and periods) in the \lstinline!ValuationSchedule! must be the same as in the \lstinline!ScheduleData!.  If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
+Allowable values: A node of the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). Note that the number of dates (and periods) in the \lstinline!ValuationSchedule! must be the same as in the \lstinline!ScheduleData!.  If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
 
 \item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
 
