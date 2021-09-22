@@ -74,7 +74,7 @@ bool Ireland::BankHolidaysImpl::isBusinessDay(const Date& date) const {
     Day d = date.dayOfMonth();
     Month m = date.month();
     if (!IrishStockExchangeImpl::isBusinessDay(date) ||
-        ((m == December) && ((d == 27) || (d == 29 && (w == Mon || w == Tue || w == Wed) || (d == 28 && w == Wed)))))
+        (m == December && (d == 27 || (d == 29 && (w == Mon || w == Tue || w == Wed)) || (d == 28 && w == Wed))))
         return false;
     else
         return true;
