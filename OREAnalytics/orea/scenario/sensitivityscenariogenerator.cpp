@@ -42,7 +42,7 @@ using RFType = RiskFactorKey::KeyType;
 SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const boost::shared_ptr<Scenario>& baseScenario,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-    const ScenarioSimMarket* simMarket,
+    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, const bool overrideTenors,
     const bool continueOnError, const boost::shared_ptr<Scenario>& baseScenarioAbsolute)
     : ShiftScenarioGenerator(baseScenario, simMarketData, simMarket), sensitivityData_(sensitivityData), 

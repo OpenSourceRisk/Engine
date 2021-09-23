@@ -90,7 +90,7 @@ public:
     //! Constructor
     ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-			   const ScenarioSimMarket* simMarket);
+			   const boost::shared_ptr<ScenarioSimMarket>& simMarket);
     //! Default destructor
     ~ShiftScenarioGenerator(){};
 
