@@ -90,12 +90,12 @@ Real OptionWrapper::NPV() const {
         // that we will probably need an effective cash settlement date then to
         // maintain the relative position to the effective exercise date).
         Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
-                       ? (isLong_ ? 1.0 : -1.0) * activeUnderlyingInstrument_->NPV() * undMultiplier_
+                       ? (isLong_ ? 1.0 : -1.0) * getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_
                        : 0.0;
         return npv + addNPV;
     } else {
         // if not exercised we just return the original option's NPV
-        Real npv = (isLong_ ? 1.0 : -1.0) * instrument_->NPV() * multiplier_;
+        Real npv = (isLong_ ? 1.0 : -1.0) * getTimedNPV(instrument_) * multiplier_;
         return npv + addNPV;
     }
 }
@@ -105,21 +105,25 @@ bool EuropeanOptionWrapper::exercise() const {
         return false;
 
     // for European Exercise, we only require that underlying has positive PV
-    return activeUnderlyingInstrument_->NPV() * undMultiplier_ > 0.0;
+    bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > 0.0;
+    return res;
 }
 
 bool AmericanOptionWrapper::exercise() const {
     if (!exercisable_)
         return false;
 
-    if (Settings::instance().evaluationDate() == effectiveExerciseDates_.back())
-        return activeUnderlyingInstrument_->NPV() * undMultiplier_ > 0.0;
-    else
-        return activeUnderlyingInstrument_->NPV() * undMultiplier_ > instrument_->NPV() * multiplier_;
+    if (Settings::instance().evaluationDate() == effectiveExerciseDates_.back()) {
+        bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > 0.0;
+        return res;
+    } else {
+        bool res = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
+        return res;
+    }
 }
 
 bool BermudanOptionWrapper::exercise() const {
-    if(!exercisable_)
+    if (!exercisable_)
         return false;
 
     // set active underlying instrument
@@ -130,7 +134,7 @@ bool BermudanOptionWrapper::exercise() const {
             break;
         }
     }
-    bool exercise = activeUnderlyingInstrument_->NPV() * undMultiplier_ > instrument_->NPV() * multiplier_;
+    bool exercise = getTimedNPV(activeUnderlyingInstrument_) * undMultiplier_ > getTimedNPV(instrument_) * multiplier_;
     return exercise;
 }
 } // namespace data

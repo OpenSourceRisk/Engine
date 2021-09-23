@@ -11,8 +11,11 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/cyprus.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/greece.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>

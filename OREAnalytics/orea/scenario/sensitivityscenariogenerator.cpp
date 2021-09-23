@@ -1006,7 +1006,15 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getVolStrikes = [this](const string& k) { return simMarketData_->swapVolStrikeSpreads(k); };
         getVolExpiries = [this](const string& k) { return simMarketData_->swapVolExpiries(k); };
         getVolTerms = [this](const string& k) { return simMarketData_->swapVolTerms(k); };
-        getDayCounter = [this](const string& k) { return to_string(simMarket_->swaptionVol(k)->dayCounter()); };
+        getDayCounter = [this](const string& k) {
+            try {
+                return to_string(simMarket_->swaptionVol(k)->dayCounter());
+            } catch (const std::exception& e) {
+                WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
+                                                                                         << "', using default A365");
+                return std::string("A365F");
+            }
+        };
         getScenarioDescription = [this](string q, Size n, Size m, Size k, bool up) {
             return swaptionVolScenarioDescription(q, n, m, k, up);
         };
@@ -1018,7 +1026,15 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getVolStrikes = [](const string& k) { return vector<Real>({0.0}); };
         getVolExpiries = [this](const string& k) { return simMarketData_->yieldVolExpiries(); };
         getVolTerms = [this](const string& k) { return simMarketData_->yieldVolTerms(); };
-        getDayCounter = [this](const string& k) { return to_string(simMarket_->yieldVol(k)->dayCounter()); };
+        getDayCounter = [this](const string& k) {
+            try {
+                return to_string(simMarket_->yieldVol(k)->dayCounter());
+            } catch (const std::exception& e) {
+                WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
+                                                                                         << "', using default A365");
+                return std::string("A365F");
+            }
+        };
         getScenarioDescription = [this](string q, Size n, Size m, Size k, bool up) {
             return yieldVolScenarioDescription(q, n, m, up);
         };

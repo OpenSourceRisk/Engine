@@ -67,7 +67,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     maturity_ = parseDate(maturityDate_);
-    bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions().has(commodityName_, Convention::Type::CommodityFuture);
+    bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
     if ((isFuturePrice_ && *isFuturePrice_) || isFutureAccordingToConventions) {
 
         // Get the commodity index from the market.
@@ -136,7 +136,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 Real CommodityForward::notional() const {
     // try to get the notional from the additional results of the instrument
     try {
-        return instrument_->qlInstrument()->result<Real>("currentNotional");
+        return instrument_->qlInstrument(true)->result<Real>("currentNotional");
     } catch (const std::exception& e) {
         if (strcmp(e.what(), "currentNotional not provided"))
             ALOG("error when retrieving notional: " << e.what());

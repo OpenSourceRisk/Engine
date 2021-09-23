@@ -108,9 +108,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
     // build scenario sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
+    TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
@@ -762,7 +762,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, false);
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
@@ -873,8 +873,8 @@ void test1dShifts(bool granular) {
         sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+    TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
@@ -970,8 +970,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+    TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
@@ -1084,8 +1084,8 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     }
 
     // build sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+    TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
@@ -1169,7 +1169,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     bool recalibrateModels = true; // nothing to calibrate here
     boost::shared_ptr<SensitivityAnalysis> sa =
         boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
-                                                simMarketData, sensiData, conventions, recalibrateModels);
+                                                simMarketData, sensiData, recalibrateModels);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap;
@@ -1293,8 +1293,8 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     }
 
     // build sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+    TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
@@ -1386,7 +1386,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     bool recalibrateModels = true;           // nothing to calibrate here
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData,
         recalibrateModels, CurveConfigurations(), TodaysMarketParameters(), useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
@@ -1644,9 +1644,9 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     cgFilter.push_back(pair<string, string>("FXSpot/EURGBP", "DiscountCurve/GBP"));
 
     // build scenario sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
+    TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
@@ -1734,7 +1734,7 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     bool useOriginalFxForBaseCcyConv = false;
     boost::shared_ptr<SensitivityAnalysis> sa =
         boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
-                                                simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+                                                simMarketData, sensiData, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc =

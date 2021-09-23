@@ -27,8 +27,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include <regex>
-#include <string>
 #include <set>
+#include <string>
 
 namespace ore {
 namespace data {
@@ -37,14 +37,26 @@ class Wildcard {
 public:
     /*! all characters in s keep their original meaning except * which is a placeholder for zero or
       more characters not equal to newline */
-    explicit Wildcard(const std::string& s);
+    explicit Wildcard(const std::string& pattern, const bool usePrefixes = true, const bool aggressivePrefixes = false);
+
     bool hasWildcard() const;
+    bool isPrefix() const;
+
     bool matches(const std::string& s) const;
+
+    const std::string& pattern() const;
     const std::string& regex() const;
+    const std::string& prefix() const;
 
 private:
-    std::string s_;
-    boost::shared_ptr<std::regex> regex_;
+    std::string pattern_;
+    bool usePrefixes_;
+    bool aggressivePrefixes_;
+
+    bool hasWildCard_ = false;
+    boost::optional<std::string> regexString_;
+    boost::optional<std::string> prefixString_;
+    mutable boost::shared_ptr<std::regex> regex_;
 };
 
 //! checks if at most one element in C has a wild card and returns it in this case
@@ -59,10 +71,15 @@ template <class C> boost::optional<Wildcard> getUniqueWildcard(const C& c) {
     return boost::none;
 }
 
-// The quoteNames set can have a mix of exact RIC names and regex strings to match multiple RICs. This function splits 
+// The quoteNames set can have a mix of exact RIC names and regex strings to match multiple RICs. This function splits
 // them into two separate sets.
-void partitionQuotes(const std::set<std::string>& quoteNames, 
-    std::set<std::string>& names, std::set<std::string>& regexes);
+void partitionQuotes(const std::set<std::string>& quoteNames, std::set<std::string>& names,
+                     std::set<std::string>& regexes);
+
+// As above, but the split is into names, regexes and prefixes
+void partitionQuotes(const std::set<std::string>& quoteNames, std::set<std::string>& names,
+                     std::set<std::string>& regexes, std::set<std::string>& prefixes,
+                     const bool aggressivePrefixes = false);
 
 } // namespace data
 } // namespace ore

@@ -1,6 +1,10 @@
 \subsubsection{Credit Default Swap}
 
-A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using a \lstinline!CreditDefaultSwapData! block as shown in listing \ref{lst:cdsdata} or \ref{lst:cdsdata_with_ref_info}. The \lstinline!CreditDefaultSwapData! block must include either a \lstinline!CreditCurveId! element or a \lstinline!ReferenceInformation! node. The elements have the following meaning:
+A credit default swap, trade type \lstinline!CreditDefaultSwap!, is set up using a \lstinline!CreditDefaultSwapData! block as shown in listing \ref{lst:cdsdata} or \ref{lst:cdsdata_with_ref_info}. The \lstinline!CreditDefaultSwapData! block must include either a \lstinline!CreditCurveId! element or a \lstinline!ReferenceInformation! node. 
+
+The {\tt LegData} sub-node must be a fixed leg, and  represents the recurring premium payments. The direction of the fixed leg payments define if the CDS is for bought (\lstinline!Payer!: \emph{true}) or sold (\lstinline!Payer!: \emph{false}) protection.
+
+The elements have the following meaning:
 
 \begin{itemize}
 \item IssuerId [Optional]: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.

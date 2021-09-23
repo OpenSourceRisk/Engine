@@ -38,7 +38,11 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     bool eom, bool flatIsDomestic, boost::optional<Period> flatTenor, boost::optional<Period> spreadTenor,
     Real spreadOnFlatLeg, Real flatGearing, Real spreadGearing, const Calendar& flatCalendar,
     const Calendar& spreadCalendar, const std::vector<Natural>& spotFXSettleDaysVec,
-    const std::vector<Calendar>& spotFXSettleCalendarVec)
+    const std::vector<Calendar>& spotFXSettleCalendarVec, Size paymentLag, Size flatPaymentLag,
+    boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
+    boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged, boost::optional<bool> flatIncludeSpread,
+    boost::optional<Period> flatLookback, boost::optional<Size> flatFixingDays, boost::optional<Size> flatRateCutoff,
+    boost::optional<bool> flatIsAveraged)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -46,7 +50,11 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
       flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()),
       spreadTenor_(spreadTenor ? *spreadTenor : spreadIndex_->tenor()), spreadOnFlatLeg_(spreadOnFlatLeg),
       flatGearing_(flatGearing), spreadGearing_(spreadGearing), flatCalendar_(flatCalendar),
-      spreadCalendar_(spreadCalendar), spotFXSettleDaysVec_(spotFXSettleDaysVec), spotFXSettleCalendarVec_(spotFXSettleCalendarVec)  {
+      spreadCalendar_(spreadCalendar), spotFXSettleDaysVec_(spotFXSettleDaysVec),
+      spotFXSettleCalendarVec_(spotFXSettleCalendarVec), paymentLag_(paymentLag), flatPaymentLag_(flatPaymentLag),
+      includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
+      isAveraged_(isAveraged), flatIncludeSpread_(flatIncludeSpread), flatLookback_(flatLookback),
+      flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff), flatIsAveraged_(flatIsAveraged) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();
@@ -65,15 +73,15 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     if (spreadCalendar_.empty())
         spreadCalendar_ = settlementCalendar;
 
-    //check spotFXSettleDaysVec_ and spotFXSettleCalendarVec_
+    // check spotFXSettleDaysVec_ and spotFXSettleCalendarVec_
     Size numSpotFXSettleDays = spotFXSettleDaysVec_.size();
     QL_REQUIRE(numSpotFXSettleDays == spotFXSettleCalendarVec_.size(),
                "Array size of spot fx settlement days must equal that of spot fx settlement calendars");
-	if (numSpotFXSettleDays == 0) {
-		spotFXSettleDaysVec_.resize(1,0);
-		spotFXSettleCalendarVec_.resize(1,settlementCalendar);
-	}
-    
+    if (numSpotFXSettleDays == 0) {
+        spotFXSettleDaysVec_.resize(1, 0);
+        spotFXSettleCalendarVec_.resize(1, settlementCalendar);
+    }
+
     /* Link the curve being bootstrapped to the index if the index has
        no projection curve */
     if (flatIndexHasCurve && haveFlatDiscountCurve) {
@@ -110,13 +118,13 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
 
-	//calc spotFXSettleDate
-	Date spotFXSettleDate = refDate;
-    Size numSpotFXSettleDays = spotFXSettleDaysVec_.size(); //guaranteed to be at least 1
+    // calc spotFXSettleDate
+    Date spotFXSettleDate = refDate;
+    Size numSpotFXSettleDays = spotFXSettleDaysVec_.size(); // guaranteed to be at least 1
     for (Size i = 0; i < numSpotFXSettleDays; i++) {
-		//Guaranteed here that spotFXSettleDaysVec_ and spotFXSettleCalendarVec_ have the same size
-		spotFXSettleDate = spotFXSettleCalendarVec_[i].advance(spotFXSettleDate, spotFXSettleDaysVec_[i], Days);
-	}
+        // Guaranteed here that spotFXSettleDaysVec_ and spotFXSettleCalendarVec_ have the same size
+        spotFXSettleDate = spotFXSettleCalendarVec_[i].advance(spotFXSettleDate, spotFXSettleDaysVec_[i], Days);
+    }
 
     Schedule flatLegSchedule = MakeSchedule()
                                    .from(settlementDate)
@@ -143,18 +151,21 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     }
 
     /* Arbitrarily set the spread leg as the pay leg */
-    swap_ = boost::shared_ptr<CrossCcyBasisSwap>(new CrossCcyBasisSwap(
+    swap_ = boost::make_shared<CrossCcyBasisSwap>(
         spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_, flatLegNominal,
-        // flatLegCurrency_, flatLegSchedule, flatIndex_, 0.0, flatGearing_));
-        flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_));
+        flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_, paymentLag_, flatPaymentLag_,
+        includeSpread_, lookback_, fixingDays_, rateCutoff_, isAveraged_, flatIncludeSpread_, flatLookback_,
+        flatFixingDays_, flatRateCutoff_, flatIsAveraged_);
 
     boost::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {
-        engine.reset(new CrossCcySwapEngine(flatLegCurrency_, flatDiscountRLH_, spreadLegCurrency_, spreadDiscountRLH_,
-                                            spotFX_, boost::none, Date(), Date(), spotFXSettleDate));
+        engine = boost::make_shared<CrossCcySwapEngine>(flatLegCurrency_, flatDiscountRLH_, spreadLegCurrency_,
+                                                        spreadDiscountRLH_, spotFX_, boost::none, Date(), Date(),
+                                                        spotFXSettleDate);
     } else {
-        engine.reset(new CrossCcySwapEngine(spreadLegCurrency_, spreadDiscountRLH_, flatLegCurrency_, flatDiscountRLH_,
-                                            spotFX_, boost::none, Date(), Date(), spotFXSettleDate));
+        engine = boost::make_shared<CrossCcySwapEngine>(spreadLegCurrency_, spreadDiscountRLH_, flatLegCurrency_,
+                                                        flatDiscountRLH_, spotFX_, boost::none, Date(), Date(),
+                                                        spotFXSettleDate);
     }
     swap_->setPricingEngine(engine);
 

@@ -230,8 +230,7 @@ void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<Fixi
     If inflation indices have been set up via ZeroInflationIndex entries in the Conventions, the \p conventions 
     should be passed here. If not, the default \c nullptr parameter will be sufficient.
 */
-void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
-    const boost::shared_ptr<Conventions>& conventions = nullptr);
+void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
 
 /*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
 
@@ -254,7 +253,7 @@ void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& 
     The original \p fixings map may be empty.
 */
 void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings,
-                          const TodaysMarketParameters& mktParams, const Conventions& conventions,
+                          const TodaysMarketParameters& mktParams,
                           const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
                           const QuantLib::Period& oisLookback = 4 * QuantLib::Months,
                           const QuantLib::Period& bmaLookback = 2 * QuantLib::Weeks,

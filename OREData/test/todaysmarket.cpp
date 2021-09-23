@@ -790,8 +790,10 @@ public:
         auto configs = curveConfigurations();
         auto convs = conventions();
 
+        ore::data::InstrumentConventions::instance().conventions() = convs;
+        
         BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
-        market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);
+        market = boost::make_shared<TodaysMarket>(asof, params, loader, configs);
     }
 
     ~F() {

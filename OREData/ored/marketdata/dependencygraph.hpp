@@ -88,11 +88,9 @@ public:
         const boost::shared_ptr<TodaysMarketParameters>& params,
         //! Description of curve compositions
         const boost::shared_ptr<const CurveConfigurations>& curveConfigs,
-        //! Repository of market conventions
-        const boost::shared_ptr<Conventions>& conventions,
         //! Ibor fallback config
         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig())
-        : asof_(asof), params_(params), curveConfigs_(curveConfigs), conventions_(conventions),
+        : asof_(asof), params_(params), curveConfigs_(curveConfigs),
           iborFallbackConfig_(iborFallbackConfig){};
 
     // data structure for a vertex in the graph
@@ -125,7 +123,6 @@ private:
     const Date asof_;
     const boost::shared_ptr<TodaysMarketParameters> params_;
     const boost::shared_ptr<const CurveConfigurations> curveConfigs_;
-    const boost::shared_ptr<Conventions> conventions_;
     const IborFallbackConfig iborFallbackConfig_;
 };
 

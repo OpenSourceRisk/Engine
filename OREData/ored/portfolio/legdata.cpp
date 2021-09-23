@@ -1863,14 +1863,8 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
-    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
-    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    Calendar paymentCalendar;
-    if (data.paymentCalendar().empty())
-        paymentCalendar = schedule.calendar();
-    else
-        paymentCalendar = parseCalendar(data.paymentCalendar());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());    
 
     bool isTotalReturn = eqLegData->returnType() == "Total";
     bool isAbsoluteReturn = eqLegData->returnType() == "Absolute";
@@ -1902,11 +1896,27 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
     Natural paymentLag = data.paymentLag();
+    
+    ScheduleBuilder scheduleBuilder;
+
+    ScheduleData scheduleData = data.schedule();
+    Schedule schedule;
+    scheduleBuilder.add(schedule, scheduleData);
+
     ScheduleData valuationData = eqLegData->valuationSchedule();
     Schedule valuationSchedule;
     if (valuationData.hasData())
-        valuationSchedule = makeSchedule(valuationData, openEndDateReplacement);
+        scheduleBuilder.add(valuationSchedule, valuationData);
+    
+    scheduleBuilder.makeSchedules(openEndDateReplacement);
+
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
 
     applyAmortization(notionals, data, schedule, false);
     Leg leg = EquityLeg(schedule, equityCurve, fxIndex)
@@ -2160,8 +2170,9 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
-                    parseCommodityIndex(indexing.index(), true, tmp->fixingCalendar(),
-                                        engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config));
+                    parseCommodityIndex(indexing.index(), true,
+                                        engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config),
+                                        tmp->fixingCalendar());
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying
                 boost::shared_ptr<BondIndex> bi = parseBondIndex(indexing.index());

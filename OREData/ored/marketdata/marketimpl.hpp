@@ -52,17 +52,7 @@ using std::tuple;
 class MarketImpl : public Market {
 public:
     //! Default constructor
-    MarketImpl() {}
-
-    //! Constructor taking a pointer to conventions
-    MarketImpl(const boost::shared_ptr<Conventions>& conventions)
-        : conventions_ref_(conventions), conventions_(*conventions_ref_) {
-        initialise();
-    }
-
-    /*! Constructor taking a reference to conventions. This ctor is deprecated.
-        TODO remove this ctor, remove the conventions member variable holding the copy. */
-    MarketImpl(const Conventions& conventions) : conventions_(conventions) { initialise(); }
+    MarketImpl() { initialise(); }
 
     void initialise() {
         // if no fx spots are defined we still need an empty triangulation
@@ -236,10 +226,6 @@ protected:
     mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;
-
-    boost::shared_ptr<Conventions> conventions_ref_;
-    // needed for the deprecated ctor taking a reference to conventions, TODO remove
-    Conventions conventions_;
 
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,
