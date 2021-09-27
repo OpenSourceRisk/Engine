@@ -899,21 +899,18 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     QL_REQUIRE(comp == QuantLib::Compounded || comp == QuantLib::Simple,
                "Compounding method " << zcFixedLegData->compounding() << " not supported");
 
-    // We loop over the dates in the schedule, computing the compound factor. Each cashflow is computed
-    // using the period's rate and notional.
-    // For the Compounded rule:
-    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
-    // So we compute the sum of all DayCountFractions in the loop.
-    // For the Simple rule:
-    // (1 + r * dcf_0) * (1 + r * dcf_1)...
-
     Leg leg;
+    vector<Date> cpnDates;
+    cpnDates.push_back(dates.front());
+
     for (Size i = 0; i < numDates - 1; i++) {
 
         double currentNotional = i < notionals.size() ? notionals[i] : notionals.back();
         double currentRate = i < rates.size() ? rates[i] : rates.back();
-        leg.push_back(boost::make_shared<ZeroFixedCoupon>(dates[i+1], currentNotional, currentRate, dc, payConvention, paymentCalendar, dates, comp,
-                                                          zcFixedLegData->subtractNotional()));
+        cpnDates.push_back(dates[i+1]);
+        Date paymentDate = paymentCalendar.adjust(dates[i+1], payConvention);
+        leg.push_back(boost::make_shared<ZeroFixedCoupon>(dates[i+1], currentNotional, currentRate, dc,
+                                                            cpnDates, comp, zcFixedLegData->subtractNotional()));
 
     }
     return leg;
