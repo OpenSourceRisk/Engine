@@ -218,6 +218,7 @@ template <class Archive> void DiscountQuote::serialize(Archive& ar, const unsign
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& ccy_;
     ar& date_;
+    ar& tenor_;
 }
 
 template <class Archive> void MMFutureQuote::serialize(Archive& ar, const unsigned int version) {
