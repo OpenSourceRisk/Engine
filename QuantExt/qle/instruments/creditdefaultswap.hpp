@@ -102,6 +102,8 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is 
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
+        @param fullFirstCouponWithAccrualsUpfront Before the CDS Big Bang 2009 the first coupon was a broken/short coupon while 
+					 after it's a full coupon and the accrued amount of the first coupon is paid upfront.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
@@ -109,7 +111,8 @@ public:
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3);
+                      Natural cashSettlementDays = 3,
+		      const bool fullFirstCouponWithAccrualsUpfront = false);
     //! CDS quoted as upfront and running spread
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Notional value
@@ -119,8 +122,8 @@ public:
         @param paymentConvention  Business-day convention for
                                   payment-date adjustment.
         @param dayCounter  Day-count convention for accrual.
-        @param settlesAccrual Whether or not the accrued coupon is
-                              due in the event of a default.
+        @param settlesAccrual Whether or no<C-S-Del>t the accrued coupon is
+                              due in the evkent of a default.
         @param protectionPaymentTime timing of protection and default accrual payments
         @param protectionStart  The first date where a default event will trigger the contract. 
                                 Before the CDS Big Bang 2009, this was typically trade date (T) + 1 calendar day.
@@ -134,6 +137,8 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
+        @param fullFirstCouponWithAccrualsUpfront Before the CDS Big Bang 2009 the first coupon was a broken/short coupon while 
+					 after it's a full coupon and the accrued amount of the first coupon is paid upfront.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
@@ -141,7 +146,8 @@ public:
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3);
+                      Natural cashSettlementDays = 3,
+		      const bool fullFirstCouponWithAccrualsUpfront = false);    
     //! CDS quoted as running-spread only and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Initial Notional value
@@ -165,6 +171,8 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is 
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
+        @param fullFirstCouponWithAccrualsUpfront Before the CDS Big Bang 2009 the first coupon was a broken/short coupon while 
+					 after it's a full coupon and the accrued amount of the first coupon is paid upfront.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread,
                       const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
@@ -173,7 +181,8 @@ public:
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3);
+                      Natural cashSettlementDays = 3,
+		      const bool fullFirstCouponWithAccrualsUpfront = false);
     //! CDS quoted as upfront and running spread and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Initial Notional value
@@ -199,6 +208,8 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
+        @param fullFirstCouponWithAccrualsUpfront Before the CDS Big Bang 2009 the first coupon was a broken/short coupon while 
+					 after it's a full coupon and the accrued amount of the first coupon is paid upfront.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront, Rate spread,
                       const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
@@ -207,7 +218,8 @@ public:
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3);
+                      Natural cashSettlementDays = 3,
+    		      const bool fullFirstCouponWithAccrualsUpfront = false);   
     //@}
     //! \name Instrument interface
     //@{
@@ -334,6 +346,7 @@ protected:
     Date protectionStart_, maturity_;
     Date tradeDate_;
     Natural cashSettlementDays_;
+    bool fullFirstCouponWithAccrualsUpfront_;
     // results
     mutable Rate fairUpfront_;
     mutable Rate fairSpread_;
