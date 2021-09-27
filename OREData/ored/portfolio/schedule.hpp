@@ -187,7 +187,7 @@ public:
     void addDates(const ScheduleDates& dates) { dates_.emplace_back(dates); }
     //! Add rules
     void addRules(const ScheduleRules& rules) { rules_.emplace_back(rules); }
-    //!  Add derived schedules
+    //! Add derived schedules
     void addDerived(const ScheduleDerived& derived) {
         derived_.emplace_back(derived);
         hasDerived_ = true;
@@ -225,7 +225,20 @@ private:
     bool hasDerived_ = false;
 };
 
+// Container class to support building of derived schedules
 class ScheduleBuilder {
+// USAGE:
+//  1. Initialise a ScheduleBuilder obj
+//  2. For each Schedule obj that will be built from a given ScheduleData obj:
+//      i. Initialise an empty Schedule obj
+//     ii. Add the Schedule obj in i. and the corresponding ScheduleData obj into the ScheduleBuilder obj in 1.
+//         using the ScheduleBuilder::add() method.
+//  3. Once all required schedules are added for the instrument/leg, call ScheduleBuilder::makeSchedules()
+//     with the appropriate openEndDateReplacement, if relevant.
+//     If successful, each Schedule obj, derived or otherwise, should have been assigned the correct schedule.
+// NOTE / WARNING:
+//  * The schedules should be initialised at the same, or higher, scope as the call to makeSchedules() (and to add())
+      
 public:
     void add(QuantLib::Schedule& schedule, const ScheduleData& scheduleData);
     void makeSchedules(const QuantLib::Date& openEndDateReplacement = QuantLib::Null<QuantLib::Date>());
