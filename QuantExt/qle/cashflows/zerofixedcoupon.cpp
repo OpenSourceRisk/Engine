@@ -35,6 +35,8 @@ namespace QuantExt {
                         QL_REQUIRE(comp_ == QuantLib::Compounded || comp_ == QuantLib::Simple,
                             "Compounding method " << comp_ << " not supported");
 
+                        QL_REQUIRE(dates_.size() >= 2, "Number of schedule dates expected at least 2, got " << dates_.size());
+
                         amount_ = accruedAmount(dates_.back());
 
                     }//ctor

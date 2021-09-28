@@ -909,7 +909,7 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
         double currentRate = i < rates.size() ? rates[i] : rates.back();
         cpnDates.push_back(dates[i+1]);
         Date paymentDate = paymentCalendar.adjust(dates[i+1], payConvention);
-        leg.push_back(boost::make_shared<ZeroFixedCoupon>(dates[i+1], currentNotional, currentRate, dc,
+        leg.push_back(boost::make_shared<ZeroFixedCoupon>(paymentDate, currentNotional, currentRate, dc,
                                                             cpnDates, comp, zcFixedLegData->subtractNotional()));
 
     }
