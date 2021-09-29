@@ -204,7 +204,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
         // check reverse
         string revName = familyName_ + " " + targetCurrency_.code() + "/" + sourceCurrency_.code();
         if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate))
-            return IndexManager::instance().getHistory(revName)[fixingDate];
+            return 1.0 / IndexManager::instance().getHistory(revName)[fixingDate];
 
         // Now we search for a pair of quotes that we can combine to construct the quote required.
         // We only search for a pair of quotes a single step apart.
