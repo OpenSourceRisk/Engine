@@ -222,55 +222,48 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
         vector<string> availIndexes = IndexManager::instance().histories();
         for (auto i : availIndexes) {
             if (boost::starts_with(i, familyName_)) {
-                Size l = i.size();
-                string keyDomestic = i.substr(l - 7, 3);
-                string keyForeign = i.substr(l - 3);
-                string domestic = sourceCurrency_.code();
-                string foreign = targetCurrency_.code();
+                // check for a fixing
+                Real fixing = IndexManager::instance().getHistory(i)[fixingDate];
+                if (fixing != Null<Real>()) {
+                    
+                    Size l = i.size();
+                    string keyDomestic = i.substr(l - 7, 3);
+                    string keyForeign = i.substr(l - 3);
+                    string domestic = sourceCurrency_.code();
+                    string foreign = targetCurrency_.code();
 
-                if (domestic == keyDomestic) {
-                    // check for a fixing
-                    string domName = familyName_ + " " + foreign + "/" + keyForeign;
-                    Real domFixing = IndexManager::instance().getHistory(domName)[fixingDate];
-
-                    // we have domestic, now look for foreign/keyForeign
-                    if (domFixing != Null<Real>()) {
+                    if (domestic == keyDomestic) {
+                        // we have domestic, now look for foreign/keyForeign
                         // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
                         string forName = familyName_ + " " + foreign + "/" + keyForeign;
                         if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
                             Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
-                            return domFixing / forFixing;
+                            return fixing / forFixing;
                         }
 
                         // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
                         forName = familyName_ + " " + keyForeign + "/" + foreign;
                         if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
                             Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
-                            return domFixing * forFixing;
+                            return fixing * forFixing;
                         }
-                    }                    
-                }
+                    }
 
-                if (domestic == keyForeign) {
-                    // check for a fixing
-                    string domName = familyName_ + " " + domestic + "/" + keyForeign;
-                    Real domFixing = IndexManager::instance().getHistory(domName)[fixingDate];
-                    
-                    // we have fixing, now look for foreign/keyDomestic
-                    if (domFixing != Null<Real>()) {
+                    if (domestic == keyForeign) {
+                        // we have fixing, now look for foreign/keyDomestic
                         // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
                         string forName = familyName_ + " " + foreign + "/" + keyDomestic;
                         if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
                             Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
-                            return 1 / (domFixing * forFixing);
+                            return 1 / (fixing * forFixing);
                         }
-                        
+
                         // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
                         forName = familyName_ + " " + keyDomestic + "/" + foreign;
                         if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
                             Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
-                            return domFixing / forFixing;
-                        }                       
+                            return fixing / forFixing;
+                        }
                     }
                 }
             }
