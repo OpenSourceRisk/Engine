@@ -57,7 +57,6 @@ Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
 
     double totalDCF = 0.0;
     double compoundFactor = 1.0;
-    double result = 0.0;
 
     // we loop over the dates in the schedule, computing the compound factor.
     // For the Compounded rule:
@@ -79,26 +78,18 @@ Real ZeroFixedCoupon::accruedAmount(const Date& accrualEnd) const {
 
         double dcf = dc_.yearFraction(startDate, endDate);
 
-        if (comp_ == QuantLib::Simple){
+        if (comp_ == QuantLib::Simple)
             compoundFactor *= (1 + rate_ * dcf);
-        } else {
-            totalDCF += dcf;
-        }
-        if (comp_ == QuantLib::Compounded)
-            compoundFactor = pow(1.0 + rate_, totalDCF);
 
-        double fixedAmount = notional_;
-
-        if (subtractNotional_)
-            fixedAmount *= (compoundFactor - 1);
-        else
-            fixedAmount *= compoundFactor;
-
-        result = fixedAmount;
-
+        totalDCF += dcf;
     }
 
-    return result;
+    if (comp_ == QuantLib::Compounded)
+        compoundFactor = pow(1.0 + rate_, totalDCF);
+
+    return notional_ * (subtractNotional_ ? compoundFactor - 1.0 : compoundFactor);
+
+
 
 }
 

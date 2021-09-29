@@ -65,8 +65,8 @@ private:
 
     double notional_;
     double rate_;
-    std::vector<Date> dates_;
     DayCounter dc_;
+    std::vector<Date> dates_;
     Compounding comp_;
     bool subtractNotional_;
 
