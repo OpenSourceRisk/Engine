@@ -1147,6 +1147,9 @@
     <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\zerofixedcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\nonstandardyoyinflationcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -1989,6 +1992,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\zerofixedcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\nonstandardyoyinflationcoupon.cpp">
