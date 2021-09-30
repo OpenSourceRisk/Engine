@@ -143,6 +143,13 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
 
+    // check for zero notional, this is not handled well in the European engine, so we switch to Bermudan in this case
+
+    if (isStandard && close_enough(notional, 0.0)) {
+        DLOG("Swaption::build() found zero notional, set isStandard := false to ensure valid pricing");
+        isStandard = false;
+    }
+
     DLOG("Swaption::build() for " << id() << ": type: isCrossCcy = " << std::boolalpha << isCrossCcy
                                   << ", isOis = " << isOis << ", isBma = " << isBma << ", isStandard = " << isStandard);
 
