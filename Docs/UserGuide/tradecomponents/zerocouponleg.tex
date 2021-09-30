@@ -7,6 +7,8 @@ Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fix
 
 To create a leg with only one payment, the schedule must only contain the start and end date. Note that this can be achieved by setting the \emph{Tenor} to \emph{0D} in a rule based Schedule. 
 
+Note that a Zero Coupon Fixed leg must have NotionalInitialExchange and NotionalFinalExchange omitted or set to false.
+
 \begin{itemize}
 \item Rates: The fixed real rate(s) of the leg. While this can be a single value, a vector of values or a dated vector of
   values. 
