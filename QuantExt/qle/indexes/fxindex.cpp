@@ -30,16 +30,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
 #include <qle/indexes/fxindex.hpp>
+
+using namespace std;
+
 namespace QuantExt {
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
-                 const Handle<YieldTermStructure>& targetYts, bool inverseIndex)
+                 const Handle<YieldTermStructure>& targetYts, bool inverseIndex, bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(false), fixingCalendar_(fixingCalendar),
-      inverseIndex_(inverseIndex) {
+      inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
 
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
@@ -57,10 +61,10 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
                  const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
-                 bool inverseIndex)
+                 bool inverseIndex, bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
       sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true), fixingCalendar_(fixingCalendar),
-      inverseIndex_(inverseIndex) {
+      inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
 
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
@@ -161,6 +165,111 @@ boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Han
                                           const Handle<YieldTermStructure>& targetYts) {
     return boost::make_shared<FxIndex>(familyName_, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_,
                                        fxQuote, sourceYts, targetYts, inverseIndex_);
+}
+
+std::string FxIndex::name() const { 
+    return name_; 
+}
+
+Calendar FxIndex::fixingCalendar() const { 
+    return fixingCalendar_; 
+}
+
+bool FxIndex::isValidFixingDate(const Date& d) const { 
+    return fixingCalendar().isBusinessDay(d); 
+}
+
+void FxIndex::update() { 
+    notifyObservers(); 
+}
+
+Date FxIndex::fixingDate(const Date& valueDate) const {
+    Date fixingDate = fixingCalendar().advance(valueDate, -static_cast<Integer>(fixingDays_), Days);
+    return fixingDate;
+}
+
+Date FxIndex::valueDate(const Date& fixingDate) const {
+    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
+    return fixingCalendar().advance(fixingDate, fixingDays_, Days);
+}
+
+Real FxIndex::pastFixing(const Date& fixingDate) const {
+    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
+
+    Real fixing = timeSeries()[fixingDate];
+    if (fixing != Null<Real>())
+        return fixing;
+
+    if (fixingTriangulation_) {        
+        // check reverse
+        string revName = familyName_ + " " + targetCurrency_.code() + "/" + sourceCurrency_.code();
+        if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate))
+            return 1.0 / IndexManager::instance().getHistory(revName)[fixingDate];
+
+        // Now we search for a pair of quotes that we can combine to construct the quote required.
+        // We only search for a pair of quotes a single step apart.
+        //
+        // Suppose we want a USDJPY quote and we have EUR based data, there are 4 combinations to
+        // consider:
+        // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
+        // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
+        // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
+        // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
+        //
+        // Loop over the map, look for domestic then use the map to find the other side of the pair.
+
+        // Loop over all the possible Indexes
+        vector<string> availIndexes = IndexManager::instance().histories();
+        for (auto i : availIndexes) {
+            if (boost::starts_with(i, familyName_)) {
+                // check for a fixing
+                Real fixing = IndexManager::instance().getHistory(i)[fixingDate];
+                if (fixing != Null<Real>()) {
+                    
+                    Size l = i.size();
+                    string keyDomestic = i.substr(l - 7, 3);
+                    string keyForeign = i.substr(l - 3);
+                    string domestic = sourceCurrency_.code();
+                    string foreign = targetCurrency_.code();
+
+                    if (domestic == keyDomestic) {
+                        // we have domestic, now look for foreign/keyForeign
+                        // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
+                        string forName = familyName_ + " " + foreign + "/" + keyForeign;
+                        if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
+                            Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
+                            return fixing / forFixing;
+                        }
+
+                        // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
+                        forName = familyName_ + " " + keyForeign + "/" + foreign;
+                        if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
+                            Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
+                            return fixing * forFixing;
+                        }
+                    }
+
+                    if (domestic == keyForeign) {
+                        // we have fixing, now look for foreign/keyDomestic
+                        // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
+                        string forName = familyName_ + " " + foreign + "/" + keyDomestic;
+                        if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
+                            Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
+                            return 1 / (fixing * forFixing);
+                        }
+
+                        // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
+                        forName = familyName_ + " " + keyDomestic + "/" + foreign;
+                        if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
+                            Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
+                            return fixing / forFixing;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return fixing;
 }
 
 } // namespace QuantExt

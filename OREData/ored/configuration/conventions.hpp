@@ -1301,7 +1301,7 @@ class CommodityFutureConvention : public Convention {
 public:
     /*! The anchor day type of commodity future convention
      */
-    enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday };
+    enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter };
     enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday };
 
     //! Classes to differentiate constructors below
@@ -1314,6 +1314,11 @@ public:
     struct CalendarDaysBefore {
         CalendarDaysBefore(const std::string& calendarDaysBefore) : calendarDaysBefore_(calendarDaysBefore) {}
         std::string calendarDaysBefore_;
+    };
+    
+    struct BusinessDaysAfter {
+        BusinessDaysAfter(const std::string& businessDaysAfter) : businessDaysAfter_(businessDaysAfter) {}
+        std::string businessDaysAfter_;
     };
 
 
@@ -1512,6 +1517,23 @@ public:
                               QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
                               const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
                               const std::string& indexName = "", const std::string& optionFrequency = "");
+    
+    //! Business days before based constructor
+    CommodityFutureConvention(const std::string& id, const BusinessDaysAfter& businessDaysAfter,
+                              const std::string& contractFrequency, const std::string& calendar,
+                              const std::string& expiryCalendar = "", QuantLib::Size expiryMonthLag = 0,
+                              const std::string& oneContractMonth = "", const std::string& offsetDays = "",
+                              const std::string& bdc = "", bool adjustBeforeOffset = true, bool isAveraging = false,
+                              const OptionExpiryAnchorDateRule& optionExpiryDateRule = OptionExpiryAnchorDateRule(),
+                              const std::set<ProhibitedExpiry>& prohibitedExpiries = {},
+                              QuantLib::Size optionExpiryMonthLag = 0,
+                              const std::string& optionBdc = "",
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& futureContinuationMappings = {},
+                              const std::map<QuantLib::Natural, QuantLib::Natural>& optionContinuationMappings = {},
+                              const AveragingData& averagingData = AveragingData(),
+                              QuantLib::Natural hoursPerDay = QuantLib::Null<QuantLib::Natural>(),
+                              const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData = boost::none,
+                              const std::string& indexName = "", const std::string& optionFrequency = "");
 
     //! \name Inspectors
     //@{
@@ -1520,6 +1542,7 @@ public:
     QuantLib::Natural nth() const { return nth_; }
     QuantLib::Weekday weekday() const { return weekday_; }
     QuantLib::Natural calendarDaysBefore() const { return calendarDaysBefore_; }
+    QuantLib::Integer businessDaysAfter() const { return businessDaysAfter_; }
     QuantLib::Frequency contractFrequency() const { return contractFrequency_; }
     const QuantLib::Calendar& calendar() const { return calendar_; }
     const QuantLib::Calendar& expiryCalendar() const { return expiryCalendar_; }
@@ -1567,6 +1590,7 @@ private:
     QuantLib::Natural nth_;
     QuantLib::Weekday weekday_;
     QuantLib::Natural calendarDaysBefore_;
+    QuantLib::Integer businessDaysAfter_;
     QuantLib::Frequency contractFrequency_;
     QuantLib::Calendar calendar_;
     QuantLib::Calendar expiryCalendar_;
@@ -1579,6 +1603,7 @@ private:
     std::string strNth_;
     std::string strWeekday_;
     std::string strCalendarDaysBefore_;
+    std::string strBusinessDaysAfter_;
     std::string strContractFrequency_;
     std::string strCalendar_;
     std::string strExpiryCalendar_;

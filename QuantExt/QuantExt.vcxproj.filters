@@ -597,6 +597,9 @@
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\rubkeyrate.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -1145,6 +1148,9 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\zerofixedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\nonstandardyoyinflationcoupon.hpp">
@@ -1989,6 +1995,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\zerofixedcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\nonstandardyoyinflationcoupon.cpp">
