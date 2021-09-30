@@ -88,6 +88,7 @@
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/rubkeyrate.hpp>
 #include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
@@ -356,6 +357,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
+        {"RUB-KEYRATE", boost::make_shared<IborIndexParserWithPeriod<RUBKeyRate>>()},
         {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
         {"THB-THBFIX", boost::make_shared<IborIndexParserWithPeriod<THBFIX>>()},
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
