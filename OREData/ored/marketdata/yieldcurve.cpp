@@ -706,7 +706,7 @@ void YieldCurve::buildZeroCurve() {
         if (zeroCompounding == Continuous) {
             zeroes.push_back(it->second);
         } else {
-            zeroes.push_back(tempRate.equivalentRate(Continuous, Annual, t));
+            zeroes.push_back(tempRate.equivalentRate(Continuous, NoFrequency, t));
         }
         discounts.push_back(tempRate.discountFactor(t));
         LOG("Add zero curve point for " << curveSpec_.name() << ": " << io::iso_date(dates.back()) << " " << fixed
@@ -875,6 +875,10 @@ void YieldCurve::buildDiscountCurve() {
         boost::dynamic_pointer_cast<DirectYieldCurveSegment>(curveSegments_[0]);
     auto discountQuoteIDs = discountCurveSegment->quotes();
 
+    boost::shared_ptr<Convention> convention = conventions_.get(discountCurveSegment->conventionsID());
+    boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
+    QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
+
     for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
         if (marketQuote) {
@@ -888,18 +892,14 @@ void YieldCurve::buildDiscountCurve() {
 
             } else if (discountQuote->tenor() != Period()){
 
-                boost::shared_ptr<Convention> convention = conventions_.get(discountCurveSegment->conventionsID());
-                boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
-                QL_REQUIRE(zeroConvention, "could not cast to zeroconvention");
                 Calendar cal = zeroConvention->tenorCalendar();
                 BusinessDayConvention rollConvention = zeroConvention->rollConvention();
-                Date date = cal.adjust(asofDate_ + discountQuote->tenor(), rollConvention);
+                Date date = cal.adjust(cal.adjust(asofDate_, rollConvention) + discountQuote->tenor(), rollConvention);
                 DLOG("YieldCurve::buildDiscountCurve - tenor " << discountQuote->tenor() << " to date " << io::iso_date(date));
                 data[date] = discountQuote->quote()->value();
 
             } else {
                 QL_FAIL("YieldCurve::buildDiscountCurve - neither date nor tenor recognised");
-
             }
 
         }
