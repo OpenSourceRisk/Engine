@@ -597,6 +597,9 @@
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\rubkeyrate.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
