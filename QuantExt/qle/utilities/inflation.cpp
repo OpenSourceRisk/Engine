@@ -59,7 +59,6 @@ Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bon
     for (auto& cf : bond->cashflows()) {
         if (auto inflCpn = boost::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
             const auto& inflationIndex = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(inflCpn->index());
-            const auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
             Date settlementDate = bond->settlementDate();
             std::pair<Date, Date> currentInflationPeriod = inflationPeriod(settlementDate, inflationIndex->frequency());
             std::pair<Date, Date> settlementFixingPeriod = inflationPeriod(settlementDate - inflCpn->observationLag(), inflationIndex->frequency());
