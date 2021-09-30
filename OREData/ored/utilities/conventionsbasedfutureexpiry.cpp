@@ -122,10 +122,17 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
         expiry = Date::nthWeekday(convention_.nth(), convention_.weekday(), contractMonth, contractYear);
     } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::CalendarDaysBefore) {
         expiry = Date(1, contractMonth, contractYear) - convention_.calendarDaysBefore() * Days;
+    } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::BusinessDaysAfter) {
+        if (convention_.businessDaysAfter() > 0) {
+            expiry = convention_.expiryCalendar().advance(Date(1, contractMonth, contractYear) - 1 * Days,
+                                                          convention_.businessDaysAfter(), Days);
+        } else {
+            expiry = convention_.expiryCalendar().advance(Date(1, contractMonth, contractYear),
+                                                          convention_.businessDaysAfter(), Days);
+        }
     } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::LastWeekday) {
         expiry = QuantExt::DateUtilities::lastWeekday(convention_.weekday(), contractMonth, contractYear);
-    } 
-    else {
+    } else {
         QL_FAIL("Did not recognise the commodity future convention's anchor type");
     }
 
@@ -188,7 +195,7 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
             expiry = QuantExt::DateUtilities::lastWeekday(convention_.optionWeekday(), optionMonth, optionYear);
             expiry = convention_.expiryCalendar().adjust(expiry, convention_.optionBusinessDayConvention());
         }
-        
+
         expiry = avoidProhibited(expiry, true);
 
     } else {
@@ -202,7 +209,7 @@ Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear
 Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool forOption) const {
 
     // If contract frequency is daily, next expiry is simply the next valid date on expiry calendar.
-  
+
     if ((convention_.contractFrequency() == Daily) && (!forOption || convention_.optionContractFrequency() == Daily)) {
         Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
         return avoidProhibited(expiry, false);
@@ -224,13 +231,9 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     return expiryDate;
 }
 
-const CommodityFutureConvention& ConventionsBasedFutureExpiry::commodityFutureConvention() const {
-    return convention_;
-}
+const CommodityFutureConvention& ConventionsBasedFutureExpiry::commodityFutureConvention() const { return convention_; }
 
-Size ConventionsBasedFutureExpiry::maxIterations() const {
-    return maxIterations_;
-}
+Size ConventionsBasedFutureExpiry::maxIterations() const { return maxIterations_; }
 
 Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry, bool forOption) const {
 
@@ -253,8 +256,8 @@ Date ConventionsBasedFutureExpiry::avoidProhibited(const Date& expiry, bool forO
         } else if (bdc == Following || bdc == ModifiedFollowing) {
             result = convention_.calendar().advance(result, 1, Days, bdc);
         } else {
-            QL_FAIL("Convention " << bdc << " associated with prohibited expiry " <<
-                io::iso_date(result) << " is not supported.");
+            QL_FAIL("Convention " << bdc << " associated with prohibited expiry " << io::iso_date(result)
+                                  << " is not supported.");
         }
 
         it = pes.find(PE(result));
