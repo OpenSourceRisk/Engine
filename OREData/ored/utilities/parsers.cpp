@@ -592,6 +592,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ACT/365L", Actual365Fixed()},
                                         {"Act/365", Actual365Fixed()},
                                         {"Act/365L", Actual365Fixed()},
+                                        {"Act/365 (Canadian Bond)", Actual365Fixed(Actual365Fixed::Canadian)},
                                         {"T360", Thirty360(Thirty360::USA)},
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 US", Thirty360(Thirty360::USA)},
