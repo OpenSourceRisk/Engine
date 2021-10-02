@@ -317,6 +317,7 @@
       <xs:enumeration value="ACT/365L"/>
       <xs:enumeration value="Act/365"/>
       <xs:enumeration value="Act/365L"/>
+      <xs:enumeration value="Act/365 (Canadian Bond)"/>
       <xs:enumeration value="T360"/>
       <xs:enumeration value="30/360"/>
       <xs:enumeration value="30/360 US"/>
