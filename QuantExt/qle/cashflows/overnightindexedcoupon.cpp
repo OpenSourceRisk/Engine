@@ -48,140 +48,6 @@ using std::vector;
 
 namespace QuantExt {
 
-namespace {
-
-// OvernightIndexedCouponPricer, this can be anonymous
-
-class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
-public:
-    void initialize(const FloatingRateCoupon& coupon) override {
-        coupon_ = dynamic_cast<const OvernightIndexedCoupon*>(&coupon);
-        QL_ENSURE(coupon_, "wrong coupon type");
-    }
-
-    void compute() const {
-        ext::shared_ptr<OvernightIndex> index = ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
-
-        const vector<Date>& fixingDates = coupon_->fixingDates();
-        const vector<Time>& dt = coupon_->dt();
-
-        Size n = dt.size();
-        Size i = 0;
-        QL_REQUIRE(coupon_->rateCutoff() < n, "rate cutoff (" << coupon_->rateCutoff()
-                                                              << ") must be less than number of fixings in period ("
-                                                              << n << ")");
-        Size nCutoff = n - coupon_->rateCutoff();
-
-        Real compoundFactor = 1.0, compoundFactorWithoutSpread = 1.0;
-
-        // already fixed part
-        Date today = Settings::instance().evaluationDate();
-        while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
-            // rate must have been fixed
-            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
-            QL_REQUIRE(pastFixing != Null<Real>(),
-                       "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
-            if (coupon_->includeSpread()) {
-                compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
-                pastFixing += coupon_->spread();
-            }
-            compoundFactor *= (1.0 + pastFixing * dt[i]);
-            ++i;
-        }
-
-        // today is a border case
-        if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
-            // might have been fixed
-            try {
-                Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
-                if (pastFixing != Null<Real>()) {
-                    if (coupon_->includeSpread()) {
-                        compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
-                        pastFixing += coupon_->spread();
-                    }
-                    compoundFactor *= (1.0 + pastFixing * dt[i]);
-                    ++i;
-                } else {
-                    ; // fall through and forecast
-                }
-            } catch (Error&) {
-                ; // fall through and forecast
-            }
-        }
-
-        // forward part using telescopic property in order
-        // to avoid the evaluation of multiple forward fixings
-        const vector<Date>& dates = coupon_->valueDates();
-        if (i < n) {
-            Handle<YieldTermStructure> curve = index->forwardingTermStructure();
-            QL_REQUIRE(!curve.empty(), "null term structure set to this instance of " << index->name());
-
-            // handle the part until the rate cutoff (might be empty, i.e. startDiscount = endDiscount)
-            DiscountFactor startDiscount = curve->discount(dates[i]);
-            DiscountFactor endDiscount = curve->discount(dates[std::max(nCutoff, i)]);
-
-            // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
-            if (nCutoff < n) {
-                // forward discount factor for one calendar day on the cutoff date
-                DiscountFactor discountCutoffDate =
-                    curve->discount(dates[nCutoff] + 1) / curve->discount(dates[nCutoff]);
-                // keep the above forward discount factor constant during the cutoff period
-                endDiscount *= std::pow(discountCutoffDate, dates[n] - dates[nCutoff]);
-            }
-
-            compoundFactor *= startDiscount / endDiscount;
-
-            if (coupon_->includeSpread()) {
-                compoundFactorWithoutSpread *= startDiscount / endDiscount;
-                // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE":
-                // set tau to an average value
-                Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
-                // now use formula (4) from the paper
-                compoundFactor *= std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates.back() - dates[i]));
-            }
-        }
-
-        Rate tau = coupon_->lookback() == 0 * Days ? coupon_->accrualPeriod()
-                                                   : coupon_->dayCounter().yearFraction(dates.front(), dates.back());
-        Rate rate = (compoundFactor - 1.0) / tau;
-        swapletRate_ = coupon_->gearing() * rate;
-        if (!coupon_->includeSpread()) {
-            swapletRate_ += coupon_->spread();
-            effectiveSpread_ = coupon_->spread();
-            effectiveIndexFixing_ = rate;
-        } else {
-            effectiveSpread_ = rate - (compoundFactorWithoutSpread - 1.0) / tau;
-            effectiveIndexFixing_ = rate - effectiveSpread_;
-        }
-    }
-
-    Rate swapletRate() const override {
-        compute();
-        return swapletRate_;
-    }
-
-    Rate effectiveSpread() const {
-        compute();
-        return effectiveSpread_;
-    }
-
-    Rate effectiveIndexFixing() const {
-        compute();
-        return effectiveIndexFixing_;
-    }
-
-    Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
-    Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }
-    Rate capletRate(Rate) const override { QL_FAIL("capletRate not available"); }
-    Real floorletPrice(Rate) const override { QL_FAIL("floorletPrice not available"); }
-    Rate floorletRate(Rate) const override { QL_FAIL("floorletRate not available"); }
-
-protected:
-    const OvernightIndexedCoupon* coupon_;
-    mutable Real swapletRate_, effectiveSpread_, effectiveIndexFixing_;
-};
-} // namespace
-
 // OvernightIndexedCoupon implementation
 
 OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nominal, const Date& startDate,
@@ -307,6 +173,122 @@ Real OvernightIndexedCoupon::effectiveIndexFixing() const {
     QL_REQUIRE(p, "OvernightIndexedCoupon::effectiveSpread(): expected OvernightIndexedCouponPricer");
     p->initialize(*this);
     return p->effectiveIndexFixing();
+}
+
+// OvernightIndexedCouponPricer implementation
+
+void OvernightIndexedCouponPricer::initialize(const FloatingRateCoupon& coupon) {
+    coupon_ = dynamic_cast<const OvernightIndexedCoupon*>(&coupon);
+    QL_ENSURE(coupon_, "wrong coupon type");
+}
+
+void OvernightIndexedCouponPricer::compute() const {
+    ext::shared_ptr<OvernightIndex> index = ext::dynamic_pointer_cast<OvernightIndex>(coupon_->index());
+
+    const vector<Date>& fixingDates = coupon_->fixingDates();
+    const vector<Time>& dt = coupon_->dt();
+
+    Size n = dt.size();
+    Size i = 0;
+    QL_REQUIRE(coupon_->rateCutoff() < n, "rate cutoff (" << coupon_->rateCutoff()
+                                                          << ") must be less than number of fixings in period (" << n
+                                                          << ")");
+    Size nCutoff = n - coupon_->rateCutoff();
+
+    Real compoundFactor = 1.0, compoundFactorWithoutSpread = 1.0;
+
+    // already fixed part
+    Date today = Settings::instance().evaluationDate();
+    while (i < n && fixingDates[std::min(i, nCutoff)] < today) {
+        // rate must have been fixed
+        Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+        QL_REQUIRE(pastFixing != Null<Real>(),
+                   "Missing " << index->name() << " fixing for " << fixingDates[std::min(i, nCutoff)]);
+        if (coupon_->includeSpread()) {
+            compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
+            pastFixing += coupon_->spread();
+        }
+        compoundFactor *= (1.0 + pastFixing * dt[i]);
+        ++i;
+    }
+
+    // today is a border case
+    if (i < n && fixingDates[std::min(i, nCutoff)] == today) {
+        // might have been fixed
+        try {
+            Rate pastFixing = IndexManager::instance().getHistory(index->name())[fixingDates[std::min(i, nCutoff)]];
+            if (pastFixing != Null<Real>()) {
+                if (coupon_->includeSpread()) {
+                    compoundFactorWithoutSpread *= (1.0 + pastFixing * dt[i]);
+                    pastFixing += coupon_->spread();
+                }
+                compoundFactor *= (1.0 + pastFixing * dt[i]);
+                ++i;
+            } else {
+                ; // fall through and forecast
+            }
+        } catch (Error&) {
+            ; // fall through and forecast
+        }
+    }
+
+    // forward part using telescopic property in order
+    // to avoid the evaluation of multiple forward fixings
+    const vector<Date>& dates = coupon_->valueDates();
+    if (i < n) {
+        Handle<YieldTermStructure> curve = index->forwardingTermStructure();
+        QL_REQUIRE(!curve.empty(), "null term structure set to this instance of " << index->name());
+
+        // handle the part until the rate cutoff (might be empty, i.e. startDiscount = endDiscount)
+        DiscountFactor startDiscount = curve->discount(dates[i]);
+        DiscountFactor endDiscount = curve->discount(dates[std::max(nCutoff, i)]);
+
+        // handle the rate cutoff period (if there is any, i.e. if nCutoff < n)
+        if (nCutoff < n) {
+            // forward discount factor for one calendar day on the cutoff date
+            DiscountFactor discountCutoffDate = curve->discount(dates[nCutoff] + 1) / curve->discount(dates[nCutoff]);
+            // keep the above forward discount factor constant during the cutoff period
+            endDiscount *= std::pow(discountCutoffDate, dates[n] - dates[nCutoff]);
+        }
+
+        compoundFactor *= startDiscount / endDiscount;
+
+        if (coupon_->includeSpread()) {
+            compoundFactorWithoutSpread *= startDiscount / endDiscount;
+            // this is an approximation, see "Ester / Daily Spread Curve Setup in ORE":
+            // set tau to an average value
+            Real tau = coupon_->dayCounter().yearFraction(dates[i], dates.back()) / (dates.back() - dates[i]);
+            // now use formula (4) from the paper
+            compoundFactor *= std::pow(1.0 + tau * coupon_->spread(), static_cast<int>(dates.back() - dates[i]));
+        }
+    }
+
+    Rate tau = coupon_->dayCounter().yearFraction(dates.front(), dates.back());
+    Rate rate = (compoundFactor - 1.0) / tau;
+    swapletRate_ = coupon_->gearing() * rate;
+    if (!coupon_->includeSpread()) {
+        swapletRate_ += coupon_->spread();
+        effectiveSpread_ = coupon_->spread();
+        effectiveIndexFixing_ = rate;
+    } else {
+        effectiveSpread_ = rate - (compoundFactorWithoutSpread - 1.0) / tau;
+        effectiveIndexFixing_ = rate - effectiveSpread_;
+    }
+}
+
+Rate OvernightIndexedCouponPricer::swapletRate() const {
+    compute();
+    return swapletRate_;
+}
+
+Rate OvernightIndexedCouponPricer::effectiveSpread() const {
+    compute();
+    return effectiveSpread_;
+}
+
+Rate OvernightIndexedCouponPricer::effectiveIndexFixing() const {
+    compute();
+    return effectiveIndexFixing_;
 }
 
 // CappedFlooredOvernightIndexedCoupon implementation
