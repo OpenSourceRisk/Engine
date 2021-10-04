@@ -160,7 +160,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         if (marginPostFreqStr.empty())
             marginPostFreqStr = "1D";
         
-        Real iaHeld;
+        Real iaHeld = 0.0;
         string iaType;
         if (XMLNode* iaChild = XMLUtils::getChildNode(csaChild, "IndependentAmount")) {
             iaHeld = XMLUtils::getChildValueAsDouble(iaChild, "IndependentAmountHeld", false, 0.0);
