@@ -177,7 +177,7 @@
                  QL_FAIL("QuadraticInterpolation primitive is not implemented");
              }
              Real derivative(Real x) const {
-                 QL_REQUIRE(p_, "failed to calibrate lambda");
+                 QL_REQUIRE(p_ != 0.0, "failed to calibrate lambda");
                  x = x * x_mul_ + x_offset_;
                  Real l = lambdas_[0];
                  Real b = 0;
@@ -188,7 +188,7 @@
                  return l / y_mul_;
              }
              Real secondDerivative(Real x) const {
-                 QL_REQUIRE(p_, "failed to calibrate lambda");
+                 QL_REQUIRE(p_ != 0.0, "failed to calibrate lambda");
                  x = x * x_mul_ + x_offset_;
                  Real l = 0;
                  Real b = 0;

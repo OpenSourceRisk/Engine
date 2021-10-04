@@ -208,7 +208,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                         Real put = blackFormula(Option::Put, amerStrikes[k], forward, vols[1][k] * sqrt(t),
                                                 forecastCurve_->discount(t));
 
-                        if (call && put) {
+                        if (call != 0.0 && put != 0.0) {
                             newStrikes.push_back(amerStrikes[k]);
                             dates.push_back(expiry);
                             callPremiums.push_back(call);
