@@ -47,7 +47,7 @@ public:
 
     //! Detailed constructor
     CommodityVolCurve(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
-                      const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                      const CurveConfigurations& curveConfigs,
                       const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
                       const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {},
                       const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {});
@@ -109,7 +109,7 @@ private:
     void buildVolatility(const QuantLib::Date& asof, CommodityVolatilityConfig& vc,
                          const VolatilityApoFutureSurfaceConfig& vapo,
                          const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
-                         const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts, const Conventions& conventions);
+                         const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at

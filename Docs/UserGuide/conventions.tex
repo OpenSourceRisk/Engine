@@ -516,6 +516,19 @@ structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
   <EOM> </EOM>
   <IsResettable> </IsResettable>
   <FlatIndexIsResettable> </FlatIndexIsResettable>>
+  <PaymentLag> </PaymentLag>
+  <FlatPaymentLag> </FlatPaymentLag>
+  <!-- for OIS only -->
+  <IncludeSpread> </IncludeSpread>
+  <Lookback> </Lookback>
+  <FixingDays> </FixingDays>
+  <RateCutoff> </RateCutoff>
+  <IsAveraged> </IsAveraged>
+  <FlatIncludeSpread> </FlatIncludeSpread>
+  <FlatLookback> </FlatLookback>
+  <FlatFixingDays> </FlatFixingDays>
+  <FlatRateCutoff> </FlatRateCutoff>
+  <FlatIsAveraged> </FlatIsAveraged>
 </CrossCurrencyBasis>
 \end{minted}
 \caption{Cross currency basis swap conventions}
@@ -534,6 +547,20 @@ SettlementDays above.
 \item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs, and \emph{False} if not. If not provided, it defaults to \emph{False}.
 \item IsResettable [Optional]: \emph{True} if the swap is mark-to-market resetting, and \emph{False} otherwise. If not provided, it defaults to \emph{False}.
 \item FlatIndexIsResettable [Optional]: \emph{True} if it is the notional on the leg paying the flat index that resets, and \emph{False} otherwise. If not provided, it defaults to \emph{True}.
+\item FlatTenor [Optional]: the flat leg period length (typical value is 3M)
+\item SpreadTenor [Optional]: the spread leg period length (typical value is 3M)
+\item SpreadPaymentLag [Optional]: the payment lag for the spread leg, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatPaymentLag [Optional]: the payment lag for the flat leg, allowable values are 0, 1, 2, ..., defaults to 0 if nove given
+\item SpreadIncludeSpread [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item SpreadLookback [Optional]: Only relevant if spread leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
+\item SpreadFixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item SpreadRateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item SpreadIsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatIncludeSpread [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
+\item FlatLookback [Optional]: Only relevant if spread leg is OIS, allowable values are 0D, 1D, ..., defaults to 0D if not given
+\item FlatFixingDays [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatRateCutoff [Optional]: Only relevant if spread leg is OIS, allowable values are 0, 1, 2, ..., defaults to 0 if not given
+\item FlatIsAveraged [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given
 \end{itemize}
 
 \subsubsection{Inflation Swap Conventions}
@@ -932,6 +959,7 @@ The meanings of the various elements in this node are as follows:
     \item The \lstinline!CalendarDaysBefore! This node can contain any non-negative integer. The contract expiry date is this number of calendar days before the first calendar day of the contract month.
     \item The \lstinline!NthWeekday! This node has the elements shown in Listing \ref{lst:nth_weekday_node}. This node is used to indicate a date in a given month in the form of the n-th named weekday of that month e.g. 3rd Wednesday. The allowable values for \lstinline!Nth! are ${1,2,3,4}$. The \lstinline!Weekday! node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
     \item The \lstinline!LastWeekday! [Optional]: This node is used to indicate a date in a given month in the form of the last named weekday of that month e.g. last Wednesday. The node takes a weekday in the form of the first three characters of the weekday with the first character capitalised.
+    \item The \lstinline!BusinessDaysAfter! This node can contain any integer. If the number is positive the contract expiry is the n-th business day of the contract month. If the number is negative the contract expiry date is this number of business days before the first calendar day of the contract month.
     \end{itemize}
 \item \lstinline!ContractFrequency!: This node indicates the frequency of the commodity future contracts. The value here is usually \lstinline!Monthly! or \lstinline!Quarterly!.
 \item \lstinline!Calendar!: The business day trading calendar(s) applicable for the commodity future contract.

@@ -4,10 +4,13 @@ set(QuantExt_SRC calendars/amendedcalendar.cpp
 calendars/austria.cpp
 calendars/belgium.cpp
 calendars/chile.cpp
+calendars/cyprus.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
 calendars/france.cpp
+calendars/greece.cpp
 calendars/ice.cpp
+calendars/ireland.cpp
 calendars/islamicweekendsonly.cpp
 calendars/israel.cpp
 calendars/largejointcalendar.cpp
@@ -50,6 +53,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 cashflows/yoyinflationcoupon.cpp
+cashflows/zerofixedcoupon.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
@@ -265,11 +269,14 @@ calendars/austria.hpp
 calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
+calendars/cyprus.hpp
 calendars/colombia.hpp
 calendars/france.hpp
+calendars/greece.hpp
 calendars/ice.hpp
 calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
+calendars/ireland.hpp
 calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
@@ -311,6 +318,7 @@ cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 cashflows/yoyinflationcoupon.hpp
+cashflows/zerofixedcoupon.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp

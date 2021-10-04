@@ -100,6 +100,8 @@ boost::shared_ptr<data::Conventions> stressConv() {
     conventions->add(boost::make_shared<data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
 
+    InstrumentConventions::instance().conventions() = conventions;
+    
     return conventions;
 }
 
@@ -270,9 +272,9 @@ BOOST_AUTO_TEST_CASE(regression) {
     boost::shared_ptr<StressTestScenarioData> stressData = setupStressScenarioData();
 
     // build scenario sim market
-    Conventions conventions = *stressConv();
+    stressConv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
     boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
@@ -329,8 +331,7 @@ BOOST_AUTO_TEST_CASE(regression) {
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
 
     // build the sensitivity analysis object
-    ore::analytics::StressTest analysis(portfolio, initMarket, "default", engineData, simMarketData, stressData,
-                                        conventions);
+    ore::analytics::StressTest analysis(portfolio, initMarket, "default", engineData, simMarketData, stressData);
 
     std::map<std::string, Real> baseNPV = analysis.baseNPV();
     std::map<std::pair<std::string, std::string>, Real> shiftedNPV = analysis.shiftedNPV();

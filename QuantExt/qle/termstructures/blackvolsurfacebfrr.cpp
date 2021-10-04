@@ -100,6 +100,14 @@ SimpleDeltaInterpolatedSmile::SimpleDeltaInterpolatedSmile(
         y_.push_back(y[perm[i]]);
     }
 
+    /* check the strikes are not (numerically) identical */
+
+    for (Size i = 0; i < x_.size() - 1; ++i) {
+        QL_REQUIRE(!close_enough(x_[i], x_[i + 1]), "SmileDeltaInterpolatedSmile: interpolation points x["
+                                                        << i << "] = x[" << (i + 1) << "] = " << x_[i]
+                                                        << " are numerically identical.");
+    }
+
     /* Create the interpolation object */
 
     if (smileInterpolation_ == BlackVolatilitySurfaceBFRR::SmileInterpolation::Linear) {
@@ -629,10 +637,21 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         but the best we can realistically do in this context, because we don't have a date
         corresponding to t) */
 
-    auto smile = boost::make_shared<detail::SimpleDeltaInterpolatedSmile>(
-        spot_->value(), domesticTS_->discount(t + settlLag_) / settlDomDisc_,
-        foreignTS_->discount(t + settlLag_) / settlForDisc_, t, deltas_, putVols_i, callVols_i, atmVol_i, dt_c, at_c,
-        smileInterpolation_);
+    boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile> smile;
+
+    try {
+        smile = boost::make_shared<detail::SimpleDeltaInterpolatedSmile>(
+            spot_->value(), domesticTS_->discount(t + settlLag_) / settlDomDisc_,
+            foreignTS_->discount(t + settlLag_) / settlForDisc_, t, deltas_, putVols_i, callVols_i, atmVol_i, dt_c,
+            at_c, smileInterpolation_);
+    } catch (const std::exception& e) {
+        // the interpolated smile failed to build => mark the "m" smile as a failure if available and retry, otherwise
+        // market the "p" smile as a failure and retry
+        Size failureIndex = index_m != Null<Size>() ? index_m : index_p;
+        smileHasError_[failureIndex] = true;
+        smileErrorMessage_[failureIndex] = e.what();
+        return blackVolImpl(t, strike);
+    }
 
     /* store the new smile in the cache */
 

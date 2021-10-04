@@ -40,8 +40,11 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/cyprus.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/greece.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
@@ -199,7 +202,10 @@ Calendar parseCalendar(const string& s, const string& newName) {
         // Country full name to Settlement/Default
         {"Australia", Australia()},
         {"Canada", Canada()},
+        {"Cyprus", Cyprus()},
         {"Denmark", Denmark()},
+        {"Greece", Greece()},
+        {"Ireland", Ireland(Ireland::BankHolidays)},
         {"Japan", Japan()},
         {"Norway", Norway()},
         {"Switzerland", QuantExt::Switzerland()},
@@ -235,13 +241,16 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"CL", Chile()},
         {"CN", China()},
         {"CO", Colombia()},
+        {"CY", Cyprus()},
         {"CZ", CzechRepublic()},
         {"DK", Denmark()},
         {"FI", Finland()},
         {"FR", QuantExt::France()},
+        {"GR", Greece()},
         {"DE", Germany(Germany::Settlement)},
         {"HK", HongKong()},
         {"HU", Hungary()},
+        {"IE", Ireland(Ireland::BankHolidays)},
         {"IS", Iceland()},
         {"IN", India()},
         {"ID", Indonesia()},
@@ -285,14 +294,18 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"CHL", Chile()},
         {"CHN", China()},
         {"COL", Colombia()},
+        {"CYP", Cyprus()},
         {"CZE", CzechRepublic()},
         {"DNK", Denmark()},
         {"FIN", Finland()},
+        {"GRC", Greece()},
         //{"FRA", QuantExt::France()},
         {"DEU", Germany(Germany::Settlement)},
         {"HKG", HongKong()},
         {"HUN", Hungary()},
         {"ISL", Iceland()},
+        
+        {"IRL", Ireland(Ireland::BankHolidays)},
         {"IND", India()},
         {"IDN", Indonesia()},
         {"ISR", QuantLib::Israel()},
@@ -435,6 +448,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
         {"XLME", UnitedKingdom(UnitedKingdom::Metals)},
         {"XNYS", UnitedStates(UnitedStates::NYSE)},
+        {"XDUB", Ireland()},
 
         // Other / Legacy
         {"DEN", Denmark()}, // TODO: consider remove it, not ISO
@@ -578,13 +592,25 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ACT/365L", Actual365Fixed()},
                                         {"Act/365", Actual365Fixed()},
                                         {"Act/365L", Actual365Fixed()},
+                                        {"Act/365 (Canadian Bond)", Actual365Fixed(Actual365Fixed::Canadian)},
                                         {"T360", Thirty360(Thirty360::USA)},
                                         {"30/360", Thirty360(Thirty360::USA)},
+                                        {"30/360 US", Thirty360(Thirty360::USA)},
+                                        {"30U/360", Thirty360(Thirty360::USA)},
+                                        {"30US/360", Thirty360(Thirty360::USA)},
                                         {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
                                         {"ACT/nACT", Thirty360(Thirty360::USA)},
                                         {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
+                                        {"30/360 AIBD (Euro)", Thirty360(Thirty360::European)},
+                                        {"30E/360.ICMA", Thirty360(Thirty360::European)},
+                                        {"30E/360 ICMA", Thirty360(Thirty360::European)},
                                         {"30E/360", Thirty360(Thirty360::European)},
-                                        {"30E/360.ISDA", Thirty360(Thirty360::European)},
+                                        {"30E/360E", Thirty360(Thirty360::German)},
+                                        {"30E/360.ISDA", Thirty360(Thirty360::German)},
+                                        {"30E/360 ISDA", Thirty360(Thirty360::German)},
+                                        {"30/360 German", Thirty360(Thirty360::German)},
+                                        {"30/360 (German)", Thirty360(Thirty360::German)},
+                                        {"30/360 Italian", Thirty360(Thirty360::Italian)},
                                         {"30/360 (Italian)", Thirty360(Thirty360::Italian)},
                                         {"ActActISDA", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT.ISDA", ActualActual(ActualActual::ISDA)},

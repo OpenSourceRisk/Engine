@@ -46,8 +46,7 @@ public:
     InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
                               const CurveConfigurations& curveConfigs,
                               map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                              map<string, boost::shared_ptr<InflationCurve>>& inflationCurves,
-                              const boost::shared_ptr<Conventions>& conventions = nullptr);
+                              map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
 
     //! \name Inspectors
     //@{
@@ -77,7 +76,6 @@ private:
     boost::shared_ptr<InflationTermStructure> surface_;
     bool useMarketYoyCurve_;
     boost::shared_ptr<YoYInflationTermStructure> yoyTs_;
-    boost::shared_ptr<Conventions> conventions_;
     Handle<YieldTermStructure> discountCurve_;
 };
 } // namespace data

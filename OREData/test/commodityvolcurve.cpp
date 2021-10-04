@@ -114,7 +114,8 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
 
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
-
+    InstrumentConventions::instance().conventions() = conventions;
+    
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + curveConfigFile)));
 
@@ -124,7 +125,7 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
     auto loader = boost::make_shared<CSVLoader>(TEST_INPUT_FILE(string(inputDir + "/" + marketFile)),
                                                 TEST_INPUT_FILE(string(inputDir + "/" + fixingsFile)), false);
 
-    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs, conventions);
+    return boost::make_shared<TodaysMarket>(asof, todaysMarketParameters, loader, curveConfigs);
 }
 
 // clang-format off
@@ -193,8 +194,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
 
     // Check commodity volatility construction works
     boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve =
-                             boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs, conventions));
+    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
 
     // Check volatilities are all equal to the configured volatility regardless of strike and expiry
     Real configuredVolatility = 0.10;
@@ -243,8 +243,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 
     // Check commodity volatility construction works
     boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve =
-                             boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs, conventions));
+    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
 
     // Check time depending volatilities are as expected
     boost::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();
@@ -312,8 +311,7 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
 
     // Check commodity volatility construction works
     boost::shared_ptr<CommodityVolCurve> curve;
-    BOOST_CHECK_NO_THROW(curve =
-                             boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs, conventions));
+    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityVolCurve>(asof, curveSpec, loader, curveConfigs));
 
     // Check time and strike depending volatilities are as expected
     boost::shared_ptr<BlackVolTermStructure> volatility = curve->volatility();

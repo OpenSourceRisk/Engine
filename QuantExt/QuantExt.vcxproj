@@ -495,8 +495,11 @@
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\cme.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
+    <ClInclude Include="qle\calendars\cyprus.hpp" />
     <ClInclude Include="qle\calendars\france.hpp" />
+    <ClInclude Include="qle\calendars\greece.hpp" />
     <ClInclude Include="qle\calendars\ice.hpp" />
+    <ClInclude Include="qle\calendars\ireland.hpp" />
     <ClInclude Include="qle\calendars\islamicweekendsonly.hpp" />
     <ClInclude Include="qle\calendars\israel.hpp" />
     <ClInclude Include="qle\calendars\largejointcalendar.hpp" />
@@ -541,6 +544,7 @@
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp" />
+    <ClInclude Include="qle\cashflows\zerofixedcoupon.hpp" />
     <ClInclude Include="qle\currencies\africa.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
@@ -604,6 +608,7 @@
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\primeindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
+    <ClInclude Include="qle\indexes\ibor\rubkeyrate.hpp" />
     <ClInclude Include="qle\indexes\ibor\saibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\seksior.hpp" />
     <ClInclude Include="qle\indexes\ibor\sekstibor.hpp" />
@@ -883,8 +888,11 @@
     <ClCompile Include="qle\calendars\chile.cpp" />
     <ClCompile Include="qle\calendars\cme.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
+    <ClCompile Include="qle\calendars\cyprus.cpp" />
     <ClCompile Include="qle\calendars\france.cpp" />
+    <ClCompile Include="qle\calendars\greece.cpp" />
     <ClCompile Include="qle\calendars\ice.cpp" />
+    <ClCompile Include="qle\calendars\ireland.cpp" />
     <ClCompile Include="qle\calendars\islamicweekendsonly.cpp" />
     <ClCompile Include="qle\calendars\israel.cpp" />
     <ClCompile Include="qle\calendars\largejointcalendar.cpp" />
@@ -928,6 +936,7 @@
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp" />
+    <ClCompile Include="qle\cashflows\zerofixedcoupon.cpp" />
     <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />

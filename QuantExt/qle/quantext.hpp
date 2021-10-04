@@ -11,8 +11,11 @@
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/cyprus.hpp>
 #include <qle/calendars/france.hpp>
+#include <qle/calendars/greece.hpp>
 #include <qle/calendars/ice.hpp>
+#include <qle/calendars/ireland.hpp>
 #include <qle/calendars/islamicweekendsonly.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
@@ -56,6 +59,7 @@
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>

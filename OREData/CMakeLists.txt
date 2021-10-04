@@ -5,7 +5,6 @@ project(OREData CXX)
 enable_testing()
 
 include("../cmake/writeAll.cmake")
-include("../cmake/writeTestSuiteMain.cmake")
 include("../cmake/commonSettings.cmake")
 
 get_library_name("OREData" ORED_LIB_NAME)

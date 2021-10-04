@@ -34,6 +34,12 @@ public:
     explicit Sofr(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 };
 
+//! %Sofr term index, see https://www.cmegroup.com/market-data/cme-group-benchmark-administration/term-sofr.html#
+class SofrTerm : public IborIndex {
+public:
+    SofrTerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
+};
+
 } // namespace QuantExt
 
 #endif

@@ -317,13 +317,25 @@
       <xs:enumeration value="ACT/365L"/>
       <xs:enumeration value="Act/365"/>
       <xs:enumeration value="Act/365L"/>
+      <xs:enumeration value="Act/365 (Canadian Bond)"/>
       <xs:enumeration value="T360"/>
       <xs:enumeration value="30/360"/>
+      <xs:enumeration value="30/360 US"/>
+      <xs:enumeration value="30U/360"/>
+      <xs:enumeration value="30US/360"/>
       <xs:enumeration value="30/360 (Bond Basis)"/>
       <xs:enumeration value="ACT/nACT"/>
       <xs:enumeration value="30E/360 (Eurobond Basis)"/>
+      <xs:enumeration value="30/360 AIBD (Euro)"/>
+      <xs:enumeration value="30E/360.ICMA"/>
+      <xs:enumeration value="30E/360 ICAM"/>
       <xs:enumeration value="30E/360"/>
+      <xs:enumeration value="30E/360E"/>
       <xs:enumeration value="30E/360.ISDA"/>
+      <xs:enumeration value="30E/360 ISDA"/>
+      <xs:enumeration value="30/360 German"/>
+      <xs:enumeration value="30/360 (German)"/>
+      <xs:enumeration value="30/360 Italian"/>
       <xs:enumeration value="30/360 (Italian)"/>
       <xs:enumeration value="ActActISDA"/>
       <xs:enumeration value="ACT/ACT.ISDA"/>
@@ -798,16 +810,7 @@
           </xs:all>
         </xs:complexType>
       </xs:element>
-      <xs:element name="DerivedSchedule">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="xs:string" name="BaseSchedule" minOccurs="1" maxOccurs="1"/>
-            <xs:element type="xs:string" name="Shift" minOccurs="0" maxOccurs="1"/>
-            <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
-            <xs:element type="businessDayConvention" name="Convention" minOccurs="0" maxOccurs="1"/>
-          </xs:all>
-        </xs:complexType>
-      </xs:element>
+      <xs:element ref="DerivedScheduleGroup"/>
     </xs:choice>
   </xs:complexType>
 
@@ -869,6 +872,19 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="DerivedScheduleGroup" abstract="true"/>
+  <xs:element name="DerivedSchedule" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
+  <xs:element name="Derived" type="DerivedScheduleType" substitutionGroup="DerivedScheduleGroup"/>
+
+  <xs:complexType name="DerivedScheduleType">
+    <xs:all>
+      <xs:element type="xs:string" name="BaseSchedule"/>
+      <xs:element type="xs:string" name="Shift" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
+    </xs:all>
   </xs:complexType>
 
 </xs:schema>

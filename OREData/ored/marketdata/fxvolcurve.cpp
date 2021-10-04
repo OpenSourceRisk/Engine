@@ -67,9 +67,8 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                        const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                        const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                       const Conventions& conventions) {
-    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, fxVols, correlationCurves, conventions);
+                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
+    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, fxVols, correlationCurves);
 }
 
 // second ctor
@@ -77,16 +76,13 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                        const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                        const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                       const Conventions& conventions) {
-    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, fxVols, correlationCurves,
-         conventions);
+                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
+    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, fxVols, correlationCurves);
 }
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                                       boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                                      const Conventions& conventions) {
+                                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
     vector<Period> unsortedExp;
 
     vector<std::pair<Real, string>> putDeltas, callDeltas;
@@ -234,8 +230,7 @@ void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, con
 
 void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                                      boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                                     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                                     const Conventions& conventions) {
+                                     const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     // collect relevant market data and populate expiries (as per regex or configured list)
 
@@ -374,8 +369,7 @@ void FXVolCurve::buildSmileBfRrCurve(Date asof, FXVolatilityCurveSpec spec, cons
 
 void FXVolCurve::buildVannaVolgaOrATMCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                                            boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
-                                           const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                                           const Conventions& conventions) {
+                                           const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     bool isATM = config->dimension() == FXVolatilityCurveConfig::Dimension::ATM;
     Natural smileDelta = 0;
@@ -581,8 +575,7 @@ void FXVolCurve::buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, con
                                       boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,
                                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                                       const map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                                      const Conventions& conventions) {
+                                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
 
     DLOG("Triangulating FxVol curve " << config->curveID() << " from baseVols " << config->baseVolatility1() << ":"
                                       << config->baseVolatility2());
@@ -662,12 +655,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                       const CurveConfigurations& curveConfigs, const FXLookup& fxSpots,
                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                       const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
-                      const Conventions& conventions) {
+                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
     try {
 
         const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
-
+        boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+        
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
@@ -718,7 +711,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 DLOG(e);
             }
         } else {
-            DLOG("expiry wildcard is used: " << (*expiriesWildcard_).regex());
+            DLOG("expiry wildcard is used: " << (*expiriesWildcard_).pattern());
         }
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated || expiriesWildcard_ ||
@@ -745,12 +738,12 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
         spotCalendar_ = parseCalendar(calTmp);
 
         if (config->conventionsID() != "") {
-            auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions.get(config->conventionsID()));
+            auto fxOptConv = boost::dynamic_pointer_cast<FxOptionConvention>(conventions->get(config->conventionsID()));
             QL_REQUIRE(fxOptConv,
                        "unable to cast convention '" << config->conventionsID() << "' into FxOptionConvention");
             boost::shared_ptr<FXConvention> fxConv;
             if (!fxOptConv->fxConventionID().empty()) {
-                fxConv = boost::dynamic_pointer_cast<FXConvention>(conventions.get(fxOptConv->fxConventionID()));
+                fxConv = boost::dynamic_pointer_cast<FXConvention>(conventions->get(fxOptConv->fxConventionID()));
                 QL_REQUIRE(fxConv, "unable to cast convention '" << fxOptConv->fxConventionID()
                                                                  << "', from FxOptionConvention '"
                                                                  << config->conventionsID() << "' into FxConvention");
@@ -778,14 +771,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
             forYts_ = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
 
         if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileDelta) {
-            buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
+            buildSmileDeltaCurve(asof, spec, loader, config, fxSpots, yieldCurves);
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::SmileBFRR) {
-            buildSmileBfRrCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
+            buildSmileBfRrCurve(asof, spec, loader, config, fxSpots, yieldCurves);
         } else if (config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated) {
-            buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves,
-                                 conventions);
+            buildATMTriangulated(asof, spec, loader, config, fxSpots, yieldCurves, fxVols, correlationCurves);
         } else {
-            buildVannaVolgaOrATMCurve(asof, spec, loader, config, fxSpots, yieldCurves, conventions);
+            buildVannaVolgaOrATMCurve(asof, spec, loader, config, fxSpots, yieldCurves);
         }
 
         // build calibration info

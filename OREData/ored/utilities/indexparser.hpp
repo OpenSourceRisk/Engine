@@ -60,8 +60,7 @@ parseFxIndex(const string& s, const Handle<Quote>& fxSpot = Handle<Quote>(),
     \ingroup utilities
 */
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
-                                            const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>(),
-                                            const boost::shared_ptr<Convention>& c = nullptr);
+                                            const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 
 //! Convert std::string to QuantLib::IborIndex and return the tenor string component of the index
 /*! In some cases, after parsing the IborIndex, we would like to know the exact tenor string that was part of
@@ -77,15 +76,13 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
 */
 boost::shared_ptr<IborIndex> parseIborIndex(
     const std::string& strIndex, std::string& outTenor,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>(),
-    const boost::shared_ptr<Convention>& c = nullptr);
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>());
 
 //! Try to convert std::string to QuantLib::IborIndex
 /*!
     \ingroup utilities
 */
-bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index,
-                       const boost::shared_ptr<Convention>& c = nullptr);
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index);
 
 //! Return true if the \p indexName is that of a generic ibor index, otherwise false
 /*!
@@ -102,8 +99,7 @@ bool isGenericIborIndex(const string& indexName);
 
     \ingroup utilities
 */
-std::pair<bool, boost::shared_ptr<QuantLib::ZeroInflationIndex>> isInflationIndex(const std::string& indexName,
-    const boost::shared_ptr<Conventions>& conventions = nullptr);
+std::pair<bool, boost::shared_ptr<QuantLib::ZeroInflationIndex>> isInflationIndex(const std::string& indexName);
 
 //! Return true if the \p indexName is that of an EquityIndex, otherwise false
 /*!
@@ -138,8 +134,7 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
  */
 boost::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, bool isInterpolated = false,
-                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>(),
-                        const boost::shared_ptr<Conventions>& conventions = nullptr);
+                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
 
 //! Convert std::string to QuantExt::BondIndex
 /*!
@@ -157,13 +152,9 @@ boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
     \ingroup utilities
  */
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
-    const std::string& name, bool hasPrefix = true, const QuantLib::Calendar& cal = QuantLib::NullCalendar(),
+    const std::string& name, bool hasPrefix = true, 
     const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>(),
-    const Conventions& conventions = Conventions());
-
-boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(
-    const std::string& name, const Conventions& conventions, bool hasPrefix = true,
-    const QuantLib::Handle<QuantExt::PriceTermStructure>& ts = QuantLib::Handle<QuantExt::PriceTermStructure>());
+    const QuantLib::Calendar& cal = QuantLib::NullCalendar());
 
 //! Convert std::string (GENERIC-...) to QuantExt::Index
 /*!
@@ -175,12 +166,12 @@ boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s);
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<Index> parseIndex(const string& s, const boost::shared_ptr<Conventions>& conventions = nullptr);
+boost::shared_ptr<Index> parseIndex(const string& s);
 
 //! Return true if the \p indexName is that of an overnight index, otherwise false
 /*! \ingroup utilities
  */
-bool isOvernightIndex(const std::string& indexName, const Conventions& conventions = Conventions());
+bool isOvernightIndex(const std::string& indexName);
 
 //! Return true if the \p indexName is that of an bma/sifma index, otherwise false
 /*! \ingroup utilities

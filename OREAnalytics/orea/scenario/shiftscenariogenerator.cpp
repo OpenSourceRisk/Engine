@@ -130,7 +130,7 @@ string ShiftScenarioGenerator::ScenarioDescription::factors() const {
 ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
                                                const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
 					       const boost::shared_ptr<ScenarioSimMarket>& simMarket)
-  : baseScenario_(baseScenario), simMarketData_(simMarketData), simMarket_(simMarket), counter_(0) {
+  : baseScenario_(baseScenario), simMarketData_(simMarketData), simMarket_(simMarket.get()), counter_(0) {
     QL_REQUIRE(baseScenario_ != NULL, "ShiftScenarioGenerator: baseScenario is null");
     QL_REQUIRE(simMarketData_ != NULL, "ShiftScenarioGenerator: simMarketData is null");
     scenarios_.push_back(baseScenario_);

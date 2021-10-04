@@ -597,6 +597,9 @@
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\rubkeyrate.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -1147,6 +1150,9 @@
     <ClInclude Include="qle\cashflows\yoyinflationcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\zerofixedcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\nonstandardyoyinflationcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -1179,6 +1185,15 @@
     </ClInclude>
     <ClInclude Include="qle\time\dateutilities.hpp">
       <Filter>time</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\ireland.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\cyprus.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\greece.hpp">
+      <Filter>time\calendars</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1982,6 +1997,9 @@
     <ClCompile Include="qle\cashflows\yoyinflationcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
+    <ClCompile Include="qle\cashflows\zerofixedcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
     <ClCompile Include="qle\cashflows\nonstandardyoyinflationcoupon.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
@@ -2011,6 +2029,15 @@
     </ClCompile>
     <ClCompile Include="qle\time\dateutilities.cpp">
       <Filter>time</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\ireland.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\cyprus.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\greece.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

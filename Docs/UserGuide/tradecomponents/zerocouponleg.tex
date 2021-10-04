@@ -7,15 +7,18 @@ Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fix
 
 To create a leg with only one payment, the schedule must only contain the start and end date. Note that this can be achieved by setting the \emph{Tenor} to \emph{0D} in a rule based Schedule. 
 
+Note that a Zero Coupon Fixed leg must have NotionalInitialExchange and NotionalFinalExchange omitted or set to false.
+
 \begin{itemize}
 \item Rates: The fixed real rate(s) of the leg. While this can be a single value, a vector of values or a dated vector of
   values. 
  
  Allowable values: Each rate element can take any  real number. The rate is
   expressed in decimal form, e.g. \emph{0.05} is a rate of 5\%.
-\item Compounding: The method of compounding applied to the rate.
+\item Compounding [Optional]:  The method of compounding applied to the rate.
 
-Allowable values: \emph{Simple} i.e. $(1 + r * t)$, or \emph{Compounded} i.e. $(1 + r)^t$
+Allowable values: \emph{Simple} i.e. $(1 + r * t)$, or \emph{Compounded} i.e. $(1 + r)^t$. Defaults to \emph{Compounded} if left blank or omitted. 
+
 
 \item SubtractNotional [Optional]:  Decides whether the notional is
   subtracted from the compounding factor,  i.e. $(1 + r * t)  - 1$
