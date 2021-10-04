@@ -126,7 +126,7 @@ void EquityVolatilityCurveConfig::loadVolatiltyConfigs(XMLNode* node) {
         volatilityConfig_.push_back(vc);
     }
 
-    if (XMLNode* n = XMLUtils::getChildNode(node, "ApoFutureSurface")) {
+    if (XMLUtils::getChildNode(node, "ApoFutureSurface")) {
         QL_FAIL("ApoFutureSurface not supported for equity volatilities.");
     }
 
