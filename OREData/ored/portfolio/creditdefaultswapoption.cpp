@@ -268,7 +268,8 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
     vector<boost::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
     string marketConfig = cdsOptionEngineBuilder->configuration(MarketContext::pricing);
-    addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers);
+    maturity_ =
+        std::max(maturity_, addPremium(engineFactory, ccy, marketConfig, additionalInstruments, additionalMultipliers));
 
     // Instrument wrapper depends on the settlement type.
     Position::Type positionType = parsePositionType(option_.longShort());
@@ -311,14 +312,15 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
     auto ccy = parseCurrency(notionalCurrency_);
     vector<boost::shared_ptr<Instrument>> additionalInstruments;
     vector<Real> additionalMultipliers;
-    addPremiums(additionalInstruments, additionalMultipliers, 1.0, PremiumData(amount, notionalCurrency_, paymentDate),
-                1.0, ccy, engineFactory, marketConfig);
+    Date premiumPayDate =
+        addPremiums(additionalInstruments, additionalMultipliers, 1.0,
+                    PremiumData(amount, notionalCurrency_, paymentDate), 1.0, ccy, engineFactory, marketConfig);
     DLOG("FEP payment (date = " << paymentDate << ", amount = " << amount << ") added for CDS option " << id() << ".");
 
     // Use the instrument added as the main instrument and clear the vectors
     auto qlInst = additionalInstruments.back();
     QL_REQUIRE(qlInst, "Expected a FEP payment to have been added for CDS option " << id() << ".");
-    maturity_ = paymentDate;
+    maturity_ = std::max(paymentDate, premiumPayDate);
     additionalInstruments.clear();
     additionalMultipliers.clear();
 
@@ -332,7 +334,7 @@ void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFacto
         additionalInstruments, additionalMultipliers);
 }
 
-void CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>& ef,
+Date CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>& ef,
     const Currency& tradeCurrency,
     const string& marketConfig,
     vector<boost::shared_ptr<Instrument>>& additionalInstruments,
@@ -341,8 +343,8 @@ void CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>&
         // pay the premium if long the option and recieve the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
-        addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), indicatorLongShort,
-                    tradeCurrency, ef, marketConfig);
+        return addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), indicatorLongShort,
+                           tradeCurrency, ef, marketConfig);
 }
 
 }

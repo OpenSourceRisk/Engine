@@ -139,9 +139,9 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
         std::vector<Real> additionalMultipliers;
-        addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd,
-                    parseCurrencyWithMinors(currency_),
-                    engineFactory, configuration);
+        maturity_ =
+            std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(),
+                                            -bsInd, parseCurrencyWithMinors(currency_), engineFactory, configuration));
 
         instrument_ = boost::shared_ptr<InstrumentWrapper>(
             new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));

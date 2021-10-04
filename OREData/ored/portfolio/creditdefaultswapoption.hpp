@@ -120,11 +120,10 @@ private:
     void buildDefaulted(const boost::shared_ptr<EngineFactory>& ef);
 
     //! Add the premium payment
-    void addPremium(const boost::shared_ptr<EngineFactory>& ef,
-        const QuantLib::Currency& tradeCurrency,
-        const std::string& marketConfig,
-        std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
-        std::vector<QuantLib::Real>& additionalMultipliers);
+    Date addPremium(const boost::shared_ptr<EngineFactory>& ef, const QuantLib::Currency& tradeCurrency,
+                    const std::string& marketConfig,
+                    std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
+                    std::vector<QuantLib::Real>& additionalMultipliers);
 };
 
 }
