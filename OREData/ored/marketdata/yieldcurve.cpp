@@ -879,7 +879,8 @@ void YieldCurve::buildDiscountCurve() {
         boost::dynamic_pointer_cast<DirectYieldCurveSegment>(curveSegments_[0]);
     auto discountQuoteIDs = discountCurveSegment->quotes();
 
-    boost::shared_ptr<Convention> convention = conventions_.get(discountCurveSegment->conventionsID());
+    boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<Convention> convention = conventions->get(discountCurveSegment->conventionsID());
     boost::shared_ptr<ZeroRateConvention> zeroConvention = boost::dynamic_pointer_cast<ZeroRateConvention>(convention);
     QL_REQUIRE(zeroConvention, "could not cast to ZeroRateConvention");
 
