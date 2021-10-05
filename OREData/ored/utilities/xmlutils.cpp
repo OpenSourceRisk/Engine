@@ -44,6 +44,14 @@ namespace data {
 
 namespace {
 
+// handle rapid xml parser errors
+
+void handle_rapidxml_parse_error(const rapidxml::parse_error& e) {
+    // limit to first 30 chars.
+    string where(e.where<char>(), std::min<std::size_t>(strlen(e.where<char>()), 30));
+    QL_FAIL("RapidXML Parse Error : " << e.what() << ". where=" << where);
+}
+
 // helper routine to convert a value of an arbitrary type to string
 
 string convertToString(const Real value) {
@@ -89,9 +97,8 @@ XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_docume
     t.close(); // close file handle
     try {
         _doc->parse<0>(_buffer);
-    } catch (rapidxml::parse_error& pe) {
-        string where(pe.where<char>(), 30); // limit to first 30 chars.
-        QL_FAIL("RapidXML Parse Error : " << pe.what() << ". where=" << where);
+    } catch (const rapidxml::parse_error& pe) {
+        handle_rapidxml_parse_error(pe);
     }
 }
 
@@ -110,9 +117,8 @@ void XMLDocument::fromXMLString(const string& xmlString) {
     _buffer[length] = '\0';
     try {
         _doc->parse<0>(_buffer);
-    } catch (rapidxml::parse_error& pe) {
-        string where(pe.where<char>(), 30); // limit to first 30 chars.
-        QL_FAIL("RapidXML Parse Error : " << pe.what() << ". where=" << where);
+    } catch (const rapidxml::parse_error& pe) {
+        handle_rapidxml_parse_error(pe);
     }
 }
 
