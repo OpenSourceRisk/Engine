@@ -166,12 +166,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Period tenor = Period();
         bool isDate;
         parseDateOrPeriod(tokens[4], date, tenor, isDate);
-        if (!isDate) {
-            // we can't assume any calendar here, so we do the minimal adjustment with a weekend only calendar
-            QL_REQUIRE(tenor != Period(), "neither date nor tenor recognised");
-            date = WeekendsOnly().adjust(asof + tenor);
-        }
-        return boost::make_shared<DiscountQuote>(value, asof, datumName, quoteType, ccy, date);
+        return boost::make_shared<DiscountQuote>(value, asof, datumName, quoteType, ccy, date, tenor);
     }
 
     case MarketDatum::InstrumentType::MM: {
