@@ -90,7 +90,7 @@ The Indexings node contains the following elements:
 \lstinline!FromAssetLeg! is supported for the following trade types:
 
 \begin{itemize}
-\item \lstinline!EquitySwap!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the non-equity funding leg, to the equity leg by deriving equity price, quantity and FX from the equity leg. \\ Note that \lstinline!FromAssetLeg! is only supported if \lstinline!NotionalReset! is \emph{true} on the equity leg - \lstinline!FromAssetLeg! is ignored otherwise.
+\item \lstinline!EquitySwap!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the non-equity funding leg, to the equity leg by deriving equity price, quantity and FX from the equity leg. \\ Note that \lstinline!FromAssetLeg! is only supported if \lstinline!NotionalReset! is \emph{true} on the equity leg - \lstinline!FromAssetLeg! is ignored otherwise. Also \lstinline!FromAssetLeg! is only supported when Quantity is given on the equity leg, not InitialPrice and Notional.
 \item \lstinline!BondTRS!: Setting \lstinline!FromAssetLeg! to \emph{true}, aligns the notionals for all return periods on the funding leg (in the \lstinline!FundingData! block), to the total return leg (in the \lstinline!TotalReturnData! block) by deriving bond price, bond notional and FX from the total return leg, bond data and the reference bond. 
 \end{itemize}
 
