@@ -184,8 +184,8 @@
      // 2) add fee payment as additional trade leg for cash flow reporting
      std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
      std::vector<Real> additionalMultipliers;
-     addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), 1.0, ccy,
-		 engineFactory, configuration);
+     maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0,
+                                                 option_.premiumData(), 1.0, ccy, engineFactory, configuration));
 
      // TODO: Use something like EuropeanOptionWrapper instead? After all, an asian option is not
      // a vanilla instrument. However, the available European-/AmericanOptionWrapper is not directly

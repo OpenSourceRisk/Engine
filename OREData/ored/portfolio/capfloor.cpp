@@ -385,9 +385,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_, -multiplier,
-                parseCurrency(legData_.currency()), engineFactory,
-                engineFactory->configuration(MarketContext::pricing));
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_,
+                                                -multiplier, parseCurrency(legData_.currency()), engineFactory,
+                                                engineFactory->configuration(MarketContext::pricing)));
 
     // set instrument
     instrument_ =
