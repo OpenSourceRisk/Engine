@@ -42,6 +42,7 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveId, const 
 
     populateNameTerm();
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 const boost::shared_ptr<VolatilityConfig>& CDSVolatilityCurveConfig::volatilityConfig() const {
@@ -114,9 +115,11 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
             QL_FAIL("CDSVolatilityCurveConfig does not yet support a DeltaSurface.");
         } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
             QL_FAIL("CDSVolatilityCurveConfig does not yet support a MoneynessSurface.");
+        } else if ((n = XMLUtils::getChildNode(node, "ProxySurface"))) {
+            volatilityConfig_ = boost::make_shared<CDSProxyVolatilityConfig>();
         } else {
             QL_FAIL("CDSVolatility node expects one child node with name in list: Constant,"
-                    << " Curve, StrikeSurface.");
+                    << " Curve, StrikeSurface, ProxySurface.");
         }
         volatilityConfig_->fromXML(n);
     }
@@ -138,6 +141,7 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
         strikeFactor_ = parseReal(XMLUtils::getNodeValue(n));
 
     populateQuotes();
+    populateRequiredCurveIds();
 }
 
 XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -191,8 +195,16 @@ void CDSVolatilityCurveConfig::populateQuotes() {
             quotes_.push_back(stem + p.first + "/" + p.second);
         }
 
+    } else if (auto vc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
+        // no quotes required in this case
     } else {
         QL_FAIL("CDSVolatilityCurveConfig expected a constant, curve or surface");
+    }
+}
+
+void CDSVolatilityCurveConfig::populateRequiredCurveIds() {
+    if (auto vc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
+        requiredCurveIds_[CurveSpec::CurveType::CDSVolatility].insert(vc->cdsVolatilityCurve());
     }
 }
 

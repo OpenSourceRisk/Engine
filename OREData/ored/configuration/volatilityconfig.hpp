@@ -80,6 +80,27 @@ private:
     std::string correlationCurve_;
 };
 
+class CDSProxyVolatilityConfig : public VolatilityConfig {
+public:
+    CDSProxyVolatilityConfig() {}
+    explicit CDSProxyVolatilityConfig(const std::string& cdsVolatilityCurve)
+        : cdsVolatilityCurve_(cdsVolatilityCurve) {}
+
+    //! \name Inspectors
+    //@{
+    const std::string& cdsVolatilityCurve() const;
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromXML(ore::data::XMLNode* node) override;
+    ore::data::XMLNode* toXML(ore::data::XMLDocument& doc) override;
+    //@}
+
+private:
+    std::string cdsVolatilityCurve_;
+};
+
 class QuoteBasedVolatilityConfig : public VolatilityConfig {
 public:
     //! Default constructor

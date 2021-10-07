@@ -88,6 +88,9 @@ private:
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();
 
+    //! Populate required curve ids
+    void populateRequiredCurveIds();
+
     //! Give back the quote stem used in construction of the quote strings
     std::string quoteStem() const;
 };
