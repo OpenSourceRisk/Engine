@@ -675,7 +675,10 @@ Currency parseCurrency(const string& s, const Currency& currency) {
         {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()}, {"USD", USDCurrency()},
         {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XAG", XAGCurrency()}, {"XAU", XAUCurrency()},
         {"XOF", XOFCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
-        {"ZMW", ZMWCurrency()}};
+        {"ZMW", ZMWCurrency()},
+        // crypto
+        {"XBT", BTCCurrency()}, {"BTC", BTCCurrency()}, {"ETH", ETHCurrency()}
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
