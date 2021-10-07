@@ -2551,7 +2551,7 @@ the list above.
   </Analytic>
   <Analytic type="additionalResults">
     <Parameter name="active">Y</Parameter>
-    <Parameter name="outputFileName">additional\_results.csv</Parameter>
+    <Parameter name="outputFileName">additional_results.csv</Parameter>
   </Analytic> 
   <Analytic type="todaysMarketCalibration">
     <Parameter name="active">Y</Parameter>
@@ -3301,7 +3301,7 @@ file:
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
   <YYInflationCapFloorVolatilities id="default">
-    <YYInflationCapFloorVolatitlity name="EUHICPXT">
+    <YYInflationCapFloorVolatility name="EUHICPXT">
         InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF
     </InflationCapFloorVolatility>
   </YYInflationCapFloorVolatilities>
@@ -3569,7 +3569,7 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     <Parameter name="ContinueOnCalibrationError">true</Parameter>
     <!-- typcially not present in a user configuration, but used internally -->
     <Parameter name="Calibrate">true</Parameter>
-    <Parameter name="GenerateAdditionalResults"</Parameter>
+    <Parameter name="GenerateAdditionalResults">true</Parameter>
   </GlobalParameters>
 \end{minted}
 \caption{Pricing engine configuration}
@@ -4618,7 +4618,7 @@ A sample {\tt calendaradjustment.xml} file can be found in the global example in
 \caption{Calendar Adjustment}\label{lst:calendar_adjustment}
 \end{longlisting}
 
-If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!CUSTOM\_Japan! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
+If the parameter \lstinline!BaseCalendar! is provided then a new calendar will be created using the specified calendar as a base, and adding any \lstinline!AdditionalHolidays! or \lstinline!AdditionalBusinessDays!. In the example below a new calendar \lstinline!CUSTOM_Japan! is being created, it will include any additional holidays or business days specified in the original \lstinline!Japan! calendar plus one additional date.
 
 If a new calendar is added in this way and the schema is being used to validate XML input, the corresponding calendar name must be prefixed with `CUSTOM\_'.
 
@@ -4626,7 +4626,7 @@ If a new calendar is added in this way and the schema is being used to validate 
 \hrule\medskip
 \begin{minted}[fontsize=\scriptsize]{xml}
 <CalendarAdjustments>
-  <Calendar name="CUSTOM\_Japan">
+  <Calendar name="CUSTOM_Japan">
     <BaseCalendar>Japan</BaseCalendar>
     <AdditionalHolidays>
       <Date>2020-04-06</Date>
