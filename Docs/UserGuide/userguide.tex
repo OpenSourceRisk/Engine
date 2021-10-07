@@ -2971,12 +2971,12 @@ We pick one discounting curve block as an example here (see {\tt Examples/Input/
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <DiscountingCurves Id="ois">
-    <DiscountingCurve Currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
-    <DiscountingCurve Currency="USD">Yield/USD/USD1D</DiscountingCurve>
-    <DiscountingCurve Currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
-    <DiscountingCurve Currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
-    <DiscountingCurve Currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+  <DiscountingCurves id="ois">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
+    <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
     <!-- ... -->
   </DiscountingCurves>
 \end{minted}
@@ -2997,12 +2997,12 @@ See an excerpt of the index curve block with ID 'default' from the same example 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<IndexForwardingCurves Id="default">
-  <Index Name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
-  <Index Name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
-  <Index Name="EUR-EURIBOR-12M">Yield/EUR/EUR6M</Index>
-  <Index Name="EUR-EONIA">Yield/EUR/EUR1D</Index>
-  <Index Name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+<IndexForwardingCurves id="default">
+  <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+  <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+  <Index name="EUR-EURIBOR-12M">Yield/EUR/EUR12M</Index>
+  <Index name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+  <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
   <!-- ... -->
 </IndexForwardingCurves>
 \end{minted}
@@ -3049,12 +3049,12 @@ The following is an excerpt of the swap index curve block with ID 'default' from
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<SwapIndexCurves Id="default">
-  <SwapIndex Name="EUR-CMS-1Y">
+<SwapIndexCurves id="default">
+  <SwapIndex name="EUR-CMS-1Y">
     <Index>EUR-EURIBOR-6M</Index>
     <Discounting>EUR-EONIA</Discounting>
   </SwapIndex>
-  <SwapIndex Name="EUR-CMS-30Y">
+  <SwapIndex name="EUR-CMS-30Y">
     <Index>EUR-EURIBOR-6M</Index>
     <Discounting>EUR-EONIA</Discounting>
   </SwapIndex>
@@ -3079,11 +3079,11 @@ The following is an excerpt of the FX spot block with ID 'default' from the same
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<FxSpots Id="default">
-  <FxSpot Pair="EURUSD">FX/EUR/USD</FxSpot>
-  <FxSpot Pair="EURGBP">FX/EUR/GBP</FxSpot>
-  <FxSpot Pair="EURCHF">FX/EUR/CHF</FxSpot>
-  <FxSpot Pair="EURJPY">FX/EUR/JPY</FxSpot>
+<FxSpots id="default">
+  <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+  <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
+  <FxSpot pair="EURCHF">FX/EUR/CHF</FxSpot>
+  <FxSpot pair="EURJPY">FX/EUR/JPY</FxSpot>
   <!-- ... -->
 </FxSpots>
 \end{minted}
@@ -3101,11 +3101,11 @@ The following is an excerpt of the FX Volatilities block with ID 'default' from 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<FxVolatilities Id="default">
-  <FxVolatility Pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
-  <FxVolatility Pair="EURGBP">FXVolatility/EUR/GBP/EURGBP</FxVolatility>
-  <FxVolatility Pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
-  <FxVolatility Pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
+<FxVolatilities id="default">
+  <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+  <FxVolatility pair="EURGBP">FXVolatility/EUR/GBP/EURGBP</FxVolatility>
+  <FxVolatility pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
+  <FxVolatility pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
   <!-- ... -->
 </FxVolatilities>
 \end{minted}
@@ -3123,12 +3123,12 @@ The following is an excerpt of the Swaption Volatilities block with ID 'default'
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<SwaptionVolatilities Id="default">
-  <SwaptionVolatility Currency="EUR">SwaptionVolatility/EUR/EUR_SW_N</SwaptionVolatility>
-  <SwaptionVolatility Currency="USD">SwaptionVolatility/USD/USD_SW_N</SwaptionVolatility>
-  <SwaptionVolatility Currency="GBP">SwaptionVolatility/GBP/GBP_SW_N</SwaptionVolatility>
-  <SwaptionVolatility Currency="CHF">SwaptionVolatility/CHF/CHF_SW_N</SwaptionVolatility>
-  <SwaptionVolatility Currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
+<SwaptionVolatilities id="default">
+  <SwaptionVolatility currency="EUR">SwaptionVolatility/EUR/EUR_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="USD">SwaptionVolatility/USD/USD_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="GBP">SwaptionVolatility/GBP/GBP_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="CHF">SwaptionVolatility/CHF/CHF_SW_N</SwaptionVolatility>
+  <SwaptionVolatility currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
 </SwaptionVolatilities>
 \end{minted}
 \caption{Swaption volatility block with ID 'default'}
@@ -3167,10 +3167,10 @@ The following is an excerpt of the Default Curves block with ID 'default' from t
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<DefaultCurves Id="default">
-  <DefaultCurve Name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
-  <DefaultCurve Name="CPTY_A">Default/USD/CUST_A_SR_USD</DefaultCurve>
-  <DefaultCurve Name="CPTY_B">Default/USD/CUST_A_SR_USD</DefaultCurve>
+<DefaultCurves id="default">
+  <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
+  <DefaultCurve name="CPTY_A">Default/USD/CUST_A_SR_USD</DefaultCurve>
+  <DefaultCurve name="CPTY_B">Default/USD/CUST_A_SR_USD</DefaultCurve>
   <!-- ... -->
 </DefaultCurves>
 \end{minted}
@@ -3384,16 +3384,16 @@ the {\tt todaysmarket.xml} file:
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<Configuration Id="default">
+<Configuration id="default">
   <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
 </Configuration>
-<Configuration Id="collateral_inccy">
+<Configuration id="collateral_inccy">
   <DiscountingCurvesId>ois</DiscountingCurvesId>
 </Configuration>
-<Configuration Id="collateral_eur">
+<Configuration id="collateral_eur">
   <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
 </Configuration>
-<Configuration Id="libor">
+<Configuration id="libor">
   <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
 </Configuration>
 \end{minted}
