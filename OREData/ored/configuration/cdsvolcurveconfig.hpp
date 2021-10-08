@@ -101,5 +101,8 @@ private:
 */
 std::pair<std::string, std::string> extractTermFromId(const std::string& id);
 
+/*! Given an id of the form name-tenor, return name. For the form name, return name. */
+std::string stripTermFromId(const std::string& id);
+
 } // namespace data
 } // namespace ore

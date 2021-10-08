@@ -254,5 +254,13 @@ pair<string, string> extractTermFromId(const string& id) {
     return result;
 }
 
+std::string stripTermFromId(const std::string& id) {
+    auto pos = id.find_last_of('-');
+    if (pos == string::npos)
+        return id;
+    else
+        return id.substr(0, pos);
+}
+
 } // namespace data
 } // namespace ore
