@@ -29,7 +29,7 @@
 namespace ore {
 namespace data {
 
-//! Utility classes for Structured warnings, contains the Trade ID and Type
+//! Utility classes for Structured warnings, contains the configuration type and ID (NettingSetId, CounterParty, etc.)
 class StructuredConfigurationWarningMessage : public StructuredErrorMessage {
 public:
     StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId,
