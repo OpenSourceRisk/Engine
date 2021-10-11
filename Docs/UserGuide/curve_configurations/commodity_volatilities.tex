@@ -225,7 +225,7 @@ The meaning of each of the elements is given below. Again, nodes explained in th
 The allowable values are \lstinline!Spot! for spot moneyness and \lstinline!Fwd! for forward moneyness.
 
 \item \lstinline!MoneynessLevels!:
-This can be a single wildcard value \lstinline!*! or a comma separated list of moneyness values. A moneyness value of $1$ indicates a strike equal to spot or forward depending on the value given in the \lstinline!MoneynessType! node.
+This must be a comma separated list of moneyness values. A moneyness value of $1$ indicates a strike equal to spot or forward depending on the value given in the \lstinline!MoneynessType! node.
 
 \item \lstinline!TimeInterpolation!:
 Only \lstinline!Linear! is currently supported here.
