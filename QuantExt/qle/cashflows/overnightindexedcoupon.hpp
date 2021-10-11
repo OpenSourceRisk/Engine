@@ -126,6 +126,25 @@ private:
     Date rateComputationStartDate_, rateComputationEndDate_;
 };
 
+//! OvernightIndexedCoupon pricer
+class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
+public:
+    void initialize(const FloatingRateCoupon& coupon) override;
+    void compute() const;
+    Rate swapletRate() const override;
+    Rate effectiveSpread() const;
+    Rate effectiveIndexFixing() const;
+    Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
+    Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }
+    Rate capletRate(Rate) const override { QL_FAIL("capletRate not available"); }
+    Real floorletPrice(Rate) const override { QL_FAIL("floorletPrice not available"); }
+    Rate floorletRate(Rate) const override { QL_FAIL("floorletRate not available"); }
+
+protected:
+    const OvernightIndexedCoupon* coupon_;
+    mutable Real swapletRate_, effectiveSpread_, effectiveIndexFixing_;
+};
+
 //! capped floored overnight indexed coupon
 class CappedFlooredOvernightIndexedCoupon : public FloatingRateCoupon {
 public:

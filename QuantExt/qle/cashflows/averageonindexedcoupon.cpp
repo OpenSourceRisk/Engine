@@ -61,16 +61,23 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
     valueDates_ = sch.dates();
     QL_ENSURE(valueDates_.size() >= 2 + rateCutoff_, "degenerate schedule");
 
-    // Populate the fixing dates.
+    // the first and last value date should be the unadjusted input value dates
+    if (valueDates_.front() != valueStart)
+        valueDates_.front() = valueStart;
+    if (valueDates_.back() != valueEnd)
+        valueDates_.back() = valueEnd;
+
     numPeriods_ = valueDates_.size() - 1;
-    if (FloatingRateCoupon::fixingDays() == 0) {
-        fixingDates_ = std::vector<Date>(valueDates_.begin(), valueDates_.end() - 1);
-    } else {
-        fixingDates_.resize(numPeriods_);
-        for (Size i = 0; i < numPeriods_; ++i)
-            fixingDates_[i] = overnightIndex->fixingCalendar().advance(
-                valueDates_[i], -static_cast<Integer>(FloatingRateCoupon::fixingDays()), Days, Preceding);
-    }
+
+    QL_REQUIRE(valueDates_[0] != valueDates_[1], "internal error: first two value dates of on coupon are equal: " << valueDates_[0]);
+    QL_REQUIRE(valueDates_[numPeriods_] != valueDates_[numPeriods_ - 1],
+               "internal error: last two value dates of on coupon are equal: " << valueDates_[numPeriods_]);
+
+    // Populate the fixing dates.
+    fixingDates_.resize(numPeriods_);
+    for (Size i = 0; i < numPeriods_; ++i)
+        fixingDates_[i] = overnightIndex->fixingCalendar().advance(
+            valueDates_[i], -static_cast<Integer>(FloatingRateCoupon::fixingDays()), Days, Preceding);
 
     // Populate the accrual periods.
     dt_.resize(numPeriods_);

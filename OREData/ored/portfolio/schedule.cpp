@@ -33,7 +33,10 @@ void ScheduleRules::fromXML(XMLNode* node) {
     tenor_ = XMLUtils::getChildValue(node, "Tenor");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
-    termConvention_ = XMLUtils::getChildValue(node, "TermConvention");
+    termConvention_ = XMLUtils::getChildValue(node, "TermConvention", false);
+    if (termConvention_.empty()) {
+        termConvention_ = convention_;
+    }
     rule_ = XMLUtils::getChildValue(node, "Rule");
     endOfMonth_ = XMLUtils::getChildValue(node, "EndOfMonth");
     firstDate_ = XMLUtils::getChildValue(node, "FirstDate");
