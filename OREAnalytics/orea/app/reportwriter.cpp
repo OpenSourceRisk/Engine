@@ -35,6 +35,8 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
@@ -236,6 +238,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
                             boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
                                 boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
+                            boost::shared_ptr<QuantExt::IndexedCoupon> ptrIndCp =
+                                boost::dynamic_pointer_cast<QuantExt::IndexedCoupon>(ptrFlow);
+                            boost::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
+                                boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
                             Date fixingDate;
                             Real fixingValue;
                             if (ptrBMA) {
@@ -260,6 +266,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             } else if (ptrFxlCf) {
                                 fixingDate = ptrFxlCf->fxFixingDate();
                                 fixingValue = ptrFxlCf->fxRate();
+                            } else if (ptrIndCp) {
+                                fixingDate = ptrIndCp->referencePeriodEnd();
+                                fixingValue = Null<Real>();
+                            } else if (ptrEqCp) {
+                                fixingDate = ptrEqCp->fixingEndDate();
+                                fixingValue = Null<Real>();
                             } else {
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
