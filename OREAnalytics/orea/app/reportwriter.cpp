@@ -971,7 +971,8 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 notional2Ccy = trade->additionalDatum<string>("notionalCurrency[2]");
             }
 
-            if (trade->instrument()->qlInstrument(true)) {
+	    // FIXME, see ore ticket 2136
+            if (trade->instrument()->qlInstrument(false)) {
                 auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
                 if (additionalResults.count("notional[2]") != 0 &&
                     additionalResults.count("notionalCurrency[2]") != 0) {
@@ -999,7 +1000,8 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                        "Expected the number of "
                            << "additional instruments (" << instruments.size() << ") to equal the number of "
                            << "additional multipliers (" << multipliers.size() << ").");
-            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument(true));
+	    // FIXME, see ore ticket 2136
+            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument(false));
             multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
 
             for (Size i = 0; i < instruments.size(); ++i) {
