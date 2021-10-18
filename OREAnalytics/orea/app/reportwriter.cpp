@@ -267,11 +267,17 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 fixingDate = ptrFxlCf->fxFixingDate();
                                 fixingValue = ptrFxlCf->fxRate();
                             } else if (ptrIndCp) {
-                                auto ind = ptrIndCp->underlying();
-                                fixingDate = ptrIndCp->referencePeriodEnd();
-                                if (ind) {
-                                    fixingValue = ind->;
-                                }
+                                // fixingDate = ptrIndCp->fixingDate();
+
+                                boost::shared_ptr<QuantExt::IndexedCoupon> ind =
+                                    boost::dynamic_pointer_cast<QuantExt::IndexedCoupon>(ptrIndCp->underlying());
+                                boost::shared_ptr<QuantExt::FloatingRateCoupon> cpn =
+                                    boost::dynamic_pointer_cast<QuantExt::FloatingRateCoupon>(ind->underlying());
+                                fixingDate = cpn->fixingDate();
+                                if (cpn->index()->fixing(fixingDate)) {
+                                    fixingValue = cpn->index()->fixing(fixingDate);
+                                } else
+                                    fixingValue = Null<Real>();
                             } else if (ptrEqCp) {
                                 fixingDate = ptrEqCp->fixingEndDate();
                                 fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
