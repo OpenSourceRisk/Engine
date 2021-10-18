@@ -167,8 +167,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                             XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
                                                                      marketObjectData[i].xmlSingleName.second, false);
                         Size nc = XMLUtils::getChildrenNodes(n, "").size();
-                        QL_REQUIRE(mp.size() == nc, "could not recognise " << (nc - mp.size()) << " sub nodes under "
-                                                                           << marketObjectData[i].xmlName);
+                        QL_REQUIRE(mp.size() == nc, "TodaysMarketParameters::fromXML(): possible duplicate entry in node " 
+                            << marketObjectData[i].xmlName << ", check for XMLUtils warnings.");
                         addMarketObject(marketObjectData[i].obj, id, mp);
                     }
                     break;

@@ -371,6 +371,10 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
         if (mandatory) {
             QL_REQUIRE(first != "", "empty attribute for " << names);
         }
+        auto it = res.find(first);
+        if (it != res.end())
+            WLOG("XMLUtils::getChildrenAttributesAndValues: Duplicate entry " << first <<
+                " in node " << names << ". Overwritting with value " << second << ".");
         res.insert(pair<string, string>(first, second));
     }
     if (mandatory) {
