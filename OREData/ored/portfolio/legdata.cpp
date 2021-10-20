@@ -60,6 +60,7 @@
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/zerofixedcoupon.hpp>
 
 #include <qle/cashflows/nonstandardcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
@@ -869,12 +870,21 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     QL_REQUIRE(zcFixedLegData, "Wrong LegType, expected Zero Coupon Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
+    BusinessDayConvention payConvention = parseBusinessDayConvention(data.paymentConvention());
+
     DayCounter dc = parseDayCounter(data.dayCounter());
-    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    // check we have a single notional and two dates in the schedule
+
     Size numNotionals = data.notionals().size();
     Size numRates = zcFixedLegData->rates().size();
     Size numDates = schedule.size();
+
     QL_REQUIRE(numDates >= 2, "Incorrect number of schedule dates entered, expected at least 2, got " << numDates);
     QL_REQUIRE(numNotionals >= 1,
                "Incorrect number of notional values entered, expected at least1, got " << numNotionals);
@@ -889,31 +899,19 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
     QL_REQUIRE(comp == QuantLib::Compounded || comp == QuantLib::Simple,
                "Compounding method " << zcFixedLegData->compounding() << " not supported");
 
-    // we loop over the dates in the schedule, computing the compound factor.
-    // For the Compounded rule:
-    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
-    // So we compute the sum of all DayCountFractions in the loop.
-    // For the Simple rule:
-    // (1 + r * dcf_0) * (1 + r * dcf_1)...
-    double totalDCF = 0;
-    double compoundFactor = 1;
     Leg leg;
+    vector<Date> cpnDates;
+    cpnDates.push_back(dates.front());
+
     for (Size i = 0; i < numDates - 1; i++) {
-        double dcf = dc.yearFraction(dates[i], dates[i + 1]);
-        double fixedAmount = i < notionals.size() ? notionals[i] : notionals.back();
-        double fixedRate = i < rates.size() ? rates[i] : rates.back();
-        if (comp == QuantLib::Simple)
-            compoundFactor *= (1 + fixedRate * dcf);
-        else
-            totalDCF += dcf;
-        if (comp == QuantLib::Compounded)
-            compoundFactor = pow(1.0 + fixedRate, totalDCF);
-        if (zcFixedLegData->subtractNotional())
-            fixedAmount *= (compoundFactor - 1);
-        else
-            fixedAmount *= compoundFactor;
-        Date fixedPayDate = schedule.calendar().adjust(dates[i + 1], bdc);
-        leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(fixedAmount, fixedPayDate)));
+
+        double currentNotional = i < notionals.size() ? notionals[i] : notionals.back();
+        double currentRate = i < rates.size() ? rates[i] : rates.back();
+        cpnDates.push_back(dates[i+1]);
+        Date paymentDate = paymentCalendar.adjust(dates[i+1], payConvention);
+        leg.push_back(boost::make_shared<ZeroFixedCoupon>(paymentDate, currentNotional, currentRate, dc,
+                                                            cpnDates, comp, zcFixedLegData->subtractNotional()));
+
     }
     return leg;
 }

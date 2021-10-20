@@ -143,6 +143,13 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
 
+    // check for zero notional, this is not handled well in the European engine, so we switch to Bermudan in this case
+
+    if (isStandard && close_enough(notional, 0.0)) {
+        DLOG("Swaption::build() found zero notional, set isStandard := false to ensure valid pricing");
+        isStandard = false;
+    }
+
     DLOG("Swaption::build() for " << id() << ": type: isCrossCcy = " << std::boolalpha << isCrossCcy
                                   << ", isOis = " << isOis << ", isBma = " << isBma << ", isStandard = " << isStandard);
 
@@ -223,9 +230,9 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
-                positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
-                swaptionBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
+                                       positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
+                                       swaptionBuilder->configuration(MarketContext::pricing));
 
     swaption->setPricingEngine(swaptionBuilder->engine(ccy));
 
@@ -242,6 +249,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
         // maturity_ = exDate;
         maturity_ = std::max(swap->fixedSchedule().dates().back(), swap->floatingSchedule().dates().back());
     }
+
+    maturity_ = std::max(maturity_, lastPremiumDate);
 
     DLOG("Building European Swaption done");
 }
@@ -319,14 +328,17 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Real multiplier = positionType_ == Position::Long ? 1.0 : -1.0;
-    addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(), -multiplier,
-                parseCurrency(npvCurrency_), engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(), -multiplier,
+                    parseCurrency(npvCurrency_), engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::make_shared<BermudanOptionWrapper>(
         swaption, positionType_ == Position::Long ? true : false, exerciseBuilder_->noticeDates(),
         settlementType_ == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0, additionalInstruments,
         additionalMultipliers);
+
+    maturity_ = std::max(maturity_, lastPremiumDate);
 
     DLOG("Building Bermudan Swaption done");
 }

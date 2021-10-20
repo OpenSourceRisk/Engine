@@ -1600,6 +1600,38 @@ CommodityFutureConvention::CommodityFutureConvention(const string& id, const Cal
     build();
 }
 
+CommodityFutureConvention::CommodityFutureConvention(const string& id, const BusinessDaysAfter& businessDaysAfter,
+                                                     const string& contractFrequency, const string& calendar,
+                                                     const string& expiryCalendar, Size expiryMonthLag,
+                                                     const string& oneContractMonth, const string& offsetDays,
+                                                     const string& bdc, bool adjustBeforeOffset, bool isAveraging,
+                                                     const OptionExpiryAnchorDateRule& optionExpiryDateRule,
+                                                     const set<ProhibitedExpiry>& prohibitedExpiries,
+                                                     Size optionExpiryMonthLag,
+                                                     const string& optionBdc,
+                                                     const map<Natural, Natural>& futureContinuationMappings,
+                                                     const map<Natural, Natural>& optionContinuationMappings,
+                                                     const AveragingData& averagingData,
+                                                     Natural hoursPerDay,
+                                                     const boost::optional<OffPeakPowerIndexData>& offPeakPowerIndexData,
+                                                     const string& indexName,
+                                                     const std::string& optionFrequency)
+    : Convention(id, Type::CommodityFuture), anchorType_(AnchorType::BusinessDaysAfter),
+      strBusinessDaysAfter_(businessDaysAfter.businessDaysAfter_), strContractFrequency_(contractFrequency),
+      strCalendar_(calendar), strExpiryCalendar_(expiryCalendar), expiryMonthLag_(expiryMonthLag),
+      strOneContractMonth_(oneContractMonth), strOffsetDays_(offsetDays), strBdc_(bdc),
+      adjustBeforeOffset_(adjustBeforeOffset), isAveraging_(isAveraging), 
+      prohibitedExpiries_(prohibitedExpiries), optionExpiryMonthLag_(optionExpiryMonthLag), strOptionBdc_(optionBdc),
+      futureContinuationMappings_(futureContinuationMappings),
+      optionContinuationMappings_(optionContinuationMappings), averagingData_(averagingData), hoursPerDay_(hoursPerDay), offPeakPowerIndexData_(offPeakPowerIndexData),
+      indexName_(indexName), strOptionContractFrequency_(optionFrequency),
+      optionAnchorType_(optionExpiryDateRule.type_), strOptionExpiryOffset_(optionExpiryDateRule.daysBefore_), 
+      strOptionExpiryDay_(optionExpiryDateRule.expiryDay_), strOptionNth_(optionExpiryDateRule.nth_), 
+      strOptionWeekday_(optionExpiryDateRule.weekday_) {
+    build();
+}
+
+
 void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "CommodityFuture");
@@ -1632,7 +1664,10 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
         } else if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "LastWeekday")) {
             anchorType_ = AnchorType::LastWeekday;
             strWeekday_ = XMLUtils::getNodeValue(tmp);
-        } else {
+        } else if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "BusinessDaysAfter")) {
+	    anchorType_ = AnchorType::BusinessDaysAfter;
+	    strBusinessDaysAfter_ = XMLUtils::getNodeValue(tmp);
+	} else {
             QL_FAIL("Failed to parse AnchorDay node");
         }
     }
@@ -1775,6 +1810,8 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
             XMLUtils::appendNode(anchorNode, nthNode);
         } else if (anchorType_ == AnchorType::LastWeekday) {
             XMLUtils::addChild(doc, anchorNode, "LastWeekday", strWeekday_);
+        } else if (anchorType_ == AnchorType::BusinessDaysAfter) {
+            XMLUtils::addChild(doc, anchorNode, "BusinessDaysAfter", strBusinessDaysAfter_);
         } else {
             XMLUtils::addChild(doc, anchorNode, "CalendarDaysBefore", strCalendarDaysBefore_);
         }
@@ -1878,6 +1915,8 @@ void CommodityFutureConvention::build() {
             calendarDaysBefore_ = lexical_cast<Natural>(strCalendarDaysBefore_);
         } else if (anchorType_ == AnchorType::LastWeekday) {
             weekday_ = parseWeekday(strWeekday_);
+        } else if (anchorType_ == AnchorType::BusinessDaysAfter) {
+            businessDaysAfter_ =  lexical_cast<Integer>(strBusinessDaysAfter_);
         } else {
             nth_ = lexical_cast<Natural>(strNth_);
             weekday_ = parseWeekday(strWeekday_);

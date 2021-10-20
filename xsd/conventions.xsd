@@ -407,6 +407,7 @@
             <xs:element type="dayOfMonth" name="DayOfMonth"/>
             <xs:element type="xs:nonNegativeInteger" name="CalendarDaysBefore"/>
             <xs:element type="weekdayType" name="LastWeekday"/>
+            <xs:element type="xs:integer" name="BusinessDaysAfter"/>
           </xs:choice>
         </xs:complexType>
       </xs:element>

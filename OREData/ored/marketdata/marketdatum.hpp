@@ -395,21 +395,23 @@ class DiscountQuote : public MarketDatum {
 public:
     DiscountQuote() {}
     //! Constructor
-    DiscountQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Date date)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::DISCOUNT), ccy_(ccy), date_(date) {}
+    DiscountQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Date date, Period tenor)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::DISCOUNT), ccy_(ccy), date_(date), tenor_(tenor) {}
     
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() {
-        return boost::make_shared<DiscountQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, date_);
+        return boost::make_shared<DiscountQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, date_, tenor_);
     }
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
     Date date() const { return date_; }
+    Period tenor() const { return tenor_; }
     //@}
 private:
     string ccy_;
     Date date_;
+    Period tenor_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

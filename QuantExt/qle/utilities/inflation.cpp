@@ -59,19 +59,23 @@ Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bon
     for (auto& cf : bond->cashflows()) {
         if (auto inflCpn = boost::dynamic_pointer_cast<QuantLib::CPICoupon>(cf)) {
             const auto& inflationIndex = boost::dynamic_pointer_cast<QuantLib::ZeroInflationIndex>(inflCpn->index());
-            const auto& inflationCurve = inflationIndex->zeroInflationTermStructure();
             Date settlementDate = bond->settlementDate();
             std::pair<Date, Date> currentInflationPeriod = inflationPeriod(settlementDate, inflationIndex->frequency());
-            Date curveBaseDate = inflationCurve->baseDate();
+            std::pair<Date, Date> settlementFixingPeriod = inflationPeriod(settlementDate - inflCpn->observationLag(), inflationIndex->frequency());
+            Date curveBaseDate = settlementFixingPeriod.first;
+            //Date curveBaseDate = inflationIndex->zeroInflationTermStructure()->baseDate();
             Real todaysCPI = inflationIndex->fixing(curveBaseDate);
             if (inflCpn->observationInterpolation() == QuantLib::CPI::Linear) {
+                
                 std::pair<Date, Date> observationPeriod = inflationPeriod(curveBaseDate, inflationIndex->frequency());
+                
                 Real indexStart = inflationIndex->fixing(observationPeriod.first);
                 Real indexEnd = inflationIndex->fixing(observationPeriod.second + 1 * QuantLib::Days);
-                todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) /
-                                             (Real)(currentInflationPeriod.second - currentInflationPeriod.first) *
-                                             (indexEnd - indexStart);
-            }
+                
+                todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) *
+                                             (indexEnd - indexStart) /
+                                             (Real)(currentInflationPeriod.second - currentInflationPeriod.first);
+            }                        
             inflFactor = todaysCPI / inflCpn->baseCPI();
             break;
         }

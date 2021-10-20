@@ -27,4 +27,8 @@ namespace QuantExt {
 Sofr::Sofr(const Handle<YieldTermStructure>& h)
     : OvernightIndex("SOFR", 0, USDCurrency(), UnitedStates(UnitedStates::GovernmentBond), Actual360(), h) {}
 
+SofrTerm::SofrTerm(const Period& tenor, const Handle<YieldTermStructure>& h)
+    : IborIndex("SOFR-TERM", tenor, 2, USDCurrency(), UnitedStates(UnitedStates::GovernmentBond), ModifiedFollowing,
+                false, Actual360(), h) {}
+
 } // namespace QuantExt

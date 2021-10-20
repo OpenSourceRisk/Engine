@@ -224,8 +224,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    addPremiums(additionalInstruments, additionalMultipliers, mult, option_.premiumData(), -bsInd, ccy, engineFactory,
-                configuration);
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, mult,
+                                                option_.premiumData(), -bsInd, ccy, engineFactory, configuration));
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));

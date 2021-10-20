@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,30 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file sofr.hpp
-    \brief %SOFR index, straight copy from QuantLib 1.16
+/*! \file rubkeyrate.hpp
+    \brief RUB-KEYRATE index
+    \ingroup indexes
 */
 
-#ifndef quantext_sofr_hpp
-#define quantext_sofr_hpp
+#ifndef quantext_rubkeyrate_hpp
+#define quantext_rubkeyrate_hpp
 
+#include <ql/currencies/europe.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/time/calendars/russia.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-//! %Sofr (Secured Overnight Financing Rate) index.
-class Sofr : public OvernightIndex {
+//! RUB-KEYRATE index
+/*! RUB-KEYRATE rate.
+*/
+class RUBKeyRate : public IborIndex {
 public:
-    explicit Sofr(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
+    RUBKeyRate(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("RUB-KEYRATE", tenor, (tenor == 1 * Days ? 0 : 1), RUBCurrency(),
+                    Russia(), ModifiedFollowing, false, ActualActual(ActualActual::ISDA), h) {}
 };
-
-//! %Sofr term index, see https://www.cmegroup.com/market-data/cme-group-benchmark-administration/term-sofr.html#
-class SofrTerm : public IborIndex {
-public:
-    SofrTerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
-};
-
 } // namespace QuantExt
 
 #endif

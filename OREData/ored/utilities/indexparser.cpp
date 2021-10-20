@@ -40,13 +40,14 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/commodityindex.hpp>
+#include <qle/indexes/decpi.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/escpi.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
-#include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/genericindex.hpp>
 #include <qle/indexes/ibor/ambor.hpp>
 #include <qle/indexes/ibor/ameribor.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
@@ -66,7 +67,6 @@
 #include <qle/indexes/ibor/dkkcita.hpp>
 #include <qle/indexes/ibor/dkkois.hpp>
 #include <qle/indexes/ibor/ester.hpp>
-#include <qle/indexes/ibor/jpyeytibor.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hkdhonia.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
@@ -75,6 +75,7 @@
 #include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmiborois.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/jpyeytibor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
@@ -87,6 +88,7 @@
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/primeindex.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/rubkeyrate.hpp>
 #include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
@@ -94,12 +96,12 @@
 #include <qle/indexes/ibor/sgdsibor.hpp>
 #include <qle/indexes/ibor/sgdsor.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
+#include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
-#include <qle/indexes/secpi.hpp>
-#include <qle/indexes/decpi.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
+#include <qle/indexes/secpi.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -284,20 +286,31 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
 
     // Map from our _unique internal name_ to an overnight index
     static map<string, boost::shared_ptr<OvernightIndex>> onIndices = {
-        {"EUR-EONIA", boost::make_shared<Eonia>()},        {"EUR-ESTER", boost::make_shared<Ester>()},
-	//{"EUR-ESTR", boost::make_shared<Ester>()},         {"EUR-STR", boost::make_shared<Ester>()},
-        {"GBP-SONIA", boost::make_shared<Sonia>()},        {"JPY-TONAR", boost::make_shared<Tonar>()},
-        {"CHF-TOIS", boost::make_shared<CHFTois>()},       {"CHF-SARON", boost::make_shared<CHFSaron>()},
-        {"USD-FedFunds", boost::make_shared<FedFunds>()},  {"USD-SOFR", boost::make_shared<Sofr>()},
-        {"USD-Prime", boost::make_shared<PrimeIndex>()},   {"USD-AMERIBOR", boost::make_shared<USDAmeribor>()},
+        {"EUR-EONIA", boost::make_shared<Eonia>()},
+        {"EUR-ESTER", boost::make_shared<Ester>()},
+        {"GBP-SONIA", boost::make_shared<Sonia>()},
+        {"JPY-TONAR", boost::make_shared<Tonar>()},
+        {"CHF-TOIS", boost::make_shared<CHFTois>()},
+        {"CHF-SARON", boost::make_shared<CHFSaron>()},
+        {"USD-FedFunds", boost::make_shared<FedFunds>()},
+        {"USD-SOFR", boost::make_shared<QuantExt::Sofr>()},
+        {"USD-Prime", boost::make_shared<PrimeIndex>()},
+        {"USD-AMERIBOR", boost::make_shared<USDAmeribor>()},
         {"AUD-AONIA", boost::make_shared<Aonia>()},
-        {"CAD-CORRA", boost::make_shared<CORRA>()},        {"DKK-DKKOIS", boost::make_shared<DKKOis>()},
-        {"SEK-SIOR", boost::make_shared<SEKSior>()},       {"COP-IBR", boost::make_shared<COPIbr>()},
-        {"BRL-CDI", boost::make_shared<BRLCdi>()},         {"NOK-NOWA", boost::make_shared<Nowa>()},
-        {"CLP-CAMARA", boost::make_shared<CLPCamara>()},   {"NZD-OCR", boost::make_shared<Nzocr>()},
-        {"PLN-POLONIA", boost::make_shared<PLNPolonia>()}, {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()},
-	    {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()}, {"HKD-HONIA", boost::make_shared<HKDHonia>()},
-        {"SEK-STINA", boost::make_shared<SEKStina>()},     {"DKK-CITA", boost::make_shared<DKKCita>()}};
+        {"CAD-CORRA", boost::make_shared<CORRA>()},
+        {"DKK-DKKOIS", boost::make_shared<DKKOis>()},
+        {"SEK-SIOR", boost::make_shared<SEKSior>()},
+        {"COP-IBR", boost::make_shared<COPIbr>()},
+        {"BRL-CDI", boost::make_shared<BRLCdi>()},
+        {"NOK-NOWA", boost::make_shared<Nowa>()},
+        {"CLP-CAMARA", boost::make_shared<CLPCamara>()},
+        {"NZD-OCR", boost::make_shared<Nzocr>()},
+        {"PLN-POLONIA", boost::make_shared<PLNPolonia>()},
+        {"INR-MIBOROIS", boost::make_shared<INRMiborOis>()},
+        {"GBP-BoEBase", boost::make_shared<BOEBaseRateIndex>()},
+        {"HKD-HONIA", boost::make_shared<HKDHonia>()},
+        {"SEK-STINA", boost::make_shared<SEKStina>()},
+        {"DKK-CITA", boost::make_shared<DKKCita>()}};
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)XF
     static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
@@ -344,12 +357,14 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
+        {"RUB-KEYRATE", boost::make_shared<IborIndexParserWithPeriod<RUBKeyRate>>()},
         {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
         {"THB-THBFIX", boost::make_shared<IborIndexParserWithPeriod<THBFIX>>()},
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
         {"RON-ROBOR", boost::make_shared<IborIndexParserWithPeriod<Robor>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
-        {"CNY-REPOFIX", boost::make_shared<IborIndexParserWithPeriod<CNYRepoFix>>()}};
+        {"CNY-REPOFIX", boost::make_shared<IborIndexParserWithPeriod<CNYRepoFix>>()},
+        {"USD-SOFR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SofrTerm>>()}};
 
     // Check (once) that we have a one-to-one mapping
     static bool checked = false;
@@ -364,19 +379,19 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         return boost::make_shared<BMAIndexWrapper>(boost::make_shared<BMAIndex>(h));
     }
 
+    // Ibor indices with a tenor, this includes OIS term rates like USD-SOFR-3M
+    auto it = iborIndices.find(indexStem);
+    if (it != iborIndices.end() && !tenor.empty()) {
+        Period p = parsePeriod(tenor);
+        return it->second->build(p, h);
+    }
+
     // Overnight indices
     auto onIt = onIndices.find(indexStem);
     if (onIt != onIndices.end()) {
         QL_REQUIRE(tenor.empty(),
                    "A tenor is not allowed with the overnight index " << indexStem << " as it is implied");
         return onIt->second->clone(h);
-    }
-
-    // Ibor indices with a tenor
-    auto it = iborIndices.find(indexStem);
-    if (it != iborIndices.end()) {
-        Period p = parsePeriod(tenor);
-        return it->second->build(p, h);
     }
 
     // GENERIC indices
@@ -810,10 +825,7 @@ string internalIndexName(const string& indexName) {
     // Check if we have an overnight index
     // This covers cases like USD-FedFunds-1D and returns USD-FedFunds
     // (no need to check convention based overnight indices, they are always of the form CCY-INDEX)
-    if (isOvernightIndex(tmpName)) {
-        Period p = parsePeriod(tokens[2]);
-        QL_REQUIRE(p == 1 * Days,
-                   "The period " << tokens[2] << " is not compatible with the overnight index " << tmpName);
+    if (isOvernightIndex(tmpName) && parsePeriod(tokens[2]) == 1 * Days) {
         return tmpName;
     }
 

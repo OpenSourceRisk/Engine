@@ -69,11 +69,13 @@ public:
     */
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
-            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false);
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
+            bool fixingTriangulation = false);
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
-            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false);
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
+            bool fixingTriangulation = true);
     //! \name Index interface
     //@{
     std::string name() const;
@@ -124,32 +126,9 @@ protected:
 private:
     Calendar fixingCalendar_;
     bool inverseIndex_;
+    bool fixingTriangulation_;
 };
 
-// inline definitions
-
-inline std::string FxIndex::name() const { return name_; }
-
-inline Calendar FxIndex::fixingCalendar() const { return fixingCalendar_; }
-
-inline bool FxIndex::isValidFixingDate(const Date& d) const { return fixingCalendar().isBusinessDay(d); }
-
-inline void FxIndex::update() { notifyObservers(); }
-
-inline Date FxIndex::fixingDate(const Date& valueDate) const {
-    Date fixingDate = fixingCalendar().advance(valueDate, -static_cast<Integer>(fixingDays_), Days);
-    return fixingDate;
-}
-
-inline Date FxIndex::valueDate(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
-    return fixingCalendar().advance(fixingDate, fixingDays_, Days);
-}
-
-inline Real FxIndex::pastFixing(const Date& fixingDate) const {
-    QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
-    return timeSeries()[fixingDate];
-}
 } // namespace QuantExt
 
 #endif
