@@ -347,7 +347,7 @@ void CrossAssetModelBuilder::buildModel() const {
         DLOG("Setting measure to BA");
     } else if (config_->measure() == "LGM") {
         measure = Measure::LGM;
-        DLOG("Setting measure to BA");
+        DLOG("Setting measure to LGM");
     } else if (config_->measure() == "") {
         DLOG("Defaulting to LGM measure");
     } else {
