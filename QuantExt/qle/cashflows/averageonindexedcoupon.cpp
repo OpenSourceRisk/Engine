@@ -39,8 +39,8 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                                                const Date& rateComputationStartDate, const Date& rateComputationEndDate)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread, Date(),
                          Date(), dayCounter, false),
-      rateCutoff_(rateCutoff), lookback_(lookback), rateComputationStartDate_(rateComputationStartDate),
-      rateComputationEndDate_(rateComputationEndDate) {
+      overnightIndex_(overnightIndex), rateCutoff_(rateCutoff), lookback_(lookback),
+      rateComputationStartDate_(rateComputationStartDate), rateComputationEndDate_(rateComputationEndDate) {
 
     Date valueStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
     Date valueEnd = rateComputationEndDate_ == Null<Date>() ? endDate : rateComputationEndDate_;
