@@ -74,7 +74,7 @@ using namespace QuantLib;
 class CreditDefaultSwap : public Instrument {
 public:
     enum ProtectionPaymentTime { atDefault, atPeriodEnd, atMaturity };
-    enum FirstCouponRule {deriveFromDateGeneration, allowFullFirstCouponWithAccrualRebate, shortFirstCoupon};
+    enum FirstCouponRule {deriveFromDateGeneration, fullFirstCouponWithAccrualRebate, shortFirstCoupon};
     class arguments;
     class results;
     class engine;
@@ -106,7 +106,7 @@ public:
         @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
             is after accrual start date, if DateGenerationRule is CDS2015. 
             shortFirstCoupon will always enforce a short/broken first period in that case.
-            allowFullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
+            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
@@ -143,7 +143,7 @@ public:
         @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
             is after accrual start date, if DateGenerationRule is CDS2015. 
             shortFirstCoupon will always enforce a short/broken first period in that case.
-            allowFullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
+            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
@@ -179,7 +179,7 @@ public:
         @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
             is after accrual start date, if DateGenerationRule is CDS2015. 
             shortFirstCoupon will always enforce a short/broken first period in that case.
-            allowFullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
+            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread,
                       const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
@@ -218,7 +218,7 @@ public:
         @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
             is after accrual start date, if DateGenerationRule is CDS2015. 
             shortFirstCoupon will always enforce a short/broken first period in that case.
-            allowFullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
+            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront, Rate spread,
                       const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,

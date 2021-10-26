@@ -117,7 +117,7 @@ void CreditDefaultSwap::init(const Schedule& schedule, BusinessDayConvention pay
 
     QL_REQUIRE(!schedule.empty(), "CreditDefaultSwap needs a non-empty schedule.");
 
-    bool postBigBang = firstCouponRule_ == FirstCouponRule::allowFullFirstCouponWithAccrualRebate;
+    bool postBigBang = firstCouponRule_ == FirstCouponRule::fullFirstCouponWithAccrualRebate;
 
     if (schedule.hasRule() && firstCouponRule_ == FirstCouponRule::deriveFromDateGeneration) {
         DateGeneration::Rule rule = schedule.rule();
