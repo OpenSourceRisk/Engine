@@ -46,6 +46,12 @@ public:
         date of the fixing; no settlement days must be used.
     */
     virtual Real forecastFixing(const Time& fixingTime) const = 0;
+
+    //! returns a past fixing at the given date
+    /*! the date passed as arguments must be the actual calendar
+        date of the fixing; no settlement days must be used.
+    */
+    virtual Real pastFixing(const Date& fixingDate) const = 0;
 };
 
 } // namespace QuantExt
