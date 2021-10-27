@@ -106,7 +106,7 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
         }
     }
 
-    return inverseIndex_ ? 1.0 / result : result;
+    return result;
 }
 
 Real FxIndex::forecastFixing(const Time& fixingTime) const {
@@ -158,7 +158,7 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     Real forward = rate * sourceYts_->discount(fixingValueDate) * targetYts_->discount(refValueDate) /
                    (sourceYts_->discount(refValueDate) * targetYts_->discount(fixingValueDate));
 
-    return forward;
+    return inverseIndex_ ? 1.0 / forward : forward;
 }
 
 boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
@@ -197,10 +197,8 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
 
     Real fixing = timeSeries()[fixingDate];
-    if (fixing != Null<Real>())
-        return fixing;
 
-    if (fixingTriangulation_) {        
+    if (fixing == Null<Real>() && fixingTriangulation_) {        
         // check reverse
         string revName = familyName_ + " " + targetCurrency_.code() + "/" + sourceCurrency_.code();
         if (IndexManager::instance().hasHistoricalFixing(revName, fixingDate))
@@ -269,7 +267,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
             }
         }
     }
-    return fixing;
+    return inverseIndex_ ? 1.0 / fixing : fixing;
 }
 
 } // namespace QuantExt
