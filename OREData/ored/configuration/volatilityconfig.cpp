@@ -82,6 +82,21 @@ const std::string& EquityProxyVolatilityConfig::correlationCurve() const {
     return correlationCurve_; 
 }
 
+void CDSProxyVolatilityConfig::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "ProxySurface");
+    VolatilityConfig::fromXMLNode(node);
+    cdsVolatilityCurve_ = XMLUtils::getChildValue(node, "CDSVolatilityCurve", true);
+}
+
+XMLNode* CDSProxyVolatilityConfig::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("ProxySurface");
+    VolatilityConfig::toXMLNode(doc, node);
+    XMLUtils::addChild(doc, node, "CDSVolatilityCurve", cdsVolatilityCurve_);
+    return node;
+}
+
+const std::string& CDSProxyVolatilityConfig::cdsVolatilityCurve() const { return cdsVolatilityCurve_; }
+
 void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
     VolatilityConfig::fromXMLNode(node);
     string qType = XMLUtils::getChildValue(node, "QuoteType", false);
