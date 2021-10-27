@@ -194,12 +194,11 @@ BaseCorrelationCurve::BaseCorrelationCurve(
             DLOG("Detachment points after: " << Array(tmpDps.begin(), tmpDps.end()));
         }
 
-        // The QuantLib interpolator expects at least two terms, so add a second column, copying the first
-        if (tmpTerms.size() == 1) {
-            tmpTerms.push_back(tmpTerms[0] + 1 * tmpTerms[0].units());
-            for (Size i = 0; i < tmpDps.size(); ++i)
-                quotes[i].push_back(quotes[i][0]);
-        }
+        // The QuantLib interpolator expects at least two terms, so add a column, copying the last
+        QL_REQUIRE(!tmpTerms.empty(), "No terms found");
+        tmpTerms.push_back(tmpTerms.back() + 1 * tmpTerms.back().units());
+        for (Size i = 0; i < tmpDps.size(); ++i)
+            quotes[i].push_back(quotes[i][tmpTerms.size() - 2]);
 
         baseCorrelation_ = boost::make_shared<BilinearBaseCorrelationTermStructure>(
             config.settlementDays(), config.calendar(), config.businessDayConvention(), tmpTerms,
