@@ -231,20 +231,21 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
                             boost::shared_ptr<QuantLib::Coupon> cpn =
                                 boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                            auto ptrUnpack = unpackIndexedCoupon(cpn);
-
+                            if (cpn) {
+                                ptrFlow = unpackIndexedCoupon(cpn);
+                            }
                             boost::shared_ptr<AverageBMACoupon> ptrBMA =
-                                boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrUnpack);
+                                boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
                             boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                                boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrUnpack);
+                                boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
                             boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
-                                boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrUnpack);
+                                boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
                             boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
-                                boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrUnpack);
+                                boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
                             boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
-                                boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrUnpack);
+                                boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                             boost::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
-                                boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrUnpack);
+                                boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
                             Date fixingDate;
                             Real fixingValue;
                             if (ptrBMA) {
