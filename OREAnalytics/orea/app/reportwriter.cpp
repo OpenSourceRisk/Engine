@@ -228,20 +228,23 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             }
                             // This BMA part here (and below) is necessary because the fixingDay() method of
                             // AverageBMACoupon returns an exception rather than the last fixing day of the period.
+
+                            boost::shared_ptr<QuantLib::Coupon> cpn =
+                                boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                            auto ptrUnpack = unpackIndexedCoupon(cpn);
+
                             boost::shared_ptr<AverageBMACoupon> ptrBMA =
-                                boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
+                                boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrUnpack);
                             boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                                boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
+                                boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrUnpack);
                             boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
-                                boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
+                                boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrUnpack);
                             boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
-                                boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                                boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrUnpack);
                             boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
-                                boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
-                            boost::shared_ptr<QuantExt::IndexedCoupon> ptrIndCp =
-                                boost::dynamic_pointer_cast<QuantExt::IndexedCoupon>(ptrFlow);
+                                boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrUnpack);
                             boost::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
-                                boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
+                                boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrUnpack);
                             Date fixingDate;
                             Real fixingValue;
                             if (ptrBMA) {
@@ -266,28 +269,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             } else if (ptrFxlCf) {
                                 fixingDate = ptrFxlCf->fxFixingDate();
                                 fixingValue = ptrFxlCf->fxRate();
-                            } else if (ptrIndCp) {
-                                // fixingDate = ptrIndCp->fixingDate();
-
-                                boost::shared_ptr<QuantExt::IndexedCoupon> ind =
-                                    boost::dynamic_pointer_cast<QuantExt::IndexedCoupon>(ptrIndCp->underlying());
-
-                                if (ind) {
-                                    boost::shared_ptr<QuantExt::FloatingRateCoupon> cpn =
-                                        boost::dynamic_pointer_cast<QuantExt::FloatingRateCoupon>(ind->underlying());
-                                    fixingDate = cpn->fixingDate();
-                                    if (cpn->index()->fixing(fixingDate)) {
-                                        fixingValue = cpn->index()->fixing(fixingDate);
-                                    } else
-                                        fixingValue = Null<Real>();
-                                } else {
-                                    fixingDate = ptrIndCp->referencePeriodEnd();
-                                    fixingValue = Null<Real>();
-                                }
                             } else if (ptrEqCp) {
                                 fixingDate = ptrEqCp->fixingEndDate();
                                 fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
-                                ;
                             } else {
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
