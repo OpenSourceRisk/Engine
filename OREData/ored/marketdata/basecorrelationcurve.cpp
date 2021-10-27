@@ -196,7 +196,7 @@ BaseCorrelationCurve::BaseCorrelationCurve(
 
         // The QuantLib interpolator expects at least two terms, so add a column, copying the last
         QL_REQUIRE(!tmpTerms.empty(), "No terms found");
-        tmpTerms.push_back(tmpTerms[0] + 1 * tmpTerms[0].units());
+        tmpTerms.push_back(tmpTerms.back() + 1 * tmpTerms.back().units());
         for (Size i = 0; i < tmpDps.size(); ++i)
             quotes[i].push_back(quotes[i][tmpTerms.size() - 2]);
 
