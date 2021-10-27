@@ -809,7 +809,7 @@ string internalIndexName(const string& indexName) {
 
     // Static map of allowable alternative external names to our unique internal name
     static map<string, string> m = {{"DKK-TNR", "DKK-DKKOIS"}, {"EUR-EURIB", "EUR-EURIBOR"}, {"CAD-BA", "CAD-CDOR"},
-				    {"EUR-ESTR", "EUR-ESTER"}, {"EUR-STR", "EUR-ESTER"}};
+                                    {"EUR-ESTR", "EUR-ESTER"}, {"EUR-STR", "EUR-ESTER"}, {"JPY-TONA", "JPY-TONAR"}};
 
     // Is start of indexName covered by the map? If so, update it.
     string tmpName = tokens[0] + "-" + tokens[1];
