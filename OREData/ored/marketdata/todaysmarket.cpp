@@ -468,8 +468,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredCDSVolCurves_.find(cdsvolspec->name());
             if (itr == requiredCDSVolCurves_.end()) {
                 DLOG("Building CDSVol for asof " << asof_);
-                boost::shared_ptr<CDSVolCurve> cdsVolCurve =
-                    boost::make_shared<CDSVolCurve>(asof_, *cdsvolspec, *loader_, *curveConfigs_);
+                boost::shared_ptr<CDSVolCurve> cdsVolCurve = boost::make_shared<CDSVolCurve>(
+                    asof_, *cdsvolspec, *loader_, *curveConfigs_, requiredCDSVolCurves_);
                 itr = requiredCDSVolCurves_.insert(make_pair(cdsvolspec->name(), cdsVolCurve)).first;
             }
             DLOG("Adding CDSVol (" << node.name << ") with spec " << *cdsvolspec << " to configuration "

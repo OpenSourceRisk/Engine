@@ -25,7 +25,6 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
-#include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
@@ -44,7 +43,8 @@ public:
 
     //! Detailed constructor
     CDSVolCurve(QuantLib::Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
-                const CurveConfigurations& curveConfigs);
+                const CurveConfigurations& curveConfigs,
+                const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves = {});
     //@}
 
     //! \name Inspectors
@@ -70,6 +70,10 @@ private:
     //! Build a volatility surface from a collection of expiry and absolute strike pairs.
     void buildVolatility(const QuantLib::Date& asof, CDSVolatilityCurveConfig& vc,
                          const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader);
+
+    void buildVolatility(const Date& asof, const CDSVolatilityCurveSpec& spec, const CDSVolatilityCurveConfig& vc,
+                         const CDSProxyVolatilityConfig& pvc,
+                         const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves);
 
     /*! Build a volatility surface from a collection of expiry and absolute strike pairs where the strikes and
         expiries are both explicitly configured i.e. where wild cards are not used for either the strikes or

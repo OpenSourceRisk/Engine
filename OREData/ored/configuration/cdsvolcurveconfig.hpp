@@ -88,6 +88,9 @@ private:
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();
 
+    //! Populate required curve ids
+    void populateRequiredCurveIds();
+
     //! Give back the quote stem used in construction of the quote strings
     std::string quoteStem() const;
 };
@@ -97,6 +100,9 @@ private:
     QuantLib::Period. If the parse is not successful, the pair of strings that are returned are empty.
 */
 std::pair<std::string, std::string> extractTermFromId(const std::string& id);
+
+/*! Given an id of the form name-tenor, return name. For the form name, return name. */
+std::string stripTermFromId(const std::string& id);
 
 } // namespace data
 } // namespace ore
