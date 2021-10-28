@@ -74,7 +74,6 @@ using namespace QuantLib;
 class CreditDefaultSwap : public Instrument {
 public:
     enum ProtectionPaymentTime { atDefault, atPeriodEnd, atMaturity };
-    enum FirstCouponRule {deriveFromDateGeneration, fullFirstCouponWithAccrualRebate, shortFirstCoupon};
     class arguments;
     class results;
     class engine;
@@ -103,10 +102,6 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is 
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
-        @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
-            is after accrual start date, if DateGenerationRule is CDS2015. 
-            shortFirstCoupon will always enforce a short/broken first period in that case.
-            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
@@ -114,8 +109,7 @@ public:
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3,
-                      const FirstCouponRule firstCouponRule = FirstCouponRule::deriveFromDateGeneration);
+                      Natural cashSettlementDays = 3);
     //! CDS quoted as upfront and running spread
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Notional value
@@ -125,8 +119,8 @@ public:
         @param paymentConvention  Business-day convention for
                                   payment-date adjustment.
         @param dayCounter  Day-count convention for accrual.
-        @param settlesAccrual Whether or no<C-S-Del>t the accrued coupon is
-                              due in the evkent of a default.
+        @param settlesAccrual Whether or not the accrued coupon is
+                              due in the event of a default.
         @param protectionPaymentTime timing of protection and default accrual payments
         @param protectionStart  The first date where a default event will trigger the contract. 
                                 Before the CDS Big Bang 2009, this was typically trade date (T) + 1 calendar day.
@@ -140,10 +134,6 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
-        @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
-            is after accrual start date, if DateGenerationRule is CDS2015. 
-            shortFirstCoupon will always enforce a short/broken first period in that case.
-            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate spread, const Schedule& schedule,
                       BusinessDayConvention paymentConvention, const DayCounter& dayCounter, bool settlesAccrual = true,
@@ -151,8 +141,7 @@ public:
                       const Date& upfrontDate = Date(), const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3,
-                      const FirstCouponRule firstCouponRule = FirstCouponRule::deriveFromDateGeneration);   
+                      Natural cashSettlementDays = 3);
     //! CDS quoted as running-spread only and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Initial Notional value
@@ -176,10 +165,6 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is 
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
-        @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
-            is after accrual start date, if DateGenerationRule is CDS2015. 
-            shortFirstCoupon will always enforce a short/broken first period in that case.
-            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate spread,
                       const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
@@ -188,8 +173,7 @@ public:
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3,
-                      const FirstCouponRule firstCouponRule = FirstCouponRule::deriveFromDateGeneration);
+                      Natural cashSettlementDays = 3);
     //! CDS quoted as upfront and running spread and with amortized notional structure
     /*! @param side  Whether the protection is bought or sold.
         @param notional  Initial Notional value
@@ -215,10 +199,6 @@ public:
                           the date on which the cash settlement amount is paid. If not given, the trade date is
                           guessed from the protection start date and \p schedule date generation rule.
         @param cashSettlementDays  The number of business days from \p tradeDate to cash settlement date.
-        @param firstCouponRule deriveFromDateGeneration allows the first coupon to be a full coupon even protection start 
-            is after accrual start date, if DateGenerationRule is CDS2015. 
-            shortFirstCoupon will always enforce a short/broken first period in that case.
-            fullFirstCouponWithAccrualRebate will allow full coupons independent from the used DateGenerationRule.
     */
     CreditDefaultSwap(Protection::Side side, Real notional, const Leg& amortized_leg, Rate upfront, Rate spread,
                       const Schedule& schedule, BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
@@ -227,8 +207,7 @@ public:
                       const boost::shared_ptr<Claim>& = boost::shared_ptr<Claim>(),
                       const DayCounter& lastPeriodDayCounter = DayCounter(),
                       const Date& tradeDate = Date(),
-                      Natural cashSettlementDays = 3,
-                      const FirstCouponRule firstCouponRule = FirstCouponRule::deriveFromDateGeneration);
+                      Natural cashSettlementDays = 3);
     //@}
     //! \name Instrument interface
     //@{
@@ -355,7 +334,6 @@ protected:
     Date protectionStart_, maturity_;
     Date tradeDate_;
     Natural cashSettlementDays_;
-    FirstCouponRule firstCouponRule_;
     // results
     mutable Rate fairUpfront_;
     mutable Rate fairSpread_;

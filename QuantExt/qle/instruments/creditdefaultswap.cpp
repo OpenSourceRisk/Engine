@@ -55,11 +55,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      const Date& protectionStart, const boost::shared_ptr<Claim>& claim,
                                      const DayCounter& lastPeriodDayCounter,
                                      const Date& tradeDate,
-                                     Natural cashSettlementDays, const FirstCouponRule firstCouponRule)
+                                     Natural cashSettlementDays)
     : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread), settlesAccrual_(settlesAccrual),
       protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      protectionStart_(protectionStart == Date() ? schedule[0] : protectionStart), tradeDate_(tradeDate),
-      cashSettlementDays_(cashSettlementDays), firstCouponRule_(firstCouponRule) {
+      protectionStart_(protectionStart == Date() ? schedule[0] : protectionStart),
+      tradeDate_(tradeDate), cashSettlementDays_(cashSettlementDays) {
 
     init(schedule, convention, dayCounter, lastPeriodDayCounter);
 }
@@ -71,11 +71,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
                                      const DayCounter& lastPeriodDayCounter,
                                      const Date& tradeDate,
-                                     Natural cashSettlementDays, const FirstCouponRule firstCouponRule)
+                                     Natural cashSettlementDays)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      protectionStart_(protectionStart == Date() ? schedule[0] : protectionStart), tradeDate_(tradeDate),
-      cashSettlementDays_(cashSettlementDays), firstCouponRule_(firstCouponRule) {
+      protectionStart_(protectionStart == Date() ? schedule[0] : protectionStart),
+      tradeDate_(tradeDate), cashSettlementDays_(cashSettlementDays) {
 
     init(schedule, convention, dayCounter, lastPeriodDayCounter, upfrontDate);
 }
@@ -86,12 +86,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const
                                      ProtectionPaymentTime protectionPaymentTime, const Date& protectionStart,
                                      const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter,
                                      const Date& tradeDate,
-                                     Natural cashSettlementDays,
-                                     const CreditDefaultSwap::FirstCouponRule firstCouponRule)
+                                     Natural cashSettlementDays)
     : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread),
       settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
-      leg_(amortized_leg), protectionStart_(protectionStart == Date() ? schedule[0] : protectionStart), tradeDate_(tradeDate),
-      cashSettlementDays_(cashSettlementDays), firstCouponRule_(firstCouponRule) {
+      leg_(amortized_leg), protectionStart_(protectionStart == Date() ? schedule[0] : protectionStart),
+      tradeDate_(tradeDate), cashSettlementDays_(cashSettlementDays) {
 
     init(schedule, convention, dayCounter, lastPeriodDayCounter);
 }
@@ -103,11 +102,11 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, const
                                      const Date& upfrontDate, const boost::shared_ptr<Claim>& claim,
                                      const DayCounter& lastPeriodDayCounter,
                                      const Date& tradeDate,
-                                     Natural cashSettlementDays, const FirstCouponRule firstCouponRule)
+                                     Natural cashSettlementDays)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), protectionPaymentTime_(protectionPaymentTime), claim_(claim),
       leg_(amortized_leg), protectionStart_(protectionStart == Date() ? schedule[0] : protectionStart),
-      tradeDate_(tradeDate), cashSettlementDays_(cashSettlementDays), firstCouponRule_(firstCouponRule) {
+      tradeDate_(tradeDate), cashSettlementDays_(cashSettlementDays) {
 
     init(schedule, convention, dayCounter, lastPeriodDayCounter, upfrontDate);
 }
@@ -117,9 +116,8 @@ void CreditDefaultSwap::init(const Schedule& schedule, BusinessDayConvention pay
 
     QL_REQUIRE(!schedule.empty(), "CreditDefaultSwap needs a non-empty schedule.");
 
-    bool postBigBang = firstCouponRule_ == FirstCouponRule::fullFirstCouponWithAccrualRebate;
-
-    if (schedule.hasRule() && firstCouponRule_ == FirstCouponRule::deriveFromDateGeneration) {
+    bool postBigBang = false;
+    if (schedule.hasRule()) {
         DateGeneration::Rule rule = schedule.rule();
         postBigBang = rule == DateGeneration::CDS || rule == DateGeneration::CDS2015;
     }
