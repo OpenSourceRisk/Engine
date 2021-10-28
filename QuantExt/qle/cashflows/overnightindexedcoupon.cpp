@@ -60,7 +60,7 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
                                                const Date& rateComputationEndDate)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread,
                          refPeriodStart, refPeriodEnd, dayCounter, false),
-      includeSpread_(includeSpread), lookback_(lookback), rateCutoff_(rateCutoff),
+      overnightIndex_(overnightIndex), includeSpread_(includeSpread), lookback_(lookback), rateCutoff_(rateCutoff),
       rateComputationStartDate_(rateComputationStartDate), rateComputationEndDate_(rateComputationEndDate) {
 
     Date valueStart = rateComputationStartDate_ == Null<Date>() ? startDate : rateComputationStartDate_;
