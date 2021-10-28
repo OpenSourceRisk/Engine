@@ -82,6 +82,9 @@ private:
     const Real initialFixing_;
 };
 
+
+boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c);
+
 //! indexed coupon leg
 /*!
     \ingroup cashflows
