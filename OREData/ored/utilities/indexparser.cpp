@@ -455,39 +455,45 @@ public:
 };
 
 boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldTermStructure>& f,
-                                            const Handle<YieldTermStructure>& d,
-                                            boost::shared_ptr<IRSwapConvention> irSwapConvention,
-                                            boost::shared_ptr<SwapIndexConvention> swapIndexConvention) {
+                                            const Handle<YieldTermStructure>& d) {
 
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
-
     QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4,
                "three or four tokens required in " << s << ": CCY-CMS-TENOR or CCY-CMS-TAG-TENOR");
     QL_REQUIRE(tokens[0].size() == 3, "invalid currency code in " << s);
     QL_REQUIRE(tokens[1] == "CMS", "expected CMS as middle token in " << s);
-
     Period p = parsePeriod(tokens.back());
-
-    // if no tag is given use LiborSwapIsdaFix as an (arbitrary) standard name
+    // use default family name, if none is given
     string familyName = tokens.size() == 4 ? tokens[0] + "-CMS-" + tokens[2] : tokens[0] + "LiborSwapIsdaFix";
     Currency ccy = parseCurrency(tokens[0]);
 
-    boost::shared_ptr<IborIndex> index;
-    if(irSwapConvention) {
-        index =  irSwapConvention->index()->clone(f);
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    boost::shared_ptr<SwapIndexConvention> swapIndexConvention;
+    boost::shared_ptr<IRSwapConvention> irSwapConvention;
+    if (conventions && conventions->has(s, Convention::Type::SwapIndex)) {
+        swapIndexConvention = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions->get(s));
+        QL_REQUIRE(swapIndexConvention, "internal error: could not cast to SwapIndexConvention");
+        QL_REQUIRE(conventions->has(swapIndexConvention->conventions(), Convention::Type::Swap),
+                   "do not have swap conventions for '" << swapIndexConvention->conventions()
+                                                        << "', required from swap index convention '" << s << "'");
+        irSwapConvention =
+            boost::dynamic_pointer_cast<IRSwapConvention>(conventions->get(swapIndexConvention->conventions()));
+        QL_REQUIRE(irSwapConvention, "internal error: could not cast to IRSwapConvention");
+    } else {
+	// set default conventions using a generic ibor index
+        irSwapConvention = boost::make_shared<IRSwapConvention>("dummy_swap_conv_" + tokens[0], tokens[0], "Annual", "MF", "A365",
+                                                                tokens[0] + "-GENERIC-3M");
+        swapIndexConvention =
+            boost::make_shared<SwapIndexConvention>("dummy_swapindex_conv_" + tokens[0], "dummy_swap_conv_" + tokens[0],
+                                                    irSwapConvention->index()->fixingCalendar().name());
     }
-    QuantLib::Natural settlementDays = index ? index->fixingDays() : 0;
-    QuantLib::Calendar fixingCalendar = irSwapConvention ? irSwapConvention->fixedCalendar() : NullCalendar();
-    if(swapIndexConvention && !swapIndexConvention->fixingCalendar().empty()) {
-        fixingCalendar = parseCalendar(swapIndexConvention->fixingCalendar());
-    }
-    Period fixedLegTenor = irSwapConvention ? Period(irSwapConvention->fixedFrequency()) : Period(1, Months);
-    BusinessDayConvention fixedLegConvention = irSwapConvention ? irSwapConvention->fixedConvention() : ModifiedFollowing;
-    DayCounter fixedLegDayCounter = irSwapConvention ? irSwapConvention->fixedDayCounter() : ActualActual();
 
-    return boost::make_shared<SwapIndex>(familyName, p, settlementDays, ccy, fixingCalendar, fixedLegTenor,
-                                         fixedLegConvention, fixedLegDayCounter, index, d);
+    return boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy,
+                                         parseCalendar(swapIndexConvention->fixingCalendar()),
+                                         Period(irSwapConvention->fixedFrequency()),
+                                         irSwapConvention->fixedConvention(), irSwapConvention->fixedDayCounter(),
+                                         irSwapConvention->index()->clone(f), d);
 }
 
 // Zero Inflation Index Parser
@@ -707,35 +713,15 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
 }
 
 boost::shared_ptr<Index> parseIndex(const string& s) {
-    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<QuantLib::Index> ret_idx;
-    // if we have an ibor index convention we parse s using this (and throw if we don't succeed)
-    if (conventions && (conventions->has(s, Convention::Type::IborIndex) || 
-        conventions->has(s, Convention::Type::OvernightIndex))) {
+    try {
         ret_idx = parseIborIndex(s);
-    } else {
-        // otherwise we try to parse the ibor index without conventions
-        try {
-            ret_idx = parseIborIndex(s);
-        } catch (...) {
-        }
+    } catch (...) {
     }
     if (!ret_idx) {
-        // if we have a swap index convention we parse s using this (and throw if we don't succeed)
-        if (conventions && conventions->has(s, Convention::Type::SwapIndex)) {
-            auto c = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions->get(s));
-            QL_REQUIRE(conventions->has(c->conventions(), Convention::Type::Swap),
-                       "do not have swap conventions for '" << c->conventions()
-                                                            << "', required from swap index convention '" << s << "'");
-            ret_idx =
-                parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
-                               boost::dynamic_pointer_cast<IRSwapConvention>(conventions->get(c->conventions())), c);
-        } else {
-            // otherwise try to parse a swap index without conventions
-            try {
-                ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(), nullptr);
-            } catch (...) {
-            }
+	try {
+        ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>());
+        } catch (...) {
         }
     }
     if (!ret_idx) {
