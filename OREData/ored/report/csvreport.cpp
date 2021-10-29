@@ -129,6 +129,8 @@ Report& CSVFileReport::add(const ReportType& rt) {
     return *this;
 }
 void CSVFileReport::end() {
+    QL_REQUIRE(i_ == columnTypes_.size() || i_ == 0, "csv report is finalized with incomplete row, got data for "
+                                                         << i_ << " columns out of " << columnTypes_.size());
     if (fp_) {
         fprintf(fp_, "\n");
         fclose(fp_);
