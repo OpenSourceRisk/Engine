@@ -405,6 +405,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         for (auto const& l : legs_)
             addToRequiredFixings(l, fdg);
     }
+
+    Date startDate = Date::maxDate();
+    for (auto const& l : legs_) {
+        if (!l.empty()) {
+            startDate = std::min(startDate, l.front()->date());
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(l.front());
+            if (coupon)
+                startDate = std::min(startDate, coupon->accrualStartDate());                
+        }
+    }
+
+    additionalData_["startDate"] = to_string(startDate);
 }
 
 void CapFloor::fromXML(XMLNode* node) {

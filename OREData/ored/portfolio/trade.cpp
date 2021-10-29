@@ -36,6 +36,11 @@ void Trade::fromXML(XMLNode* node) {
     XMLNode* taNode = XMLUtils::getChildNode(node, "TradeActions");
     if (taNode)
         tradeActions_.fromXML(taNode);
+
+    for (auto af : envelope_.additionalFields()) {
+        if (additionalData_.find(af.first) == additionalData_.end())
+            additionalData_[af.first] = af.second;
+    }
 }
 
 XMLNode* Trade::toXML(XMLDocument& doc) {
@@ -131,7 +136,7 @@ void Trade::reset() {
     maturity_ = Date();
     requiredFixings_.clear();
 }
-
+    
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
 
 } // namespace data
