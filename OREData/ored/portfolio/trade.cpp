@@ -131,7 +131,7 @@ void Trade::reset() {
     maturity_ = Date();
     requiredFixings_.clear();
 }
-
+    
 const std::map<std::string, boost::any>& Trade::additionalData() const { return additionalData_; }
 
 } // namespace data

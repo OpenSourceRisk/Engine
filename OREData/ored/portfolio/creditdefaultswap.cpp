@@ -21,6 +21,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
@@ -119,6 +120,8 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {swap_.leg().isPayer()};
     notionalCurrency_ = swap_.leg().currency();
+
+    additionalData_["startDate"] = to_string(swap_.protectionStart());
 }
 
 QuantLib::Real CreditDefaultSwap::notional() const {
