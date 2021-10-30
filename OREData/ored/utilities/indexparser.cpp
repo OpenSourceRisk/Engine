@@ -489,7 +489,7 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
     }
 
     Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
-                                  ? irSwapConvention->index()->fixingCalendar()
+                                  ? irSwapConvention->fixedCalendar()
                                   : parseCalendar(swapIndexConvention->fixingCalendar());
 
     return boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy, fixingCalendar,
