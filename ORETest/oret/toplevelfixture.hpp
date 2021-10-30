@@ -56,7 +56,7 @@ public:
         // Clear and fixings that have been added
         IndexManager::instance().clearHistories();
 	// Clear conventions that have been set
-        ore::data::InstrumentConventions::instance().conventions() = nullptr;
+        ore::data::InstrumentConventions::instance().conventions() = boost::make_shared<ore::data::Conventions>();
     }
 
     bool updatesEnabled() { return savedObservableSettings.updatesEnabled(); }
