@@ -484,13 +484,15 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
 	// set default conventions using a generic ibor index
         irSwapConvention = boost::make_shared<IRSwapConvention>("dummy_swap_conv_" + tokens[0], tokens[0], "Annual", "MF", "A365",
                                                                 tokens[0] + "-GENERIC-3M");
-        swapIndexConvention =
-            boost::make_shared<SwapIndexConvention>("dummy_swapindex_conv_" + tokens[0], "dummy_swap_conv_" + tokens[0],
-                                                    irSwapConvention->index()->fixingCalendar().name());
+        swapIndexConvention = boost::make_shared<SwapIndexConvention>("dummy_swapindex_conv_" + tokens[0],
+                                                                      "dummy_swap_conv_" + tokens[0], "");
     }
 
-    return boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy,
-                                         parseCalendar(swapIndexConvention->fixingCalendar()),
+    Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
+                                  ? irSwapConvention->index()->fixingCalendar()
+                                  : parseCalendar(swapIndexConvention->fixingCalendar());
+
+    return boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy, fixingCalendar,
                                          Period(irSwapConvention->fixedFrequency()),
                                          irSwapConvention->fixedConvention(), irSwapConvention->fixedDayCounter(),
                                          irSwapConvention->index()->clone(f), d);
