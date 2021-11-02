@@ -28,6 +28,7 @@
 #include <ored/marketdata/market.hpp>
 
 #include <qle/indexes/inflationindexobserver.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 #include <map>
 
@@ -88,6 +89,8 @@ public:
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
 
     //! FX
+    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& ccypair, 
+        const string& configuration = Market::defaultConfiguration) const;
     Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,
                                         const string& configuration = Market::defaultConfiguration) const;
@@ -206,6 +209,7 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
+    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::FxIndex>> fxIndices_;
     mutable map<string, FXTriangulation> fxSpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;

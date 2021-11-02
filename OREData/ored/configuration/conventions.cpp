@@ -693,10 +693,10 @@ XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) {
 
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
-                           const string& spotRelative)
+                           const string& spotRelative, const string& endOfMonth, const string& convention)
     : Convention(id, Type::FX), strSpotDays_(spotDays), strSourceCurrency_(sourceCurrency),
       strTargetCurrency_(targetCurrency), strPointsFactor_(pointsFactor), strAdvanceCalendar_(advanceCalendar),
-      strSpotRelative_(spotRelative) {
+      strSpotRelative_(spotRelative), strEndOfMonth_(endOfMonth), strConvention_(convention) {
     build();
 }
 
@@ -707,6 +707,8 @@ void FXConvention::build() {
     pointsFactor_ = parseReal(strPointsFactor_);
     advanceCalendar_ = strAdvanceCalendar_.empty() ? NullCalendar() : parseCalendar(strAdvanceCalendar_);
     spotRelative_ = strSpotRelative_.empty() ? true : parseBool(strSpotRelative_);
+    endOfMonth_ = strEndOfMonth_.empty() ? false : parseBool(strEndOfMonth_);
+    convention_ = strConvention_.empty() ? Following : parseBusinessDayConvention(strConvention_);
 }
 
 void FXConvention::fromXML(XMLNode* node) {
@@ -722,6 +724,8 @@ void FXConvention::fromXML(XMLNode* node) {
     strPointsFactor_ = XMLUtils::getChildValue(node, "PointsFactor", true);
     strAdvanceCalendar_ = XMLUtils::getChildValue(node, "AdvanceCalendar", false);
     strSpotRelative_ = XMLUtils::getChildValue(node, "SpotRelative", false);
+    strEndOfMonth_ = XMLUtils::getChildValue(node, "EOM", false);
+    strConvention_ = XMLUtils::getChildValue(node, "Convention", false);
 
     build();
 }
@@ -736,6 +740,8 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "PointsFactor", strPointsFactor_);
     XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
     XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+    XMLUtils::addChild(doc, node, "EOM", strEndOfMonth_);
+    XMLUtils::addChild(doc, node, "Convention", strConvention_);
 
     return node;
 }
