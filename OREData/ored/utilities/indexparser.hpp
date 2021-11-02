@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <ored/configuration/conventions.hpp>
 #include <ql/index.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
@@ -36,10 +35,10 @@
 
 namespace ore {
 namespace data {
-using ore::data::Convention;
 using QuantLib::Handle;
 using QuantLib::IborIndex;
 using QuantLib::Index;
+using QuantLib::Quote;
 using QuantLib::SwapIndex;
 using QuantLib::YieldTermStructure;
 using QuantLib::ZeroInflationIndex;
@@ -124,9 +123,7 @@ boost::shared_ptr<QuantExt::EquityIndex> parseEquityIndex(const string& s);
 */
 boost::shared_ptr<SwapIndex>
 parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
-               const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>(),
-               boost::shared_ptr<IRSwapConvention> irSwapConvention = nullptr,
-               boost::shared_ptr<SwapIndexConvention> swapIndexConvention = nullptr);
+               const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>());
 
 //! Convert std::string to QuantLib::ZeroInflationIndex
 /*!

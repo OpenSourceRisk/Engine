@@ -66,7 +66,7 @@ using boost::timer::default_places;
 
 using testsuite::TestMarket;
 
-boost::shared_ptr<data::Conventions> conventions() {
+void setConventions() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
 
     boost::shared_ptr<data::Convention> swapIndexConv(
@@ -78,8 +78,6 @@ boost::shared_ptr<data::Conventions> conventions() {
     conventions->add(swapConv);
 
     InstrumentConventions::instance().conventions() = conventions;
-    
-    return conventions;
 }
 
 boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& factory) {
@@ -285,8 +283,7 @@ void simulation(string dateGridString, bool checkFixings) {
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
 
-    // set conventions and build scenario sim market
-    conventions();
+    // build scenario sim market
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters);
 
@@ -360,6 +357,7 @@ BOOST_AUTO_TEST_SUITE(ObservationModeTest)
 
 BOOST_AUTO_TEST_CASE(testDisableShort) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
+    setConventions();
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Disable, Short Grid, No Fixing Checks");
     simulation("10,1Y", false);
@@ -370,6 +368,7 @@ BOOST_AUTO_TEST_CASE(testDisableShort) {
 
 BOOST_AUTO_TEST_CASE(testDisableLong) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
+    setConventions();
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Disable, Long Grid, No Fixing Checks");
     simulation("11,1Y", false);
@@ -380,6 +379,7 @@ BOOST_AUTO_TEST_CASE(testDisableLong) {
 
 BOOST_AUTO_TEST_CASE(testNone) {
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
+    setConventions();
 
     BOOST_TEST_MESSAGE("Testing Observation Mode None, Short Grid, No Fixing Checks");
     simulation("10,1Y", false);
@@ -396,6 +396,7 @@ BOOST_AUTO_TEST_CASE(testNone) {
 
 BOOST_AUTO_TEST_CASE(testUnregister) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Unregister);
+    setConventions();
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Unregister, Long Grid, No Fixing Checks");
     simulation("11,1Y", false);
@@ -412,6 +413,7 @@ BOOST_AUTO_TEST_CASE(testUnregister) {
 
 BOOST_AUTO_TEST_CASE(testDefer) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Defer);
+    setConventions();
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Defer, Long Grid, No Fixing Checks");
     simulation("11,1Y", false);
