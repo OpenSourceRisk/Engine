@@ -45,6 +45,7 @@ public:
           FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
         registerWith(FXLinked::fxIndex());
         registerWith(underlying_);
+        underlying_->alwaysForwardNotifications();
     }
 
     //! \name FXLinked interface
