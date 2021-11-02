@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/report/report.hpp>
 #include <ored/report/csvreport.hpp>
+#include <ored/report/report.hpp>
 #include <ql/errors.hpp>
 #include <vector>
 namespace ore {
@@ -67,7 +67,10 @@ public:
         return *this;
     }
 
-    void end() {}
+    void end() {
+        QL_REQUIRE(i_ == headers_.size() || i_ == 0,
+                   "report is finalized with incomplete row, got data for " << i_ << " columns out of " << columns());
+    }
 
     // InMemoryInterface
     Size columns() const { return headers_.size(); }
@@ -76,29 +79,32 @@ public:
     ReportType columnType(Size i) const { return columnTypes_[i]; }
     Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
-    const vector<ReportType>& data(Size i) const { return data_[i]; }
-    
+    const vector<ReportType>& data(Size i) const {
+        QL_REQUIRE(data_[i].size() == rows(), "internal error: report column "
+                                                  << i << " (" << header(i) << ") contains " << data_[i].size()
+                                                  << " rows, expected are " << rows() << " rows.");
+        return data_[i];
+    }
+
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
                 const string& nullString = "#N/A") {
-        
-        CSVFileReport cReport(filename, sep, commentCharacter, quoteChar,
-                              nullString);
-        
-        
+
+        CSVFileReport cReport(filename, sep, commentCharacter, quoteChar, nullString);
+
         for (Size i = 0; i < headers_.size(); i++) {
             cReport.addColumn(headers_[i], columnTypes_[i], columnPrecision_[i]);
         }
-        
+
         auto numColumns = columns();
         auto numRows = data_[0].size();
-    
+
         for (Size i = 0; i < numRows; i++) {
             cReport.next();
             for (Size j = 0; j < numColumns; j++) {
                 cReport.add(data_[j][i]);
             }
         }
-        
+
         cReport.end();
     }
 

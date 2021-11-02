@@ -385,9 +385,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_, -multiplier,
-                parseCurrency(legData_.currency()), engineFactory,
-                engineFactory->configuration(MarketContext::pricing));
+    maturity_ = std::max(maturity_, addPremiums(additionalInstruments, additionalMultipliers, 1.0, premiumData_,
+                                                -multiplier, parseCurrency(legData_.currency()), engineFactory,
+                                                engineFactory->configuration(MarketContext::pricing)));
 
     // set instrument
     instrument_ =
@@ -405,6 +405,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         for (auto const& l : legs_)
             addToRequiredFixings(l, fdg);
     }
+
+    Date startDate = Date::maxDate();
+    for (auto const& l : legs_) {
+        if (!l.empty()) {
+            startDate = std::min(startDate, l.front()->date());
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(l.front());
+            if (coupon)
+                startDate = std::min(startDate, coupon->accrualStartDate());                
+        }
+    }
+
+    additionalData_["startDate"] = to_string(startDate);
 }
 
 void CapFloor::fromXML(XMLNode* node) {

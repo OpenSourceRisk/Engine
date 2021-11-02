@@ -105,6 +105,8 @@ public:
     const Date& rateComputationStartDate() const { return rateComputationStartDate_; }
     //! rate computation end date
     const Date& rateComputationEndDate() const { return rateComputationEndDate_; }
+    //! the underlying index
+    const ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
     //@}
     //! \name FloatingRateCoupon interface
     //@{
@@ -116,6 +118,7 @@ public:
     void accept(AcyclicVisitor&);
     //@}
 private:
+    boost::shared_ptr<OvernightIndex> overnightIndex_;
     std::vector<Date> valueDates_, fixingDates_;
     mutable std::vector<Rate> fixings_;
     Size n_;
@@ -124,6 +127,25 @@ private:
     Period lookback_;
     Natural rateCutoff_;
     Date rateComputationStartDate_, rateComputationEndDate_;
+};
+
+//! OvernightIndexedCoupon pricer
+class OvernightIndexedCouponPricer : public FloatingRateCouponPricer {
+public:
+    void initialize(const FloatingRateCoupon& coupon) override;
+    void compute() const;
+    Rate swapletRate() const override;
+    Rate effectiveSpread() const;
+    Rate effectiveIndexFixing() const;
+    Real swapletPrice() const override { QL_FAIL("swapletPrice not available"); }
+    Real capletPrice(Rate) const override { QL_FAIL("capletPrice not available"); }
+    Rate capletRate(Rate) const override { QL_FAIL("capletRate not available"); }
+    Real floorletPrice(Rate) const override { QL_FAIL("floorletPrice not available"); }
+    Rate floorletRate(Rate) const override { QL_FAIL("floorletRate not available"); }
+
+protected:
+    const OvernightIndexedCoupon* coupon_;
+    mutable Real swapletRate_, effectiveSpread_, effectiveIndexFixing_;
 };
 
 //! capped floored overnight indexed coupon

@@ -21,7 +21,7 @@
 #include <ql/errors.hpp>
 #include <ql/utilities/null.hpp>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 using QuantLib::Null;
 
@@ -29,9 +29,11 @@ namespace ore {
 namespace data {
 
 CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
-                             const std::string& delimiters, const char eolMarker)
-    : fileName_(fileName), hasHeaders_(firstLineContainsHeaders), delimiters_(delimiters), eolMarker_(eolMarker),
-      currentLine_(Null<Size>()), numberOfColumns_(Null<Size>()) {
+                             const std::string& delimiters, const std::string& escapeCharacters,
+                             const std::string& quoteCharacters, const char eolMarker)
+    : fileName_(fileName), hasHeaders_(firstLineContainsHeaders), eolMarker_(eolMarker), currentLine_(Null<Size>()),
+      numberOfColumns_(Null<Size>()),
+      tokenizer_(std::string(), boost::escaped_list_separator<char>(escapeCharacters, delimiters, quoteCharacters)) {
     file_.open(fileName);
     QL_REQUIRE(file_.is_open(), "CSVFileReader: error opening file " << fileName);
     if (firstLineContainsHeaders) {
@@ -39,7 +41,8 @@ CSVFileReader::CSVFileReader(const std::string& fileName, const bool firstLineCo
         std::string line;
         getline(file_, line, eolMarker);
         boost::trim(line);
-        boost::split(headers_, line, boost::is_any_of(delimiters_), boost::token_compress_off);
+        tokenizer_.assign(line);
+        std::copy(tokenizer_.begin(), tokenizer_.end(), std::back_inserter(headers_));
         numberOfColumns_ = headers_.size();
     }
 }
@@ -74,7 +77,9 @@ bool CSVFileReader::next() {
         currentLine_ = 0;
     else
         ++currentLine_;
-    boost::split(data_, line, boost::is_any_of(delimiters_), boost::token_compress_off);
+    tokenizer_.assign(line);
+    data_.clear();
+    std::copy(tokenizer_.begin(), tokenizer_.end(), std::back_inserter(data_));
     if (numberOfColumns_ == Null<Size>())
         numberOfColumns_ = data_.size();
     else

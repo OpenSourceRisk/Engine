@@ -230,9 +230,9 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
-                positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
-                swaptionBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate = addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(),
+                                       positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
+                                       swaptionBuilder->configuration(MarketContext::pricing));
 
     swaption->setPricingEngine(swaptionBuilder->engine(ccy));
 
@@ -249,6 +249,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
         // maturity_ = exDate;
         maturity_ = std::max(swap->fixedSchedule().dates().back(), swap->floatingSchedule().dates().back());
     }
+
+    maturity_ = std::max(maturity_, lastPremiumDate);
 
     DLOG("Building European Swaption done");
 }
@@ -326,14 +328,17 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     Real multiplier = positionType_ == Position::Long ? 1.0 : -1.0;
-    addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(), -multiplier,
-                parseCurrency(npvCurrency_), engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+    Date lastPremiumDate =
+        addPremiums(additionalInstruments, additionalMultipliers, 1.0, optionData_.premiumData(), -multiplier,
+                    parseCurrency(npvCurrency_), engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::make_shared<BermudanOptionWrapper>(
         swaption, positionType_ == Position::Long ? true : false, exerciseBuilder_->noticeDates(),
         settlementType_ == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0, additionalInstruments,
         additionalMultipliers);
+
+    maturity_ = std::max(maturity_, lastPremiumDate);
 
     DLOG("Building Bermudan Swaption done");
 }
@@ -416,13 +421,18 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
         for (Size j = 0; j < legs.size(); ++j) {
-            if (!legs[j].empty()) {
-                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs[j].front());
-                while (legs[j].size() > 0 && coupon->accrualStartDate() < exerciseDates[i]) {
-                    legs[j].erase(legs[j].begin());
-                    coupon = boost::dynamic_pointer_cast<Coupon>(legs[j].front());
-                }
+            for (auto const& c : legs[j]) {
+                QL_REQUIRE(boost::dynamic_pointer_cast<Coupon>(c),
+                           "Swaption::buildUnderlyingSwaps(): internal error: could not cast to Coupon on leg " << j);
             }
+            Date ed = exerciseDates[i];
+            auto it = std::lower_bound(legs[j].begin(), legs[j].end(), exerciseDates[i],
+                                       [&ed](const boost::shared_ptr<CashFlow>& c, const Date& d) {
+                                           return boost::dynamic_pointer_cast<Coupon>(c)->accrualStartDate() < ed;
+                                       });
+            if (it != legs[j].begin())
+                --it;
+            legs[j].erase(legs[j].begin(), it);
         }
         auto newSwap = boost::make_shared<QuantLib::Swap>(legs, payer);
         if (swapEngine != nullptr) {

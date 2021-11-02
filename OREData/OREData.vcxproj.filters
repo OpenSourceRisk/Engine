@@ -654,6 +654,12 @@
     <ClInclude Include="ored\portfolio\builders\equitycompositeoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\structuredtradewarning.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\structuredconfigurationwarning.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1136,10 +1142,20 @@
     <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\asianoption.cpp" />
-    <ClCompile Include="ored\portfolio\commodityasianoption.cpp" />
-    <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
-    <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
-    <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
+    <ClCompile Include="ored\portfolio\asianoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commodityasianoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\equityasianoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\fxasianoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\optionasiandata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

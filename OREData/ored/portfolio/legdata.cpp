@@ -1861,7 +1861,11 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
-    DayCounter dc = parseDayCounter(data.dayCounter());
+    DayCounter dc;
+    if (data.dayCounter().empty())
+        dc = Actual365Fixed();
+    else
+        dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());    
 
     bool isTotalReturn = eqLegData->returnType() == "Total";

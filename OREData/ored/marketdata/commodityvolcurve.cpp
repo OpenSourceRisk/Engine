@@ -525,15 +525,20 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         // Store in the data container.
         Date expiry = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
-        ExpiryStrike node(expiry, strike->strike());
-        cpData.addDatum(ExpiryStrike(expiry, strike->strike()), q->optionType(), q->quote()->value());
+        if (expiry > asof) {
+            ExpiryStrike node(expiry, strike->strike());
+            cpData.addDatum(ExpiryStrike(expiry, strike->strike()), q->optionType(), q->quote()->value());
 
-        // If we have a price term structure, add forward for expiry if not there already.
-        if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL && !pts_.empty() && fwdCurve.count(expiry) == 0) {
-            fwdCurve[expiry] = pts_->price(expiry);
+            // If we have a price term structure, add forward for expiry if not there already.
+            if (vssc.quoteType() == MarketDatum::QuoteType::RATE_LNVOL && !pts_.empty() &&
+                fwdCurve.count(expiry) == 0) {
+                fwdCurve[expiry] = pts_->price(expiry);
+            }
+
+            TLOG("Added quote " << q->name() << " to intermediate data.");
+        } else {
+            TLOG("Skipped quote " << q->name() << " to intermediate data, already expired at " << QuantLib::io::iso_date(expiry));
         }
-
-        TLOG("Added quote " << q->name() << " to intermediate data.");
     }
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
@@ -720,28 +725,33 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
 
         // Process the quote
         Date eDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
+        if (eDate > asof) {
 
-        // Position of quote in vector of strikes
-        auto strikeIt = find_if(configuredStrikes.begin(), configuredStrikes.end(),
-                                [&strike](Real s) { return close(s, strike->strike()); });
-        Size pos = distance(configuredStrikes.begin(), strikeIt);
-        QL_REQUIRE(
-            pos < configuredStrikes.size(),
-            "The quote '" << q->name()
-                          << "' is in the list of configured quotes but does not match any of the configured strikes");
+            // Position of quote in vector of strikes
+            auto strikeIt = find_if(configuredStrikes.begin(), configuredStrikes.end(),
+                                    [&strike](Real s) { return close(s, strike->strike()); });
+            Size pos = distance(configuredStrikes.begin(), strikeIt);
+            QL_REQUIRE(pos < configuredStrikes.size(),
+                       "The quote '"
+                           << q->name()
+                           << "' is in the list of configured quotes but does not match any of the configured strikes");
 
-        // Add quote to surface
-        if (surfaceData.count(eDate) == 0)
-            surfaceData[eDate] = vector<Real>(configuredStrikes.size(), Null<Real>());
+            // Add quote to surface
+            if (surfaceData.count(eDate) == 0)
+                surfaceData[eDate] = vector<Real>(configuredStrikes.size(), Null<Real>());
 
-        QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
-                   "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
-                            << " and the strike " << configuredStrikes[pos]);
-        surfaceData[eDate][pos] = q->quote()->value();
-        quotesAdded++;
+            QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
+                       "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
+                                << " and the strike " << configuredStrikes[pos]);
+            surfaceData[eDate][pos] = q->quote()->value();
+            quotesAdded++;
 
-        TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
-                            << configuredStrikes[pos] << "," << q->quote()->value() << ")");
+            TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
+                                << configuredStrikes[pos] << "," << q->quote()->value() << ")");
+        } else {
+            TLOG("Skipped quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
+                                  << q->quote()->value() << ")");
+        }
     }
 
     LOG("CommodityVolCurve: added " << quotesAdded << " quotes in building explicit absolute strike surface.");
@@ -940,19 +950,24 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         // Process the quote
         Date eDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
+        if (eDate > asof) {
 
-        // Add quote to surface
-        if (surfaceData.count(eDate) == 0)
-            surfaceData[eDate] = vector<Real>(numStrikes, Null<Real>());
+            // Add quote to surface
+            if (surfaceData.count(eDate) == 0)
+                surfaceData[eDate] = vector<Real>(numStrikes, Null<Real>());
 
-        QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
-                   "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
-                            << " and strike " << *q->strike());
-        surfaceData[eDate][pos] = q->quote()->value();
-        quotesAdded++;
+            QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
+                       "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
+                                << " and strike " << *q->strike());
+            surfaceData[eDate][pos] = q->quote()->value();
+            quotesAdded++;
 
-        TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
-                            << setprecision(9) << "," << q->quote()->value() << ")");
+            TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
+                                << setprecision(9) << "," << q->quote()->value() << ")");
+        } else {
+            TLOG("Skiped quote, already expired: " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
+                                << setprecision(9) << "," << q->quote()->value() << ")");
+        }
     }
 
     LOG("CommodityVolCurve: added " << quotesAdded << " quotes in building delta strike surface.");
@@ -1145,19 +1160,25 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
         // Process the quote
         Date eDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
+        if (eDate > asof) {
+            // Add quote to surface
+            if (surfaceData.count(eDate) == 0)
+                surfaceData[eDate] = vector<Real>(moneynessLevels.size(), Null<Real>());
 
-        // Add quote to surface
-        if (surfaceData.count(eDate) == 0)
-            surfaceData[eDate] = vector<Real>(moneynessLevels.size(), Null<Real>());
+            QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
+                       "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
+                                << " and strike " << *q->strike());
+            surfaceData[eDate][pos] = q->quote()->value();
+            quotesAdded++;
 
-        QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
-                   "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
-                            << " and strike " << *q->strike());
-        surfaceData[eDate][pos] = q->quote()->value();
-        quotesAdded++;
-
-        TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
-                            << setprecision(9) << "," << q->quote()->value() << ")");
+            TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
+                                << setprecision(9) << "," << q->quote()->value() << ")");
+        }
+        else {
+            TLOG("Skip quote, already expired: " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
+                                << setprecision(9) << "," << q->quote()->value() << ")");
+        }
+        
     }
 
     LOG("CommodityVolCurve: added " << quotesAdded << " quotes in building moneyness strike surface.");

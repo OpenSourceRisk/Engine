@@ -35,6 +35,8 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
+#include <qle/cashflows/indexedcoupon.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/currencies/currencycomparator.hpp>
 #include <qle/instruments/cashflowresults.hpp>
 #include <stdio.h>
@@ -226,6 +228,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             }
                             // This BMA part here (and below) is necessary because the fixingDay() method of
                             // AverageBMACoupon returns an exception rather than the last fixing day of the period.
+
+                            boost::shared_ptr<QuantLib::Coupon> cpn =
+                                boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                            if (cpn) {
+                                ptrFlow = unpackIndexedCoupon(cpn);
+                            }
                             boost::shared_ptr<AverageBMACoupon> ptrBMA =
                                 boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
                             boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
@@ -236,6 +244,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
                             boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
                                 boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
+                            boost::shared_ptr<QuantExt::EquityCoupon> ptrEqCp =
+                                boost::dynamic_pointer_cast<QuantExt::EquityCoupon>(ptrFlow);
                             Date fixingDate;
                             Real fixingValue;
                             if (ptrBMA) {
@@ -260,6 +270,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             } else if (ptrFxlCf) {
                                 fixingDate = ptrFxlCf->fxFixingDate();
                                 fixingValue = ptrFxlCf->fxRate();
+                            } else if (ptrEqCp) {
+                                fixingDate = ptrEqCp->fixingEndDate();
+                                fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
                             } else {
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
@@ -971,7 +984,8 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 notional2Ccy = trade->additionalDatum<string>("notionalCurrency[2]");
             }
 
-            if (trade->instrument()->qlInstrument(true)) {
+	    // FIXME, see ore ticket 2136
+            if (trade->instrument()->qlInstrument(false)) {
                 auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
                 if (additionalResults.count("notional[2]") != 0 &&
                     additionalResults.count("notionalCurrency[2]") != 0) {
@@ -999,7 +1013,8 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                        "Expected the number of "
                            << "additional instruments (" << instruments.size() << ") to equal the number of "
                            << "additional multipliers (" << multipliers.size() << ").");
-            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument(true));
+	    // FIXME, see ore ticket 2136
+            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument(false));
             multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
 
             for (Size i = 0; i < instruments.size(); ++i) {

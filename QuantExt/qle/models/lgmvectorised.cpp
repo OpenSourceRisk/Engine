@@ -231,8 +231,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
         }
     }
 
-    Rate tau =
-        lookback == 0 * Days ? accrualPeriod : accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
+    Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate = (compoundFactorLgm - RandomVariable(x.size(), 1.0)) / RandomVariable(x.size(), tau);
     RandomVariable swapletRate = RandomVariable(x.size(), gearing) * rate;
     // RandomVariable effectiveSpread, effectiveIndexFixing;
@@ -343,8 +342,7 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
         accumulatedRateLgm += log(disc1 / disc2);
     }
 
-    Rate tau =
-        lookback == 0 * Days ? accrualPeriod : accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
+    Rate tau = accrualDayCounter.yearFraction(valueDates.front(), valueDates.back());
     RandomVariable rate =
         RandomVariable(x.size(), gearing / tau) * accumulatedRateLgm + RandomVariable(x.size(), spread);
     RandomVariable floorVal(x.size(), floor == Null<Real>() ? -QL_MAX_REAL : floor);

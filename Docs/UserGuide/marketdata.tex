@@ -137,7 +137,8 @@ The instrument specific information to be captured for quotes representing Disco
   \label{tab:discount_quote}
 \end{table}
 
-If a Term is given in the last element of the quote, it is converted to a maturity date using a weekend only calendar.
+If a Term is given in the last element of the quote, it is converted to a maturity date using the calendar, specified in the conventions.
+Bear in mind, only zero conventions (see Listing \ref{lst:zero_conventions_tenor}) can be used for the discount factor instruments.
 
 \medskip
 Examples with a Term and with a DiscountDate:
