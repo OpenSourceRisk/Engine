@@ -87,7 +87,7 @@ void OICCBSHelper::setTermStructure(YieldTermStructure* t) {
 Real OICCBSHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "term structure not set");
     // we didn't register as observers - force calculation
-    swap_->recalculate();
+    swap_->deepUpdate();
     if (spreadQuoteOnPayLeg_)
         return swap_->fairPayLegSpread();
     else

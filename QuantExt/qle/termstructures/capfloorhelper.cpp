@@ -160,7 +160,7 @@ void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
 
 Real CapFloorHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "CapFloorHelper's optionlet volatility term structure has not been set");
-    capFloor_->recalculate();
+    capFloor_->deepUpdate();
     return capFloor_->NPV();
 }
 
