@@ -207,8 +207,6 @@ Rate CappedFlooredAverageONIndexedCoupon::effectiveFloor() const {
     }
 }
 
-void CappedFlooredAverageONIndexedCoupon::update() { notifyObservers(); }
-
 void CappedFlooredAverageONIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredAverageONIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredAverageONIndexedCoupon>*>(&v);
     if (v1 != 0)

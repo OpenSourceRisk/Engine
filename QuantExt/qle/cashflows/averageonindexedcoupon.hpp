@@ -130,10 +130,6 @@ public:
     //! effective floor of fixing
     Rate effectiveFloor() const;
     //@}
-    //! \name Observer interface
-    //@{
-    void update() override;
-    //@}
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&) override;
