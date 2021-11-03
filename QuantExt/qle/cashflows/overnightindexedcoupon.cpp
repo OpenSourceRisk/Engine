@@ -332,7 +332,7 @@ CappedFlooredOvernightIndexedCoupon::CappedFlooredOvernightIndexedCoupon(
     registerWith(underlying_);
 }
 
-void CappedFlooredOvernightIndexedCoupon::deepUpdate() override {
+void CappedFlooredOvernightIndexedCoupon::deepUpdate() {
     update();
     underlying_->deepUpdate();
 }
@@ -411,8 +411,6 @@ Rate CappedFlooredOvernightIndexedCoupon::effectiveFloor() const {
         }
     }
 }
-
-void CappedFlooredOvernightIndexedCoupon::update() { notifyObservers(); }
 
 void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredOvernightIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredOvernightIndexedCoupon>*>(&v);

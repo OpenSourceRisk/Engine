@@ -122,7 +122,7 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 
 // capped floored average on coupon implementation
 
-void CappedFlooredAverageONIndexedCoupon::deepUpdate() override {
+void CappedFlooredAverageONIndexedCoupon::deepUpdate() {
     update();
     underlying_->deepUpdate();
 }
