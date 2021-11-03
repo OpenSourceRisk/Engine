@@ -123,7 +123,7 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 // capped floored average on coupon implementation
 
 void CappedFlooredAverageONIndexedCoupon::alwaysForwardNotifications() {
-    alwaysForwardNotifications();
+    LazyObject::alwaysForwardNotifications();
     underlying_->alwaysForwardNotifications();
 }
 
