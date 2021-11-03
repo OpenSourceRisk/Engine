@@ -624,6 +624,15 @@
           "tradeId",
           "resultId",
           "resultType"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "resultValue"
+            ],
+            "abs_tol": 1e-7,
+            "rel_tol": null
+          }
         ]
       },
       ".*curves.*\\.csv": {
@@ -812,22 +821,6 @@
             ],
             "abs_tol": 1e-6,
             "rel_tol": 1e-12
-          }
-        ]
-      },
-	  "additional_results_.*\\.csv": {
-        "keys": [
-          "tradeId",
-		  "resultId",
-		  "resultType"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "resultValue"
-            ],
-            "abs_tol": 1e-7,
-            "rel_tol": null
           }
         ]
       }
