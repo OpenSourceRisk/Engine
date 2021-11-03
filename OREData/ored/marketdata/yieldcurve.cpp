@@ -2072,14 +2072,19 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                             }
                         }
                     }
-                    if (tnSpread == Null<Real>())
+                    if (tnSpread == Null<Real>()) {
+                        WLOG("YieldCurve::AddFxFowrads cannot use ON rate, when SpotDays are 2 we also require the TN "
+                             "rate");
                         continue;
+                    }
                     totalSpread = tnSpread + qlFXForwardQuote->value();
                     // TODO: this isn't registeredWith the ON or TN basis quote
                     spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
                         fxSpotQuote->quote(), subtract<Real>(totalSpread)));
                     break;
                 default:
+                    WLOG("YieldCurve::AddFxFowrads cannot use ON rate, when SpotDays are " << spotDays << 
+                        ", only valid for SpotDays of 0,1 or 2.");
                     continue;
                 }
             } else if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::TN)) {
