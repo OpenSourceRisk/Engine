@@ -714,7 +714,7 @@
               "BaselEE",
               "BaselEEE"
             ],
-            "abs_tol": 2e-2,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           }
         ]
@@ -824,7 +824,7 @@
         "column_settings": [
           {
             "names": [
-              "resultValue",
+              "resultValue"
             ],
             "abs_tol": 1e-7,
             "rel_tol": null
