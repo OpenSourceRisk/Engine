@@ -278,7 +278,7 @@ void ValuationEngine::runCalculators(bool isCloseOutDate, const std::vector<boos
             continue;
         auto trade = trades[j];
         // We can avoid checking mode here and always call updateQlInstruments()
-        if (om == ObservationMode::Mode::Disable)
+        if (om == ObservationMode::Mode::Disable || om == ObservationMode::Mode::Unregister)
             trade->instrument()->updateQlInstruments();
         try {
             for (auto calc : calculators)
