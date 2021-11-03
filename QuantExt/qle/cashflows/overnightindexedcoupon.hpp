@@ -157,6 +157,14 @@ public:
                                         Real cap = Null<Real>(), Real floor = Null<Real>(), bool nakedOption = false,
                                         bool localCapFloor = false);
 
+    //! \name Observer interface
+    //@{
+    void deepUpdate() override;
+    //@}
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override;
+    //@}
     //! \name Coupon interface
     //@{
     Rate rate() const override;
@@ -174,10 +182,6 @@ public:
     Rate effectiveCap() const;
     //! effective floor of fixing
     Rate effectiveFloor() const;
-    //@}
-    //! \name Observer interface
-    //@{
-    void update() override;
     //@}
     //! \name Visitability
     //@{

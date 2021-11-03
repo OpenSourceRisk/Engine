@@ -69,7 +69,8 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
 
     numPeriods_ = valueDates_.size() - 1;
 
-    QL_REQUIRE(valueDates_[0] != valueDates_[1], "internal error: first two value dates of on coupon are equal: " << valueDates_[0]);
+    QL_REQUIRE(valueDates_[0] != valueDates_[1],
+               "internal error: first two value dates of on coupon are equal: " << valueDates_[0]);
     QL_REQUIRE(valueDates_[numPeriods_] != valueDates_[numPeriods_ - 1],
                "internal error: last two value dates of on coupon are equal: " << valueDates_[numPeriods_]);
 
@@ -121,11 +122,12 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 
 // capped floored average on coupon implementation
 
-Rate CappedFlooredAverageONIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
+void CappedFlooredAverageONIndexedCoupon::deepUpdate() override {
+    update();
+    underlying_->deepUpdate();
+}
 
-Rate CappedFlooredAverageONIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
-
-Rate CappedFlooredAverageONIndexedCoupon::rate() const {
+void CappedFlooredAverageONIndexedCoupon::performCalculations() const {
     QL_REQUIRE(underlying_->pricer(), "pricer not set");
     Rate swapletRate = nakedOption_ ? 0.0 : underlying_->rate();
     if (floor_ != Null<Real>() || cap_ != Null<Real>())
@@ -136,7 +138,16 @@ Rate CappedFlooredAverageONIndexedCoupon::rate() const {
     Rate capletRate = 0.;
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
-    return swapletRate + floorletRate - capletRate;
+    rate_ = swapletRate + floorletRate - capletRate;
+}
+
+Rate CappedFlooredAverageONIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
+
+Rate CappedFlooredAverageONIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
+
+Rate CappedFlooredAverageONIndexedCoupon::rate() const {
+    calculate();
+    return rate_;
 }
 
 Rate CappedFlooredAverageONIndexedCoupon::convexityAdjustment() const { return underlying_->convexityAdjustment(); }

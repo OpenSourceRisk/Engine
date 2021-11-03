@@ -53,10 +53,21 @@ public:
     boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) override;
     //@}
 
+    //! \name Obverver interface
+    //@{
+    void deepUpdate() override {
+        update();
+        underlying_->deepUpdate();
+    }
+    //@}
+
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const override { rate_ = underlying_->rate(); }
+    //@}
     //! \name Coupon interface
     //@{
     Rate nominal() const override { return foreignAmount() * fxRate(); }
-    Rate rate() const override { return underlying_->rate(); }
     //@}
 
     //! \name FloatingRateCoupon interface
