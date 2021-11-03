@@ -719,6 +719,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     // clang-format on
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
+    std::set<pair<string, string>> coveredSensis;
     for (Size i = 0; i < cachedResults.size(); ++i) {
         pair<string, string> p(cachedResults[i].id, cachedResults[i].label);
         npvMap[p] = cachedResults[i].npv;
@@ -752,12 +753,19 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                         fabs((sensi - sensiMap[p]) / sensi) < tolerance,
                                     "sensitivity regression failed for pair ("
                                         << p.first << ", " << p.second << "): " << sensi << " vs " << sensiMap[p]);
+		coveredSensis.insert(p);
             }
         }
     }
     BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
                                                            << count << ") do not match regression data ("
                                                            << cachedResults.size() << ")");
+    for (auto const& p : sensiMap) {
+        if (coveredSensis.find(p.first) == coveredSensis.end()) {
+            BOOST_TEST_MESSAGE("sensi in expected, but not in calculated results: " << p.first.first << " "
+                                                                                    << p.first.second);
+        }
+    }
 
     // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
