@@ -45,7 +45,6 @@ public:
           FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
         registerWith(FXLinked::fxIndex());
         registerWith(underlying_);
-        underlying_->alwaysForwardNotifications();
     }
 
     //! \name FXLinked interface
@@ -64,6 +63,10 @@ public:
     //! \name LazyObject interface
     //@{
     void performCalculations() const override { rate_ = underlying_->rate(); }
+    void alwaysForwardNotifications() override {
+	LazyObject::alwaysForwardNotifications();
+        underlying_->alwaysForwardNotifications();
+    }
     //@}
     //! \name Coupon interface
     //@{

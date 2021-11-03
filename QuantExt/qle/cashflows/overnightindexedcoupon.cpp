@@ -330,6 +330,13 @@ CappedFlooredOvernightIndexedCoupon::CappedFlooredOvernightIndexedCoupon(
         QL_REQUIRE(cap_ >= floor, "cap level (" << cap_ << ") less than floor level (" << floor_ << ")");
     }
     registerWith(underlying_);
+    if (nakedOption_)
+        underlying_->alwaysForwardNotifications();
+}
+
+void CappedFlooredOvernightIndexedCoupon::alwaysForwardNotifications() {
+    LazyObject::alwaysForwardNotifications();
+    underlying_->alwaysForwardNotifications();
 }
 
 void CappedFlooredOvernightIndexedCoupon::deepUpdate() {

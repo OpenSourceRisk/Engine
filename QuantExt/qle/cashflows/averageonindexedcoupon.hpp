@@ -110,6 +110,7 @@ public:
     //! \name LazyObject interface
     //@{
     void performCalculations() const override;
+    void alwaysForwardNotifications() override;
     //@}
     //! \name Coupon interface
     //@{

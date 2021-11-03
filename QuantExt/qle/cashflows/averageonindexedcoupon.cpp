@@ -122,6 +122,11 @@ void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
 
 // capped floored average on coupon implementation
 
+void CappedFlooredAverageONIndexedCoupon::alwaysForwardNotifications() {
+    alwaysForwardNotifications();
+    underlying_->alwaysForwardNotifications();
+}
+
 void CappedFlooredAverageONIndexedCoupon::deepUpdate() {
     update();
     underlying_->deepUpdate();
@@ -224,6 +229,9 @@ CappedFlooredAverageONIndexedCoupon::CappedFlooredAverageONIndexedCoupon(
     QL_REQUIRE(!includeSpread_ || close_enough(underlying_->gearing(), 1.0),
                "CappedFlooredAverageONIndexedCoupon: if include spread = true, only a gearing 1.0 is allowed - scale "
                "the notional in this case instead.");
+    registerWith(underlying_);
+    if (nakedOption_)
+        underlying_->alwaysForwardNotifications();
 }
 
 // capped floored average on coupon pricer base class implementation
