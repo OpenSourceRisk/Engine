@@ -52,6 +52,10 @@ using std::string;
 */
 class Trade : public XMLSerializable {
 public:
+
+    //! Default constructor
+    Trade() {}
+
     //! Base class constructor
     Trade(const string& tradeType, const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
         : tradeType_(tradeType), envelope_(env), tradeActions_(ta) {
