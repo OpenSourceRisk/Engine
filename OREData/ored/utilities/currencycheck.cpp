@@ -64,6 +64,24 @@ bool checkMinorCurrency(const string& s) {
     return it != codes.end();
 }
 
+bool checkCryptoCurrency(const string& s) {
+    //! see https://en.wikipedia.org/wiki/List_of_cryptocurrencies
+    const static std::vector<string> codes = {
+        "BTC", "XBT", // Bitcoin
+        "ETH", // Ethereum
+        "ETC", // Ethereum Classic
+        "BCH", // Bitcoin Cash
+        "XRP", // Ripple
+        "LTC"  // Litecoin
+    };
+    auto it = std::find(codes.begin(), codes.end(), s);
+    if (it != codes.end())
+        return true;
+    else {
+        return false;
+    }
+}
+
 QuantLib::Real convertMinorToMajorCurrency(const string& s, QuantLib::Real value) {
     if (checkMinorCurrency(s)) {
         QuantLib::Currency ccy = parseMinorCurrency(s);

@@ -677,7 +677,8 @@ Currency parseCurrency(const string& s, const Currency& currency) {
         {"XOF", XOFCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
         {"ZMW", ZMWCurrency()},
         // crypto
-        {"XBT", BTCCurrency()}, {"BTC", BTCCurrency()}, {"ETH", ETHCurrency()}
+        {"XBT", BTCCurrency()}, {"BTC", BTCCurrency()}, {"ETH", ETHCurrency()}, {"ETC", ETCCurrency()},
+        {"BCH", BCHCurrency()}, {"XRP", XRPCurrency()}, {"LTC", LTCCurrency()} 
     };
 
     auto it = m.find(s);

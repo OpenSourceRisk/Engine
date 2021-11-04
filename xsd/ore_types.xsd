@@ -232,6 +232,13 @@
       <xs:enumeration value="ZAR"/>
       <xs:enumeration value="ZMW"/>
       <xs:enumeration value="ZWL"/>
+      <xs:enumeration value="XBT"/>
+      <xs:enumeration value="BTC"/>
+      <xs:enumeration value="ETH"/>
+      <xs:enumeration value="ETC"/>
+      <xs:enumeration value="BCH"/>
+      <xs:enumeration value="XRP"/>
+      <xs:enumeration value="LTC"/>
     </xs:restriction>
   </xs:simpleType>
   
