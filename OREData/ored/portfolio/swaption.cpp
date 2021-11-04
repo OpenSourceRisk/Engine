@@ -421,13 +421,18 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         std::vector<Leg> legs = underlying_->legs();
         std::vector<bool> payer = underlying_->legPayers();
         for (Size j = 0; j < legs.size(); ++j) {
-            if (!legs[j].empty()) {
-                boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs[j].front());
-                while (legs[j].size() > 0 && coupon->accrualStartDate() < exerciseDates[i]) {
-                    legs[j].erase(legs[j].begin());
-                    coupon = boost::dynamic_pointer_cast<Coupon>(legs[j].front());
-                }
+            for (auto const& c : legs[j]) {
+                QL_REQUIRE(boost::dynamic_pointer_cast<Coupon>(c),
+                           "Swaption::buildUnderlyingSwaps(): internal error: could not cast to Coupon on leg " << j);
             }
+            Date ed = exerciseDates[i];
+            auto it = std::lower_bound(legs[j].begin(), legs[j].end(), exerciseDates[i],
+                                       [&ed](const boost::shared_ptr<CashFlow>& c, const Date& d) {
+                                           return boost::dynamic_pointer_cast<Coupon>(c)->accrualStartDate() < ed;
+                                       });
+            if (it != legs[j].begin())
+                --it;
+            legs[j].erase(legs[j].begin(), it);
         }
         auto newSwap = boost::make_shared<QuantLib::Swap>(legs, payer);
         if (swapEngine != nullptr) {

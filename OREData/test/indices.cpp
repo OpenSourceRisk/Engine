@@ -427,22 +427,16 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
     Handle<YieldTermStructure> h; // dummy
 
     Size len = sizeof(swap_index_data) / sizeof(swap_index_data[0]);
-    data::Conventions conventions = *convs();
 
     for (Size i = 0; i < len; ++i) {
         string str(swap_index_data[i].str);
         string index_name(swap_index_data[i].index_name);
         Period tenor(swap_index_data[i].tenor);
 
-        boost::shared_ptr<data::Convention> tmp = conventions.get(str);
-        boost::shared_ptr<data::SwapIndexConvention> swapCon =
-            boost::dynamic_pointer_cast<data::SwapIndexConvention>(tmp);
-        tmp = conventions.get(swapCon->conventions());
-        boost::shared_ptr<data::IRSwapConvention> con = boost::dynamic_pointer_cast<data::IRSwapConvention>(tmp);
-        QL_REQUIRE(con, "no swap convention");
+        ore::data::InstrumentConventions::instance().conventions() = convs();
         boost::shared_ptr<SwapIndex> swap;
         try {
-            swap = ore::data::parseSwapIndex(str, h, h, con, swapCon);
+            swap = ore::data::parseSwapIndex(str, h, h);
         } catch (std::exception& e) {
             BOOST_FAIL("Swap Parser failed to parse \"" << str << "\" [exception:" << e.what() << "]");
         } catch (...) {
