@@ -104,6 +104,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
 
     Real npvValue = 0.0;
     DiscountingRiskyBondEngine::BondNPVCalculationResults calculationResults;
+    calculationResults.cashflowsBeforeSettlementValue = 0.0;
 
     // handle case where we wish to price simply with benchmark curve and scalar security spread
     // i.e. credit curve term structure (and recovery) have not been specified
@@ -188,7 +189,7 @@ DiscountingRiskyBondEngine::calculateNpv(const Date& npvDate, const Date& settle
         calculationResults.npv = 0.0;
         return calculationResults;
     }
-        
+
     if (cashflows.size() > 1 && numCoupons == 0) {
         QL_FAIL("DiscountingRiskyBondEngine does not support bonds with multiple cashflows but no coupons");
     }
