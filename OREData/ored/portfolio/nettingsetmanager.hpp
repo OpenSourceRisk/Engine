@@ -71,6 +71,7 @@ public:
 
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
+    const std::map<std::string, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
 
 private:
     map<string, const boost::shared_ptr<NettingSetDefinition>> data_;

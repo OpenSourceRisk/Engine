@@ -157,4 +157,14 @@ IndexedCouponLeg::operator Leg() const {
     return resultLeg;
 }
 
+boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c) {
+    boost::shared_ptr<IndexedCoupon> cpn = boost::dynamic_pointer_cast<IndexedCoupon>(c);
+
+    if (cpn) {
+        boost::shared_ptr<Coupon> unpacked_cpn = cpn->underlying();
+        return unpackIndexedCoupon(unpacked_cpn);
+    } else
+        return c;
+}
+
 } // namespace QuantExt

@@ -79,7 +79,7 @@ using testsuite::TestMarket;
 
 namespace {
 
-boost::shared_ptr<data::Conventions> convs() {
+void setConventions() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
 
     boost::shared_ptr<data::Convention> swapIndexConv(
@@ -91,8 +91,6 @@ boost::shared_ptr<data::Conventions> convs() {
     conventions->add(swapConv);
 
     InstrumentConventions::instance().conventions() = conventions;
-    
-    return conventions;
 }
 
 struct TestData {
@@ -293,21 +291,25 @@ BOOST_AUTO_TEST_SUITE(ScenarioGeneratorTest)
 
 BOOST_AUTO_TEST_CASE(testLgmMersenneTwister) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with MersenneTwister...");
+    setConventions();
     test_lgm(false, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(testLgmMersenneTwisterAntithetic) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with MersenneTwister/Antithetic...");
+    setConventions();
     test_lgm(false, true, false);
 }
 
 BOOST_AUTO_TEST_CASE(testLgmLowDiscrepancy) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with LowDiscrepancy...");
+    setConventions();
     test_lgm(true, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(testLgmLowDiscrepancyBrownianBridge) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with LowDiscrepancy/BrownianBridge...");
+    setConventions();
     test_lgm(true, false, true);
 }
 
@@ -449,26 +451,31 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
 
 BOOST_AUTO_TEST_CASE(testCrossAssetMersenneTwister) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with MersenneTwister...");
+    setConventions();
     test_crossasset(false, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(testCrossAssetMersenneTwisterAntithetic) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with MersenneTwister/Antithetic...");
+    setConventions();
     test_crossasset(false, true, false);
 }
 
 BOOST_AUTO_TEST_CASE(testCrossAssetLowDiscrepancy) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with LowDiscrepancy...");
+    setConventions();
     test_crossasset(true, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(testCrossAssetLowDiscrepancyBrownianBridge) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with LowDiscrepancy/BrownianBridge...");
+    setConventions();
     test_crossasset(true, false, true);
 }
 
 BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator via SimMarket (Martingale tests)...");
+    setConventions();
 
     TestData d;
 
@@ -514,7 +521,6 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    convs();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
@@ -614,6 +620,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
 
 BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator via SimMarket (direct test against model)...");
+    setConventions();
     TestData d;
 
     // Simulation date grid
@@ -660,7 +667,6 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    convs();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
@@ -751,6 +757,7 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
 
 BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     BOOST_TEST_MESSAGE("Testing EUR and USD vanilla swap exposure profiles generated with CrossAssetScenarioGenerator");
+    setConventions();
 
     TestData d;
 
@@ -802,7 +809,6 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    convs();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
@@ -897,6 +903,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
 
 BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     BOOST_TEST_MESSAGE("Testing EUR-USD FX Forward and FX Vanilla Option exposure");
+    setConventions();
 
     TestData d;
 
@@ -946,7 +953,6 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    convs();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
@@ -1018,6 +1024,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
 
 BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     BOOST_TEST_MESSAGE("Testing EUR-USD FX Forward exposure (zero IR vol)");
+    setConventions();
 
     TestData d;
 
@@ -1071,7 +1078,6 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     // boost::shared_ptr<DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    convs();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 
@@ -1140,6 +1146,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
 
 BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     BOOST_TEST_MESSAGE("Testing CPI Swap exposure");
+    setConventions();
 
     TestData d;
 
@@ -1200,7 +1207,6 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
-    convs();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig);
     simMarket->scenarioGenerator() = sg;
 

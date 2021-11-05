@@ -238,7 +238,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
         // some checks on the quotes read
         LOG("EquityCurve: read " << quotesRead + quotesExpired << " quotes of type " << config->type());
-        LOG("EquiteCUrve: ignored " << quotesExpired << " expired quotes.");
+        LOG("EquityCurve: ignored " << quotesExpired << " expired quotes.");
         QL_REQUIRE(!equitySpot.empty(), "Equity spot quote not found for " << config->curveID());
 
         if (!wildcard) {

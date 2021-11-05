@@ -37,7 +37,8 @@ namespace ore {
 namespace data {
 
 CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
-                         const CurveConfigurations& curveConfigs) {
+                         const CurveConfigurations& curveConfigs,
+                         const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves) {
 
     try {
 
@@ -65,6 +66,8 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
             QL_FAIL("CDSVolCurve does not support a VolatilityMoneynessSurfaceConfig yet.");
         } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
             QL_FAIL("VolatilityApoFutureSurfaceConfig does not make sense for CDSVolCurve.");
+        } else if (auto vpc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(vc)) {
+            buildVolatility(asof, spec, config, *vpc, requiredCdsVolCurves);
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CDSVolatilityConfig");
         }
@@ -406,6 +409,17 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     vol_->enableExtrapolation(vssc.extrapolation());
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
+}
+
+void CDSVolCurve::buildVolatility(
+    const Date& asof, const CDSVolatilityCurveSpec& spec, const CDSVolatilityCurveConfig& vc,
+    const CDSProxyVolatilityConfig& pvc,
+    const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves) {
+    auto proxyVolCurve = requiredCdsVolCurves.find(CDSVolatilityCurveSpec(pvc.cdsVolatilityCurve()).name());
+    QL_REQUIRE(proxyVolCurve != requiredCdsVolCurves.end(), "CDSVolCurve: Failed to find cds vol curve '"
+                                                                << pvc.cdsVolatilityCurve() << "' when building '"
+                                                                << spec.name() << "'");
+    vol_ = proxyVolCurve->second->volTermStructure();
 }
 
 void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveConfig& vc,

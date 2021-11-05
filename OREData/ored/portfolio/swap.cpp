@@ -43,7 +43,7 @@ namespace data {
 
 void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Swap::build() called for trade " << id());
-
+    
     QL_REQUIRE(legData_.size() >= 1, "Swap must have at least 1 leg");
     const boost::shared_ptr<Market> market = engineFactory->market();
 
@@ -163,11 +163,18 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // set maturity
     maturity_ = Date::minDate();
+    Date startDate = Date::maxDate();
     for (auto const& l : legs_) {
-        if (!l.empty())
+        if (!l.empty()) {
             maturity_ = std::max(maturity_, l.back()->date());
+            startDate = std::min(startDate, l.front()->date());
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(l.front());
+            if (coupon)
+                startDate = std::min(startDate, coupon->accrualStartDate());                
+        }
     }
 
+    additionalData_["startDate"] = to_string(startDate);
 }
 
 const std::map<std::string,boost::any>& Swap::additionalData() const {

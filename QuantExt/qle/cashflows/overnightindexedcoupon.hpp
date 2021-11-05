@@ -105,6 +105,8 @@ public:
     const Date& rateComputationStartDate() const { return rateComputationStartDate_; }
     //! rate computation end date
     const Date& rateComputationEndDate() const { return rateComputationEndDate_; }
+    //! the underlying index
+    const ext::shared_ptr<OvernightIndex>& overnightIndex() const { return overnightIndex_; }
     //@}
     //! \name FloatingRateCoupon interface
     //@{
@@ -116,6 +118,7 @@ public:
     void accept(AcyclicVisitor&);
     //@}
 private:
+    boost::shared_ptr<OvernightIndex> overnightIndex_;
     std::vector<Date> valueDates_, fixingDates_;
     mutable std::vector<Rate> fixings_;
     Size n_;

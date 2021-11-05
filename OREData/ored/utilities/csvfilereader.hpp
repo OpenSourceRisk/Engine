@@ -25,6 +25,8 @@
 
 #include <ql/types.hpp>
 
+#include <boost/tokenizer.hpp>
+
 #include <fstream>
 #include <vector>
 
@@ -36,7 +38,8 @@ class CSVFileReader {
 public:
     /*! Ctor */
     CSVFileReader(const std::string& fileName, const bool firstLineContainsHeaders,
-                  const std::string& delimiters = ",;\t", const char eolMarker = '\n');
+                  const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
+                  const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
 
     /*! Returns the fields, if a hedaer line is present, otherwise throws */
     const std::vector<std::string>& fields() const;
@@ -58,10 +61,10 @@ public:
 private:
     const std::string fileName_;
     const bool hasHeaders_;
-    const std::string delimiters_;
     const char eolMarker_;
     std::ifstream file_;
     Size currentLine_, numberOfColumns_;
+    boost::tokenizer<boost::escaped_list_separator<char>> tokenizer_;
     std::vector<std::string> headers_, data_;
 };
 

@@ -108,7 +108,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
     // build scenario sim market
-    TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 
@@ -873,7 +872,6 @@ void test1dShifts(bool granular) {
         sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
-    TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
@@ -970,7 +968,6 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build sim market
-    TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
@@ -1084,7 +1081,6 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     }
 
     // build sim market
-    TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
@@ -1293,7 +1289,6 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     }
 
     // build sim market
-    TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData);
 
     // build scenario factory
@@ -1644,7 +1639,6 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
     cgFilter.push_back(pair<string, string>("FXSpot/EURGBP", "DiscountCurve/GBP"));
 
     // build scenario sim market
-    TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData);
 

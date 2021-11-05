@@ -28,6 +28,7 @@
 #include <ql/patterns/observable.hpp>
 #include <ql/settings.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
+#include <ored/configuration/conventions.hpp>
 
 using QuantExt::SavedObservableSettings;
 using QuantLib::IndexManager;
@@ -54,6 +55,8 @@ public:
     virtual ~TopLevelFixture() {
         // Clear and fixings that have been added
         IndexManager::instance().clearHistories();
+	// Clear conventions that have been set
+        ore::data::InstrumentConventions::instance().conventions() = boost::make_shared<ore::data::Conventions>();
     }
 
     bool updatesEnabled() { return savedObservableSettings.updatesEnabled(); }
