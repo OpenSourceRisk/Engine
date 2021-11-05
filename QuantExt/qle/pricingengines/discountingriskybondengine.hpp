@@ -52,9 +52,11 @@ class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
 public:
 
     struct BondNPVCalculationResults {
+	// always provided in calculateNpv()
         Real npv;
         Real compoundFactorSettlement;
         Real cashflowsBeforeSettlementValue;
+	// only provided in calculateNpv() when additionalResults = true
         std::vector<CashFlowResults> cashflowResults;
     };
 
@@ -76,9 +78,10 @@ public:
         - If an incomeCurve is given, this is used to compound the npv from today to the npvDate, otherwise the curve
           built in the engine as discount curve + security Spread is used. */
     BondNPVCalculationResults calculateNpv(const Date& npvDate, const Date& settlementDate, const Leg& cashflows,
-                      boost::optional<bool> includeSettlementDateFlows = boost::none,
-                      const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-                      const bool conditionalOnSurvival = true) const;
+                                           boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                           const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
+                                           const bool conditionalOnSurvival = true,
+                                           const bool additionalResults = true) const;
 
     // inspectors
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
