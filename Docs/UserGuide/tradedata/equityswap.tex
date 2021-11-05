@@ -2,11 +2,11 @@
 \label{ss:equity_swap}
 
 An Equity Swap uses its own trade type  \emph{EquitySwap}, and is set up using a {\tt EquitySwapData} node with one leg of type  \emph{Equity} and one more leg that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:equityswap} shows an example. The
-Equity leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the Equity leg specification.
+\emph{Equity} leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the \emph{Equity} leg specification.
 
 Note that pricing for an \emph{EquitySwap} is based on discounted cashflows, whereas pricing for a \emph{TotalReturnSwap} (GenericTRS) on an equity underlying uses the accrual method.
 
-Also note that the {\tt DayCounter} field is mandatory for an \emph{Equity} leg, just like any other leg, but that the daycount convention does not impact pricing, only the accrued amount (displayed in cashflows).
+Also note that, unlike other leg types, the {\tt DayCounter} field is optional for an \emph{Equity} leg, and defaults to \emph{ACT/365} if left blank or omitted. The daycount convention for the equity leg of an equity swap does not impact pricing, only the accrued amount (displayed in cashflows).
 
 
 \begin{listing}[H]
