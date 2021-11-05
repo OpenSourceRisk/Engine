@@ -138,7 +138,7 @@ void CrossCcyFixFloatMtMResetSwapHelper::update() {
 
 Real CrossCcyFixFloatMtMResetSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_, "Term structure needs to be set");
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairFixedRate();
 }
 

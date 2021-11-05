@@ -180,6 +180,26 @@ void CurrencySwap::results::reset() {
     npvDateDiscount = Null<DiscountFactor>();
 }
 
+void CurrencySwap::deepUpdate() {
+    for (auto& leg : legs_) {
+        for (auto& k : leg) {
+            if (auto lazy = ext::dynamic_pointer_cast<LazyObject>(k))
+                lazy->deepUpdate();
+        }
+    }
+    update();
+}
+
+void CurrencySwap::alwaysForwardNotifications() {
+    for (auto& leg : legs_) {
+        for (auto& k : leg) {
+            if (auto lazy = ext::dynamic_pointer_cast<LazyObject>(k))
+                lazy->alwaysForwardNotifications();
+        }
+    }
+    LazyObject::alwaysForwardNotifications();
+}
+
 //=========================================================================
 // Constructors for specialised currency swaps
 //=========================================================================
