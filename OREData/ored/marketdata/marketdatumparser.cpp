@@ -195,10 +195,7 @@ struct FxFwdStringCompare : boost::static_visitor<bool> {
     bool operator()(const Period& p) const { return false; }
 
     bool operator()(const FXForwardQuote::FxFwdString& p) const { 
-        if (p == fxFwdString)
-            return true;
-        else
-            return false;
+        return p == fxFwdString;
     }
 
     FXForwardQuote::FxFwdString fxFwdString;
