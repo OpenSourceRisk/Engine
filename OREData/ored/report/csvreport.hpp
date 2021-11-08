@@ -57,6 +57,8 @@ public:
     void flush() override;
 
 private:
+    void checkIsOpen(const std::string& op) const;
+
     std::vector<ReportType> columnTypes_;
     std::vector<ReportTypePrinter> printers_;
     std::string filename_;

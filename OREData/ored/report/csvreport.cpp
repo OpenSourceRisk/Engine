@@ -99,11 +99,13 @@ CSVFileReport::~CSVFileReport() {
 }
 
 void CSVFileReport::flush() {
+    checkIsOpen("flush()");
     LOG("CVS file report '" << filename_ << "' is flushed");
     fflush(fp_);
 }
 
 Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
+    checkIsOpen("addColumn(" + name + ")");
     columnTypes_.push_back(rt);
     printers_.push_back(ReportTypePrinter(fp_, precision, quoteChar_, nullString_));
     if (i_ == 0 && commentCharacter_)
@@ -119,6 +121,7 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
 }
 
 Report& CSVFileReport::next() {
+    checkIsOpen("next()");
     QL_REQUIRE(i_ == columnTypes_.size(), "Cannot go to next line, only " << i_ << " entries filled");
     fprintf(fp_, "\n");
     i_ = 0;
@@ -126,6 +129,7 @@ Report& CSVFileReport::next() {
 }
 
 Report& CSVFileReport::add(const ReportType& rt) {
+    checkIsOpen("add()");
     QL_REQUIRE(i_ < columnTypes_.size(), "No column to add [" << rt << "] to.");
     QL_REQUIRE(rt.which() == columnTypes_[i_].which(), "Cannot add value " << rt << " of type " << rt.which()
                                                                            << " to column " << i_ << " of type "
@@ -139,27 +143,28 @@ Report& CSVFileReport::add(const ReportType& rt) {
 }
 
 void CSVFileReport::end() {
-
-    if (finalized_) {
-        WLOG("CSV file report '" << filename_
-                                 << "' already finalized, is end() called multiple times on the report instance?");
-        return;
-    }
+    checkIsOpen("end()");
 
     if (fp_) {
         fprintf(fp_, "\n");
         if (int rc = fclose(fp_)) {
-            ALOG("CSV file report '" << filename_ << "' could not be closed (return code " << rc << ")");
+            ALOG("CSV file report '" << filename_ << "' can not be closed (return code " << rc << ")");
+        } else {
+            LOG("CSV file report '" << filename_ << "' closed.");
         }
-        fp_ = NULL;
-        LOG("CSV file report '" << filename_ << "' closed.");
     } else {
-        ALOG("CSV file report '" << filename_ << "': can not close file, handle is null.");
+        ALOG("CSV file report '" << filename_ << "' can not be closed (file handle is null).");
     }
 
     QL_REQUIRE(i_ == columnTypes_.size() || i_ == 0, "csv report is finalized with incomplete row, got data for "
                                                          << i_ << " columns out of " << columnTypes_.size());
     finalized_ = true;
 }
+
+void CSVFileReport::checkIsOpen(const std::string& op) const {
+    QL_REQUIRE(!finalized_,
+               "CSV file report '" << filename_ << "' is already finalized, can not process operation " << op);
+}
+
 } // namespace data
 } // namespace ore
