@@ -67,6 +67,7 @@ private:
     bool lowerHeader_;
     Size i_;
     FILE* fp_;
+    bool finalized_ = false;
 };
 } // namespace data
 } // namespace ore

@@ -86,13 +86,22 @@ CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool 
                              const string& nullString, bool lowerHeader)
     : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), quoteChar_(quoteChar),
       nullString_(nullString), lowerHeader_(lowerHeader), i_(0), fp_(NULL) {
-    fp_ = fopen(filename_.c_str(), "w+");
-    QL_REQUIRE(fp_, "Error opening file " << filename_);
+    LOG("Opening CSV file report '" << filename_ << "'");
+    fp_ = fopen(filename_.c_str(), "w");
+    QL_REQUIRE(fp_, "Error opening file '" << filename_ << "'");
 }
 
-CSVFileReport::~CSVFileReport() { end(); }
+CSVFileReport::~CSVFileReport() {
+    if (!finalized_) {
+        WLOG("CSV file report '" << filename_ << "' was not finalized, call end() on the report instance.");
+        end();
+    }
+}
 
-void CSVFileReport::flush() { fflush(fp_); }
+void CSVFileReport::flush() {
+    LOG("CVS file report '" << filename_ << "' is flushed");
+    fflush(fp_);
+}
 
 Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     columnTypes_.push_back(rt);
@@ -128,14 +137,29 @@ Report& CSVFileReport::add(const ReportType& rt) {
     i_++;
     return *this;
 }
+
 void CSVFileReport::end() {
-    QL_REQUIRE(i_ == columnTypes_.size() || i_ == 0, "csv report is finalized with incomplete row, got data for "
-                                                         << i_ << " columns out of " << columnTypes_.size());
+
+    if (finalized_) {
+        WLOG("CSV file report '" << filename_
+                                 << "' already finalized, is end() called multiple times on the report instance?");
+        return;
+    }
+
     if (fp_) {
         fprintf(fp_, "\n");
-        fclose(fp_);
+        if (int rc = fclose(fp_)) {
+            ALOG("CSV file report '" << filename_ << "' could not be closed (return code " << rc << ")");
+        }
         fp_ = NULL;
+        LOG("CSV file report '" << filename_ << "' closed.");
+    } else {
+        ALOG("CSV file report '" << filename_ << "': can not close file, handle is null.");
     }
+
+    QL_REQUIRE(i_ == columnTypes_.size() || i_ == 0, "csv report is finalized with incomplete row, got data for "
+                                                         << i_ << " columns out of " << columnTypes_.size());
+    finalized_ = true;
 }
 } // namespace data
 } // namespace ore
