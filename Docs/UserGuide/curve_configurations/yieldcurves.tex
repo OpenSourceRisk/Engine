@@ -542,3 +542,84 @@ build a projection curve for an Ibor index based on a risk free rate and a sprea
 \caption{Ibor fallback segment}
 \label{lst:ibor_fallback_segment}
 \end{listing}
+
+\subsubsection*{Discount Ratio Segment}
+\label{sec:dicount_ratio_segment}
+
+When the node name is \lstinline!DiscountRatio!, the \lstinline!Type! node has the only allowable value \emph{Dicount
+Ratio} and the node has the structure shown in Listing \ref{lst:discount_ratio_segment}. This segment is used to build a
+curve with discount factors $P(0,t)$ from three input curves with discount factors $P_b(0,t)$, $P_n(0,t)$ and $P_d(0,t)$
+(``base'', ``numerator'', ``denominator'' curves) following the equation
+
+\begin{equation}\label{discount_ratio_df}
+  P(0,t) = P_b(0,t) \frac{P_n(0,t)}{P_d(0,t)}
+\end{equation}
+
+The main use case of this segment is to build a discount curve ``CCY1-IN-CCY2'' for cashflows in CCY1 collateralized in
+CCY2 when curves ``CCY1-IN-BASE'' and ``CCY2-IN-BASE'' are known for a common base currency BASE:
+
+For a maturity $t$ denote the zero rate on a curve ``X'' by $r_X(t)$ and the correpsonding discount factor by
+$P_X(0,t)$. Furthermore, write ``CCY'' as shorthand for ``CCY-IN-CCY'', i.e. for the discount curve for cashflows in the
+same currency as the collateral currency ``CCY''. We write the desired zero rate as
+
+\begin{equation}\label{discount_ratio_rates}
+  \begin{split}
+    r_{\text{CCY1-IN-CCY2}} = r_{\text{CCY2}} + & ( r_{\text{BASE-IN-CCY2}} - r_{\text{CCY2}} ) + \\
+                               & (r_{\text{CCY1-IN-CCY2}} - r_{\text{BASE-IN-CCY2}})
+  \end{split}
+\end{equation}
+
+We now assume that these two rate differentials stay the same when we switch from collateral currency ``CCY2'' to
+``BASE'', i.e.
+
+\begin{eqnarray}
+r_{\text{BASE-IN-CCY2}} - r_{\text{CCY2}} &\approx& r_{\text{BASE}} - r_{\text{CCY2-IN-BASE}} \label{discount_ratio_rate1} \\
+r_{\text{CCY1-IN-CCY2}} - r_{\text{BASE-IN-CCY2}} &\approx& r_{\text{CCY1-IN-BASE}} - r_{\text{BASE}}  \label{discount_ratio_rate2}
+\end{eqnarray}
+
+In less technical terms we assume that FX Forward Quotes CCY2 / BASE and CCY1 / BASE stay constant when the collateral
+currency changes, which seems reasonable, if no further market information is available.
+
+In terms of discount factors the RHS of \ref{discount_ratio_rate1} and \ref{discount_ratio_rate2} can be written
+
+\begin{eqnarray}
+  P_{\text{BASE}}(0,t) / P_{\text{CCY2-IN-BASE}}(0,t) \\
+  P_{\text{CCY1-IN-BASE}}(0,t) / P_{\text{BASE}}(0,t)
+\end{eqnarray}
+
+and so \ref{discount_ratio_rates} can be written
+
+\begin{equation}\label{discount_ratio_rates}
+  P_{\text{CCY1-IN-CCY2}}(0,t) = \frac{P_{\text{CCY2}}(0,t) P_{\text{CCY1-IN-BASE}}(0,t)}{P_{\text{CCY2-IN-BASE}}(0,t)}
+\end{equation}
+
+so the following choice of curves will result in the desired ``CCY1-IN-CCY2'' curve:
+
+\begin{itemize}
+\item base curve = ``CCY2-IN-CCY2''
+\item numerator curve = ``CCY1-IN-BASE''
+\item denominator curve = ``CCY2-IN-BASE''
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurve>
+  <CurveId>GBP-IN-EUR</CurveId>
+  <CurveDescription>GBP collateralized in EUR discount curve</CurveDescription>
+  <Currency>GBP</Currency>
+  <DiscountCurve/>
+  <Segments>
+    <DiscountRatio>
+      <Type>Discount Ratio</Type>
+      <BaseCurve currency="EUR">EUR1D</BaseCurve>
+      <NumeratorCurve currency="GBP">GBP-IN-USD</NumeratorCurve>
+      <DenominatorCurve currency="EUR">EUR-IN-USD</DenominatorCurve>
+    </DiscountRatio>
+  </Segments>
+</YieldCurve>
+\end{minted}
+\caption{Discount Ratio segment}
+\label{lst:discount_ratio_segment}
+\end{listing}
+
