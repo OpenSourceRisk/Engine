@@ -112,8 +112,7 @@ Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 Real FxIndex::forecastFixing(const Time& fixingTime) const {
     QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
 
-    // we base the forecast always on the exchange rate (and not on today's
-    // fixing)
+    // we base the forecast always on the exchange rate (and not on today's fixing)
     Real rate;
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
@@ -121,10 +120,21 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
         QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
         rate = fxQuote_->value();
     }
-    
-    // TODO: Add a time based adjusement for settlement days
-    Real forward = rate * sourceYts_->discount(fixingTime)  /
-        targetYts_->discount(fixingTime);
+
+    // TODO: do we need to add this a class variable?
+    DayCounter dc = Actual365Fixed();
+
+    // to make the spot adjustment we get the time to spot, and also add this to fixing time
+    Date refValueDate = fixingCalendar().adjust(Settings::instance().evaluationDate());
+    Date spotValueDate = valueDate(refValueDate);
+
+    // time from ref to spot date
+    Real spotTime = dc.yearFraction(refValueDate, spotValueDate);
+    Real fowardTime = spotTime + fixingTime;
+
+    // compute the forecast applying the usual no arbitrage principle
+    Real forward = rate * sourceYts_->discount(fowardTime) * targetYts_->discount(spotTime) /
+                   targetYts_->discount(fowardTime) * sourceYts_->discount(spotTime);
     return forward;
 }
 

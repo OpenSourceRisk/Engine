@@ -129,6 +129,94 @@ Date getDateFromDateOrPeriod(const string& token, Date asof, QuantLib::Calendar 
     return expiryDate;
 }
 
+static FXForwardQuote::FxFwdString parseFxString(const string& s) {
+    static map<string, FXForwardQuote::FxFwdString> b = {
+        {"ON", FXForwardQuote::FxFwdString::ON},
+        {"TN", FXForwardQuote::FxFwdString::TN},
+        {"SN", FXForwardQuote::FxFwdString::SN}
+    };
+
+    auto it = b.find(s);
+    if (it != b.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Cannot convert \"" << s << "\" to FxFwdString");
+    }
+}
+
+boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString> parseFxPeriod(const string& s) {
+    bool isPeriod = isdigit(s.front());
+    if (isPeriod)
+        return parsePeriod(s);
+    else
+        return parseFxString(s);
+}
+
+namespace {
+
+struct FxTenorGetter : boost::static_visitor<Period> {
+    FxTenorGetter() {}
+    Period operator()(const Period& p) const { return p; }
+    Period operator()(const FXForwardQuote::FxFwdString& p) const { 
+        // These are all overnight rates
+        return Period(1, Days);
+    }
+};
+
+struct FxStartTenorGetter : boost::static_visitor<Period> {
+    
+    FxStartTenorGetter(const boost::shared_ptr<FXConvention>& fxConvention) :
+        fxConvention(fxConvention) {}    
+    
+    Period operator()(const Period& p) const { 
+        Integer days = 0;
+        if (fxConvention)
+            days = fxConvention->spotRelative() ? fxConvention->spotDays() : days; 
+        return Period(days, Days);
+    }
+
+    Period operator()(const FXForwardQuote::FxFwdString& p) const {
+        Integer days = 0;
+        if (p == FXForwardQuote::FxFwdString::TN)
+            days = 1;
+        else if (p == FXForwardQuote::FxFwdString::SN && fxConvention) {
+            days = fxConvention->spotDays();
+        }
+        return Period(days, Days);
+    }
+
+    boost::shared_ptr<FXConvention> fxConvention;
+};
+
+struct FxFwdStringCompare : boost::static_visitor<bool> {
+
+    FxFwdStringCompare(FXForwardQuote::FxFwdString fxFwdString) : fxFwdString(fxFwdString) {}
+
+    bool operator()(const Period& p) const { return false; }
+
+    bool operator()(const FXForwardQuote::FxFwdString& p) const { 
+        return p == fxFwdString;
+    }
+
+    FXForwardQuote::FxFwdString fxFwdString;
+};
+
+} // namespace
+
+QuantLib::Period fxFwdQuoteTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term) {
+    return boost::apply_visitor(FxTenorGetter(), term);
+}
+
+QuantLib::Period fxFwdQuoteStartTenor(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
+                                      const boost::shared_ptr<FXConvention>& fxConvention) {
+    return boost::apply_visitor(FxStartTenorGetter(fxConvention), term);
+}
+
+bool matchFxFwdStringTerm(const boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString>& term,
+                     const FXForwardQuote::FxFwdString& fxfwdString) {
+    return boost::apply_visitor(FxFwdStringCompare(fxfwdString), term);
+}
+
 //! Function to parse a market datum
 boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& datumName, const Real& value) {
 
@@ -413,7 +501,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& unitCcy = tokens[2];
         const string& ccy = tokens[3];
-        Period term = parsePeriod(tokens[4]);
+        boost::variant<QuantLib::Period, FXForwardQuote::FxFwdString> term = parseFxPeriod(tokens[4]);
         return boost::make_shared<FXForwardQuote>(value, asof, datumName, quoteType, unitCcy, ccy, term);
     }
 
