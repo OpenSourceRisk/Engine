@@ -41,12 +41,6 @@ bool checkCurrency(const string& s);
 */
 bool checkMinorCurrency(const string& s);
 
-//! Crypto Currency Check
-/*! check whether string is a crypto currency
-    \ingroup utilities
-*/
-bool checkCryptoCurrency(const string& s);
-
 //! Convert a value from a minor ccy to major
 /*! .i.e 100 GBp to 1 GBP
     \ingroup utilities
