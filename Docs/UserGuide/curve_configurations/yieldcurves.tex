@@ -580,14 +580,14 @@ r_{\text{CCY1-IN-CCY2}} - r_{\text{BASE-IN-CCY2}} &\approx& r_{\text{CCY1-IN-BAS
 In less technical terms we assume that FX Forward Quotes CCY2 / BASE and CCY1 / BASE stay constant when the collateral
 currency changes, which seems reasonable, if no further market information is available.
 
-In terms of discount factors the RHS of \ref{discount_ratio_rate1} and \ref{discount_ratio_rate2} can be written
+The discount factors associated to the RHS of \ref{discount_ratio_rate1} and \ref{discount_ratio_rate2} can be written
 
 \begin{eqnarray}
   P_{\text{BASE}}(0,t) / P_{\text{CCY2-IN-BASE}}(0,t) \\
   P_{\text{CCY1-IN-BASE}}(0,t) / P_{\text{BASE}}(0,t)
 \end{eqnarray}
 
-and so \ref{discount_ratio_rates} can be written
+and so \ref{discount_ratio_df} can be written
 
 \begin{equation}\label{discount_ratio_rates}
   P_{\text{CCY1-IN-CCY2}}(0,t) = \frac{P_{\text{CCY2}}(0,t) P_{\text{CCY1-IN-BASE}}(0,t)}{P_{\text{CCY2-IN-BASE}}(0,t)}
