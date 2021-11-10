@@ -93,7 +93,7 @@ void BRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
 
 Real BRLCdiRateHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "BRLCdiRateHelper's term structure not set");
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairRate();
 }
 
@@ -151,7 +151,7 @@ void DatedBRLCdiRateHelper::setTermStructure(YieldTermStructure* t) {
 
 Real DatedBRLCdiRateHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "DatedBRLCdiRateHelper's term structure not set");
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairRate();
 }
 

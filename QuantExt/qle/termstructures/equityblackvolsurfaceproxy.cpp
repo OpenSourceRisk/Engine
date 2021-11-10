@@ -40,6 +40,9 @@ EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(
 }
 
 Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) const {
+
+    t = std::max(t, 1E-6);
+
     Volatility vol;
     if (fxSurface_) {
         // Get the Fx forward value at time t, and hence the ATM vol

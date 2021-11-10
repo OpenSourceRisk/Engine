@@ -45,6 +45,7 @@ public:
                    const Settlement::Type settlementType = Settlement::Physical,
                    Settlement::Method settlementMethod = Settlement::PhysicalOTC);
 
+    void deepUpdate() override;
     bool isExpired() const override { return Settings::instance().evaluationDate() >= maturityDate(); }
     void setupArguments(PricingEngine::arguments*) const override;
     void fetchResults(const PricingEngine::results*) const override;

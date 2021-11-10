@@ -120,7 +120,8 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
 
     n_ = valueDates_.size() - 1;
 
-    QL_REQUIRE(valueDates_[0] != valueDates_[1], "internal error: first two value dates of on coupon are equal: " << valueDates_[0]);
+    QL_REQUIRE(valueDates_[0] != valueDates_[1],
+               "internal error: first two value dates of on coupon are equal: " << valueDates_[0]);
     QL_REQUIRE(valueDates_[n_] != valueDates_[n_ - 1],
                "internal error: last two value dates of on coupon are equal: " << valueDates_[n_]);
 
@@ -329,13 +330,21 @@ CappedFlooredOvernightIndexedCoupon::CappedFlooredOvernightIndexedCoupon(
         QL_REQUIRE(cap_ >= floor, "cap level (" << cap_ << ") less than floor level (" << floor_ << ")");
     }
     registerWith(underlying_);
+    if (nakedOption_)
+        underlying_->alwaysForwardNotifications();
 }
 
-Rate CappedFlooredOvernightIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
+void CappedFlooredOvernightIndexedCoupon::alwaysForwardNotifications() {
+    LazyObject::alwaysForwardNotifications();
+    underlying_->alwaysForwardNotifications();
+}
 
-Rate CappedFlooredOvernightIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
+void CappedFlooredOvernightIndexedCoupon::deepUpdate() {
+    update();
+    underlying_->deepUpdate();
+}
 
-Rate CappedFlooredOvernightIndexedCoupon::rate() const {
+void CappedFlooredOvernightIndexedCoupon::performCalculations() const {
     QL_REQUIRE(underlying_->pricer(), "pricer not set");
     Rate swapletRate = nakedOption_ ? 0.0 : underlying_->rate();
     if (floor_ != Null<Real>() || cap_ != Null<Real>())
@@ -346,7 +355,16 @@ Rate CappedFlooredOvernightIndexedCoupon::rate() const {
     Rate capletRate = 0.;
     if (cap_ != Null<Real>())
         capletRate = (nakedOption_ && floor_ == Null<Real>() ? -1.0 : 1.0) * pricer()->capletRate(effectiveCap());
-    return swapletRate + floorletRate - capletRate;
+    rate_ = swapletRate + floorletRate - capletRate;
+}
+
+Rate CappedFlooredOvernightIndexedCoupon::cap() const { return gearing_ > 0.0 ? cap_ : floor_; }
+
+Rate CappedFlooredOvernightIndexedCoupon::floor() const { return gearing_ > 0.0 ? floor_ : cap_; }
+
+Rate CappedFlooredOvernightIndexedCoupon::rate() const {
+    calculate();
+    return rate_;
 }
 
 Rate CappedFlooredOvernightIndexedCoupon::convexityAdjustment() const { return underlying_->convexityAdjustment(); }
@@ -400,8 +418,6 @@ Rate CappedFlooredOvernightIndexedCoupon::effectiveFloor() const {
         }
     }
 }
-
-void CappedFlooredOvernightIndexedCoupon::update() { notifyObservers(); }
 
 void CappedFlooredOvernightIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<CappedFlooredOvernightIndexedCoupon>* v1 = dynamic_cast<Visitor<CappedFlooredOvernightIndexedCoupon>*>(&v);

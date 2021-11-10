@@ -102,7 +102,7 @@ void SubPeriodsSwapHelper::setTermStructure(YieldTermStructure* t) {
 
 Real SubPeriodsSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairRate();
 }
 

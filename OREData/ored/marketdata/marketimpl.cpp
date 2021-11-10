@@ -131,6 +131,15 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
                                                                  "yield volatility curve");
 }
 
+
+Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& ccypair, const string& configuration) const {
+    require(MarketObject::FXSpot, ccypair, configuration);
+    auto it = fxIndices_.find(make_pair(configuration, ccypair));
+    QL_REQUIRE(it != fxIndices_.end(), "did not find object " << ccypair << " of type fx index under configuration '"
+                                                            << configuration << "' or 'default'");
+    return it->second;
+}
+
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
     require(MarketObject::FXSpot, ccypair, configuration);
     auto it = fxSpots_.find(configuration);

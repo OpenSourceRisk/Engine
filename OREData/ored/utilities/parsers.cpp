@@ -1192,26 +1192,26 @@ QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
     }
 }
 
-pair<string, string> parseBoostAny(const boost::any& anyType) {
+pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
     string resultType;
     std::ostringstream oss;
 
     if (anyType.type() == typeid(int)) {
         resultType = "int";
         int r = boost::any_cast<int>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Size)) {
         resultType = "size";
         int r = boost::any_cast<Size>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(double)) {
         resultType = "double";
         double r = boost::any_cast<double>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
         std::string r = boost::any_cast<std::string>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Date)) {
         resultType = "date";
         oss << io::iso_date(boost::any_cast<Date>(anyType));
@@ -1236,7 +1236,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
+            oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
@@ -1248,7 +1248,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << "\"" << to_string(r[0]);
+            oss << std::fixed << std::setprecision(precision) << "\"" << to_string(r[0]);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << to_string(r[i]);
             }
@@ -1260,7 +1260,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
+            oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
@@ -1270,7 +1270,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         resultType = "vector_cashflows";
         std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
         if (!r.empty()) {
-            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
+            oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); ++i) {
                 oss << ", " << r[i];
             }
@@ -1281,7 +1281,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
         std::regex pattern("\n");
         std::ostringstream tmp;
-        tmp << std::setprecision(8) << r;
+        tmp << std::setprecision(precision) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
     } else {
         ALOG("Unsupported Boost::Any type");

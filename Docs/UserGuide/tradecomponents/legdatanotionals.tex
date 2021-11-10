@@ -67,9 +67,9 @@ PaymentLag is also not supported for CapFloor Floating legs that have Ibor coupo
 
 Allowable values: A non-negative whole number, if not given it defaults to zero.
 
-\item DayCounter: The day count convention of the leg coupons. 
+\item DayCounter: The day count convention of the leg coupons. Note that \lstinline!DayCounter! is mandatory for all leg types except \emph{Equity}.
 
-Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}. For \emph{Equity} legs, if left blank or omitted, it defaults to \emph{ACT/365}.
 
 \item Notionals: This node contains child elements of type
   \lstinline!Notional!. If the notional is fixed over the life of the

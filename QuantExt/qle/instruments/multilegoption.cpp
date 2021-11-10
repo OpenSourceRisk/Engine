@@ -47,10 +47,22 @@ MultiLegOption::MultiLegOption(const std::vector<Leg>& legs, const std::vector<b
     for (auto const& l : legs_) {
         for (auto const& c : l) {
             registerWith(c);
+            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+                lazy->alwaysForwardNotifications();
         }
     }
 
 } // MultiLegOption
+
+void MultiLegOption::deepUpdate() {
+    for (auto& l : legs_) {
+        for (auto& c : l) {
+            if (auto lazy = boost::dynamic_pointer_cast<LazyObject>(c))
+                lazy->deepUpdate();
+        }
+    }
+    update();
+}
 
 Real MultiLegOption::underlyingNpv() const {
     calculate();

@@ -714,7 +714,7 @@
               "BaselEE",
               "BaselEEE"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 1.0,
             "rel_tol": 1e-12
           }
         ]
