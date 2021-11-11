@@ -42,6 +42,10 @@ void NettingSetManager::reset() {
     uniqueKeys_.clear();
 }
 
+const bool NettingSetManager::empty() {
+    return data_.empty();
+}
+
 boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(string id) const {
     if (has(id))
         return data_.find(id)->second;
