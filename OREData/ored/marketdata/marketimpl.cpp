@@ -21,6 +21,7 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
@@ -33,6 +34,7 @@ using namespace QuantLib;
 
 using QuantExt::PriceTermStructure;
 using QuantExt::CommodityIndex;
+using QuantExt::FxIndex;
 
 namespace ore {
 namespace data {
@@ -62,7 +64,6 @@ A lookup(const B& map, const C& key, const YieldCurveType y, const string& confi
     }
     return it->second;
 }
-
 } // anonymous namespace
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
@@ -131,13 +132,96 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
                                                                  "yield volatility curve");
 }
 
+Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& domestic, 
+    const string& foreign, bool useXbsCurves, const string& configuration) const {
+    
+    string index = fxIndex;
+    if (!isFxIndex(index)) {
+        // then we must have a currency pair e.g. EURUSD
+        QL_REQUIRE(index.size() == 6, "MarketImpl::fxIndex, Invalid fxIndex "
+                                         << index
+                                         << ", must be an FXIndex "
+                                            "name (e.g. FX-ECB-EUR-USD), or ccy pair (e.g. EURUSD).");
+        index = "FX-GENERIC-" + index.substr(0, 3) + "-" + index.substr(3);
+    }
+    
+    string indexName = index;
+    // If an index built from a curve bootstrapped from just cross ccy basis instruments is required, we
+    // add the ccy prefix to distinguish, we still parse the given fxIndex and use it too look up conventions
+    if (useXbsCurves)
+        indexName = xccyCurveName(indexName);
 
-Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& ccypair, const string& configuration) const {
-    require(MarketObject::FXSpot, ccypair, configuration);
-    auto it = fxIndices_.find(make_pair(configuration, ccypair));
-    QL_REQUIRE(it != fxIndices_.end(), "did not find object " << ccypair << " of type fx index under configuration '"
-                                                            << configuration << "' or 'default'");
-    return it->second;
+    Handle<FxIndex> fxInd; 
+    auto it = fxIndices_.find(make_pair(configuration, indexName));
+    // if no index found we build it
+    if (it == fxIndices_.end()) {        
+        // Parse the index we have with no term structures
+        boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(index);
+
+        // get market data objects - we set up the index using source/target, fixing days
+        // and calendar from legData_[i].fxIndex()
+        string source = fxIndexBase->sourceCurrency().code();
+        string target = fxIndexBase->targetCurrency().code();
+
+        string ccypair = source + target;
+        Handle<Quote> spot = fxSpot(ccypair);
+
+        // If useXbsCurves is true, try to link the FX index to xccy based curves. There will be none if source or
+        // target
+        // is equal to the base currency of the run so we must use the try/catch.
+        Handle<YieldTermStructure> sorTS;
+        Handle<YieldTermStructure> tarTS;
+        if (useXbsCurves) {
+            sorTS = xccyYieldCurve(source, configuration);
+            tarTS = xccyYieldCurve(target, configuration);
+        } else {
+            sorTS = discountCurve(source, configuration);
+            tarTS = discountCurve(target, configuration);
+        }
+
+        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+        // first check if we have a convention specific to the Index (e.g. FX-ECD-EUR-USD), otherwise use the ccy pair
+        boost::shared_ptr<FXConvention> fxCon;
+        try {
+            fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->get(index));
+        } catch (...) {
+            // build the convention string, can we do this better, we now require a convention name EUR-USD-FX etc?
+            string conStr = source + "-" + target + "-FX";
+            fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->get(conStr));
+        }
+
+        fxInd = Handle<FxIndex>(boost::make_shared<FxIndex>(fxIndexBase->familyName(), fxCon->spotDays(), fxIndexBase->sourceCurrency(),
+            fxIndexBase->targetCurrency(), fxCon->advanceCalendar(), spot, sorTS, tarTS, false));
+        // add it to the cache
+        fxIndices_.at(make_pair(indexName, configuration)) = fxInd;
+
+    } else {
+        fxInd = it->second;      
+    }
+
+    // check if we need to invert the index
+    // only check if a domestic and foreign have been provided
+    bool invertFxIndex = false;
+    if (!domestic.empty() && !foreign.empty()) {
+        if (domestic == fxInd->targetCurrency().code() && foreign == fxInd->sourceCurrency().code()) {
+            invertFxIndex = false;
+        } else if (domestic == fxInd->sourceCurrency().code() && foreign == fxInd->targetCurrency().code()) {
+            invertFxIndex = true;
+        } else {
+            QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic
+                                               << " and reset foreignCurrency " << foreign);
+        }
+    }
+
+    if (invertFxIndex)
+        fxInd = Handle<QuantExt::FxIndex>(fxInd->clone(fxInd->fxQuote(), 
+            fxInd->sourceCurve(), fxInd->targetCurve(), true));
+
+    return fxInd;
+}
+
+Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configuration) const {
+    return fxIndex(ccypair, configuration)->fxQuote();
 }
 
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
@@ -502,6 +586,20 @@ void MarketImpl::refresh(const string& configuration) {
     }
 
 } // refresh
+
+Handle<YieldTermStructure> MarketImpl::xccyYieldCurve(const string& ccyCode, const string& configuration) const {
+
+    Handle<YieldTermStructure> curve;
+    string xccyCurve = xccyCurveName(ccyCode);
+    try {
+        curve = yieldCurve(xccyCurve, configuration);
+    } catch (const Error&) {
+        DLOG("Could not link " << ccyCode << " termstructure to cross currency yield curve " << xccyCurve
+                               << " so just using " << ccyCode << " discount curve.");
+        curve = discountCurve(ccyCode, configuration);
+    }
+    return curve;
+}
 
 } // namespace data
 } // namespace ore

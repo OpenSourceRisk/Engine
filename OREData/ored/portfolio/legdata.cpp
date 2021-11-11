@@ -2233,7 +2233,7 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
         tarTS = market->discountCurve(target, configuration);
     }
 
-    Handle<Quote> spot = market->fxSpot(source + target);
+    Handle<Quote> spot = market->fxRate(source + target);
     Calendar cal = parseCalendar(calendar);
 
     // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not

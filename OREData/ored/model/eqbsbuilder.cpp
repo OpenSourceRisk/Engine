@@ -52,7 +52,7 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
     // get market data
     std::string fxCcyPair = ccy.code() + baseCcy_.code();
     eqSpot_ = market_->equitySpot(eqName, configuration_);
-    fxSpot_ = market_->fxSpot(fxCcyPair, configuration_);
+    fxSpot_ = market_->fxRate(fxCcyPair, configuration_);
     // FIXME using the "discount curve" here instead of the equityReferenceRateCurve?
     ytsRate_ = market_->discountCurve(ccy.code(), configuration_);
     ytsDiv_ = market_->equityDividendCurve(eqName, configuration_);

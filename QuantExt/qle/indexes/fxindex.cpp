@@ -32,6 +32,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using namespace std;
@@ -58,12 +59,13 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
     // however currently exchange rates are not quotes anyway
     // so this is to be revisited later
 }
+
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
-                 const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
+                 const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
                  const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
                  bool inverseIndex, bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
-      sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true), fixingCalendar_(fixingCalendar),
+      sourceYts_(sourceYts), targetYts_(targetYts), fxSpot_(fxSpot), useQuote_(true), fixingCalendar_(fixingCalendar),
       inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
 
     std::ostringstream tmp;
@@ -71,9 +73,33 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
-    registerWith(fxQuote_);
+    registerWith(fxSpot_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
+}
+
+
+const Handle<Quote>& FxIndex::fxQuote(bool withSettlementLag) const {   
+    
+    Handle<Quote> quote;
+    Real rate = Null<Real>();
+    if (!useQuote_)
+        rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
+    else
+        rate = fxSpot_->value();
+
+    if (!withSettlementLag) {
+        // the exchange rate is interpreted as the spot rate w.r.t. the index's
+        // settlement date
+        Date refValueDate = valueDate(fixingCalendar().adjust(Settings::instance().evaluationDate()));
+
+        rate = rate * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
+    }
+
+    if (inverseIndex_)
+        rate = 1.0 / rate;
+
+    return Handle<Quote>(boost::make_shared<SimpleQuote>(rate));
 }
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -117,8 +143,8 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
-        rate = fxQuote_->value();
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        rate = fxSpot_->value();
     }
 
     // TODO: do we need to add this a class variable?
@@ -147,8 +173,8 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
-        rate = fxQuote_->value();
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        rate = fxSpot_->value();
     }
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
@@ -172,9 +198,9 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 }
 
 boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
-                                          const Handle<YieldTermStructure>& targetYts) {
+                                          const Handle<YieldTermStructure>& targetYts, bool inverseIndex) {
     return boost::make_shared<FxIndex>(familyName_, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_,
-                                       fxQuote, sourceYts, targetYts, inverseIndex_);
+                                       fxQuote, sourceYts, targetYts, inverseIndex);
 }
 
 std::string FxIndex::name() const { 

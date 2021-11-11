@@ -64,7 +64,7 @@ protected:
         string ccyPairCode = equityCcy.code() + strikeCcy.code();
 
         Handle<Quote> equitySpot = this->market_->equitySpot(equityName, config);
-        Handle<Quote> fxSpot = this->market_->fxSpot(ccyPairCode, config);
+        Handle<Quote> fxSpot = this->market_->fxRate(ccyPairCode, config);
         
         std::function<Real(const Real&, const Real&)> multiply = [](const Real& a, const Real& b) { return a * b; };
 

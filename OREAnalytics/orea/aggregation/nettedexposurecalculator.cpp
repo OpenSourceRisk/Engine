@@ -376,7 +376,7 @@ NettedExposureCalculator::collateralPaths(
     string csaFxPair = netting->csaDetails()->csaCurrency() + baseCurrency_;
     Real csaFxRateToday = 1.0;
     if (netting->csaDetails()->csaCurrency() != baseCurrency_)
-        csaFxRateToday = market_->fxSpot(csaFxPair, configuration_)->value();
+        csaFxRateToday = market_->fxRate(csaFxPair, configuration_)->value();
     LOG("CSA FX rate for pair " << csaFxPair << " = " << csaFxRateToday);
 
     // Don't use Settings::instance().evaluationDate() here, this has moved to simulation end date.

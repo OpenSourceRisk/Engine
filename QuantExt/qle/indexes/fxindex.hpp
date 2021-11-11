@@ -53,26 +53,26 @@ using namespace QuantLib;
 class FxIndex : public EqFxIndexBase {
 public:
     /*! familyName may be e.g. ECB
-        settlementDays determine the spot date of the currency pair
+        fixingDays determine the spot date of the currency pair
         source is the asset or foreign currency
         target is the numeraire or domestic currency
         fixingCalendar is the calendar defining good days for the pair
         this class uses the exchange rate manager to retrieve spot values
+        fxSpot is the fx rate settled at today + fixingDays
 
-        if inverseIndex is true, the returned fixing values are flipped, but all inspectors
+        if inverseIndex is true, the returned fixing and fxQuote values are flipped, but all inspectors
         - sourceCurremcy(), targetCurrency()
         - sourceCurve(), targetCurve()
-        - fxQuote()
         - forecastFixing()
         - pastFixing()
         will still return results in terms of the original pair.
     */
-    FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
+    FxIndex(const std::string& familyName, Natural , const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
             bool fixingTriangulation = false);
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
-            const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
+            const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
             bool fixingTriangulation = true);
@@ -97,7 +97,9 @@ public:
     const bool inverseIndex() const { return inverseIndex_; }
     const Handle<YieldTermStructure>& sourceCurve() const { return sourceYts_; }
     const Handle<YieldTermStructure>& targetCurve() const { return targetYts_; }
-    const Handle<Quote>& fxQuote() const { return fxQuote_; }
+
+    //! fxQuote returns instantaneous Quote by default, otherwise settlement after fixingDays
+    const Handle<Quote>& fxQuote(bool withSettlementLag = false) const;
     const bool useQuote() const { return useQuote_; }
     //@}
     /*! \name Date calculations */
@@ -110,9 +112,14 @@ public:
     Real pastFixing(const Date& fixingDate) const;
     // @}
 
+    //! \name Setters
+    //@{
+    void setInverseIndex(bool inverseIndex) { inverseIndex_ = inverseIndex; }
+    //@}
+    
     //! clone the index, the clone will be linked to the provided handles
     boost::shared_ptr<FxIndex> clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
-                                     const Handle<YieldTermStructure>& targetYts);
+                                     const Handle<YieldTermStructure>& targetYts, bool inverseIndex = false);
 
 protected:
     std::string familyName_;
@@ -120,7 +127,7 @@ protected:
     Currency sourceCurrency_, targetCurrency_;
     const Handle<YieldTermStructure> sourceYts_, targetYts_;
     std::string name_;
-    const Handle<Quote> fxQuote_;
+    const Handle<Quote> fxSpot_;
     bool useQuote_;
 
 private:

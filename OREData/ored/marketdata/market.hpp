@@ -40,6 +40,7 @@
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
@@ -129,7 +130,11 @@ public:
 
     //! \name Foreign Exchange
     //@{
-    virtual Handle<Quote> fxSpot(const string& ccypair,
+    virtual QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& domestic = string(), 
+        const string& foreign = string(), bool useXbsCurves = false, const string& configuration = Market::defaultConfiguration) 
+        const = 0;
+
+    virtual Handle<Quote> fxRate(const string& ccypair,
                                  const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<BlackVolTermStructure> fxVol(const string& ccypair,
                                                 const string& configuration = Market::defaultConfiguration) const = 0;
@@ -236,6 +241,11 @@ public:
     virtual Handle<Quote> cpr(const string& securityID,
                               const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
+
+protected:
+    // fx spot, should never be called outside of a market implementation, use fxRate instead
+    virtual Handle<Quote> fxSpot(const string& ccypair,
+                                 const string& configuration = Market::defaultConfiguration) const = 0;
 };
 } // namespace data
 } // namespace ore
