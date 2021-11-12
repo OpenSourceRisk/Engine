@@ -50,6 +50,11 @@ public:
     void reset();
 
     /*!
+      checks if the manager is empty
+    */
+    const bool empty();
+
+    /*!
       checks if object named id exists in manager
     */
     bool has(string id) const;
