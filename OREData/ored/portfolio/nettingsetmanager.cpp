@@ -42,8 +42,26 @@ void NettingSetManager::reset() {
     uniqueKeys_.clear();
 }
 
-const bool NettingSetManager::empty() {
+const bool NettingSetManager::empty() const {
     return data_.empty();
+}
+
+const bool NettingSetManager::calculateIMAmount() const { 
+    for (const auto nsd : data_) {
+        if (nsd.second->csaDetails()->calculateIMAmount())
+            return true;
+    }
+    return false;
+}
+
+const std::set<string> NettingSetManager::calculateIMNettingSets() const {
+    std::set<string> calculateIMNettingSets = std::set<string>();
+    for (const auto nsd : data_) {
+        if (nsd.second->csaDetails()->calculateIMAmount()) {
+            calculateIMNettingSets.insert(nsd.first);
+        }
+    }
+    return calculateIMNettingSets;
 }
 
 boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(string id) const {

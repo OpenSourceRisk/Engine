@@ -54,6 +54,8 @@
                   </xs:element>
                   <xs:element type="xs:boolean" name="ApplyInitialMargin" minOccurs="0"/>
                   <xs:element type="csaType" name="InitialMarginType" minOccurs="0"/>
+                  <xs:element type="xs:boolean" name="CalculateIMAmount" minOccurs="0"/>
+                  <xs:element type="xs:boolean" name="CalculateVMAmount" minOccurs="0"/>
                 </xs:all>
               </xs:complexType>
             </xs:element>
