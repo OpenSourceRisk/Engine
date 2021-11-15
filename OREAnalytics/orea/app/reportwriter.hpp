@@ -63,6 +63,12 @@ public:
                                const std::string& configuration = ore::data::Market::defaultConfiguration,
                                const bool includePastCashflows = false);
 
+    virtual void writeCashflowNpvReport(ore::data::Report& report,
+                                        boost::shared_ptr<ore::data::Portfolio> portfolio,
+                                        boost::shared_ptr<ore::data::Market> market,
+                                        const std::string& baseCcy,
+                                        boost::optional<int> horizonCalendarDays);
+
     virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                              const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
                              const bool continueOnError = false);
