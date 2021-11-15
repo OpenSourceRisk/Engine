@@ -57,7 +57,6 @@ public:
 
     /*! Update switch dates in the configuration to the targetSwitchDate
         - either for the selected IBOR index only, or for all of them if indexName is left blank
-        - skipping those where the switch date is still undefined (i.e. switch date curently set to QL::maxDate())
         - and skipping those where the current switch date is earlier than the target switch date
         This is to facilitate testing without loading a custom fallback configuration.
     */
