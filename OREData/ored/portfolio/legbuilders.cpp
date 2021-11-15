@@ -76,8 +76,8 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
 
     if (data.legType() == "Floating" && !data.isNotResetXCCY()) {
         QL_REQUIRE(!data.fxIndex().empty(), "FloatingRateLegBuilder: need fx index for fx resetting leg");
-        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), engineFactory->market(),
-                                    configuration, data.fixingCalendar(), data.fixingDays(), true);
+        auto fxIndex = engineFactory->market()->fxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), false,
+                                                        configuration).currentLink();
 
         // If the domestic notional value is not specified, i.e. there are no notionals specified in the leg
         // data, then all coupons including the first will be FX linked. If the first coupon's FX fixing date
@@ -275,8 +275,9 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
                        "Equity Currency provided does not match currency of Equity Curve");
         }
 
-        fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqCurrency.code(), engineFactory->market(),
-                               configuration, eqData->fxIndexCalendar(), eqData->fxIndexFixingDays());
+        fxIndex = engineFactory->market()
+                      ->fxIndex(eqData->fxIndex(), data.currency(), eqCurrency.code(), false, configuration)
+                      .currentLink();
     }
 
     Leg result = makeEquityLeg(data, eqCurve, fxIndex, openEndDateReplacement);

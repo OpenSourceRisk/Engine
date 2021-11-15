@@ -567,8 +567,14 @@ void EquityLegData::fromXML(XMLNode* node) {
     if (fxt) {
         eqCurrency_ = XMLUtils::getChildValue(fxt, "EquityCurrency", true);
         fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
-        fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
-        fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
+        if (XMLUtils::getChildNode(fxt, "FXIndexFixingDays")) {
+            WLOG("EquityLegData::fromXML, node FXIndexFixingDays has been deprecated, fixing days are "
+                 "taken from conventions.");
+        }
+        if (XMLUtils::getChildNode(fxt, "FXIndexCalendar")) {
+            WLOG("EquityLegData::fromXML, node FXIndexCalendar has been deprecated, fixing calendar is "
+                 "taken from conventions.");
+        }
         indices_.insert(fxIndex_);
     }
 
@@ -607,10 +613,6 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLNode* fxNode = doc.allocNode("FXTerms");
         XMLUtils::addChild(doc, fxNode, "EquityCurrency", eqCurrency_);
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
-        if (fxIndexFixingDays_)
-            XMLUtils::addChild(doc, fxNode, "FXIndexFixingDays", static_cast<Integer>(fxIndexFixingDays_));
-        if (fxIndexCalendar_ != "")
-            XMLUtils::addChild(doc, fxNode, "FXIndexCalendar", fxIndexCalendar_);
         XMLUtils::appendNode(node, fxNode);
     }
     return node;
@@ -2166,9 +2168,10 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                                                        << data.currency() << ")");
                 std::string domestic = data.currency();
                 std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
-                index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
-                                     engineFactory->configuration(MarketContext::pricing),
-                                     indexing.indexFixingCalendar(), indexing.indexFixingDays());
+                index = engineFactory->market()
+                            ->fxIndex(indexing.index(), domestic, foreign, false,
+                                      engineFactory->configuration(MarketContext::pricing))
+                            .currentLink();                    
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
@@ -2314,8 +2317,8 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         Real foreignNotional = data.foreignAmount();
 
         QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
-        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration,
-                                    data.fixingCalendar(), data.fixingDays(), true);
+        auto fxIndex = market->fxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), false, configuration)
+                           .currentLink();
 
         Leg resettingLeg;
         for (Size j = 0; j < leg.size(); j++) {

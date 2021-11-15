@@ -46,8 +46,10 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // So, the convention here is that the sold currency is domestic and the bought currency is foreign.
         // Note: intentionally use null calendar and 0 day fixing lag here because we will ask the FX index for its
         //       value on the expiry date without adjustment.
-        index_ = buildFxIndex(fxIndex_, currency_, assetName_, market,
-                              engineFactory->configuration(MarketContext::pricing), "NullCalendar", 0);
+        index_ =
+            market
+                ->fxIndex(fxIndex_, currency_, assetName_, false, engineFactory->configuration(MarketContext::pricing))
+                .currentLink();
 
         // Populate the external index name so that fixings work.
         indexName_ = fxIndex_;

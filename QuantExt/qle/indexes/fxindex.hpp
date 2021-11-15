@@ -48,7 +48,6 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-
 class FxRateQuote : public Quote, public Observer {
 public:
     FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,

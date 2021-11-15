@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     BOOST_CHECK_CLOSE(market->discountCurve("USD")->discount(today + 3 * Years), 0.96908, 0.0001);
 
     // Test EURUSD fx spot object against base value
-    BOOST_CHECK_EQUAL(market->fxSpot("EURUSD")->value(), 1.1306);
+    BOOST_CHECK_EQUAL(market->fxRate("EURUSD")->value(), 1.1306);
 
     // envelope
     Envelope env("CP");

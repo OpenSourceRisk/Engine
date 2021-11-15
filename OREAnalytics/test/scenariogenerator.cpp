@@ -412,20 +412,20 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     Real eurExpected = d.market->discountCurve("EUR")->discount(20.);
     BOOST_CHECK_MESSAGE(fabs(eur - eurExpected) / eurExpected < relTolerance,
                         "EUR 20Y Discount mismatch: " << eur << " vs " << eurExpected);
-    Real gbpExpected = d.market->fxSpot("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(20.);
+    Real gbpExpected = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(20.);
     BOOST_CHECK_MESSAGE(fabs(gbp - gbpExpected) / gbpExpected < relTolerance,
                         "GBP 20Y Discount mismatch: " << gbp << " vs " << gbpExpected);
-    Real usdExpected = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(20.);
+    Real usdExpected = d.market->fxRate("USDEUR")->value() * d.market->discountCurve("USD")->discount(20.);
     BOOST_CHECK_MESSAGE(fabs(usd - usdExpected) / usdExpected < relTolerance,
                         "USD 20Y Discount mismatch: " << usd << " vs " << usdExpected);
 
     Real eurExpected2 = d.market->discountCurve("EUR")->discount(10.);
     BOOST_CHECK_MESSAGE(fabs(eur2 - eurExpected2) / eurExpected2 < relTolerance,
                         "EUR 10Y Discount mismatch: " << eur2 << " vs " << eurExpected2);
-    Real gbpExpected2 = d.market->fxSpot("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(10.);
+    Real gbpExpected2 = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(10.);
     BOOST_CHECK_MESSAGE(fabs(gbp2 - gbpExpected2) / gbpExpected2 < relTolerance,
                         "GBP 10Y Discount mismatch: " << gbp2 << " vs " << gbpExpected2);
-    Real usdExpected2 = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(10.);
+    Real usdExpected2 = d.market->fxRate("USDEUR")->value() * d.market->discountCurve("USD")->discount(10.);
     BOOST_CHECK_MESSAGE(fabs(usd2 - usdExpected2) / usdExpected2 < relTolerance,
                         "USD 10Y Discount mismatch: " << usd2 << " vs " << usdExpected2);
 
@@ -535,10 +535,10 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     Real relTolerance = 0.015;
     Real eurExpected = d.market->discountCurve("EUR")->discount(d2);
     Real eurExpected2 = d.market->discountCurve("EUR")->discount(d1);
-    Real gbpExpected = d.market->fxSpot("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d2);
-    Real gbpExpected2 = d.market->fxSpot("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d1);
-    Real usdExpected = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(d2);
-    Real usdExpected2 = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(d1);
+    Real gbpExpected = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d2);
+    Real gbpExpected2 = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d1);
+    Real usdExpected = d.market->fxRate("USDEUR")->value() * d.market->discountCurve("USD")->discount(d2);
+    Real usdExpected2 = d.market->fxRate("USDEUR")->value() * d.market->discountCurve("USD")->discount(d1);
 
     cpu_timer timer;
     Real updateTime = 0.0;
@@ -551,8 +551,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
             updateTime += timer.elapsed().wall * 1e-9;
             if (d == grid->dates().back()) {
                 Real numeraire = simMarket->numeraire();
-                Real usdeurFX = simMarket->fxSpot("USDEUR")->value();
-                Real gbpeurFX = simMarket->fxSpot("GBPEUR")->value();
+                Real usdeurFX = simMarket->fxRate("USDEUR")->value();
+                Real gbpeurFX = simMarket->fxRate("GBPEUR")->value();
                 Real eurDiscount = simMarket->discountCurve("EUR")->discount(1.0 * horizon);
                 Real gbpDiscount = simMarket->discountCurve("GBP")->discount(1.0 * horizon);
                 ;
@@ -698,8 +698,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
             // compare a sample of the simulated data with a parallel direct run of the model
             // sim market
             Real numeraire = simMarket->numeraire();
-            Real usdeurFX = simMarket->fxSpot("USDEUR")->value();
-            Real gbpeurFX = simMarket->fxSpot("GBPEUR")->value();
+            Real usdeurFX = simMarket->fxRate("USDEUR")->value();
+            Real gbpeurFX = simMarket->fxRate("GBPEUR")->value();
             Real eurDiscount = simMarket->discountCurve("EUR")->discount(1.0 * horizon);
             Real gbpDiscount = simMarket->discountCurve("GBP")->discount(1.0 * horizon);
             ;
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
         boost::shared_ptr<Swaption> swaption_usd =
             MakeSwaption(swapIdx_usd, i * Years, 0.03).withPricingEngine(usdLgmSwaptionEngine);
         swaptions_eur.push_back(swaption_eur->NPV());
-        swaptions_usd.push_back(swaption_usd->NPV() * simMarket->fxSpot("USDEUR")->value());
+        swaptions_usd.push_back(swaption_usd->NPV() * simMarket->fxRate("USDEUR")->value());
     }
     swaptions_eur.push_back(0.0);
     swaptions_usd.push_back(0.0);
@@ -872,7 +872,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
             timer.stop();
             updateTime += timer.elapsed().wall * 1e-9;
             Real numeraire = simMarket->numeraire();
-            Real usdeurFX = simMarket->fxSpot("USDEUR")->value();
+            Real usdeurFX = simMarket->fxRate("USDEUR")->value();
             // swap
             swap_eur_epe[idx] += std::max(swap_eur->NPV(), 0.0) / numeraire;
             swap_usd_epe[idx] += std::max(swap_usd->NPV(), 0.0) * usdeurFX / numeraire;
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
         boost::make_shared<FxForward>(1.0, EURCurrency(), 1.3, USDCurrency(), grid->dates().back() + 1, false);
     boost::shared_ptr<PricingEngine> fxFwdEngine =
         boost::make_shared<DiscountingFxForwardEngine>(EURCurrency(), simMarket->discountCurve("EUR"), USDCurrency(),
-                                                       simMarket->discountCurve("USD"), simMarket->fxSpot("USDEUR"));
+                                                       simMarket->discountCurve("USD"), simMarket->fxRate("USDEUR"));
     fxfwd->setPricingEngine(fxFwdEngine);
 
     // fx option as reference
@@ -980,7 +980,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
         boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Put, 1.0 / 1.3),
                                           boost::make_shared<EuropeanExercise>(grid->dates().back() + 1));
     boost::shared_ptr<GeneralizedBlackScholesProcess> simGbm =
-        boost::make_shared<GeneralizedBlackScholesProcess>(simMarket->fxSpot("USDEUR"), simMarket->discountCurve("USD"),
+        boost::make_shared<GeneralizedBlackScholesProcess>(simMarket->fxRate("USDEUR"), simMarket->discountCurve("USD"),
                                                            simMarket->discountCurve("EUR"), simMarket->fxVol("USDEUR"));
     boost::shared_ptr<AnalyticEuropeanEngine> fxOptionEngine = boost::make_shared<AnalyticEuropeanEngine>(simGbm);
     fxOptionSim->setPricingEngine(fxOptionEngine);
@@ -1089,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
         boost::make_shared<FxForward>(1.0, EURCurrency(), 1.3, USDCurrency(), maturity, false);
     boost::shared_ptr<PricingEngine> fxFwdEngine =
         boost::make_shared<DiscountingFxForwardEngine>(EURCurrency(), simMarket->discountCurve("EUR"), USDCurrency(),
-                                                       simMarket->discountCurve("USD"), simMarket->fxSpot("USDEUR"));
+                                                       simMarket->discountCurve("USD"), simMarket->fxRate("USDEUR"));
     fxfwd->setPricingEngine(fxFwdEngine);
 
     // fx (forward) options as reference
