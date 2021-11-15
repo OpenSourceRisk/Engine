@@ -52,7 +52,7 @@ std::ostream& operator<<(std::ostream& out, CSA::Type t) {
 
 void CSA::validate(string nettingSetId) {
     QL_REQUIRE(csaCurrency_.size() == 3, "NettingSetDefinition build error;"
-                                             << " csa currency should be a three-letter ISO code");
+                                             << " CSA currency should be a three-letter ISO code");
 
     QL_REQUIRE(thresholdPay_ >= 0, "NettingSetDefinition build error; negative thresholdPay");
     QL_REQUIRE(thresholdRcv_ >= 0, "NettingSetDefinition build error; negative thresholdRcv");
@@ -72,8 +72,9 @@ void CSA::validate(string nettingSetId) {
     }
 
     for (Size i = 0; i < eligCollatCcys_.size(); i++) {
-        QL_REQUIRE(eligCollatCcys_[i].size() == 3, "NettingSetDefinition build error;"
-                                                       << " three-letter ISO code expected");
+        QL_REQUIRE(eligCollatCcys_[i].size() == 3,
+                   "NettingSetDefinition build error;"
+                       << "EligibleCollaterals currency should be a three-letter ISO code");
     }
 
     // unilateral CSA - set threshold near infinity to disable margining
