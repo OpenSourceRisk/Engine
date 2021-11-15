@@ -2210,51 +2210,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
     }
 }
 
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
-                                                  const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays, bool useXbsCurves) {
-    // 1. Parse the index we have with no term structures
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
-
-    // get market data objects - we set up the index using source/target, fixing days
-    // and calendar from legData_[i].fxIndex()
-    string source = fxIndexBase->sourceCurrency().code();
-    string target = fxIndexBase->targetCurrency().code();
-
-    // If useXbsCurves is true, try to link the FX index to xccy based curves. There will be none if source or target
-    // is equal to the base currency of the run so we must use the try/catch.
-    Handle<YieldTermStructure> sorTS;
-    Handle<YieldTermStructure> tarTS;
-    if (useXbsCurves) {
-        sorTS = xccyYieldCurve(market, source, configuration);
-        tarTS = xccyYieldCurve(market, target, configuration);
-    } else {
-        sorTS = market->discountCurve(source, configuration);
-        tarTS = market->discountCurve(target, configuration);
-    }
-
-    Handle<Quote> spot = market->fxRate(source + target);
-    Calendar cal = parseCalendar(calendar);
-
-    // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
-    bool invertFxIndex = false;
-    if (domestic == target && foreign == source) {
-        invertFxIndex = false;
-    } else if (domestic == source && foreign == target) {
-        invertFxIndex = true;
-    } else {
-        QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic << " and reset foreignCurrency "
-                                           << foreign);
-    }
-
-    auto fxi = boost::make_shared<FxIndex>(fxIndexBase->familyName(), fixingDays, fxIndexBase->sourceCurrency(),
-                                           fxIndexBase->targetCurrency(), cal, spot, sorTS, tarTS, invertFxIndex);
-
-    QL_REQUIRE(fxi, "Failed to build FXIndex " << fxIndex);
-
-    return fxi;
-}
-
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
                                                       const bool relative, const Calendar& fixingCalendar,
                                                       const bool conditionalOnSurvival,

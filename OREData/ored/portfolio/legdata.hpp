@@ -1074,12 +1074,6 @@ typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const v
     return i;
 }
 
-// build an FX Index needed by legbuilders / makeLeg methods
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
-                                                  const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays = 0,
-                                                  bool useXbsCurves = false);
-
 // build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
 class BondData;
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,

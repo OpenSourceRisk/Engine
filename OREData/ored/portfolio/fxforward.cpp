@@ -69,7 +69,8 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_REQUIRE(!fxIndex_.empty(), "FX settlement index must be specified for non-deliverable forwards");
         Currency nonPayCcy = payCcy == boughtCcy ? soldCcy : boughtCcy;
         fxIndex = engineFactory->market()->fxIndex(fxIndex_, nonPayCcy.code(), payCcy.code()).currentLink();
-        requiredFixings_.addFixingDate(maturityDate, fxIndex_, payDate);
+        if (maturityDate < Settings::instance().evaluationDate())
+            requiredFixings_.addFixingDate(maturityDate, fxIndex_, payDate);
     }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");

@@ -48,6 +48,28 @@
 namespace QuantExt {
 using namespace QuantLib;
 
+
+class FxRateQuote : public Quote, public Observer {
+public:
+    FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
+                const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar);
+    //! \name Quote interface
+    //@{
+    Real value() const override;
+    bool isValid() const override;
+    //@}
+    //! \name Observer interface
+    //@{
+    void update() override;
+    //@}
+private:
+    const Handle<Quote> spotQuote_;
+    const Handle<YieldTermStructure> sourceYts_, targetYts_;
+    Natural fixingDays_;    
+    Calendar fixingCalendar_;
+};
+
+
 //! FX Index
 /*! \ingroup indexes */
 class FxIndex : public EqFxIndexBase {
@@ -99,7 +121,7 @@ public:
     const Handle<YieldTermStructure>& targetCurve() const { return targetYts_; }
 
     //! fxQuote returns instantaneous Quote by default, otherwise settlement after fixingDays
-    const Handle<Quote>& fxQuote(bool withSettlementLag = false) const;
+    const Handle<Quote> fxQuote(bool withSettlementLag = false) const;
     const bool useQuote() const { return useQuote_; }
     //@}
     /*! \name Date calculations */

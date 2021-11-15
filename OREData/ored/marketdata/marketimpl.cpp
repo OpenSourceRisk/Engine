@@ -180,20 +180,18 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
         }
 
         const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        // first check if we have a convention specific to the Index (e.g. FX-ECD-EUR-USD), otherwise use the ccy pair
+        // first check if we have a convention specific to the Index (e.g. FX-ECB-EUR-USD), otherwise use the ccy pair
         boost::shared_ptr<FXConvention> fxCon;
         try {
             fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->get(index));
         } catch (...) {
-            // build the convention string, can we do this better, we now require a convention name EUR-USD-FX etc?
-            string conStr = source + "-" + target + "-FX";
-            fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->get(conStr));
+            fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->getFxConvention(source, target));
         }
 
         fxInd = Handle<FxIndex>(boost::make_shared<FxIndex>(fxIndexBase->familyName(), fxCon->spotDays(), fxIndexBase->sourceCurrency(),
             fxIndexBase->targetCurrency(), fxCon->advanceCalendar(), spot, sorTS, tarTS, false));
         // add it to the cache
-        fxIndices_.at(make_pair(indexName, configuration)) = fxInd;
+        fxIndices_[make_pair(configuration, indexName)] = fxInd;
 
     } else {
         fxInd = it->second;      
@@ -214,7 +212,7 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
     }
 
     if (invertFxIndex)
-        fxInd = Handle<QuantExt::FxIndex>(fxInd->clone(fxInd->fxQuote(), 
+        fxInd = Handle<QuantExt::FxIndex>(fxInd->clone(fxInd->fxQuote(true), 
             fxInd->sourceCurve(), fxInd->targetCurve(), true));
 
     return fxInd;
