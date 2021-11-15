@@ -19,6 +19,7 @@
 #include <ored/configuration/iborfallbackconfig.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 
 namespace ore {
 namespace data {
@@ -186,12 +187,11 @@ void IborFallbackConfig::updateSwitchDate(QuantLib::Date targetSwitchDate, const
     for (std::map<std::string, FallbackData>::iterator f = fallbacks_.begin(); f != fallbacks_.end(); f++) {
         if ((f->first == indexName || indexName == "") && // selected index or all of them if indexName is left blank
             f->second.switchDate > targetSwitchDate)  {   // skipping IBORs with switch dates before the target switch date
-            WLOG("set switch date " << to_string(f->second.switchDate) << " for ibor " << f->first << " to " << to_string(targetSwitchDate));
+            WLOG(StructuredConfigurationWarningMessage("IborFallbackConfig", f->first,
+                                                       "change switch date " + to_string(f->second.switchDate),
+                                                       "new switch date " + to_string(targetSwitchDate)));
             f->second.switchDate = targetSwitchDate;
         }
-        else {
-            WLOG("leave switch date " << to_string(f->second.switchDate) << " for ibor " << f->first << " unchanged");
-        }      
     }
 }
 
