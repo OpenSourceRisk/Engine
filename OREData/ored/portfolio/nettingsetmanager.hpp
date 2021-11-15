@@ -62,7 +62,7 @@ public:
     /*!
       returns the list of netting sets for which SIMM will be calculated as IM
     */
-    const std::set<string> NettingSetManager::calculateIMNettingSets() const;
+    const std::set<string> calculateIMNettingSets() const;
 
     /*!
       checks if object named id exists in manager
