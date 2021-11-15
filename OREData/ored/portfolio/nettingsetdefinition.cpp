@@ -96,13 +96,13 @@ NettingSetDefinition::NettingSetDefinition(XMLNode* node) {
     DLOG("NettingSetDefinition built from XML... " << nettingSetId_);
 }
 
-NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const string& ctp)
-    : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(false) {
+NettingSetDefinition::NettingSetDefinition(const string& nettingSetId)
+    : nettingSetId_(nettingSetId), activeCsaFlag_(false) {
     validate();
     DLOG("uncollateralised NettingSetDefinition built... " << nettingSetId_);
 }
 
-NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const string& ctp, const string& bilateral,
+NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const string& bilateral,
                                            const string& csaCurrency, const string& index, const Real& thresholdPay,
                                            const Real& thresholdRcv, const Real& mtaPay, const Real& mtaRcv,
                                            const Real& iaHeld, const string& iaType, const string& marginCallFreq,
@@ -110,7 +110,7 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                            const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
                                            bool applyInitialMargin, const string& initialMarginType,
                                            const bool calculateIMAmount, const bool calculateVMAmount)
-    : nettingSetId_(nettingSetId), ctp_(ctp), activeCsaFlag_(true) {
+    : nettingSetId_(nettingSetId), activeCsaFlag_(true) {
 
     csa_ =
         boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv,
@@ -127,7 +127,6 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
 
     // Read in the mandatory nodes.
     nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", true);
-    ctp_ = XMLUtils::getChildValue(node, "Counterparty", true);
     activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", false, true);
 
     // Load "CSA" information, if necessary
@@ -199,7 +198,6 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
 
     // Add the mandatory members.
     XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
-    XMLUtils::addChild(doc, node, "Counterparty", ctp_);
     XMLUtils::addChild(doc, node, "ActiveCSAFlag", activeCsaFlag_);
 
     XMLNode* csaSubNode = doc.allocNode("CSADetails");
@@ -244,8 +242,6 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
 void NettingSetDefinition::validate() {
 
     QL_REQUIRE(nettingSetId_.size() > 0, "NettingSetDefinition build error; no netting set Id");
-
-    QL_REQUIRE(ctp_.size() > 0, "NettingSetDefinition build error; no counterparty specified for " << nettingSetId_);
 
     if (activeCsaFlag_) {
         QL_REQUIRE(csa_, "CSA not defined yet");

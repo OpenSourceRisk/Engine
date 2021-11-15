@@ -8,7 +8,6 @@
         <xs:complexType>
           <xs:all>
             <xs:element type="xs:string" name="NettingSetId"/>
-            <xs:element type="xs:string" name="Counterparty"/>
             <xs:element type="xs:boolean" name="ActiveCSAFlag" minOccurs="0"/>
             <xs:element name="CSADetails" minOccurs="0">
               <xs:complexType mixed="true">

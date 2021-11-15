@@ -143,12 +143,12 @@ public:
     /*!
       Constructor for "uncollateralised" netting sets
     */
-    NettingSetDefinition(const string& nettingSetId, const string& ctp);
+    NettingSetDefinition(const string& nettingSetId);
 
     /*!
       Constructor for "collateralised" netting sets
     */
-    NettingSetDefinition(const string& nettingSetId, const string& ctp, const string& bilateral,
+    NettingSetDefinition(const string& nettingSetId, const string& bilateral,
                          const string& csaCurrency, // three letter ISO code
                          const string& index, const Real& thresholdPay, const Real& thresholdRcv, const Real& mtaPay,
                          const Real& mtaRcv, const Real& iaHeld, const string& iaType,
@@ -180,8 +180,6 @@ public:
     //@{
     /*! returns netting set id */
     const string& nettingSetId() const { return nettingSetId_; }
-    /*! returns counterparty on ISDA netting agreement */
-    const string& counterparty() const { return ctp_; }
     /*! boolean specifying if ISDA agreement is covered by a Credit Support Annex */
     bool activeCsaFlag() const { return activeCsaFlag_; }
     /*! CSA details, if active */
@@ -227,7 +225,6 @@ public:
 
 private:
     string nettingSetId_;
-    string ctp_;
     bool activeCsaFlag_;
     boost::shared_ptr<CSA> csa_;
 
