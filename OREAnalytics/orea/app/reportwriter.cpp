@@ -482,7 +482,8 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
     QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
     QL_REQUIRE(cashflowReport.header(ccyColumn) == "Currency", "incorrect currency column " << ccyColumn);
     QL_REQUIRE(cashflowReport.header(pvColumn) == "PresentValue", "incorrect pv column " << pvColumn);
-    QL_REQUIRE(horizonCalendarDays || *horizonCalendarDays > 0, "horizon calendar days " << *horizonCalendarDays << " is invalid");
+    QL_REQUIRE(horizonCalendarDays || horizonCalendarDays == boost::none || *horizonCalendarDays > 0,
+               "horizon calendar days is invalid");
     
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
@@ -496,9 +497,11 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
             fx = market->fxSpot(ccy + baseCcy, configuration)->value();
         if (npvMap.find(tradeId) == npvMap.end())
             npvMap[tradeId] = 0.0;
-        if (payDate > asof && (!horizonCalendarDays || payDate <= asof + *horizonCalendarDays)) {
-            npvMap[tradeId] += pv * fx;
-            DLOG("Cashflow NPV for trade " << tradeId << ": pv " << pv << " fx " << fx << " sum " << npvMap[tradeId]);
+        if (payDate > asof) {
+            if (!horizonCalendarDays || horizonCalendarDays == boost::none || payDate <= asof + *horizonCalendarDays) {
+                npvMap[tradeId] += pv * fx;
+                DLOG("Cashflow NPV for trade " << tradeId << ": pv " << pv << " fx " << fx << " sum " << npvMap[tradeId]);
+            }   
         }   
     }   
 
@@ -507,7 +510,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
     LOG("Writing cashflow NPV report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("PresentValue", double(), 10)
-        .addColumn("Currency", string())
+        .addColumn("BaseCurrency", string())
         .addColumn("Horizon", string());        
 
     for (auto r: npvMap)
