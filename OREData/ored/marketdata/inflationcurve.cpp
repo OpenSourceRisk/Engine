@@ -274,7 +274,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 pillarDates.push_back(instrument->pillarDate());
             }
             // base zero rate: if given, take it, otherwise set it to first quote
-            Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
+            Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : instruments.front()->quote()->value();
             curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
                 baseRate, instruments, config->tolerance()));
