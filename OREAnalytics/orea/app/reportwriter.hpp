@@ -36,6 +36,7 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
+#include <ored/report/inmemoryreport.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <string>
@@ -63,11 +64,12 @@ public:
                                const std::string& configuration = ore::data::Market::defaultConfiguration,
                                const bool includePastCashflows = false);
 
-    virtual void writeCashflowNpvReport(ore::data::Report& report,
-                                        boost::shared_ptr<ore::data::Portfolio> portfolio,
-                                        boost::shared_ptr<ore::data::Market> market,
-                                        const std::string& baseCcy,
-                                        boost::optional<int> horizonCalendarDays);
+    virtual void writeCashflowNpv(ore::data::Report& report,
+                                  const ore::data::InMemoryReport& cashflowReport,
+                                  boost::shared_ptr<ore::data::Market> market,
+                                  const std::string& configuration,
+                                  const std::string& baseCcy,
+                                  boost::optional<int> horizonCalendarDays);
 
     virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                              const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
