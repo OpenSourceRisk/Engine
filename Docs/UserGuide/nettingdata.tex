@@ -66,7 +66,6 @@ case the netting set can be defined within the following XML template:
 \begin{minted}[fontsize=\footnotesize]{xml}
     <NettingSet>
         <NettingSetId> </NettingSetId>
-        <Counterparty> </Counterparty>
         <ActiveCSAFlag> </ActiveCSAFlag>
         <CSADetails>
             <Bilateral> </Bilateral>
@@ -100,6 +99,8 @@ case the netting set can be defined within the following XML template:
             </EligibleCollaterals>
             <ApplyInitialMargin>Y</ApplyInitialMargin>
             <InitialMarginType>Bilateral</InitialMarginType>
+            <CalculateIMAmount>true</CalculateIMAmount>
+            <CalculateVMAmount>true</CalculateVMAmount>
         </CSADetails>
     </NettingSet>
 \end{minted}
@@ -111,7 +112,6 @@ The first few nodes are shared with the template for uncollateralised
 netting sets:
 \begin{itemize}
 \item NettingSetId: The unique identifier for the ISDA netting set.
-\item Counterparty: The identifier for the counterparty to the ISDA agreement.
 \item ActiveCSAFlag: Boolean indicating whether the netting set is
   covered by a Credit Support Annex. For collateralised netting sets
   this flag should be \emph{True}.
@@ -214,4 +214,14 @@ addition to variation margin
   counterparty has no such entitlement.
 \item PostOnly: Only the counterparty is entitled to hold collateral;
   we have no such entitlement.
+
+\paragraph*{CalculateIMAmount} Boolean indicating whether to calculate
+  initial margin from SIMM. For uncollateralised netting sets
+  this flag will be ignored. This only applies to the SA-CCR capital
+  calculations.
+
+\paragraph*{CalculateVMAmount} Boolean indicating whether to calculate
+  variation margin from the netting set NPV. For uncollateralised netting
+  sets this flag will be ignored. This only applies to the SA-CCR capital
+  calculations.
 \end{itemize}
