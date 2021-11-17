@@ -112,7 +112,6 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {   
     
     Handle<Quote> quote;
-    Real rate = Null<Real>();
     if (!useQuote_)
         quote = Handle<Quote>(boost::make_shared<SimpleQuote>(
             ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
