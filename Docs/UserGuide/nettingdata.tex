@@ -34,7 +34,6 @@ case the netting set can be defined within the following XML template:
 \begin{minted}[fontsize=\footnotesize]{xml}
     <NettingSet>
         <NettingSetId> </NettingSetId>
-        <Counterparty> </Counterparty>
         <ActiveCSAFlag> </ActiveCSAFlag>
         <CSADetails></CSADetails>
     </NettingSet>
@@ -46,7 +45,6 @@ case the netting set can be defined within the following XML template:
 The meanings of the various elements are as follows:
 \begin{itemize}
 \item NettingSetId: The unique identifier for the ISDA netting set.
-\item Counterparty: The identifier for the counterparty to the ISDA agreement.
 \item ActiveCSAFlag: Boolean indicating whether the netting set is
   covered by a Credit Support Annex. For uncollateralised netting sets
   this flag should be \emph{False}.
