@@ -34,7 +34,7 @@ void Filter::clear() {
 }
 
 void Filter::updateDeterministic() {
-    if (deterministic_)
+    if (deterministic_ || !initialised())
         return;
     for (Size i = 1; i < n_; ++i) {
         if (data_[i] != data_[0])
@@ -145,8 +145,10 @@ Filter operator!(Filter x) {
 }
 
 RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real valueFalse, const Real time) {
-    if (!f.initialised())
+    if (!f.initialised()) {
+        clear();
         return;
+    }
     n_ = f.size();
     if (f.deterministic())
         setAll(f.at(0) ? valueTrue : valueFalse);
@@ -168,7 +170,7 @@ void RandomVariable::clear() {
 }
 
 void RandomVariable::updateDeterministic() {
-    if (deterministic_)
+    if (deterministic_ || !initialised())
         return;
     for (Size i = 1; i < n_; ++i) {
         if (!QuantLib::close_enough(data_[i], data_[0]))
