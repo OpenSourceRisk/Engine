@@ -64,22 +64,9 @@ Rate YoYInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTod
 
     // duplicated logic from YoYInflationIndex, this would not be necessary, if forecastFixing
     // was defined virtual in InflationIndex
-    Date today = Settings::instance().evaluationDate();
-    Date todayMinusLag = today - availabilityLag_;
-    std::pair<Date, Date> lim = inflationPeriod(todayMinusLag, frequency_);
-    Date lastFix = lim.first - 1;
-
-    Date flatMustForecastOn = lastFix + 1;
-    Date interpMustForecastOn = lastFix + 1 - Period(frequency_);
-
-    if (interpolated() && fixingDate >= interpMustForecastOn) {
+    if (needsForecast(fixingDate)) {
         return forecastFixing(fixingDate);
     }
-
-    if (!interpolated() && fixingDate >= flatMustForecastOn) {
-        return forecastFixing(fixingDate);
-    }
-
     // historical fixing
     return YoYInflationIndex::fixing(fixingDate);
 }
