@@ -372,13 +372,18 @@ private:
     std::stringstream ss_;
 };
 
-#define ALOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_ALERT, __FILE__, __LINE__))
-#define CLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_CRITICAL, __FILE__, __LINE__))
-#define ELOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_ERROR, __FILE__, __LINE__))
-#define WLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_WARNING, __FILE__, __LINE__))
-#define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
-#define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
-#define TLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DATA, __FILE__, __LINE__))
+#define CHECKED_LOGGERSTREAM(LEVEL, text)                                                                              \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(LEVEL)) {                            \
+        (std::ostream&)ore::data::LoggerStream(LEVEL, __FILE__, __LINE__) << text;                              \
+    }
+
+#define ALOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_ALERT, text)
+#define CLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_CRITICAL, text)
+#define ELOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_ERROR, text)
+#define WLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_WARNING, text)
+#define LOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_NOTICE, text)
+#define DLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_DEBUG, text)
+#define TLOGGERSTREAM(text) CHECKED_LOGGERSTREAM(ORE_DATA, text)
 
 //! Utility class for having structured Error messages
 // This can be used directly in log messages, e.g.

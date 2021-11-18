@@ -282,7 +282,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                         TLOG("CorrelationCurve: Added quote " << c->name() << ", tenor " << optionTenors[i] << ", with value "
                             << fixed << setprecision(9) << c->quote()->value() );
                     } else {
-                        DLOGGERSTREAM << "could not find correlation quote " << q << std::endl;
+                        DLOGGERSTREAM("could not find correlation quote " << q);
                         failed = true;
                     }
                 }

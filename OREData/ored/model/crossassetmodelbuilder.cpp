@@ -388,7 +388,7 @@ void CrossAssetModelBuilder::buildModel() const {
     Matrix corrMatrix = cmb.correlationMatrix(processInfo);
 
     TLOG("CAM correlation matrix:");
-    TLOGGERSTREAM << corrMatrix;
+    TLOGGERSTREAM(corrMatrix);
 
     /*****************************
      * Build the cross asset model
@@ -451,23 +451,20 @@ void CrossAssetModelBuilder::buildModel() const {
             fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    // we check the log level here to avoid unncessary computations
-                    if (Log::instance().filter(ORE_DATA)) {
-                        TLOGGERSTREAM << "Calibration details:";
-                        TLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
-                                                               irParametrizations[0]);
-                        TLOGGERSTREAM << "rmse = " << fxOptionCalibrationErrors_[i];
-                    }
+                    TLOGGERSTREAM("Calibration details:");
+                    TLOGGERSTREAM(
+                        getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
+                    TLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "FX BS " + std::to_string(i) + " calibration error " +
                                                    std::to_string(fxOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
                     WLOG(StructuredModelErrorMessage("Failed to calibrate FX BS Model", exceptionMessage));
-                    WLOGGERSTREAM << "Calibration details:";
-                    WLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
-                                                           irParametrizations[0]);
-                    WLOGGERSTREAM << "rmse = " << fxOptionCalibrationErrors_[i];
+                    WLOGGERSTREAM("Calibration details:");
+                    WLOGGERSTREAM(
+                        getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i], irParametrizations[0]));
+                    WLOGGERSTREAM("rmse = " << fxOptionCalibrationErrors_[i]);
                     if (!continueOnError_)
                         QL_FAIL(exceptionMessage);
                 }
@@ -516,23 +513,20 @@ void CrossAssetModelBuilder::buildModel() const {
             eqOptionCalibrationErrors_[i] = getCalibrationError(eqOptionBaskets_[i]);
             if (eq->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    // we check the log level here to avoid unncessary computations
-                    if (Log::instance().filter(ORE_DATA)) {
-                        TLOGGERSTREAM << "Calibration details:";
-                        TLOGGERSTREAM << getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i],
-                                                               irParametrizations[0]);
-                        TLOGGERSTREAM << "rmse = " << eqOptionCalibrationErrors_[i];
-                    }
+                    TLOGGERSTREAM("Calibration details:");
+                    TLOGGERSTREAM(
+                        getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
+                    TLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
                 } else {
                     std::string exceptionMessage = "EQ BS " + std::to_string(i) + " calibration error " +
                                                    std::to_string(eqOptionCalibrationErrors_[i]) +
                                                    " exceeds tolerance " +
                                                    std::to_string(config_->bootstrapTolerance());
                     WLOG(StructuredModelErrorMessage("Failed to calibrate EQ BS Model", exceptionMessage));
-                    WLOGGERSTREAM << "Calibration details:";
-                    WLOGGERSTREAM << getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i],
-                                                           irParametrizations[0]);
-                    WLOGGERSTREAM << "rmse = " << eqOptionCalibrationErrors_[i];
+                    WLOGGERSTREAM("Calibration details:");
+                    WLOGGERSTREAM(
+                        getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]));
+                    WLOGGERSTREAM("rmse = " << eqOptionCalibrationErrors_[i]);
                     if (!continueOnError_)
                         QL_FAIL(exceptionMessage);
                 }
@@ -635,20 +629,17 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(cb);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            // we check the log level here to avoid unncessary computations
-            if (Log::instance().filter(ORE_DATA)) {
-                TLOGGERSTREAM << "Calibration details:";
-                TLOGGERSTREAM << getCalibrationDetails(cb, inflationParam);
-                TLOGGERSTREAM << "rmse = " << inflationCalibrationErrors_[modelIdx];
-            }
+            TLOGGERSTREAM("Calibration details:");
+            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam));
+            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
                                       std::to_string(inflationCalibrationErrors_[modelIdx]) + " exceeds tolerance " +
                                       std::to_string(config_->bootstrapTolerance());
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
-            WLOGGERSTREAM << "Calibration details:";
-            WLOGGERSTREAM << getCalibrationDetails(cb, inflationParam);
-            WLOGGERSTREAM << "rmse = " << inflationCalibrationErrors_[modelIdx];
+            WLOGGERSTREAM("Calibration details:");
+            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam));
+            WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
             if (!continueOnError_)
                 QL_FAIL(exceptionMessage);
         }
@@ -776,21 +767,18 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < cc.rmseTolerance()) {
-            // we check the log level here to avoid unncessary computations
-            if (Log::instance().filter(ORE_DATA)) {
-                TLOGGERSTREAM << "Calibration details:";
-                TLOGGERSTREAM << getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate());
-                TLOGGERSTREAM << "rmse = " << inflationCalibrationErrors_[modelIdx];
-            }
+            TLOGGERSTREAM("Calibration details:");
+            TLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
+            TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             std::stringstream ss;
             ss << "INF (JY) " << modelIdx << " calibration error " << std::scientific
                << inflationCalibrationErrors_[modelIdx] << " exceeds tolerance " << cc.rmseTolerance();
             string exceptionMessage = ss.str();
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF JY Model", exceptionMessage));
-            WLOGGERSTREAM << "Calibration details:";
-            WLOGGERSTREAM << getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate());
-            WLOGGERSTREAM << "rmse = " << inflationCalibrationErrors_[modelIdx];
+            WLOGGERSTREAM("Calibration details:");
+            WLOGGERSTREAM(getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate()));
+            WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
             if (!continueOnError_)
                 QL_FAIL(exceptionMessage);
         }
