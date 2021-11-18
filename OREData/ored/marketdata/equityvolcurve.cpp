@@ -1202,15 +1202,15 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                         if (!cm.arbitrageFree())
                             calibrationInfo_->isArbitrageFree = false;
                         calibrationInfo_->deltaGridProb[i] = cm.density();
-                        TLOGGERSTREAM << arbitrageAsString(cm);
+                        TLOGGERSTREAM(arbitrageAsString(cm));
                     } catch (const std::exception& e) {
                         TLOG("error for time " << t << ": " << e.what());
                         calibrationInfo_->isArbitrageFree = false;
-                        TLOGGERSTREAM << "..(invalid slice)..";
+                        TLOGGERSTREAM("..(invalid slice)..");
                     }
                 } else {
                     calibrationInfo_->isArbitrageFree = false;
-                    TLOGGERSTREAM << "..(invalid slice)..";
+                    TLOGGERSTREAM("..(invalid slice)..");
                 }
             }
             TLOG("EquityVolCurve: Delta surface arbitrage analysis completed.");
@@ -1257,7 +1257,7 @@ void EquityVolCurve::buildCalibrationInfo(const QuantLib::Date& asof, const Curv
                     if (!cm.arbitrageFree())
                         calibrationInfo_->isArbitrageFree = false;
                     TLOG("EquityVolCurve: Moneyness surface Arbitrage analysis result:");
-                    TLOGGERSTREAM << arbitrageAsString(cm);
+                    TLOGGERSTREAM(arbitrageAsString(cm));
                 } catch (const std::exception& e) {
                     TLOG("EquityVolCurve: error: " << e.what());
                     calibrationInfo_->isArbitrageFree = false;
