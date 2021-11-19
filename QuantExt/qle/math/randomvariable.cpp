@@ -512,6 +512,48 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
     return x;
 }
 
+RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
+                                         << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    for (Size i = 0; i < x.data_.size(); ++i) {
+        x.data_[i] = QuantLib::close_enough(x.data_[i], y[i]) ? 1.0 : 0.0;
+    }
+    return x;
+}
+
+RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
+                                         << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    for (Size i = 0; i < x.data_.size(); ++i) {
+        x.data_[i] = (x.data_[i] > y[i] && !QuantLib::close_enough(x.data_[i], y[i])) ? 1.0 : 0.0;
+    }
+    return x;
+}
+
+RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
+                                         << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    for (Size i = 0; i < x.data_.size(); ++i) {
+        x.data_[i] = (x.data_[i] > y[i] || QuantLib::close_enough(x.data_[i], y[i])) ? 1.0 : 0.0;
+    }
+    return x;
+}
+
 Filter operator<(const RandomVariable& x, const RandomVariable& y) {
     if (!x.initialised() || !y.initialised())
         return Filter();

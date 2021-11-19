@@ -145,6 +145,9 @@ struct RandomVariable {
     friend RandomVariable applyFilter(RandomVariable, const Filter&);
     friend RandomVariable applyInverseFilter(RandomVariable, const Filter&);
     friend RandomVariable conditionalResult(const Filter&, RandomVariable, const RandomVariable&);
+    friend RandomVariable indicatorEq(RandomVariable, const RandomVariable&);
+    friend RandomVariable indicatorGt(RandomVariable, const RandomVariable&);
+    friend RandomVariable indicatorGeq(RandomVariable, const RandomVariable&);
 
     // the raw data
     const std::vector<Real>& data() const { return data_; }
@@ -178,6 +181,9 @@ RandomVariable sin(RandomVariable);
 RandomVariable cos(RandomVariable);
 RandomVariable normalCdf(RandomVariable);
 RandomVariable normalPdf(RandomVariable);
+RandomVariable indicatorEq(RandomVariable, const RandomVariable&);
+RandomVariable indicatorGt(RandomVariable, const RandomVariable&);
+RandomVariable indicatorGeq(RandomVariable, const RandomVariable&);
 
 Filter close_enough(const RandomVariable&, const RandomVariable&);
 bool close_enough_all(const RandomVariable&, const RandomVariable&);
