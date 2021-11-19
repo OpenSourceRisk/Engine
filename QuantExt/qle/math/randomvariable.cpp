@@ -512,7 +512,7 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
     return x;
 }
 
-RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y) {
+RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
@@ -521,12 +521,12 @@ RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y) {
     if (!y.deterministic_)
         x.expand();
     for (Size i = 0; i < x.data_.size(); ++i) {
-        x.data_[i] = QuantLib::close_enough(x.data_[i], y[i]) ? 1.0 : 0.0;
+        x.data_[i] = QuantLib::close_enough(x.data_[i], y[i]) ? trueVal : falseVal;
     }
     return x;
 }
 
-RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y) {
+RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
@@ -535,12 +535,12 @@ RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y) {
     if (!y.deterministic_)
         x.expand();
     for (Size i = 0; i < x.data_.size(); ++i) {
-        x.data_[i] = (x.data_[i] > y[i] && !QuantLib::close_enough(x.data_[i], y[i])) ? 1.0 : 0.0;
+        x.data_[i] = (x.data_[i] > y[i] && !QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
     }
     return x;
 }
 
-RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y) {
+RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
     if (!x.initialised() || !y.initialised())
         return RandomVariable();
     QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
