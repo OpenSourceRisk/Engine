@@ -222,4 +222,7 @@ RandomVariable expectation(const RandomVariable& r);
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
                      const RandomVariable& forward, const RandomVariable& impliedVol);
 
+// derivative of indicator function 1_{x>0}
+RandomVariable indicatorDerivative(const RandomVariable& x, const double eps);
+
 } // namespace QuantExt

@@ -549,7 +549,7 @@ RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Rea
     if (!y.deterministic_)
         x.expand();
     for (Size i = 0; i < x.data_.size(); ++i) {
-        x.data_[i] = (x.data_[i] > y[i] || QuantLib::close_enough(x.data_[i], y[i])) ? 1.0 : 0.0;
+        x.data_[i] = (x.data_[i] > y[i] || QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
     }
     return x;
 }
@@ -747,6 +747,41 @@ RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const
     RandomVariable d2 = d1 - stdDev;
     return applyFilter(forward, zeroStrike && call) +
            applyInverseFilter(omega * (forward * normalCdf(omega * d1) - strike * normalCdf(omega * d2)), zeroStrike);
+}
+
+RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
+    RandomVariable tmp(x.size(), 0.0);
+
+    // determine delta (as Fries, i.e. delta = eps * sqrt(E(X^2)) for an indicator1_{X>0})
+
+    if (QuantLib::close_enough(eps, 0.0) || x.deterministic())
+        return tmp;
+
+    Real sum = 0.0;
+    for (Size i = 0; i < x.size(); ++i) {
+        sum += x[i] * x[i];
+    }
+
+    Real delta = std::sqrt(sum / static_cast<Real>(x.size())) * eps / 2.0;
+
+    if (QuantLib::close_enough(delta, 0.0))
+        return tmp;
+
+    // compute derivative
+
+    for (Size i = 0; i < tmp.size(); ++i) {
+        Real ax = std::abs(x[i]);
+
+        // linear approximation of step
+        // if (ax < delta) {
+        //     tmp.set(i, 1.0 / (2.0 * delta));
+        // }
+
+        // logistic function
+        tmp.set(i, std::exp(-1.0 / delta * ax) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * ax), 2.0)));
+    }
+
+    return tmp;
 }
 
 } // namespace QuantExt
