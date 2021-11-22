@@ -91,6 +91,8 @@ bool operator==(const Filter& a, const Filter& b) {
 }
 
 Filter operator&&(Filter x, const Filter& y) {
+    if ((x.deterministic() && !x.data_[0]) || (y.deterministic() && !y.data_[0]))
+        return Filter(x.size(), false);
     if (!x.initialised() || !y.initialised())
         return Filter();
     QL_REQUIRE(x.size() == y.size(),
@@ -108,6 +110,8 @@ Filter operator&&(Filter x, const Filter& y) {
 }
 
 Filter operator||(Filter x, const Filter& y) {
+    if ((x.deterministic() && x.data_[0]) || (y.deterministic() && y.data_[0]))
+        return Filter(x.size(), true);
     if (!x.initialised() || !y.initialised())
         return Filter();
     QL_REQUIRE(x.size() == y.size(),
