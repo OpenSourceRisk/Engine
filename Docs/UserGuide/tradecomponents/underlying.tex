@@ -194,12 +194,12 @@ Allowable values:  \emph{RIC}, \emph{ISIN}, \emph{FIGI}, \emph{BBG}. Defaults to
 
 \item \lstinline!Currency! [Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}]: Only valid when \lstinline!Type! is  \emph{Equity}. The currency the underlying equity is quoted in. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Exchange!  convert a given ISIN to a RIC code.  
 
-Allowable values: See Table \ref{tab:currency} \lstinline!Currency!. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}, should not be used when  \lstinline!IdentifierType! is  \emph{RIC}, and ignored otherwise. When \lstinline!Type! is \emph{Equity}, \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data} are also allowable.
+Allowable values: See Table \ref{tab:currency} \lstinline!Currency!. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}, and should not be used for other  \lstinline!IdentifierType!:s  When \lstinline!Type! is \emph{Equity}, Minor Currencies in Table \ref{tab:currency} are also allowable.
 
 \item \lstinline!Exchange! [Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}]:
 Only valid when \lstinline!Type! is  \emph{Equity}. A string code representing the exchange the equity is traded on. Used when \lstinline!IdentifierType! is  \emph{ISIN}, to - together with the \lstinline!Currency!  convert a given ISIN to a RIC code.  
 
-Allowable values:  The MIC code of the exchange, see Table \ref{tab:mic}. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}, should not be used when  \lstinline!IdentifierType! is \emph{RIC}, and ignored otherwise.
+Allowable values:  The MIC code of the exchange, see Table \ref{tab:mic}. Mandatory when \lstinline!IdentifierType! is  \emph{ISIN}, and should not be used for other  \lstinline!IdentifierType!:s.
 
 \item \lstinline!PriceType! [Optional]:
 Only valid when  \lstinline!Type! is  \emph{Commodity}.  Whether the Spot or Future price is referenced. 
