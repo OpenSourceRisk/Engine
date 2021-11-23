@@ -17,6 +17,7 @@ app/parameters.cpp
 app/reportwriter.cpp
 app/sensitivityrunner.cpp
 app/structuredanalyticserror.cpp
+app/structuredanalyticswarning.cpp
 app/xvarunner.cpp
 cube/cubeinterpretation.cpp
 cube/cubewriter.cpp
@@ -72,7 +73,7 @@ app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
-app/structuredanalyticserror.hpp
+app/structuredanalyticswarning.hpp
 app/xvarunner.hpp
 auto_link.hpp
 cube/cubeinterpretation.hpp
