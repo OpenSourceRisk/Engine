@@ -173,19 +173,24 @@ private:
 //! Bond Factory that builds bonds from reference data
 
 struct BondBuilder {
+    struct Result {
+        boost::shared_ptr<QuantLib::Bond> bond;
+        double inflationFactor = 1.0;
+        std::string currency;
+    };
     virtual ~BondBuilder() {}
-    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-    build(const boost::shared_ptr<EngineFactory>& engineFactory,
-          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const = 0;
+    virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                         const std::string& securityId) const = 0;
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory> {
     map<std::string, boost::shared_ptr<BondBuilder>> builders_;
 
 public:
-    std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-    build(const boost::shared_ptr<EngineFactory>& engineFactory,
-          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const;
+    BondBuilder::Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                              const std::string& securityId) const;
     void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
 };
 
@@ -197,9 +202,9 @@ template <typename T> struct BondBuilderRegister {
 
 struct VanillaBondBuilder : public BondBuilder {
     static BondBuilderRegister<VanillaBondBuilder> reg_;
-    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-    build(const boost::shared_ptr<EngineFactory>& engineFactory,
-          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const override;
+    virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                         const std::string& securityId) const override;
 };
 
 } // namespace data

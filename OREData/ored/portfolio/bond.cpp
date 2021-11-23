@@ -261,9 +261,9 @@ Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     return result;
 }
 
-std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
-BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                   const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const {
+BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                       const std::string& securityId) const {
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
             return b.second->build(engineFactory, referenceData, securityId);
@@ -282,10 +282,9 @@ void BondFactory::addBuilder(const std::string& referenceDataType, const boost::
 
 BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
-std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                          const std::string& securityId) const {
+    BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                 const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                 const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
@@ -299,11 +298,12 @@ VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
-    Real inflFactor = 1;
+    Result res;
+    res.currency = data.currency();
     if (data.isInflationLinked()) {
-        inflFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+        res.inflationFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
     }
-    return std::make_pair(qlBond, inflFactor);
+    return res;
 }
 
 } // namespace data
