@@ -302,7 +302,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // constructing fxSpots_
                         LOG("adding " << name << " FX rates");
                         boost::shared_ptr<SimpleQuote> q(
-                            new SimpleQuote(initMarket->fxIndex(name, configuration)->fxQuote(true)->value()));
+                            new SimpleQuote(initMarket->fxIndex(name, configuration)->fxQuote()->value()));
                         Handle<Quote> qh(q);
                         fxSpots_[Market::defaultConfiguration].addQuote(name, qh);
                         // Check if the risk factor is simulated before adding it
@@ -1114,8 +1114,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (cal.empty()) {
                                 cal = NullCalendar();
                             }
-                           DayCounter dc = wrapper->dayCounter();
-			    vector<Time> times;
+                            DayCounter dc = wrapper->dayCounter();
+			                vector<Time> times;
                             vector<Date> dates;
 
                             // Attempt to get the relevant yield curves from the initial market
@@ -1246,8 +1246,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     domTS = discountCurve(domCcy);
                                 }
                                 // set up a FX Index
-                                boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(
-                                    name, 0, parseCurrency(forCcy), parseCurrency(domCcy), cal, spot, forTS, domTS);
+                                boost::shared_ptr<FxIndex> fxInd = fxIndex(forCcy + domCcy).currentLink();
 
                                 bool stickyStrike = true;
                                 bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
@@ -1287,7 +1286,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             initDomTS, forTS, domTS, stickyStrike);
                                     } else {
                                         fxVolCurve = boost::make_shared<BlackVarianceSurfaceStdDevs>(
-                                            cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc, fxIndex,
+                                            cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc, fxInd,
                                             stickyStrike, flatExtrapolation);
                                     }
                                 }
@@ -1845,8 +1844,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<string> keys(parameters->yoyInflationTenors(name).size());
 
                         Date date0 = asof_ - yoyInflationTs->observationLag();
-			DayCounter dc = yoyInflationTs->dayCounter();
-			vector<Date> quoteDates;
+			            DayCounter dc = yoyInflationTs->dayCounter();
+			            vector<Date> quoteDates;
                         vector<Time> yoyCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
@@ -2032,8 +2031,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Get the configured simulation tenors. Simulation tenors being empty at this point means
                         // that we wish to use the pillar date points from the t_0 market PriceTermStructure.
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
-			DayCounter commodityCurveDayCounter = initialCommodityCurve->dayCounter();
-			if (simulationTenors.empty()) {
+			            DayCounter commodityCurveDayCounter = initialCommodityCurve->dayCounter();
+			            if (simulationTenors.empty()) {
                             simulationTenors.reserve(initialCommodityCurve->pillarDates().size());
                             for (const Date& d : initialCommodityCurve->pillarDates()) {
                                 QL_REQUIRE(d >= asof_, "Commodity curve pillar date (" << io::iso_date(d)
@@ -2422,6 +2421,10 @@ ScenarioSimMarket::ScenarioSimMarket(
         }
     }
     LOG("building base scenario done");
+}
+
+Handle<Quote> ScenarioSimMarket::fxRate(const string& ccypair, const string& configuration) const {
+    return fxSpot(ccypair, configuration);
 }
 
 void ScenarioSimMarket::reset() {

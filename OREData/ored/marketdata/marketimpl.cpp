@@ -179,17 +179,26 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
             tarTS = discountCurve(target, configuration);
         }
 
-        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        // first check if we have a convention specific to the Index (e.g. FX-ECB-EUR-USD), otherwise use the ccy pair
-        boost::shared_ptr<FXConvention> fxCon;
-        try {
-            fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->get(index));
-        } catch (...) {
-            fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->getFxConvention(source, target));
+        Natural spotDays = 0;
+        Calendar calendar = NullCalendar();
+
+        if (source != target) {
+            const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+            // first check if we have a convention specific to the Index (e.g. FX-ECB-EUR-USD), otherwise use the ccy
+            // pair
+            boost::shared_ptr<FXConvention> fxCon;
+            try {
+                fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->get(index));
+            } catch (...) {
+                fxCon = boost::dynamic_pointer_cast<data::FXConvention>(conventions->getFxConvention(source, target));
+            }
+            spotDays = fxCon->spotDays();
+            calendar = fxCon->advanceCalendar();
         }
 
-        fxInd = Handle<FxIndex>(boost::make_shared<FxIndex>(fxIndexBase->familyName(), fxCon->spotDays(), fxIndexBase->sourceCurrency(),
-            fxIndexBase->targetCurrency(), fxCon->advanceCalendar(), spot, sorTS, tarTS, false));
+        fxInd = Handle<FxIndex>(
+            boost::make_shared<FxIndex>(fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(),
+                                        fxIndexBase->targetCurrency(), calendar, spot, sorTS, tarTS, false));
         // add it to the cache
         fxIndices_[make_pair(configuration, indexName)] = fxInd;
 

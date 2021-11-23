@@ -82,12 +82,8 @@ protected:
         Handle<BlackVolTermStructure> fxVol = this->market_->fxVol(ccyPairCode, config);
         
         auto strikeCcyDiscountCurve = this->market_->discountCurve(strikeCcy.code(), config);
-        auto underlingCcyDiscountCurve = this->market_->discountCurve(equityCcy.code(), config);
 
-        auto fxIndex = boost::make_shared<QuantExt::FxIndex>(
-            "FX/GENERIC", 0, equityCcy, strikeCcy, fxVol->calendar(),
-                                                  fxSpot, 
-            underlingCcyDiscountCurve, strikeCcyDiscountCurve, false);
+        auto fxIndex = market_->fxIndex(equityCcy.code() + strikeCcy.code()).currentLink();
 
         // Try Catch and 0 correlation fallback
         Handle<QuantExt::CorrelationTermStructure> correlation;
