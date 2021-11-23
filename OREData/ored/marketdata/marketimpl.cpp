@@ -228,7 +228,7 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
 }
 
 Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configuration) const {
-    return fxIndex(ccypair, configuration)->fxQuote();
+    return fxIndex(ccypair, string(), string(), false, configuration)->fxQuote();
 }
 
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
