@@ -788,4 +788,7 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     return tmp;
 }
 
+std::function<void(RandomVariable&)> RandomVariable::deleter =
+    std::function<void(RandomVariable&)>([](RandomVariable& x) { x.clear(); });
+
 } // namespace QuantExt

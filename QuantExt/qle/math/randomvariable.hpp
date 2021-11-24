@@ -155,6 +155,8 @@ struct RandomVariable {
     // expand vector to full size and set determinisitc to false
     void expand();
 
+    static std::function<void(RandomVariable&)> deleter;
+
 private:
     void checkTimeConsistencyAndUpdate(const Real t);
     Size n_;
