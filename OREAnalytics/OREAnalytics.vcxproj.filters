@@ -213,6 +213,9 @@
     <ClInclude Include="orea\engine\npvrecord.hpp">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="orea\app\structuredanalyticswarning.hpp">
+      <Filter>app</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -373,6 +376,9 @@
     </ClCompile>
     <ClCompile Include="orea\engine\npvrecord.cpp">
       <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\app\structuredanalyticswarning.cpp">
+      <Filter>app</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

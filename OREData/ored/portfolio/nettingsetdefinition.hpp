@@ -49,12 +49,13 @@ public:
         const Real& iaHeld, const string& iaType, const Period& marginCallFreq, const Period& marginPostFreq,
         const Period& mpr, const Real& collatSpreadPay, const Real& collatSpreadRcv,
         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
-        bool applyInitialMargin, Type initialMarginType)
+        bool applyInitialMargin, Type initialMarginType, const bool calculateIMAmount, const bool calculateVMAmount)
         : type_(type), csaCurrency_(csaCurrency), index_(index), thresholdPay_(thresholdPay),
           thresholdRcv_(thresholdRcv), mtaPay_(mtaPay), mtaRcv_(mtaRcv), iaHeld_(iaHeld), iaType_(iaType),
           marginCallFreq_(marginCallFreq), marginPostFreq_(marginPostFreq), mpr_(mpr),
           collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv), eligCollatCcys_(eligCollatCcys),
-          applyInitialMargin_(applyInitialMargin), initialMarginType_(initialMarginType) {}
+          applyInitialMargin_(applyInitialMargin), initialMarginType_(initialMarginType),
+          calculateIMAmount_(calculateIMAmount), calculateVMAmount_(calculateVMAmount) {}
 
     //! Inspectors
     //@{
@@ -94,6 +95,10 @@ public:
     /*! Direction of (dynamic) initial margin */
     Type initialMarginType() { return initialMarginType_; }
     //@}
+    /*! Calculate SIMM as IM (currently used only for SA-CCR) */
+    bool calculateIMAmount() { return calculateIMAmount_; }
+    /*! Calculate VM from NPV (currently used only for SA-CCR) */
+    bool calculateVMAmount() { return calculateVMAmount_; }
 
     void validate(string nettingSetId);
 
@@ -115,6 +120,7 @@ private:
     vector<string> eligCollatCcys_;
     bool applyInitialMargin_;
     Type initialMarginType_;
+    bool calculateIMAmount_, calculateVMAmount_;
 };
 
 CSA::Type parseCsaType(const string& s);
@@ -137,12 +143,12 @@ public:
     /*!
       Constructor for "uncollateralised" netting sets
     */
-    NettingSetDefinition(const string& nettingSetId, const string& ctp);
+    NettingSetDefinition(const string& nettingSetId);
 
     /*!
       Constructor for "collateralised" netting sets
     */
-    NettingSetDefinition(const string& nettingSetId, const string& ctp, const string& bilateral,
+    NettingSetDefinition(const string& nettingSetId, const string& bilateral,
                          const string& csaCurrency, // three letter ISO code
                          const string& index, const Real& thresholdPay, const Real& thresholdRcv, const Real& mtaPay,
                          const Real& mtaRcv, const Real& iaHeld, const string& iaType,
@@ -152,7 +158,9 @@ public:
                          const Real& collatSpreadPay, const Real& collatSpreadRcv,
                          const vector<string>& eligCollatCcys, // vector of three letter ISO codes
                          bool applyInitialMargin = false,
-                         const string& initialMarginType = "Bilateral");
+                         const string& initialMarginType = "Bilateral",
+                         const bool calculateIMAmount = false,
+                         const bool calculateVMAmount = false);
 
     /*!
       loads NettingSetDefinition object from XML
@@ -172,8 +180,6 @@ public:
     //@{
     /*! returns netting set id */
     const string& nettingSetId() const { return nettingSetId_; }
-    /*! returns counterparty on ISDA netting agreement */
-    const string& counterparty() const { return ctp_; }
     /*! boolean specifying if ISDA agreement is covered by a Credit Support Annex */
     bool activeCsaFlag() const { return activeCsaFlag_; }
     /*! CSA details, if active */
@@ -219,7 +225,6 @@ public:
 
 private:
     string nettingSetId_;
-    string ctp_;
     bool activeCsaFlag_;
     boost::shared_ptr<CSA> csa_;
 
@@ -243,6 +248,8 @@ private:
     // Real collatSpreadRcv_;
     // vector<string> eligCollatCcys_;
     // bool applyInitialMargin_;
+    // bool calculateIMAmount_
+    // bool calculateVMAmount_
 };
 } // namespace data
 } // namespace ore
