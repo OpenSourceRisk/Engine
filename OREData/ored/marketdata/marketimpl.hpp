@@ -213,7 +213,6 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
-    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::FxIndex>> fxIndices_;
     mutable map<string, FXTriangulation> fxSpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
@@ -234,6 +233,10 @@ protected:
     mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;
+
+    // Cache of derived fx structures
+    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::FxIndex>> fxIndices_;
+    mutable map<pair<string, string>, Handle<Quote>> fxRates_;
 
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,

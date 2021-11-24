@@ -148,7 +148,10 @@ protected:
     Currency sourceCurrency_, targetCurrency_;
     const Handle<YieldTermStructure> sourceYts_, targetYts_;
     std::string name_;
+    // Spot as quoted in market
     const Handle<Quote> fxSpot_;
+    // instantaneous fx rate
+    mutable Handle<Quote> fxRate_;
     bool useQuote_;
 
 private:

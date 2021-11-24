@@ -111,24 +111,28 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
 
 const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {   
     
-    Handle<Quote> quote;
-    if (!useQuote_)
-        quote = Handle<Quote>(boost::make_shared<SimpleQuote>(
-            ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
-    else
-        quote = fxSpot_;
+    if (withSettlementLag)
+        return fxSpot_;
 
-    if (!withSettlementLag) {
-        // Create an FxRateQuote to handle spot adjustment
-        quote =
-            Handle<Quote>(boost::make_shared<FxRateQuote>(quote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
-    }
+    if (fxRate_.empty()){
+        Handle<Quote> quote;
+        if (!useQuote_)
+            quote = Handle<Quote>(boost::make_shared<SimpleQuote>(
+                ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
+        else
+            quote = fxSpot_;
+
+        // adjust for spot
+        quote = Handle<Quote>(
+            boost::make_shared<FxRateQuote>(quote, sourceYts_, targetYts_, fixingDays_, fixingCalendar_));
         
-    if (inverseIndex_)
-        // Create a dervice quote to invert
-        quote = Handle<Quote>(boost::make_shared<DerivedQuote<divide<Real>>>(quote, divide<Real>(1.0)));
-
-    return quote;
+        if (inverseIndex_)
+            // Create a derived quote to invert
+            quote = Handle<Quote>(boost::make_shared<DerivedQuote<divide<Real>>>(quote, divide<Real>(1.0)));
+        fxRate_ = quote;        
+    }
+    return fxRate_;
+    
 }
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {

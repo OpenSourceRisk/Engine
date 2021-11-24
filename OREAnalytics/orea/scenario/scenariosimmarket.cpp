@@ -302,7 +302,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // constructing fxSpots_
                         LOG("adding " << name << " FX rates");
                         boost::shared_ptr<SimpleQuote> q(
-                            new SimpleQuote(initMarket->fxIndex(name, configuration)->fxQuote()->value()));
+                            new SimpleQuote(initMarket->fxRate(name, configuration)->value()));
                         Handle<Quote> qh(q);
                         fxSpots_[Market::defaultConfiguration].addQuote(name, qh);
                         // Check if the risk factor is simulated before adding it
