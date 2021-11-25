@@ -240,6 +240,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {bondData_.isPayer()};
+
+    DLOG("Bond::build() finished for trade " << id());
 }
 
 void Bond::fromXML(XMLNode* node) {
@@ -282,9 +284,9 @@ void BondFactory::addBuilder(const std::string& referenceDataType, const boost::
 
 BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
-    BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                                 const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                                 const std::string& securityId) const {
+BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                              const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
@@ -299,10 +301,15 @@ BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
                "(either the instrument wrapper or the ql instrument is null)");
 
     Result res;
-    res.currency = data.currency();
+    res.bond = qlBond;
     if (data.isInflationLinked()) {
         res.inflationFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
     }
+    res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
+    res.currency = data.currency();
+    res.creditCurveId = data.creditCurveId();
+    res.securityId = data.securityId();
+    res.creditGroup = data.creditGroup();
     return res;
 }
 

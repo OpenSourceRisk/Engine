@@ -291,7 +291,7 @@ QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string
 */
 QuantLib::FdmSchemeDesc parseFdmSchemeDesc(const std::string& s);
 
-enum class AssetClass { EQ, FX, COM, IR, INF, CR, BOND };
+enum class AssetClass { EQ, FX, COM, IR, INF, CR, BOND, BOND_INDEX };
 
 //! Convert text to ore::data::AssetClass
 /*!

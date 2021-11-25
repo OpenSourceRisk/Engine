@@ -175,8 +175,14 @@ private:
 struct BondBuilder {
     struct Result {
         boost::shared_ptr<QuantLib::Bond> bond;
+
         double inflationFactor = 1.0;
+
+        bool hasCreditRisk = true;
         std::string currency;
+        std::string creditCurveId;
+        std::string securityId;
+        std::string creditGroup;
     };
     virtual ~BondBuilder() {}
     virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
