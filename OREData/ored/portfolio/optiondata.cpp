@@ -174,9 +174,9 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
 
     // build exercise instance
 
-    if (parseExerciseType(optionData.style()) == Exercise::European)
+    if (optionData.style() == "European")
         exercise_ = boost::make_shared<EuropeanExercise>(sortedExerciseDates.back());
-    else if (parseExerciseType(optionData.style()) == Exercise::Bermudan)
+    else 
         exercise_ = boost::make_shared<BermudanExercise>(noticeDates_);
 
 
