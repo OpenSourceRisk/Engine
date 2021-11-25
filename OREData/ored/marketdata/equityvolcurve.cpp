@@ -483,7 +483,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
     if (maxExpiry_ == Date::minDate())
         maxExpiry_ = Date();
 
-    bool preferOutOfTheMoney = vc.preferOutOfTheMoney() && *vc.preferOutOfTheMoney();
+    bool preferOutOfTheMoney = vc.preferOutOfTheMoney() ? *vc.preferOutOfTheMoney() : true;
 
     if (vssc.quoteType() == MarketDatum::QuoteType::PRICE) {
 
