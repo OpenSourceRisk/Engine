@@ -713,9 +713,9 @@ void OREApp::writeInitialReports() {
     out_ << setw(tab_) << left << "Cashflow NPV report... " << flush;
     if (params_->hasGroup("cashflowNpv") && params_->get("cashflowNpv", "active") == "Y") {
         string fileName = outputPath_ + "/" + params_->get("cashflowNpv", "outputFileName");
-        boost::optional<int> horizonCalendarDays;
-        if (params_->has("cashflowNpv", "horizonCalendarDays"))
-            horizonCalendarDays = parseInteger(params_->get("cashflowNpv", "horizonCalendarDays"));
+        Date horizon = Date::maxDate();
+        if (params_->has("cashflowNpv", "horizon"))
+            horizon = parseDate(params_->get("cashflowNpv", "horizon"));
         string baseCcy = params_->get("npv", "baseCurrency");
 
         InMemoryReport cashflowReport;
@@ -724,7 +724,7 @@ void OREApp::writeInitialReports() {
         getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, config, includePastCashflows);
 
         CSVFileReport cfNpvReport(fileName);
-        getReportWriter()->writeCashflowNpv(cfNpvReport, cashflowReport, market_, config, baseCcy, horizonCalendarDays);
+        getReportWriter()->writeCashflowNpv(cfNpvReport, cashflowReport, market_, config, baseCcy, horizon);
         out_ << "OK" << endl;
     } else {
         LOG("skip cashflow npv report");

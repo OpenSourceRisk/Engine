@@ -69,7 +69,7 @@ public:
                                   boost::shared_ptr<ore::data::Market> market,
                                   const std::string& configuration,
                                   const std::string& baseCcy,
-                                  boost::optional<int> horizonCalendarDays);
+                                  const Date& horizon = Date::maxDate());
 
     virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                              const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,

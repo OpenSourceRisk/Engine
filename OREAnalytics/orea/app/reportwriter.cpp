@@ -465,7 +465,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
                                     boost::shared_ptr<ore::data::Market> market,
                                     const std::string& configuration,
                                     const std::string& baseCcy,
-                                    boost::optional<int> horizonCalendarDays)  {
+                                    const Date& horizon)  {
     // Pick the following fields form the in memory report:
     // - tradeId 
     // - payment date 
@@ -482,8 +482,6 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
     QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
     QL_REQUIRE(cashflowReport.header(ccyColumn) == "Currency", "incorrect currency column " << ccyColumn);
     QL_REQUIRE(cashflowReport.header(pvColumn) == "PresentValue", "incorrect pv column " << pvColumn);
-    QL_REQUIRE(horizonCalendarDays || horizonCalendarDays == boost::none || *horizonCalendarDays > 0,
-               "horizon calendar days is invalid");
     
     map<string, Real> npvMap;
     Date asof = Settings::instance().evaluationDate();
@@ -497,16 +495,12 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
             fx = market->fxSpot(ccy + baseCcy, configuration)->value();
         if (npvMap.find(tradeId) == npvMap.end())
             npvMap[tradeId] = 0.0;
-        if (payDate > asof) {
-            if (!horizonCalendarDays || horizonCalendarDays == boost::none || payDate <= asof + *horizonCalendarDays) {
-                npvMap[tradeId] += pv * fx;
-                DLOG("Cashflow NPV for trade " << tradeId << ": pv " << pv << " fx " << fx << " sum " << npvMap[tradeId]);
-            }   
+        if (payDate > asof && payDate <= horizon) {
+            npvMap[tradeId] += pv * fx;
+            DLOG("Cashflow NPV for trade " << tradeId << ": pv " << pv << " fx " << fx << " sum " << npvMap[tradeId]);
         }   
     }   
 
-    string horizon = horizonCalendarDays ? to_string(*horizonCalendarDays) + " calendar days" : "infinite";
-    
     LOG("Writing cashflow NPV report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("PresentValue", double(), 10)
@@ -514,7 +508,7 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
         .addColumn("Horizon", string());        
 
     for (auto r: npvMap)
-        report.next().add(r.first).add(r.second).add(baseCcy).add(horizon);
+        report.next().add(r.first).add(r.second).add(baseCcy).add(horizon < Date::maxDate() ? to_string(horizon) : "infinite");
 
     report.end();
     LOG("Cashflow NPV report written");
