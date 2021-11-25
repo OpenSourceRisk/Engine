@@ -100,7 +100,7 @@ XMLNode* IborFallbackConfig::toXML(XMLDocument& doc) {
 }
 
 IborFallbackConfig IborFallbackConfig::defaultConfig() {
-    // A switch date 31 Dec 2199 (= Date::maxDate()) indicates that the cessation date is not yet known.
+    // A switch date 1 Jan 2100 indicates that the cessation date is not yet known.
     // Sources:
     // [1] BBG ISDA IBOR Fallback Dashboard (Tenor Effective Date = switchDate, Spread Adjustment Today => spread)
     // [2] https://assets.bbhub.io/professional/sites/10/IBOR-Fallbacks-LIBOR-Cessation_Announcement_20210305.pdf
