@@ -248,7 +248,8 @@ bool FxIndex::isValidFixingDate(const Date& d) const {
     return fixingCalendar().isBusinessDay(d); 
 }
 
-void FxIndex::update() { 
+void FxIndex::update() {
+    fxRate_ = Handle<Quote>();
     notifyObservers(); 
 }
 
