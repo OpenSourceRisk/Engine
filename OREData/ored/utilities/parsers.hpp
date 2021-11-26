@@ -443,5 +443,8 @@ QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
 */
 QuantLib::Average::Type parseAverageType(const std::string& s);
 
+//! Helper function to get the two tokens in a correlation name Index2:Index1
+std::vector<std::string> getCorrelationTokens(const std::string& name);
+
 } // namespace data
 } // namespace ore

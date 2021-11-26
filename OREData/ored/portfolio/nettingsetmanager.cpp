@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/nettingsetmanager.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
@@ -42,8 +43,26 @@ void NettingSetManager::reset() {
     uniqueKeys_.clear();
 }
 
-const bool NettingSetManager::empty() {
+const bool NettingSetManager::empty() const {
     return data_.empty();
+}
+
+const bool NettingSetManager::calculateIMAmount() const { 
+    for (const auto nsd : data_) {
+        if (nsd.second->csaDetails()->calculateIMAmount())
+            return true;
+    }
+    return false;
+}
+
+const std::set<string> NettingSetManager::calculateIMNettingSets() const {
+    std::set<string> calculateIMNettingSets = std::set<string>();
+    for (const auto nsd : data_) {
+        if (nsd.second->csaDetails()->calculateIMAmount()) {
+            calculateIMNettingSets.insert(nsd.first);
+        }
+    }
+    return calculateIMNettingSets;
 }
 
 boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(string id) const {
@@ -62,7 +81,8 @@ void NettingSetManager::fromXML(XMLNode* node) {
             boost::shared_ptr<NettingSetDefinition> nettingSet(new NettingSetDefinition(child));
             add(nettingSet);
         } catch (std::exception& ex) {
-            ALOG("Exception parsing netting set definition: " << ex.what());
+            ALOG(StructuredConfigurationWarningMessage("Netting set manager", "",
+                                                       "Netting set definnition failed to parse", ex.what()));
         }
     }
 }

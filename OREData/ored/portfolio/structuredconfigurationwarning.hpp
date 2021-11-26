@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/portfolio/structuredconfigurationwarning.hpp
-    \brief Classes for structured configuration warnings
+    \brief Class for structured configuration warnings
     \ingroup portfolio
 */
 
