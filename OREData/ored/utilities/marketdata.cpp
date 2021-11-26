@@ -57,24 +57,19 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
 
 std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
     auto tmp = "__SECURITYCREDITCURVE__" + securityId + "__&__" + creditCurveId;
-    std::cerr << "return sec spec name " << tmp << std::endl;
     return tmp;
 }
 
 std::string creditCurveNameFromSecuritySpecificCreditCurveName(const std::string& name) {
-    std::cerr << "credit curve from sec spec name '" << name << "':";
     if (name.substr(0, 23) == "__SECURITYCREDITCURVE__") {
         std::size_t pos = name.find("__&__", 23);
         if (pos != std::string::npos) {
             auto tmp = name.substr(pos + 5);
-            std::cerr << tmp << std::endl;
             return tmp;
         } else {
-            std::cerr << name << std::endl;
             return name;
         }
     }
-    std::cerr << name << std::endl;
     return name;
 }
 
