@@ -11,10 +11,9 @@ namespace data {
 
 void populateFromBondReferenceData(std::string& issuerId, std::string& settlementDays, std::string& calendar,
                                    std::string& issueDate, std::string& creditCurveId, std::string& creditGroup,
-                                   std::string& referenceCurveId, std::string& proxySecurityId,
-                                   std::string& incomeCurveId, std::string& volatilityCurveId,
-                                   std::vector<LegData>& coupons, const std::string& name,
-                                   const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
+                                   std::string& referenceCurveId, std::string& incomeCurveId,
+                                   std::string& volatilityCurveId, std::vector<LegData>& coupons,
+                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
     if (issuerId.empty()) {
@@ -44,10 +43,6 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
     if (referenceCurveId.empty()) {
         referenceCurveId = bondRefData->bondData().referenceCurveId;
         TLOG("overwrite referenceCurveId with '" << referenceCurveId << "'");
-    }
-    if (proxySecurityId.empty()) {
-        proxySecurityId = bondRefData->bondData().proxySecurityId;
-        TLOG("overwrite proxySecurityId with '" << proxySecurityId << "'");
     }
     if (incomeCurveId.empty()) {
         incomeCurveId = bondRefData->bondData().incomeCurveId;

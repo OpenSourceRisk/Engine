@@ -43,16 +43,14 @@ using namespace ore::data;
     creditCurveId
     creditGroup
     referenceCurveId
-    proxySecurityId
     incomeCurveId
     volatilityCurveId
     coupons */
 void populateFromBondReferenceData(std::string& issuerId, std::string& settlementDays, std::string& calendar,
                                    std::string& issueDate, std::string& creditCurveId, std::string& creditGroup,
-                                   std::string& referenceCurveId, std::string& proxySecurityId,
-                                   std::string& incomeCurveId, std::string& volatilityCurveId,
-                                   std::vector<LegData>& coupons, const std::string& name,
-                                   const boost::shared_ptr<BondReferenceDatum>& bondRefData);
+                                   std::string& referenceCurveId, std::string& incomeCurveId,
+                                   std::string& volatilityCurveId, std::vector<LegData>& coupons,
+                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData);
 
 Date getOpenEndDateReplacement(const std::string& replacementPeriodStr, const Calendar& calendar = NullCalendar());
 

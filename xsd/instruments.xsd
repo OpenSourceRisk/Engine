@@ -188,7 +188,6 @@
       <xs:element type="xs:string" name="CreditGroup" minOccurs="0"/>
       <xs:element type="xs:string" name="SecurityId"/>
       <xs:element type="xs:string" name="ReferenceCurveId" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProxySecurityId" minOccurs="0"/>
       <xs:element type="xs:string" name="IncomeCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="SettlementDays" minOccurs="0"/>
