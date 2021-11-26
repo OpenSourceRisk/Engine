@@ -19,6 +19,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 
+using QuantLib::DefaultProbabilityTermStructure;
 using QuantLib::Handle;
 using QuantLib::YieldTermStructure;
 using std::string;
@@ -51,6 +52,44 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
         outXccyExists = false;
     }
 
+    return curve;
+}
+
+std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
+    auto tmp = "__SECURITYCREDITCURVE__" + securityId + "__&__" + creditCurveId;
+    std::cerr << "return sec spec name " << tmp << std::endl;
+    return tmp;
+}
+
+std::string creditCurveNameFromSecuritySpecificCreditCurveName(const std::string& name) {
+    std::cerr << "credit curve from sec spec name '" << name << "':";
+    if (name.substr(0, 23) == "__SECURITYCREDITCURVE__") {
+        std::size_t pos = name.find("__&__", 23);
+        if (pos != std::string::npos) {
+            auto tmp = name.substr(pos + 5);
+            std::cerr << tmp << std::endl;
+            return tmp;
+        } else {
+            std::cerr << name << std::endl;
+            return name;
+        }
+    }
+    std::cerr << name << std::endl;
+    return name;
+}
+
+QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
+securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::string& securityId,
+                            const std::string& creditCurveId, const std::string& configuration) {
+    Handle<DefaultProbabilityTermStructure> curve;
+    std::string name = securitySpecificCreditCurveName(securityId, creditCurveId);
+    try {
+        curve = market->defaultCurve(name, configuration);
+    } catch (const std::exception& e) {
+        DLOG("Could not link " << securityId << " to security specific credit curve " << name << " so just using "
+                               << creditCurveId << " default curve.");
+        curve = market->defaultCurve(creditCurveId, configuration);
+    }
     return curve;
 }
 
