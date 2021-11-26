@@ -73,6 +73,7 @@ app/oreapp.hpp
 app/parameters.hpp
 app/reportwriter.hpp
 app/sensitivityrunner.hpp
+app/structuredanalyticserror.hpp
 app/structuredanalyticswarning.hpp
 app/xvarunner.hpp
 auto_link.hpp
