@@ -113,6 +113,9 @@ public:
     //! Compute set of portfolios
     std::set<std::string> portfolioIds() const;
 
+    //! Check if at least one trade in the portfolio uses the NettingSetDetails node, and not just NettingSetId
+    bool hasNettingSetDetails() const;
+
     /*! Return the fixings that will be requested in order to price every Trade in this Portfolio given
         the \p settlementDate. The map key is the ORE name of the index and the map value is the set of fixing dates.
 
