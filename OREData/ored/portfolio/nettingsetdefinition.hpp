@@ -24,6 +24,7 @@
 #pragma once
 
 #include <boost/optional.hpp>
+#include <ored/portfolio/envelope.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/period.hpp>
 #include <ql/utilities/null.hpp>
@@ -31,6 +32,8 @@
 namespace ore {
 namespace data {
 using namespace QuantLib;
+
+using ore::data::NettingSetDetails;
 
 class CSA {
 public:
@@ -100,7 +103,7 @@ public:
     /*! Calculate VM from NPV (currently used only for SA-CCR) */
     bool calculateVMAmount() { return calculateVMAmount_; }
 
-    void validate(string nettingSetId);
+    void validate();
 
 private:
     Type type_;
@@ -144,6 +147,7 @@ public:
       Constructor for "uncollateralised" netting sets
     */
     NettingSetDefinition(const string& nettingSetId);
+    NettingSetDefinition(const NettingSetDetails& nettingSetDetails);
 
     /*!
       Constructor for "collateralised" netting sets
@@ -163,6 +167,21 @@ public:
                          const bool calculateVMAmount = false);
 
     /*!
+      Constructor for "collateralised" netting sets
+    */
+    NettingSetDefinition(const NettingSetDetails& nettingSetDetails, const string& bilateral,
+                         const string& csaCurrency, // three letter ISO code
+                         const string& index, const Real& thresholdPay, const Real& thresholdRcv, const Real& mtaPay,
+                         const Real& mtaRcv, const Real& iaHeld, const string& iaType,
+                         const string& marginCallFreq, // e.g. "1D", "2W", "3M", "4Y"
+                         const string& marginPostFreq, // e.g. "1D", "2W", "3M", "4Y"
+                         const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
+                         const Real& collatSpreadPay, const Real& collatSpreadRcv,
+                         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
+                         bool applyInitialMargin = false, const string& initialMarginType = "Bilateral",
+                         const bool calculateIMAmount = false, const bool calculateVMAmount = false);
+
+    /*!
       loads NettingSetDefinition object from XML
     */
     void fromXML(XMLNode* node);
@@ -179,7 +198,11 @@ public:
     //! Inspectors
     //@{
     /*! returns netting set id */
-    const string& nettingSetId() const { return nettingSetId_; }
+    const string& nettingSetId() const {
+        return (nettingSetDetails_.empty() ? nettingSetId_ : nettingSetDetails_.nettingSetId());
+    }
+    /*! returns netting set details */
+    const NettingSetDetails nettingSetDetails() const { return nettingSetDetails_; }
     /*! boolean specifying if ISDA agreement is covered by a Credit Support Annex */
     bool activeCsaFlag() const { return activeCsaFlag_; }
     /*! CSA details, if active */
@@ -225,6 +248,7 @@ public:
 
 private:
     string nettingSetId_;
+    NettingSetDetails nettingSetDetails_;
     bool activeCsaFlag_;
     boost::shared_ptr<CSA> csa_;
 

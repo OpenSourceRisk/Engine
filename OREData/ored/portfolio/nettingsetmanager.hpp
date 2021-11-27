@@ -25,11 +25,13 @@
 
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/utilities/xmlutils.hpp>
-
+#include <ored/portfolio/envelope.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
+
+using ore::data::NettingSetDetails;
 
 //! Netting Set Manager
 /*!
@@ -62,12 +64,17 @@ public:
     /*!
       returns the list of netting sets for which SIMM will be calculated as IM
     */
-    const std::set<string> calculateIMNettingSets() const;
+    const std::set<NettingSetDetails::Key> calculateIMNettingSets() const;
 
     /*!
       checks if object named id exists in manager
     */
-    bool has(string id) const;
+    bool has(const string& id) const;
+
+    /*!
+      checks if object with the given nettingSetDetails exists in manager
+    */
+    bool has(const NettingSetDetails& nettingSetDetails) const;
 
     /*!
       adds a new NettingSetDefinition object to manager
@@ -77,20 +84,21 @@ public:
     /*!
       extracts a pointer to a NettingSetDefinition from manager
     */
-    boost::shared_ptr<NettingSetDefinition> get(string id) const;
+    boost::shared_ptr<NettingSetDefinition> get(const string& id) const;
+    boost::shared_ptr<NettingSetDefinition> get(const NettingSetDetails& nettingSetDetails) const;
 
     /*!
       vector containing the ids of all objects stored in manager
     */
-    vector<string> uniqueKeys() const { return uniqueKeys_; }
+    vector<NettingSetDetails::Key> uniqueKeys() const { return uniqueKeys_; }
 
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
-    const std::map<std::string, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
+    const std::map<NettingSetDetails::Key, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
 
 private:
-    map<string, const boost::shared_ptr<NettingSetDefinition>> data_;
-    vector<string> uniqueKeys_;
+    map<NettingSetDetails::Key, const boost::shared_ptr<NettingSetDefinition>> data_;
+    vector<NettingSetDetails::Key> uniqueKeys_;
 };
 } // namespace data
 } // namespace ore

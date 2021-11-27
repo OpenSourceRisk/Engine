@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& out, CSA::Type t) {
     }
 }
 
-void CSA::validate(string nettingSetId) {
+void CSA::validate() {
     QL_REQUIRE(csaCurrency_.size() == 3, "NettingSetDefinition build error;"
                                              << " CSA currency should be a three-letter ISO code");
 
@@ -67,8 +67,8 @@ void CSA::validate(string nettingSetId) {
     QL_REQUIRE(mpr_ >= Period(0, Days), "NettingSetDefinition build error;"
                                             << " negative margin period of risk");
     if (mpr_ < marginCallFreq_ || mpr_ < marginPostFreq_) {
-        LOG("NettingSet " << nettingSetId << " has CSA margining frequency (" << marginCallFreq_ << ", "
-                          << marginPostFreq_ << ") longer than assumed margin period of risk " << mpr_);
+        LOG("NettingSetDefinition has CSA margining frequency (" << marginCallFreq_ << ", "
+            << marginPostFreq_ << ") longer than assumed margin period of risk " << mpr_);
     }
 
     for (Size i = 0; i < eligCollatCcys_.size(); i++) {
@@ -93,13 +93,43 @@ void CSA::validate(string nettingSetId) {
 
 NettingSetDefinition::NettingSetDefinition(XMLNode* node) {
     fromXML(node);
-    DLOG("NettingSetDefinition built from XML... " << nettingSetId_);
+    if (nettingSetId_.empty()) {
+        DLOG("NettingSetDefinition built from XML... " << nettingSetDetails_);
+    } else {
+        DLOG("NettingSetDefinition built from XML... " << nettingSetId_);
+    }
 }
 
 NettingSetDefinition::NettingSetDefinition(const string& nettingSetId)
-    : nettingSetId_(nettingSetId), activeCsaFlag_(false) {
+    : nettingSetId_(nettingSetId), nettingSetDetails_(NettingSetDetails()), activeCsaFlag_(false) {
     validate();
-    DLOG("uncollateralised NettingSetDefinition built... " << nettingSetId_);
+    DLOG(nettingSetId_ << ": uncollateralised NettingSetDefinition built.");
+}
+
+NettingSetDefinition::NettingSetDefinition(const NettingSetDetails& nettingSetDetails)
+    : nettingSetId_(""), nettingSetDetails_(nettingSetDetails), activeCsaFlag_(false) {
+    validate();
+    DLOG(nettingSetDetails_ << ": uncollateralised NettingSetDefinition built.");
+}
+
+NettingSetDefinition::NettingSetDefinition(const NettingSetDetails& nettingSetDetails, const string& bilateral,
+                                           const string& csaCurrency, const string& index, const Real& thresholdPay,
+                                           const Real& thresholdRcv, const Real& mtaPay, const Real& mtaRcv,
+                                           const Real& iaHeld, const string& iaType, const string& marginCallFreq,
+                                           const string& marginPostFreq, const string& mpr, const Real& collatSpreadPay,
+                                           const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
+                                           bool applyInitialMargin, const string& initialMarginType,
+                                           const bool calculateIMAmount, const bool calculateVMAmount)
+    : nettingSetId_(""), nettingSetDetails_(nettingSetDetails), activeCsaFlag_(true) {
+
+    csa_ =
+        boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv,
+                                iaHeld, iaType, parsePeriod(marginCallFreq), parsePeriod(marginPostFreq),
+                                parsePeriod(mpr), collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin,
+                                parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
+
+    validate();
+    DLOG(nettingSetDetails_ << ": collateralised NettingSetDefinition built. ");
 }
 
 NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const string& bilateral,
@@ -110,7 +140,7 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                            const Real& collatSpreadRcv, const vector<string>& eligCollatCcys,
                                            bool applyInitialMargin, const string& initialMarginType,
                                            const bool calculateIMAmount, const bool calculateVMAmount)
-    : nettingSetId_(nettingSetId), activeCsaFlag_(true) {
+    : nettingSetId_(nettingSetId), nettingSetDetails_(NettingSetDetails()), activeCsaFlag_(true) {
 
     csa_ =
         boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv,
@@ -119,14 +149,23 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
                                 parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
 
     validate();
-    DLOG("collateralised NettingSetDefinition built... " << nettingSetId_);
+    DLOG(nettingSetId_ << ": collateralised NettingSetDefinition built. ");
 }
 
 void NettingSetDefinition::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "NettingSet");
 
     // Read in the mandatory nodes.
-    nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", true);
+    XMLNode* nettingSetIdNode = XMLUtils::getChildNode(node, "NettingSetId");
+    XMLNode* nettingSetDetailsNode = XMLUtils::getChildNode(node, "NettingSetDetails");
+    QL_REQUIRE(!(nettingSetIdNode && nettingSetDetailsNode),
+               "Only one of NettingSetId and NettingSetDetails should be provided.");
+    if (nettingSetIdNode) {
+        nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
+    } else {
+        nettingSetDetails_.fromXML(nettingSetDetailsNode);
+    }
+        
     activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", false, true);
 
     // Load "CSA" information, if necessary
@@ -197,7 +236,11 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("NettingSet");
 
     // Add the mandatory members.
-    XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+    if (nettingSetDetails_.empty()) {
+        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+    } else {
+        XMLUtils::appendNode(node, nettingSetDetails_.toXML(doc));
+    }
     XMLUtils::addChild(doc, node, "ActiveCSAFlag", activeCsaFlag_);
 
     XMLNode* csaSubNode = doc.allocNode("CSADetails");
@@ -240,12 +283,16 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
 }
 
 void NettingSetDefinition::validate() {
-
-    QL_REQUIRE(nettingSetId_.size() > 0, "NettingSetDefinition build error; no netting set Id");
+    string nettingSetLog = nettingSetDetails_.empty() ? nettingSetId_ : ore::data::to_string(nettingSetDetails_);
+    LOG(nettingSetLog << ": Validating netting set definition");
+    QL_REQUIRE(nettingSetId_.size() > 0 || !nettingSetDetails_.empty(),
+               "NettingSetDefinition build error; no netting set ID or netting set details");
 
     if (activeCsaFlag_) {
         QL_REQUIRE(csa_, "CSA not defined yet");
-        csa_->validate(nettingSetId_);
+        string nettingSetLog = nettingSetDetails_.empty() ? nettingSetId_ : ore::data::to_string(nettingSetDetails_);
+        LOG(nettingSetLog << ": Validating netting set definition's CSA details");
+        csa_->validate();
     }
 }
 } // namespace data
