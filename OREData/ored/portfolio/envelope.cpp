@@ -36,8 +36,6 @@ NettingSetDetails::NettingSetDetails(const NettingSetDetails::Key& nettingSetKey
 }
 
 NettingSetDetails::NettingSetDetails(const map<string, string>& nettingSetMap) {
-    const vector<string>& supportedFields = fieldNames();
-    
     for (const pair<string, string>& m : nettingSetMap) {
         if (m.first == "NettingSetId") {
             nettingSetId_ = nettingSetMap.at(m.first);
