@@ -604,6 +604,35 @@
           }
         ]
       },
+      "npv.csv": {
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "NPV",
+              "NPV(Base)"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      "flownpv.csv": {
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "PresentValue"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       ".*npv.*\\.json": {
         "keys": [
           "tradeId"
@@ -640,6 +669,29 @@
         ]
       },
       ".*(flows|cashflow).*\\.csv": {
+        "keys": [
+          "TradeId",
+          "Type",
+          "CashflowNo",
+          "LegNo"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Amount"
+            ],
+            "optional_names": [
+              "PresentValue",
+              "DiscountFactor",
+			  "Coupon",
+			  "fixingValue"
+            ],
+            "abs_tol": 1e-8,
+            "rel_tol": 1e-8
+          }
+        ]
+      },
+      "flow.csv": {
         "keys": [
           "TradeId",
           "Type",
