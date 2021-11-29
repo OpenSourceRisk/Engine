@@ -70,5 +70,8 @@ securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::
                             const std::string& creditCurveId,
                             const std::string& configuration = Market::defaultConfiguration);
 
+/*! Pretty print an internal curve name occuring (once or several times) in a string (e.g. in a risk factor name). */
+std::string prettyPrintInternalCurveName(std::string name);
+
 } // namespace data
 } // namespace ore

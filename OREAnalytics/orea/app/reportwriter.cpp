@@ -883,7 +883,7 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
             if (fabs(difference) > outputThreshold) {
                 report.next();
                 report.add(tradeId);
-                report.add(scenarioDescription.factors());
+                report.add(prettyPrintInternalCurveName(scenarioDescription.factors()));
                 report.add(scenarioDescription.typeString());
                 report.add(baseNpv);
                 report.add(scenarioNpv);
@@ -926,9 +926,9 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
             report.next();
             report.add(sr.tradeId);
             report.add(to_string(sr.isPar));
-            report.add(reconstructFactor(sr.key_1, sr.desc_1));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(reconstructFactor(sr.key_2, sr.desc_2));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
