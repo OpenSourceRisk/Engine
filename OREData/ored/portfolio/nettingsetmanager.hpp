@@ -64,7 +64,7 @@ public:
     /*!
       returns the list of netting sets for which SIMM will be calculated as IM
     */
-    const std::set<NettingSetDetails::Key> calculateIMNettingSets() const;
+    const std::set<NettingSetDetails> calculateIMNettingSets() const;
 
     /*!
       checks if object named id exists in manager
@@ -90,15 +90,15 @@ public:
     /*!
       vector containing the ids of all objects stored in manager
     */
-    vector<NettingSetDetails::Key> uniqueKeys() const { return uniqueKeys_; }
+    vector<NettingSetDetails> uniqueKeys() const { return uniqueKeys_; }
 
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
-    const std::map<NettingSetDetails::Key, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
+    const std::map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
 
 private:
-    map<NettingSetDetails::Key, const boost::shared_ptr<NettingSetDefinition>> data_;
-    vector<NettingSetDetails::Key> uniqueKeys_;
+    map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> data_;
+    vector<NettingSetDetails> uniqueKeys_;
 };
 } // namespace data
 } // namespace ore

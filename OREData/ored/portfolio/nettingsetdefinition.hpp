@@ -24,16 +24,16 @@
 #pragma once
 
 #include <boost/optional.hpp>
-#include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/period.hpp>
 #include <ql/utilities/null.hpp>
 
+using ore::data::NettingSetDetails;
+
 namespace ore {
 namespace data {
 using namespace QuantLib;
-
-using ore::data::NettingSetDetails;
 
 class CSA {
 public:
@@ -146,26 +146,10 @@ public:
     /*!
       Constructor for "uncollateralised" netting sets
     */
-    NettingSetDefinition(const string& nettingSetId);
     NettingSetDefinition(const NettingSetDetails& nettingSetDetails);
-
-    /*!
-      Constructor for "collateralised" netting sets
-    */
-    NettingSetDefinition(const string& nettingSetId, const string& bilateral,
-                         const string& csaCurrency, // three letter ISO code
-                         const string& index, const Real& thresholdPay, const Real& thresholdRcv, const Real& mtaPay,
-                         const Real& mtaRcv, const Real& iaHeld, const string& iaType,
-                         const string& marginCallFreq, // e.g. "1D", "2W", "3M", "4Y"
-                         const string& marginPostFreq, // e.g. "1D", "2W", "3M", "4Y"
-                         const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
-                         const Real& collatSpreadPay, const Real& collatSpreadRcv,
-                         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
-                         bool applyInitialMargin = false,
-                         const string& initialMarginType = "Bilateral",
-                         const bool calculateIMAmount = false,
-                         const bool calculateVMAmount = false);
-
+    NettingSetDefinition::NettingSetDefinition(const string& nettingSetId)
+        : NettingSetDefinition(NettingSetDetails(nettingSetId)) {}
+    
     /*!
       Constructor for "collateralised" netting sets
     */
@@ -180,6 +164,22 @@ public:
                          const vector<string>& eligCollatCcys, // vector of three letter ISO codes
                          bool applyInitialMargin = false, const string& initialMarginType = "Bilateral",
                          const bool calculateIMAmount = false, const bool calculateVMAmount = false);
+
+    NettingSetDefinition(const string& nettingSetId, const string& bilateral,
+                         const string& csaCurrency, // three letter ISO code
+                         const string& index, const Real& thresholdPay, const Real& thresholdRcv, const Real& mtaPay,
+                         const Real& mtaRcv, const Real& iaHeld, const string& iaType,
+                         const string& marginCallFreq, // e.g. "1D", "2W", "3M", "4Y"
+                         const string& marginPostFreq, // e.g. "1D", "2W", "3M", "4Y"
+                         const string& mpr,            // e.g. "1D", "2W", "3M", "4Y"
+                         const Real& collatSpreadPay, const Real& collatSpreadRcv,
+                         const vector<string>& eligCollatCcys, // vector of three letter ISO codes
+                         bool applyInitialMargin = false, const string& initialMarginType = "Bilateral",
+                         const bool calculateIMAmount = false, const bool calculateVMAmount = false)
+        : NettingSetDefinition(NettingSetDetails(nettingSetId), bilateral, csaCurrency, index, thresholdPay,
+                               thresholdRcv, mtaPay, mtaRcv, iaHeld, iaType, marginCallFreq, marginPostFreq, mpr,
+                               collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin, initialMarginType,
+                               calculateIMAmount, calculateVMAmount) {}
 
     /*!
       loads NettingSetDefinition object from XML

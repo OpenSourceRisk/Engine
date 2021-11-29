@@ -249,7 +249,7 @@ std::set<std::string> Portfolio::portfolioIds() const {
 bool Portfolio::hasNettingSetDetails() const {
     bool hasNettingSetDetails = false;
     for (auto it = trades().begin(); it != trades().end(); it++) {
-        if ((*it)->envelope().hasNettingSetDetails()) {
+        if (!(*it)->envelope().nettingSetDetails().emptyOptionalFields()) {
             hasNettingSetDetails = true;
             break;
         }
