@@ -589,6 +589,20 @@
           }
         ]
       },
+      "flownpv.csv": {
+        "keys": [
+          "TradeId"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "PresentValue"
+            ],
+            "abs_tol": 1e-6,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       ".*npv.*\\.csv": {
         "keys": [
           "TradeId"
@@ -613,20 +627,6 @@
             "names": [
               "NPV",
               "NPV(Base)"
-            ],
-            "abs_tol": 1e-6,
-            "rel_tol": 1e-12
-          }
-        ]
-      },
-      "flownpv.csv": {
-        "keys": [
-          "TradeId"
-        ],
-        "column_settings": [
-          {
-            "names": [
-              "PresentValue"
             ],
             "abs_tol": 1e-6,
             "rel_tol": 1e-12
