@@ -17,8 +17,9 @@
 */
 
 #include <ored/configuration/iborfallbackconfig.hpp>
-
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 
 namespace ore {
 namespace data {
@@ -99,7 +100,8 @@ XMLNode* IborFallbackConfig::toXML(XMLDocument& doc) {
 }
 
 IborFallbackConfig IborFallbackConfig::defaultConfig() {
-    // A switch date 1 Jan 2022 indicates that the cessation date is not yet known. Sources:
+    // A switch date 1 Jan 2100 indicates that the cessation date is not yet known.
+    // Sources:
     // [1] BBG ISDA IBOR Fallback Dashboard (Tenor Effective Date = switchDate, Spread Adjustment Today => spread)
     // [2] https://assets.bbhub.io/professional/sites/10/IBOR-Fallbacks-LIBOR-Cessation_Announcement_20210305.pdf
     // [3] https://www.isda.org/2021/03/05/isda-statement-on-uk-fca-libor-announcement/
@@ -179,6 +181,23 @@ IborFallbackConfig IborFallbackConfig::defaultConfig() {
                                     {"USD-LIBOR-6M", FallbackData{"USD-SOFR", 0.0042826, Date(1, Jul, 2023)}},
                                     {"USD-LIBOR-12M", FallbackData{"USD-SOFR", 0.0071513, Date(1, Jul, 2023)}}}};
     return c;
+}
+
+void IborFallbackConfig::updateSwitchDate(QuantLib::Date targetSwitchDate, const std::string& indexName) {
+    for (std::map<std::string, FallbackData>::iterator f = fallbacks_.begin(); f != fallbacks_.end(); f++) {
+        if ((f->first == indexName || indexName == "") && // selected index or all of them if indexName is left blank
+            f->second.switchDate > targetSwitchDate)  {   // skipping IBORs with switch dates before the target switch date
+            WLOG(StructuredConfigurationWarningMessage("IborFallbackConfig", f->first, "update switch date",
+                                                       "change switch date from " + to_string(f->second.switchDate) + " to " + to_string(targetSwitchDate)));
+            f->second.switchDate = targetSwitchDate;
+        }
+    }
+}
+
+void IborFallbackConfig::logSwitchDates() {
+    for (auto f : fallbacks_) {
+        LOG("IBOR index " << f.first << " has fallback switch date " << to_string(f.second.switchDate));
+    }
 }
 
 } // namespace data
