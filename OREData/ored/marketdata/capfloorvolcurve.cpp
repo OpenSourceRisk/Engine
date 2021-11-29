@@ -913,14 +913,14 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                         if (!cm.arbitrageFree())
                             calibrationInfo_->isArbitrageFree = false;
                         calibrationInfo_->strikeGridProb[i][u] = cm.density();
-                        TLOGGERSTREAM << arbitrageAsString(cm);
+                        TLOGGERSTREAM(arbitrageAsString(cm));
                     } catch (const std::exception& e) {
                         TLOG("error for time " << t << ": " << e.what());
                         calibrationInfo_->isArbitrageFree = false;
-                        TLOGGERSTREAM << "..(invalid slice)..";
+                        TLOGGERSTREAM("..(invalid slice)..");
                     }
                 } else {
-                    TLOGGERSTREAM << "..(invalid slice)..";
+                    TLOGGERSTREAM("..(invalid slice)..");
                 }
             }
         }
@@ -985,14 +985,14 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                         if (!cm.arbitrageFree())
                             calibrationInfo_->isArbitrageFree = false;
                         calibrationInfo_->strikeSpreadGridProb[i][u] = cm.density();
-                        TLOGGERSTREAM << arbitrageAsString(cm);
+                        TLOGGERSTREAM(arbitrageAsString(cm));
                     } catch (const std::exception& e) {
                         TLOG("error for time " << t << ": " << e.what());
                         calibrationInfo_->isArbitrageFree = false;
-                        TLOGGERSTREAM << "..(invalid slice)..";
+                        TLOGGERSTREAM("..(invalid slice)..");
                     }
                 } else {
-                    TLOGGERSTREAM << "..(invalid slice)..";
+                    TLOGGERSTREAM("..(invalid slice)..");
                 }
             }
         }

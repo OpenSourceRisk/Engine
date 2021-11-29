@@ -155,10 +155,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
             atm->enableExtrapolation(config->extrapolate());
             TLOG("built atm surface with vols:");
-            TLOGGERSTREAM << vols;
+            TLOGGERSTREAM(vols);
             if (isSln) {
                 TLOG("built atm surface with shifts:");
-                TLOGGERSTREAM << shifts;
+                TLOGGERSTREAM(shifts);
             }
         } else {
             // Constant volatility
@@ -403,14 +403,14 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                             if (!cm.arbitrageFree())
                                 calibrationInfo_->isArbitrageFree = false;
                             calibrationInfo_->strikeGridProb[i][u] = cm.density();
-                            TLOGGERSTREAM << arbitrageAsString(cm);
+                            TLOGGERSTREAM(arbitrageAsString(cm));
                         } catch (const std::exception& e) {
                             TLOG("error for time " << t << ": " << e.what());
                             calibrationInfo_->isArbitrageFree = false;
-                            TLOGGERSTREAM << "..(invalid slice)..";
+                            TLOGGERSTREAM("..(invalid slice)..");
                         }
                     } else {
-                        TLOGGERSTREAM << "..(invalid slice)..";
+                        TLOGGERSTREAM("..(invalid slice)..");
                     }
                 }
             }
@@ -477,14 +477,14 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                             if (!cm.arbitrageFree())
                                 calibrationInfo_->isArbitrageFree = false;
                             calibrationInfo_->strikeSpreadGridProb[i][u] = cm.density();
-                            TLOGGERSTREAM << arbitrageAsString(cm);
+                            TLOGGERSTREAM(arbitrageAsString(cm));
                         } catch (const std::exception& e) {
                             TLOG("error for time " << t << ": " << e.what());
                             calibrationInfo_->isArbitrageFree = false;
-                            TLOGGERSTREAM << "..(invalid slice)..";
+                            TLOGGERSTREAM("..(invalid slice)..");
                         }
                     } else {
-                        TLOGGERSTREAM << "..(invalid slice)..";
+                        TLOGGERSTREAM("..(invalid slice)..");
                     }
                 }
             }

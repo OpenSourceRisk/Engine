@@ -402,7 +402,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             // Fwd = Spot e^{(r-q)T}
             // => q = 1/T Log(Spot/Fwd) + r
             for (Size i = 0; i < quotes_.size(); i++) {
-                QL_REQUIRE(quotes_[i] > 0, "Invalid Fwd Price " << quotes_[i] << " for " << spec_.name());
+                QL_REQUIRE(quotes_[i] > 0, "Invalid Forward Price " << quotes_[i] << " for " << spec_.name()
+                                                                    << ", expiry: " << terms_[i]);
                 Time t = dc_.yearFraction(asof, terms_[i]);
                 Rate ir_rate = forecastYieldTermStructure->zeroRate(t, Continuous);
                 dividendRates.push_back(::log(equitySpot->value() / quotes_[i]) / t + ir_rate);
