@@ -1,6 +1,6 @@
 [submodule "QuantLib"]
 	path = QuantLib
-	url = git@codebasehq.com:qrm/openxva/quantlib.git
+	url = git@gitlab.acadiasoft.net:qs/quantlib.git
 	branch = v1.8.x.beta
 	ignore = dirty
 [submodule "OREPlus/openssl"]

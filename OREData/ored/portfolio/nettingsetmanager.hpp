@@ -52,7 +52,17 @@ public:
     /*!
       checks if the manager is empty
     */
-    const bool empty();
+    const bool empty() const;
+
+    /*!
+      checks if at least one of the netting set definitions has calculateIMAmount = true
+    */
+    const bool calculateIMAmount() const;
+
+    /*!
+      returns the list of netting sets for which SIMM will be calculated as IM
+    */
+    const std::set<string> calculateIMNettingSets() const;
 
     /*!
       checks if object named id exists in manager

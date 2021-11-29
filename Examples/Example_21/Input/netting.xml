@@ -2,7 +2,6 @@
 <NettingSetDefinitions>
   <NettingSet>
     <NettingSetId>CPTY_A</NettingSetId>
-    <Counterparty>CPTY_A</Counterparty>
     <ActiveCSAFlag>false</ActiveCSAFlag>
     <CSADetails>
       <Bilateral>Bilateral</Bilateral>

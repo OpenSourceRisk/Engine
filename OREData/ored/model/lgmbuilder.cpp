@@ -332,42 +332,46 @@ void LgmBuilder::performCalculations() const {
         (data_->calibrationType() == CalibrationType::BestFit && error_ != QL_MAX_REAL)) {
         // we check the log level here to avoid unncessary computations
         if (Log::instance().filter(ORE_DATA) || setCalibrationInfo_) {
-            TLOGGERSTREAM << "Basket details:";
+            TLOGGERSTREAM("Basket details:");
             try {
-                TLOGGERSTREAM << getBasketDetails(calibrationInfo);
+		auto d = getBasketDetails(calibrationInfo);
+                TLOGGERSTREAM(d);
             } catch (const std::exception& e) {
                 WLOG("An error occured: " << e.what());
             }
-            TLOGGERSTREAM << "Calibration details (with time grid = calibration swaption expiries):";
+            TLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
             try {
-                TLOGGERSTREAM << getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
+		auto d = getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
+		TLOGGERSTREAM(d);
             } catch (const std::exception& e) {
                 WLOG("An error occured: " << e.what());
             }
-            TLOGGERSTREAM << "Parameter details (with parameter time grid)";
-            TLOGGERSTREAM << getCalibrationDetails(parametrization_);
-            TLOGGERSTREAM << "rmse = " << error_;
+            TLOGGERSTREAM("Parameter details (with parameter time grid)");
+            TLOGGERSTREAM(getCalibrationDetails(parametrization_))
+	    TLOGGERSTREAM("rmse = " << error_);
             calibrationInfo.valid = true;
         }
     } else {
         std::string exceptionMessage = "LGM (" + data_->ccy() + ") calibration error " + std::to_string(error_) +
                                        " exceeds tolerance " + std::to_string(bootstrapTolerance_);
         WLOG(StructuredModelErrorMessage("Failed to calibrate LGM Model", exceptionMessage));
-        WLOGGERSTREAM << "Basket details:";
+        WLOGGERSTREAM("Basket details:");
         try {
-            WLOGGERSTREAM << getBasketDetails(calibrationInfo);
+	    auto d = getBasketDetails(calibrationInfo);
+            WLOGGERSTREAM(d);
         } catch (const std::exception& e) {
             WLOG("An error occured: " << e.what());
         }
-        WLOGGERSTREAM << "Calibration details (with time grid = calibration swaption expiries):";
+        WLOGGERSTREAM("Calibration details (with time grid = calibration swaption expiries):");
         try {
-            WLOGGERSTREAM << getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
+	    auto d = getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
+            WLOGGERSTREAM(d);
         } catch (const std::exception& e) {
             WLOG("An error occured: " << e.what());
         }
-        WLOGGERSTREAM << "Parameter details (with parameter time grid)";
-        WLOGGERSTREAM << getCalibrationDetails(parametrization_);
-        WLOGGERSTREAM << "rmse = " << error_;
+        WLOGGERSTREAM("Parameter details (with parameter time grid)");
+        WLOGGERSTREAM(getCalibrationDetails(parametrization_));
+        WLOGGERSTREAM("rmse = " << error_);
         calibrationInfo.valid = true;
         if (!continueOnError_) {
             QL_FAIL(exceptionMessage);

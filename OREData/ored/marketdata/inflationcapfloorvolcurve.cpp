@@ -171,7 +171,7 @@ void InflationCapFloorVolCurve::buildFromVolatilities(
                     m << endl;
             }
         }
-        DLOGGERSTREAM << m.str() << endl;
+        DLOGGERSTREAM(m.str());
         QL_FAIL("could not build inflation cap/floor vol curve");
     }
 
@@ -367,7 +367,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
     DLOG("Building inflation cap floor price surface:");
     DLOG("Cap Strikes are: " << capStrikesString.str());
     DLOG("Floor Strikes are: " << floorStrikesString.str());
-    DLOGGERSTREAM << "Cap Price Matrix:\n" << cPrice << "Floor Price Matrix:\n" << fPrice;
+    DLOGGERSTREAM("Cap Price Matrix:\n" << cPrice << "Floor Price Matrix:\n" << fPrice);
 
     if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
         // ZC Curve
