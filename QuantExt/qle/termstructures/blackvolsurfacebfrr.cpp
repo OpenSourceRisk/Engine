@@ -402,13 +402,19 @@ BlackVolatilitySurfaceBFRR::BlackVolatilitySurfaceBFRR(
     registerWith(spot_);
     registerWith(domesticTS_);
     registerWith(foreignTS_);
-
-    // initialise
-
-    init();
 }
 
-void BlackVolatilitySurfaceBFRR::init() {
+const std::vector<bool>& BlackVolatilitySurfaceBFRR::smileHasError() const {
+    calculate();
+    return smileHasError_;
+}
+
+const std::vector<std::string>& BlackVolatilitySurfaceBFRR::smileErrorMessage() const {
+    calculate();
+    return smileErrorMessage_;
+}
+
+void BlackVolatilitySurfaceBFRR::performCalculations() const {
 
     // calcluate switch time
 
@@ -446,10 +452,12 @@ void BlackVolatilitySurfaceBFRR::init() {
 
 void BlackVolatilitySurfaceBFRR::update() {
     BlackVolatilityTermStructure::update();
-    init();
+    LazyObject::update();
 }
 
 Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
+
+    calculate();
 
     /* minimum supported time is 1D, i.e. if t is smaller, we return the vol at 1D */
 

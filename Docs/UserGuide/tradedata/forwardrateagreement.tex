@@ -14,12 +14,12 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 \item Currency: The currency of the FRA notional. \\
 
-Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.	
 \item Index: The name of the interest rate index the FRA is benchmarked against.
 
-  Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
-  M or Y. See Table \ref{tab:indices}.
-  
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TENOR. CCY, INDEX and TENOR must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TENOR must be an integer followed by D, W,
+  M or Y, except for Overnight indices which do not require a TENOR. See Table \ref{tab:indices}.
+    
 \item LongShort: Specifies whether the FRA position is long (one receives the agreed rate) or short (one pays the agreed rate).
 
 Allowable values: \emph{Long}, \emph{Short}.

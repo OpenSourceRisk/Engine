@@ -48,7 +48,7 @@ const bool NettingSetManager::empty() const {
 }
 
 const bool NettingSetManager::calculateIMAmount() const { 
-    for (const auto nsd : data_) {
+    for (const auto& nsd : data_) {
         if (nsd.second->csaDetails()->calculateIMAmount())
             return true;
     }
@@ -57,7 +57,7 @@ const bool NettingSetManager::calculateIMAmount() const {
 
 const std::set<string> NettingSetManager::calculateIMNettingSets() const {
     std::set<string> calculateIMNettingSets = std::set<string>();
-    for (const auto nsd : data_) {
+    for (const auto& nsd : data_) {
         if (nsd.second->csaDetails()->calculateIMAmount()) {
             calculateIMNettingSets.insert(nsd.first);
         }
