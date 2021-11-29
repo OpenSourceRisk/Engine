@@ -265,6 +265,7 @@ void BondUnderlying::fromXML(XMLNode* node) {
     } else {
         QL_FAIL("Need either a " << basicUnderlyingNodeName_ << " or " << nodeName_ << " for BondUnderlying.");
     }
+    bidAskAdjustment_ = XMLUtils::getChildValueAsDouble(node, "BidAskAdjustment", false, 0.0);
     setType("Bond");
 }
 

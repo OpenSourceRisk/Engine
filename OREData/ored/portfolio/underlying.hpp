@@ -223,6 +223,7 @@ public:
 
     const std::string& name() const override { return bondName_.empty() ? name_ : bondName_; };
     const std::string& identifierType() const { return identifierType_; }
+    double bidAskAdjustment() const { return bidAskAdjustment_; }
 
     //! set name of bond
     void setBondName();
@@ -235,6 +236,7 @@ public:
 
 private:
     std::string bondName_, identifierType_;
+    double bidAskAdjustment_ = 0.0;
 };
 
 class UnderlyingBuilder : public XMLSerializable {
