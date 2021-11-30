@@ -508,6 +508,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     if (params_->get(groupName, "pricingEnginesFile") != "")
         engineData->fromFile(pricingEnginesFile);
     engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
+    engineData->globalParameters()["RunType"] = groupName == "simulation" ? "Exposure" : "NPV";
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
