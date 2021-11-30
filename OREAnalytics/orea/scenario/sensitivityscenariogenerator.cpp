@@ -780,12 +780,12 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         }
     }
 
-    Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-    std::vector<Real> times(n_fxvol_exp);
-
     for (auto f : sensitivityData_->fxVolShiftData()) {
         string ccyPair = f.first;
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+        
+        Size n_fxvol_exp = simMarketData_->fxVolExpiries(ccyPair).size();
+        std::vector<Real> times(n_fxvol_exp);
         Size n_fxvol_strikes;
         vector<Real> vol_strikes;
         if (simMarketData_->useMoneyness(ccyPair)) {
@@ -816,7 +816,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         }
         bool valid = true;
         for (Size j = 0; j < n_fxvol_exp; ++j) {
-            Date d = asof + simMarketData_->fxVolExpiries()[j];
+            Date d = asof + simMarketData_->fxVolExpiries(ccyPair)[j];
             times[j] = dc.yearFraction(asof, d);
             for (Size k = 0; k < n_fxvol_strikes; k++) {
                 Size idx = k * n_fxvol_exp + j;

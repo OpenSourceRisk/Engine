@@ -160,10 +160,8 @@ public:
     bool simulateFXVols() const { return paramsSimulate(RiskFactorKey::KeyType::FXVolatility); }
     bool fxVolIsSurface(const std::string& ccypair) const;
     bool fxVolIsSurface() const;
-    bool hasFxPairWithSurface() const { return hasFxPairWithSurface_; }
-    bool useMoneyness(const std::string& ccypair) const;
-    bool useMoneyness() const;
-    const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
+    bool fxUseMoneyness(const std::string& ccypair) const;
+    const vector<Period>& fxVolExpiries(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     vector<string> fxVolCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility); }
     const vector<Real>& fxVolMoneyness(const string& ccypair) const;
@@ -302,12 +300,10 @@ public:
 
     // FX volatility data setters
     void setSimulateFXVols(bool simulate);
+    void setSimulateFxVolATMOnly(bool simulateATMOnly) { fxVolSimulateATMOnly_ = simulateATMOnly; }
     void setFxVolIsSurface(const string& ccypair, bool val);
     void setFxVolIsSurface(bool val);
-    void setHasFxPairWithSurface(bool val);
-    void setUseMoneyness(const string& ccypair, bool val);
-    void setUseMoneyness(bool val);
-    void setFxVolExpiries(const vector<Period>& expiries);
+    void setFxVolExpiries(const string& name, const vector<Period>& expiries);
     void setFxVolDecayMode(const string& val);
     void setFxVolCcyPairs(vector<string> names);
     void setFxVolMoneyness(const string& ccypair, const vector<Real>& moneyness);
@@ -433,15 +429,14 @@ private:
     map<string, vector<Period>> equityDividendTenors_;
 
     // FX volatility data
-    bool hasFxPairWithSurface_;
-    map<std::string, bool> useMoneyness_;
+    bool fxVolSimulateATMOnly_ = false;
     map<std::string, bool> fxVolIsSurface_;
-    vector<Period> fxVolExpiries_;
+    map<string, vector<Period>> fxVolExpiries_;
     string fxVolDecayMode_;
     map<string, vector<Real>> fxMoneyness_;
     map<string, vector<Real>> fxStandardDevs_;
 
-    bool equityVolSimulateATMOnly_;
+    bool equityVolSimulateATMOnly_ = false;
     map<string, bool> equityVolIsSurface_;
     map<string, vector<Period>> equityVolExpiries_;
     string equityVolDecayMode_;

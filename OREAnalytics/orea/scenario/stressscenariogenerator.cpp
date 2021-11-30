@@ -339,24 +339,24 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
                                              boost::shared_ptr<Scenario>& scenario) {
     Date asof = baseScenario_->asof();
 
-    Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-
-    std::vector<Real> values(n_fxvol_exp);
-    std::vector<Real> times(n_fxvol_exp);
-
-    // buffer for shifted zero curves
-    std::vector<Real> shiftedValues(n_fxvol_exp);
-
     for (auto d : std.fxVolShifts) {
         string ccypair = d.first;
         LOG("Apply stress scenario to fx vol structure " << ccypair);
+
+        Size n_fxvol_exp = simMarketData_->fxVolExpiries(ccypair).size();
+
+        std::vector<Real> values(n_fxvol_exp);
+        std::vector<Real> times(n_fxvol_exp);
+
+        // buffer for shifted zero curves
+        std::vector<Real> shiftedValues(n_fxvol_exp);
 
         StressTestScenarioData::VolShiftData data = d.second;
 
         //DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccypair));
         DayCounter dc = simMarket_->fxVol(ccypair)->dayCounter();
         for (Size j = 0; j < n_fxvol_exp; ++j) {
-            Date d = asof + simMarketData_->fxVolExpiries()[j];
+            Date d = asof + simMarketData_->fxVolExpiries(ccypair)[j];
 
             RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, j);
             values[j] = baseScenario_->get(key);

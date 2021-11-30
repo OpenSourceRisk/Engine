@@ -690,7 +690,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             bool flatExtrapolation = true; // FIXME: get this from curve configuration
                             VolatilityType volType = convertToNormal ? Normal : wrapper->volatilityType();
-			    DayCounter dc = wrapper->dayCounter();
+                            DayCounter dc = wrapper->dayCounter();
 			    
                             if (useSpreadedTermStructures_) {
                                 // using the wrapper from t0 and init market swap indices means we
@@ -712,7 +712,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 atm = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
                                     wrapper->calendar(), wrapper->businessDayConvention(), optionTenors,
                                     underlyingTenors, atmQuotes, dc, flatExtrapolation, volType, shift));
-				atm->enableExtrapolation(); // see below for svp, take this from T0 config?
+                                atm->enableExtrapolation(); // see below for svp, take this from T0 config?
                                 if (simulateAtmOnly) {
                                     if (isAtm) {
                                         svp = atm;
@@ -1026,8 +1026,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
                             vector<Time> times;
-			    DayCounter dc = wrapper->dayCounter();
-			    for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
+                            DayCounter dc = wrapper->dayCounter();
+                            for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
                                 Date date = asof_ + parameters->cdsVolExpiries()[i];
                                 Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
                                 times.push_back(dc.yearFraction(asof_, date));
@@ -1102,21 +1102,16 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         if (param.second.first) {
                             LOG("Simulating FX Vols for " << name);
-                            Size n = parameters->fxVolExpiries().size();
-                            Size m;
-                            if (parameters->useMoneyness(name)) {
-                                m = parameters->fxVolMoneyness(name).size();
-                            } else {
-                                m = parameters->fxVolStdDevs(name).size();
-                            }
-                            vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
+                            auto& expiries = parameters->fxVolExpiries(name);
+                            Size m = expiries.size();
                             Calendar cal = wrapper->calendar();
                             if (cal.empty()) {
                                 cal = NullCalendar();
                             }
-                           DayCounter dc = wrapper->dayCounter();
-			    vector<Time> times;
-                            vector<Date> dates;
+                            DayCounter dc = wrapper->dayCounter();
+                            vector<vector<Handle<Quote>>> quotes;
+                            vector<Time> times(m);
+                            vector<Date> dates(m);
 
                             // Attempt to get the relevant yield curves from the initial market
                             Handle<YieldTermStructure> forTS =
@@ -1136,95 +1131,109 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 domTS = initMarket->discountCurve(domCcy, configuration);
                             }
 
-                            // get vol matrix to feed to surface
-                            if (parameters->useMoneyness(name)) { // if moneyness
-                                for (Size i = 0; i < n; i++) {
-                                    Date date = asof_ + parameters->fxVolExpiries()[i];
+                            for (Size k = 0; k < m; k++) {
+                                dates[k] = cal.advance(asof_, expiries[k]);
+                                times[k] = wrapper->timeFromReference(dates[k]);
+                            }
 
-                                    times.push_back(wrapper->timeFromReference(date));
+                            boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
 
+                            if (parameters->fxVolIsSurface(name)) {
+                                vector<Real> strikes;
+                                strikes = parameters->fxUseMoneyness(name) ? parameters->fxVolMoneyness(name)
+                                                                           : parameters->fxVolStdDevs(name);
+                                Size n = strikes.size();
+                                quotes.resize(n, vector<Handle<Quote>>(n, Handle<Quote>()));
+
+                                // get vol matrix to feed to surface
+                                if (parameters->fxUseMoneyness(name)) { // if moneyness
                                     for (Size j = 0; j < m; j++) {
-                                        Size idx = j * n + i;
-                                        Real mon = parameters->fxVolMoneyness(name)[j];
+                                        for (Size i = 0; i < n; i++) {
+                                            Real mon = strikes[i];
+                                            // strike (assuming forward prices)
+                                            Real k = spot->value() * mon * forTS->discount(dates[j]) /
+                                                     domTS->discount(dates[j]);
+                                            Size idx = i * m + j;
 
-                                        // strike (assuming forward prices)
-                                        Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
-                                        Volatility vol = wrapper->blackVol(date, k, true);
-                                        boost::shared_ptr<SimpleQuote> q(
-                                            new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : vol));
-                                        simDataTmp.emplace(std::piecewise_construct,
-                                                           std::forward_as_tuple(param.first, name, idx),
-                                                           std::forward_as_tuple(q));
-                                        if (useSpreadedTermStructures_) {
-                                            absoluteSimDataTmp.emplace(std::piecewise_construct,
-                                                                       std::forward_as_tuple(param.first, name, idx),
-                                                                       std::forward_as_tuple(q->value()));
+                                            Volatility vol = wrapper->blackVol(dates[j], k, true);
+                                            boost::shared_ptr<SimpleQuote> q(
+                                                new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : vol));
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                               std::forward_as_tuple(param.first, name, idx),
+                                                               std::forward_as_tuple(q));
+                                            if (useSpreadedTermStructures_) {
+                                                absoluteSimDataTmp.emplace(
+                                                    std::piecewise_construct,
+                                                    std::forward_as_tuple(param.first, name, idx),
+                                                    std::forward_as_tuple(q->value()));
+                                            }
+                                            quotes[i][j] = Handle<Quote>(q);
                                         }
-                                        quotes[j][i] = Handle<Quote>(q);
                                     }
-                                }
-                            } else { // if stdDevPoints
+                                } else { // if stdDevPoints
 
-                                // times (for fwds)
-                                for (Size i = 0; i < n; i++) {
-                                    Date date = asof_ + parameters->fxVolExpiries()[i];
-                                    times.push_back(wrapper->timeFromReference(date));
-                                    dates.push_back(date);
-                                }
+                                    // times (for fwds)
+                                    for (Size i = 0; i < n; i++) {
+                                        Date date = asof_ + parameters->fxVolExpiries(name)[i];
+                                        times.push_back(wrapper->timeFromReference(date));
+                                        dates.push_back(date);
+                                    }
 
-                                // forwards
-                                vector<Real> fwds;
-                                vector<Real> atmVols;
-                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
-                                    Date date = asof_ + parameters->fxVolExpiries()[i];
-                                    Real k = spot->value() * forTS->discount(date) / domTS->discount(date);
-                                    fwds.push_back(k);
-                                    atmVols.push_back(wrapper->blackVol(dates[i], k));
-                                    DLOG("on date " << dates[i] << ": fwd = " << fwds.back()
-                                                    << ", atmVol = " << atmVols.back());
-                                }
+                                    // forwards
+                                    vector<Real> fwds;
+                                    vector<Real> atmVols;
+                                    for (Size i = 0; i < parameters->fxVolExpiries(name).size(); i++) {
+                                        Date date = asof_ + parameters->fxVolExpiries(name)[i];
+                                        Real k = spot->value() * forTS->discount(date) / domTS->discount(date);
+                                        fwds.push_back(k);
+                                        atmVols.push_back(wrapper->blackVol(dates[i], k));
+                                        DLOG("on date " << dates[i] << ": fwd = " << fwds.back()
+                                                        << ", atmVol = " << atmVols.back());
+                                    }
 
-                                // interpolations
-                                Interpolation forwardCurve =
-                                    Linear().interpolate(times.begin(), times.end(), fwds.begin());
-                                Interpolation atmVolCurve =
-                                    Linear().interpolate(times.begin(), times.end(), atmVols.begin());
+                                    // interpolations
+                                    Interpolation forwardCurve =
+                                        Linear().interpolate(times.begin(), times.end(), fwds.begin());
+                                    Interpolation atmVolCurve =
+                                        Linear().interpolate(times.begin(), times.end(), atmVols.begin());
 
-                                // populate quotes
-                                vector<vector<Handle<Quote>>> absQuotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
-                                BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, absQuotes, times,
-                                                                               parameters->fxVolStdDevs(name),
-                                                                               forwardCurve, atmVolCurve);
-                                if (useSpreadedTermStructures_) {
-                                    for (Size i = 0; i < m; ++i)
-                                        for (Size j = 0; j < n; ++j)
-                                            quotes[i][j] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
-                                } else {
-                                    quotes = absQuotes;
-                                }
+                                    // populate quotes
+                                    vector<vector<Handle<Quote>>> absQuotes(m,
+                                                                            vector<Handle<Quote>>(n, Handle<Quote>()));
+                                    BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, absQuotes, times,
+                                                                                   parameters->fxVolStdDevs(name),
+                                                                                   forwardCurve, atmVolCurve);
+                                    if (useSpreadedTermStructures_) {
+                                        for (Size i = 0; i < m; ++i)
+                                            for (Size j = 0; j < n; ++j)
+                                                quotes[i][j] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+                                    } else {
+                                        quotes = absQuotes;
+                                    }
 
-                                // sort out simDataTemp
-                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
-                                    for (Size j = 0; j < parameters->fxVolStdDevs(name).size(); j++) {
-                                        Size idx = j * n + i;
-                                        boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
-                                        boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
-                                        QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
+                                    // sort out simDataTemp
+                                    for (Size i = 0; i < parameters->fxVolExpiries(name).size(); i++) {
+                                        for (Size j = 0; j < parameters->fxVolStdDevs(name).size(); j++) {
+                                            Size idx = j * n + i;
+                                            boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
+                                            boost::shared_ptr<SimpleQuote> sq =
+                                                boost::dynamic_pointer_cast<SimpleQuote>(q);
+                                            QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
 
-                                        simDataTmp.emplace(std::piecewise_construct,
-                                                           std::forward_as_tuple(param.first, name, idx),
-                                                           std::forward_as_tuple(sq));
-                                        if (useSpreadedTermStructures_) {
-                                            absoluteSimDataTmp.emplace(std::piecewise_construct,
-                                                                       std::forward_as_tuple(param.first, name, idx),
-                                                                       std::forward_as_tuple(absQuotes[j][i]->value()));
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                               std::forward_as_tuple(param.first, name, idx),
+                                                               std::forward_as_tuple(sq));
+                                            if (useSpreadedTermStructures_) {
+                                                absoluteSimDataTmp.emplace(
+                                                    std::piecewise_construct,
+                                                    std::forward_as_tuple(param.first, name, idx),
+                                                    std::forward_as_tuple(absQuotes[j][i]->value()));
+                                            }
                                         }
                                     }
                                 }
                             }
-
                             // build surface
-                            boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
                             if (parameters->fxVolIsSurface(name)) {
 
                                 // Attempt to get the relevant yield curves from this scenario simulation market
@@ -1266,7 +1275,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                 }
 
-                                if (parameters->useMoneyness(name)) { // moneyness
+                                if (parameters->fxUseMoneyness(name)) { // moneyness
                                     if (useSpreadedTermStructures_) {
                                         fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
@@ -1363,7 +1372,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 // take the equity curves calendar - this at least ensures fixings align
                                 cal = eqCurve->fixingCalendar();
                             }
-			    DayCounter dc = wrapper->dayCounter();
+                            DayCounter dc = wrapper->dayCounter();
 
                             for (Size k = 0; k < m; k++) {
                                 dates[k] = cal.advance(asof_, expiries[k]);
