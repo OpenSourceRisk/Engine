@@ -147,7 +147,7 @@ public:
       Constructor for "uncollateralised" netting sets
     */
     NettingSetDefinition(const NettingSetDetails& nettingSetDetails);
-    NettingSetDefinition::NettingSetDefinition(const string& nettingSetId)
+    NettingSetDefinition(const string& nettingSetId)
         : NettingSetDefinition(NettingSetDetails(nettingSetId)) {}
     
     /*!
