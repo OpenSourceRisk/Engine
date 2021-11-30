@@ -88,6 +88,9 @@ public:
     //! EUR => Yield/EUR/EUR6M, USD => Yield/USD/USD3M etc.
     const map<string, string>& mapping(const MarketObject o, const string& configuration) const;
 
+    //! return a mapping reference for modification
+    map<string, string>& mappingReference(const MarketObject o, const string& configuration);
+
     //! Build a vector of all the curve specs (may contain duplicates)
     vector<string> curveSpecs(const string& configuration) const;
 
@@ -162,20 +165,6 @@ inline bool TodaysMarketParameters::hasMarketObject(const MarketObject& o) const
 inline string TodaysMarketParameters::marketObjectId(const MarketObject o, const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     return configurations_.at(configuration)(o);
-}
-
-inline const map<string, string>& TodaysMarketParameters::mapping(const MarketObject o,
-                                                                  const string& configuration) const {
-    static map<string, string> empty;
-    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
-    auto it = marketObjects_.find(o);
-    if (it != marketObjects_.end()) {
-        auto it2 = it->second.find(marketObjectId(o, configuration));
-        if (it2 != it->second.end()) {
-            return it2->second;
-        }
-    }
-    return empty;
 }
 
 } // namespace data

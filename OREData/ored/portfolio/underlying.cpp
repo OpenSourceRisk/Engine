@@ -243,6 +243,44 @@ XMLNode* InflationUnderlying::toXML(XMLDocument& doc) {
     return node;
 }
 
+void BondUnderlying::setBondName() {
+    if (bondName_.empty()) {
+        if (!identifierType_.empty())
+            bondName_ = identifierType_ + ":" + name_;
+        else
+            bondName_ = name_;
+    }
+}
+
+void BondUnderlying::fromXML(XMLNode* node) {
+    if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
+        name_ = XMLUtils::getNodeValue(node);
+        isBasic_ = true;
+    } else if (XMLUtils::getNodeName(node) == nodeName_) {
+        Underlying::fromXML(node);
+        QL_REQUIRE(type_ == "Bond", "Underlying must be of type 'Bond'.");
+        identifierType_ = XMLUtils::getChildValue(node, "IdentifierType", false);
+        setBondName();
+        isBasic_ = false;
+    } else {
+        QL_FAIL("Need either a " << basicUnderlyingNodeName_ << " or " << nodeName_ << " for BondUnderlying.");
+    }
+    bidAskAdjustment_ = XMLUtils::getChildValueAsDouble(node, "BidAskAdjustment", false, 0.0);
+    setType("Bond");
+}
+
+XMLNode* BondUnderlying::toXML(XMLDocument& doc) {
+    XMLNode* node;
+    if (isBasic_) {
+        node = doc.allocNode(basicUnderlyingNodeName_, name_);
+    } else {
+        node = Underlying::toXML(doc);
+        if (!identifierType_.empty())
+            XMLUtils::addChild(doc, node, "IdentifierType", identifierType_);
+    }
+    return node;
+}
+
 void UnderlyingBuilder::fromXML(XMLNode* node) {
     if (XMLUtils::getNodeName(node) == basicUnderlyingNodeName_) {
         underlying_ = boost::make_shared<BasicUnderlying>();
@@ -260,6 +298,8 @@ void UnderlyingBuilder::fromXML(XMLNode* node) {
             underlying_ = boost::make_shared<InflationUnderlying>();
         else if (type == "Credit")
             underlying_ = boost::make_shared<CreditUnderlying>();
+        else if (type == "Bond")
+            underlying_ = boost::make_shared<BondUnderlying>();
         else {
             QL_FAIL("Unknown Underlying type " << type);
         }

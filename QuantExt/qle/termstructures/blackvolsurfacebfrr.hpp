@@ -38,7 +38,7 @@ namespace detail {
 class SimpleDeltaInterpolatedSmile;
 }
 
-class BlackVolatilitySurfaceBFRR : public BlackVolatilityTermStructure {
+class BlackVolatilitySurfaceBFRR : public  BlackVolatilityTermStructure, public LazyObject {
 public:
     enum class SmileInterpolation { Linear, Cubic };
     BlackVolatilitySurfaceBFRR(
@@ -75,13 +75,13 @@ public:
     bool butterflyIsBrokerStyle() const { return butterflyIsBrokerStyle_; }
     SmileInterpolation smileInterpolation() const { return smileInterpolation_; }
 
-    const std::vector<bool>& smileHasError() const { return smileHasError_; }
-    const std::vector<std::string>& smileErrorMessage() const { return smileErrorMessage_; }
+    const std::vector<bool>& smileHasError() const;
+    const std::vector<std::string>& smileErrorMessage() const;
 
 private:
     Volatility blackVolImpl(Time t, Real strike) const override;
     void update() override;
-    void init();
+    void performCalculations() const override;
 
     std::vector<Date> dates_;
     std::vector<Real> deltas_;
@@ -102,9 +102,9 @@ private:
     bool butterflyIsBrokerStyle_;
     SmileInterpolation smileInterpolation_;
 
-    Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
-    std::vector<Real> expiryTimes_;
-    std::vector<Date> settlementDates_;
+    mutable Real switchTime_, settlDomDisc_, settlForDisc_, settlLag_;
+    mutable std::vector<Real> expiryTimes_;
+    mutable std::vector<Date> settlementDates_;
 
     mutable std::vector<boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> smiles_;
     mutable std::map<Real, boost::shared_ptr<detail::SimpleDeltaInterpolatedSmile>> cachedInterpolatedSmiles_;

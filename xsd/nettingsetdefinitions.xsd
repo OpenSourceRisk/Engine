@@ -8,7 +8,6 @@
         <xs:complexType>
           <xs:all>
             <xs:element type="xs:string" name="NettingSetId"/>
-            <xs:element type="xs:string" name="Counterparty"/>
             <xs:element type="xs:boolean" name="ActiveCSAFlag" minOccurs="0"/>
             <xs:element name="CSADetails" minOccurs="0">
               <xs:complexType mixed="true">
@@ -54,6 +53,8 @@
                   </xs:element>
                   <xs:element type="xs:boolean" name="ApplyInitialMargin" minOccurs="0"/>
                   <xs:element type="csaType" name="InitialMarginType" minOccurs="0"/>
+                  <xs:element type="xs:boolean" name="CalculateIMAmount" minOccurs="0"/>
+                  <xs:element type="xs:boolean" name="CalculateVMAmount" minOccurs="0"/>
                 </xs:all>
               </xs:complexType>
             </xs:element>
