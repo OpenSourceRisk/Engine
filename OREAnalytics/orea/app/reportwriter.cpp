@@ -460,6 +460,60 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
     LOG("Cashflow report written");
 }
 
+void ReportWriter::writeCashflowNpv(ore::data::Report& report,
+                                    const ore::data::InMemoryReport& cashflowReport,
+                                    boost::shared_ptr<ore::data::Market> market,
+                                    const std::string& configuration,
+                                    const std::string& baseCcy,
+                                    const Date& horizon)  {
+    // Pick the following fields form the in memory report:
+    // - tradeId 
+    // - payment date 
+    // - currency 
+    // - present value 
+    // Then convert PVs into base currency, aggrate per trade if payment date is within the horizon
+    // Write the resulting aggregate PV per trade into the report.
+
+    Size tradeIdColumn = 0;
+    Size payDateColumn = 4;
+    Size ccyColumn = 7;
+    Size pvColumn = 17;
+    QL_REQUIRE(cashflowReport.header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
+    QL_REQUIRE(cashflowReport.header(ccyColumn) == "Currency", "incorrect currency column " << ccyColumn);
+    QL_REQUIRE(cashflowReport.header(pvColumn) == "PresentValue", "incorrect pv column " << pvColumn);
+    
+    map<string, Real> npvMap;
+    Date asof = Settings::instance().evaluationDate();
+    for (Size i = 0; i < cashflowReport.rows(); ++i) {
+        string tradeId = boost::get<string>(cashflowReport.data(tradeIdColumn).at(i));
+        Date payDate = boost::get<Date>(cashflowReport.data(payDateColumn).at(i));
+        string ccy = boost::get<string>(cashflowReport.data(ccyColumn).at(i));
+        Real pv = boost::get<Real>(cashflowReport.data(pvColumn).at(i));
+        Real fx = 1.0;
+        if (ccy != baseCcy)
+            fx = market->fxSpot(ccy + baseCcy, configuration)->value();
+        if (npvMap.find(tradeId) == npvMap.end())
+            npvMap[tradeId] = 0.0;
+        if (payDate > asof && payDate <= horizon) {
+            npvMap[tradeId] += pv * fx;
+            DLOG("Cashflow NPV for trade " << tradeId << ": pv " << pv << " fx " << fx << " sum " << npvMap[tradeId]);
+        }   
+    }   
+
+    LOG("Writing cashflow NPV report for " << asof);
+    report.addColumn("TradeId", string())
+        .addColumn("PresentValue", double(), 10)
+        .addColumn("BaseCurrency", string())
+        .addColumn("Horizon", string());        
+
+    for (auto r: npvMap)
+        report.next().add(r.first).add(r.second).add(baseCcy).add(horizon < Date::maxDate() ? to_string(horizon) : "infinite");
+
+    report.end();
+    LOG("Cashflow NPV report written");
+}
+
 void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                                const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
                                const bool continueOnError) {
