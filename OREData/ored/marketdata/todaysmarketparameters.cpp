@@ -298,5 +298,33 @@ void TodaysMarketParameters::addMarketObject(const MarketObject o, const string&
                                                                    << s.second);
 }
 
+const map<string, string>& TodaysMarketParameters::mapping(const MarketObject o, const string& configuration) const {
+    static map<string, string> empty;
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = marketObjects_.find(o);
+    if (it != marketObjects_.end()) {
+        auto it2 = it->second.find(marketObjectId(o, configuration));
+        if (it2 != it->second.end()) {
+            return it2->second;
+        }
+    }
+    return empty;
+}
+
+map<string, string>& TodaysMarketParameters::mappingReference(const MarketObject o, const string& configuration) {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = marketObjects_.find(o);
+    if (it != marketObjects_.end()) {
+        auto it2 = it->second.find(marketObjectId(o, configuration));
+        if (it2 != it->second.end()) {
+            return it2->second;
+        } else {
+	    return it->second[marketObjectId(o, configuration)];
+        }
+    } else {
+        return marketObjects_[o][marketObjectId(o, configuration)];
+    }
+}
+
 } // namespace data
 } // namespace ore
