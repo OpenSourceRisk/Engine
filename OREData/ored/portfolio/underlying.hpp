@@ -209,6 +209,36 @@ public:
     //@}
 };
 
+class BondUnderlying : public Underlying {
+public:
+    //! Default constructor
+    BondUnderlying() : Underlying() { setType("Bond"); }
+
+    //! Constructor with full bond name (e.g. ISIN:DE00001142867)
+    explicit BondUnderlying(const std::string& name) : Underlying("Bond", name) { isBasic_ = true; };
+
+    //! Constructor with identifer infomation (e.g. identifier = DE00001142867, identifierType = ISIN)
+    BondUnderlying(const std::string& identifier, const std::string& identifierType, const QuantLib::Real weight)
+        : Underlying("Bond", identifier, weight), identifierType_(identifierType){};
+
+    const std::string& name() const override { return bondName_.empty() ? name_ : bondName_; };
+    const std::string& identifierType() const { return identifierType_; }
+    double bidAskAdjustment() const { return bidAskAdjustment_; }
+
+    //! set name of bond
+    void setBondName();
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+
+private:
+    std::string bondName_, identifierType_;
+    double bidAskAdjustment_ = 0.0;
+};
+
 class UnderlyingBuilder : public XMLSerializable {
 public:
     explicit UnderlyingBuilder(const std::string& nodeName = "Underlying",
