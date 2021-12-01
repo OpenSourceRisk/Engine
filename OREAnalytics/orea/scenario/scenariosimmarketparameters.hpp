@@ -158,17 +158,15 @@ public:
 
     // fxvol getters
     bool simulateFXVols() const { return paramsSimulate(RiskFactorKey::KeyType::FXVolatility); }
+    bool simulateFxVolATMOnly() const { return fxVolSimulateATMOnly_; }    
     bool fxVolIsSurface(const std::string& ccypair) const;
-    bool fxVolIsSurface() const;
     bool fxUseMoneyness(const std::string& ccypair) const;
     const vector<Period>& fxVolExpiries(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     vector<string> fxVolCcyPairs() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility); }
     const vector<Real>& fxVolMoneyness(const string& ccypair) const;
-    const vector<Real>& fxVolMoneyness() const;
     const vector<Real>& fxVolStdDevs(const string& ccypair) const;
-    const vector<Real>& fxVolStdDevs() const;
-
+    
     bool simulateEquityVols() const { return paramsSimulate(RiskFactorKey::KeyType::EquityVolatility); }
     bool simulateEquityVolATMOnly() const { return equityVolSimulateATMOnly_; }
     bool equityUseMoneyness(const string& key) const;

@@ -49,6 +49,7 @@ libTermStructures_la_SOURCES = \
     flatcorrelation.cpp \
 	capfloortermvolsurface.cpp \
 	blackvariancesurfacesparse.cpp \
+    blackvolconstantspread.cpp \
 	constantyoyinflationoptionletvolatility.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -93,7 +94,7 @@ this_include_HEADERS = \
 	swaptionvolcubewithatm.hpp \
 	swaptionvolconstantspread.hpp \
 	blackvariancesurfacemoneyness.hpp \
-    equityvolconstantspread.hpp \
+    blackvolconstantspread.hpp \
 	swaptionvolcube2.hpp \
 	yoyinflationcurveobserverstatic.hpp \
 	yoyinflationcurveobservermoving.hpp \

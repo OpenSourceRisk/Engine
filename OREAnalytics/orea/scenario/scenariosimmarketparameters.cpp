@@ -131,8 +131,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     defaultCurveCalendars_[""] = "TARGET";
     // Default fxVol params
     fxVolIsSurface_[""] = false;
-    fxMoneyness_[""] = {1.0};
-    fxStandardDevs_[""] = {0.0};
     // Defaults for equity/fx
     setSimulateFxVolATMOnly(false);
     setSimulateEquityVolATMOnly(false);
@@ -231,19 +229,13 @@ const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness(const string& cc
     return lookup(fxMoneyness_, ccypair);
 }
 
-const vector<Real>& ScenarioSimMarketParameters::fxVolMoneyness() const { return fxVolMoneyness(""); }
-
 const vector<Real>& ScenarioSimMarketParameters::fxVolStdDevs(const string& ccypair) const {
     return lookup(fxStandardDevs_, ccypair);
 }
 
-const vector<Real>& ScenarioSimMarketParameters::fxVolStdDevs() const { return fxVolStdDevs(""); }
-
 bool ScenarioSimMarketParameters::fxVolIsSurface(const string& ccypair) const {
     return lookup(fxVolIsSurface_, ccypair);
 }
-
-bool ScenarioSimMarketParameters::fxVolIsSurface() const { return fxVolIsSurface(""); }
 
 bool ScenarioSimMarketParameters::fxUseMoneyness(const string& ccypair) const {
     try {
