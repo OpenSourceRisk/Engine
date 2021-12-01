@@ -210,6 +210,10 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     results.additionalResults["premiumLegNPV"] = results.couponLegNPV;
     results.additionalResults["accrualRebateNPV"] = results.accrualRebateNPV;
     results.additionalResults["protectionLegNPV"] = results.defaultLegNPV;
+    results.additionalResults["fairSpread"] = results.fairSpread;
+    results.additionalResults["fairUpfront"] = results.fairUpfront;
+    results.additionalResults["couponLegBPS"] = results.couponLegBPS;
+    results.additionalResults["upfrontBPS"] = results.upfrontBPS;
 
 } // MidPointCdsEngineBase::calculate()
 

@@ -10,17 +10,49 @@
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
-    \lstinline!Currency! &
-% hard coded currencies: 
-%      \emph{AED, AOA, ARS, ATS, AUD, BEF, BGN, BHD,
-%      BRL, CAD, CHF, CLF, CLP, CNH, CNY, COP, COU, CZK, DEM, DKK, EGP,
-%      ESP, ETB, EUR, FIM, FRF, GBP, GEL, GHS, GRD, HKD, HRK, HUF, IDR, 
-%      IEP, ILS, INR, ISK, ITL, JOD, JPY, KES, KRW, KWD, KZT, LKR, LUF, MAD, 
-%      MUR, MXN, MXV, MYR, NGN, NLG, NOK, NZD, OMR, PEN, PHP, PKR, PLN, 
-%      PTE, QAR, RON, RSD, RUB, SAR, SEK, SGD, THB, TND, TRY, TWD, UAH, 
-%      UGX, USD, UYU, VND, XOF, ZAR, ZMW, XAG, XAU, XPD, XPT},
-% hard coded and configured currencies:
-\emph{AED,AFN,ALL,AMD,ANG,AOA,ARS,AUD,AWG,AZN,
+%    \lstinline!Currency! &
+%\emph{AED,AFN,ALL,AMD,ANG,AOA,ARS,AUD,AWG,AZN,
+%BAM,BBD,BDT,BGN,BHD,BIF,BMD,BND,BOB,BOV,
+%BRL,BSD,BTN,BWP,BYN,BZD,CAD,CDF,CHE,CHF,
+%CHW,CLF,CLP,CNH,CNT,CNY,COP,COU,CRC,CUC,
+%CUP,CVE,CZK,DJF,DKK,DOP,DZD,EGP,ERN,ETB,
+%EUR,FJD,FKP,GBP,GEL,GGP,GHS,GIP,GMD,GNF,
+%GTQ,GYD,HKD,HNL,HRK,HTG,HUF,IDR,ILS,IMP,
+%INR,IQD,IRR,ISK,JEP,JMD,JOD,JPY,KES,KGS,
+%KHR,KID,KMF,KPW,KRW,KWD,KYD,KZT,LAK,LBP,
+%LKR,LRD,LSL,LYD,MAD,MDL,MGA,MKD,MMK,MNT,
+%MOP,MRU,MUR,MVR,MWK,MXN,MXV,MYR,MZN,NAD,
+%NGN,NIO,NOK,NPR,NZD,OMR,PAB,PEN,PGK,PHP,
+%PKR,PLN,PYG,QAR,RON,RSD,RUB,RWF,SAR,SBD,
+%SCR,SDG,SEK,SGD,SHP,SLL,SOS,SRD,SSP,STN,
+%SVC,SYP,SZL,THB,TJS,TMT,TND,TOP,TRY,TTD,
+%TWD,TZS,UAH,UGX,USD,USN,UYI,UYU,UYW,UZS,
+%VES,VND,VUV,WST,XAF,XAG,XAU,XCD,XOF,XPD,
+%XPF,XPT,XSU,XUA,YER,ZAR,ZMW,ZWL,
+%XBT,BTC,ETH,ETC,BCH,XRP,LTC.}
+%This full list of currencies is available via loading the provided {\tt currencies.xml} at start-up.
+%Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+%\lstinline!Minor Currencies! & \emph{GBp, GBX, ILa, ILX, ZAc, ZAC, ZAX},  
+%    Note: Minor Currency codes only supported for Equity products.  \\ \hline
+    %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
+    \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
+\emph{F,  Following, FOLLOWING}\\ 
+\emph{MF, ModifiedFollowing, Modified Following, MODIFIEDF}\\ 
+\emph{P, Preceding, PRECEDING}\\ 
+\emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
+\emph{U, Unadjusted, INDIFF }\end{tabular}  \\ \hline
+  \end{tabular}
+  \caption{Allowable values for standard trade data.}
+  \label{tab:allow_stand_data}
+\end{table}
+
+
+
+\begin{longtable}{| p{.25\textwidth} | p{.80\textwidth} |}
+\hline
+\multicolumn{2}{|l|}{\lstinline!Currency!}                    \\ \hline
+\textbf{Category}                   & \textbf{Allowable Values}                       \\ \hline
+Fiat Currencies &   \emph{AED,AFN,ALL,AMD,ANG,AOA,ARS,AUD,AWG,AZN,
 BAM,BBD,BDT,BGN,BHD,BIF,BMD,BND,BOB,BOV,
 BRL,BSD,BTN,BWP,BYN,BZD,CAD,CDF,CHE,CHF,
 CHW,CLF,CLP,CNH,CNT,CNY,COP,COU,CRC,CUC,
@@ -36,25 +68,20 @@ PKR,PLN,PYG,QAR,RON,RSD,RUB,RWF,SAR,SBD,
 SCR,SDG,SEK,SGD,SHP,SLL,SOS,SRD,SSP,STN,
 SVC,SYP,SZL,THB,TJS,TMT,TND,TOP,TRY,TTD,
 TWD,TZS,UAH,UGX,USD,USN,UYI,UYU,UYW,UZS,
-VES,VND,VUV,WST,XAF,XAG,XAU,XCD,XOF,XPD,
-XPF,XPT,XSU,XUA,YER,ZAR,ZMW,ZWL.}
-This full list of currencies is available via loading the provided {\tt currencies.xml} at start-up.
-Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
-\lstinline!Minor Currencies! & \emph{GBp, GBX, ILa, ILX, ZAc, ZAC, ZAX},  
-    Note: Minor Currency codes only supported for Equity products.  \\ \hline
-    %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
-    \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
-\emph{F,  Following, FOLLOWING}\\ 
-\emph{MF, ModifiedFollowing, Modified Following, MODIFIEDF}\\ 
-\emph{P, Preceding, PRECEDING}\\ 
-\emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
-\emph{U, Unadjusted, INDIFF }\end{tabular}  \\ \hline
-  \end{tabular}
-  \caption{Allowable values for standard trade data.}
-  \label{tab:allow_stand_data}
-\end{table}
+VES,VND,VUV,WST,XAF,XAU,XCD,XOF,
+XPF,XSU,XUA,YER,ZAR,ZMW,ZWL}
+\\ \hline Minor Currencies &  \makecell[l]{\emph{GBp, GBX} (for pennies of GBP) \\ \emph{ILa, ILX} (for agorot of ILS)  \\ \emph{ZAc, ZAC, ZAX} (for cents of ZAR) \\ 
+    Note: Minor Currency codes are only supported for equity products. } \\ \hline
+%Pre-Eurozone Currencies   &  \emph{ATS, BEF, DEM, ESP, FIM, FRF, GRD, IEP, ITL, LUF, NLG, PTE} \\ \hline
+Precious Metals treated as Currencies   &   \emph{XAG, XAU, XPD, XPT}  \\ \hline
+Cryptocurrencies   &   \emph{BTC, XBT, ETH, ETC, BCH, XRP, LTC} \\ \hline
+\multicolumn{2}{|l|}{\makecell[l]{This full list of currencies is available via loading the provided {\tt currencies.xml} at start-up.\\
+Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  }  }                  \\ \hline
+  \caption{Allowable Values for Currency}
+  \label{tab:currency}
+  \end{longtable}
 
-\newpage
+
 
 %\begin{table}[H]
 %\centering

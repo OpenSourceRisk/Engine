@@ -48,7 +48,6 @@ void BondReferenceDatum::BondData::fromXML(XMLNode* node) {
     creditCurveId = XMLUtils::getChildValue(node, "CreditCurveId", false);
     creditGroup = XMLUtils::getChildValue(node, "CreditGroup", false);
     referenceCurveId = XMLUtils::getChildValue(node, "ReferenceCurveId", true);
-    proxySecurityId = XMLUtils::getChildValue(node, "ProxySecurityId", false);
     incomeCurveId = XMLUtils::getChildValue(node, "IncomeCurveId", false);
     volatilityCurveId = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
     settlementDays = XMLUtils::getChildValue(node, "SettlementDays", true);
@@ -71,7 +70,6 @@ XMLNode* BondReferenceDatum::BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CreditCurveId", issuerId);
     XMLUtils::addChild(doc, node, "CreditGroup", creditGroup);
     XMLUtils::addChild(doc, node, "ReferenceCurveId", issuerId);
-    XMLUtils::addChild(doc, node, "ProxySecurityId", proxySecurityId);
     XMLUtils::addChild(doc, node, "IncomeCurveId", incomeCurveId);
     XMLUtils::addChild(doc, node, "VolatilityCurveId", volatilityCurveId);
     XMLUtils::addChild(doc, node, "SettlementDays", issuerId);

@@ -287,6 +287,7 @@ portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/durationadjustedcms.hpp
 portfolio/builders/equityasianoption.hpp
+portfolio/builders/equitycompositeoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
@@ -342,7 +343,9 @@ portfolio/premiumdata.hpp
 portfolio/referencedata.hpp
 portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
+portfolio/structuredconfigurationwarning.hpp
 portfolio/structuredtradeerror.hpp
+portfolio/structuredtradewarning.hpp
 portfolio/swap.hpp
 portfolio/swaption.hpp
 portfolio/trade.hpp

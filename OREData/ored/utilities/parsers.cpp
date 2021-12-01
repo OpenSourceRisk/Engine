@@ -53,6 +53,7 @@
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/wmr.hpp>
@@ -442,7 +443,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"XIDX", Indonesia(Indonesia::IDX)},
         {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
         {"XMIL", Italy(Italy::Exchange)},
-        {"MISX", Russia(Russia::MOEX)},
+        {"MISX", RussiaModified(Russia::MOEX)},
         {"XKRX", SouthKorea(SouthKorea::KRX)},
         {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
         {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
@@ -675,7 +676,11 @@ Currency parseCurrency(const string& s, const Currency& currency) {
         {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()}, {"USD", USDCurrency()},
         {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XAG", XAGCurrency()}, {"XAU", XAUCurrency()},
         {"XOF", XOFCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
-        {"ZMW", ZMWCurrency()}};
+        {"ZMW", ZMWCurrency()},
+        // crypto
+        {"XBT", BTCCurrency()}, {"BTC", BTCCurrency()}, {"ETH", ETHCurrency()}, {"ETC", ETCCurrency()},
+        {"BCH", BCHCurrency()}, {"XRP", XRPCurrency()}, {"LTC", LTCCurrency()} 
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -1048,7 +1053,7 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
 AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {
         {"EQ", AssetClass::EQ},   {"FX", AssetClass::FX}, {"COM", AssetClass::COM},  {"IR", AssetClass::IR},
-        {"INF", AssetClass::INF}, {"CR", AssetClass::CR}, {"BOND", AssetClass::BOND}};
+        {"INF", AssetClass::INF}, {"CR", AssetClass::CR}, {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -1073,6 +1078,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "CR";
     case AssetClass::BOND:
         return os << "BOND";
+    case AssetClass::BOND_INDEX:
+        return os << "BOND_INDEX";
     default:
         QL_FAIL("Unknown AssetClass");
     }
@@ -1536,6 +1543,22 @@ Average::Type parseAverageType(const std::string& s) {
     } else {
         QL_FAIL("Average::Type '" << s << "' not recognized. Should be Arithmetic or Geometric");
     }
+}
+
+
+std::vector<std::string> getCorrelationTokens(const std::string& name) {
+    // Look for & first as it avoids collisions with : which can be used in an index name
+    // if it is not there we fall back on the old behaviour
+    string delim;
+    if (name.find('&') != std::string::npos)
+        delim = "&";
+    else
+        delim = "/:,";
+    vector<string> tokens;
+    boost::split(tokens, name, boost::is_any_of(delim));
+    QL_REQUIRE(tokens.size() == 2,
+               "invalid correlation name '" << name << "', expected Index2:Index1 or Index2/Index1 or Index2&Index1");
+    return tokens;
 }
 
 } // namespace data

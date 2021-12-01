@@ -188,7 +188,6 @@
       <xs:element type="xs:string" name="CreditGroup" minOccurs="0"/>
       <xs:element type="xs:string" name="SecurityId"/>
       <xs:element type="xs:string" name="ReferenceCurveId" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProxySecurityId" minOccurs="0"/>
       <xs:element type="xs:string" name="IncomeCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="SettlementDays" minOccurs="0"/>
@@ -1001,6 +1000,7 @@
       <xs:element type="xs:int" name="DeliveryRollDays" minOccurs="0"/>
       <xs:element type="xs:string" name="DeliveryRollCalendar" minOccurs="0"/>
       <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
+      <xs:element type="xs:float" name="BidAskAdjustment" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   

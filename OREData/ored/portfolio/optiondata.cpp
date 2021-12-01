@@ -174,7 +174,11 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
 
     // build exercise instance
 
-    exercise_ = boost::make_shared<BermudanExercise>(noticeDates_);
+    if (optionData.style() == "European")
+        exercise_ = boost::make_shared<EuropeanExercise>(sortedExerciseDates.back());
+    else 
+        exercise_ = boost::make_shared<BermudanExercise>(noticeDates_);
+
 
     // build feee and rebated exercise instance, if any fees are present
 

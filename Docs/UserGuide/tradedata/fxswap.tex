@@ -28,9 +28,9 @@ The meanings and allowable values of the various elements in the \lstinline!FXSw
 
 \begin{itemize}
 \item NearDate: The date of the initial fx exchange of the FX Swap. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-\item NearBoughtCurrency: The currency to be bought in the initial exchange at near date, and sold in the final exchange at far date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item NearBoughtCurrency: The currency to be bought in the initial exchange at near date, and sold in the final exchange at far date.  \\ Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 \item NearBoughtAmount: The amount to be bought on near date.  \\ Allowable values:  Any positive real number.
-\item NearSoldCurrency: The currency to be sold in the initial fx exchange at near date, and bought in the final exchange at far date.   \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item NearSoldCurrency: The currency to be sold in the initial fx exchange at near date, and bought in the final exchange at far date.   \\ Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 \item NearSoldAmount: The amount to be sold on near date.  \\ Allowable values:  Any positive real number.
 \item FarDate: The date of the final fx exchange of the FX Swap. \\ Allowable values:  Any date further into the future than NearDate. See \lstinline!Date! in Table  \ref{tab:allow_stand_data}.
 \item FarBoughtAmount: The amount to be bought on far date.  \\ Allowable values:  Any positive real number.
@@ -41,5 +41,4 @@ Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} i
 
 \end{itemize}
 
-Note that FX Swaps also cover Precious Metals Swaps, i.e. with
-currencies XAU, XAG, XPT, XPD.
+Note that FX Swaps also cover Precious Metals swaps, i.e. with currencies XAU, XAG, XPT, XPD, and Cryptocurrency swaps,  see supported Cryptocurrencies in Table \ref{tab:currency}.

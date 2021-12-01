@@ -26,9 +26,9 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 
 \begin{itemize}
 \item ValueDate: The value date of the FX Forward. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-\item BoughtCurrency: The currency to be bought on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item BoughtCurrency: The currency to be bought on value date.  \\ Allowable values:  See Table \ref{tab:currency}  \lstinline!Currency!.
 \item BoughtAmount: The amount to be bought on value date.  \\ Allowable values:  Any positive real number.
-\item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:   See Table \ref{tab:currency}  \lstinline!Currency!.
 \item SoldAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
 \item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Forwards can be represented by \emph{Cash} settlement. \\
 Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} if left blank or omitted.
@@ -39,7 +39,7 @@ A \lstinline!SettlementData! node is shown in Listing \ref{lst:settlement_data_n
 
 \begin{itemize}
 \item Currency: The currency in which the FX Forward is settled. This field is only used if settlement is \emph{Cash}. \\
-Allowable values: See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. Defaults to the sold currency if left blank or omitted.
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!. Defaults to the sold currency if left blank or omitted.
 \item FXIndex: The FX reference index for determining the FX fixing at the value date. This field is required if settlement is \emph{Cash}
 and the payment date is greater than the value date. Otherwise, it is ignored. \\
 Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
@@ -59,8 +59,7 @@ The \lstinline!Rules! sub-node is shown in Listing \ref{lst:settlement_data_node
   \end{itemize}
 \end{itemize}
 
-Note that FX Forwards also cover Precious Metals forwards, i.e. with
-currencies XAU, XAG, XPT, XPD.
+Note that FX Forwards also cover Precious Metals forwards, i.e. with currencies XAU, XAG, XPT, XPD, and Cryptocurrency forwards,  see supported Cryptocurrencies in Table \ref{tab:currency}.
 
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{xml}
