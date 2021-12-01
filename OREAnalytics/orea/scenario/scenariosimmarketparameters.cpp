@@ -1105,7 +1105,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
         vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
         set<string> names = params_.find(RiskFactorKey::KeyType::FXVolatility)->second.second;
-        QL_REQUIRE(names.size() > 0, "EquityVolatility needs at least one name");
+        QL_REQUIRE(names.size() > 0, "FXVolatility needs at least one name");
         set<string> namesCheck = names;
         bool defaultProvided = false;
         for (XMLNode* expiryNode : expiryNodes) {
@@ -1113,10 +1113,12 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             string name = XMLUtils::getAttribute(expiryNode, "ccyPair");
             vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
             QL_REQUIRE(fxVolExpiries_.insert(make_pair(name, expiries)).second,
-                       "EquityVolatilities has duplicate expiries for key '" << name << "'");
+                       "FXVolatilities has duplicate expiries for key '" << name << "'");
             namesCheck.erase(name);
             defaultProvided = name == "";
         }
+        QL_REQUIRE(defaultProvided || namesCheck.size() == 0, "FXVolatilities has no expiries for "
+            << "equities '" << join(namesCheck, ",") << "' and no default expiry set has been given");
 
         XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         setFxVolIsSurface("", false);
