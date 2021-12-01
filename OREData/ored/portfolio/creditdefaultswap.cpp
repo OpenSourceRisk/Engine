@@ -41,6 +41,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     QL_REQUIRE(legData.legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(legData.schedule());
+    QL_REQUIRE(schedule.size() > 1, "CreditDefaultSwap requires at least two dates in the schedule");
 
     BusinessDayConvention payConvention = Following;
     if (!legData.paymentConvention().empty()) {
