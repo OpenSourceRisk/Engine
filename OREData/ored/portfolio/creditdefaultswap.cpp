@@ -48,6 +48,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     }
 
     Protection::Side prot = legData.isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
+    notional_ = notionals.front();
 
     Leg amortized_leg;
     if (notionals.size() == 0)
@@ -85,12 +86,12 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     if (notionals.size() == 1) {
         if (swap_.upfrontFee() == Null<Real>()) {
             cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-                prot, notionals.front(), fixedData->rates().front(), schedule, payConvention, dc,
+                prot, notional_, fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(),
                 boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
         } else {
             cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-                prot, notionals.front(), swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
+                prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
                 swap_.settlesAccrual(), swap_.protectionPaymentTime(), swap_.protectionStart(), swap_.upfrontDate(),
                 boost::shared_ptr<Claim>(), lastPeriodDayCounter, swap_.tradeDate(), swap_.cashSettlementDays());
         }
