@@ -44,7 +44,7 @@ public:
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>(),
-                const Date& maxValidDividendDate = Date::maxDate());
+                const Real maxValidDividendTIme = QL_MAX_REAL);
     //! \name Index interface
     //@{
     std::string name() const;
@@ -94,7 +94,7 @@ protected:
     std::string familyName_;
     Currency currency_;
     const Handle<YieldTermStructure> rate_, dividend_;
-    const Date maxValidDividendDate_;
+    const Real maxValidDividendTime_;
     std::string name_;
     const Handle<Quote> spotQuote_;
 
