@@ -21,9 +21,6 @@
 namespace QuantExt {
 
 Rate EquityCouponPricer::swapletRate() const {
-    if (returnType_ == EquityReturnType::Dividend)
-        return equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
-
     // Start fixing shouldn't include dividends as the assumption of continuous dividends means they will have been paid
     // as they accrued in the previous period (or at least at the end when performance is measured).
     Real start = coupon_->initialPrice();
@@ -38,7 +35,7 @@ Rate EquityCouponPricer::swapletRate() const {
 
     // Dividends that are already fixed dividends + yield accrued over remaining period.
     // yield accrued = Forward without dividend yield - Forward with dividend yield
-    if (returnType_ == EquityReturnType::Total) {
+    if (returnType_ == EquityReturnType::Total || returnType_ == EquityReturnType::Dividend) {
         // projected dividends from today until the fixing end date
         dividends = equityCurve_->fixing(coupon_->fixingEndDate(), false, true) -
                     equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
@@ -51,13 +48,14 @@ Rate EquityCouponPricer::swapletRate() const {
         dividends += equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
     }
 
-    if (start == 0) {
+    if (returnType_ == EquityReturnType::Dividend)
+        return dividends; 
+    else if (start == 0)
         return (end + dividends * dividendFactor_) * fxEnd;
-    } else if (returnType_ == EquityReturnType::Absolute) {
+    else if (returnType_ == EquityReturnType::Absolute)
         return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart);
-    } else {
+    else
         return ((end + dividends * dividendFactor_) * fxEnd - start * fxStart) / (start * fxStart);
-    }
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {

@@ -108,6 +108,8 @@ void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer
 }
 
 Real EquityCoupon::nominal() const {
+    // use quantity for dividend swaps, this ensures notional resetting is not relevant
+    // swaplet rate returns the absolute dividend to match
     if (returnType_ == EquityReturnType::Dividend)
         return quantity();
     else if(notionalReset_) {

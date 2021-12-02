@@ -576,11 +576,6 @@ void EquityLegData::fromXML(XMLNode* node) {
         quantity_ = parseReal(XMLUtils::getNodeValue(qty));
     else
         quantity_ = Null<Real>();
-    
-    if (returnType_ == EquityReturnType::Total)
-        QL_REQUIRE(quantity_,
-                   "EquityLegData::fromXML: A Quantity must be provided for return type " << to_string(returnType_));
-
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
