@@ -19,6 +19,7 @@ calendars/malaysia.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
+calendars/russia.cpp
 calendars/spain.cpp
 calendars/switzerland.cpp
 calendars/wmr.cpp
@@ -284,6 +285,7 @@ calendars/malaysia.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
+calendars/russia.hpp
 calendars/spain.hpp
 calendars/switzerland.hpp
 calendars/wmr.hpp

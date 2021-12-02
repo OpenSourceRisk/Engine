@@ -20,6 +20,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
@@ -831,8 +832,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (pn) {
             for (XMLNode* child = XMLUtils::getChildNode(pn, "Pair"); child; child = XMLUtils::getNextSibling(child)) {
                 string p = XMLUtils::getNodeValue(child);
-                vector<string> tokens;
-                boost::split(tokens, p, boost::is_any_of(",:"));
+                vector<string> tokens = getCorrelationTokens(p);
                 QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << p);
                 pairs.push_back(tokens[0] + ":" + tokens[1]);
             }

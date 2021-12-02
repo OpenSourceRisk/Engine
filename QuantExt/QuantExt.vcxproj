@@ -509,6 +509,7 @@
     <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
+    <ClInclude Include="qle\calendars\russia.hpp" />
     <ClInclude Include="qle\calendars\spain.hpp" />
     <ClInclude Include="qle\calendars\switzerland.hpp" />
     <ClInclude Include="qle\calendars\wmr.hpp" />
@@ -902,6 +903,7 @@
     <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
+    <ClCompile Include="qle\calendars\russia.cpp" />
     <ClCompile Include="qle\calendars\spain.cpp" />
     <ClCompile Include="qle\calendars\switzerland.cpp" />
     <ClCompile Include="qle\calendars\wmr.cpp" />

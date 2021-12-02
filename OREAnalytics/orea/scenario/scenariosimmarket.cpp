@@ -49,6 +49,7 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
@@ -2288,17 +2289,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         LOG("Adding correlations for " << name << " from configuration " << configuration);
 
-                        // Look for '&' first
-                        // see todaysmarket.cpp for similar logic
-                        string delim;
-                        if (name.find('&') != std::string::npos)
-                            delim = "&";
-                        else
-                            // otherwise fall back on old behavior
-                            delim = ":";
-
-                        vector<string> tokens;
-                        boost::split(tokens, name, boost::is_any_of(delim));
+                        vector<string> tokens = getCorrelationTokens(name);
                         QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << name);
                         pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
 
