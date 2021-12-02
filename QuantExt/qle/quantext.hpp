@@ -173,6 +173,7 @@
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <qle/math/fillemptymatrix.hpp>

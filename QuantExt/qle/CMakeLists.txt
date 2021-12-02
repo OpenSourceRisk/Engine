@@ -434,6 +434,7 @@ instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 interpolators/optioninterpolator2d.hpp
+math/constantinterpolation.hpp
 math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp

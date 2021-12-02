@@ -26,8 +26,6 @@
 #include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 
-#include <iostream>
-
 using std::set;
 using std::vector;
 using namespace QuantLib;
