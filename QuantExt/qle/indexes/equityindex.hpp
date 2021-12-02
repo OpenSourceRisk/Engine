@@ -38,13 +38,11 @@ using namespace QuantLib;
 /*! \ingroup indexes */
 class EquityIndex : public EqFxIndexBase {
 public:
-    /*! spot quote is interpreted as of today,
-        forwards are extrapolated flat beyond maxValidDividendDate */
+    /*! spot quote is interpreted as of today */
     EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
-                const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>(),
-                const Date& maxValidDividendDate = Date::maxDate());
+                const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>());
     //! \name Index interface
     //@{
     std::string name() const;
@@ -94,7 +92,6 @@ protected:
     std::string familyName_;
     Currency currency_;
     const Handle<YieldTermStructure> rate_, dividend_;
-    const Date maxValidDividendDate_;
     std::string name_;
     const Handle<Quote> spotQuote_;
 
