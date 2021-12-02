@@ -780,15 +780,18 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         }
     }
 
-    Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-    std::vector<Real> times(n_fxvol_exp);
-
     for (auto f : sensitivityData_->fxVolShiftData()) {
         string ccyPair = f.first;
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+        
+        Size n_fxvol_exp = simMarketData_->fxVolExpiries(ccyPair).size();
+        std::vector<Real> times(n_fxvol_exp);
         Size n_fxvol_strikes;
         vector<Real> vol_strikes;
-        if (simMarketData_->useMoneyness(ccyPair)) {
+        if (!simMarketData_->fxVolIsSurface(ccyPair)) {
+            vol_strikes = {0.0};
+            n_fxvol_strikes = 1;
+        } else if (simMarketData_->fxUseMoneyness(ccyPair)) {
             n_fxvol_strikes = simMarketData_->fxVolMoneyness(ccyPair).size();
             vol_strikes = simMarketData_->fxVolMoneyness(ccyPair);
         } else {
@@ -816,7 +819,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         }
         bool valid = true;
         for (Size j = 0; j < n_fxvol_exp; ++j) {
-            Date d = asof + simMarketData_->fxVolExpiries()[j];
+            Date d = asof + simMarketData_->fxVolExpiries(ccyPair)[j];
             times[j] = dc.yearFraction(asof, d);
             for (Size k = 0; k < n_fxvol_strikes; k++) {
                 Size idx = k * n_fxvol_exp + j;
@@ -1009,7 +1012,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getDayCounter = [this](const string& k) {
             try {
                 return to_string(simMarket_->swaptionVol(k)->dayCounter());
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
                                                                                          << "', using default A365");
                 return std::string("A365F");
@@ -1029,7 +1032,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getDayCounter = [this](const string& k) {
             try {
                 return to_string(simMarket_->yieldVol(k)->dayCounter());
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
                                                                                          << "', using default A365");
                 return std::string("A365F");

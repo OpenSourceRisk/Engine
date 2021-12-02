@@ -198,6 +198,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvariancesurfacestddevs.cpp
+termstructures/blackvolconstantspread.cpp
 termstructures/blackvolsurfacebfrr.cpp
 termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfacewithatm.cpp
@@ -551,6 +552,7 @@ termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvariancesurfacestddevs.hpp
+termstructures/blackvolconstantspread.hpp
 termstructures/blackvolsurfacebfrr.hpp
 termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfacewithatm.hpp
@@ -581,7 +583,6 @@ termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityblackvolsurfaceproxy.hpp
 termstructures/equityforwardcurvestripper.hpp
-termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp

@@ -450,7 +450,7 @@
     <ClInclude Include="qle\math\stabilisedglls.hpp">
       <Filter>math</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp">
+    <ClInclude Include="qle\termstructures\blackvolconstantspread.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp">
@@ -2044,6 +2044,9 @@
     </ClCompile>
     <ClCompile Include="qle\calendars\greece.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolconstantspread.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
