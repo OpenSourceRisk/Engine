@@ -602,7 +602,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
             expiries.push_back(expiry);
             strikes.push_back(stk);
-            bool useCall = true;
+            bool useCall = cpd.call != Null<Real>();
 
             if ((cpd.call != Null<Real>() && cpd.put != Null<Real>()) && !fwdCurve.empty()) {
                 // We have a call and a put and a forward curve so use it to decide.
