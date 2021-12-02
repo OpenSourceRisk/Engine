@@ -128,13 +128,13 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     eqIndex->addFixing(fixingDate1, 1980);
 
     // Price Return coupon
-    EquityCoupon eq1(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc);
+    EquityCoupon eq1(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, EquityReturnType::Price);
     // Total Return Coupon
-    EquityCoupon eq2(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, true, divFactor);
+    EquityCoupon eq2(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, EquityReturnType::Total, divFactor);
     // historical starting coupon
-    EquityCoupon eq3(cfDate2, nominal, cfDate1, cfDate2, 0, eqIndex, dc);
+    EquityCoupon eq3(cfDate2, nominal, cfDate1, cfDate2, 0, eqIndex, dc, EquityReturnType::Price);
     // Total Return Coupon with fixing lag
-    EquityCoupon eq4(cfDate2, nominal, today, cfDate2, fixingLag, eqIndex, dc, true);
+    EquityCoupon eq4(cfDate2, nominal, today, cfDate2, fixingLag, eqIndex, dc, EquityReturnType::Total);
 
     // Fx Index, coupon and underlying have different currency
     Handle<YieldTermStructure> domYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // EUR
@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     fxIndex->addFixing(cfDate1, 1.09);
 
     // Total return coupon with underlying in different ccy - Base ccy EUR, and underlying SP5 in USD
-    EquityCoupon eq5(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, true, 1.0, false, Null<Real>(), Null<Real>(),
-                     Date(), Date(), Date(), Date(), Date(), fxIndex);
+    EquityCoupon eq5(cfDate2, nominal, today, cfDate2, 0, eqIndex, dc, EquityReturnType::Total, 1.0, false,
+                     Null<Real>(), Null<Real>(), Date(), Date(), Date(), Date(), Date(), fxIndex);
 
     boost::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
