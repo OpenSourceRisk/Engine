@@ -246,6 +246,17 @@ std::set<std::string> Portfolio::portfolioIds() const {
     return portfolioIds;
 }
 
+bool Portfolio::hasNettingSetDetails() const {
+    bool hasNettingSetDetails = false;
+    for (auto it = trades().begin(); it != trades().end(); it++) {
+        if (!(*it)->envelope().nettingSetDetails().emptyOptionalFields()) {
+            hasNettingSetDetails = true;
+            break;
+        }
+    }
+    return hasNettingSetDetails;
+}
+
 map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
 
     map<string, set<Date>> result;
