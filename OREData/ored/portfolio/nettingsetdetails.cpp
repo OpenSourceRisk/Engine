@@ -25,7 +25,7 @@ namespace ore {
 namespace data {
 
 NettingSetDetails::NettingSetDetails(const map<string, string>& nettingSetMap) {
-    for (const pair<string, string>& m : nettingSetMap) {
+    for (const auto& m : nettingSetMap) {
         if (m.first == "NettingSetId") {
             nettingSetId_ = nettingSetMap.at(m.first);
         } else if (m.first == "AgreementType") {

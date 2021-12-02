@@ -56,7 +56,7 @@ const bool NettingSetManager::empty() const {
 }
 
 const bool NettingSetManager::calculateIMAmount() const { 
-    for (const auto nsd : data_) {
+    for (const auto& nsd : data_) {
         if (nsd.second->csaDetails()->calculateIMAmount())
             return true;
     }
