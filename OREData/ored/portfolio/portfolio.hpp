@@ -45,7 +45,7 @@ public:
     //! Default constructor
     explicit Portfolio(bool buildFailedTrades = true) : buildFailedTrades_(buildFailedTrades) {}
 
-    //! Add a trade to the portfoliio
+    //! Add a trade to the portfolio
     void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
 
     //! Check if a trade id is already in the porfolio
