@@ -879,6 +879,9 @@
     <ClInclude Include="qle\calendars\luxembourg.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\russia.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
     <ClInclude Include="qle\calendars\spain.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
@@ -1821,6 +1824,9 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\luxembourg.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\russia.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\spain.cpp">

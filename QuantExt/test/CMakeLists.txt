@@ -8,6 +8,7 @@ blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
 blackvolsurfacedelta.cpp
 bonds.cpp
+calendars.cpp
 capfloortermvolcurve.cpp
 cashflow.cpp
 commodityforward.cpp

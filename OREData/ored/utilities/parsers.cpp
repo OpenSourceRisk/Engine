@@ -53,6 +53,7 @@
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/wmr.hpp>
@@ -442,7 +443,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"XIDX", Indonesia(Indonesia::IDX)},
         {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
         {"XMIL", Italy(Italy::Exchange)},
-        {"MISX", Russia(Russia::MOEX)},
+        {"MISX", RussiaModified(Russia::MOEX)},
         {"XKRX", SouthKorea(SouthKorea::KRX)},
         {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
         {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
