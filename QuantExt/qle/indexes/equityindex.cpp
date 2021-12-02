@@ -29,9 +29,9 @@ namespace QuantExt {
 
 EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency,
                          const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                         const Handle<YieldTermStructure>& dividend, const Real maxValidDividendTime)
-    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend),
-      maxValidDividendTime_(maxValidDividendTime), spotQuote_(spotQuote), fixingCalendar_(fixingCalendar) {
+                         const Handle<YieldTermStructure>& dividend, const Date& maxValidDividendDate)
+    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), maxValidDividendDate_(maxValidDividendDate),
+      spotQuote_(spotQuote), fixingCalendar_(fixingCalendar) {
 
     name_ = familyName;
     registerWith(spotQuote_);
@@ -93,7 +93,7 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     Real price = spotQuote_->value();
 
     // we extrapolate the forward flat after maxValidDividendDate
-    Real effFixingTime = std::min(fixingTime, maxValidDividendTime_);
+    Real effFixingTime = std::min(fixingTime, rate_->timeFromReference(maxValidDividendDate_));
 
     // compute the forecast applying the usual no arbitrage principle
     Real forward;
@@ -130,7 +130,7 @@ Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDa
 boost::shared_ptr<EquityIndex> EquityIndex::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                   const Handle<YieldTermStructure>& dividend) const {
     return boost::make_shared<EquityIndex>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend,
-                                           maxValidDividendTime_);
+                                           maxValidDividendDate_);
 }
 
 } // namespace QuantExt

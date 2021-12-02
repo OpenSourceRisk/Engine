@@ -434,6 +434,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             dividendDiscountFactors.push_back(std::exp(-dividendRates[i] * t));
         }
 
+        Date maxValidDividendDate = terms_.empty() ? asof : terms_.back();
         boost::shared_ptr<YieldTermStructure> divCurve;
         // Build Dividend Term Structure
         if (dividendRates.size() == 1) {
@@ -473,8 +474,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
         equityIndex_ = boost::make_shared<EquityIndex>(
             spec.curveConfigID(), calendar, parseCurrency(config->currency()), equitySpot, forecastYieldTermStructure,
-            dividendYieldTermStructure,
-            terms_.empty() ? 0.0 : forecastYieldTermStructure->timeFromReference(terms_.back()));
+            dividendYieldTermStructure, maxValidDividendDate);
 
         // set calibration info
 
