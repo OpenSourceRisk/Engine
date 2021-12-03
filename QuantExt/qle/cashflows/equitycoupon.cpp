@@ -26,17 +26,45 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+std::ostream& operator<<(std::ostream& out, EquityReturnType t) {
+    switch (t) {
+    case EquityReturnType::Price:
+        return out << "Price";
+    case EquityReturnType::Total:
+        return out << "Total";
+    case EquityReturnType::Absolute:
+        return out << "Absolute";
+    case EquityReturnType::Dividend:
+        return out << "Dividend";
+    default:
+        QL_FAIL("unknown EquityReturnType(" << int(t) << ")");
+    }
+}
+
+EquityReturnType parseEquityReturnType(const std::string& str) {
+    if (str == "Price")
+        return EquityReturnType::Price;
+    else if (str == "Total")
+        return EquityReturnType::Total;
+    else if (str == "Absolute")
+        return EquityReturnType::Absolute;
+    else if (str == "Dividend")
+        return EquityReturnType::Dividend;
+    QL_FAIL("Invalid EquityReturnType " << str);
+}
+
 EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            Natural fixingDays, const boost::shared_ptr<EquityIndex>& equityCurve,
-                           const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor, bool notionalReset,
-                           Real initialPrice, Real quantity, const Date& fixingStartDate, const Date& fixingEndDate,
-                           const Date& refPeriodStart, const Date& refPeriodEnd, const Date& exCouponDate,
-                           const boost::shared_ptr<FxIndex>& fxIndex, const bool initialPriceIsInTargetCcy, const bool absoluteReturn)
+                           const DayCounter& dayCounter, EquityReturnType returnType, Real dividendFactor,
+                           bool notionalReset, Real initialPrice, Real quantity, const Date& fixingStartDate,
+                           const Date& fixingEndDate, const Date& refPeriodStart, const Date& refPeriodEnd, 
+                           const Date& exCouponDate, const boost::shared_ptr<FxIndex>& fxIndex,
+                           const bool initialPriceIsInTargetCcy)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
-      fixingDays_(fixingDays), equityCurve_(equityCurve), dayCounter_(dayCounter), isTotalReturn_(isTotalReturn),
+      fixingDays_(fixingDays), equityCurve_(equityCurve), dayCounter_(dayCounter), returnType_(returnType),
       dividendFactor_(dividendFactor), notionalReset_(notionalReset), initialPrice_(initialPrice),
       initialPriceIsInTargetCcy_(initialPriceIsInTargetCcy), quantity_(quantity), fixingStartDate_(fixingStartDate),
-      fixingEndDate_(fixingEndDate), fxIndex_(fxIndex), isAbsoluteReturn_(absoluteReturn) {
+      fixingEndDate_(fixingEndDate), fxIndex_(fxIndex) {
     QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
     QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
 
@@ -80,7 +108,11 @@ void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer
 }
 
 Real EquityCoupon::nominal() const {
-    if (notionalReset_) {
+    // use quantity for dividend swaps, this ensures notional resetting is not relevant
+    // swaplet rate returns the absolute dividend to match
+    if (returnType_ == EquityReturnType::Dividend)
+        return quantity();
+    else if(notionalReset_) {
         Real mult = (initialPrice_ == 0) ? 1 : initialPrice();
         return mult * (initialPriceIsInTargetCcy_ ? 1.0 : fxRate()) * quantity_;
     } else {
@@ -133,7 +165,7 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve,
                      const boost::shared_ptr<FxIndex>& fxIndex)
     : schedule_(schedule), equityCurve_(equityCurve), fxIndex_(fxIndex), paymentLag_(0), paymentAdjustment_(Following),
-      paymentCalendar_(Calendar()), isTotalReturn_(true), absoluteReturn_(false), initialPrice_(Null<Real>()),
+      paymentCalendar_(Calendar()), returnType_(EquityReturnType::Total), initialPrice_(Null<Real>()),
       initialPriceIsInTargetCcy_(false), dividendFactor_(1.0), fixingDays_(0), notionalReset_(false),
       quantity_(Null<Real>()) {}
 
@@ -167,13 +199,8 @@ EquityLeg& EquityLeg::withPaymentCalendar(const Calendar& calendar) {
     return *this;
 }
 
-EquityLeg& EquityLeg::withTotalReturn(bool totalReturn) {
-    isTotalReturn_ = totalReturn;
-    return *this;
-}
-
-EquityLeg& EquityLeg::withAbsoluteReturn(bool absoluteReturn) {
-    absoluteReturn_ = absoluteReturn;
+EquityLeg& EquityLeg::withReturnType(EquityReturnType returnType) {
+    returnType_ = returnType;
     return *this;
 }
     
@@ -280,9 +307,9 @@ EquityLeg::operator Leg() const {
         }
 
         boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
-            paymentDate, notional, startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_,
+            paymentDate, notional, startDate, endDate, fixingDays_, equityCurve_, paymentDayCounter_, returnType_,
             dividendFactor_, notionalReset_, initialPrice, quantity, fixingStartDate, fixingEndDate, Date(), Date(),
-            Date(), fxIndex_, initialPriceIsInTargetCcy, absoluteReturn_));
+            Date(), fxIndex_, initialPriceIsInTargetCcy));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);

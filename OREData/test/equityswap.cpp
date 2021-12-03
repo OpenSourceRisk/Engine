@@ -108,7 +108,7 @@ struct CommonVars {
     vector<double> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType, bool notionalReset = false) {
+    boost::shared_ptr<ore::data::Swap> makeEquitySwap(EquityReturnType returnType, bool notionalReset = false) {
         ScheduleData floatSchedule(ScheduleRules(start, end, floattenor, calStr, conv, conv, rule));
         ScheduleData eqSchedule(ScheduleRules(start, end, eqtenor, calStr, conv, conv, rule));
 
@@ -124,7 +124,7 @@ struct CommonVars {
         return swap;
     }
 
-    boost::shared_ptr<QuantLib::Swap> qlEquitySwap(string returnType, bool notionalReset = false) {
+    boost::shared_ptr<QuantLib::Swap> qlEquitySwap(EquityReturnType returnType, bool notionalReset = false) {
 
         boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
         // check Equity swap NPV against pure QL pricing
@@ -144,7 +144,7 @@ struct CommonVars {
                         .withNotionals(notionals)
                         .withPaymentDayCounter(parseDayCounter(fixDC))
                         .withPaymentAdjustment(parseBusinessDayConvention(conv))
-                        .withTotalReturn(returnType == "Total")
+                        .withReturnType(returnType)
                         .withInitialPrice(initialPrice)
                         .withNotionalReset(notionalReset);
 
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
     Settings::instance().evaluationDate() = today;
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap("Price");
+    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Price);
 
     // engine data and factory
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
     portfolio->add(eqSwap);
     portfolio->build(engineFactory);
 
-    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap("Price");
+    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Price);
 
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
     Settings::instance().evaluationDate() = today;
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap("Total");
+    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Total);
 
     // engine data and factory
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
     portfolio->add(eqSwap);
     portfolio->build(engineFactory);
 
-    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap("Total");
+    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Total);
 
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
     Settings::instance().evaluationDate() = today + Period(4, Months);
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap("Total", true);
+    boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap(EquityReturnType::Total, true);
 
     // engine data and factory
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapNotionalReset) {
     portfolio->add(eqSwap);
     portfolio->build(engineFactory);
 
-    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap("Total", true);
+    boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap(EquityReturnType::Total, true);
 
     BOOST_TEST_MESSAGE("Initial notional = " << eqSwap->notional());
 

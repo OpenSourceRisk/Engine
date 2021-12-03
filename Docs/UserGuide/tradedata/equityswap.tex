@@ -60,7 +60,11 @@ case. An example is shown in listing \ref{lst:equityswap_reset}.
           ...
           <EquityLegData>
             <Quantity>1000</Quantity>
-            <Name>RIC:.STOXX50E</Name>
+			<Underlying>
+				<Type>Equity</Type>
+				<Name>.STOXX50E</Name>
+				<IdentifierType>RIC</IdentifierType>
+			</Underlying>
             <InitialPrice>2937.36</InitialPrice>
             <NotionalReset>true</NotionalReset>
             <FXTerms>
@@ -76,4 +80,50 @@ case. An example is shown in listing \ref{lst:equityswap_reset}.
 \end{minted}
 \caption{Equity Swap Data with notional reset and FX indexing}
 \label{lst:equityswap_reset}
+\end{listing}
+
+\subsubsection{Dividend Swap}
+\label{ss:dividend_swap}
+
+An Dividend Swap uses its the trade type \emph{EquitySwap}, shown above \ref{ss:equity_swap}, and is set up using a {\tt EquitySwapData} node with one leg of type  \emph{Equity}, with \emph{ReturnType} equal to \emph{Dividend} and one more leg that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:dividendswap} shows an example.
+
+An example is shown in listing \ref{lst:equityswap_reset}.
+
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <EquitySwapData>
+        <LegData>
+            ...
+        </LegData>
+        <LegData>
+            <Payer>false</Payer>
+            <LegType>Equity</LegType>
+            <Currency>EUR</Currency>
+            <PaymentConvention>Following</PaymentConvention>
+            <DayCounter>A360</DayCounter>
+            <EquityLegData>
+                <ReturnType>Dividend</ReturnType>
+                <Underlying>
+					<Type>Equity</Type>
+					<Name>.STOXX50E</Name>
+					<IdentifierType>RIC</IdentifierType>
+				</Underlying>
+				<Quantity>10000</Quantity>
+            </EquityLegData>
+            <ScheduleData>
+                <Rules>
+                    <StartDate>2018-12-31</StartDate>
+                    <EndDate>2020-12-31</EndDate>
+                    <Tenor>6M</Tenor>
+                    <Calendar>EUR</Calendar>
+                    <Convention>ModifiedFollowing</Convention>
+                    <TermConvention>ModifiedFollowing</TermConvention>
+                    <Rule>Forward</Rule>
+                </Rules>
+            </ScheduleData>
+        </LegData>
+    </EquitySwapData>
+\end{minted}
+\caption{Dividend Swap Data}
+\label{lst:dividendswap}
 \end{listing}

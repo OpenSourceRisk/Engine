@@ -539,8 +539,8 @@ LegDataRegister<EquityLegData> EquityLegData::reg_("Equity");
 
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    returnType_ = XMLUtils::getChildValue(node, "ReturnType");
-    if (returnType_ == "Total" && XMLUtils::getChildNode(node, "DividendFactor"))
+    returnType_ = parseEquityReturnType(XMLUtils::getChildValue(node, "ReturnType"));
+    if (returnType_ == EquityReturnType::Total && XMLUtils::getChildNode(node, "DividendFactor"))
         dividendFactor_ = XMLUtils::getChildValueAsDouble(node, "DividendFactor", true);
     else
         dividendFactor_ = 1.0;
@@ -572,22 +572,21 @@ void EquityLegData::fromXML(XMLNode* node) {
         indices_.insert(fxIndex_);
     }
 
-    if (XMLNode* qty = XMLUtils::getChildNode(node, "Quantity")) {
+    if (XMLNode* qty = XMLUtils::getChildNode(node, "Quantity"))
         quantity_ = parseReal(XMLUtils::getNodeValue(qty));
-    } else {
+    else
         quantity_ = Null<Real>();
-    }
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    if (quantity_ != Null<Real>()) {
+    if (quantity_ != Null<Real>())
         XMLUtils::addChild(doc, node, "Quantity", quantity_);
-    }
-    XMLUtils::addChild(doc, node, "ReturnType", returnType_);
-    if (returnType_ == "Total") {
+    
+    XMLUtils::addChild(doc, node, "ReturnType", to_string(returnType_));
+    if (returnType_ == EquityReturnType::Total)
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
-    }
+    
     XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     if (initialPrice_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
@@ -1868,8 +1867,6 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
         dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());    
 
-    bool isTotalReturn = eqLegData->returnType() == "Total";
-    bool isAbsoluteReturn = eqLegData->returnType() == "Absolute";
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
     bool initialPriceIsInTargetCcy = false;
@@ -1928,8 +1925,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(paymentCalendar)
                   .withPaymentLag(paymentLag)
-                  .withTotalReturn(isTotalReturn)
-                  .withAbsoluteReturn(isAbsoluteReturn)
+                  .withReturnType(eqLegData->returnType())
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)
                   .withInitialPriceIsInTargetCcy(initialPriceIsInTargetCcy)
