@@ -292,6 +292,7 @@
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
+#include <qle/termstructures/blackvolconstantspread.hpp>
 #include <qle/termstructures/blackvolsurfacebfrr.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
@@ -322,7 +323,6 @@
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
-#include <qle/termstructures/equityvolconstantspread.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
