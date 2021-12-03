@@ -77,6 +77,21 @@ def create_df(file, col_types=None):
                 else:
                     logger.warning('Expected npv json file %s to contain the field npv.', file)
                     return None
+        if filename == 'flownpv.json':
+            with open(file, 'r') as json_file:
+                flownpv_json = json.load(json_file)
+                if 'cashflowNpv' in flownpv_json:
+
+                    logger.debug('Creating DataFrame from flownpv json file %s.', file)
+                    flownpv_df = pd.DataFrame(flownpv_json['cashflowNpv'])
+                    flownpv_df.rename(columns={"baseCurrency" : "BaseCurrency", "horizon" : "Horizon", "presentValue" : "PresentValue", "tradeId" : "TradeId"}, inplace=True)
+                    flownpv_df.drop(columns='jobId', inplace=True)
+                    print(flownpv_df)
+                    return flownpv_df
+
+                else:
+                    logger.warning('Expected flownpv json file %s to contain the field cashflowNpv.', file)
+                    return None
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
         return None
