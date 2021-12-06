@@ -50,7 +50,7 @@
   <xs:complexType name="envelope">
     <xs:all>
       <xs:element type="xs:string" name="CounterParty"/>
-      <xs:element type="xs:string" name="NettingSetId" minOccurs="0"/>
+      <xs:element ref="nettingSetGroup" minOccurs="0"/>
       <xs:element name="PortfolioIds" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
@@ -65,6 +65,16 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="nettingSetDetails">
+    <xs:all>
+      <xs:element type="xs:string" name="NettingSetId"/>
+      <xs:element type="xs:string" minOccurs="0" name="AgreementType"/>
+      <xs:element type="xs:string" minOccurs="0" name="CallType"/>
+      <xs:element type="xs:string" minOccurs="0" name="InitialMarginType"/>
+      <xs:element type="xs:string" minOccurs="0" name="LegalEntityId"/>
     </xs:all>
   </xs:complexType>
 
@@ -188,7 +198,6 @@
       <xs:element type="xs:string" name="CreditGroup" minOccurs="0"/>
       <xs:element type="xs:string" name="SecurityId"/>
       <xs:element type="xs:string" name="ReferenceCurveId" minOccurs="0"/>
-      <xs:element type="xs:string" name="ProxySecurityId" minOccurs="0"/>
       <xs:element type="xs:string" name="IncomeCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityCurveId" minOccurs="0"/>
       <xs:element type="xs:string" name="SettlementDays" minOccurs="0"/>
@@ -1001,11 +1010,16 @@
       <xs:element type="xs:int" name="DeliveryRollDays" minOccurs="0"/>
       <xs:element type="xs:string" name="DeliveryRollCalendar" minOccurs="0"/>
       <xs:element type="xs:string" name="Interpolation" minOccurs="0"/>
+      <xs:element type="xs:float" name="BidAskAdjustment" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
   
   <xs:element name="equityNameType" abstract="true"/>
   <xs:element type="xs:string" name="Name" substitutionGroup="equityNameType"/>
   <xs:element type= "underlying" name="Underlying" substitutionGroup="equityNameType"/>
+
+  <xs:element name="nettingSetGroup" abstract="true"/>
+  <xs:element type="xs:string" name="NettingSetId" substitutionGroup="nettingSetGroup"/>
+  <xs:element type="nettingSetDetails" name="NettingSetDetails" substitutionGroup="nettingSetGroup"/>
 
 </xs:schema>

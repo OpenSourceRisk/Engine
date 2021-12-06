@@ -168,6 +168,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/nettingsetdefinition.hpp>
+#include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/optionasiandata.hpp>
 #include <ored/portfolio/optiondata.hpp>

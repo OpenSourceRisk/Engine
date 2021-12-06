@@ -7,7 +7,7 @@
       <xs:element name="NettingSet" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:all>
-            <xs:element type="xs:string" name="NettingSetId"/>
+            <xs:element ref="nettingSetGroup"/>
             <xs:element type="xs:boolean" name="ActiveCSAFlag" minOccurs="0"/>
             <xs:element name="CSADetails" minOccurs="0">
               <xs:complexType mixed="true">

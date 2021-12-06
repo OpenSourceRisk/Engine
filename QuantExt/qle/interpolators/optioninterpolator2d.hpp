@@ -28,6 +28,8 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
+#include <qle/math/constantinterpolation.hpp>
+
 namespace QuantExt {
 
 struct CloseEnoughComparator {
@@ -237,12 +239,11 @@ void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>&
 
         // set interpolation
         if (strikes_[i].size() == 1) {
-            // if only one strike => add different strike with same value for interpolation object.
-            strikes_[i].push_back(strikes_[i][0] + strikes_[i][0] * 2);
-            values_[i].push_back(values_[i][0]);
+            interpolations_[i] = Constant().interpolate(values_[i].front());
+        } else {
+            interpolations_[i] =
+                interpolatorStrike_.interpolate(strikes_[i].begin(), strikes_[i].end(), values_[i].begin());
         }
-        interpolations_[i] =
-            interpolatorStrike_.interpolate(strikes_[i].begin(), strikes_[i].end(), values_[i].begin());
     }
     initialised_ = true;
 }

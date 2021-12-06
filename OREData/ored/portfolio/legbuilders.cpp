@@ -245,6 +245,13 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     string eqName = eqData->eqName();
     auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
 
+    // A little hacky but ensures for a dividend swap the swap value doesn't move equity price
+    if (eqData->returnType() == EquityReturnType::Dividend) {
+        Real spotVal = eqCurve->equitySpot()->value();
+        Handle<Quote> divSpot = Handle<Quote>(boost::make_shared<SimpleQuote>(spotVal));
+        eqCurve = eqCurve->clone(divSpot, eqCurve->equityForecastCurve(), eqCurve->equityDividendCurve());
+    }
+
     Currency dataCurrency = parseCurrencyWithMinors(data.currency());
     Currency eqCurrency;
     // Set the equity currency if provided

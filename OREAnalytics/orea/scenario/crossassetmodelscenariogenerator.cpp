@@ -333,9 +333,9 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // FX vols
         if (simMarketConfig_->simulateFXVols()) {
-            const vector<Period>& expires = simMarketConfig_->fxVolExpiries();
             for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
                 const string ccyPair = simMarketConfig_->fxVolCcyPairs()[k];
+                const vector<Period>& expires = simMarketConfig_->fxVolExpiries(ccyPair);
 
                 Size fxIndex = fxVols_[k]->fxIndex();
                 Real zFor = sample.value[fxIndex + 1][i + 1];

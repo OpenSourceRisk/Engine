@@ -509,6 +509,7 @@
     <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
+    <ClInclude Include="qle\calendars\russia.hpp" />
     <ClInclude Include="qle\calendars\spain.hpp" />
     <ClInclude Include="qle\calendars\switzerland.hpp" />
     <ClInclude Include="qle\calendars\wmr.hpp" />
@@ -826,7 +827,7 @@
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
-    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp" />
+    <ClInclude Include="qle\termstructures\blackvolconstantspread.hpp" />
     <ClInclude Include="qle\termstructures\immfraratehelper.hpp" />
     <ClInclude Include="qle\termstructures\fxblackvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\fxsmilesection.hpp" />
@@ -902,6 +903,7 @@
     <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
+    <ClCompile Include="qle\calendars\russia.cpp" />
     <ClCompile Include="qle\calendars\spain.cpp" />
     <ClCompile Include="qle\calendars\switzerland.cpp" />
     <ClCompile Include="qle\calendars\wmr.cpp" />
@@ -1080,6 +1082,7 @@
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacestddevs.cpp" />
+    <ClCompile Include="qle\termstructures\blackvolconstantspread.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp" />

@@ -53,6 +53,7 @@
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/wmr.hpp>
@@ -442,7 +443,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"XIDX", Indonesia(Indonesia::IDX)},
         {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
         {"XMIL", Italy(Italy::Exchange)},
-        {"MISX", Russia(Russia::MOEX)},
+        {"MISX", RussiaModified(Russia::MOEX)},
         {"XKRX", SouthKorea(SouthKorea::KRX)},
         {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
         {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
@@ -1052,7 +1053,7 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
 AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {
         {"EQ", AssetClass::EQ},   {"FX", AssetClass::FX}, {"COM", AssetClass::COM},  {"IR", AssetClass::IR},
-        {"INF", AssetClass::INF}, {"CR", AssetClass::CR}, {"BOND", AssetClass::BOND}};
+        {"INF", AssetClass::INF}, {"CR", AssetClass::CR}, {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -1077,6 +1078,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "CR";
     case AssetClass::BOND:
         return os << "BOND";
+    case AssetClass::BOND_INDEX:
+        return os << "BOND_INDEX";
     default:
         QL_FAIL("Unknown AssetClass");
     }

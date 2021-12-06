@@ -19,6 +19,7 @@ calendars/malaysia.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
+calendars/russia.cpp
 calendars/spain.cpp
 calendars/switzerland.cpp
 calendars/wmr.cpp
@@ -197,6 +198,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvariancesurfacestddevs.cpp
+termstructures/blackvolconstantspread.cpp
 termstructures/blackvolsurfacebfrr.cpp
 termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfacewithatm.cpp
@@ -283,6 +285,7 @@ calendars/malaysia.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
+calendars/russia.hpp
 calendars/spain.hpp
 calendars/switzerland.hpp
 calendars/wmr.hpp
@@ -431,6 +434,7 @@ instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 interpolators/optioninterpolator2d.hpp
+math/constantinterpolation.hpp
 math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
@@ -549,6 +553,7 @@ termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvariancesurfacestddevs.hpp
+termstructures/blackvolconstantspread.hpp
 termstructures/blackvolsurfacebfrr.hpp
 termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfacewithatm.hpp
@@ -579,7 +584,6 @@ termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityblackvolsurfaceproxy.hpp
 termstructures/equityforwardcurvestripper.hpp
-termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp

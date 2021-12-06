@@ -41,19 +41,24 @@ using namespace QuantLib;
  */
 class EquityCouponPricer;
 
+enum class EquityReturnType { Price, Total, Absolute, Dividend };
+
+EquityReturnType parseEquityReturnType(const std::string& str);
+std::ostream& operator<<(std::ostream& out, EquityReturnType t);
+
 //! equity coupon
 /*!
     \ingroup cashflows
 */
-class EquityCoupon : public Coupon, public Observer {
+class EquityCoupon : public Coupon, public Observer {   
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false,
+                 EquityReturnType returnType, Real dividendFactor = 1.0, bool notionalReset = false, 
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
                  const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
-                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false, const bool isAbsoluteReturn = false);
+                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
 
     //! \name CashFlow interface
     //@{
@@ -77,10 +82,8 @@ public:
     const boost::shared_ptr<EquityIndex>& equityCurve() const { return equityCurve_; }
     //! fx index curve
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
-    //! total return or price return?
-    bool isTotalReturn() const { return isTotalReturn_; }
-    //! absolute return or relative return
-    bool absoluteReturn() const { return isAbsoluteReturn_; }
+    //! the return type of the coupon
+    EquityReturnType returnType() const { return returnType_; }
     //! are dividends scaled (e.g. to account for tax)
     Real dividendFactor() const { return dividendFactor_; }
     //! The date at which the starting equity price is fixed
@@ -121,7 +124,7 @@ protected:
     Natural fixingDays_;
     boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
-    bool isTotalReturn_;
+    EquityReturnType returnType_;
     Real dividendFactor_;
     bool notionalReset_;
     Real initialPrice_;
@@ -131,7 +134,6 @@ protected:
     Date fixingEndDate_;
     Natural paymentLag_;
     boost::shared_ptr<FxIndex> fxIndex_;
-    bool isAbsoluteReturn_;
 };
 
 // inline definitions
@@ -159,8 +161,7 @@ public:
     EquityLeg& withPaymentAdjustment(BusinessDayConvention convention);
     EquityLeg& withPaymentLag(Natural paymentLag);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
-    EquityLeg& withTotalReturn(bool);
-    EquityLeg& withAbsoluteReturn(bool);
+    EquityLeg& withReturnType(EquityReturnType);
     EquityLeg& withDividendFactor(Real);
     EquityLeg& withInitialPrice(Real);
     EquityLeg& withInitialPriceIsInTargetCcy(bool);
@@ -179,8 +180,7 @@ private:
     Natural paymentLag_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
-    bool isTotalReturn_;
-    bool absoluteReturn_;
+    EquityReturnType returnType_;
     Real initialPrice_;
     bool initialPriceIsInTargetCcy_;
     Real dividendFactor_;
