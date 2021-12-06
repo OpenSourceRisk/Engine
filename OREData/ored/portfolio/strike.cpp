@@ -35,14 +35,12 @@ using std::vector;
 namespace ore {
 namespace data {
 
-Strike::Strike() {}
+TradeStrike::TradeStrike() {}
 
-Strike::Strike(Real strike, std::string strikeCurrency) : strike_(strike), strikeCurrency_(strikeCurrency) {}
+TradeStrike::TradeStrike(Real strike, std::string strikeCurrency) : strike_(strike), strikeCurrency_(strikeCurrency) {}
 
-Real Strike::strike() const { return strike_; }
-std::string Strike::strikeCurrency() const { return strikeCurrency_; }
+Real TradeStrike::strike() const { return strike_; }
+std::string TradeStrike::strikeCurrency() const { return strikeCurrency_; }
 
 } // namespace data
 } // namespace ore
-
-// BOOST_CLASS_EXPORT_IMPLEMENT(ore::data::AbsoluteStrike);

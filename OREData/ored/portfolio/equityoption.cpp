@@ -18,6 +18,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/strike.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityoption.hpp>
@@ -48,6 +49,11 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency();
     QL_REQUIRE(!equityCurrency.empty(), "No equity currency in equityCurve for equity " << assetName_ << ".");
 
+    // Testing new strike class:
+    boost::shared_ptr<TradeStrike> test(new TradeStrike(localStrike_, localCurrency_));
+
+    std::cout << test->strike() << "and" << test->strikeCurrency() << std::endl;
+    
     // Set the strike currency - if we have a minor currency, convert the strike
     if (!strikeCurrency_.empty()) {
         

@@ -201,6 +201,7 @@
     <ClInclude Include="ored\portfolio\referencedata.hpp" />
     <ClInclude Include="ored\portfolio\referencedatafactory.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
+    <ClInclude Include="ored\portfolio\strike.hpp" />
     <ClInclude Include="ored\portfolio\structuredconfigurationwarning.hpp" />
     <ClInclude Include="ored\portfolio\structuredtradeerror.hpp" />
     <ClInclude Include="ored\portfolio\structuredtradewarning.hpp" />
@@ -383,6 +384,7 @@
     <ClCompile Include="ored\portfolio\referencedata.cpp" />
     <ClCompile Include="ored\portfolio\referencedatafactory.cpp" />
     <ClCompile Include="ored\portfolio\schedule.cpp" />
+    <ClCompile Include="ored\portfolio\strike.cpp" />
     <ClCompile Include="ored\portfolio\swap.cpp" />
     <ClCompile Include="ored\portfolio\swaption.cpp" />
     <ClCompile Include="ored\portfolio\trade.cpp" />

@@ -37,12 +37,12 @@
 namespace ore {
 namespace data {
 
-class Strike {
+class TradeStrike {
 public:
 
-    Strike();
+    TradeStrike();
 
-    Strike(QuantLib::Real strike, std::string strikeCurrency);
+    TradeStrike(QuantLib::Real strike, std::string strikeCurrency);
 
     QuantLib::Real strike() const;
     std::string strikeCurrency() const;
@@ -50,10 +50,10 @@ public:
 private:
     QuantLib::Real strike_;
     std::string strikeCurrency_;
-
+    //! Serialization
+    // friend class boost::serialization::access;
+    // template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 } // namespace data
 } // namespace ore
-
-// BOOST_CLASS_EXPORT_KEY(ore::data::AbsoluteStrike);
