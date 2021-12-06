@@ -24,8 +24,11 @@
 #pragma once
 
 #include <ql/experimental/fx/deltavolquote.hpp>
+#include <ql/money.hpp>
 #include <ql/option.hpp>
 #include <ql/types.hpp>
+
+#include <ored/utilities/xmlutils.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
@@ -34,22 +37,28 @@
 #include <boost/serialization/version.hpp>
 #include <boost/shared_ptr.hpp>
 
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+
 namespace ore {
 namespace data {
 
-class TradeStrike {
+class TradeStrike : public QuantLib::Money, public XMLSerializable {
 public:
 
     TradeStrike();
 
-    TradeStrike(QuantLib::Real strike, std::string strikeCurrency);
+    TradeStrike(QuantLib::Real value, std::string currency);
 
-    QuantLib::Real strike() const;
-    std::string strikeCurrency() const;
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+
+    QuantLib::Real value() const;
+    std::string currency() const;
 
 private:
-    QuantLib::Real strike_;
-    std::string strikeCurrency_;
+    QuantLib::Real value_;
+    std::string currency_;
     //! Serialization
     // friend class boost::serialization::access;
     // template <class Archive> void serialize(Archive& ar, const unsigned int version);

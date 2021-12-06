@@ -27,6 +27,7 @@
 #include <boost/serialization/export.hpp>
 
 using namespace QuantLib;
+using ore::data::XMLUtils;
 using std::ostream;
 using std::ostringstream;
 using std::string;
@@ -37,10 +38,22 @@ namespace data {
 
 TradeStrike::TradeStrike() {}
 
-TradeStrike::TradeStrike(Real strike, std::string strikeCurrency) : strike_(strike), strikeCurrency_(strikeCurrency) {}
+TradeStrike::TradeStrike(Real value, std::string currency) : value_(value), currency_(currency) {}
 
-Real TradeStrike::strike() const { return strike_; }
-std::string TradeStrike::strikeCurrency() const { return strikeCurrency_; }
+void TradeStrike::fromXML(XMLNode* node) { 
+	currency_ = XMLUtils::getChildValue(node, "Currency", true);
+    value_ = XMLUtils::getChildValueAsDouble(node, "Value", true);
+}
+
+XMLNode* TradeStrike::toXML(XMLDocument& doc) { 
+	XMLNode* strikeNode = doc.allocNode("Strike");
+    XMLUtils::addChild(doc, strikeNode, "Value", value_);
+    XMLUtils::addChild(doc, strikeNode, "Currency", currency_);
+
+}
+
+Real TradeStrike::value() const { return value_; }
+std::string TradeStrike::currency() const { return currency_; }
 
 } // namespace data
 } // namespace ore

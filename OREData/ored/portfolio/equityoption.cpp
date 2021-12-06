@@ -52,7 +52,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // Testing new strike class:
     boost::shared_ptr<TradeStrike> test(new TradeStrike(localStrike_, localCurrency_));
 
-    std::cout << test->strike() << "and" << test->strikeCurrency() << std::endl;
+    std::cout << test->value() << "and" << test->currency() << std::endl;
     
     // Set the strike currency - if we have a minor currency, convert the strike
     if (!strikeCurrency_.empty()) {
