@@ -90,7 +90,6 @@ public:
         string creditCurveId;
         string creditGroup;
         string referenceCurveId;
-        string proxySecurityId;
         string incomeCurveId;
         string volatilityCurveId;
         std::vector<LegData> legData;

@@ -660,7 +660,11 @@
     <ClInclude Include="ored\portfolio\structuredconfigurationwarning.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="ored\portfolio\strike.hpp">
+=======
+    <ClInclude Include="ored\portfolio\nettingsetdetails.hpp">
+>>>>>>> master
       <Filter>portfolio</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1160,7 +1164,11 @@
     <ClCompile Include="ored\portfolio\optionasiandata.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="ored\portfolio\strike.cpp">
+=======
+    <ClCompile Include="ored\portfolio\nettingsetdetails.cpp">
+>>>>>>> master
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>

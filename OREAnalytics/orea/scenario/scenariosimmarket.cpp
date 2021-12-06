@@ -49,10 +49,12 @@
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
+#include <qle/termstructures/blackvolconstantspread.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamiccpivolatilitystructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
@@ -690,7 +692,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             bool flatExtrapolation = true; // FIXME: get this from curve configuration
                             VolatilityType volType = convertToNormal ? Normal : wrapper->volatilityType();
-			    DayCounter dc = wrapper->dayCounter();
+                            DayCounter dc = wrapper->dayCounter();
 			    
                             if (useSpreadedTermStructures_) {
                                 // using the wrapper from t0 and init market swap indices means we
@@ -712,7 +714,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 atm = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
                                     wrapper->calendar(), wrapper->businessDayConvention(), optionTenors,
                                     underlyingTenors, atmQuotes, dc, flatExtrapolation, volType, shift));
-				atm->enableExtrapolation(); // see below for svp, take this from T0 config?
+                                atm->enableExtrapolation(); // see below for svp, take this from T0 config?
                                 if (simulateAtmOnly) {
                                     if (isAtm) {
                                         svp = atm;
@@ -1026,8 +1028,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
                             vector<Time> times;
-			    DayCounter dc = wrapper->dayCounter();
-			    for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
+                            DayCounter dc = wrapper->dayCounter();
+                            for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
                                 Date date = asof_ + parameters->cdsVolExpiries()[i];
                                 Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
                                 times.push_back(dc.yearFraction(asof_, date));
@@ -1102,171 +1104,97 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         if (param.second.first) {
                             LOG("Simulating FX Vols for " << name);
-                            Size n = parameters->fxVolExpiries().size();
-                            Size m;
-                            if (parameters->useMoneyness(name)) {
-                                m = parameters->fxVolMoneyness(name).size();
-                            } else {
-                                m = parameters->fxVolStdDevs(name).size();
-                            }
-                            vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
+                            auto& expiries = parameters->fxVolExpiries(name);
+                            Size m = expiries.size();
                             Calendar cal = wrapper->calendar();
                             if (cal.empty()) {
                                 cal = NullCalendar();
                             }
-                           DayCounter dc = wrapper->dayCounter();
-			    vector<Time> times;
-                            vector<Date> dates;
+                            DayCounter dc = wrapper->dayCounter();
+                            vector<vector<Handle<Quote>>> quotes;
+                            vector<Time> times(m);
+                            vector<Date> dates(m);
 
                             // Attempt to get the relevant yield curves from the initial market
-                            Handle<YieldTermStructure> forTS =
+                            Handle<YieldTermStructure> initForTS =
                                 getYieldCurve(foreignTsId, todaysMarketParams, configuration, initMarket);
                             TLOG("Foreign term structure '" << foreignTsId << "' from t_0 market is "
-                                                            << (forTS.empty() ? "empty" : "not empty"));
-                            Handle<YieldTermStructure> domTS =
+                                                            << (initForTS.empty() ? "empty" : "not empty"));
+                            Handle<YieldTermStructure> initDomTS =
                                 getYieldCurve(domesticTsId, todaysMarketParams, configuration, initMarket);
                             TLOG("Domestic term structure '" << domesticTsId << "' from t_0 market is "
-                                                             << (domTS.empty() ? "empty" : "not empty"));
+                                                             << (initDomTS.empty() ? "empty" : "not empty"));
 
-                            // If either term structure is empty, fall back on the initial market's discount curves
-                            if (forTS.empty() || domTS.empty()) {
+                            // fall back on discount curves
+                            if (initForTS.empty() || initDomTS.empty()) {
                                 TLOG("Falling back on the discount curves for " << forCcy << " and " << domCcy
                                                                                 << " from t_0 market");
-                                forTS = initMarket->discountCurve(forCcy, configuration);
-                                domTS = initMarket->discountCurve(domCcy, configuration);
+                                initForTS = initMarket->discountCurve(forCcy, configuration);
+                                initDomTS = initMarket->discountCurve(domCcy, configuration);
                             }
 
-                            // get vol matrix to feed to surface
-                            if (parameters->useMoneyness(name)) { // if moneyness
-                                for (Size i = 0; i < n; i++) {
-                                    Date date = asof_ + parameters->fxVolExpiries()[i];
+                            // Attempt to get the relevant yield curves from this scenario simulation market
+                            Handle<YieldTermStructure> forTS =
+                                getYieldCurve(foreignTsId, todaysMarketParams, Market::defaultConfiguration);
+                            TLOG("Foreign term structure '" << foreignTsId << "' from sim market is "
+                                                            << (forTS.empty() ? "empty" : "not empty"));
+                            Handle<YieldTermStructure> domTS =
+                                getYieldCurve(domesticTsId, todaysMarketParams, Market::defaultConfiguration);
+                            TLOG("Domestic term structure '" << domesticTsId << "' from sim market is "
+                                                             << (domTS.empty() ? "empty" : "not empty"));
 
-                                    times.push_back(wrapper->timeFromReference(date));
-
-                                    for (Size j = 0; j < m; j++) {
-                                        Size idx = j * n + i;
-                                        Real mon = parameters->fxVolMoneyness(name)[j];
-
-                                        // strike (assuming forward prices)
-                                        Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
-                                        Volatility vol = wrapper->blackVol(date, k, true);
-                                        boost::shared_ptr<SimpleQuote> q(
-                                            new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : vol));
-                                        simDataTmp.emplace(std::piecewise_construct,
-                                                           std::forward_as_tuple(param.first, name, idx),
-                                                           std::forward_as_tuple(q));
-                                        if (useSpreadedTermStructures_) {
-                                            absoluteSimDataTmp.emplace(std::piecewise_construct,
-                                                                       std::forward_as_tuple(param.first, name, idx),
-                                                                       std::forward_as_tuple(q->value()));
-                                        }
-                                        quotes[j][i] = Handle<Quote>(q);
-                                    }
-                                }
-                            } else { // if stdDevPoints
-
-                                // times (for fwds)
-                                for (Size i = 0; i < n; i++) {
-                                    Date date = asof_ + parameters->fxVolExpiries()[i];
-                                    times.push_back(wrapper->timeFromReference(date));
-                                    dates.push_back(date);
-                                }
-
-                                // forwards
-                                vector<Real> fwds;
-                                vector<Real> atmVols;
-                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
-                                    Date date = asof_ + parameters->fxVolExpiries()[i];
-                                    Real k = spot->value() * forTS->discount(date) / domTS->discount(date);
-                                    fwds.push_back(k);
-                                    atmVols.push_back(wrapper->blackVol(dates[i], k));
-                                    DLOG("on date " << dates[i] << ": fwd = " << fwds.back()
-                                                    << ", atmVol = " << atmVols.back());
-                                }
-
-                                // interpolations
-                                Interpolation forwardCurve =
-                                    Linear().interpolate(times.begin(), times.end(), fwds.begin());
-                                Interpolation atmVolCurve =
-                                    Linear().interpolate(times.begin(), times.end(), atmVols.begin());
-
-                                // populate quotes
-                                vector<vector<Handle<Quote>>> absQuotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
-                                BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, absQuotes, times,
-                                                                               parameters->fxVolStdDevs(name),
-                                                                               forwardCurve, atmVolCurve);
-                                if (useSpreadedTermStructures_) {
-                                    for (Size i = 0; i < m; ++i)
-                                        for (Size j = 0; j < n; ++j)
-                                            quotes[i][j] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
-                                } else {
-                                    quotes = absQuotes;
-                                }
-
-                                // sort out simDataTemp
-                                for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
-                                    for (Size j = 0; j < parameters->fxVolStdDevs(name).size(); j++) {
-                                        Size idx = j * n + i;
-                                        boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
-                                        boost::shared_ptr<SimpleQuote> sq = boost::dynamic_pointer_cast<SimpleQuote>(q);
-                                        QL_REQUIRE(sq, "Quote is not a SimpleQuote"); // why do we need this?
-
-                                        simDataTmp.emplace(std::piecewise_construct,
-                                                           std::forward_as_tuple(param.first, name, idx),
-                                                           std::forward_as_tuple(sq));
-                                        if (useSpreadedTermStructures_) {
-                                            absoluteSimDataTmp.emplace(std::piecewise_construct,
-                                                                       std::forward_as_tuple(param.first, name, idx),
-                                                                       std::forward_as_tuple(absQuotes[j][i]->value()));
-                                        }
-                                    }
-                                }
+                            // fall back on discount curves
+                            if (forTS.empty() || domTS.empty()) {
+                                TLOG("Falling back on the discount curves for " << forCcy << " and " << domCcy
+                                                                                << " from sim market");
+                                forTS = discountCurve(forCcy);
+                                domTS = discountCurve(domCcy);
                             }
 
-                            // build surface
+                            for (Size k = 0; k < m; k++) {
+                                dates[k] = asof_ + expiries[k];
+                                times[k] = wrapper->timeFromReference(dates[k]);
+                            }
+
                             boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
                             if (parameters->fxVolIsSurface(name)) {
+                                vector<Real> strikes;
+                                strikes = parameters->fxUseMoneyness(name) ? parameters->fxVolMoneyness(name)
+                                                                           : parameters->fxVolStdDevs(name);
+                                Size n = strikes.size();
+                                quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
 
-                                // Attempt to get the relevant yield curves from this scenario simulation market
-                                Handle<YieldTermStructure> forTS =
-                                    getYieldCurve(foreignTsId, todaysMarketParams, Market::defaultConfiguration);
-                                TLOG("Foreign term structure '" << foreignTsId << "' from sim market is "
-                                                                << (forTS.empty() ? "empty" : "not empty"));
-                                Handle<YieldTermStructure> domTS =
-                                    getYieldCurve(domesticTsId, todaysMarketParams, Market::defaultConfiguration);
-                                TLOG("Domestic term structure '" << domesticTsId << "' from sim market is "
-                                                                 << (domTS.empty() ? "empty" : "not empty"));
-
-                                // If either term structure is empty, fall back on this scenario simulation market's
-                                // discount curves
-                                if (forTS.empty() || domTS.empty()) {
-                                    TLOG("Falling back on the discount curves for " << forCcy << " and " << domCcy
-                                                                                    << " from sim market");
-                                    forTS = discountCurve(forCcy);
-                                    domTS = discountCurve(domCcy);
-                                }
-                                // set up a FX Index
-                                boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(
-                                    name, 0, parseCurrency(forCcy), parseCurrency(domCcy), cal, spot, forTS, domTS);
-
+                                // hardcode these for now
                                 bool stickyStrike = true;
-                                bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
+                                bool flatExtrapolation = true;
 
-                                // get init market for and dom ts for spreaded ts construction below
-                                Handle<YieldTermStructure> initForTS, initDomTS;
-                                if (useSpreadedTermStructures_) {
-                                    initForTS =
-                                        getYieldCurve(foreignTsId, todaysMarketParams, configuration, initMarket);
-                                    initDomTS =
-                                        getYieldCurve(domesticTsId, todaysMarketParams, configuration, initMarket);
-                                    if (initForTS.empty() || initDomTS.empty()) {
-                                        // forTs and domTs are from the init market, see above
-                                        initForTS = forTS;
-                                        initDomTS = domTS;
+                                // get vol matrix to feed to surface
+                                if (parameters->fxUseMoneyness(name)) { // if moneyness
+                                    for (Size j = 0; j < m; j++) {
+                                        for (Size i = 0; i < n; i++) {
+                                            Real mon = strikes[i];
+                                            // strike (assuming forward prices)
+                                            Real k = spot->value() * mon * initForTS->discount(dates[j]) /
+                                                     initDomTS->discount(dates[j]);
+                                            Size idx = i * m + j;
+
+                                            Volatility vol = wrapper->blackVol(dates[j], k, true);
+                                            boost::shared_ptr<SimpleQuote> q(
+                                                new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : vol));
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                               std::forward_as_tuple(param.first, name, idx),
+                                                               std::forward_as_tuple(q));
+                                            if (useSpreadedTermStructures_) {
+                                                absoluteSimDataTmp.emplace(
+                                                    std::piecewise_construct,
+                                                    std::forward_as_tuple(param.first, name, idx),
+                                                    std::forward_as_tuple(q->value()));
+                                            }
+                                            quotes[i][j] = Handle<Quote>(q);
+                                        }
                                     }
-                                }
 
-                                if (parameters->useMoneyness(name)) { // moneyness
+                                    // build the surface
                                     if (useSpreadedTermStructures_) {
                                         fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
@@ -1278,28 +1206,118 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             cal, spot, times, parameters->fxVolMoneyness(name), quotes, dc, forTS,
                                             domTS, stickyStrike, flatExtrapolation);
                                     }
-                                } else { // standard deviations
-                                    if (useSpreadedTermStructures_) {
-                                        fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
-                                            Handle<BlackVolTermStructure>(wrapper), spot, times,
-                                            parameters->fxVolStdDevs(name), quotes,
-                                            Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())), initForTS,
-                                            initDomTS, forTS, domTS, stickyStrike);
-                                    } else {
-                                        fxVolCurve = boost::make_shared<BlackVarianceSurfaceStdDevs>(
-                                            cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc, fxIndex,
-                                            stickyStrike, flatExtrapolation);
+                                } else { // if stdDevPoints
+                                    // forwards
+                                    vector<Real> fwds;
+                                    vector<Real> atmVols;
+                                    for (Size i = 0; i < m; i++) {
+                                        Real k = spot->value() * initForTS->discount(dates[i]) / initDomTS->discount(dates[i]);
+                                        fwds.push_back(k);
+                                        atmVols.push_back(wrapper->blackVol(dates[i], k));
+                                        DLOG("on date " << dates[i] << ": fwd = " << fwds.back()
+                                                        << ", atmVol = " << atmVols.back());
                                     }
+
+                                    // interpolations
+                                    Interpolation forwardCurve =
+                                        Linear().interpolate(times.begin(), times.end(), fwds.begin());
+                                    Interpolation atmVolCurve =
+                                        Linear().interpolate(times.begin(), times.end(), atmVols.begin());
+
+                                    // populate quotes
+                                    vector<vector<Handle<Quote>>> absQuotes(n,
+                                                                            vector<Handle<Quote>>(m, Handle<Quote>()));
+                                    BlackVarianceSurfaceStdDevs::populateVolMatrix(wrapper, absQuotes, times,
+                                                                                   parameters->fxVolStdDevs(name),
+                                                                                   forwardCurve, atmVolCurve);
+                                    if (useSpreadedTermStructures_) {
+                                        for (Size i = 0; i < n; ++i)
+                                            for (Size j = 0; j < m; ++j)
+                                                quotes[i][j] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+                                    } else {
+                                        quotes = absQuotes;
+                                    }
+
+                                    // sort out simDataTemp
+                                    for (Size i = 0; i < m; i++) {
+                                        for (Size j = 0; j < n; j++) {
+                                            Size idx = j * m + i;
+                                            boost::shared_ptr<Quote> q = quotes[j][i].currentLink();
+                                            boost::shared_ptr<SimpleQuote> sq =
+                                                boost::dynamic_pointer_cast<SimpleQuote>(q);
+                                            simDataTmp.emplace(std::piecewise_construct,
+                                                               std::forward_as_tuple(param.first, name, idx),
+                                                               std::forward_as_tuple(sq));
+                                            if (useSpreadedTermStructures_) {
+                                                absoluteSimDataTmp.emplace(
+                                                    std::piecewise_construct,
+                                                    std::forward_as_tuple(param.first, name, idx),
+                                                    std::forward_as_tuple(absQuotes[j][i]->value()));
+                                            }
+                                        }
+                                    }
+
+                                    // set up a FX Index
+                                    boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(
+                                        name, 0, parseCurrency(forCcy), parseCurrency(domCcy), cal, spot, forTS, domTS);
+
+                                    if (parameters->fxUseMoneyness(name)) { // moneyness
+                                    } else {                                // standard deviations
+                                        if (useSpreadedTermStructures_) {
+                                            fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
+                                                Handle<BlackVolTermStructure>(wrapper), spot, times,
+                                                parameters->fxVolStdDevs(name), quotes,
+                                                Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value())),
+                                                initForTS, initDomTS, forTS, domTS, stickyStrike);
+                                        } else {
+                                            fxVolCurve = boost::make_shared<BlackVarianceSurfaceStdDevs>(
+                                                cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc, fxIndex,
+                                                stickyStrike, flatExtrapolation);
+                                        }
+                                    }
+                                }                            
+                            } else { // not a surface - case for ATM or simulateATMOnly
+                                quotes.resize(1, vector<Handle<Quote>>(m, Handle<Quote>()));
+                                // Only need ATM quotes in this case
+                                for (Size j = 0; j < m; j++) {
+                                    // Index is expires then moneyness.
+                                    Size idx = j;
+                                    Real f =
+                                        spot->value() * initForTS->discount(dates[j]) / initDomTS->discount(dates[j]);
+                                    Volatility vol = wrapper->blackVol(dates[j], f);
+                                    boost::shared_ptr<SimpleQuote> q(
+                                        new SimpleQuote(useSpreadedTermStructures_ ? 0.0 : vol));
+                                    simDataTmp.emplace(std::piecewise_construct,
+                                                       std::forward_as_tuple(param.first, name, idx),
+                                                       std::forward_as_tuple(q));
+                                    if (useSpreadedTermStructures_) {
+                                        absoluteSimDataTmp.emplace(std::piecewise_construct,
+                                                                   std::forward_as_tuple(param.first, name, idx),
+                                                                   std::forward_as_tuple(vol));
+                                    }
+                                    quotes[0][j] = Handle<Quote>(q);
                                 }
-                            } else {
+
                                 if (useSpreadedTermStructures_) {
-                                    // smile dynamics is sticky strike here always
+                                    // if simulate atm only is false, we use the ATM slice from the wrapper only
+                                    // the smile dynamics is sticky strike here always (if t0 is a surface)
                                     fxVolCurve = boost::make_shared<SpreadedBlackVolatilityCurve>(
-                                        Handle<BlackVolTermStructure>(wrapper), times, quotes[0]);
+                                        Handle<BlackVolTermStructure>(wrapper), times, quotes[0],
+                                        !parameters->simulateFxVolATMOnly());
                                 } else {
-                                    fxVolCurve = boost::make_shared<BlackVarianceCurve3>(
-                                        0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0],
-                                        false);
+                                    LOG("ATM FX Vols (BlackVarianceCurve3) for " << name);
+                                    boost::shared_ptr<BlackVolTermStructure> atmCurve;
+                                    atmCurve = boost::make_shared<BlackVarianceCurve3>(
+                                        0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false);
+                                    // if we have a surface but are only simulating atm vols we wrap the atm curve and
+                                    // the full t0 surface
+                                    if (parameters->simulateFxVolATMOnly()) {
+                                        LOG("Simulating FX Vols (FXVolatilityConstantSpread) for " << name);
+                                        fxVolCurve = boost::make_shared<BlackVolatilityConstantSpread>(
+                                            Handle<BlackVolTermStructure>(atmCurve), wrapper);
+                                    } else {
+                                        fxVolCurve = atmCurve;
+                                    }
                                 }
                             }
                             fvh = Handle<BlackVolTermStructure>(fxVolCurve);
@@ -1363,7 +1381,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 // take the equity curves calendar - this at least ensures fixings align
                                 cal = eqCurve->fixingCalendar();
                             }
-			    DayCounter dc = wrapper->dayCounter();
+                            DayCounter dc = wrapper->dayCounter();
 
                             for (Size k = 0; k < m; k++) {
                                 dates[k] = cal.advance(asof_, expiries[k]);
@@ -1530,7 +1548,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     // the full t0 surface
                                     if (parameters->simulateEquityVolATMOnly()) {
                                         LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << name);
-                                        eqVolCurve = boost::make_shared<EquityVolatilityConstantSpread>(
+                                        eqVolCurve = boost::make_shared<BlackVolatilityConstantSpread>(
                                             Handle<BlackVolTermStructure>(atmCurve), wrapper);
                                     } else {
                                         eqVolCurve = atmCurve;
@@ -2271,17 +2289,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     try {
                         LOG("Adding correlations for " << name << " from configuration " << configuration);
 
-                        // Look for '&' first
-                        // see todaysmarket.cpp for similar logic
-                        string delim;
-                        if (name.find('&') != std::string::npos)
-                            delim = "&";
-                        else
-                            // otherwise fall back on old behavior
-                            delim = ":";
-
-                        vector<string> tokens;
-                        boost::split(tokens, name, boost::is_any_of(delim));
+                        vector<string> tokens = getCorrelationTokens(name);
                         QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << name);
                         pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
 

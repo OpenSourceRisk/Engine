@@ -1111,9 +1111,8 @@ void YieldCurve::buildFittedBondCurve() {
             string securityID = bondQuote->securityID();
 
             QL_REQUIRE(referenceData_ != nullptr, "reference data required to build fitted bond curve");
-            auto qlBondAndInflationQuoteFactor = BondFactory::instance().build(engineFactory, referenceData_, securityID);
-            auto qlInstr = qlBondAndInflationQuoteFactor.first;
-            auto inflationQuoteFactor = qlBondAndInflationQuoteFactor.second;
+            auto res = BondFactory::instance().build(engineFactory, referenceData_, securityID);
+            auto qlInstr = res.bond;
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
             if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
                 bonds.push_back(qlInstr);
@@ -1121,12 +1120,12 @@ void YieldCurve::buildFittedBondCurve() {
                 Date thisMaturity = qlInstr->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor, ActualActual(),
+                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * res.inflationFactor, ActualActual(),
                                                   Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
-                                   << ", clean price = " << rescaledBondQuote->value() * inflationQuoteFactor
+                                   << ", clean price = " << rescaledBondQuote->value() * res.inflationFactor
                                    << ", yield (cont,act/act) = " << marketYield);
-                marketPrices.push_back(bondQuote->quote()->value() * inflationQuoteFactor);
+                marketPrices.push_back(bondQuote->quote()->value() * res.inflationFactor);
                 securityIDs.push_back(securityID);
                 marketYields.push_back(marketYield);
                 securityMaturityDates.push_back(thisMaturity);

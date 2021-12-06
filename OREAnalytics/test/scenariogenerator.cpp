@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->setSwapVolExpiries("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setSwapVolTerms("", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years});
-    simMarketConfig->setFxVolExpiries(
+    simMarketConfig->setFxVolExpiries("",
         vector<Period>{6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years});
     simMarketConfig->setFxVolDecayMode(string("ForwardVariance"));
     simMarketConfig->setFxVolCcyPairs({"USDEUR"});

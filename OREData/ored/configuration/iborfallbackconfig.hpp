@@ -55,6 +55,13 @@ public:
     void clear();
     static IborFallbackConfig defaultConfig();
 
+    /*! Update switch dates in the configuration to the targetSwitchDate
+        - either for the selected IBOR index only, or for all of them if indexName is left blank
+        - and skipping those where the current switch date is earlier than the target switch date
+        This is to facilitate testing without loading a custom fallback configuration.
+    */
+    void updateSwitchDate(QuantLib::Date targetSwitchDate, const std::string& indexName = "");
+    void logSwitchDates();
 private:
     bool enableIborFallbacks_;
     bool useRfrCurveInTodaysMarket_;

@@ -49,14 +49,6 @@ Allowable values: A valid bond identifier, typically the ISIN of the reference b
 \item SecurityId: The unique identifier of the bond.  This defines the security specific spread to be used for pricing.
 
 Allowable values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
-
-\item ProxySecurityId [Optional]: Only applicable to exotic bonds, which have the BondData block embedded as one of the
-  components typically. An identifier of a proxy security. If given, the security curve configuration, i.e. the security
-  spread and recovery rate of the proxy security will be used for the pricing of the exotic bond. Typically the ISIN of
-  a liquid vanilla bond of the same issuer and with comparable maturity as the convertible bond. The proxy security must
-  be a vanilla bond.
-  
-  Allowable values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
   
 \item ReferenceCurveId: The benchmark curve to be used for pricing. This is typically the main ibor index for the currency of the bond, and if no ibor index is available for the currency in question, a currency-specific benchmark curve can be used.
 
@@ -92,7 +84,6 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
         <IssuerId>Ineos Group Holdings SA</IssuerId>
         <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
         <SecurityId>ISIN:XS0982710740</SecurityId>
-        <ProxySecurityId>ISIN:XS2000000000</ProxySecurityId>
         <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
         <SettlementDays>2</SettlementDays>
         <Calendar>TARGET</Calendar>

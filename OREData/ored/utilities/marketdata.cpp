@@ -19,6 +19,9 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 
+#include <boost/algorithm/string.hpp>
+
+using QuantLib::DefaultProbabilityTermStructure;
 using QuantLib::Handle;
 using QuantLib::YieldTermStructure;
 using std::string;
@@ -54,5 +57,61 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
     return curve;
 }
 
+std::string securitySpecificCreditCurveName(const std::string& securityId, const std::string& creditCurveId) {
+    auto tmp = "__SECCRCRV_" + securityId + "_&_" + creditCurveId + "_&_";
+    return tmp;
+}
+
+std::string creditCurveNameFromSecuritySpecificCreditCurveName(const std::string& name) {
+    if (boost::starts_with(name, "__SECCRCRV_")) {
+        std::size_t pos = name.find("_&_", 11);
+        if (pos != std::string::npos) {
+            std::size_t pos2 = name.find("_&_", pos + 3);
+            if (pos2 != std::string::npos) {
+                auto tmp = name.substr(pos + 3, pos2 - (pos + 3));
+                return tmp;
+            }
+        }
+    }
+    return name;
+}
+
+QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
+securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::string& securityId,
+                            const std::string& creditCurveId, const std::string& configuration) {
+    Handle<DefaultProbabilityTermStructure> curve;
+    std::string name = securitySpecificCreditCurveName(securityId, creditCurveId);
+    try {
+        curve = market->defaultCurve(name, configuration);
+    } catch (const std::exception& e) {
+        DLOG("Could not link " << securityId << " to security specific credit curve " << name << " so just using "
+                               << creditCurveId << " default curve.");
+        curve = market->defaultCurve(creditCurveId, configuration);
+    }
+    return curve;
+}
+
+std::string prettyPrintInternalCurveName(std::string name) {
+    std::size_t pos = 0;
+    bool found;
+    do {
+        found = false;
+        std::size_t pos2 = name.find("__SECCRCRV_", pos);
+        if (pos2 != std::string::npos) {
+            std::size_t pos3 = name.find("_&_", pos2);
+            if (pos3 != std::string::npos) {
+                std::size_t pos4 = name.find("_&_", pos3 + 3);
+                if (pos4 != std::string::npos) {
+                    name.replace(pos2, pos4 + 3 - pos2,
+                                 name.substr(pos2 + 11, pos3 - (pos2 + 11)) + "(" +
+                                     name.substr(pos3 + 3, pos4 - (pos3 + 3)) + ")");
+                    pos = pos + (pos4 - pos2 - 12);
+                    found = true;
+                }
+            }
+        }
+    } while (found);
+    return name;
+}
 } // namespace data
 } // namespace ore

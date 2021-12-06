@@ -21,6 +21,7 @@
 #include <qle/indexes/bondindex.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/utilities/inflation.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
@@ -30,11 +31,11 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                      const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
-                     const bool conditionalOnSurvival, const bool isInflationLinked)
+                     const bool conditionalOnSurvival, const bool isInflationLinked, const double bidAskAdjustment)
     : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
       securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival),
-      isInflationLinked_(isInflationLinked) {
+      isInflationLinked_(isInflationLinked), bidAskAdjustment_(bidAskAdjustment) {
 
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
@@ -109,6 +110,8 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
         price = res.npv;
     }
 
+    price += bidAskAdjustment_ * bond_->notional(fixingDate);
+
     if (!dirty_) {
         price -= bond_->accruedAmount(fixingDate) / 100.0 * bond_->notional(fixingDate);
     }
@@ -125,7 +128,7 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 
 Real BondIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date for '" << name() << "'");
-    Real price = timeSeries()[fixingDate];
+    Real price = timeSeries()[fixingDate] + bidAskAdjustment_;
     if (price == Null<Real>())
         return price;
     if (dirty_) {
