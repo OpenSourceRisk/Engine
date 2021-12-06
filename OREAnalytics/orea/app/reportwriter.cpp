@@ -265,7 +265,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 flowType = "Inflation";
                             } else if (ptrIndCf) {
                                 fixingDate = ptrIndCf->fixingDate();
-                                fixingValue = ptrIndCf->index()->fixing(fixingDate);
+                                fixingValue = ptrIndCf->indexFixing();
                                 flowType = "Index";
                             } else if (ptrFxlCf) {
                                 fixingDate = ptrFxlCf->fxFixingDate();
