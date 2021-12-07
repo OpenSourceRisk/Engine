@@ -49,11 +49,17 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
 	XMLNode* strikeNode = doc.allocNode("Strike");
     XMLUtils::addChild(doc, strikeNode, "Value", value_);
     XMLUtils::addChild(doc, strikeNode, "Currency", currency_);
-
+    return strikeNode;
 }
 
-Real TradeStrike::value() const { return value_; }
 std::string TradeStrike::currency() const { return currency_; }
+Real TradeStrike::value() const { 
+    if (checkMinorCurrency(currency_)) 
+        return convertMinorToMajorCurrency(currency_, value_);
+    else
+        return value_;
+    return value_; 
+}
 
 } // namespace data
 } // namespace ore
