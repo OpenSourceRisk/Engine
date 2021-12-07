@@ -778,7 +778,7 @@ public:
     //! Default constructor
     LegData()
         : isPayer_(true), notionalInitialExchange_(false), notionalFinalExchange_(false),
-          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0),
+          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0),
           indexingFromAssetLeg_(false) {}
 
     //! Constructor with concrete leg data
@@ -789,7 +789,6 @@ public:
             const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
@@ -818,8 +817,6 @@ public:
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
-    int fixingDays() const { return fixingDays_; }
-    const string& fixingCalendar() const { return fixingCalendar_; }
     const int paymentLag() const { return paymentLag_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     const std::string& paymentCalendar() const { return paymentCalendar_; }
@@ -872,8 +869,6 @@ private:
     string foreignCurrency_;
     double foreignAmount_;
     string fxIndex_;
-    int fixingDays_;
-    string fixingCalendar_;
     std::vector<AmortizationData> amortizationData_;
     int paymentLag_;
     std::string paymentCalendar_;

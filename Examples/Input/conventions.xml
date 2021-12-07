@@ -1101,6 +1101,16 @@
     <AdditionalSettleCalendar/>
   </FX>
   <FX>
+    <Id>EUR-JPY-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>EUR</SourceCurrency>
+    <TargetCurrency>JPY</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>TARGET,JPY</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>CHF-USD-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>CHF</SourceCurrency>
@@ -1206,6 +1216,16 @@
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>KRW</TargetCurrency>
     <PointsFactor>100</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
+    <Id>USD-TRY-FX</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>TRY</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>

@@ -191,10 +191,10 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     auto legdataEUR = boost::make_shared<FloatingLegData>(indexEUR, days, isInArrears, spreadEUR);
     LegData legEUR1(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, notionalFinalXNL, foreignCCY,
-                    foreignAmount, fxIndex, fxFixingDays);
+                    foreignAmount, fxIndex);
     LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY, foreignAmount,
-                    fxIndex, fxFixingDays);
+                    fxIndex);
 
     // USD Leg without notional resets
     bool isPayerUSD = false;

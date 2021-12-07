@@ -205,6 +205,23 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
     } else {
         fxInd = it->second;      
     }
+    // check if we need to invert the index
+    // only check if a domestic and foreign have been provided
+    bool invertFxIndex = false;
+    if (!domestic.empty() && !foreign.empty()) {
+        if (domestic == fxInd->targetCurrency().code() && foreign == fxInd->sourceCurrency().code()) {
+            invertFxIndex = false;
+        } else if (domestic == fxInd->sourceCurrency().code() && foreign == fxInd->targetCurrency().code()) {
+            invertFxIndex = true;
+        } else {
+            QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic
+                                               << " and reset foreignCurrency " << foreign);
+        }
+    }
+
+    if (invertFxIndex)
+        fxInd = Handle<QuantExt::FxIndex>(
+            fxInd->clone(fxInd->fxQuote(true), fxInd->sourceCurve(), fxInd->targetCurve(), true));
 
     return fxInd;
 }

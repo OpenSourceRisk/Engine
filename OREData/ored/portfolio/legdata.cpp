@@ -655,7 +655,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const std::vector<string>& notionalDates, const string& paymentConvention,
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
-                 const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
+                 const double foreignAmount, const string& fxIndex, 
                  const std::vector<AmortizationData>& amortizationData, const int paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
                  const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
@@ -665,7 +665,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-      fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
+      fxIndex_(fxIndex), amortizationData_(amortizationData),
       paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing),
       indexingFromAssetLeg_(indexingFromAssetLeg), lastPeriodDayCounter_(lastPeriodDayCounter) {
 
@@ -704,8 +704,14 @@ void LegData::fromXML(XMLNode* node) {
             foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount", true);
             fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
             indices_.insert(fxIndex_);
-            fixingDays_ = XMLUtils::getChildValueAsInt(fxResetNode, "FixingDays");
-            fixingCalendar_ = XMLUtils::getChildValue(fxResetNode, "FixingCalendar"); // may be empty string
+            if (XMLUtils::getChildNode(node, "FixingDays")) {
+                WLOG("LegData::fromXML, node FixingDays has been deprecated, fixing days are "
+                     "taken from conventions.");
+            }
+            if (XMLUtils::getChildNode(node, "FixingCalendar")) {
+                WLOG("LegData::fromXML, node FixingCalendar has been deprecated, fixing calendar is "
+                     "taken from conventions.");
+            }
             // TODO add schedule
         }
         XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
@@ -784,8 +790,6 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
         XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
         XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
-        XMLUtils::addChild(doc, resetNode, "FixingDays", fixingDays_);
-        XMLUtils::addChild(doc, resetNode, "FixingCalendar", fixingCalendar_);
         XMLUtils::appendNode(notionalsNodePtr, resetNode);
     }
 
