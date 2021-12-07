@@ -91,12 +91,12 @@ bool operator==(const Filter& a, const Filter& b) {
 }
 
 Filter operator&&(Filter x, const Filter& y) {
+    QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
+               "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     if ((x.deterministic() && !x.data_[0]) || (y.deterministic() && !y.data_[0]))
         return Filter(x.size(), false);
     if (!x.initialised() || !y.initialised())
         return Filter();
-    QL_REQUIRE(x.size() == y.size(),
-               "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     if (!y.deterministic_)
         x.expand();
     else if (y.data_.front())
@@ -110,12 +110,12 @@ Filter operator&&(Filter x, const Filter& y) {
 }
 
 Filter operator||(Filter x, const Filter& y) {
+    QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
+               "RandomVariable: x || y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     if ((x.deterministic() && x.data_[0]) || (y.deterministic() && y.data_[0]))
         return Filter(x.size(), true);
     if (!x.initialised() || !y.initialised())
         return Filter();
-    QL_REQUIRE(x.size() == y.size(),
-               "RandomVariable: x || y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     if (!y.deterministic_)
         x.expand();
     else if (!y.data_.front())
