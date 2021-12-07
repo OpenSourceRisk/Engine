@@ -356,6 +356,17 @@ void TestConfigurationObjects::setConventions() {
     boost::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
         "JPY-LIBOR-6M-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M"));
 
+    boost::shared_ptr<ore::data::FXConvention> fxEURUSDConv(
+        new ore::data::FXConvention("EUR-USD-FX", "2", "EUR", "USD", "10000", "TARGET, USD", "true"));
+    boost::shared_ptr<ore::data::FXConvention> fxGBPUSDConv(
+        new ore::data::FXConvention("GBP-USD-FX", "2", "GBP", "USD", "10000", "GBP, USD", "true"));
+    boost::shared_ptr<ore::data::FXConvention> fxEURGBPConv(
+        new ore::data::FXConvention("EUR-GBP-FX", "2", "EUR", "GBP", "10000", "TARGET, GBP", "true"));
+    boost::shared_ptr<ore::data::FXConvention> fxEURCHFConv(
+        new ore::data::FXConvention("EUR-CHF-FX", "2", "EUR", "CHF", "10000", "TARGET, CHF", "true"));
+    boost::shared_ptr<ore::data::FXConvention> fxEURJPYConv(
+        new ore::data::FXConvention("EUR-JPY-FX", "2", "EUR", "JPY", "10000", "TARGET, JPY", "true"));
+
     conventions->add(swapEURConv);
     conventions->add(swapUSDConv);
     conventions->add(swapGBPConv);
@@ -369,6 +380,12 @@ void TestConfigurationObjects::setConventions() {
     conventions->add(boost::make_shared<ore::data::DepositConvention>("GBP-DEP-CONVENTIONS", "GBP-LIBOR"));
     conventions->add(boost::make_shared<ore::data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<ore::data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
+
+    conventions->add(fxEURUSDConv);
+    conventions->add(fxGBPUSDConv);
+    conventions->add(fxEURGBPConv);
+    conventions->add(fxEURCHFConv);
+    conventions->add(fxEURJPYConv);
 
     InstrumentConventions::instance().conventions() = conventions;
 }
