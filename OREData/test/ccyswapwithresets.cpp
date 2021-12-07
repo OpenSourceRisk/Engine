@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     bool isPayerEUR = true;
     string indexEUR = "EUR-EURIBOR-6M";
     bool isInArrears = false;
-    int days = 2, fxFixingDays = 0;
+    int days = 2;
     vector<Real> spreadEUR(1, 0.000261);
     string dc = "ACT/360";
     vector<Real> notionalEUR(1, 8833141.95);
