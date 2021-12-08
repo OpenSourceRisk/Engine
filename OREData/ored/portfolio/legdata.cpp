@@ -70,6 +70,7 @@
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/cashflows/yoyinflationcoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/utilities/inflation.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -2314,10 +2315,11 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     }
 
     // build and return the index
+    double inflationHistoricalPriceAdjustment = data.isInflationLinked() ? inflationLinkedBondQuoteFactor(qlBond) : 1.0;
 
     return boost::make_shared<QuantExt::BondIndex>(securityId, dirty, relative, fixingCalendar, qlBond, discountCurve,
                                                    defaultCurve, recovery, spread, incomeCurve, conditionalOnSurvival,
-                                                   data.isInflationLinked());
+                                                   inflationHistoricalPriceAdjustment);
 }
 
 Leg joinLegs(const std::vector<Leg>& legs) {
