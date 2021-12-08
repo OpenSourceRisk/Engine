@@ -172,7 +172,7 @@ struct BondBuilder {
         boost::shared_ptr<QuantLib::Bond> bond;
 
         double inflationFactor = 1.0;
-
+        bool isInflationLinked = false;
         bool hasCreditRisk = true;
         std::string currency;
         std::string creditCurveId;
