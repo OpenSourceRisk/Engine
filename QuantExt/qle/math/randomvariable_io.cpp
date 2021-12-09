@@ -105,10 +105,7 @@ template <typename C> std::ostream& output(std::ostream& out, const C& c) {
 }
 } // namespace
 
-std::ostream& operator<<(std::ostream& out, const Filter& f) {
-    out << std::boolalpha;
-    return output(out, f);
-}
+std::ostream& operator<<(std::ostream& out, const Filter& f) { return output(out, f); }
 
 std::ostream& operator<<(std::ostream& out, const RandomVariable& r) {
     output(out, r);
