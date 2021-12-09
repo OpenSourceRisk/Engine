@@ -202,6 +202,7 @@
     <ClInclude Include="ored\portfolio\referencedata.hpp" />
     <ClInclude Include="ored\portfolio\referencedatafactory.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
+    <ClInclude Include="ored\portfolio\structuredconfigurationerror.hpp" />
     <ClInclude Include="ored\portfolio\structuredconfigurationwarning.hpp" />
     <ClInclude Include="ored\portfolio\structuredtradeerror.hpp" />
     <ClInclude Include="ored\portfolio\structuredtradewarning.hpp" />

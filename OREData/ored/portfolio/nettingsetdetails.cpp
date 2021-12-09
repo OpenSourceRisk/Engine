@@ -107,10 +107,10 @@ bool operator==(const NettingSetDetails& lhs, const NettingSetDetails& rhs) {
 bool operator!=(const NettingSetDetails& lhs, const NettingSetDetails& rhs) { return !(lhs == rhs); }
 
 std::ostream& operator<<(std::ostream& out, const NettingSetDetails& nettingSetDetails) {
-    std::ostream& tmp = out << "NettingSetId=\'" << nettingSetDetails.nettingSetId();
+    std::ostream& tmp = out << "NettingSetId=\'" << nettingSetDetails.nettingSetId() << "\'";
 
     if (!nettingSetDetails.emptyOptionalFields()) {
-        return tmp << "\', AgreementType=\'" << nettingSetDetails.agreementType() << "\', CallType=\'"
+        return tmp << ", AgreementType=\'" << nettingSetDetails.agreementType() << "\', CallType=\'"
                    << nettingSetDetails.callType() << "\', InitialMarginType=\'"
                    << nettingSetDetails.initialMarginType() << "\', LegalEntityId=\'"
                    << nettingSetDetails.legalEntityId() << "\'";
