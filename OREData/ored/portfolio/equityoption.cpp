@@ -48,11 +48,6 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     Currency equityCurrency =
         market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency();
     QL_REQUIRE(!equityCurrency.empty(), "No equity currency in equityCurve for equity " << assetName_ << ".");
-
-    // Testing new strike class:
-    boost::shared_ptr<TradeStrike> test(new TradeStrike(localStrike_, localCurrency_));
-
-    std::cout << test->value() << "and" << test->currency() << std::endl;
     
     // Set the strike currency - if we have a minor currency, convert the strike
     if (!strikeCurrency_.empty()) {

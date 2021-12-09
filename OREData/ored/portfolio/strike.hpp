@@ -53,6 +53,7 @@ public:
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
+    bool empty() const { return value_ == QuantLib::Null<QuantLib::Real>(); };
 
     QuantLib::Real value() const;
     std::string currency() const;

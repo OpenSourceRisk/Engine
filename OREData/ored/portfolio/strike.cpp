@@ -46,7 +46,7 @@ void TradeStrike::fromXML(XMLNode* node) {
 }
 
 XMLNode* TradeStrike::toXML(XMLDocument& doc) { 
-	XMLNode* strikeNode = doc.allocNode("Strike");
+	XMLNode* strikeNode = doc.allocNode("StrikeData"); // might need to rename as StrikeData
     XMLUtils::addChild(doc, strikeNode, "Value", value_);
     XMLUtils::addChild(doc, strikeNode, "Currency", currency_);
     return strikeNode;
@@ -57,8 +57,7 @@ Real TradeStrike::value() const {
     if (checkMinorCurrency(currency_)) 
         return convertMinorToMajorCurrency(currency_, value_);
     else
-        return value_;
-    return value_; 
+        return value_; 
 }
 
 } // namespace data
