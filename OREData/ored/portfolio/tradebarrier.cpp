@@ -17,7 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/strike.hpp>
+#include <ored/portfolio/tradebarrier.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -26,39 +26,17 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/export.hpp>
 
-using namespace QuantLib;
-using ore::data::XMLUtils;
-using std::ostream;
-using std::ostringstream;
-using std::string;
-using std::vector;
-
 namespace ore {
 namespace data {
 
-TradeStrike::TradeStrike() {}
+void TradeBarrier::fromXML(XMLNode* node) { TradeMonetary::fromXML(XMLUtils::getChildNode(node, "Level")); }
 
-TradeStrike::TradeStrike(Real value, std::string currency) : value_(value), currency_(currency) {}
-
-void TradeStrike::fromXML(XMLNode* node) { 
-	currency_ = XMLUtils::getChildValue(node, "Currency", true);
-    value_ = XMLUtils::getChildValueAsDouble(node, "Value", true);
+XMLNode* TradeBarrier::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("Level");
+    XMLUtils::addChild(doc, node, "Value", value_);
+    XMLUtils::addChild(doc, node, "Currency", currency_);
+    return node;
 }
 
-XMLNode* TradeStrike::toXML(XMLDocument& doc) { 
-	XMLNode* strikeNode = doc.allocNode("StrikeData"); // might need to rename as StrikeData
-    XMLUtils::addChild(doc, strikeNode, "Value", value_);
-    XMLUtils::addChild(doc, strikeNode, "Currency", currency_);
-    return strikeNode;
 }
-
-std::string TradeStrike::currency() const { return currency_; }
-Real TradeStrike::value() const { 
-    if (checkMinorCurrency(currency_)) 
-        return convertMinorToMajorCurrency(currency_, value_);
-    else
-        return value_; 
-}
-
-} // namespace data
 } // namespace ore

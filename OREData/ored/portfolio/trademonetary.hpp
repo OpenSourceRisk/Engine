@@ -44,26 +44,24 @@ using ore::data::XMLSerializable;
 namespace ore {
 namespace data {
 
-class TradeStrike : public QuantLib::Money, public XMLSerializable {
+class TradeMonetary : public XMLSerializable {
+
 public:
+    TradeMonetary() {};
 
-    TradeStrike();
-
-    TradeStrike(QuantLib::Real value, std::string currency);
-
+    TradeMonetary(QuantLib::Real value, std::string currency);
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
-    bool empty() const { return value_ == QuantLib::Null<QuantLib::Real>(); };
+    //virtual void additionalToXML(XMLNode* node) = 0;
+    //virtual XMLNode* additionalToXML(XMLDocument& doc, XMLNode* node) = 0;
 
+    bool empty() const { return value_ == QuantLib::Null<QuantLib::Real>(); };
     QuantLib::Real value() const;
     std::string currency() const;
 
-private:
+protected:
     QuantLib::Real value_;
     std::string currency_;
-    //! Serialization
-    // friend class boost::serialization::access;
-    // template <class Archive> void serialize(Archive& ar, const unsigned int version);
 };
 
 } // namespace data
