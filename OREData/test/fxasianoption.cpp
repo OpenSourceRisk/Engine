@@ -54,7 +54,11 @@
          yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "JPY")] = foreign;
 
          // Add fx spot
-         fxSpots_[Market::defaultConfiguration].addQuote("JPYUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(spot)));
+         fxIndices_[make_pair(Market::defaultConfiguration, "JPYUSD")] =
+             Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                 Settings::instance().evaluationDate(), "JPYUSD", 0, parseCurrency("JPY"), parseCurrency("USD"),
+                 parseCalendar("JPY,USD"), Handle<Quote>(boost::make_shared<SimpleQuote>(spot)),
+                 discountCurve("JPY"), discountCurve("USD"), false));
 
          // Add USDJPY volatilities
          Handle<BlackVolTermStructure> volatility(

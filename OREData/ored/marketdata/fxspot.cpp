@@ -27,8 +27,37 @@
 namespace ore {
 namespace data {
 
-FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation) {
-    spot_ = fxTriangulation.getQuote(spec.unitCcy() + spec.ccy());
+FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation,
+               const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves) {
+
+    string ccyPair = spec.unitCcy() + spec.ccy();
+    auto spot = fxTriangulation.getQuote(ccyPair);
+    
+    Natural spotDays = 0;
+    Calendar calendar = NullCalendar();
+
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    auto fxCon = boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(spec.unitCcy(), spec.ccy()));
+    if (fxCon) {
+        spotDays = fxCon->spotDays();
+        calendar = fxCon->advanceCalendar();
+    }
+
+    // get the discount curves for the source and target currencies
+    auto itSor = requiredDiscountCurves.find(spec.unitCcy());
+    QL_REQUIRE(itSor != requiredDiscountCurves.end(),
+               "Discount Curve - " << spec.unitCcy() << " - not found during Fx Spot build");
+    auto sorTS = itSor->second->handle();
+
+    auto itTar = requiredDiscountCurves.find(spec.ccy());
+    QL_REQUIRE(itTar != requiredDiscountCurves.end(),
+               "Discount Curve - " << spec.ccy() << " - not found during Fx Spot build");
+    auto tarTS = itTar->second->handle();
+
+    index_ = Handle<QuantExt::FxIndex>(
+        boost::make_shared<QuantExt::FxIndex>(asof, ccyPair, spotDays, parseCurrency(spec.unitCcy()), 
+            parseCurrency(spec.ccy()), calendar, spot, sorTS, tarTS, false));
+
 }
 } // namespace data
 } // namespace ore

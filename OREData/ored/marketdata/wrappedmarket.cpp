@@ -78,10 +78,6 @@ Handle<BlackVolTermStructure> WrappedMarket::fxVol(const string& ccypair, const 
     return market_->fxVol(ccypair, configuration);
 }
 
-Handle<Quote> WrappedMarket::fxSpot(const string& ccypair, const string& configuration) const {
-    return fxIndex(ccypair, configuration)->fxQuote(true);
-}
-
 Handle<DefaultProbabilityTermStructure> WrappedMarket::defaultCurve(const string& name,
                                                                     const string& configuration) const {
     return market_->defaultCurve(name, configuration);

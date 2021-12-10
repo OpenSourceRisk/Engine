@@ -26,6 +26,8 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 
@@ -39,13 +41,14 @@ namespace data {
 class FXSpot {
 public:
     //! Constructor
-    FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation);
+    FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation, 
+        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves);
 
     //! Inspector
-    Handle<Quote> handle() const { return spot_; }
+    Handle<QuantExt::FxIndex> handle() const { return index_; }
 
 private:
-    Handle<Quote> spot_;
+    Handle<QuantExt::FxIndex> index_;
 };
 } // namespace data
 } // namespace ore

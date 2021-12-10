@@ -120,9 +120,6 @@ public:
                       const string& configuration = Market::defaultConfiguration) const override;
 
 protected:
-    Handle<Quote> fxSpot(const string& ccypair,
-                         const string& configuration = Market::defaultConfiguration) const override;
-
     boost::shared_ptr<Market> market_;
 };
 

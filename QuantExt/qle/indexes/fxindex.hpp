@@ -51,7 +51,7 @@ using namespace QuantLib;
 class FxRateQuote : public Quote, public Observer {
 public:
     FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
-                const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar);
+                const Handle<YieldTermStructure>& targetYts, Date refDate);
     //! \name Quote interface
     //@{
     Real value() const override;
@@ -64,8 +64,7 @@ public:
 private:
     const Handle<Quote> spotQuote_;
     const Handle<YieldTermStructure> sourceYts_, targetYts_;
-    Natural fixingDays_;    
-    Calendar fixingCalendar_;
+    Date refDate_;
 };
 
 
@@ -93,6 +92,16 @@ public:
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
             bool fixingTriangulation = false);
     FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
+            const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
+            const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
+            bool fixingTriangulation = true);
+    FxIndex(const Date& referenceDate, const std::string& familyName, Natural, const Currency& source, const Currency& target,
+            const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
+            const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
+            bool fixingTriangulation = false);
+    FxIndex(const Date& referenceDate, const std::string& familyName, Natural fixingDays, const Currency& source,
+            const Currency& target,
             const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
@@ -140,9 +149,11 @@ public:
     
     //! clone the index, the clone will be linked to the provided handles
     boost::shared_ptr<FxIndex> clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
-                                     const Handle<YieldTermStructure>& targetYts, bool inverseIndex = false);
+                                     const Handle<YieldTermStructure>& targetYts,
+                                     const std::string& familyName = std::string(), bool inverseIndex = false);
 
 protected:
+    Date referenceDate_;
     std::string familyName_;
     Natural fixingDays_;
     Currency sourceCurrency_, targetCurrency_;
@@ -158,6 +169,8 @@ private:
     Calendar fixingCalendar_;
     bool inverseIndex_;
     bool fixingTriangulation_;
+
+    void initialise();
 };
 
 } // namespace QuantExt

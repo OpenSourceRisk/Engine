@@ -30,6 +30,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <ql/currencies/america.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -103,8 +104,10 @@ public:
         hUSD->addFixing(Date(18, Aug, 2016), 0.00811);
 
         // add fx rates
-        fxSpots_[Market::defaultConfiguration].addQuote("EURUSD",
-                                                        Handle<Quote>(boost::make_shared<SimpleQuote>(1.1306)));
+        fxIndices_[make_pair(Market::defaultConfiguration, "EURUSD")] = 
+            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                Settings::instance().evaluationDate(), "EURUSD", 0, EURCurrency(), USDCurrency(), parseCalendar("TARGET,USD"),
+                Handle<Quote>(boost::make_shared<SimpleQuote>(1.1306)), discountCurve("EUR"), discountCurve("USD"), false));
     }
 
 private:

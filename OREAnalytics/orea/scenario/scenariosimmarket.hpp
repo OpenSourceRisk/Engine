@@ -153,9 +153,6 @@ public:
     //! Get scenarioFilter
     const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
-    // Override Fx Rate to read straight from spot
-    Handle<Quote> fxRate(const string& ccypair, const string& configuration = Market::defaultConfiguration) const override;
-
     //! Update
     // virtual void update(const Date&) override;
     virtual void preUpdate() override;

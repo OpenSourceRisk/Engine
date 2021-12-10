@@ -45,6 +45,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
@@ -59,6 +60,7 @@ using namespace QuantLib;
 
 using QuantExt::CommodityIndex;
 using QuantExt::EquityIndex;
+using QuantExt::FxIndex;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
 
@@ -322,12 +324,12 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredFxSpots_.find(fxspec->name());
             if (itr == requiredFxSpots_.end()) {
                 DLOG("Building FXSpot for asof " << asof_);
-                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_);
+                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_, requiredDiscountCurves_);
                 itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
-                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle());
+                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()->fxQuote(true));
             }
-            LOG("Adding FXSpot (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
-            fxSpots_[configuration].addQuote(node.name, itr->second->handle());
+            LOG("Adding FXIndex (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
+            fxIndices_[make_pair(configuration, node.name)] = Handle<FxIndex>(itr->second->handle());
             break;
         }
 

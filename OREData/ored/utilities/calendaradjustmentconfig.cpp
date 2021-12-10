@@ -114,7 +114,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
                 Date h = parseDate(holiday);
                 addHolidays(calname, h);
                 cal.addHoliday(h);
-            } catch(std::exception& e) {
+            } catch(std::exception&) {
                 ALOG("error parsing holiday " << holiday << " for calendar " << calname);
             }
         }
@@ -124,7 +124,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
                 Date b = parseDate(businessDay);
                 addBusinessDays(calname, b);
                 cal.removeHoliday(b);
-            } catch(std::exception& e) {
+            } catch(std::exception&) {
                 ALOG("error parsing business day " << businessDay << " for calendar " << calname);
             }
         }
@@ -143,7 +143,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
                 Date h = parseDate(holiday);
                 addHolidays(calname, h);
                 cal.addHoliday(h);
-            } catch(std::exception& e) {
+            } catch(std::exception&) {
                 ALOG("error parsing business day " << holiday << " for calendar " << calname);
             }
 
@@ -154,7 +154,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
                 Date b = parseDate(businessDay);
                 addBusinessDays(calname, b);
                 cal.removeHoliday(b);
-            } catch(std::exception& e) {
+            } catch(std::exception&) {
                 ALOG("error parsing business day " << businessDay << " for calendar " << calname);
             }
         }

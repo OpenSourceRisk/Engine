@@ -50,9 +50,22 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] = flatRateYts(0.05);
 
         // add fx rates
-        fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
-        fxSpots_[Market::defaultConfiguration].addQuote("EURCHF", Handle<Quote>(boost::make_shared<SimpleQuote>(1.3)));
-        fxSpots_[Market::defaultConfiguration].addQuote("EURGBP", Handle<Quote>(boost::make_shared<SimpleQuote>(1.4)));
+
+        fxIndices_[make_pair(Market::defaultConfiguration, "EURUSD")] =
+            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                Settings::instance().evaluationDate(), "EURUSD", 0, parseCurrency("EUR"), parseCurrency("USD"),
+                parseCalendar("TARGET,USD"), Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)), discountCurve("EUR"),
+                discountCurve("USD"), false));
+        fxIndices_[make_pair(Market::defaultConfiguration, "EURCHF")] =
+            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                Settings::instance().evaluationDate(), "EURCHF", 0, parseCurrency("EUR"), parseCurrency("CHF"),
+                parseCalendar("TARGET,CHF"), Handle<Quote>(boost::make_shared<SimpleQuote>(1.3)), discountCurve("EUR"),
+                discountCurve("CHF"), false));
+        fxIndices_[make_pair(Market::defaultConfiguration, "EURGBP")] =
+            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                Settings::instance().evaluationDate(), "EURGBP", 0, parseCurrency("EUR"), parseCurrency("GBP"),
+                parseCalendar("TARGET,GBP"), Handle<Quote>(boost::make_shared<SimpleQuote>(1.4)), discountCurve("EUR"),
+                discountCurve("GBP"), false));
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);

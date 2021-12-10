@@ -304,7 +304,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::shared_ptr<SimpleQuote> q(
                             new SimpleQuote(initMarket->fxRate(name, configuration)->value()));
                         Handle<Quote> qh(q);
-                        fxSpots_[Market::defaultConfiguration].addQuote(name, qh);
+
+                        // build the fxIndex
+                        auto fxInd = initMarket->fxIndex(name);
+                        // we use the todays quote so spotDays is zero
+                        fxIndices_[make_pair(Market::defaultConfiguration, name)] = 
+                            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                                name, 0, fxInd->sourceCurrency(), fxInd->targetCurrency(), fxInd->fixingCalendar(), qh,
+                                discountCurve(fxInd->sourceCurrency().code(), configuration),
+                                discountCurve(fxInd->targetCurrency().code(), configuration), false));                        
+                        
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
@@ -368,8 +377,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << name);
                         vector<string> keys(parameters->yieldCurveTenors(name).size());
 
-			DayCounter dc = wrapperIndex->dayCounter();
-			vector<Time> yieldCurveTimes(1, 0.0);        // include today
+                        DayCounter dc = wrapperIndex->dayCounter();
+                        vector<Time> yieldCurveTimes(1, 0.0);        // include today
                         vector<Date> yieldCurveDates(1, asof_);
                         QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days,
                                    "yield curve tenors must not include t=0");
@@ -1080,7 +1089,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     try {
                         Handle<BlackVolTermStructure> wrapper = initMarket->fxVol(name, configuration);
-                        Handle<Quote> spot = fxSpot(name);
+                        Handle<Quote> spot = fxIndex(name)->fxQuote(true);
                         QL_REQUIRE(name.length() == 6, "invalid ccy pair length");
                         string forCcy = name.substr(0, 3);
                         string domCcy = name.substr(3, 3);
@@ -2423,10 +2432,6 @@ ScenarioSimMarket::ScenarioSimMarket(
     LOG("building base scenario done");
 }
 
-Handle<Quote> ScenarioSimMarket::fxRate(const string& ccypair, const string& configuration) const {
-    return fxSpot(ccypair, configuration);
-}
-
 void ScenarioSimMarket::reset() {
     auto filterBackup = filter_;
     // no filter
@@ -2673,7 +2678,7 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
 
         for (auto c : parameters_->additionalScenarioDataCcys()) {
             if (c != parameters_->baseCcy())
-                asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
+                asd_->set(fxIndex(c + parameters_->baseCcy())->fxQuote(true)->value(), AggregationScenarioDataType::FXSpot, c);
         }
 
         asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);

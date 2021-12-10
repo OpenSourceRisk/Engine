@@ -53,12 +53,7 @@ using std::tuple;
 class MarketImpl : public Market {
 public:
     //! Default constructor
-    MarketImpl() { initialise(); }
-
-    void initialise() {
-        // if no fx spots are defined we still need an empty triangulation
-        fxSpots_[Market::defaultConfiguration] = FXTriangulation();
-    }
+    MarketImpl() { }
 
     //! \name Market interface
     //@{
@@ -202,9 +197,6 @@ protected:
         Notice that correlation curves are required with '&' as a delimiter between the indexes. */
     virtual void require(const MarketObject o, const string& name, const string& configuration) const {}
     
-    //! fx Spot as quoted in the market
-    Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
-
     Date asof_;
     // maps (configuration, key) => term structure
     mutable map<tuple<string, YieldCurveType, string>, Handle<YieldTermStructure>> yieldCurves_;
@@ -213,7 +205,6 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
-    mutable map<string, FXTriangulation> fxSpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;

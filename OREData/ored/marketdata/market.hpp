@@ -241,11 +241,6 @@ public:
     virtual Handle<Quote> cpr(const string& securityID,
                               const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
-
-protected:
-    // fx spot, should never be called outside of a market implementation, use fxRate instead
-    virtual Handle<Quote> fxSpot(const string& ccypair,
-                                 const string& configuration = Market::defaultConfiguration) const = 0;
 };
 } // namespace data
 } // namespace ore
