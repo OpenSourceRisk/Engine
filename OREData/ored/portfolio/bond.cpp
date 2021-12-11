@@ -301,6 +301,7 @@ BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFact
     res.bond = qlBond;
     if (data.isInflationLinked()) {
         res.inflationFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+        res.isInflationLinked = true;
     }
     res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
     res.currency = data.currency();

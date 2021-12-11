@@ -663,6 +663,9 @@
     <ClInclude Include="ored\portfolio\nettingsetdetails.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\structuredconfigurationerror.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
