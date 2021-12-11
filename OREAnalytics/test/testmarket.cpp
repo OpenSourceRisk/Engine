@@ -18,7 +18,6 @@
 
 #include <boost/make_shared.hpp>
 #include <ql/currencies/america.hpp>
-#include <ql/currencies/asia.hpp>
 #include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
@@ -83,10 +82,10 @@ TestMarket::TestMarket(Date asof) {
     addSwapIndex("JPY-CMS-30Y", "JPY-LIBOR-6M", Market::defaultConfiguration);
 
     // add fx rates
-    fxIndices_[make_pair(Market::defaultConfiguration, "EURUSD")] = makeFxIndex("EURUSD", 1.2);
-    fxIndices_[make_pair(Market::defaultConfiguration, "EURGBP")] = makeFxIndex("EURGBP", 0.8);
-    fxIndices_[make_pair(Market::defaultConfiguration, "EURCHF")] = makeFxIndex("EURCHF", 1.0);
-    fxIndices_[make_pair(Market::defaultConfiguration, "EURJPY")] = makeFxIndex("EURJPY", 128);
+    fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
+    fxSpots_[Market::defaultConfiguration].addQuote("EURGBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.8)));
+    fxSpots_[Market::defaultConfiguration].addQuote("EURCHF", Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)));
+    fxSpots_[Market::defaultConfiguration].addQuote("EURJPY", Handle<Quote>(boost::make_shared<SimpleQuote>(128.0)));
 
     // build fx vols
     fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.12);
@@ -252,16 +251,6 @@ TestMarket::TestMarket(Date asof) {
     correlationCurves_[make_tuple(Market::defaultConfiguration, "USD-CMS-10Y", "USD-CMS-1Y")] = flatCorrelation(0.2);
 }
 
-Handle<QuantExt::FxIndex> TestMarket::makeFxIndex(string index, Real spot) {
-    string ccy1 = index.substr(0, 3);
-    string ccy2 = index.substr(3);
-
-    return Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-        Settings::instance().evaluationDate(), index, 0, parseCurrency(ccy1), parseCurrency(ccy2), 
-        parseCalendar(ccy1 + "," + ccy2), Handle<Quote>(boost::make_shared<SimpleQuote>(spot)), 
-        discountCurve(ccy1), discountCurve(ccy2), false));
-}
-
 Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
                                                               boost::shared_ptr<ZeroInflationIndex> ii,
                                                               Handle<YieldTermStructure> yts) {
@@ -367,17 +356,6 @@ void TestConfigurationObjects::setConventions() {
     boost::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
         "JPY-LIBOR-6M-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M"));
 
-    boost::shared_ptr<ore::data::FXConvention> fxEURUSDConv(
-        new ore::data::FXConvention("EUR-USD-FX", "0", "EUR", "USD", "10000", "TARGET, USD", "true"));
-    boost::shared_ptr<ore::data::FXConvention> fxGBPUSDConv(
-        new ore::data::FXConvention("GBP-USD-FX", "0", "GBP", "USD", "10000", "GBP, USD", "true"));
-    boost::shared_ptr<ore::data::FXConvention> fxEURGBPConv(
-        new ore::data::FXConvention("EUR-GBP-FX", "0", "EUR", "GBP", "10000", "TARGET, GBP", "true"));
-    boost::shared_ptr<ore::data::FXConvention> fxEURCHFConv(
-        new ore::data::FXConvention("EUR-CHF-FX", "0", "EUR", "CHF", "10000", "TARGET, CHF", "true"));
-    boost::shared_ptr<ore::data::FXConvention> fxEURJPYConv(
-        new ore::data::FXConvention("EUR-JPY-FX", "0", "EUR", "JPY", "10000", "TARGET, JPY", "true"));
-
     conventions->add(swapEURConv);
     conventions->add(swapUSDConv);
     conventions->add(swapGBPConv);
@@ -391,12 +369,6 @@ void TestConfigurationObjects::setConventions() {
     conventions->add(boost::make_shared<ore::data::DepositConvention>("GBP-DEP-CONVENTIONS", "GBP-LIBOR"));
     conventions->add(boost::make_shared<ore::data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<ore::data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
-
-    conventions->add(fxEURUSDConv);
-    conventions->add(fxGBPUSDConv);
-    conventions->add(fxEURGBPConv);
-    conventions->add(fxEURCHFConv);
-    conventions->add(fxEURJPYConv);
 
     InstrumentConventions::instance().conventions() = conventions;
 }
@@ -427,7 +399,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true);
 
-    simMarketData->setFxVolExpiries(
+    simMarketData->setFxVolExpiries("",
         vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
     simMarketData->setFxVolDecayMode(string("ConstantVariance"));
     simMarketData->setSimulateFXVols(true);
@@ -465,7 +437,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->setSimulateSwapVols(true); // false;
 
-    simMarketData->setFxVolExpiries(
+    simMarketData->setFxVolExpiries("",
         vector<Period>{1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years});
     simMarketData->setFxVolDecayMode(string("ConstantVariance"));
     simMarketData->setSimulateFXVols(true); // false;

@@ -133,8 +133,11 @@ public:
     virtual QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& domestic = string(), 
         const string& foreign = string(), bool useXbsCurves = false, const string& configuration = Market::defaultConfiguration) 
         const = 0;
-
+    // Fx Rate is the fx rate as of today
     virtual Handle<Quote> fxRate(const string& ccypair,
+                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    // Fx Spot is the spot rate quoted in the market
+    virtual Handle<Quote> fxSpot(const string& ccypair,
                                  const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<BlackVolTermStructure> fxVol(const string& ccypair,
                                                 const string& configuration = Market::defaultConfiguration) const = 0;

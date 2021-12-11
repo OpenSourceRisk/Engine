@@ -302,18 +302,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // constructing fxSpots_
                         LOG("adding " << name << " FX rates");
                         boost::shared_ptr<SimpleQuote> q(
-                            new SimpleQuote(initMarket->fxRate(name, configuration)->value()));
+                            new SimpleQuote(initMarket->fxSpot(name, configuration)->value()));
                         Handle<Quote> qh(q);
 
                         // build the fxIndex
-                        auto fxInd = initMarket->fxIndex(name);
-                        // we use the todays quote so spotDays is zero
-                        fxIndices_[make_pair(Market::defaultConfiguration, name)] = 
-                            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-                                name, 0, fxInd->sourceCurrency(), fxInd->targetCurrency(), fxInd->fixingCalendar(), qh,
-                                discountCurve(fxInd->sourceCurrency().code(), configuration),
-                                discountCurve(fxInd->targetCurrency().code(), configuration), false));                        
-                        
+                        auto initMarFxInd = initMarket->fxIndex(name);
+                        auto fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                            name, initMarFxInd->fixingDays(), initMarFxInd->sourceCurrency(),
+                            initMarFxInd->targetCurrency(), 
+                                initMarFxInd->fixingCalendar(), qh,
+                            discountCurve(initMarFxInd->sourceCurrency().code(), configuration),
+                            discountCurve(initMarFxInd->targetCurrency().code(), configuration), false)); 
+                            
+                        fxSpots_[Market::defaultConfiguration].addQuote(name, fxInd->fxQuote(true));
+                        fxRates_[Market::defaultConfiguration].addQuote(name, fxInd->fxQuote());
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
@@ -1089,7 +1091,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     try {
                         Handle<BlackVolTermStructure> wrapper = initMarket->fxVol(name, configuration);
-                        Handle<Quote> spot = fxIndex(name)->fxQuote(true);
+                        Handle<Quote> spot = fxSpot(name);
                         QL_REQUIRE(name.length() == 6, "invalid ccy pair length");
                         string forCcy = name.substr(0, 3);
                         string domCcy = name.substr(3, 3);
@@ -2678,7 +2680,7 @@ void ScenarioSimMarket::updateAsd(const Date& d) {
 
         for (auto c : parameters_->additionalScenarioDataCcys()) {
             if (c != parameters_->baseCcy())
-                asd_->set(fxIndex(c + parameters_->baseCcy())->fxQuote(true)->value(), AggregationScenarioDataType::FXSpot, c);
+                asd_->set(fxSpot(c + parameters_->baseCcy())->value(), AggregationScenarioDataType::FXSpot, c);
         }
 
         asd_->set(numeraire_, AggregationScenarioDataType::Numeraire);

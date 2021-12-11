@@ -1009,7 +1009,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getDayCounter = [this](const string& k) {
             try {
                 return to_string(simMarket_->swaptionVol(k)->dayCounter());
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
                                                                                          << "', using default A365");
                 return std::string("A365F");
@@ -1029,7 +1029,7 @@ void SensitivityScenarioGenerator::generateGenericYieldVolScenarios(bool up, Ris
         getDayCounter = [this](const string& k) {
             try {
                 return to_string(simMarket_->yieldVol(k)->dayCounter());
-            } catch (const std::exception& e) {
+            } catch (const std::exception&) {
                 WLOG("Day counter lookup in simulation market failed for swaption vol '" << k
                                                                                          << "', using default A365");
                 return std::string("A365F");

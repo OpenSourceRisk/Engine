@@ -88,6 +88,7 @@ public:
         const string& foreign = string(), bool useXbsCurves = false,
         const string& configuration = Market::defaultConfiguration) const;
     Handle<Quote> fxRate(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
+    Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,
                                         const string& configuration = Market::defaultConfiguration) const;
 
@@ -205,6 +206,8 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
+    mutable map<string, FXTriangulation> fxSpots_;
+    mutable map<string, FXTriangulation> fxRates_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;
@@ -224,10 +227,6 @@ protected:
     mutable map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     mutable map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     mutable map<pair<string, string>, Handle<Quote>> cprs_;
-
-    // Cache of derived fx structures
-    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::FxIndex>> fxIndices_;
-    mutable map<pair<string, string>, Handle<Quote>> fxRates_;
 
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,

@@ -64,6 +64,8 @@ public:
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& domestic = string(), const string& foreign = string(), 
         bool useXbsCurves = false, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> fxSpot(const string& ccypair,
+                         const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> fxRate(const string& ccypair,
                          const string& configuration = Market::defaultConfiguration) const override;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,

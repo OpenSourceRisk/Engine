@@ -51,11 +51,7 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.075);
 
         // add fx rates
-        fxIndices_[make_pair(Market::defaultConfiguration, "EURUSD")] =
-            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-                Settings::instance().evaluationDate(), "EURUSD", 0, parseCurrency("EUR"),
-                parseCurrency("USD"), parseCalendar("TARGET,USD"), Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)),
-                discountCurve("EUR"), discountCurve("USD"), false));
+        fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);

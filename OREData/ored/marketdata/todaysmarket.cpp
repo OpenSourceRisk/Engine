@@ -126,24 +126,6 @@ void TodaysMarket::initialise(const Date& asof) {
     }
     dependencies_ = dg.dependencies();
 
-    // build the fx spots in all configurations upfront (managing dependencies would be messy due to triangulation)
-
-    for (const auto& configuration : params_->configurations()) {
-        Graph& g = dependencies_[configuration.first];
-        VertexIterator v, vend;
-        for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
-            if (g[*v].obj == MarketObject::FXSpot) {
-                try {
-                    buildNode(configuration.first, g[*v]);
-                } catch (const std::exception& e) {
-                    buildErrors[g[*v].curveSpec->name()] = e.what();
-                    ALOG("error while building node " << g[*v] << " in configuration " << configuration.first << ": "
-                                                      << e.what());
-                }
-            }
-        }
-    }
-
     // if market is not build lazily, sort the dependency graph and build the objects
 
     if (!lazyBuild_) {
@@ -329,7 +311,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()->fxQuote(true));
             }
             LOG("Adding FXIndex (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
-            fxIndices_[make_pair(configuration, node.name)] = Handle<FxIndex>(itr->second->handle());
+            // add the market spot rate and the rate today, both are needed
+            fxSpots_[configuration].addQuote(node.name, itr->second->handle()->fxQuote(true));
+            fxRates_[configuration].addQuote(node.name, itr->second->handle()->fxQuote());
             break;
         }
 

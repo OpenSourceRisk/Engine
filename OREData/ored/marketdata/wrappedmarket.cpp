@@ -70,6 +70,10 @@ Handle<QuantExt::FxIndex> WrappedMarket::fxIndex(const string& fxIndex,  const s
     return market_->fxIndex(fxIndex, domestic, foreign, useXbsCurves, configuration);
 }
 
+Handle<Quote> WrappedMarket::fxSpot(const string& ccypair, const string& configuration) const {
+    return market_->fxSpot(ccypair, configuration);
+}
+
 Handle<Quote> WrappedMarket::fxRate(const string& ccypair, const string& configuration) const {
     return market_->fxRate(ccypair, configuration);
 }

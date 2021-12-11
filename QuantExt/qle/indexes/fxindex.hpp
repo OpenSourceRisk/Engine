@@ -51,7 +51,8 @@ using namespace QuantLib;
 class FxRateQuote : public Quote, public Observer {
 public:
     FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
-                const Handle<YieldTermStructure>& targetYts, Date refDate);
+        const Handle<YieldTermStructure>& targetYts, Natural fixingDays, const Calendar& fixingCalendar,
+        Date refDate = Date());
     //! \name Quote interface
     //@{
     Real value() const override;
@@ -64,6 +65,8 @@ public:
 private:
     const Handle<Quote> spotQuote_;
     const Handle<YieldTermStructure> sourceYts_, targetYts_;
+    Natural fixingDays_;
+    Calendar fixingCalendar_;
     Date refDate_;
 };
 
@@ -87,7 +90,7 @@ public:
         - pastFixing()
         will still return results in terms of the original pair.
     */
-    FxIndex(const std::string& familyName, Natural , const Currency& source, const Currency& target,
+    FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
             bool fixingTriangulation = false);
@@ -96,7 +99,8 @@ public:
             const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
             bool fixingTriangulation = true);
-    FxIndex(const Date& referenceDate, const std::string& familyName, Natural, const Currency& source, const Currency& target,
+    FxIndex(const Date& referenceDate, const std::string& familyName, Natural fixingDays, const Currency& source,
+            const Currency& target,
             const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(), bool inverseIndex = false,
             bool fixingTriangulation = false);
@@ -122,11 +126,11 @@ public:
     std::string familyName() const { return familyName_; }
     Natural fixingDays() const { return fixingDays_; }
     Date fixingDate(const Date& valueDate) const;
-    const Currency& sourceCurrency() const { return sourceCurrency_; }
-    const Currency& targetCurrency() const { return targetCurrency_; }
+    const Currency& sourceCurrency() const { return inverseIndex_ ? targetCurrency_ : sourceCurrency_; }
+    const Currency& targetCurrency() const { return inverseIndex_ ? sourceCurrency_ : targetCurrency_; }
     const bool inverseIndex() const { return inverseIndex_; }
-    const Handle<YieldTermStructure>& sourceCurve() const { return sourceYts_; }
-    const Handle<YieldTermStructure>& targetCurve() const { return targetYts_; }
+    const Handle<YieldTermStructure>& sourceCurve() const { return inverseIndex_ ? targetYts_ : sourceYts_; }
+    const Handle<YieldTermStructure>& targetCurve() const { return inverseIndex_ ? sourceYts_ : targetYts_; }
 
     //! fxQuote returns instantaneous Quote by default, otherwise settlement after fixingDays
     const Handle<Quote> fxQuote(bool withSettlementLag = false) const;

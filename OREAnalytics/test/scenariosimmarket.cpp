@@ -106,8 +106,8 @@ void testFxSpot(boost::shared_ptr<ore::data::Market>& initMarket,
             string ccyPair(parameters->baseCcy() + ccy);
             string ccyReverse(ccy + parameters->baseCcy());
 
-            Handle<Quote> fx_sim = simMarket->fxIndex(ccyPair)->fxQuote(true);
-            Handle<Quote> fx_init = initMarket->fxIndex(ccyPair)->fxQuote(true);
+            Handle<Quote> fx_sim = simMarket->fxSpot(ccyPair);
+            Handle<Quote> fx_init = initMarket->fxSpot(ccyPair);
             if (fx_sim.empty())
                 BOOST_FAIL("fx_sim handle is empty");
             if (fx_init.empty())
@@ -115,8 +115,8 @@ void testFxSpot(boost::shared_ptr<ore::data::Market>& initMarket,
 
             BOOST_CHECK_CLOSE(fx_init->value(), fx_sim->value(), 1e-12);
 
-            fx_sim = simMarket->fxIndex(ccyReverse)->fxQuote(true);
-            fx_init = initMarket->fxIndex(ccyReverse)->fxQuote(true);
+            fx_sim = simMarket->fxSpot(ccyReverse);
+            fx_init = initMarket->fxSpot(ccyReverse);
             if (fx_sim.empty())
                 BOOST_FAIL("fx_sim handle is empty");
             if (fx_init.empty())

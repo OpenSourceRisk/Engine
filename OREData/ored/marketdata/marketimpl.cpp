@@ -42,13 +42,18 @@ namespace data {
 namespace {
 
 template <class A, class B, class C>
-A lookup(const B& map, const C& key, const string& configuration, const string& type) {
+A lookup(const B& map, const C& key, const string& configuration, const string& type, bool continueOnError = false) {
     auto it = map.find(make_pair(configuration, key));
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_pair(Market::defaultConfiguration, key));
-        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration '"
-                                                           << configuration << "' or 'default'");
+        if (it == map.end()) {
+            if (!continueOnError)
+                QL_FAIL("did not find object " << key << " of type " << type 
+                    << " under configuration '" << configuration << "' or 'default'");
+            else
+                return A();
+        }
     }
     return it->second;
 }
@@ -135,14 +140,15 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
 Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& domestic, 
     const string& foreign, bool useXbsCurves, const string& configuration) const {
     
+    // can be an ccy pair of an fx index of form FX-ECB-EUR-USD
     bool isIndex = false;
     string ccyPair = fxIndex;
+    string fxIndName = fxIndex;
     if (isFxIndex(fxIndex)) {
         isIndex = true;
         boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
-        string source = fxIndexBase->sourceCurrency().code();
-        string target = fxIndexBase->targetCurrency().code();
-        ccyPair = source + target;
+        ccyPair = fxIndexBase->sourceCurrency().code() + fxIndexBase->targetCurrency().code();
+        fxIndName = fxIndexBase->familyName();
     } else {
         QL_REQUIRE(fxIndex.size() == 6, "MarketImpl::fxIndex, Invalid fxIndex "
                                           << fxIndex
@@ -150,24 +156,12 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
                                              "name (e.g. FX-ECB-EUR-USD), or ccy pair (e.g. EURUSD).");
     }
 
-    // look up the index, the ccypair should have been built
+    string source = ccyPair.substr(0, 3), target = ccyPair.substr(3);
     bool invertFxIndex = false;
-    auto it = fxIndices_.find(make_pair(configuration, ccyPair));
-    if (it == fxIndices_.end()) {
-        // try the reverse
-        string revCcy = ccyPair.substr(3) + ccyPair.substr(0, 3);
-        it = fxIndices_.find(make_pair(configuration, revCcy));
-        invertFxIndex = true;
-    }
-    QL_REQUIRE(it != fxIndices_.end(), "MarketImpl::fxIndex, Cannot find fxIndex for " << fxIndex);
-    
-    Handle<FxIndex> fxInd = it->second;
-    // check if we need to invert the index -  only valid if we look for an index, not a ccy pair
-    // only check if a domestic and foreign have been provided    
     if (isIndex && !domestic.empty() && !foreign.empty()) {
-        if (domestic == fxInd->targetCurrency().code() && foreign == fxInd->sourceCurrency().code()) {
+        if (domestic == target && foreign == source) {
             invertFxIndex = false;
-        } else if (domestic == fxInd->sourceCurrency().code() && foreign == fxInd->targetCurrency().code()) {
+        } else if (domestic == source && foreign == target) {
             invertFxIndex = true;
         } else {
             QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic
@@ -175,26 +169,41 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
         }
     }
 
-    if (isIndex || invertFxIndex || useXbsCurves) {
-        auto sorTS = fxInd->sourceCurve();
-        auto tarTS = fxInd->targetCurve();
-        if (useXbsCurves) {
-            sorTS = xccyYieldCurve(fxInd->sourceCurrency().code(), configuration);
-            tarTS = xccyYieldCurve(fxInd->targetCurrency().code(), configuration);
-        }
-        fxInd = Handle<QuantExt::FxIndex>(fxInd->clone(fxInd->fxQuote(true), sorTS, tarTS, fxIndex, invertFxIndex));
+    Natural spotDays = 0;
+    Calendar calendar = NullCalendar();
+
+    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+    auto fxCon = boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(source, target));
+    if (fxCon) {
+        spotDays = fxCon->spotDays();
+        calendar = fxCon->advanceCalendar();
     }
 
-    return fxInd;
+    // get the discount curves and spot
+    auto sorTS = useXbsCurves ? xccyYieldCurve(source, configuration) : discountCurve(source, configuration);
+    auto tarTS = useXbsCurves ? xccyYieldCurve(target, configuration) : discountCurve(target, configuration);
+    auto spot = fxSpot(ccyPair);
+
+    return Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(fxIndName, spotDays, 
+        parseCurrency(source), parseCurrency(target), calendar, spot, sorTS, tarTS, invertFxIndex));
 }
 
 Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configuration) const {
-    auto it = fxRates_.find(make_pair(configuration, ccypair));
-    // if no fx rate found we build it
+    auto it = fxRates_.find(configuration);
     if (it == fxRates_.end())
-        fxRates_[make_pair(configuration, ccypair)] =
-            fxIndex(ccypair, string(), string(), false, configuration)->fxQuote();
-    return fxRates_[make_pair(configuration, ccypair)];
+        it = fxRates_.find(Market::defaultConfiguration);
+    QL_REQUIRE(it != fxRates_.end(), "did not find object " << ccypair << " of type fx spot under configuration '"
+                                                            << configuration << "' or 'default'");
+    return it->second.getQuote(ccypair); // will throw if not found
+}
+
+Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
+    auto it = fxSpots_.find(configuration);
+    if (it == fxSpots_.end())
+        it = fxSpots_.find(Market::defaultConfiguration);
+    QL_REQUIRE(it != fxSpots_.end(), "did not find object " << ccypair << " of type fx spot under configuration '"
+                                                            << configuration << "' or 'default'");
+    return it->second.getQuote(ccypair); // will throw if not found
 }
 
 Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const string& configuration) const {

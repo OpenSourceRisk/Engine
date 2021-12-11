@@ -43,8 +43,10 @@ using namespace QuantLib;
 namespace QuantExt {
 
 FxRateQuote::FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
-                         const Handle<YieldTermStructure>& targetYts, Date refDate)
-    : spotQuote_(spotQuote), sourceYts_(sourceYts), targetYts_(targetYts), refDate_(refDate) {
+                         const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
+                         const Calendar& fixingCalendar, Date refDate)
+    : spotQuote_(spotQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
+      fixingCalendar_(fixingCalendar), refDate_(refDate) {
     registerWith(spotQuote_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
@@ -52,7 +54,11 @@ FxRateQuote::FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructur
 
 Real FxRateQuote::value() const {
     QL_ENSURE(isValid(), "invalid FxRateQuote");
-    return spotQuote_->value() * targetYts_->discount(refDate_) / sourceYts_->discount(refDate_);
+
+    Date today = refDate_ == Null<Date>() ? Settings::instance().evaluationDate() : refDate_;
+    Date refValueDate = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
+
+    return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
 }
 
 bool FxRateQuote::isValid() const { 
@@ -121,31 +127,29 @@ void FxIndex::initialise() {
 }
 
 const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {   
-    
+    Handle<Quote> quote;
     if (withSettlementLag)
-        return fxSpot_;
+        quote = fxSpot_;
+    
+    if (quote.empty()) {
+        if (fxRate_.empty()) {
+            Handle<Quote> tmpQuote;
+            if (!useQuote_)
+                tmpQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(
+                    ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
+            else
+                tmpQuote = fxSpot_;
 
-    if (fxRate_.empty()){
-        Handle<Quote> quote;
-        if (!useQuote_)
-            quote = Handle<Quote>(boost::make_shared<SimpleQuote>(
-                ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
-        else
-            quote = fxSpot_;
-                
-        Date today =  referenceDate_ == Null<Date>() ? Settings::instance().evaluationDate() : referenceDate_;
-        Date refValueDate  = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
-
-        // adjust for spot
-        quote = Handle<Quote>(
-            boost::make_shared<FxRateQuote>(quote, sourceYts_, targetYts_, refValueDate));
-        
-        if (inverseIndex_)
-            // Create a derived quote to invert
-            quote = Handle<Quote>(boost::make_shared<DerivedQuote<divide<Real>>>(quote, divide<Real>(1.0)));
-        fxRate_ = quote;        
+            // adjust for spot
+            fxRate_ = Handle<Quote>(boost::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, 
+                fixingDays_, fixingCalendar_, referenceDate_));
+        }
+        quote = fxRate_;
     }
-    return fxRate_;    
+    if (inverseIndex_)
+        // Create a derived quote to invert
+        quote = Handle<Quote>(boost::make_shared<DerivedQuote<divide<Real>>>(quote, divide<Real>(1.0)));
+    return quote;
 }
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {

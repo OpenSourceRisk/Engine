@@ -30,7 +30,6 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <ql/currencies/america.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -104,10 +103,8 @@ public:
         hUSD->addFixing(Date(18, Aug, 2016), 0.00811);
 
         // add fx rates
-        fxIndices_[make_pair(Market::defaultConfiguration, "EURUSD")] = 
-            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
-                Settings::instance().evaluationDate(), "EURUSD", 0, EURCurrency(), USDCurrency(), parseCalendar("TARGET,USD"),
-                Handle<Quote>(boost::make_shared<SimpleQuote>(1.1306)), discountCurve("EUR"), discountCurve("USD"), false));
+        fxSpots_[Market::defaultConfiguration].addQuote("EURUSD",
+                                                        Handle<Quote>(boost::make_shared<SimpleQuote>(1.1306)));
     }
 
 private:
@@ -152,7 +149,7 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     BOOST_CHECK_CLOSE(market->discountCurve("USD")->discount(today + 3 * Years), 0.96908, 0.0001);
 
     // Test EURUSD fx spot object against base value
-    BOOST_CHECK_EQUAL(market->fxRate("EURUSD")->value(), 1.1306);
+    BOOST_CHECK_EQUAL(market->fxSpot("EURUSD")->value(), 1.1306);
 
     // envelope
     Envelope env("CP");
@@ -180,7 +177,7 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     bool isPayerEUR = true;
     string indexEUR = "EUR-EURIBOR-6M";
     bool isInArrears = false;
-    int days = 2;
+    int days = 2, fxFixingDays = 0;
     vector<Real> spreadEUR(1, 0.000261);
     string dc = "ACT/360";
     vector<Real> notionalEUR(1, 8833141.95);
@@ -194,10 +191,10 @@ BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
     auto legdataEUR = boost::make_shared<FloatingLegData>(indexEUR, days, isInArrears, spreadEUR);
     LegData legEUR1(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, notionalFinalXNL, foreignCCY,
-                    foreignAmount, fxIndex);
+                    foreignAmount, fxIndex, fxFixingDays);
     LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY, foreignAmount,
-                    fxIndex);
+                    fxIndex, fxFixingDays);
 
     // USD Leg without notional resets
     bool isPayerUSD = false;
