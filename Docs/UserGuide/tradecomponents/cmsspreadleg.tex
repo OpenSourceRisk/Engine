@@ -47,10 +47,10 @@ for the index which is defined by two CMS indices as the difference between \ver
 The payout for each coupon is thus:
 
 $
-N \cdot (Index1 - Index2 + Spread) \cdot gearing \cdot daycountfraction
+N \cdot (gearing \cdot (Index1 - Index2) + Spread)  \cdot daycountfraction
 $
 
-Adding a cap, and assuming no spread,  a gearing of 1, a daycount fraction of 1, a notional of 1, the payout becomes:
+Adding a cap, and assuming no spread,  a gearing of 1, a daycount fraction of 1, and a notional of 1, the payout becomes:
 
 $
 min (Cap; Index1 - Index2) 
