@@ -390,6 +390,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 ccy = cf.currency;
                             } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
                                 ccy = trades[k]->legCurrencies()[cf.legNumber];
+                            } else {
+                                ccy = trades[k]->npvCurrency();
                             }
 
                             Real effectiveAmount = Null<Real>();
@@ -475,10 +477,12 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
     // Write the resulting aggregate PV per trade into the report.
 
     Size tradeIdColumn = 0;
+    Size tradeTypeColumn = 1;
     Size payDateColumn = 4;
     Size ccyColumn = 7;
     Size pvColumn = 17;
     QL_REQUIRE(cashflowReport.header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(cashflowReport.header(tradeTypeColumn) == "Type", "incorrect trade type column " << tradeTypeColumn);
     QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
     QL_REQUIRE(cashflowReport.header(ccyColumn) == "Currency", "incorrect currency column " << ccyColumn);
     QL_REQUIRE(cashflowReport.header(pvColumn) == "PresentValue", "incorrect pv column " << pvColumn);
@@ -487,11 +491,18 @@ void ReportWriter::writeCashflowNpv(ore::data::Report& report,
     Date asof = Settings::instance().evaluationDate();
     for (Size i = 0; i < cashflowReport.rows(); ++i) {
         string tradeId = boost::get<string>(cashflowReport.data(tradeIdColumn).at(i));
+        string tradeType = boost::get<string>(cashflowReport.data(tradeTypeColumn).at(i));
         Date payDate = boost::get<Date>(cashflowReport.data(payDateColumn).at(i));
         string ccy = boost::get<string>(cashflowReport.data(ccyColumn).at(i));
         Real pv = boost::get<Real>(cashflowReport.data(pvColumn).at(i));
         Real fx = 1.0;
-        if (ccy != baseCcy)
+	// There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
+        if (ccy.empty()) {
+            ALOG(StructuredTradeErrorMessage(tradeId, tradeType, "Error during CashflowNpv calculation.",
+                                             "Cashflow in row " + std::to_string(i) +
+                                                 " has no ccy. Assuming ccy = baseCcy = " + baseCcy + "."));
+        }
+        if (!ccy.empty() && ccy != baseCcy)
             fx = market->fxSpot(ccy + baseCcy, configuration)->value();
         if (npvMap.find(tradeId) == npvMap.end())
             npvMap[tradeId] = 0.0;
