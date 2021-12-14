@@ -65,6 +65,7 @@ public:
 
     //! \name Modifiers
     //@{
+    string& modifyStartDate() { return startDate_; }
     string& modifyEndDate() { return endDate_; }
     //@}
 
