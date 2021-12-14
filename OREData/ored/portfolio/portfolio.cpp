@@ -157,7 +157,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             (*trade)->reset();
             (*trade)->build(engineFactory);
             TLOG("Required Fixings for trade " << (*trade)->id() << ":");
-            TLOGGERSTREAM << (*trade)->requiredFixings();
+            TLOGGERSTREAM((*trade)->requiredFixings());
             ++trade;
         } catch (std::exception& e) {
             ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
@@ -244,6 +244,17 @@ std::set<std::string> Portfolio::portfolioIds() const {
     for (auto const& t : trades_)
         portfolioIds.insert(t->portfolioIds().begin(), t->portfolioIds().end());
     return portfolioIds;
+}
+
+bool Portfolio::hasNettingSetDetails() const {
+    bool hasNettingSetDetails = false;
+    for (auto it = trades().begin(); it != trades().end(); it++) {
+        if (!(*it)->envelope().nettingSetDetails().emptyOptionalFields()) {
+            hasNettingSetDetails = true;
+            break;
+        }
+    }
+    return hasNettingSetDetails;
 }
 
 map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {

@@ -112,7 +112,9 @@ protected:
         for (Size i = 0; i < times_.size(); ++i) {
             data_[i] = quotes_[i]->value();
             QL_REQUIRE(data_[i] > 0, "InterpolatedDiscountCurve2: invalid value " << data_[i] << " at index " << i);
-            if (interpolation_ == Interpolation::linearZero) {
+        }
+        if (interpolation_ == Interpolation::linearZero) {
+            for (Size i = 0; i < times_.size(); ++i) {
                 data_[i] = -std::log(data_[std::max<Size>(i, 1)]) / times_[std::max<Size>(i, 1)];
             }
         }

@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/envelope.hpp>
+#include <ored/utilities/log.hpp>
 
 using ore::data::XMLUtils;
 
@@ -26,7 +27,14 @@ namespace data {
 void Envelope::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Envelope");
     counterparty_ = XMLUtils::getChildValue(node, "CounterParty", true);
-    nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
+
+    XMLNode* nettingSetDetailsNode = XMLUtils::getChildNode(node, "NettingSetDetails");
+    if (nettingSetDetailsNode) {
+        nettingSetDetails_.fromXML(nettingSetDetailsNode);
+    } else {
+        nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
+        nettingSetDetails_ = NettingSetDetails(nettingSetId_);
+    }   
 
     portfolioIds_.clear();
     XMLNode* portfolioNode = XMLUtils::getChildNode(node, "PortfolioIds");
@@ -47,7 +55,11 @@ void Envelope::fromXML(XMLNode* node) {
 XMLNode* Envelope::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Envelope");
     XMLUtils::addChild(doc, node, "CounterParty", counterparty_);
-    XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+    if (nettingSetDetails_.emptyOptionalFields()) {
+        XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+    } else {
+        XMLUtils::appendNode(node, nettingSetDetails_.toXML(doc));
+    }
     XMLNode* portfolioNode = doc.allocNode("PortfolioIds");
     XMLUtils::appendNode(node, portfolioNode);
     for (const auto& p : portfolioIds_)
@@ -58,5 +70,6 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, additionalNode, it.first, it.second);
     return node;
 }
+
 } // namespace data
 } // namespace ore

@@ -79,7 +79,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setDefaultTenors("", {6 * Months, 8 * Months, 1 * Years, 2 * Years});
 
     parameters->setSimulateFXVols(false);
-    parameters->setFxVolExpiries(vector<Period>{2 * Years, 3 * Years, 4 * Years});
+    parameters->setFxVolExpiries("", vector<Period>{2 * Years, 3 * Years, 4 * Years});
     parameters->setFxVolDecayMode(string("ConstantVariance"));
     parameters->setSimulateEquityVols(false);
 
@@ -174,8 +174,8 @@ void testFxVolCurve(boost::shared_ptr<data::Market>& initMarket,
         Handle<BlackVolTermStructure> initCurve = initMarket->fxVol(ccyPair);
         vector<Date> dates;
         Date asof = initMarket->asofDate();
-        for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
-            dates.push_back(asof + parameters->fxVolExpiries()[i]);
+        for (Size i = 0; i < parameters->fxVolExpiries(ccyPair).size(); i++) {
+            dates.push_back(asof + parameters->fxVolExpiries(ccyPair)[i]);
         }
 
         for (const auto& date : dates) {

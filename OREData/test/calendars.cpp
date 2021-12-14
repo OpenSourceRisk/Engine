@@ -35,6 +35,7 @@
 #include <qle/calendars/malaysia.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/wmr.hpp>
@@ -107,7 +108,7 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"THB", Thailand()},
                             {"CHF", QuantExt::Switzerland()},
                             {"ZA", SouthAfrica()},
-                            {"MISX", Russia(Russia::MOEX)},
+                            {"MISX", RussiaModified(Russia::MOEX)},
                             {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
                             {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
                             {"WMR", Wmr()},

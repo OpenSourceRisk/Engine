@@ -643,6 +643,7 @@
     <ClCompile Include="blackvariancesurfacestddevs.cpp" />
     <ClCompile Include="blackvolsurfacedelta.cpp" />
     <ClCompile Include="bonds.cpp" />
+    <ClCompile Include="calendars.cpp" />
     <ClCompile Include="capfloortermvolcurve.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />

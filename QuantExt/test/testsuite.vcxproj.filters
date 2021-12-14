@@ -176,6 +176,9 @@
     <ClCompile Include="randomvariable.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="calendars.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

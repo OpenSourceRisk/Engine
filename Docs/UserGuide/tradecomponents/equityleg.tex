@@ -13,10 +13,11 @@ The EquityLegData block contains the following elements:
   Allowable values: Any positive real number
 
 \item ReturnType: \emph{Price} indicates that the coupons on the equity leg are determined by the  price movement of the underlying equity, i.e.: $Notional \cdot \frac{FinalPrice - InitialPrice} {InitialPrice}$, \\ 
-whereas  \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends, i.e.: \\
- $Notional \cdot \frac{(FinalPrice + dividends * DividendFactor) - InitialPrice} {InitialPrice}$ 
+ \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends, i.e.: \\
+ $Notional \cdot \frac{(FinalPrice + dividends * DividendFactor) - InitialPrice} {InitialPrice}$, \\
+ \emph{Dividend} indicates that the coupons are determined by the dividened paid on the underlying equity.
  
-Allowable values:  \emph{Price}, \emph{Total} 
+Allowable values:  \emph{Price}, \emph{Total}, \emph{Dividend}
 
 \item Name: The identifier of the underlying equity or equity index.
 
@@ -34,7 +35,7 @@ Allowable values: Any positive real number
   or the leg currency (if these are different). This field determines in which currency the initial price is given. If
   omitted, it is assumed that the initial price is given in equity currency.
 
-Allowable values: A valid currency code, See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
+Allowable values: A valid currency code, See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.
 
 \item NotionalReset [Optional]: Defaults to \emph{true}.  Notional resets only affect the equity leg. If NotionalReset
   is set to \emph{true} the quantity or number of shares of the underlying equity is fixed for all the coupons on the
@@ -78,7 +79,7 @@ Allowable values: Any non-negative integer.
 \begin{itemize}
 	\item EquityCurrency [Mandatory within \lstinline!FXTerms!]: Currency underlying equity is quoted in. Required if FXTerms is present.
 
-	Allowable values: See \lstinline!Currency! and \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data}.
+	Allowable values: See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.
 
 	\item FXIndex [Mandatory within \lstinline!FXTerms!]: Name of the index for FX fixings for the leg vs equity currency pair, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
 

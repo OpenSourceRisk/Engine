@@ -17,40 +17,71 @@
 */
 
 #include <ored/portfolio/nettingsetmanager.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
 namespace ore {
 namespace data {
 
+using ore::data::NettingSetDetails;
+
 void NettingSetManager::add(const boost::shared_ptr<NettingSetDefinition>& nettingSet) {
+    const NettingSetDetails& k = nettingSet->nettingSetDetails();
 
-    bool added =
-        data_.insert(std::pair<string, boost::shared_ptr<NettingSetDefinition>>(nettingSet->nettingSetId(), nettingSet))
-            .second;
+    std::pair<NettingSetDetails, boost::shared_ptr<NettingSetDefinition>> newNetSetDef(k, nettingSet);
 
+    bool added = data_.insert(newNetSetDef).second;
     if (added)
-        uniqueKeys_.push_back(nettingSet->nettingSetId());
+        uniqueKeys_.push_back(k);
 
     QL_REQUIRE(data_.size() == uniqueKeys_.size(), "NettingSetManager: vector/map size mismatch");
 }
 
-bool NettingSetManager::has(string id) const { return data_.find(id) != data_.end(); }
+bool NettingSetManager::has(const NettingSetDetails& nettingSetDetails) const {
+    return data_.find(nettingSetDetails) != data_.end();
+}
+
+bool NettingSetManager::has(const string& id) const {
+    return has(NettingSetDetails(id));
+}
 
 void NettingSetManager::reset() {
     data_.clear();
     uniqueKeys_.clear();
 }
 
-const bool NettingSetManager::empty() {
+const bool NettingSetManager::empty() const {
     return data_.empty();
 }
 
-boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(string id) const {
-    if (has(id))
-        return data_.find(id)->second;
+const bool NettingSetManager::calculateIMAmount() const { 
+    for (const auto& nsd : data_) {
+        if (nsd.second->csaDetails()->calculateIMAmount())
+            return true;
+    }
+    return false;
+}
+
+const set<NettingSetDetails> NettingSetManager::calculateIMNettingSets() const {
+    set<NettingSetDetails> calculateIMNettingSets = set<NettingSetDetails>();
+    for (const auto& nsd : data_) {
+        if (nsd.second->csaDetails()->calculateIMAmount()) {
+            calculateIMNettingSets.insert(nsd.first);
+        }
+    }
+    return calculateIMNettingSets;
+}
+
+boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(const NettingSetDetails& nettingSetDetails) const {
+    if (has(nettingSetDetails))
+        return data_.find(nettingSetDetails)->second;
     else
-        QL_FAIL("NettingSetDefinition not found in manager: " << id);
+        QL_FAIL("NettingSetDefinition not found in manager: " << nettingSetDetails);
+}
+
+boost::shared_ptr<NettingSetDefinition> NettingSetManager::get(const string& id) const {
+    return get(NettingSetDetails(id));
 }
 
 void NettingSetManager::fromXML(XMLNode* node) {
@@ -62,14 +93,15 @@ void NettingSetManager::fromXML(XMLNode* node) {
             boost::shared_ptr<NettingSetDefinition> nettingSet(new NettingSetDefinition(child));
             add(nettingSet);
         } catch (std::exception& ex) {
-            ALOG("Exception parsing netting set definition: " << ex.what());
+            ALOG(StructuredConfigurationWarningMessage("Netting set manager", "",
+                                                       "Netting set definnition failed to parse", ex.what()));
         }
     }
 }
 
 XMLNode* NettingSetManager::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("NettingSetDefinitions");
-    map<string, const boost::shared_ptr<NettingSetDefinition>>::iterator it;
+    map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>>::iterator it;
     for (it = data_.begin(); it != data_.end(); ++it)
         XMLUtils::appendNode(node, it->second->toXML(doc));
     return node;

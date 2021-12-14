@@ -35,6 +35,7 @@
 #include <ql/experimental/coupons/swapspreadindex.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/position.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
 
@@ -43,6 +44,7 @@
 namespace ore {
 namespace data {
 using namespace QuantLib;
+using QuantExt::EquityReturnType;
 using std::string;
 
 class EngineFactory;
@@ -684,9 +686,9 @@ private:
 class EquityLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    EquityLegData() : LegAdditionalData("Equity"), quantity_(Null<Real>()) {}
+    EquityLegData() : LegAdditionalData("Equity"), initialPrice_(Null<Real>()), quantity_(Null<Real>()) {}
     //! Constructor
-    EquityLegData(string returnType, Real dividendFactor, EquityUnderlying equityUnderlying, Real initialPrice,
+    EquityLegData(EquityReturnType returnType, Real dividendFactor, EquityUnderlying equityUnderlying, Real initialPrice,
                   bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
                   string eqCurrency = "", string fxIndex = "", Real quantity = Null<Real>(), string initialPriceCurrency = "")
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor),
@@ -698,7 +700,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& returnType() const { return returnType_; }
+    EquityReturnType returnType() const { return returnType_; }
     string eqName() { return equityUnderlying_.name(); }
     Real dividendFactor() const { return dividendFactor_; }
     EquityUnderlying equityIdentifier() const { return equityUnderlying_; }
@@ -718,7 +720,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
-    string returnType_;
+    EquityReturnType returnType_;
     Real dividendFactor_ = 1.0;
     EquityUnderlying equityUnderlying_;
     Real initialPrice_;

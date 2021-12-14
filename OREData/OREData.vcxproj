@@ -191,6 +191,7 @@
     <ClInclude Include="ored\portfolio\legdata.hpp" />
     <ClInclude Include="ored\portfolio\legdatafactory.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
+    <ClInclude Include="ored\portfolio\nettingsetdetails.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp" />
@@ -373,6 +374,7 @@
     <ClCompile Include="ored\portfolio\legdata.cpp" />
     <ClCompile Include="ored\portfolio\legdatafactory.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
+    <ClCompile Include="ored\portfolio\nettingsetdetails.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
     <ClCompile Include="ored\portfolio\optiondata.cpp" />
     <ClCompile Include="ored\portfolio\optionexercisedata.cpp" />

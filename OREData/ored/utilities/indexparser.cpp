@@ -140,6 +140,8 @@ public:
             return boost::make_shared<MXNTiie>(4 * Weeks, h);
         } else if (p.units() == Days && p.length() == 91) {
             return boost::make_shared<MXNTiie>(3 * Months, h);
+        } else if (p.units() == Days && (p.length() >= 180 || p.length() <= 183)) {
+            return boost::make_shared<MXNTiie>(6 * Months, h);
         } else {
             return boost::make_shared<MXNTiie>(p, h);
         }

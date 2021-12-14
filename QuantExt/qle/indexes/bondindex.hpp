@@ -85,7 +85,8 @@ public:
               const Handle<Quote>& recoveryRate = Handle<Quote>(),
               const Handle<Quote>& securitySpread = Handle<Quote>(),
               const Handle<YieldTermStructure>& incomeCurve = Handle<YieldTermStructure>(),
-              const bool conditionalOnSurvival = true, const bool isInflationLinked = false);
+              const bool conditionalOnSurvival = true, const bool isInflationLinked = false,
+              const double bidAskAdjustment = 0.0);
 
     //! \name Index interface
     //@{
@@ -132,6 +133,7 @@ protected:
     Handle<YieldTermStructure> incomeCurve_;
     bool conditionalOnSurvival_;
     bool isInflationLinked_;
+    double bidAskAdjustment_;
     boost::shared_ptr<DiscountingRiskyBondEngine> vanillaBondEngine_;
 };
 
