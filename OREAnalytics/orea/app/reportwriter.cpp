@@ -390,6 +390,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 ccy = cf.currency;
                             } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
                                 ccy = trades[k]->legCurrencies()[cf.legNumber];
+                            } else {
+                                ccy = trades[k]->npvCurrency();
                             }
 
                             Real effectiveAmount = Null<Real>();
