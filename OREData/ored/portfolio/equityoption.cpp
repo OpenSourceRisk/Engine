@@ -207,7 +207,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     
     if (!strikeStr_.empty()) {
         XMLUtils::addChild(doc, eqNode, "Currency", tradeStrike_.currency());
-        XMLUtils::addChild(doc, eqNode, "Strike", tradeStrike_.value());
+        XMLUtils::addChild(doc, eqNode, "Strike", localStrike_);
     } else
         XMLUtils::appendNode(eqNode, tradeStrike_.toXML(doc));
     
