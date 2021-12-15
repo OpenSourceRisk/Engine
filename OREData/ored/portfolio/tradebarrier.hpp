@@ -50,7 +50,7 @@ class TradeBarrier : public TradeMonetary {
 public:
     TradeBarrier(){};
 
-    TradeBarrier(QuantLib::Real value, std::string currency){};
+    TradeBarrier(QuantLib::Real value, std::string currency) : TradeMonetary(value, currency){};
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
 };

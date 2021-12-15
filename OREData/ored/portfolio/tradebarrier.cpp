@@ -29,6 +29,7 @@
 namespace ore {
 namespace data {
 
+
 void TradeBarrier::fromXML(XMLNode* node) { TradeMonetary::fromXML(XMLUtils::getChildNode(node, "Level")); }
 
 XMLNode* TradeBarrier::toXML(XMLDocument& doc) {

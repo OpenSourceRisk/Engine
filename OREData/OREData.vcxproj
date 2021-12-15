@@ -395,7 +395,7 @@
     <ClCompile Include="ored\portfolio\tradeactions.cpp" />
     <ClCompile Include="ored\portfolio\tradebarrier.cpp" />
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
-    <ClCompile Include="ored\portfolio\tradestike.cpp" />
+    <ClCompile Include="ored\portfolio\tradestrike.cpp" />
     <ClCompile Include="ored\portfolio\underlying.cpp" />
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
     <ClCompile Include="ored\portfolio\asianoption.cpp" />

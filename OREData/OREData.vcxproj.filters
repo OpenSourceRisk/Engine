@@ -168,7 +168,7 @@
     <ClCompile Include="ored\utilities\to_string.cpp" />
     <ClCompile Include="ored\utilities\wildcard.cpp" />
     <ClCompile Include="ored\utilities\xmlutils.cpp" />
-    <ClCompile Include="ored\portfolio\tradestike.cpp" />
+    <ClCompile Include="ored\portfolio\tradestrike.cpp" />
     <ClCompile Include="ored\portfolio\tradebarrier.cpp" />
   </ItemGroup>
   <ItemGroup>

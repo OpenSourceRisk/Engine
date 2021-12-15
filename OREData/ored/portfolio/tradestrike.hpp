@@ -49,7 +49,7 @@ class TradeStrike : public TradeMonetary {
 public:
     TradeStrike(){};
 
-    TradeStrike(QuantLib::Real value, std::string currency){};
+    TradeStrike(QuantLib::Real value, std::string currency) : TradeMonetary(value, currency){};
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;

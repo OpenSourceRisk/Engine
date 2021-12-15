@@ -49,7 +49,7 @@ class TradeMonetary : public XMLSerializable {
 public:
     TradeMonetary() {};
 
-    TradeMonetary(QuantLib::Real value, std::string currency);
+    TradeMonetary(QuantLib::Real value, std::string currency = std::string()) : value_(value), currency_(currency){};
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //virtual void additionalToXML(XMLNode* node) = 0;

@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
+#include <ored/portfolio/tradestrike.hpp>
 
 namespace ore {
 namespace data {
@@ -66,10 +67,12 @@ public:
     //@}
 
 protected:
+    TradeStrike tradeStrike_;
     EquityUnderlying equityUnderlying_;
     string localCurrency_;
     QuantLib::Real localStrike_;
     string strikeCurrency_;
+    std::string strikeStr_;
 };
 } // namespace data
 } // namespace ore

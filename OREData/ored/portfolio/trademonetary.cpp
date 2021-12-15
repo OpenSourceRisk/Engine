@@ -30,8 +30,6 @@ namespace ore {
 namespace data {
 
 
-TradeMonetary::TradeMonetary(Real value, std::string currency = std::string()) : value_(value), currency_(currency) {}
-
 void TradeMonetary::fromXML(XMLNode* node) { 
 	currency_ = XMLUtils::getChildValue(node, "Currency", false);
     value_ = XMLUtils::getChildValueAsDouble(node, "Value", true);
