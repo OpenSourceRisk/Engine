@@ -192,7 +192,7 @@ Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configurat
     auto it = fxRates_.find(configuration);
     if (it == fxRates_.end())
         it = fxRates_.find(Market::defaultConfiguration);
-    QL_REQUIRE(it != fxRates_.end(), "did not find object " << ccypair << " of type fx spot under configuration '"
+    QL_REQUIRE(it != fxRates_.end(), "did not find object " << ccypair << " of type fx rate under configuration '"
                                                             << configuration << "' or 'default'");
     return it->second.getQuote(ccypair); // will throw if not found
 }
