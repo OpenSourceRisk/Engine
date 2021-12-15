@@ -64,7 +64,6 @@ void FlattenedDefaultCurve::performCalculations() const {
 
     cds.setPricingEngine(engine);
     Real fairSpread = cds.fairSpread();
-    std::cout << "flattened curve recalc, fair spread = " << fairSpread << std::endl;
 
     CreditDefaultSwap cdsf(Protection::Buyer, 1E8, fairSpread, schedule, Following, Actual360(), true,
                            CreditDefaultSwap::ProtectionPaymentTime::atDefault, source_->referenceDate(),
@@ -76,10 +75,8 @@ void FlattenedDefaultCurve::performCalculations() const {
     } catch (...) {
         // if the above should fail, fall back to a less accurate estimate
         flatRate_ = -std::log(source_->survivalProbability(samplingDate_)) / source_->timeFromReference(samplingDate_);
-        std::cout << "USE FALLBACK RATE!" << std::endl;
     }
 
-    std::cout << "flattened curve recalc, implied hazard = " << flatRate_ << std::endl;
 }
 
 Real FlattenedDefaultCurve::survivalProbabilityImpl(Time t) const {
