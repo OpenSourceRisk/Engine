@@ -355,8 +355,8 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
-portfolio/trademonetary.cpp
-portfolio/tradestrike.cpp
+portfolio/trademonetary.hpp
+portfolio/tradestrike.hpp
 portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp
