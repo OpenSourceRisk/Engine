@@ -170,8 +170,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
 			if(marketObjectData[i].obj == MarketObject::CapFloorVol) {
                             auto mp2 = XMLUtils::getChildrenAttributesAndValues(
                                 n, marketObjectData[i].xmlSingleName.first, "currency", false);
-			    if(mp2 != empty()) {
-				mp.insert(mp2.begin(), mp2.end());
+                            if (!mp2.empty()) {
+                                mp.insert(mp2.begin(), mp2.end());
                                 ALOG("TodaysMarketParameters: the attribute 'currency' is deprecated for "
                                      "CapFloorVolatilities, use 'key' instead.");
                             }
