@@ -91,8 +91,8 @@ Handle<BilinearBaseCorrelationTermStructure> WrappedMarket::baseCorrelation(cons
     return market_->baseCorrelation(name, configuration);
 }
 
-Handle<OptionletVolatilityStructure> WrappedMarket::capFloorVol(const string& ccy, const string& configuration) const {
-    return market_->capFloorVol(ccy, configuration);
+Handle<OptionletVolatilityStructure> WrappedMarket::capFloorVol(const string& key, const string& configuration) const {
+    return market_->capFloorVol(key, configuration);
 }
 
 Handle<QuantExt::YoYOptionletVolatilitySurface> WrappedMarket::yoyCapFloorVol(const string& indexName,
