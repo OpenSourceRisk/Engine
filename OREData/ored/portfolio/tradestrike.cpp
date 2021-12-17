@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019, 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
@@ -33,8 +33,7 @@ void TradeStrike::fromXML(XMLNode* node) { TradeMonetary::fromXML(XMLUtils::getC
 
 XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("StrikeData");
-    XMLUtils::addChild(doc, node, "Value", value_);
-    XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::appendNode(node, TradeMonetary::toXML(doc));
     return node;
 }
 

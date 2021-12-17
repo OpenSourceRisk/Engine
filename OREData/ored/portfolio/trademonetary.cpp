@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019, 2021 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Quaternion Risk Management Ltd
  Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
