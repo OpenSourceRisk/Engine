@@ -573,7 +573,7 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     vector<Real> qtStrikes;
     vector<Real> qtData;
     vector<Period> qtTenors;
-    Period tenor = parsePeriod(config.iborTenor());
+    Period tenor = parsePeriod(config.indexTenor());
     string currency = config.currency();
     vector<Period> configTenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
 
@@ -668,7 +668,7 @@ CapFloorVolCurve::atmCurve(const Date& asof, CapFloorVolatilityCurveConfig& conf
     map<Period, Handle<Quote>> volQuotes;
 
     bool optionalQuotes = config.optionalQuotes();
-    Period tenor = parsePeriod(config.iborTenor());
+    Period tenor = parsePeriod(config.indexTenor());
     string currency = config.currency();
     // Load the relevant quotes
     for (auto& md : loader.loadQuotes(asof)) {

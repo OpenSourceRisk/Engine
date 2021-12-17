@@ -804,7 +804,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 // (we do not support convention based indices there)
                                 auto config = curveConfigs.capFloorVolCurveConfig(name);
                                 settleDays = config->settleDays();
-                                strIborIndex = config->iborIndex();
+                                strIborIndex = config->index();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
                                     iborCalendar = iborIndex->fixingCalendar();
                                     Natural settlementDays = iborIndex->fixingDays();

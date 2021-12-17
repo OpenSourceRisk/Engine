@@ -55,15 +55,17 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const VolatilityType& volatilityType, bool extrapolate,
     bool flatExtrapolation, bool inlcudeAtm, const vector<string>& tenors, const vector<string>& strikes,
     const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
-    const BusinessDayConvention& businessDayConvention, const string& iborIndex, const string& discountCurve,
-    const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
-    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig)
+    const BusinessDayConvention& businessDayConvention, const std::string& index,
+    const QuantLib::Period& rateComputationPeriod, const string& discountCurve, const string& interpolationMethod,
+    const string& interpolateOn, const string& timeInterpolation, const string& strikeInterpolation,
+    const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
-      businessDayConvention_(businessDayConvention), iborIndex_(iborIndex), discountCurve_(discountCurve),
-      interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn), timeInterpolation_(timeInterpolation),
-      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig) {
+      businessDayConvention_(businessDayConvention), index_(index), rateComputationPeriod_(rateComputationPeriod),
+      discountCurve_(discountCurve), interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn),
+      timeInterpolation_(timeInterpolation), strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors),
+      bootstrapConfig_(bootstrapConfig) {
 
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -99,8 +101,23 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
-    iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
+    if (auto iborNode = XMLUtils::getChildNode(node, "IborIndex")) {
+        ALOG("CapFloorVolatilityCurveConfig (" << curveID_
+                                               << "): The IborIndex node is deprecated, use Index instead.");
+        index_ = XMLUtils::getNodeValue(iborNode);
+    } else if (auto indexNode = XMLUtils::getChildNode(node, "index")) {
+        index_ = XMLUtils::getChildValue(node, "index", false);
+    } else {
+        QL_FAIL("CapFloorVOlatilityCurveConfig (" << curveID_
+                                                  << "): Index node (or the deprecated IborIndex node) expected");
+    }
     discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+
+    // rate computation period, only required for OIS indices (which we don't check here)
+    rateComputationPeriod_ = 0 * Days;
+    if (auto rcpNode = XMLUtils::getChildNode(node, "RateComputationPeriod")) {
+        rateComputationPeriod_ = parsePeriod(XMLUtils::getNodeValue(rcpNode));
+    }
 
     // Settlement days (optional)
     settleDays_ = 0;
@@ -188,7 +205,10 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
     XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "OptionalQuotes", optionalQuotes_);
-    XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
+    XMLUtils::addChild(doc, node, "Index", index_);
+    if (rateComputationPeriod_ != 0 * Days) {
+        XMLUtils::addChild(doc, node, "RateComputationPeriod", rateComputationPeriod_);
+    }
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
     XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);
     XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settleDays_));
@@ -201,12 +221,11 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-typedef QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod CftvsInterp;
-CftvsInterp CapFloorVolatilityCurveConfig::interpolationMethod() const {
+QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod CapFloorVolatilityCurveConfig::interpolationMethod() const {
     if (interpolationMethod_ == "BicubicSpline") {
-        return CftvsInterp::BicubicSpline;
+        return QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod::BicubicSpline;
     } else if (interpolationMethod_ == "Bilinear") {
-        return CftvsInterp::Bilinear;
+        return QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod::Bilinear;
     } else {
         QL_FAIL("Invalid InterpolationMethod " << interpolationMethod_);
     }
@@ -223,17 +242,19 @@ void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
 }
 
-string CapFloorVolatilityCurveConfig::iborTenor() const {
+string CapFloorVolatilityCurveConfig::indexTenor() const {
     string tenor;
-    // Ibor index term and currency (do not allow for convention based ibor indices here)
-    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
+    boost::shared_ptr<IborIndex> index = parseIborIndex(index_, tenor);
+    // for ON indices we get back an empty string
+    if (tenor.empty())
+        tenor = "1D";
     return tenor;
 }
 
 const string& CapFloorVolatilityCurveConfig::currency() const {
     string tenor;
     // Ibor index term and currency (do not allow for convention based ibor indices here)
-    boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
+    auto index = parseIborIndex(index_, tenor);
     return index->currency().code();
 }
 
@@ -242,7 +263,7 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     // Cap floor quotes are for the form:
     // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE>
     string ccy = currency();
-    string tenor = iborTenor();
+    string tenor = indexTenor();
 
     // Volatility quote stem
     MarketDatum::QuoteType qType = quoteType();
