@@ -95,7 +95,7 @@ public:
     const string& yieldVolDecarayMode() const { return yieldVolDecayMode_; }
 
     bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility); }
-    vector<string> capFloorVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
+    vector<string> capFloorVolKeys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
     const vector<Period>& capFloorVolExpiries(const string& key) const;
     bool hasCapFloorVolExpiries(const string& key) const { return capFloorVolExpiries_.count(key) > 0; }
     const vector<QuantLib::Rate>& capFloorVolStrikes(const std::string& key) const;

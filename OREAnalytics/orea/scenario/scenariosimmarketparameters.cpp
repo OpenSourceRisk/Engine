@@ -1490,12 +1490,12 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // cap/floor volatilities
-    if (!capFloorVolCcys().empty()) {
+    if (!capFloorVolKeys().empty()) {
         DLOG("Writing cap/floor volatilities");
         XMLNode* capFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CapFloorVolatilities");
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "Simulate", simulateCapFloorVols());
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "ReactionToTimeDecay", capFloorVolDecayMode_);
-        XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Currencies", "Currency", capFloorVolCcys());
+        XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Currencies", "Currency", capFloorVolKeys());
 
         // Write out cap floor expiries node for each currency
         for (auto kv : capFloorVolExpiries_) {
