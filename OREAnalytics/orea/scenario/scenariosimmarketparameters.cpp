@@ -372,7 +372,7 @@ void ScenarioSimMarketParameters::setYieldVolNames(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::YieldVolatility, names);
 }
 
-void ScenarioSimMarketParameters::setCapFloorVolCcys(vector<string> names) {
+void ScenarioSimMarketParameters::setCapFloorVolKeys(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::OptionletVolatility, names);
 }
 
@@ -863,59 +863,81 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (capVolSimNode)
             setSimulateCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(capVolSimNode)));
 
-        // All cap floor currencies
-        setCapFloorVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
-        set<string> currencies = params_.find(RiskFactorKey::KeyType::OptionletVolatility)->second.second;
-        QL_REQUIRE(currencies.size() > 0, "CapFloorVolatilities needs at least one currency");
+        // All cap floor keys
+	auto ccys = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
+	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", true);
+	if(!ccys.empty()) {
+	    keys.insert(keys.end(), ccys.begin(), ccys.end());
+            ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Currencies is deprecated, use Keys instead.");
+        }
+        setCapFloorVolKeys(keys);
+        QL_REQUIRE(!keys.empty(), "CapFloorVolatilities needs at least one entry");
 
         // Get the configured expiries. They are of the form:
-        // - <Expiries ccy="CCY">t_1,...,t_n</Expiries> for currency specific expiries
-        // - <Expiries>t_1,...,t_n</Expiries> or <Expiries ccy="">t_1,...,t_n</Expiries> for default set of expiries
+        // - <Expiries key="CCY">t_1,...,t_n</Expiries> for currency specific expiries
+        // - <Expiries>t_1,...,t_n</Expiries> or <Expiries key="">t_1,...,t_n</Expiries> for default set of expiries
         // Only need a default expiry set if every currency has not been given an expiry set explicitly
+	// instead of key, ccy is supported as an derprecated attribute
         vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
         QL_REQUIRE(expiryNodes.size() > 0, "CapFloorVolatilities needs at least one Expiries node");
-        set<string> currenciesCheck = currencies;
+        set<string> keysCheck(keys.begin(), keys.end());
         bool defaultProvided = false;
         for (XMLNode* expiryNode : expiryNodes) {
-            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
-            string ccy = XMLUtils::getAttribute(expiryNode, "ccy");
+            // If there is no "key" attribute, getAttribute returns "" which is what we want in any case
+            string key = XMLUtils::getAttribute(expiryNode, "key");
+            if (key.empty()) {
+                string ccyAttr = XMLUtils::getAttribute(expiryNode, "ccy");
+                if (!ccyAttr.empty()) {
+                    key = ccyAttr;
+                    ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Expiries: 'ccy' attribute is deprecated, "
+                         "use 'key' instead.");
+                }
+            }
             vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
-            QL_REQUIRE(capFloorVolExpiries_.insert(make_pair(ccy, expiries)).second,
-                       "CapFloorVolatilities has duplicate expiries for key '" << ccy << "'");
-            currenciesCheck.erase(ccy);
-            defaultProvided = ccy == "";
+            QL_REQUIRE(capFloorVolExpiries_.insert(make_pair(key, expiries)).second,
+                       "CapFloorVolatilities has duplicate expiries for key '" << key << "'");
+            keysCheck.erase(key);
+            defaultProvided = defaultProvided || key.empty();
         }
-        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "CapFloorVolatilities has no expiries for "
-                                                                       << "currencies '" << join(currenciesCheck, ",")
-                                                                       << "' and no default expiry set has been given");
+        QL_REQUIRE(defaultProvided || keysCheck.size() == 0, "CapFloorVolatilities has no expiries for "
+                                                                 << "keys '" << join(keysCheck, ",")
+                                                                 << "' and no default expiry set has been given");
 
         // Get the configured strikes. This has the same set up and logic as the Expiries above.
         vector<XMLNode*> strikeNodes = XMLUtils::getChildrenNodes(nodeChild, "Strikes");
         QL_REQUIRE(strikeNodes.size() > 0, "CapFloorVolatilities needs at least one Strikes node");
-        currenciesCheck = currencies;
+        keysCheck = std::set<std::string>(keys.begin(), keys.end());
         defaultProvided = false;
         for (XMLNode* strikeNode : strikeNodes) {
-            string ccy = XMLUtils::getAttribute(strikeNode, "ccy");
+            string key = XMLUtils::getAttribute(strikeNode, "key");
+            if (key.empty()) {
+                string ccyAttr = XMLUtils::getAttribute(strikeNode, "ccy");
+                if (!ccyAttr.empty()) {
+                    key = ccyAttr;
+                    ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Strikes: 'ccy' attribute is deprecated, "
+                         "use 'key' instead.");
+                }
+            }
             // For the strike value, we allow ATM or a comma separated list of absolute strike values
             // If ATM, the stored strikes vector is left as an empty vector
             vector<Rate> strikes;
             string strStrike = XMLUtils::getNodeValue(strikeNode);
             if (strStrike == "ATM") {
-                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, true)).second,
-                           "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
+                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(key, true)).second,
+                           "CapFloorVolatilities has duplicate strikes for key '" << key << "'");
             } else {
-                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, false)).second,
-                           "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
+                QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(key, false)).second,
+                           "CapFloorVolatilities has duplicate strikes for key '" << key << "'");
                 strikes = parseListOfValues<Rate>(strStrike, &parseReal);
             }
-            QL_REQUIRE(capFloorVolStrikes_.insert(make_pair(ccy, strikes)).second,
-                       "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
-            currenciesCheck.erase(ccy);
-            defaultProvided = ccy == "";
+            QL_REQUIRE(capFloorVolStrikes_.insert(make_pair(key, strikes)).second,
+                       "CapFloorVolatilities has duplicate strikes for key '" << key << "'");
+            keysCheck.erase(key);
+            defaultProvided = defaultProvided || key.empty();
         }
-        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "CapFloorVolatilities has no strikes for "
-                                                                       << "currencies '" << join(currenciesCheck, ",")
-                                                                       << "' and no default strike set has been given");
+        QL_REQUIRE(defaultProvided || keysCheck.empty(), "CapFloorVolatilities has no strikes for "
+                                                             << "key '" << join(keysCheck, ",")
+                                                             << "' and no default strike set has been given");
 
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
 

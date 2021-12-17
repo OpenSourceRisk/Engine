@@ -255,7 +255,7 @@ public:
     string& yieldVolDecayMode() { return yieldVolDecayMode_; }
 
     void setSimulateCapFloorVols(bool simulate);
-    void setCapFloorVolCcys(vector<string> names);
+    void setCapFloorVolKeys(vector<string> names);
     void setCapFloorVolExpiries(const string& key, const vector<Period>& p);
     void setCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     void setCapFloorVolIsAtm(const std::string& key, bool isAtm);

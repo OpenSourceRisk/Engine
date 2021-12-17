@@ -790,7 +790,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
-                            LOG("Simulating Cap/Floor Optionlet vols for ccy " << name);
+                            LOG("Simulating Cap/Floor Optionlet vols for key " << name);
 
                             // Try to get the ibor index that the cap floor structure relates to
                             // We use this to convert Period to Date below to sample from `wrapper`
