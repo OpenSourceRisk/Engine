@@ -239,21 +239,22 @@ public:
 class CapFloorVolatilityCurveSpec : public CurveSpec {
 public:
     CapFloorVolatilityCurveSpec() {}
-    CapFloorVolatilityCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
+    // key is an index name (Ibor, OIS) or a currency
+    CapFloorVolatilityCurveSpec(const string& key, const string& curveConfigID) : CurveSpec(curveConfigID), key_(key) {}
 
     //! \name CurveSpec interface
     //@{
     CurveType baseType() const { return CurveType::CapFloorVolatility; }
-    string subName() const { return ccy() + "/" + curveConfigID(); }
+    string subName() const { return key() + "/" + curveConfigID(); }
     //@}
 
     //! \name Inspectors
     //@{
-    const string& ccy() const { return ccy_; }
+    const string& key() const { return key_; }
     //@}
 
 private:
-    string ccy_;
+    string key_;
 };
 
 //! FX Spot description
