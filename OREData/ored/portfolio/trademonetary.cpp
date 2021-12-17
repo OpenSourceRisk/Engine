@@ -42,7 +42,8 @@ XMLNode* TradeMonetary::toXML(XMLDocument& doc) {
     return node;
 }
 
-std::string TradeMonetary::currency() const { return currency_; }
+std::string TradeMonetary::currency() const { return parseCurrencyWithMinors(currency_).code(); }
+
 QuantLib::Real TradeMonetary::value() const { return convertMinorToMajorCurrency(currency_, value_); }
 
 } // namespace data

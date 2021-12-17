@@ -16,11 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/strike.hpp
-    \brief Classes for representing a strike using various conventions.
-    \ingroup marketdata
-*/
-
 #pragma once
 
 #include <ql/experimental/fx/deltavolquote.hpp>
@@ -48,9 +43,9 @@ namespace data {
 class TradeBarrier : public TradeMonetary {
 
 public:
-    TradeBarrier(){};
+    TradeBarrier() {};
 
-    TradeBarrier(QuantLib::Real value, std::string currency) : TradeMonetary(value, currency){};
+    TradeBarrier(QuantLib::Real value, std::string currency) : TradeMonetary(value, currency) {};
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
 };

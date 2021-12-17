@@ -16,11 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/strike.hpp
-    \brief Classes for representing a strike using various conventions.
-    \ingroup marketdata
-*/
-
 #pragma once
 
 #include <ql/experimental/fx/deltavolquote.hpp>
@@ -49,11 +44,9 @@ class TradeMonetary : public XMLSerializable {
 public:
     TradeMonetary() {};
 
-    TradeMonetary(QuantLib::Real value, std::string currency = std::string()) : value_(value), currency_(currency){};
+    TradeMonetary(QuantLib::Real value, std::string currency = std::string()) : value_(value), currency_(currency) {};
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
-    //virtual void additionalToXML(XMLNode* node) = 0;
-    //virtual XMLNode* additionalToXML(XMLDocument& doc, XMLNode* node) = 0;
 
     bool empty() const { return value_ == QuantLib::Null<QuantLib::Real>(); };
     QuantLib::Real value() const;
