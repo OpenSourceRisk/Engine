@@ -203,14 +203,40 @@ MarketImpl::baseCorrelation(const string& key, const string& configuration) cons
 
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {
     require(MarketObject::CapFloorVol, key, configuration);
-    return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
+    auto it = capFloorCurves_.find(make_pair(configuration, key));
+    if (it != capFloorCurves_.end())
+        return it->second;
+    // first try the default config with the same key
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::CapFloorVol, key, Market::defaultConfiguration);
+        auto it2 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, key));
+        if (it2 != capFloorCurves_.end())
+            return it->second;
+    }
+    // if key is and index name and we have a cap floor surface for its ccy, we return that
+    boost::shared_ptr<IborIndex> index;
+    if (!tryParseIborIndex(key, index)) {
+        QL_FAIL("did not find capfloor curve for key '" << key << "'");
+    }
+    auto ccy = index->currency().code();
+    require(MarketObject::CapFloorVol, ccy, configuration);
+    auto it3 = capFloorCurves_.find(make_pair(configuration, ccy));
+    if (it3 != capFloorCurves_.end()) {
+        return it3->second;
+    }
+    // check if we have a curve for the ccy in the default config
+    if (configuration != Market::defaultConfiguration) {
+        auto it4 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, ccy));
+        if (it4 != capFloorCurves_.end())
+            return it4->second;
+    }
+    QL_FAIL("did not find capfloor curve for key '" << key << "'");
 }
 
-Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
-                                                                           const string& configuration) const {
+Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {
     require(MarketObject::YoYInflationCapFloorVol, key, configuration);
     return lookup<Handle<YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
-                                                                   "yoy inflation capfloor curve");
+                                                         "yoy inflation capfloor curve");
 }
 
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
