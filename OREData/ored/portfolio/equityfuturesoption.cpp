@@ -21,7 +21,7 @@ EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const s
                                        const boost::shared_ptr<ore::data::Underlying>& underlying, Real strike,
                                        QuantLib::Date forwardDate, const boost::shared_ptr<QuantLib::Index>& index,
                                        const std::string& indexName)
-    : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, strike, quantity, index, indexName,
+    : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, strike, quantity, TradeStrike(), index, indexName,
                          forwardDate),
       underlying_(underlying) {
     tradeType_ = "EquityFutureOption";
