@@ -72,7 +72,6 @@ protected:
     string localCurrency_;
     QuantLib::Real localStrike_;
     string strikeCurrency_;
-    std::string strikeStr_;
 };
 } // namespace data
 } // namespace ore

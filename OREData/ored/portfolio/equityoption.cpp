@@ -184,16 +184,15 @@ void EquityOption::fromXML(XMLNode* node) {
         tmp = XMLUtils::getChildNode(eqNode, "Name");
     equityUnderlying_.fromXML(tmp);
     strikeCurrency_ = XMLUtils::getChildValue(eqNode, "StrikeCurrency", false);
-    strikeStr_ = XMLUtils::getChildValue(eqNode, "Strike", false);
-    if (strikeStr_.empty()) {
-        tradeStrike_.fromXML(eqNode);
-        localCurrency_ = tradeStrike_.currency();
-        localStrike_ = tradeStrike_.value();
+    localCurrency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
+    XMLNode* strikeData = XMLUtils::getChildNode(eqNode, "StrikeData");
+    if (strikeData) {
+        tradeStrike_.fromXML(strikeData);
+        localStrike_ = XMLUtils::getChildValueAsDouble(strikeData, "Value", true);
     } else {
-        localCurrency_ = XMLUtils::getChildValue(eqNode, "Currency", false);
-        localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", false);
+        localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
         tradeStrike_ = TradeStrike(localStrike_, localCurrency_);
-    }    
+    }
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
@@ -204,12 +203,9 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 
     XMLUtils::appendNode(eqNode, option_.toXML(doc));
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
-    
-    if (!strikeStr_.empty()) {
-        XMLUtils::addChild(doc, eqNode, "Currency", tradeStrike_.currency());
-        XMLUtils::addChild(doc, eqNode, "Strike", localStrike_);
-    } else
-        XMLUtils::appendNode(eqNode, tradeStrike_.toXML(doc));
+    XMLUtils::addChild(doc, eqNode, "Currency", localCurrency_);
+    XMLUtils::addChild(doc, eqNode, "Strike", localStrike_);
+    // XMLUtils::appendNode(eqNode, tradeStrike_.toXML(doc));
     
     Currency ccy = parseCurrencyWithMinors(tradeStrike_.currency());
     Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);

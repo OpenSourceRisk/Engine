@@ -30,10 +30,10 @@ namespace ore {
 namespace data {
 
 
-void TradeBarrier::fromXML(XMLNode* node) { TradeMonetary::fromXML(XMLUtils::getChildNode(node, "Level")); }
+void TradeBarrier::fromXML(XMLNode* node) { TradeMonetary::fromXML(node); }
 
 XMLNode* TradeBarrier::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("Level");
+    XMLNode* node = doc.allocNode("LevelData");
     XMLUtils::addChild(doc, node, "Value", value_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
     return node;

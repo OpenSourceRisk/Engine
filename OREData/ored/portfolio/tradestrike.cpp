@@ -29,11 +29,12 @@
 namespace ore {
 namespace data {
 
-void TradeStrike::fromXML(XMLNode* node) { TradeMonetary::fromXML(XMLUtils::getChildNode(node, "StrikeData")); }
+void TradeStrike::fromXML(XMLNode* node) { TradeMonetary::fromXML(node); }
 
 XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("StrikeData");
-    XMLUtils::appendNode(node, TradeMonetary::toXML(doc));
+    XMLUtils::addChild(doc, node, "Value", value_);
+    XMLUtils::addChild(doc, node, "Currency", currency_);
     return node;
 }
 
