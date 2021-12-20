@@ -69,7 +69,7 @@ private:
         boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, ActualActual()));
         return Handle<BlackVolTermStructure>(fxv);
     }
-    Handle<QuantExt::FxIndex> TestMarket::makeFxIndex(string index, Real spot) {
+    Handle<QuantExt::FxIndex> makeFxIndex(string index, Real spot) {
         string ccy1 = index.substr(0, 3);
         string ccy2 = index.substr(3);
 
