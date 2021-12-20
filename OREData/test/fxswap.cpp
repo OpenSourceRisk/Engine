@@ -50,9 +50,9 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] = flatRateYts(0.05);
 
         // add fx rates
-        fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
-        fxSpots_[Market::defaultConfiguration].addQuote("EURCHF", Handle<Quote>(boost::make_shared<SimpleQuote>(1.3)));
-        fxSpots_[Market::defaultConfiguration].addQuote("EURGBP", Handle<Quote>(boost::make_shared<SimpleQuote>(1.4)));
+        fxIndices_[Market::defaultConfiguration].addIndex("EURUSD", makeFxIndex("EURUSD", 1.2));
+        fxIndices_[Market::defaultConfiguration].addIndex("EURGBP", makeFxIndex("EURGBP", 1.4));
+        fxIndices_[Market::defaultConfiguration].addIndex("EURCHF", makeFxIndex("EURCHF", 1.3));
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
@@ -68,6 +68,15 @@ private:
     Handle<BlackVolTermStructure> flatRateFxv(Volatility forward) {
         boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, ActualActual()));
         return Handle<BlackVolTermStructure>(fxv);
+    }
+    Handle<QuantExt::FxIndex> TestMarket::makeFxIndex(string index, Real spot) {
+        string ccy1 = index.substr(0, 3);
+        string ccy2 = index.substr(3);
+
+        return Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+            Settings::instance().evaluationDate(), index, 0, parseCurrency(ccy1), parseCurrency(ccy2),
+            parseCalendar(ccy1 + "," + ccy2), Handle<Quote>(boost::make_shared<SimpleQuote>(spot)), discountCurve(ccy1),
+            discountCurve(ccy2), false));
     }
 };
 } // namespace

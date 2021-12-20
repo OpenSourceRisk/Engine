@@ -128,7 +128,7 @@ void FxIndex::initialise() {
 
 const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {   
     Handle<Quote> quote;
-    if (withSettlementLag)
+    if (withSettlementLag || fixingDays_ == 0)
         quote = fxSpot_;
     
     if (quote.empty()) {
@@ -249,9 +249,17 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 
 boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
                                           const Handle<YieldTermStructure>& targetYts, const string& familyName, bool inverseIndex) {
+    Handle<Quote> quote = fxQuote.empty() ? fxSpot_ : fxQuote;
+    Handle<YieldTermStructure> source = sourceYts.empty() ? sourceYts_ : sourceYts;
+    Handle<YieldTermStructure> target = targetYts.empty() ? targetYts_ : targetYts;
     string famName = familyName.empty() ? familyName_ : familyName;
-    return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_,
-                                       fxQuote, sourceYts, targetYts, inverseIndex);
+    if (referenceDate_ == Null<Date>())
+        return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_,
+            fixingCalendar_, quote, source, target, inverseIndex);
+    else
+        return boost::make_shared<FxIndex>(referenceDate_, famName, fixingDays_, sourceCurrency_, targetCurrency_,
+            fixingCalendar_, quote, source, target, inverseIndex);
+
 }
 
 std::string FxIndex::name() const { 

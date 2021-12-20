@@ -316,8 +316,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             discountCurve(initMarFxInd->sourceCurrency().code(), configuration),
                             discountCurve(initMarFxInd->targetCurrency().code(), configuration), false)); 
                             
-                        fxSpots_[Market::defaultConfiguration].addQuote(name, fxInd->fxQuote(true));
-                        fxRates_[Market::defaultConfiguration].addQuote(name, fxInd->fxQuote());
+                        fxIndices_[Market::defaultConfiguration].addIndex(name, fxInd);
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),

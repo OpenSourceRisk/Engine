@@ -82,10 +82,10 @@ TestMarket::TestMarket(Date asof) {
     addSwapIndex("JPY-CMS-30Y", "JPY-LIBOR-6M", Market::defaultConfiguration);
 
     // add fx rates
-    fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
-    fxSpots_[Market::defaultConfiguration].addQuote("EURGBP", Handle<Quote>(boost::make_shared<SimpleQuote>(0.8)));
-    fxSpots_[Market::defaultConfiguration].addQuote("EURCHF", Handle<Quote>(boost::make_shared<SimpleQuote>(1.0)));
-    fxSpots_[Market::defaultConfiguration].addQuote("EURJPY", Handle<Quote>(boost::make_shared<SimpleQuote>(128.0)));
+    fxIndices_[Market::defaultConfiguration].addIndex("EURUSD", makeFxIndex("EURUSD", 1.2));
+    fxIndices_[Market::defaultConfiguration].addIndex("EURGBP", makeFxIndex("EURGBP", 0.8));
+    fxIndices_[Market::defaultConfiguration].addIndex("EURCHF", makeFxIndex("EURCHF", 1.0));
+    fxIndices_[Market::defaultConfiguration].addIndex("EURJPY", makeFxIndex("EURJPY", 128.0));
 
     // build fx vols
     fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.12);
@@ -303,6 +303,16 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     yoyTS = boost::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
     return Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
         parseZeroInflationIndex(index, false), false, Handle<YoYInflationTermStructure>(pYoYts)));
+}
+
+Handle<QuantExt::FxIndex> TestMarket::makeFxIndex(string index, Real spot) {
+    string ccy1 = index.substr(0, 3);
+    string ccy2 = index.substr(3);
+
+    return Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+        Settings::instance().evaluationDate(), index, 0, parseCurrency(ccy1), parseCurrency(ccy2),
+        parseCalendar(ccy1 + "," + ccy2), Handle<Quote>(boost::make_shared<SimpleQuote>(spot)), discountCurve(ccy1),
+        discountCurve(ccy2), false));
 }
 
 void TestConfigurationObjects::setConventions() {

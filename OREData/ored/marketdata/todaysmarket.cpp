@@ -312,8 +312,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             }
             LOG("Adding FXIndex (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
             // add the market spot rate and the rate today, both are needed
-            fxSpots_[configuration].addQuote(node.name, itr->second->handle()->fxQuote(true));
-            fxRates_[configuration].addQuote(node.name, itr->second->handle()->fxQuote());
+            fxIndices_[configuration].addIndex(node.name, itr->second->handle());
             break;
         }
 

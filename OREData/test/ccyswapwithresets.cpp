@@ -103,8 +103,10 @@ public:
         hUSD->addFixing(Date(18, Aug, 2016), 0.00811);
 
         // add fx rates
-        fxSpots_[Market::defaultConfiguration].addQuote("EURUSD",
-                                                        Handle<Quote>(boost::make_shared<SimpleQuote>(1.1306)));
+        fxIndices_[Market::defaultConfiguration].addIndex("EURUSD", 
+            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                asof_, "EURUSD", 0, parseCurrency("EUR"), parseCurrency("USD"), parseCalendar("EUR,USD"),
+                Handle<Quote>(boost::make_shared<SimpleQuote>(1.130)), discountCurve("EUR"), discountCurve("USD"), false)));
     }
 
 private:

@@ -206,8 +206,7 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
-    mutable map<string, FXTriangulation> fxSpots_;
-    mutable map<string, FXTriangulation> fxRates_;
+    mutable map<string, FXIndexTriangulation> fxIndices_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;
