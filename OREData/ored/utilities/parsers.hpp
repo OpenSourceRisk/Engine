@@ -31,8 +31,10 @@
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
+#include <ql/experimental/barrieroption/doublebarriertype.hpp>
 #include <ql/experimental/fx/deltavolquote.hpp>
 #include <ql/instruments/averagetype.hpp>
+#include <ql/instruments/barriertype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
@@ -435,6 +437,18 @@ QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
     \ingroup utilities
 */
 QuantLib::Average::Type parseAverageType(const std::string& s);
+
+//! Convert text to QuantLib::Barrier::Type
+/*!
+\ingroup utilities
+*/
+QuantLib::Barrier::Type parseBarrierType(const std::string& s);
+
+//! Convert text to QuantLib::DoubleBarrier::Type
+/*!
+\ingroup utilities
+*/
+QuantLib::DoubleBarrier::Type parseDoubleBarrierType(const std::string& s);
 
 } // namespace data
 } // namespace ore

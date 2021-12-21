@@ -1502,5 +1502,33 @@ Average::Type parseAverageType(const std::string& s) {
     }
 }
 
+Barrier::Type parseBarrierType(const string& s) {
+    if (s == "DownAndIn") {
+        return Barrier::Type::DownIn;
+    } else if (s == "UpAndIn") {
+        return Barrier::Type::UpIn;
+    } else if (s == "DownAndOut") {
+        return Barrier::Type::DownOut;
+    } else if (s == "UpAndOut") {
+        return Barrier::Type::UpOut;
+    } else {
+        QL_FAIL("Failed to parseBarrierType(\"" << s << "\")");
+    }
+}
+
+DoubleBarrier::Type parseDoubleBarrierType(const string& s) {
+    if (s == "KnockIn") {
+        return DoubleBarrier::Type::KnockIn;
+    } else if (s == "KnockOut") {
+        return DoubleBarrier::Type::KnockOut;
+    } else if (s == "KI lo+KO up") {
+        return DoubleBarrier::Type::KIKO;
+    } else if (s == "KO lo+KI up") {
+        return DoubleBarrier::Type::KOKI;
+    } else {
+        QL_FAIL("Failed to parseDoubleBarrierType(\"" << s << "\")");
+    }
+}
+
 } // namespace data
 } // namespace ore

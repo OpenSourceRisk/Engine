@@ -163,5 +163,8 @@
     <ClCompile Include="equityasianoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="optionbarrierdata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

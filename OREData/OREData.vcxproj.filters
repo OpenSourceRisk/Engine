@@ -648,6 +648,9 @@
     <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\optionbarrierdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1132,5 +1135,8 @@
     <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
     <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
     <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
+    <ClCompile Include="ored\portfolio\optionbarrierdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

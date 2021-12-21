@@ -190,6 +190,7 @@
     <ClInclude Include="ored\portfolio\legdatafactory.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
+    <ClInclude Include="ored\portfolio\optionbarrierdata.hpp" />
     <ClInclude Include="ored\portfolio\optiondata.hpp" />
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp" />
     <ClInclude Include="ored\portfolio\optionpaymentdata.hpp" />
@@ -369,6 +370,7 @@
     <ClCompile Include="ored\portfolio\legdatafactory.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
+    <ClCompile Include="ored\portfolio\optionbarrierdata.cpp" />
     <ClCompile Include="ored\portfolio\optiondata.cpp" />
     <ClCompile Include="ored\portfolio\optionexercisedata.cpp" />
     <ClCompile Include="ored\portfolio\optionpaymentdata.cpp" />

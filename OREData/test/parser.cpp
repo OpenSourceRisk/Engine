@@ -764,6 +764,28 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     checkCalendars(expectedHolidays, hol);
 }
 
+BOOST_AUTO_TEST_CASE(testBarrierType) {
+    using ore::data::parseBarrierType;
+    BOOST_TEST_MESSAGE("Testing barrier type parsing...");
+
+    BOOST_CHECK_EQUAL(Barrier::Type::DownIn, parseBarrierType("DownAndIn"));
+    BOOST_CHECK_EQUAL(Barrier::Type::UpIn, parseBarrierType("UpAndIn"));
+    BOOST_CHECK_EQUAL(Barrier::Type::DownOut, parseBarrierType("DownAndOut"));
+    BOOST_CHECK_EQUAL(Barrier::Type::UpOut, parseBarrierType("UpAndOut"));
+    BOOST_CHECK_THROW(parseBarrierType("DownAndSideways"), Error);
+}
+
+BOOST_AUTO_TEST_CASE(testDoubleBarrierType) {
+    using ore::data::parseDoubleBarrierType;
+    BOOST_TEST_MESSAGE("Testing double barrier type parsing...");
+
+    BOOST_CHECK_EQUAL(DoubleBarrier::Type::KnockIn, parseDoubleBarrierType("KnockIn"));
+    BOOST_CHECK_EQUAL(DoubleBarrier::Type::KnockOut, parseDoubleBarrierType("KnockOut"));
+    BOOST_CHECK_EQUAL(DoubleBarrier::Type::KIKO, parseDoubleBarrierType("KI lo+KO up"));
+    BOOST_CHECK_EQUAL(DoubleBarrier::Type::KOKI, parseDoubleBarrierType("KO lo+KI up"));
+    BOOST_CHECK_THROW(parseDoubleBarrierType("KO lo+KO up"), Error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
