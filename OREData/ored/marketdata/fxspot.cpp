@@ -23,6 +23,7 @@
 
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 namespace ore {
 namespace data {
@@ -33,15 +34,9 @@ FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTrian
     string ccyPair = spec.unitCcy() + spec.ccy();
     auto spot = fxTriangulation.getQuote(ccyPair);
     
-    Natural spotDays = 0;
-    Calendar calendar = NullCalendar();
-
-    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-    auto fxCon = boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(spec.unitCcy(), spec.ccy()));
-    if (fxCon) {
-        spotDays = fxCon->spotDays();
-        calendar = fxCon->advanceCalendar();
-    }
+    Natural spotDays;
+    Calendar calendar;
+    getFxIndexConventions(spec.unitCcy(), spec.ccy(), spotDays, calendar);
 
     // get the discount curves for the source and target currencies
     auto itSor = requiredDiscountCurves.find(spec.unitCcy());

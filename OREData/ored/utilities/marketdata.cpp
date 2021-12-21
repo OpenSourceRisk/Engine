@@ -175,5 +175,21 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
         return fxInd->clone(Handle<Quote>(), sorTS, tarTS, fxIndexBase->familyName(), invertFxIndex);
 }
 
+
+void getFxIndexConventions(const string& ccy1, const string& ccy2, Natural& fixingDays, Calendar& fixingCalendar) {
+    try {
+        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+        auto fxCon =
+            boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(ccy1, ccy2));
+        if (fxCon) {
+            fixingDays = fxCon->spotDays();
+            fixingCalendar = fxCon->advanceCalendar();
+        }
+    } catch (...) {
+        fixingDays = 2;
+        fixingCalendar = parseCalendar(ccy1 + "," + ccy2);
+    }
+}
+
 } // namespace data
 } // namespace ore

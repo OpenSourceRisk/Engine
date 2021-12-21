@@ -18,6 +18,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ql/errors.hpp>
@@ -253,15 +254,9 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
     // Loop over the map, look for domestic then use the map to find the other side of the pair.
 
     // Here q1 is USDEUR and it->second is JPYEUR
-    Natural spotDays = 2;
-    Calendar calendar = parseCalendar(domestic + "," + foreign);
-
-    const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-    auto fxCon = boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(domestic, foreign));
-    if (fxCon) {
-        spotDays = fxCon->spotDays();
-        calendar = fxCon->advanceCalendar();
-    }
+    Natural spotDays;
+    Calendar calendar;
+    getFxIndexConventions(domestic, foreign, spotDays, calendar);
 
     for (const auto& kv : map_) {
         string keyDomestic = kv.first.substr(0, 3);
