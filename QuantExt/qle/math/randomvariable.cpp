@@ -34,7 +34,7 @@ void Filter::clear() {
 }
 
 void Filter::updateDeterministic() {
-    if (deterministic_)
+    if (deterministic_ || !initialised())
         return;
     for (Size i = 1; i < n_; ++i) {
         if (data_[i] != data_[0])
@@ -91,8 +91,12 @@ bool operator==(const Filter& a, const Filter& b) {
 }
 
 Filter operator&&(Filter x, const Filter& y) {
-    QL_REQUIRE(x.size() == y.size(),
+    QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
+    if ((x.deterministic() && !x.data_[0]) || (y.deterministic() && !y.data_[0]))
+        return Filter(x.size(), false);
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     if (!y.deterministic_)
         x.expand();
     else if (y.data_.front())
@@ -106,8 +110,12 @@ Filter operator&&(Filter x, const Filter& y) {
 }
 
 Filter operator||(Filter x, const Filter& y) {
-    QL_REQUIRE(x.size() == y.size(),
+    QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x || y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
+    if ((x.deterministic() && x.data_[0]) || (y.deterministic() && y.data_[0]))
+        return Filter(x.size(), true);
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     if (!y.deterministic_)
         x.expand();
     else if (!y.data_.front())
@@ -121,6 +129,8 @@ Filter operator||(Filter x, const Filter& y) {
 }
 
 Filter equal(Filter x, const Filter& y) {
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: equal(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     if (!y.deterministic_)
@@ -139,6 +149,10 @@ Filter operator!(Filter x) {
 }
 
 RandomVariable::RandomVariable(const Filter& f, const Real valueTrue, const Real valueFalse, const Real time) {
+    if (!f.initialised()) {
+        clear();
+        return;
+    }
     n_ = f.size();
     if (f.deterministic())
         setAll(f.at(0) ? valueTrue : valueFalse);
@@ -160,7 +174,7 @@ void RandomVariable::clear() {
 }
 
 void RandomVariable::updateDeterministic() {
-    if (deterministic_)
+    if (deterministic_ || !initialised())
         return;
     for (Size i = 1; i < n_; ++i) {
         if (!QuantLib::close_enough(data_[i], data_[0]))
@@ -246,6 +260,10 @@ bool operator==(const RandomVariable& a, const RandomVariable& b) {
 }
 
 RandomVariable& RandomVariable::operator+=(const RandomVariable& y) {
+    if (!y.initialised())
+        clear();
+    if (!initialised())
+        return *this;
     QL_REQUIRE(size() == y.size(),
                "RandomVariable: x += y: x size (" << size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistencyAndUpdate(y.time());
@@ -260,6 +278,10 @@ RandomVariable& RandomVariable::operator+=(const RandomVariable& y) {
 }
 
 RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
+    if (!y.initialised())
+        clear();
+    if (!initialised())
+        return *this;
     QL_REQUIRE(size() == y.size(),
                "RandomVariable: x -= y: x size (" << size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistencyAndUpdate(y.time());
@@ -274,6 +296,10 @@ RandomVariable& RandomVariable::operator-=(const RandomVariable& y) {
 }
 
 RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
+    if (!y.initialised())
+        clear();
+    if (!initialised())
+        return *this;
     QL_REQUIRE(size() == y.size(),
                "RandomVariable: x *= y: x size (" << size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistencyAndUpdate(y.time());
@@ -288,6 +314,10 @@ RandomVariable& RandomVariable::operator*=(const RandomVariable& y) {
 }
 
 RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
+    if (!y.initialised())
+        clear();
+    if (!initialised())
+        return *this;
     QL_REQUIRE(size() == y.size(),
                "RandomVariable: x /= y: x size (" << size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistencyAndUpdate(y.time());
@@ -302,26 +332,36 @@ RandomVariable& RandomVariable::operator/=(const RandomVariable& y) {
 }
 
 RandomVariable operator+(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
     x += y;
     return x;
 }
 
 RandomVariable operator-(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
     x -= y;
     return x;
 }
 
 RandomVariable operator*(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
     x *= y;
     return x;
 }
 
 RandomVariable operator/(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
     x /= y;
     return x;
 }
 
 RandomVariable max(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: max(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     x.checkTimeConsistencyAndUpdate(y.time());
@@ -334,6 +374,8 @@ RandomVariable max(RandomVariable x, const RandomVariable& y) {
 }
 
 RandomVariable min(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: min(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     x.checkTimeConsistencyAndUpdate(y.time());
@@ -346,6 +388,8 @@ RandomVariable min(RandomVariable x, const RandomVariable& y) {
 }
 
 RandomVariable pow(RandomVariable x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: pow(x,y): x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     x.checkTimeConsistencyAndUpdate(y.time());
@@ -425,6 +469,8 @@ RandomVariable normalPdf(RandomVariable x) {
 }
 
 Filter close_enough(const RandomVariable& x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     QL_REQUIRE(x.size() == y.size(), "RandomVariable: close_enough(x,y): x size ("
                                          << x.size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistency(x, y);
@@ -453,6 +499,8 @@ bool close_enough_all(const RandomVariable& x, const RandomVariable& y) {
 }
 
 RandomVariable conditionalResult(const Filter& f, RandomVariable x, const RandomVariable& y) {
+    if (!f.initialised() || !x.initialised() || !y.initialised())
+        return RandomVariable();
     QL_REQUIRE(f.size() == x.size(),
                "conditionalResult(f,x,y): f size (" << f.size() << ") must match x size (" << x.size() << ")");
     QL_REQUIRE(f.size() == y.size(),
@@ -468,7 +516,51 @@ RandomVariable conditionalResult(const Filter& f, RandomVariable x, const Random
     return x;
 }
 
+RandomVariable indicatorEq(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
+                                         << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    for (Size i = 0; i < x.data_.size(); ++i) {
+        x.data_[i] = QuantLib::close_enough(x.data_[i], y[i]) ? trueVal : falseVal;
+    }
+    return x;
+}
+
+RandomVariable indicatorGt(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
+                                         << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    for (Size i = 0; i < x.data_.size(); ++i) {
+        x.data_[i] = (x.data_[i] > y[i] && !QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
+    }
+    return x;
+}
+
+RandomVariable indicatorGeq(RandomVariable x, const RandomVariable& y, const Real trueVal, const Real falseVal) {
+    if (!x.initialised() || !y.initialised())
+        return RandomVariable();
+    QL_REQUIRE(x.size() == y.size(), "RandomVariable: indicatorEq(x,y): x size ("
+                                         << x.size() << ") must be equal to y size (" << y.size() << ")");
+    x.checkTimeConsistencyAndUpdate(y.time());
+    if (!y.deterministic_)
+        x.expand();
+    for (Size i = 0; i < x.data_.size(); ++i) {
+        x.data_[i] = (x.data_[i] > y[i] || QuantLib::close_enough(x.data_[i], y[i])) ? trueVal : falseVal;
+    }
+    return x;
+}
+
 Filter operator<(const RandomVariable& x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: x < y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistency(x, y);
@@ -484,6 +576,8 @@ Filter operator<(const RandomVariable& x, const RandomVariable& y) {
 }
 
 Filter operator<=(const RandomVariable& x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: x <= y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistency(x, y);
@@ -499,6 +593,8 @@ Filter operator<=(const RandomVariable& x, const RandomVariable& y) {
 }
 
 Filter operator>(const RandomVariable& x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: x > y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistency(x, y);
@@ -514,6 +610,8 @@ Filter operator>(const RandomVariable& x, const RandomVariable& y) {
 }
 
 Filter operator>=(const RandomVariable& x, const RandomVariable& y) {
+    if (!x.initialised() || !y.initialised())
+        return Filter();
     QL_REQUIRE(x.size() == y.size(),
                "RandomVariable: x >= y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
     checkTimeConsistency(x, y);
@@ -529,6 +627,8 @@ Filter operator>=(const RandomVariable& x, const RandomVariable& y) {
 }
 
 RandomVariable applyFilter(RandomVariable x, const Filter& f) {
+    if (!x.initialised())
+        return x;
     QL_REQUIRE(!f.initialised() || f.size() == x.size(), "RandomVariable: applyFitler(x,f): filter size ("
                                                              << f.size() << ") must be equal to x size (" << x.size()
                                                              << ")");
@@ -550,6 +650,8 @@ RandomVariable applyFilter(RandomVariable x, const Filter& f) {
 }
 
 RandomVariable applyInverseFilter(RandomVariable x, const Filter& f) {
+    if (!x.initialised())
+        return x;
     QL_REQUIRE(!f.initialised() || f.size() == x.size(), "RandomVariable: applyFitler(x,f): filter size ("
                                                              << f.size() << ") must be equal to x size (" << x.size()
                                                              << ")");
@@ -650,5 +752,43 @@ RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const
     return applyFilter(forward, zeroStrike && call) +
            applyInverseFilter(omega * (forward * normalCdf(omega * d1) - strike * normalCdf(omega * d2)), zeroStrike);
 }
+
+RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
+    RandomVariable tmp(x.size(), 0.0);
+
+    // determine delta (as Fries, i.e. delta = eps * sqrt(E(X^2)) for an indicator1_{X>0})
+
+    if (QuantLib::close_enough(eps, 0.0) || x.deterministic())
+        return tmp;
+
+    Real sum = 0.0;
+    for (Size i = 0; i < x.size(); ++i) {
+        sum += x[i] * x[i];
+    }
+
+    Real delta = std::sqrt(sum / static_cast<Real>(x.size())) * eps / 2.0;
+
+    if (QuantLib::close_enough(delta, 0.0))
+        return tmp;
+
+    // compute derivative
+
+    for (Size i = 0; i < tmp.size(); ++i) {
+        Real ax = std::abs(x[i]);
+
+        // linear approximation of step
+        // if (ax < delta) {
+        //     tmp.set(i, 1.0 / (2.0 * delta));
+        // }
+
+        // logistic function
+        tmp.set(i, std::exp(-1.0 / delta * ax) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * ax), 2.0)));
+    }
+
+    return tmp;
+}
+
+std::function<void(RandomVariable&)> RandomVariable::deleter =
+    std::function<void(RandomVariable&)>([](RandomVariable& x) { x.clear(); });
 
 } // namespace QuantExt
