@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <ored/portfolio/tradestrike.hpp>
 #include <ored/utilities/parsers.hpp>
 
 namespace ore {
@@ -59,11 +60,11 @@ protected:
     VanillaOptionTrade(AssetClass assetClassUnderlying)
         : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
     VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
-                       string currency, double strike, double quantity,
+                       string currency, double strike, double quantity, TradeStrike tradeStrike,
                        const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "",
                        QuantLib::Date forwardDate = QuantLib::Date())
         : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
-          assetName_(assetName), currency_(currency), strike_(strike), quantity_(quantity), index_(index),
+          assetName_(assetName), currency_(currency), strike_(strike), quantity_(quantity), tradeStrike_(tradeStrike), index_(index),
           indexName_(indexName), forwardDate_(forwardDate) {}
 
     AssetClass assetClassUnderlying_;
@@ -73,6 +74,7 @@ protected:
     string underlyingCurrency_ = "";
     double strike_;
     double quantity_;
+    TradeStrike tradeStrike_;
 
     //! An index is needed if the option is to be automatically exercised on expiry.
     boost::shared_ptr<QuantLib::Index> index_;
