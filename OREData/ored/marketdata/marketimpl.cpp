@@ -137,72 +137,34 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
                                                                  "yield volatility curve");
 }
 
-Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& domestic, 
-    const string& foreign, bool useXbsCurves, const string& configuration) const {
-    
-    // can be an ccy pair of an fx index of form FX-ECB-EUR-USD
-    bool isIndex = false;
-    string ccypair = fxIndex;
-    string fxIndName = fxIndex;
-    if (isFxIndex(fxIndex)) {
-        isIndex = true;
-        boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
-        ccypair = fxIndexBase->sourceCurrency().code() + fxIndexBase->targetCurrency().code();
-        fxIndName = fxIndexBase->familyName();
-    } else {
-        QL_REQUIRE(fxIndex.size() == 6, "MarketImpl::fxIndex, Invalid fxIndex "
-                                          << fxIndex
-                                          << ", must be an FXIndex "
-                                             "name (e.g. FX-ECB-EUR-USD), or ccy pair (e.g. EURUSD).");
-    }
+Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& configuration) const {
 
-    require(MarketObject::FXSpot, ccypair, configuration);
+    require(MarketObject::FXSpot, fxIndex, configuration);
     auto it = fxIndices_.find(configuration);
     if (it == fxIndices_.end())
         it = fxIndices_.find(Market::defaultConfiguration);
     
     Handle<FxIndex> fxInd;
     if (it != fxIndices_.end()) {
-        fxInd = it->second.getIndex(ccypair, true); // don't throw error here
+        fxInd = it->second.getIndex(fxIndex, true); // don't throw error here
     }
 
     // we try the inverse if an empty handle, this in mainly for lazy builds 
     // where only the inverse is specified in the market
     if (fxInd.empty()) {
-        string ccypairInverted = ccypair.substr(3, 3) + ccypair.substr(0, 3);
+        string ccypairInverted = fxIndex.substr(3, 3) + fxIndex.substr(0, 3);
         require(MarketObject::FXSpot, ccypairInverted, configuration);
         auto iti = fxIndices_.find(configuration);
         if (iti == fxIndices_.end())
             iti = fxIndices_.find(Market::defaultConfiguration);
         QL_REQUIRE(iti != fxIndices_.end(), "did not find object "
-                                               << ccypair << " of type fx index under configuration '" << configuration
+                                                << fxIndex << " of type fx index under configuration '" << configuration
                                                << "' or 'default'");
 
         // still look up by ccypair, not inverted ccypair, the triangulation will handle
-        fxInd = iti->second.getIndex(ccypair); // throws error here is still not found
+        fxInd = iti->second.getIndex(fxIndex); // throws error here is still not found
     }
 
-    string source = ccypair.substr(0, 3), target = ccypair.substr(3);
-    bool invertFxIndex = false;
-    if (isIndex && !domestic.empty() && !foreign.empty()) {
-        if (domestic == target && foreign == source) {
-            invertFxIndex = false;
-        } else if (domestic == source && foreign == target) {
-            invertFxIndex = true;
-        } else {
-            QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic
-                                               << " and reset foreignCurrency " << foreign);
-        }
-    }
-
-    if (isIndex || invertFxIndex || useXbsCurves) {
-        Handle<YieldTermStructure> sorTS, tarTS;
-        if (useXbsCurves) {
-            sorTS = xccyYieldCurve(source, configuration);
-            tarTS = xccyYieldCurve(target, configuration);
-        }
-        return Handle<FxIndex>(fxInd->clone(Handle<Quote>(), sorTS, tarTS, fxIndName, invertFxIndex));
-    }
     return fxInd;
 }
 
@@ -210,11 +172,11 @@ Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configurat
     // if rate requested for a currency against itself, return 1.0
     if (ccypair.substr(0,3) == ccypair.substr(3))
         return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
-    return fxIndex(ccypair, string(), string(), false, configuration)->fxQuote();
+    return fxIndex(ccypair, configuration)->fxQuote();
 }
 
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
-    return fxIndex(ccypair, string(), string(), false, configuration)->fxQuote(true);
+    return fxIndex(ccypair, configuration)->fxQuote(true);
 }
 
 Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const string& configuration) const {
@@ -559,20 +521,6 @@ void MarketImpl::refresh(const string& configuration) {
         x->deepUpdate();
 
 } // refresh
-
-Handle<YieldTermStructure> MarketImpl::xccyYieldCurve(const string& ccyCode, const string& configuration) const {
-
-    Handle<YieldTermStructure> curve;
-    string xccyCurve = xccyCurveName(ccyCode);
-    try {
-        curve = yieldCurve(xccyCurve, configuration);
-    } catch (const Error&) {
-        DLOG("Could not link " << ccyCode << " termstructure to cross currency yield curve " << xccyCurve
-                               << " so just using " << ccyCode << " discount curve.");
-        curve = discountCurve(ccyCode, configuration);
-    }
-    return curve;
-}
 
 } // namespace data
 } // namespace ore

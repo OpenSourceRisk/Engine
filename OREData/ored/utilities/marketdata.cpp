@@ -18,6 +18,9 @@
 
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/configuration/conventions.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -113,5 +116,64 @@ std::string prettyPrintInternalCurveName(std::string name) {
     } while (found);
     return name;
 }
+
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, 
+    const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration,
+    bool useXbsCurves) {
+
+    // 1. Parse the index we have with no term structures
+    boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
+
+    // get market data objects - we set up the index using source/target, fixing days
+    // and calendar from legData_[i].fxIndex()
+    string source = fxIndexBase->sourceCurrency().code();
+    string target = fxIndexBase->targetCurrency().code();
+
+    // get the base index from the market for the currency pair
+    Handle<QuantExt::FxIndex> fxInd = market->fxIndex(source + target);
+
+    // check if we need to invert the index
+    bool invertFxIndex = false;
+    if (!domestic.empty() && !foreign.empty()) {
+        if (domestic == target && foreign == source) {
+            invertFxIndex = false;
+        } else if (domestic == source && foreign == target) {
+            invertFxIndex = true;
+        } else {
+            QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic
+                                               << " and reset foreignCurrency " << foreign);
+        }
+    }
+
+    Handle<YieldTermStructure> sorTS, tarTS;
+    if (useXbsCurves) {
+        sorTS = xccyYieldCurve(market, source, configuration);
+        tarTS = xccyYieldCurve(market, target, configuration);
+    }
+
+    if (fxInd.empty()) {
+        sorTS = sorTS.empty() ? market->discountCurve(source) : sorTS;
+        tarTS = tarTS.empty() ? market->discountCurve(target) : tarTS;
+        auto spot = market->fxSpot(source + target);
+
+        Natural spotDays = 2;
+        Calendar calendar = parseCalendar(source + "," + target);
+
+        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
+        auto fxCon =
+            boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(source, target));
+        if (fxCon) {
+            spotDays = fxCon->spotDays();
+            calendar = fxCon->advanceCalendar();
+        }
+
+        return boost::make_shared<QuantExt::FxIndex>(fxIndexBase->familyName(), spotDays,
+            fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), calendar, spot, 
+            sorTS, tarTS, invertFxIndex);
+    }
+    else
+        return fxInd->clone(Handle<Quote>(), sorTS, tarTS, fxIndexBase->familyName(), invertFxIndex);
+}
+
 } // namespace data
 } // namespace ore

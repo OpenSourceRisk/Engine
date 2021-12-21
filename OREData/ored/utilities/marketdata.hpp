@@ -73,5 +73,13 @@ securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::
 /*! Pretty print an internal curve name occuring (once or several times) in a string (e.g. in a risk factor name). */
 std::string prettyPrintInternalCurveName(std::string name);
 
+/*! Build an Fx Index given a market */
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
+    const boost::shared_ptr<Market>& market, const string& configuration, bool useXbsCurves = false);
+
+/*! Get a Xccy curve from  given a market */
+Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
+                                          const string& configuration);
+
 } // namespace data
 } // namespace ore

@@ -84,8 +84,7 @@ public:
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
 
     //! FX
-    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& domestic = string(), 
-        const string& foreign = string(), bool useXbsCurves = false,
+    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, 
         const string& configuration = Market::defaultConfiguration) const;
     Handle<Quote> fxRate(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
     Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
@@ -230,9 +229,6 @@ protected:
     //! add a swap index to the market
     void addSwapIndex(const string& swapindex, const string& discountIndex,
                       const string& configuration = Market::defaultConfiguration) const;
-
-    // function to try to look a xccy yield curve
-    Handle<YieldTermStructure> xccyYieldCurve(const string& ccyCode, const string& configuration) const;
 
     // set of term structure pointers for refresh (per configuration)
     map<string, std::set<boost::shared_ptr<TermStructure>>> refreshTs_;

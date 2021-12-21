@@ -22,6 +22,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <qle/instruments/fxforward.hpp>
@@ -68,7 +69,8 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (fixingRequired) {
         QL_REQUIRE(!fxIndex_.empty(), "FX settlement index must be specified for non-deliverable forwards");
         Currency nonPayCcy = payCcy == boughtCcy ? soldCcy : boughtCcy;
-        fxIndex = engineFactory->market()->fxIndex(fxIndex_, nonPayCcy.code(), payCcy.code()).currentLink();
+        fxIndex = buildFxIndex(fxIndex_, nonPayCcy.code(), payCcy.code(), engineFactory->market(),
+                                 engineFactory->configuration(MarketContext::pricing));
         if (maturityDate < Settings::instance().evaluationDate())
             requiredFixings_.addFixingDate(maturityDate, fxIndex_, payDate);
     }

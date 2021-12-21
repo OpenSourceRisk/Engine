@@ -78,7 +78,8 @@
   </CrossCurrencyBasis>
   <FX>
     <Id>USD-MXN-FX</Id>
-    <SpotDays>2</SpotDays>
+	<!--Set spot days to 0 here as building curve without FX forwards at short end-->
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>MXN</TargetCurrency>
     <PointsFactor>1</PointsFactor>

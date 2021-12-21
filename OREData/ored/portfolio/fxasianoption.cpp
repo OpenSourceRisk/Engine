@@ -16,6 +16,7 @@
 
  #include <ored/portfolio/fxasianoption.hpp>
  #include <ored/utilities/xmlutils.hpp>
+ #include <ored/utilities/marketdata.hpp>
  #include <ql/errors.hpp>
 
  namespace ore {
@@ -37,9 +38,10 @@
      // So, the convention here is that the sold currency is domestic and the bought currency is foreign.
      // Note: intentionally use null calendar and 0 day fixing lag here because we will ask the FX index for its
      //       value on the expiry date without adjustment.
-     index_ =
-         market->fxIndex(fxIndex_, currency_, assetName_, false, engineFactory->configuration(MarketContext::pricing))
-             .currentLink();
+     index_ = buildFxIndex(fxIndex_, currency_, assetName_, market,
+                           engineFactory->configuration(MarketContext::pricing));
+
+
 
      // Populate the external index name so that fixings work.
      indexName_ = fxIndex_;

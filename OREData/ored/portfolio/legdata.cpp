@@ -2167,11 +2167,10 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                            "applyIndexing: fx index '" << indexing.index() << "' ccys do not match leg ccy ("
                                                        << data.currency() << ")");
                 std::string domestic = data.currency();
-                std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
-                index = engineFactory->market()
-                            ->fxIndex(indexing.index(), domestic, foreign, false,
-                                      engineFactory->configuration(MarketContext::pricing))
-                            .currentLink();                    
+                std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();           
+                index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
+                                     engineFactory->configuration(MarketContext::pricing));
+
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
@@ -2317,8 +2316,7 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         Real foreignNotional = data.foreignAmount();
 
         QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
-        auto fxIndex = market->fxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), false, configuration)
-                           .currentLink();
+        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration, true);
 
         Leg resettingLeg;
         for (Size j = 0; j < leg.size(); j++) {
@@ -2335,17 +2333,17 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 // Two possibilities for first coupon:
                 // 1. we have not been given a domestic notional so it is an FX linked coupon
                 // 2. we have been given an explicit domestic notional so it is a simple cashflow
-                if (data.notionals().size() == 0) {
+                if (data.notionals().size() == 0) {                    
                     fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     if (data.notionalInitialExchange()) {
                         outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                                                                     -foreignNotional, fxIndex);
+                                                                        -foreignNotional, fxIndex);
                     }
                     // if there is only one period we generate the cash flow at the period end
                     // only if there is a final notional exchange
                     if (leg.size() > 1 || data.notionalFinalExchange()) {
-                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
-                                                                    fxIndex);
+                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate,
+                            foreignNotional, fxIndex);
                     }
                 } else {
                     if (data.notionalInitialExchange()) {
@@ -2357,12 +2355,12 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 }
             } else {
                 fixingDate = fxIndex->fixingDate(c->accrualStartDate());
-                outCf =
-                    boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional, fxIndex);
+                outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional,
+                                                                fxIndex);
                 // we don't want a final one, unless there is notional exchange
                 if (j < leg.size() - 1 || data.notionalFinalExchange()) {
-                    inCf =
-                        boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional, fxIndex);
+                    inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
+                                                                fxIndex);
                 }
             }
 

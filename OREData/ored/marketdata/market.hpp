@@ -130,8 +130,7 @@ public:
 
     //! \name Foreign Exchange
     //@{
-    virtual QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& domestic = string(), 
-        const string& foreign = string(), bool useXbsCurves = false, const string& configuration = Market::defaultConfiguration) 
+    virtual QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& configuration = Market::defaultConfiguration) 
         const = 0;
     // Fx Rate is the fx rate as of today
     virtual Handle<Quote> fxRate(const string& ccypair,
