@@ -299,8 +299,8 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
                                   return x.first == keyForeign + foreign;
                               });
             if (it != map_.end()) {
-                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                    q1->fxQuote(), it->second->fxQuote(), Triangulation()));
+                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(
+                    q1->fxQuote(), it->second->fxQuote(), Product()));
                 Handle<Quote> spotCross = Handle<Quote>(
                     boost::make_shared<FxSpotQuote>(todaysCross, q1->sourceCurve(), it->second->targetCurve(), 
                         spotDays, calendar, q1->referenceDate()));
@@ -321,8 +321,8 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
                                   return x.first == foreign + keyDomestic;
                               });
             if (it != map_.end()) {
-                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                    q1->fxQuote(), it->second->fxQuote(), Triangulation()));
+                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<InverseProduct>>(
+                    q1->fxQuote(), it->second->fxQuote(), InverseProduct()));
                 Handle<Quote> spotCross = Handle<Quote>(
                     boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->sourceCurve(), 
                         spotDays, calendar, q1->referenceDate()));
@@ -341,7 +341,7 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
             if (it != map_.end()) {
                 // Here q1 is EURUSD and it->second is EURJPY
                 Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                    q1->fxQuote(), it->second->fxQuote(), Triangulation()));
+                    it->second->fxQuote(), q1->fxQuote(), Triangulation()));
                 Handle<Quote> spotCross = Handle<Quote>(
                     boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->targetCurve(), 
                         spotDays, calendar, q1->referenceDate()));
