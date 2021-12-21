@@ -648,8 +648,20 @@
     <ClInclude Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\barrieroption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\fxbarrieroption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\optionbarrierdata.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\barrieroption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\fxbarrieroption.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1135,6 +1147,12 @@
     <ClCompile Include="ored\portfolio\equityasianoption.cpp" />
     <ClCompile Include="ored\portfolio\fxasianoption.cpp" />
     <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
+    <ClCompile Include="ored\portfolio\barrieroption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\fxbarrieroption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
     <ClCompile Include="ored\portfolio\optionbarrierdata.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>

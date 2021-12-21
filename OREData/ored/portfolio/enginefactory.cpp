@@ -42,6 +42,7 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxasianoption.hpp>
+#include <ored/portfolio/builders/fxbarrieroption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/quantoequityoption.hpp>
@@ -172,7 +173,12 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGASEngineBuilder>());
-     
+    registerBuilder(boost::make_shared<FxEuropeanAsianOptionADAAPEngineBuilder>());
+    registerBuilder(boost::make_shared<FxStandardBarrierOptionAnalyticalEngineBuilder>());
+    registerBuilder(boost::make_shared<FxStandardDoubleBarrierOptionAnalyticalEngineBuilder>());
+    registerBuilder(boost::make_shared<FxStandardBarrierOptionEngineVVBuilder>());
+    registerBuilder(boost::make_shared<FxPartialTimeBarrierOptionAnalyticEngineBuilder>());
+
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredOvernightIndexedCouponLegEngineBuilder>());

@@ -132,8 +132,10 @@
     <ClInclude Include="ored\model\structuredmodelerror.hpp" />
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
+    <ClInclude Include="ored\portfolio\barrieroption.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
     <ClInclude Include="ored\portfolio\bondutils.hpp" />
+    <ClInclude Include="ored\portfolio\builders\barrieroption.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
@@ -154,6 +156,7 @@
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityfuturesoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\forwardbond.hpp" />
+    <ClInclude Include="ored\portfolio\builders\fxbarrieroption.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
@@ -180,6 +183,7 @@
     <ClInclude Include="ored\portfolio\fixingdates.hpp" />
     <ClInclude Include="ored\portfolio\forwardbond.hpp" />
     <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
+    <ClInclude Include="ored\portfolio\fxbarrieroption.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -331,6 +335,7 @@
     <ClCompile Include="ored\model\modeldata.cpp" />
     <ClCompile Include="ored\model\modelparameter.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
+    <ClCompile Include="ored\portfolio\barrieroption.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\bondutils.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
@@ -361,6 +366,7 @@
     <ClCompile Include="ored\portfolio\fixingdates.cpp" />
     <ClCompile Include="ored\portfolio\forwardbond.cpp" />
     <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />
+    <ClCompile Include="ored\portfolio\fxbarrieroption.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
