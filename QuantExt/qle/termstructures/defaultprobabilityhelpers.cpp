@@ -152,7 +152,7 @@ SpreadCdsHelper::SpreadCdsHelper(Rate runningSpread, const Period& tenor, Intege
                 recoveryRate, discountCurve, startDate, settlesAccrual, protectionPaymentTime, lastPeriodDayCounter) {}
 
 Real SpreadCdsHelper::impliedQuote() const {
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairSpread();
 }
 
@@ -202,7 +202,7 @@ void UpfrontCdsHelper::initializeUpfront() {
 Real UpfrontCdsHelper::impliedQuote() const {
     SavedSettings backup;
     Settings::instance().includeTodaysCashFlows() = true;
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairUpfront();
 }
 

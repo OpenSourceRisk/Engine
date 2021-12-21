@@ -25,11 +25,13 @@
 
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/utilities/xmlutils.hpp>
-
+#include <ored/portfolio/envelope.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace ore {
 namespace data {
+
+using ore::data::NettingSetDetails;
 
 //! Netting Set Manager
 /*!
@@ -50,9 +52,29 @@ public:
     void reset();
 
     /*!
+      checks if the manager is empty
+    */
+    const bool empty() const;
+
+    /*!
+      checks if at least one of the netting set definitions has calculateIMAmount = true
+    */
+    const bool calculateIMAmount() const;
+
+    /*!
+      returns the list of netting sets for which SIMM will be calculated as IM
+    */
+    const std::set<NettingSetDetails> calculateIMNettingSets() const;
+
+    /*!
       checks if object named id exists in manager
     */
-    bool has(string id) const;
+    bool has(const string& id) const;
+
+    /*!
+      checks if object with the given nettingSetDetails exists in manager
+    */
+    bool has(const NettingSetDetails& nettingSetDetails) const;
 
     /*!
       adds a new NettingSetDefinition object to manager
@@ -62,20 +84,21 @@ public:
     /*!
       extracts a pointer to a NettingSetDefinition from manager
     */
-    boost::shared_ptr<NettingSetDefinition> get(string id) const;
+    boost::shared_ptr<NettingSetDefinition> get(const string& id) const;
+    boost::shared_ptr<NettingSetDefinition> get(const NettingSetDetails& nettingSetDetails) const;
 
     /*!
       vector containing the ids of all objects stored in manager
     */
-    vector<string> uniqueKeys() const { return uniqueKeys_; }
+    vector<NettingSetDetails> uniqueKeys() const { return uniqueKeys_; }
 
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
-    const std::map<std::string, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
+    const std::map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
 
 private:
-    map<string, const boost::shared_ptr<NettingSetDefinition>> data_;
-    vector<string> uniqueKeys_;
+    map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> data_;
+    vector<NettingSetDetails> uniqueKeys_;
 };
 } // namespace data
 } // namespace ore

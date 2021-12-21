@@ -135,8 +135,8 @@ void BasisTwoSwapHelper::setTermStructure(YieldTermStructure* t) {
 
 Real BasisTwoSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
-    longSwap_->recalculate();
-    shortSwap_->recalculate();
+    longSwap_->deepUpdate();
+    shortSwap_->deepUpdate();
     if (longMinusShort_)
         return longSwap_->fairRate() - shortSwap_->fairRate();
     else

@@ -291,7 +291,7 @@ QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string
 */
 QuantLib::FdmSchemeDesc parseFdmSchemeDesc(const std::string& s);
 
-enum class AssetClass { EQ, FX, COM, IR, INF, CR, BOND };
+enum class AssetClass { EQ, FX, COM, IR, INF, CR, BOND, BOND_INDEX };
 
 //! Convert text to ore::data::AssetClass
 /*!
@@ -386,7 +386,7 @@ QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const std::string& s
 /*! Convert boost::any to pair<string,string>, including the valueType and the value
     \ingroup utilities
 */
-std::pair<string, string> parseBoostAny(const boost::any& anyType);
+std::pair<string, string> parseBoostAny(const boost::any& anyType, Size precision = 8);
 
 //! Convert text to QuantLib::RateAveraging::Type
 QuantLib::RateAveraging::Type parseOvernightIndexFutureNettingType(const std::string& s);
@@ -442,6 +442,9 @@ QuantExt::CdsOption::StrikeType parseCdsOptionStrikeType(const std::string& s);
     \ingroup utilities
 */
 QuantLib::Average::Type parseAverageType(const std::string& s);
+
+//! Helper function to get the two tokens in a correlation name Index2:Index1
+std::vector<std::string> getCorrelationTokens(const std::string& name);
 
 } // namespace data
 } // namespace ore

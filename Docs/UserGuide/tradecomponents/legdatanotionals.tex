@@ -50,7 +50,7 @@ Allowable values:  \emph{true, false}
 
 \item Currency: The currency of the leg. 
 
-Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}. When \lstinline!LegType! is \emph{Equity}, \lstinline!Minor Currencies! in Table \ref{tab:allow_stand_data} are also allowable.
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!. When \lstinline!LegType! is \emph{Equity}, Minor Currencies in Table \ref{tab:currency} are also allowable.
 
 \item PaymentCalendar [Optional]: The payment calendar of the leg coupons. The \lstinline!PaymentCalendar! is used in conjuction with the \lstinline!PaymentConvention! and the \lstinline!PaymentLag! to determine the payments dates, unless the \lstinline!PaymentDates! node is used which defines the payment dates explicitly.
 
@@ -67,9 +67,9 @@ PaymentLag is also not supported for CapFloor Floating legs that have Ibor coupo
 
 Allowable values: A non-negative whole number, if not given it defaults to zero.
 
-\item DayCounter: The day count convention of the leg coupons. 
+\item DayCounter: The day count convention of the leg coupons. Note that \lstinline!DayCounter! is mandatory for all leg types except \emph{Equity}.
 
-Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
+Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}. For \emph{Equity} legs, if left blank or omitted, it defaults to \emph{ACT/365}.
 
 \item Notionals: This node contains child elements of type
   \lstinline!Notional!. If the notional is fixed over the life of the
@@ -152,7 +152,7 @@ FX Resets,  used for Rebalancing Cross-currency swaps, can be specified using an
 
 \item ForeignCurrency: The foreign currency the notional of the leg resets to.  
 
-Allowable values:  See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.
 
 \item ForeignAmount: The notional amount in the foreign currency that the notional of the leg resets to.  
 

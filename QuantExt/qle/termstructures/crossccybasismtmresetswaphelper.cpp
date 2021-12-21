@@ -235,7 +235,7 @@ void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
 
 Real CrossCcyBasisMtMResetSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_, "Term structure needs to be set");
-    swap_->recalculate();
+    swap_->deepUpdate();
     if (spreadOnForeignCcy_)
         return swap_->fairForeignSpread();
     else

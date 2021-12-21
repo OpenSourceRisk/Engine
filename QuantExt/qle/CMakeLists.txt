@@ -4,9 +4,9 @@ set(QuantExt_SRC calendars/amendedcalendar.cpp
 calendars/austria.cpp
 calendars/belgium.cpp
 calendars/chile.cpp
-calendars/cyprus.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
+calendars/cyprus.cpp
 calendars/france.cpp
 calendars/greece.cpp
 calendars/ice.cpp
@@ -19,6 +19,7 @@ calendars/malaysia.cpp
 calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
+calendars/russia.cpp
 calendars/spain.cpp
 calendars/switzerland.cpp
 calendars/wmr.cpp
@@ -197,6 +198,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvariancesurfacestddevs.cpp
+termstructures/blackvolconstantspread.cpp
 termstructures/blackvolsurfacebfrr.cpp
 termstructures/blackvolsurfacedelta.cpp
 termstructures/blackvolsurfacewithatm.cpp
@@ -221,6 +223,7 @@ termstructures/eqcommoptionsurfacestripper.cpp
 termstructures/equityblackvolsurfaceproxy.cpp
 termstructures/equityforwardcurvestripper.cpp
 termstructures/flatcorrelation.cpp
+termstructures/flatteneddefaultcurve.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
@@ -257,8 +260,8 @@ termstructures/swaptionvolconstantspread.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
-time/yearcounter.cpp
 time/dateutilities.cpp
+time/yearcounter.cpp
 utilities/inflation.cpp)
 
 # hpp files, this list is maintained manually
@@ -269,20 +272,21 @@ calendars/austria.hpp
 calendars/belgium.hpp
 calendars/chile.hpp
 calendars/cme.hpp
-calendars/cyprus.hpp
 calendars/colombia.hpp
+calendars/cyprus.hpp
 calendars/france.hpp
 calendars/greece.hpp
 calendars/ice.hpp
+calendars/ireland.hpp
 calendars/islamicweekendsonly.hpp
 calendars/israel.hpp
-calendars/ireland.hpp
 calendars/largejointcalendar.hpp
 calendars/luxembourg.hpp
 calendars/malaysia.hpp
 calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
+calendars/russia.hpp
 calendars/spain.hpp
 calendars/switzerland.hpp
 calendars/wmr.hpp
@@ -381,6 +385,7 @@ indexes/ibor/phpphiref.hpp
 indexes/ibor/plnpolonia.hpp
 indexes/ibor/plnwibor.hpp
 indexes/ibor/primeindex.hpp
+indexes/ibor/rubkeyrate.hpp
 indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
@@ -430,6 +435,7 @@ instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 instruments/vanillaforwardoption.hpp
 interpolators/optioninterpolator2d.hpp
+math/constantinterpolation.hpp
 math/covariancesalvage.hpp
 math/deltagammavar.hpp
 math/fillemptymatrix.hpp
@@ -548,6 +554,7 @@ termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvariancesurfacestddevs.hpp
+termstructures/blackvolconstantspread.hpp
 termstructures/blackvolsurfacebfrr.hpp
 termstructures/blackvolsurfacedelta.hpp
 termstructures/blackvolsurfacewithatm.hpp
@@ -578,8 +585,8 @@ termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityblackvolsurfaceproxy.hpp
 termstructures/equityforwardcurvestripper.hpp
-termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
+termstructures/flatteneddefaultcurve.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
@@ -647,9 +654,9 @@ termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
+time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
-time/dateutilities.hpp
 utilities/inflation.hpp
 utilities/savedobservablesettings.hpp
 version.hpp)

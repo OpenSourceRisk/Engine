@@ -123,6 +123,7 @@
 #include <ored/portfolio/builders/creditdefaultswapoption.hpp>
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/builders/equityasianoption.hpp>
+#include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityfuturesoption.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -167,6 +168,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/legdatafactory.hpp>
 #include <ored/portfolio/nettingsetdefinition.hpp>
+#include <ored/portfolio/nettingsetdetails.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/optionasiandata.hpp>
 #include <ored/portfolio/optiondata.hpp>
@@ -178,7 +180,9 @@
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/portfolio/referencedatafactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/portfolio/structuredtradeerror.hpp>
+#include <ored/portfolio/structuredtradewarning.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/trade.hpp>

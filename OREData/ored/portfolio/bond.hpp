@@ -82,7 +82,6 @@ public:
     const string& creditGroup() const { return creditGroup_; }
     const string& securityId() const { return securityId_; }
     const string& referenceCurveId() const { return referenceCurveId_; }
-    const string& proxySecurityId() const { return proxySecurityId_; }
     const string& incomeCurveId() const { return incomeCurveId_; }
     const string& volatilityCurveId() const { return volatilityCurveId_; }
     const string& settlementDays() const { return settlementDays_; }
@@ -98,9 +97,6 @@ public:
     // only used for zero bonds
     Real faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
-
-    //! returns effective security id (if proxy is given, this is returned, otherwise the original id)
-    const string& effectiveSecurityId() const { return proxySecurityId_.empty() ? securityId_ : proxySecurityId_; }
 
     //! XMLSerializable interface
     virtual void fromXML(XMLNode* node) override;
@@ -122,7 +118,6 @@ private:
     string creditGroup_;
     string securityId_;
     string referenceCurveId_;
-    string proxySecurityId_;
     string incomeCurveId_;     // only used for bond derivatives
     string volatilityCurveId_; // only used for bond derivatives
     string settlementDays_;
@@ -173,19 +168,30 @@ private:
 //! Bond Factory that builds bonds from reference data
 
 struct BondBuilder {
+    struct Result {
+        boost::shared_ptr<QuantLib::Bond> bond;
+
+        double inflationFactor = 1.0;
+        bool isInflationLinked = false;
+        bool hasCreditRisk = true;
+        std::string currency;
+        std::string creditCurveId;
+        std::string securityId;
+        std::string creditGroup;
+    };
     virtual ~BondBuilder() {}
-    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-    build(const boost::shared_ptr<EngineFactory>& engineFactory,
-          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const = 0;
+    virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                         const std::string& securityId) const = 0;
 };
 
 class BondFactory : public QuantLib::Singleton<BondFactory> {
     map<std::string, boost::shared_ptr<BondBuilder>> builders_;
 
 public:
-    std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-    build(const boost::shared_ptr<EngineFactory>& engineFactory,
-          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const;
+    BondBuilder::Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                              const std::string& securityId) const;
     void addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder);
 };
 
@@ -197,9 +203,9 @@ template <typename T> struct BondBuilderRegister {
 
 struct VanillaBondBuilder : public BondBuilder {
     static BondBuilderRegister<VanillaBondBuilder> reg_;
-    virtual std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-    build(const boost::shared_ptr<EngineFactory>& engineFactory,
-          const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const override;
+    virtual Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                         const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                         const std::string& securityId) const override;
 };
 
 } // namespace data

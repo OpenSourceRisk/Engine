@@ -44,3 +44,32 @@ Listing \ref{lst:cmsspreadlegdata} shows an example for a leg of type CMSSpread.
 The elements of the CMSSpreadLegData block are identical to those of the CMSLegData (see \ref{ss:cmslegdata}), except
 for the index which is defined by two CMS indices as the difference between \verb+Index1+ and \verb+Index2+.
 
+The payout for each coupon is thus:
+
+$
+N \cdot (gearing \cdot (Index1 - Index2) + Spread)  \cdot daycountfraction
+$
+
+Adding a cap, and assuming no spread,  a gearing of 1, a daycount fraction of 1, and a notional of 1, the payout becomes:
+
+$
+min (Cap; Index1 - Index2) 
+$
+
+If there is a floor instead of a cap, the payout is:
+
+$
+max (Floor; Index1 - Index2) 
+$
+
+Note that a CMS Spread Option can be created by setting NakedOption to \emph{true}. With this setting, the payout for the CMS Spread leg with a cap becomes an option with the cap rate as strike:
+
+$
+max (0; (Index1 - Index2) - Cap) 
+$
+
+And the payout for a CMS Spread leg with a floor, and with NakedOption set to \emph{true} is :
+
+$
+max (0; Floor - (Index1 - Index2))
+$

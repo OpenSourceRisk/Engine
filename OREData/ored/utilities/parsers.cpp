@@ -53,6 +53,7 @@
 #include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
+#include <qle/calendars/russia.hpp>
 #include <qle/calendars/spain.hpp>
 #include <qle/calendars/switzerland.hpp>
 #include <qle/calendars/wmr.hpp>
@@ -442,7 +443,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"XIDX", Indonesia(Indonesia::IDX)},
         {"XTAE", QuantLib::Israel(QuantLib::Israel::TASE)},
         {"XMIL", Italy(Italy::Exchange)},
-        {"MISX", Russia(Russia::MOEX)},
+        {"MISX", RussiaModified(Russia::MOEX)},
         {"XKRX", SouthKorea(SouthKorea::KRX)},
         {"XSWX", QuantExt::Switzerland(QuantExt::Switzerland::SIX)},
         {"XLON", UnitedKingdom(UnitedKingdom::Exchange)},
@@ -675,7 +676,11 @@ Currency parseCurrency(const string& s, const Currency& currency) {
         {"TWD", TWDCurrency()}, {"UAH", UAHCurrency()}, {"UGX", UGXCurrency()}, {"USD", USDCurrency()},
         {"UYU", UYUCurrency()}, {"VND", VNDCurrency()}, {"XAG", XAGCurrency()}, {"XAU", XAUCurrency()},
         {"XOF", XOFCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}, {"ZAR", ZARCurrency()},
-        {"ZMW", ZMWCurrency()}};
+        {"ZMW", ZMWCurrency()},
+        // crypto
+        {"XBT", BTCCurrency()}, {"BTC", BTCCurrency()}, {"ETH", ETHCurrency()}, {"ETC", ETCCurrency()},
+        {"BCH", BCHCurrency()}, {"XRP", XRPCurrency()}, {"LTC", LTCCurrency()} 
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -1048,7 +1053,7 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
 AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {
         {"EQ", AssetClass::EQ},   {"FX", AssetClass::FX}, {"COM", AssetClass::COM},  {"IR", AssetClass::IR},
-        {"INF", AssetClass::INF}, {"CR", AssetClass::CR}, {"BOND", AssetClass::BOND}};
+        {"INF", AssetClass::INF}, {"CR", AssetClass::CR}, {"BOND", AssetClass::BOND}, {"BOND_INDEX", AssetClass::BOND_INDEX}};
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {
         return it->second;
@@ -1073,6 +1078,8 @@ std::ostream& operator<<(std::ostream& os, AssetClass a) {
         return os << "CR";
     case AssetClass::BOND:
         return os << "BOND";
+    case AssetClass::BOND_INDEX:
+        return os << "BOND_INDEX";
     default:
         QL_FAIL("Unknown AssetClass");
     }
@@ -1188,26 +1195,26 @@ QuantExt::CrossAssetModelTypes::AssetType parseCamAssetType(const string& s) {
     }
 }
 
-pair<string, string> parseBoostAny(const boost::any& anyType) {
+pair<string, string> parseBoostAny(const boost::any& anyType, Size precision) {
     string resultType;
     std::ostringstream oss;
 
     if (anyType.type() == typeid(int)) {
         resultType = "int";
         int r = boost::any_cast<int>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Size)) {
         resultType = "size";
         int r = boost::any_cast<Size>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(double)) {
         resultType = "double";
         double r = boost::any_cast<double>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(std::string)) {
         resultType = "string";
         std::string r = boost::any_cast<std::string>(anyType);
-        oss << std::fixed << std::setprecision(8) << r;
+        oss << std::fixed << std::setprecision(precision) << r;
     } else if (anyType.type() == typeid(Date)) {
         resultType = "date";
         oss << io::iso_date(boost::any_cast<Date>(anyType));
@@ -1232,7 +1239,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
+            oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
@@ -1244,7 +1251,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << "\"" << to_string(r[0]);
+            oss << std::fixed << std::setprecision(precision) << "\"" << to_string(r[0]);
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << to_string(r[i]);
             }
@@ -1256,7 +1263,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         if (r.size() == 0) {
             oss << "";
         } else {
-            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
+            oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); i++) {
                 oss << ", " << r[i];
             }
@@ -1266,7 +1273,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         resultType = "vector_cashflows";
         std::vector<CashFlowResults> r = boost::any_cast<std::vector<CashFlowResults>>(anyType);
         if (!r.empty()) {
-            oss << std::fixed << std::setprecision(8) << "\"" << r[0];
+            oss << std::fixed << std::setprecision(precision) << "\"" << r[0];
             for (Size i = 1; i < r.size(); ++i) {
                 oss << ", " << r[i];
             }
@@ -1277,7 +1284,7 @@ pair<string, string> parseBoostAny(const boost::any& anyType) {
         QuantLib::Matrix r = boost::any_cast<QuantLib::Matrix>(anyType);
         std::regex pattern("\n");
         std::ostringstream tmp;
-        tmp << std::setprecision(8) << r;
+        tmp << std::setprecision(precision) << r;
         oss << std::fixed << std::regex_replace(tmp.str(), pattern, std::string(""));
     } else {
         ALOG("Unsupported Boost::Any type");
@@ -1536,6 +1543,22 @@ Average::Type parseAverageType(const std::string& s) {
     } else {
         QL_FAIL("Average::Type '" << s << "' not recognized. Should be Arithmetic or Geometric");
     }
+}
+
+
+std::vector<std::string> getCorrelationTokens(const std::string& name) {
+    // Look for & first as it avoids collisions with : which can be used in an index name
+    // if it is not there we fall back on the old behaviour
+    string delim;
+    if (name.find('&') != std::string::npos)
+        delim = "&";
+    else
+        delim = "/:,";
+    vector<string> tokens;
+    boost::split(tokens, name, boost::is_any_of(delim));
+    QL_REQUIRE(tokens.size() == 2,
+               "invalid correlation name '" << name << "', expected Index2:Index1 or Index2/Index1 or Index2&Index1");
+    return tokens;
 }
 
 } // namespace data

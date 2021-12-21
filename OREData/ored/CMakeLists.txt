@@ -128,6 +128,7 @@ portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/legdatafactory.cpp
 portfolio/nettingsetdefinition.cpp
+portfolio/nettingsetdetails.cpp
 portfolio/nettingsetmanager.cpp
 portfolio/optionasiandata.cpp
 portfolio/optiondata.cpp
@@ -144,6 +145,9 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/trademonetary.cpp
+portfolio/tradestrike.cpp
+portfolio/tradebarrier.cpp
 portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
@@ -287,6 +291,7 @@ portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/creditdefaultswapoption.hpp
 portfolio/builders/durationadjustedcms.hpp
 portfolio/builders/equityasianoption.hpp
+portfolio/builders/equitycompositeoption.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityfuturesoption.hpp
 portfolio/builders/equityoption.hpp
@@ -331,6 +336,7 @@ portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/legdatafactory.hpp
 portfolio/nettingsetdefinition.hpp
+portfolio/nettingsetdetails.hpp
 portfolio/nettingsetmanager.hpp
 portfolio/optionasiandata.hpp
 portfolio/optiondata.hpp
@@ -342,12 +348,17 @@ portfolio/premiumdata.hpp
 portfolio/referencedata.hpp
 portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
+portfolio/structuredconfigurationwarning.hpp
 portfolio/structuredtradeerror.hpp
+portfolio/structuredtradewarning.hpp
 portfolio/swap.hpp
 portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/trademonetary.hpp
+portfolio/tradestrike.hpp
+portfolio/tradebarrier.hpp
 portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp

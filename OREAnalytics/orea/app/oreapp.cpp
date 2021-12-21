@@ -36,6 +36,7 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <ored/report/inmemoryreport.hpp>
 
 #include <orea/app/oreapp.hpp>
 
@@ -128,7 +129,7 @@ int OREApp::run() {
          */
         writeInitialReports();
 
-	/**********************
+        /**********************
          * Output pricing stats
          */
 
@@ -508,6 +509,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     if (params_->get(groupName, "pricingEnginesFile") != "")
         engineData->fromFile(pricingEnginesFile);
     engineData->globalParameters()["GenerateAdditionalResults"] = generateAdditionalResults ? "true" : "false";
+    engineData->globalParameters()["RunType"] = groupName == "simulation" ? "Exposure" : "NPV";
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
@@ -702,6 +704,31 @@ void OREApp::writeInitialReports() {
         out_ << "OK" << endl;
     } else {
         LOG("skip cashflow generation");
+        out_ << "SKIP" << endl;
+    }
+
+    /**********************
+     * Cash flow NPV Report
+     * NPV of future cash flows with payment dates from tomorrow up to today+horizonCalendarDays
+     */
+    out_ << setw(tab_) << left << "Cashflow NPV report... " << flush;
+    if (params_->hasGroup("cashflowNpv") && params_->get("cashflowNpv", "active") == "Y") {
+        string fileName = outputPath_ + "/" + params_->get("cashflowNpv", "outputFileName");
+        Date horizon = Date::maxDate();
+        if (params_->has("cashflowNpv", "horizon"))
+            horizon = parseDate(params_->get("cashflowNpv", "horizon"));
+        string baseCcy = params_->get("npv", "baseCurrency");
+
+        InMemoryReport cashflowReport;
+        bool includePastCashflows = false;
+        string config = params_->get("markets", "pricing");
+        getReportWriter()->writeCashflow(cashflowReport, portfolio_, market_, config, includePastCashflows);
+
+        CSVFileReport cfNpvReport(fileName);
+        getReportWriter()->writeCashflowNpv(cfNpvReport, cashflowReport, market_, config, baseCcy, horizon);
+        out_ << "OK" << endl;
+    } else {
+        LOG("skip cashflow npv report");
         out_ << "SKIP" << endl;
     }
 

@@ -61,6 +61,7 @@
 
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/fittedbondcurvehelpermarket.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/enginefactory.hpp>
@@ -1110,9 +1111,8 @@ void YieldCurve::buildFittedBondCurve() {
             string securityID = bondQuote->securityID();
 
             QL_REQUIRE(referenceData_ != nullptr, "reference data required to build fitted bond curve");
-            auto qlBondAndInflationQuoteFactor = BondFactory::instance().build(engineFactory, referenceData_, securityID);
-            auto qlInstr = qlBondAndInflationQuoteFactor.first;
-            auto inflationQuoteFactor = qlBondAndInflationQuoteFactor.second;
+            auto res = BondFactory::instance().build(engineFactory, referenceData_, securityID);
+            auto qlInstr = res.bond;
             // skip bonds with settlement date <= curve reference date or which are otherwise non-tradeable
             if (qlInstr->settlementDate() > asofDate_ && QuantLib::BondFunctions::isTradable(*qlInstr)) {
                 bonds.push_back(qlInstr);
@@ -1120,12 +1120,12 @@ void YieldCurve::buildFittedBondCurve() {
                 Date thisMaturity = qlInstr->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * inflationQuoteFactor, ActualActual(),
+                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * res.inflationFactor, ActualActual(),
                                                   Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
-                                   << ", clean price = " << rescaledBondQuote->value() * inflationQuoteFactor
+                                   << ", clean price = " << rescaledBondQuote->value() * res.inflationFactor
                                    << ", yield (cont,act/act) = " << marketYield);
-                marketPrices.push_back(bondQuote->quote()->value() * inflationQuoteFactor);
+                marketPrices.push_back(bondQuote->quote()->value() * res.inflationFactor);
                 securityIDs.push_back(securityID);
                 marketYields.push_back(marketYield);
                 securityMaturityDates.push_back(thisMaturity);
@@ -2025,6 +2025,8 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
         // Check that we have a valid FX forward quote
         if (marketQuote) {
             boost::shared_ptr<FXForwardQuote> fxForwardQuote;
+            Handle<Quote> spotFx;
+
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::FX_FWD,
                        "Market quote not of type FX forward.");
             fxForwardQuote = boost::dynamic_pointer_cast<FXForwardQuote>(marketQuote);
@@ -2033,27 +2035,73 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                            fxSpotQuote->ccy() == fxForwardQuote->ccy(),
                        "Currency mismatch between spot \"" << spotRateID << "\" and fwd \""
                                                            << fxForwardQuoteIDs[i].first << "\"");
-
+                        
             // QL expects the FX Fwd quote to be per spot, not points.
             Handle<Quote> qlFXForwardQuote(boost::make_shared<DerivedQuote<divide_by<Real>>>(
                 fxForwardQuote->quote(), divide_by<Real>(fxConvention->pointsFactor())));
 
-            // Create an FX forward helper
-            Period fxForwardTenor = fxForwardQuote->term();
-            bool endOfMonth = false;
+            Natural spotDays = fxConvention->spotDays();
+            if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::ON)) {
+                // Overnight rate is the spread over todays fx, for settlement on t+1. We need 'todays' rate in order
+                // to use this to determine yield curve value at t+1.
+                // If spotDays is 0 it is spread over Spot.
+                // If spotDays is 1 we can subtract the ON spread from spot to get todays fx. 
+                // If spotDays is 2 we also need Tomorrow next rate to get todays fx.
+                // If spotDays is greater than 2 we can't use this.
+                Real tnSpread = Null<Real>();
+                Real totalSpread = 0.0;
+                switch (spotDays) { 
+                case 0:
+                    spotFx = fxSpotQuote->quote();
+                    break;
+                case 1:
+                    // TODO: this isn't registeredWith the ON basis quote
+                    spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
+                        fxSpotQuote->quote(), subtract<Real>(qlFXForwardQuote->value())));
+                    break;
+                case 2:
+                    // find the TN quote
+                    for (auto q : loader_.loadQuotes(asofDate_)) {
+                        if (q->instrumentType() == MarketDatum::InstrumentType::FX_FWD) {
+                            auto fxq = boost::dynamic_pointer_cast<FXForwardQuote>(q);
+                            if (fxq && fxSpotQuote->unitCcy() == fxq->unitCcy() && fxSpotQuote->ccy() == fxq->ccy() &&
+                                matchFxFwdStringTerm(fxq->term(), FXForwardQuote::FxFwdString::TN)) {
+                                tnSpread = fxq->quote()->value() / fxConvention->pointsFactor();
+                                break;
+                            }
+                        }
+                    }
+                    if (tnSpread == Null<Real>()) {
+                        WLOG("YieldCurve::AddFxFowrads cannot use ON rate, when SpotDays are 2 we also require the TN "
+                             "rate");
+                        continue;
+                    }
+                    totalSpread = tnSpread + qlFXForwardQuote->value();
+                    // TODO: this isn't registeredWith the ON or TN basis quote
+                    spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
+                        fxSpotQuote->quote(), subtract<Real>(totalSpread)));
+                    break;
+                default:
+                    WLOG("YieldCurve::AddFxFowrads cannot use ON rate, when SpotDays are " << spotDays << 
+                        ", only valid for SpotDays of 0,1 or 2.");
+                    continue;
+                }
+            } else if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::TN)) {
+                // TODO: this isn't registeredWith the TN basis quote
+                spotFx = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
+                    fxSpotQuote->quote(), subtract<Real>(qlFXForwardQuote->value())));
+            } else {
+                spotFx = fxSpotQuote->quote();
+            }
+
+            Period fxForwardTenor = fxFwdQuoteTenor(fxForwardQuote->term());
+            Period fxStartTenor = fxFwdQuoteStartTenor(fxForwardQuote->term(), fxConvention);
             bool isFxBaseCurrencyCollateralCurrency = knownCurrency == fxSpotSourceCcy;
 
-            // TODO: spotRelative
-
-            // the fx swap rate helper interprets the fxSpot as of the spot date, our fx spot here
-            // is as of today, therefore we set up the fx spot helper with zero settlement days
-            // and compute the tenor such that the correct maturity date is still matched
-            Date spotDate = fxConvention->advanceCalendar().advance(asofDate_, fxConvention->spotDays() * Days);
-            Date endDate = fxConvention->advanceCalendar().advance(spotDate, fxForwardTenor);
-
             boost::shared_ptr<RateHelper> fxForwardHelper(new FxSwapRateHelper(
-                qlFXForwardQuote, fxSpotQuote->quote(), (endDate - asofDate_) * Days, 0, NullCalendar(), Unadjusted,
-                endOfMonth, isFxBaseCurrencyCollateralCurrency, knownDiscountCurve->handle()));
+                qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(), 
+                fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
+                knownDiscountCurve->handle()));
 
             instruments.push_back(fxForwardHelper);
         }

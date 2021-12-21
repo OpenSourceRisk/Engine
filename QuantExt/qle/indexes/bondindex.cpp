@@ -21,6 +21,7 @@
 #include <qle/indexes/bondindex.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/utilities/inflation.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
@@ -30,11 +31,11 @@ BondIndex::BondIndex(const std::string& securityName, const bool dirty, const bo
                      const Handle<YieldTermStructure>& discountCurve,
                      const Handle<DefaultProbabilityTermStructure>& defaultCurve, const Handle<Quote>& recoveryRate,
                      const Handle<Quote>& securitySpread, const Handle<YieldTermStructure>& incomeCurve,
-                     const bool conditionalOnSurvival, const bool isInflationLinked)
+                     const bool conditionalOnSurvival, const bool isInflationLinked, const double bidAskAdjustment)
     : securityName_(securityName), dirty_(dirty), relative_(relative), fixingCalendar_(fixingCalendar), bond_(bond),
       discountCurve_(discountCurve), defaultCurve_(defaultCurve), recoveryRate_(recoveryRate),
       securitySpread_(securitySpread), incomeCurve_(incomeCurve), conditionalOnSurvival_(conditionalOnSurvival),
-      isInflationLinked_(isInflationLinked) {
+      isInflationLinked_(isInflationLinked), bidAskAdjustment_(bidAskAdjustment) {
 
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(BondIndex::name()));
@@ -103,10 +104,13 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
     // simply discounting its cashflows
 
     if (price == Null<Real>()) {
-        auto res = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate), bond_->settlementDate(fixingDate),
-                                                 bond_->cashflows(), boost::none, incomeCurve_, conditionalOnSurvival_);
+        auto res = vanillaBondEngine_->calculateNpv(bond_->settlementDate(fixingDate),
+                                                    bond_->settlementDate(fixingDate), bond_->cashflows(), boost::none,
+                                                    incomeCurve_, conditionalOnSurvival_, false);
         price = res.npv;
     }
+
+    price += bidAskAdjustment_ * bond_->notional(fixingDate);
 
     if (!dirty_) {
         price -= bond_->accruedAmount(fixingDate) / 100.0 * bond_->notional(fixingDate);
@@ -124,7 +128,7 @@ Rate BondIndex::forecastFixing(const Date& fixingDate) const {
 
 Real BondIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date for '" << name() << "'");
-    Real price = timeSeries()[fixingDate];
+    Real price = timeSeries()[fixingDate] + bidAskAdjustment_;
     if (price == Null<Real>())
         return price;
     if (dirty_) {
@@ -172,10 +176,9 @@ Rate BondFuturesIndex::forecastFixing(const Date& fixingDate) const {
                                         << fixingDate << ") must be >= today (" << today << ")");
     QL_REQUIRE(bond_, "BondFuturesIndex::forecastFixing(): bond required");
 
-    
-    auto bondNpvResults = 
-        vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_), bond()->settlementDate(expiryDate_),
-                                         bond()->cashflows(), boost::none, incomeCurve(), conditionalOnSurvival());
+    auto bondNpvResults = vanillaBondEngine_->calculateNpv(bond()->settlementDate(expiryDate_),
+                                                           bond()->settlementDate(expiryDate_), bond()->cashflows(),
+                                                           boost::none, incomeCurve(), conditionalOnSurvival(), false);
     Real price = bondNpvResults.npv;
 
     if (!dirty()) {

@@ -36,7 +36,7 @@
 using namespace QuantExt;
 using namespace QuantLib;
 
-BOOST_FIXTURE_TEST_SUITE(OREPlusTestSuite, qle::test::TopLevelFixture)
+BOOST_AUTO_TEST_SUITE(QuantExtTestSuite)
 
 BOOST_AUTO_TEST_SUITE(RandomVariableTest)
 

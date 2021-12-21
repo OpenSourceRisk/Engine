@@ -265,7 +265,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 flowType = "Inflation";
                             } else if (ptrIndCf) {
                                 fixingDate = ptrIndCf->fixingDate();
-                                fixingValue = ptrIndCf->index()->fixing(fixingDate);
+                                fixingValue = ptrIndCf->indexFixing();
                                 flowType = "Index";
                             } else if (ptrFxlCf) {
                                 fixingDate = ptrFxlCf->fxFixingDate();
@@ -390,6 +390,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 ccy = cf.currency;
                             } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
                                 ccy = trades[k]->legCurrencies()[cf.legNumber];
+                            } else {
+                                ccy = trades[k]->npvCurrency();
                             }
 
                             Real effectiveAmount = Null<Real>();
@@ -458,6 +460,69 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
     }
     report.end();
     LOG("Cashflow report written");
+}
+
+void ReportWriter::writeCashflowNpv(ore::data::Report& report,
+                                    const ore::data::InMemoryReport& cashflowReport,
+                                    boost::shared_ptr<ore::data::Market> market,
+                                    const std::string& configuration,
+                                    const std::string& baseCcy,
+                                    const Date& horizon)  {
+    // Pick the following fields form the in memory report:
+    // - tradeId 
+    // - payment date 
+    // - currency 
+    // - present value 
+    // Then convert PVs into base currency, aggrate per trade if payment date is within the horizon
+    // Write the resulting aggregate PV per trade into the report.
+
+    Size tradeIdColumn = 0;
+    Size tradeTypeColumn = 1;
+    Size payDateColumn = 4;
+    Size ccyColumn = 7;
+    Size pvColumn = 17;
+    QL_REQUIRE(cashflowReport.header(tradeIdColumn) == "TradeId", "incorrect trade id column " << tradeIdColumn);
+    QL_REQUIRE(cashflowReport.header(tradeTypeColumn) == "Type", "incorrect trade type column " << tradeTypeColumn);
+    QL_REQUIRE(cashflowReport.header(payDateColumn) == "PayDate", "incorrect payment date column " << payDateColumn);
+    QL_REQUIRE(cashflowReport.header(ccyColumn) == "Currency", "incorrect currency column " << ccyColumn);
+    QL_REQUIRE(cashflowReport.header(pvColumn) == "PresentValue", "incorrect pv column " << pvColumn);
+    
+    map<string, Real> npvMap;
+    Date asof = Settings::instance().evaluationDate();
+    for (Size i = 0; i < cashflowReport.rows(); ++i) {
+        string tradeId = boost::get<string>(cashflowReport.data(tradeIdColumn).at(i));
+        string tradeType = boost::get<string>(cashflowReport.data(tradeTypeColumn).at(i));
+        Date payDate = boost::get<Date>(cashflowReport.data(payDateColumn).at(i));
+        string ccy = boost::get<string>(cashflowReport.data(ccyColumn).at(i));
+        Real pv = boost::get<Real>(cashflowReport.data(pvColumn).at(i));
+        Real fx = 1.0;
+	// There shouldn't be entries in the cf report without ccy. We assume ccy = baseCcy in this case and log an error.
+        if (ccy.empty()) {
+            ALOG(StructuredTradeErrorMessage(tradeId, tradeType, "Error during CashflowNpv calculation.",
+                                             "Cashflow in row " + std::to_string(i) +
+                                                 " has no ccy. Assuming ccy = baseCcy = " + baseCcy + "."));
+        }
+        if (!ccy.empty() && ccy != baseCcy)
+            fx = market->fxSpot(ccy + baseCcy, configuration)->value();
+        if (npvMap.find(tradeId) == npvMap.end())
+            npvMap[tradeId] = 0.0;
+        if (payDate > asof && payDate <= horizon) {
+            npvMap[tradeId] += pv * fx;
+            DLOG("Cashflow NPV for trade " << tradeId << ": pv " << pv << " fx " << fx << " sum " << npvMap[tradeId]);
+        }   
+    }   
+
+    LOG("Writing cashflow NPV report for " << asof);
+    report.addColumn("TradeId", string())
+        .addColumn("PresentValue", double(), 10)
+        .addColumn("BaseCurrency", string())
+        .addColumn("Horizon", string());        
+
+    for (auto r: npvMap)
+        report.next().add(r.first).add(r.second).add(baseCcy).add(horizon < Date::maxDate() ? to_string(horizon) : "infinite");
+
+    report.end();
+    LOG("Cashflow NPV report written");
 }
 
 void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
@@ -883,7 +948,7 @@ void ReportWriter::writeScenarioReport(ore::data::Report& report,
             if (fabs(difference) > outputThreshold) {
                 report.next();
                 report.add(tradeId);
-                report.add(scenarioDescription.factors());
+                report.add(prettyPrintInternalCurveName(scenarioDescription.factors()));
                 report.add(scenarioDescription.typeString());
                 report.add(baseNpv);
                 report.add(scenarioNpv);
@@ -926,9 +991,9 @@ void ReportWriter::writeSensitivityReport(Report& report, const boost::shared_pt
             report.next();
             report.add(sr.tradeId);
             report.add(to_string(sr.isPar));
-            report.add(reconstructFactor(sr.key_1, sr.desc_1));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_1, sr.desc_1)));
             report.add(sr.shift_1);
-            report.add(reconstructFactor(sr.key_2, sr.desc_2));
+            report.add(prettyPrintInternalCurveName(reconstructFactor(sr.key_2, sr.desc_2)));
             report.add(sr.shift_2);
             report.add(sr.currency);
             report.add(sr.baseNpv);
@@ -975,7 +1040,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             // Get the additional data for the current instrument.
             auto additionalData = trade->additionalData();
             for (const auto& kv : additionalData) {
-                auto p = parseBoostAny(kv.second);
+                auto p = parseBoostAny(kv.second, 6);
                 report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
             }
             // if the 'notional[2]' has been provided convert it to base currency
@@ -1046,7 +1111,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                     } else if (kv.second.type() == typeid(result_type_scalar)) {
                         addMapResults<result_type_scalar>(kv.second, tradeId, kv.first, report);
                     } else {
-                        auto p = parseBoostAny(kv.second);
+                        auto p = parseBoostAny(kv.second, 6);
                         report.next().add(tradeId).add(kv.first).add(p.first).add(p.second);
                     }
                 }

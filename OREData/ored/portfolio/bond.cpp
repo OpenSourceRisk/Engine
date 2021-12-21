@@ -49,7 +49,6 @@ void BondData::fromXML(XMLNode* node) {
     creditGroup_ = XMLUtils::getChildValue(node, "CreditGroup", false);
     securityId_ = XMLUtils::getChildValue(node, "SecurityId", true);
     referenceCurveId_ = XMLUtils::getChildValue(node, "ReferenceCurveId", false);
-    proxySecurityId_ = XMLUtils::getChildValue(node, "ProxySecurityId", false);
     incomeCurveId_ = XMLUtils::getChildValue(node, "IncomeCurveId", false);
     volatilityCurveId_ = XMLUtils::getChildValue(node, "VolatilityCurveId", false);
     settlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", false);
@@ -86,8 +85,6 @@ XMLNode* BondData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
     if (!referenceCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
-    if (!proxySecurityId_.empty())
-        XMLUtils::addChild(doc, bondNode, "ProxySecurityId", proxySecurityId_);
     if (!incomeCurveId_.empty())
         XMLUtils::addChild(doc, bondNode, "IncomeCurveId", incomeCurveId_);
     if (!volatilityCurveId_.empty())
@@ -154,8 +151,8 @@ void BondData::initialise() {
 void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
-                                             creditGroup_, referenceCurveId_, proxySecurityId_, incomeCurveId_,
-                                             volatilityCurveId_, coupons_, securityId_, referenceDatum);
+                                             creditGroup_, referenceCurveId_, incomeCurveId_, volatilityCurveId_,
+                                             coupons_, securityId_, referenceDatum);
     initialise();
     checkData();
 }
@@ -240,6 +237,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};
     legPayers_ = {bondData_.isPayer()};
+
+    DLOG("Bond::build() finished for trade " << id());
 }
 
 void Bond::fromXML(XMLNode* node) {
@@ -261,9 +260,9 @@ Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
     return result;
 }
 
-std::pair<boost::shared_ptr<QuantLib::Bond>, Real>
-BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                   const boost::shared_ptr<ReferenceDataManager>& referenceData, const std::string& securityId) const {
+BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                       const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                       const std::string& securityId) const {
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
             return b.second->build(engineFactory, referenceData, securityId);
@@ -282,10 +281,9 @@ void BondFactory::addBuilder(const std::string& referenceDataType, const boost::
 
 BondBuilderRegister<VanillaBondBuilder> VanillaBondBuilder::reg_("Bond");
 
-std::pair<boost::shared_ptr<QuantLib::Bond>, QuantLib::Real>
-VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
-                          const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                          const std::string& securityId) const {
+BondBuilder::Result VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                              const boost::shared_ptr<ReferenceDataManager>& referenceData,
+                                              const std::string& securityId) const {
     BondData data(securityId, 1.0);
     data.populateFromBondReferenceData(referenceData);
     ore::data::Bond bond(Envelope(), data);
@@ -299,11 +297,18 @@ VanillaBondBuilder::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                "VanillaBondBuilder: constructed bond trade does not provide a valid ql instrument, this is unexpected "
                "(either the instrument wrapper or the ql instrument is null)");
 
-    Real inflFactor = 1;
+    Result res;
+    res.bond = qlBond;
     if (data.isInflationLinked()) {
-        inflFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+        res.inflationFactor = QuantExt::inflationLinkedBondQuoteFactor(qlBond);
+        res.isInflationLinked = true;
     }
-    return std::make_pair(qlBond, inflFactor);
+    res.hasCreditRisk = data.hasCreditRisk() && !data.creditCurveId().empty();
+    res.currency = data.currency();
+    res.creditCurveId = data.creditCurveId();
+    res.securityId = data.securityId();
+    res.creditGroup = data.creditGroup();
+    return res;
 }
 
 } // namespace data

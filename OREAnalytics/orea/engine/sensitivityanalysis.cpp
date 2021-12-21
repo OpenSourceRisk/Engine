@@ -158,8 +158,10 @@ SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuil
                                   const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) const {
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
+    auto ed = boost::make_shared<EngineData>(*engineData_);
+    ed->globalParameters()["RunType"] = std::string("Sensitivity") + (sensitivityData_->computeGamma() ? "DeltaGamma" : "Delta");
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
-        engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_, iborFallbackConfig_);
+        ed, simMarket_, configurations, extraBuilders, extraLegBuilders, referenceData_, iborFallbackConfig_);
     return factory;
 }
 
