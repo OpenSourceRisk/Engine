@@ -55,4 +55,14 @@
     <FixedDayCounter>30/360</FixedDayCounter>
     <Index>EUR-EURIBOR-3M</Index>
   </Swap>
+  <FX>
+    <Id>EUR-USD-FX</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>EUR</SourceCurrency>
+    <TargetCurrency>USD</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>TARGET,US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
 </Conventions>

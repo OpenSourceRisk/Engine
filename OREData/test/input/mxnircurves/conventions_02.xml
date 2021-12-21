@@ -76,4 +76,14 @@
     <SpreadIndex>USD-LIBOR-1M</SpreadIndex>
     <SpreadTenor>28D</SpreadTenor>
   </CrossCurrencyBasis>
+  <FX>
+    <Id>USD-MXN-FX</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>MXN</TargetCurrency>
+    <PointsFactor>1</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
 </Conventions>
