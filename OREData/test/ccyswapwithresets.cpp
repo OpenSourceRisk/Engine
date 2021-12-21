@@ -44,6 +44,12 @@ public:
         // valuation date
         asof_ = Date(22, Aug, 2016);
 
+        boost::shared_ptr<ore::data::Conventions> conventions = boost::make_shared<Conventions>();
+        conventions->add(boost::make_shared<ore::data::FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000",
+                                                                     "USD,EUR", "true"));
+        InstrumentConventions::instance().conventions() = conventions;
+
+
         // build vectors with dates and discount factors
         vector<Date> datesEUR = {asof_,
                                  asof_ + 6 * Months,
@@ -106,7 +112,7 @@ public:
         fxIndices_[Market::defaultConfiguration].addIndex("EURUSD", 
             Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
                 asof_, "EURUSD", 0, parseCurrency("EUR"), parseCurrency("USD"), parseCalendar("EUR,USD"),
-                Handle<Quote>(boost::make_shared<SimpleQuote>(1.130)), discountCurve("EUR"), discountCurve("USD"), false)));
+                Handle<Quote>(boost::make_shared<SimpleQuote>(1.1306)), discountCurve("EUR"), discountCurve("USD"), false)));
     }
 
 private:
