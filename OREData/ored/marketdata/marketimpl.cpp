@@ -151,7 +151,7 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
 
     // we try the inverse if an empty handle, this in mainly for lazy builds 
     // where only the inverse is specified in the market
-    if (fxInd.empty()) {
+    if (fxInd.empty() && !isFxIndex(fxIndex)) {
         string ccypairInverted = fxIndex.substr(3, 3) + fxIndex.substr(0, 3);
         require(MarketObject::FXSpot, ccypairInverted, configuration);
         auto iti = fxIndices_.find(configuration);
@@ -165,6 +165,31 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
         fxInd = iti->second.getIndex(fxIndex); // throws error here is still not found
     }
 
+    // if an index and doesn't already exist, build and add to cache
+    if (fxInd.empty() && isFxIndex(fxIndex)) {
+        // Parse the index we have with no term structures
+        boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
+
+        // get market data objects - we set up the index using source/target, fixing days
+        // and calendar from legData_[i].fxIndex()
+        string source = fxIndexBase->sourceCurrency().code();
+        string target = fxIndexBase->targetCurrency().code();
+
+        auto sorTS = discountCurve(source);
+        auto tarTS = discountCurve(target);
+        auto spot = fxSpot(source + target);
+
+        Natural spotDays;
+        Calendar calendar;
+        getFxIndexConventions(fxIndex, spotDays, calendar);
+
+        fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+            fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(),
+            fxIndexBase->targetCurrency(), calendar, spot, sorTS, tarTS));
+
+        fxIndices_[configuration].addIndex(fxIndex, fxInd);
+    }
+
     return fxInd;
 }
 
@@ -176,6 +201,8 @@ Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configurat
 }
 
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
+    if (ccypair.substr(0, 3) == ccypair.substr(3))
+        return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
     return fxIndex(ccypair, configuration)->fxQuote(true);
 }
 

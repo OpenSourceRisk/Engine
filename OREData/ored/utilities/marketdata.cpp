@@ -121,15 +121,12 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration,
     bool useXbsCurves) {
 
-    // 1. Parse the index we have with no term structures
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
-
-    // get market data objects - we set up the index using source/target, fixing days
-    // and calendar from legData_[i].fxIndex()
-    string source = fxIndexBase->sourceCurrency().code();
-    string target = fxIndexBase->targetCurrency().code();
+    // get the base index from the market for the currency pair
+    Handle<QuantExt::FxIndex> fxInd = market->fxIndex(fxIndex);
 
     // check if we need to invert the index
+    string source = fxInd->sourceCurrency().code();
+    string target = fxInd->targetCurrency().code();
     bool invertFxIndex = false;
     if (!domestic.empty() && !foreign.empty()) {
         if (domestic == target && foreign == source) {
@@ -141,18 +138,16 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
                                                << " and reset foreignCurrency " << foreign);
         }
     }
-        
-    auto sorTS = useXbsCurves ? xccyYieldCurve(market, source, configuration) : market->discountCurve(source);
-    auto tarTS = useXbsCurves ? xccyYieldCurve(market, target, configuration) : market->discountCurve(target);
-    auto spot = market->fxSpot(source + target);   
 
-    Natural spotDays;
-    Calendar calendar;
-    getFxIndexConventions(fxIndex, spotDays, calendar);
-
-    return boost::make_shared<QuantExt::FxIndex>(fxIndexBase->familyName(), spotDays,
-        fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), calendar, spot, 
-        sorTS, tarTS, invertFxIndex);
+    Handle<YieldTermStructure> sorTS, tarTS;
+    if (useXbsCurves) {
+        sorTS = xccyYieldCurve(market, source, configuration);
+        tarTS = xccyYieldCurve(market, target, configuration);
+    }
+    if (invertFxIndex || useXbsCurves)
+        return fxInd->clone(Handle<Quote>(), sorTS, tarTS, fxInd->familyName(), invertFxIndex);
+    else
+        return fxInd.currentLink();
 }
 
 

@@ -20,6 +20,7 @@
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ql/errors.hpp>
 #include <ql/quotes/compositequote.hpp>
@@ -214,143 +215,150 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
     if (it != map_.end())
         return it->second;
 
-    // Now we have to break the pair up and search for it.
-    QL_REQUIRE(pair.size() == 6, "FXIndexTriangulation: Invalid ccypair " << pair);
-    string domestic = pair.substr(0, 3);
-    string foreign = pair.substr(3);
+    if (!isFxIndex(pair)) {
 
-    // check reverse
-    string reverse = foreign + domestic;
-    it = std::find_if(map_.begin(), map_.end(),
-                      [&reverse](const std::pair<string, Handle<FxIndex>>& x) { return x.first == reverse; });
-    if (it != map_.end()) {
-        Handle<Quote> invertedQuote(boost::make_shared<DerivedQuote<Inverse>>(it->second->fxQuote(true), Inverse()));
-        Handle<FxIndex> invertedIndex(boost::make_shared<FxIndex>(
-            it->second->referenceDate(), it->second->familyName(), it->second->fixingDays(), 
-            it->second->targetCurrency(), it->second->sourceCurrency(), it->second->fixingCalendar(),
-            invertedQuote, it->second->targetCurve(), it->second->sourceCurve()));
-        map_.push_back(std::make_pair(pair, invertedIndex));
-        return invertedIndex;
-    }
+        // Now we have to break the pair up and search for it.
+        QL_REQUIRE(pair.size() == 6, "FXIndexTriangulation: Invalid ccypair " << pair);
+        string domestic = pair.substr(0, 3);
+        string foreign = pair.substr(3);
 
-    // check EUREUR
-    if (foreign == domestic) {
-        static Handle<FxIndex> unity(
-            boost::make_shared<FxIndex>("", 0, parseCurrency(foreign), parseCurrency(domestic), 
-                parseCalendar(foreign), Handle<Quote>(boost::make_shared<SimpleQuote>(1.0))));
-        return unity;
-    }
-
-    // Now we search for a pair of indices that we can combine to construct the indexx required.
-    // We only search for a pair of indices a single step apart.
-    //
-    // Suppose we want a USDJPY quote and we have EUR based data, there are 4 combinations to
-    // consider:
-    // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
-    // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
-    // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
-    // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
-    //
-    // Loop over the map, look for domestic then use the map to find the other side of the pair.
-
-    // Here q1 is USDEUR and it->second is JPYEUR
-    Natural spotDays;
-    Calendar calendar;
-    getFxIndexConventions(pair, spotDays, calendar);
-
-    for (const auto& kv : map_) {
-        string keyDomestic = kv.first.substr(0, 3);
-        string keyForeign = kv.first.substr(3);
-        const Handle<FxIndex>& q1 = kv.second;
-
-        if (domestic == keyDomestic) {
-            // we have domestic, now look for foreign/keyForeign
-            // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyForeign](const std::pair<string, Handle<FxIndex>>& x) {
-                                  return x.first == foreign + keyForeign;
-                              });
-            if (it != map_.end()) {
-                // we need a spot quote for the crossed fx index. The two underying spot quotes could
-                // have different spotDays so we can't just cross them directly. We cross the two 'todays'
-                // rates and then construst a derived FX Spot quote with the correct fixing days
-                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                        q1->fxQuote(), it->second->fxQuote(), Triangulation()));
-                Handle<Quote> spotCross = Handle<Quote>(boost::make_shared<FxSpotQuote>(
-                    todaysCross, q1->sourceCurve(), it->second->sourceCurve(), spotDays, 
-                    calendar, q1->referenceDate()));
-
-                auto tmp = Handle<FxIndex>(boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), 
-                    spotDays, q1->sourceCurrency(), it->second->sourceCurrency(), calendar,
-                    Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                        q1->fxQuote(), it->second->fxQuote(), Triangulation())),
-                    q1->sourceCurve(), it->second->sourceCurve()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
-            }
-            // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyForeign](const std::pair<string, Handle<FxIndex>>& x) {
-                                  return x.first == keyForeign + foreign;
-                              });
-            if (it != map_.end()) {
-                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(
-                    q1->fxQuote(), it->second->fxQuote(), Product()));
-                Handle<Quote> spotCross = Handle<Quote>(
-                    boost::make_shared<FxSpotQuote>(todaysCross, q1->sourceCurve(), it->second->targetCurve(), 
-                        spotDays, calendar, q1->referenceDate()));
-
-                auto tmp = Handle<FxIndex>(boost::make_shared<FxIndex>(
-                    q1->referenceDate(), q1->familyName(), spotDays, q1->sourceCurrency(), 
-                    it->second->targetCurrency(), calendar, spotCross,
-                    q1->sourceCurve(), it->second->targetCurve()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
-            }
+        // check reverse
+        string reverse = foreign + domestic;
+        it = std::find_if(map_.begin(), map_.end(),
+                          [&reverse](const std::pair<string, Handle<FxIndex>>& x) { return x.first == reverse; });
+        if (it != map_.end()) {
+            Handle<Quote> invertedQuote(
+                boost::make_shared<DerivedQuote<Inverse>>(it->second->fxQuote(true), Inverse()));
+            Handle<FxIndex> invertedIndex(boost::make_shared<FxIndex>(
+                it->second->referenceDate(), it->second->familyName(), it->second->fixingDays(),
+                it->second->targetCurrency(), it->second->sourceCurrency(), it->second->fixingCalendar(), invertedQuote,
+                it->second->targetCurve(), it->second->sourceCurve()));
+            map_.push_back(std::make_pair(pair, invertedIndex));
+            return invertedIndex;
         }
 
-        if (domestic == keyForeign) {
-            // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyDomestic](const std::pair<string, Handle<FxIndex>>& x) {
-                                  return x.first == foreign + keyDomestic;
-                              });
-            if (it != map_.end()) {
-                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<InverseProduct>>(
-                    q1->fxQuote(), it->second->fxQuote(), InverseProduct()));
-                Handle<Quote> spotCross = Handle<Quote>(
-                    boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->sourceCurve(), 
-                        spotDays, calendar, q1->referenceDate()));
-                
-                auto tmp = Handle<FxIndex>(boost::make_shared<FxIndex>( q1->referenceDate(), 
-                    q1->familyName(), spotDays, q1->targetCurrency(), it->second->sourceCurrency(), 
-                    calendar, spotCross, q1->targetCurve(), it->second->sourceCurve()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
-            }
-            // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
-            it = std::find_if(map_.begin(), map_.end(),
-                              [&foreign, &keyDomestic](const std::pair<string, Handle<FxIndex>>& x) {
-                                  return x.first == keyDomestic + foreign;
-                              });
-            if (it != map_.end()) {
-                // Here q1 is EURUSD and it->second is EURJPY
-                Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                    it->second->fxQuote(), q1->fxQuote(), Triangulation()));
-                Handle<Quote> spotCross = Handle<Quote>(
-                    boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->targetCurve(), 
-                        spotDays, calendar, q1->referenceDate()));
-             
-                auto tmp = Handle<FxIndex>(boost::make_shared<FxIndex>(
-                    q1->referenceDate(), q1->familyName(), spotDays, q1->targetCurrency(),
-                    it->second->targetCurrency(), calendar, spotCross,
-                    q1->targetCurve(), it->second->targetCurve()));
-                map_.push_back(std::make_pair(pair, tmp));
-                return tmp;
+        // check EUREUR
+        if (foreign == domestic) {
+            static Handle<FxIndex> unity(boost::make_shared<FxIndex>(
+                "", 0, parseCurrency(foreign), parseCurrency(domestic), parseCalendar(foreign),
+                Handle<Quote>(boost::make_shared<SimpleQuote>(1.0))));
+            return unity;
+        }
+
+        // Now we search for a pair of indices that we can combine to construct the indexx required.
+        // We only search for a pair of indices a single step apart.
+        //
+        // Suppose we want a USDJPY quote and we have EUR based data, there are 4 combinations to
+        // consider:
+        // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
+        // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
+        // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
+        // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
+        //
+        // Loop over the map, look for domestic then use the map to find the other side of the pair.
+
+        // Here q1 is USDEUR and it->second is JPYEUR
+        Natural spotDays;
+        Calendar calendar;
+        getFxIndexConventions(pair, spotDays, calendar);
+
+        for (const auto& kv : map_) {
+            if (!isFxIndex(kv.first)) {
+                string keyDomestic = kv.first.substr(0, 3);
+                string keyForeign = kv.first.substr(3);
+                const Handle<FxIndex>& q1 = kv.second;
+
+                if (domestic == keyDomestic) {
+                    // we have domestic, now look for foreign/keyForeign
+                    // USDEUR, JPYEUR  => we want USDEUR / JPYEUR [Triangulation (but in the reverse order)]
+                    it = std::find_if(map_.begin(), map_.end(),
+                                      [&foreign, &keyForeign](const std::pair<string, Handle<FxIndex>>& x) {
+                                          return x.first == foreign + keyForeign;
+                                      });
+                    if (it != map_.end()) {
+                        // we need a spot quote for the crossed fx index. The two underying spot quotes could
+                        // have different spotDays so we can't just cross them directly. We cross the two 'todays'
+                        // rates and then construst a derived FX Spot quote with the correct fixing days
+                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
+                            q1->fxQuote(), it->second->fxQuote(), Triangulation()));
+                        Handle<Quote> spotCross = Handle<Quote>(
+                            boost::make_shared<FxSpotQuote>(todaysCross, q1->sourceCurve(), it->second->sourceCurve(),
+                                                            spotDays, calendar, q1->referenceDate()));
+
+                        auto tmp = Handle<FxIndex>(
+                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
+                                                        q1->sourceCurrency(), it->second->sourceCurrency(), calendar,
+                                                        Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
+                                                            q1->fxQuote(), it->second->fxQuote(), Triangulation())),
+                                                        q1->sourceCurve(), it->second->sourceCurve()));
+                        map_.push_back(std::make_pair(pair, tmp));
+                        return tmp;
+                    }
+                    // USDEUR, EURJPY  => we want USDEUR * EURJPY [Product]
+                    it = std::find_if(map_.begin(), map_.end(),
+                                      [&foreign, &keyForeign](const std::pair<string, Handle<FxIndex>>& x) {
+                                          return x.first == keyForeign + foreign;
+                                      });
+                    if (it != map_.end()) {
+                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Product>>(
+                            q1->fxQuote(), it->second->fxQuote(), Product()));
+                        Handle<Quote> spotCross = Handle<Quote>(
+                            boost::make_shared<FxSpotQuote>(todaysCross, q1->sourceCurve(), it->second->targetCurve(),
+                                                            spotDays, calendar, q1->referenceDate()));
+
+                        auto tmp = Handle<FxIndex>(
+                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
+                                                        q1->sourceCurrency(), it->second->targetCurrency(), calendar,
+                                                        spotCross, q1->sourceCurve(), it->second->targetCurve()));
+                        map_.push_back(std::make_pair(pair, tmp));
+                        return tmp;
+                    }
+                }
+
+                if (domestic == keyForeign) {
+                    // EURUSD, JPYEUR  => we want 1 / (EURUSD * JPYEUR) [InverseProduct]
+                    it = std::find_if(map_.begin(), map_.end(),
+                                      [&foreign, &keyDomestic](const std::pair<string, Handle<FxIndex>>& x) {
+                                          return x.first == foreign + keyDomestic;
+                                      });
+                    if (it != map_.end()) {
+                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<InverseProduct>>(
+                            q1->fxQuote(), it->second->fxQuote(), InverseProduct()));
+                        Handle<Quote> spotCross = Handle<Quote>(
+                            boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->sourceCurve(),
+                                                            spotDays, calendar, q1->referenceDate()));
+
+                        auto tmp = Handle<FxIndex>(
+                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
+                                                        q1->targetCurrency(), it->second->sourceCurrency(), calendar,
+                                                        spotCross, q1->targetCurve(), it->second->sourceCurve()));
+                        map_.push_back(std::make_pair(pair, tmp));
+                        return tmp;
+                    }
+                    // EURUSD, EURJPY  => we want EURJPY / EURUSD [Triangulation]
+                    it = std::find_if(map_.begin(), map_.end(),
+                                      [&foreign, &keyDomestic](const std::pair<string, Handle<FxIndex>>& x) {
+                                          return x.first == keyDomestic + foreign;
+                                      });
+                    if (it != map_.end()) {
+                        // Here q1 is EURUSD and it->second is EURJPY
+                        Handle<Quote> todaysCross = Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
+                            it->second->fxQuote(), q1->fxQuote(), Triangulation()));
+                        Handle<Quote> spotCross = Handle<Quote>(
+                            boost::make_shared<FxSpotQuote>(todaysCross, q1->targetCurve(), it->second->targetCurve(),
+                                                            spotDays, calendar, q1->referenceDate()));
+
+                        auto tmp = Handle<FxIndex>(
+                            boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
+                                                        q1->targetCurrency(), it->second->targetCurrency(), calendar,
+                                                        spotCross, q1->targetCurve(), it->second->targetCurve()));
+                        map_.push_back(std::make_pair(pair, tmp));
+                        return tmp;
+                    }
+                }
             }
         }
     }
-    
     // if don't throw return an empty handle
     if (dontThrow)
         return Handle<FxIndex>();
