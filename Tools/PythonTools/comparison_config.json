@@ -421,7 +421,7 @@
             "names": [
               "InitialMargin"
             ],
-            "abs_tol": 1.0,
+            "abs_tol": 0.1,
             "rel_tol": 1e-12
           },
           {
@@ -528,7 +528,7 @@
             "names": [
               "InitialMargin"
             ],
-            "abs_tol": 1e-2,
+            "abs_tol": 0.1,
             "rel_tol": 1e-12
           }
         ]
