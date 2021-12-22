@@ -36,18 +36,23 @@ FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTrian
     
     Natural spotDays;
     Calendar calendar;
-    getFxIndexConventions(spec.unitCcy(), spec.ccy(), spotDays, calendar);
+    getFxIndexConventions(ccyPair, spotDays, calendar);
 
+    Handle<YieldTermStructure> sorTS, tarTS;
     // get the discount curves for the source and target currencies
     auto itSor = requiredDiscountCurves.find(spec.unitCcy());
-    QL_REQUIRE(itSor != requiredDiscountCurves.end(),
-               "Discount Curve - " << spec.unitCcy() << " - not found during Fx Spot build");
-    auto sorTS = itSor->second->handle();
+    if (spotDays > 0) // if spot days are zero we can build a curve without the discount curve
+        QL_REQUIRE(itSor != requiredDiscountCurves.end(),
+                   "Discount Curve - " << spec.unitCcy() << " - not found during Fx Spot build");
+    if (itSor != requiredDiscountCurves.end())
+        sorTS = itSor->second->handle();
 
     auto itTar = requiredDiscountCurves.find(spec.ccy());
-    QL_REQUIRE(itTar != requiredDiscountCurves.end(),
+    if (spotDays > 0)
+        QL_REQUIRE(itTar != requiredDiscountCurves.end(),
                "Discount Curve - " << spec.ccy() << " - not found during Fx Spot build");
-    auto tarTS = itTar->second->handle();
+    if (itTar != requiredDiscountCurves.end())
+        tarTS = itTar->second->handle();
 
     index_ = Handle<QuantExt::FxIndex>(
         boost::make_shared<QuantExt::FxIndex>(asof, ccyPair, spotDays, parseCurrency(spec.unitCcy()), 

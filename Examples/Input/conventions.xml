@@ -1072,7 +1072,7 @@
   <!-- FX Forwards -->
   <FX>
     <Id>GBP-USD-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>GBP</SourceCurrency>
     <TargetCurrency>USD</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1082,7 +1082,7 @@
   </FX>
   <FX>
     <Id>USD-GBP-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>GBP</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1092,17 +1092,27 @@
   </FX>
   <FX>
     <Id>EUR-USD-FX-CONVENTIONS</Id>
+    <SpotDays>0</SpotDays>
+    <SourceCurrency>EUR</SourceCurrency>
+    <TargetCurrency>USD</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>TARGET,US, UK</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
+    <Id>FX-ECB-EUR-USD</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>EUR</SourceCurrency>
     <TargetCurrency>USD</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
-    <AdvanceCalendar>TARGET,US</AdvanceCalendar>
+    <AdvanceCalendar>TARGET,US, UK</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
   <FX>
     <Id>EUR-JPY-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>EUR</SourceCurrency>
     <TargetCurrency>JPY</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1112,7 +1122,7 @@
   </FX>
   <FX>
     <Id>CHF-USD-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>CHF</SourceCurrency>
     <TargetCurrency>USD</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1122,7 +1132,7 @@
   </FX>
   <FX>
     <Id>USD-CHF-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CHF</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1132,7 +1142,7 @@
   </FX>
   <FX>
     <Id>EUR-GBP-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>EUR</SourceCurrency>
     <TargetCurrency>GBP</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1142,7 +1152,7 @@
   </FX>
   <FX>
     <Id>EUR-CHF-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>EUR</SourceCurrency>
     <TargetCurrency>CHF</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1152,7 +1162,7 @@
   </FX>
   <FX>
     <Id>USD-NOK-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>NOK</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1162,7 +1172,7 @@
   </FX>
   <FX>
     <Id>USD-SEK-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>SEK</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1172,7 +1182,7 @@
   </FX>
   <FX>
     <Id>USD-MXN-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>MXN</TargetCurrency>
     <PointsFactor>1</PointsFactor>
@@ -1182,7 +1192,7 @@
   </FX>
   <FX>
     <Id>USD-JPY-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>JPY</TargetCurrency>
     <PointsFactor>100</PointsFactor>
@@ -1192,7 +1202,7 @@
   </FX>
   <FX>  
     <Id>USD-CAD-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CAD</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1202,7 +1212,7 @@
   </FX>
   <FX>
     <Id>USD-TWD-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>TWD</TargetCurrency>
     <PointsFactor>1</PointsFactor>
@@ -1212,7 +1222,7 @@
   </FX>
   <FX>
     <Id>USD-KRW-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>KRW</TargetCurrency>
     <PointsFactor>100</PointsFactor>
@@ -1222,7 +1232,7 @@
   </FX>
   <FX>
     <Id>USD-TRY-FX</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>TRY</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1232,7 +1242,7 @@
   </FX>
   <FX>
     <Id>USD-INR-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>INR</TargetCurrency>
     <PointsFactor>100</PointsFactor>
@@ -1242,7 +1252,7 @@
   </FX>
   <FX>
     <Id>USD-BRL-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>BRL</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1252,7 +1262,7 @@
   </FX>
   <FX>
     <Id>USD-CLP-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CLP</TargetCurrency>
     <PointsFactor>1</PointsFactor>
@@ -1262,7 +1272,7 @@
   </FX>
   <FX>
     <Id>USD-IDR-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>IDR</TargetCurrency>
     <PointsFactor>1</PointsFactor>
@@ -1272,7 +1282,7 @@
   </FX>
   <FX>
     <Id>USD-CNY-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CNY</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1282,7 +1292,7 @@
   </FX>
   <FX>
     <Id>USD-MYR-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>MYR</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -1292,7 +1302,7 @@
   </FX>
   <FX>
     <Id>USD-PHP-FX-CONVENTIONS</Id>
-    <SpotDays>2</SpotDays>
+    <SpotDays>0</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>PHP</TargetCurrency>
     <PointsFactor>10</PointsFactor>

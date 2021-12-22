@@ -86,7 +86,7 @@ securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::
     std::string name = securitySpecificCreditCurveName(securityId, creditCurveId);
     try {
         curve = market->defaultCurve(name, configuration);
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         DLOG("Could not link " << securityId << " to security specific credit curve " << name << " so just using "
                                << creditCurveId << " default curve.");
         curve = market->defaultCurve(creditCurveId, configuration);
@@ -129,9 +129,6 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
     string source = fxIndexBase->sourceCurrency().code();
     string target = fxIndexBase->targetCurrency().code();
 
-    // get the base index from the market for the currency pair
-    Handle<QuantExt::FxIndex> fxInd = market->fxIndex(source + target);
-
     // check if we need to invert the index
     bool invertFxIndex = false;
     if (!domestic.empty() && !foreign.empty()) {
@@ -144,44 +141,46 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
                                                << " and reset foreignCurrency " << foreign);
         }
     }
+        
+    auto sorTS = useXbsCurves ? xccyYieldCurve(market, source, configuration) : market->discountCurve(source);
+    auto tarTS = useXbsCurves ? xccyYieldCurve(market, target, configuration) : market->discountCurve(target);
+    auto spot = market->fxSpot(source + target);   
 
-    Handle<YieldTermStructure> sorTS, tarTS;
-    if (useXbsCurves) {
-        sorTS = xccyYieldCurve(market, source, configuration);
-        tarTS = xccyYieldCurve(market, target, configuration);
-    }
+    Natural spotDays;
+    Calendar calendar;
+    getFxIndexConventions(fxIndex, spotDays, calendar);
 
-    if (fxInd.empty()) {
-        sorTS = sorTS.empty() ? market->discountCurve(source) : sorTS;
-        tarTS = tarTS.empty() ? market->discountCurve(target) : tarTS;
-        auto spot = market->fxSpot(source + target);
-
-        Natural spotDays = 2;
-        Calendar calendar = parseCalendar(source + "," + target);
-
-        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        auto fxCon =
-            boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(source, target));
-        if (fxCon) {
-            spotDays = fxCon->spotDays();
-            calendar = fxCon->advanceCalendar();
-        }
-
-        return boost::make_shared<QuantExt::FxIndex>(fxIndexBase->familyName(), spotDays,
-            fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), calendar, spot, 
-            sorTS, tarTS, invertFxIndex);
-    }
-    else
-        return fxInd->clone(Handle<Quote>(), sorTS, tarTS, fxIndexBase->familyName(), invertFxIndex);
+    return boost::make_shared<QuantExt::FxIndex>(fxIndexBase->familyName(), spotDays,
+        fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), calendar, spot, 
+        sorTS, tarTS, invertFxIndex);
 }
 
 
-void getFxIndexConventions(const string& ccy1, const string& ccy2, Natural& fixingDays, Calendar& fixingCalendar) {
+void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& fixingCalendar) {
+    // can take an fx index or ccy pair e.g. EURUSD
+    string ccy1, ccy2;
+    if (isFxIndex(index)) {
+        auto ind = parseFxIndex(index);
+        ccy1 = ind->sourceCurrency().code();
+        ccy2 = ind->targetCurrency().code();
+    } else {
+        QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, " <<
+            "or a currency pair e.g. EURUSD.");
+        ccy1 = index.substr(0, 3);
+        ccy2 = index.substr(3);
+    }        
+    
     try {
         const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
-        auto fxCon =
-            boost::dynamic_pointer_cast<FXConvention>(conventions->getFxConvention(ccy1, ccy2));
-        if (fxCon) {
+        boost::shared_ptr<Convention> con;
+        try {
+            // first look for the index directly
+            con = conventions->get(index);
+        } catch (...) {
+            // then by currency pair
+            con = conventions->getFxConvention(ccy1, ccy2);
+        }
+        if (auto fxCon = boost::dynamic_pointer_cast<FXConvention>(con)) {
             fixingDays = fxCon->spotDays();
             fixingCalendar = fxCon->advanceCalendar();
         }

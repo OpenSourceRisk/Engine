@@ -75,13 +75,14 @@ std::string prettyPrintInternalCurveName(std::string name);
 
 /*! Build an Fx Index given a market */
 boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
-    const boost::shared_ptr<Market>& market, const string& configuration, bool useXbsCurves = false);
+                                                  const boost::shared_ptr<Market>& market, const string& configuration,
+                                                  bool useXbsCurves = false);
 
 /*! Get a Xccy curve from  given a market */
 Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& market, const string& ccyCode,
                                           const string& configuration);
 
-void getFxIndexConventions(const string& ccy1, const string& ccy2, Natural& fixingDays, Calendar& fixingCalendar);
+void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& fixingCalendar);
 
 } // namespace data
 } // namespace ore

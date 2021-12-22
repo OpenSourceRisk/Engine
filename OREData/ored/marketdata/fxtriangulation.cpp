@@ -256,7 +256,7 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
     // Here q1 is USDEUR and it->second is JPYEUR
     Natural spotDays;
     Calendar calendar;
-    getFxIndexConventions(domestic, foreign, spotDays, calendar);
+    getFxIndexConventions(pair, spotDays, calendar);
 
     for (const auto& kv : map_) {
         string keyDomestic = kv.first.substr(0, 3);
