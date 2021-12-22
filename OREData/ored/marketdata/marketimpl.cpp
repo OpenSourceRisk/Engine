@@ -187,7 +187,7 @@ Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const strin
             fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(),
             fxIndexBase->targetCurrency(), calendar, spot, sorTS, tarTS));
 
-        fxIndices_[configuration].addIndex(fxIndex, fxInd);
+        fxIndices_[Market::defaultConfiguration].addIndex(fxIndex, fxInd);
     }
 
     return fxInd;

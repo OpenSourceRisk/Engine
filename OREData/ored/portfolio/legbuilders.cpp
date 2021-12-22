@@ -99,8 +99,7 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
         // Make the necessary FX linked floating rate coupons
         for (; j < result.size(); ++j) {
             boost::shared_ptr<FloatingRateCoupon> coupon =
-                boost::dynamic_pointer_cast<FloatingRateCoupon>(result[j]);
-
+                boost::dynamic_pointer_cast<FloatingRateCoupon>(result[j]);            
             Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
             boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
