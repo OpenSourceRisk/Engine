@@ -43,7 +43,7 @@ CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { trade
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
                                  const string& currency, Real strike, Real quantity,
                                  const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
-    : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, strike, quantity),
+    : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, strike, quantity, TradeStrike()),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityOption";
 }

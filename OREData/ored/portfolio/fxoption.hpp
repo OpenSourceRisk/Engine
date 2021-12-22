@@ -41,7 +41,7 @@ public:
     FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
              double soldAmount, const std::string& fxIndex = "")
         : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount,
-                             boughtAmount),
+                             boughtAmount, TradeStrike()),
           fxIndex_(fxIndex) {
         tradeType_ = "FxOption";
     }

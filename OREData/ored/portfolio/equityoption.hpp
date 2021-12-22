@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
+#include <ored/portfolio/tradestrike.hpp>
 
 namespace ore {
 namespace data {
@@ -40,9 +41,10 @@ public:
     EquityOption() : VanillaOptionTrade(AssetClass::EQ), localStrike_(0.0) { tradeType_ = "EquityOption"; }
     //! Constructor
     EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, QuantLib::Real strike,
-        QuantLib::Real quantity, string strikeCurrency = "")
-        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity),
-          equityUnderlying_(equityUnderlying), localCurrency_(currency), localStrike_(strike), strikeCurrency_(strikeCurrency) {
+        QuantLib::Real quantity, TradeStrike tradeStrike, string strikeCurrency = "")
+        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity, tradeStrike),
+          equityUnderlying_(equityUnderlying), localCurrency_(currency), localStrike_(strike), 
+          strikeCurrency_(strikeCurrency) {
         tradeType_ = "EquityOption";
     }
 

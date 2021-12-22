@@ -1198,6 +1198,7 @@
     <ClInclude Include="qle\calendars\greece.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2046,6 +2047,9 @@
       <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvolconstantspread.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\flatteneddefaultcurve.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

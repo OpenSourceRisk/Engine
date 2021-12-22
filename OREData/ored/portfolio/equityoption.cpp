@@ -18,6 +18,7 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/tradestrike.hpp>
 #include <ored/portfolio/builders/equitycompositeoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityoption.hpp>
@@ -47,15 +48,15 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     Currency equityCurrency =
         market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency();
     QL_REQUIRE(!equityCurrency.empty(), "No equity currency in equityCurve for equity " << assetName_ << ".");
-
+    
     // Set the strike currency - if we have a minor currency, convert the strike
     if (!strikeCurrency_.empty()) {
         
-        strike_ = convertMinorToMajorCurrency(strikeCurrency_, localStrike_);
+        strike_ = tradeStrike_.value();
     } else {
         // If payoff currency and underlying currency are equivalent (and payoff currency could be a minor currency)
         if (parseCurrencyWithMinors(localCurrency_) == equityCurrency) {
-            strike_ = convertMinorToMajorCurrency(localCurrency_, localStrike_);
+            strike_ = tradeStrike_.value();
             TLOG("Setting strike currency to payoff currency " << localCurrency_ << " for trade " << id() << ".");
             strikeCurrency_ = localCurrency_;
         } else {
@@ -66,7 +67,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     }
 
     // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
-    currency_ = parseCurrencyWithMinors(localCurrency_).code();
+    currency_ = parseCurrencyWithMinors(tradeStrike_.currency()).code();
     underlyingCurrency_ = equityCurrency.code();
     Currency strikeCurrency = parseCurrencyWithMinors(strikeCurrency_);
 
@@ -182,9 +183,16 @@ void EquityOption::fromXML(XMLNode* node) {
     if (!tmp)
         tmp = XMLUtils::getChildNode(eqNode, "Name");
     equityUnderlying_.fromXML(tmp);
-    localCurrency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
-    localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
     strikeCurrency_ = XMLUtils::getChildValue(eqNode, "StrikeCurrency", false);
+    localCurrency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
+    XMLNode* strikeData = XMLUtils::getChildNode(eqNode, "StrikeData");
+    if (strikeData) {
+        tradeStrike_.fromXML(strikeData);
+        localStrike_ = XMLUtils::getChildValueAsDouble(strikeData, "Value", true);
+    } else {
+        localStrike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
+        tradeStrike_ = TradeStrike(localStrike_, localCurrency_);
+    }
     quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
@@ -197,8 +205,9 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Currency", localCurrency_);
     XMLUtils::addChild(doc, eqNode, "Strike", localStrike_);
-
-    Currency ccy = parseCurrencyWithMinors(localCurrency_);
+    // XMLUtils::appendNode(eqNode, tradeStrike_.toXML(doc));
+    
+    Currency ccy = parseCurrencyWithMinors(tradeStrike_.currency());
     Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
     if (!strikeCurrency_.empty() && ccy != strikeCcy)
         XMLUtils::addChild(doc, eqNode, "StrikeCurrency", strikeCurrency_);

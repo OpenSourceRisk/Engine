@@ -145,6 +145,9 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/trademonetary.cpp
+portfolio/tradestrike.cpp
+portfolio/tradebarrier.cpp
 portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
@@ -353,6 +356,9 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/trademonetary.hpp
+portfolio/tradestrike.hpp
+portfolio/tradebarrier.hpp
 portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp

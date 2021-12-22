@@ -145,12 +145,17 @@ struct RandomVariable {
     friend RandomVariable applyFilter(RandomVariable, const Filter&);
     friend RandomVariable applyInverseFilter(RandomVariable, const Filter&);
     friend RandomVariable conditionalResult(const Filter&, RandomVariable, const RandomVariable&);
+    friend RandomVariable indicatorEq(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
+    friend RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
+    friend RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal, const Real falseVal);
 
     // the raw data
     const std::vector<Real>& data() const { return data_; }
     std::vector<Real>& data() { return data_; }
     // expand vector to full size and set determinisitc to false
     void expand();
+
+    static std::function<void(RandomVariable&)> deleter;
 
 private:
     void checkTimeConsistencyAndUpdate(const Real t);
@@ -178,6 +183,9 @@ RandomVariable sin(RandomVariable);
 RandomVariable cos(RandomVariable);
 RandomVariable normalCdf(RandomVariable);
 RandomVariable normalPdf(RandomVariable);
+RandomVariable indicatorEq(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0);
+RandomVariable indicatorGt(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0);
+RandomVariable indicatorGeq(RandomVariable, const RandomVariable&, const Real trueVal = 1.0, const Real falseVal = 0.0);
 
 Filter close_enough(const RandomVariable&, const RandomVariable&);
 bool close_enough_all(const RandomVariable&, const RandomVariable&);
@@ -215,5 +223,8 @@ RandomVariable expectation(const RandomVariable& r);
 // black formula
 RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const RandomVariable& strike,
                      const RandomVariable& forward, const RandomVariable& impliedVol);
+
+// derivative of indicator function 1_{x>0}
+RandomVariable indicatorDerivative(const RandomVariable& x, const double eps);
 
 } // namespace QuantExt

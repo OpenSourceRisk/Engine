@@ -202,6 +202,8 @@
     <ClInclude Include="ored\portfolio\referencedata.hpp" />
     <ClInclude Include="ored\portfolio\referencedatafactory.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
+    <ClInclude Include="ored\portfolio\trademonetary.hpp" />
+    <ClInclude Include="ored\portfolio\structuredconfigurationerror.hpp" />
     <ClInclude Include="ored\portfolio\structuredconfigurationwarning.hpp" />
     <ClInclude Include="ored\portfolio\structuredtradeerror.hpp" />
     <ClInclude Include="ored\portfolio\structuredtradewarning.hpp" />
@@ -209,7 +211,9 @@
     <ClInclude Include="ored\portfolio\swaption.hpp" />
     <ClInclude Include="ored\portfolio\trade.hpp" />
     <ClInclude Include="ored\portfolio\tradeactions.hpp" />
+    <ClInclude Include="ored\portfolio\tradebarrier.hpp" />
     <ClInclude Include="ored\portfolio\tradefactory.hpp" />
+    <ClInclude Include="ored\portfolio\tradestrike.hpp" />
     <ClInclude Include="ored\portfolio\underlying.hpp" />
     <ClInclude Include="ored\portfolio\vanillaoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\asianoption.hpp" />
@@ -385,11 +389,14 @@
     <ClCompile Include="ored\portfolio\referencedata.cpp" />
     <ClCompile Include="ored\portfolio\referencedatafactory.cpp" />
     <ClCompile Include="ored\portfolio\schedule.cpp" />
+    <ClCompile Include="ored\portfolio\trademonetary.cpp" />
     <ClCompile Include="ored\portfolio\swap.cpp" />
     <ClCompile Include="ored\portfolio\swaption.cpp" />
     <ClCompile Include="ored\portfolio\trade.cpp" />
     <ClCompile Include="ored\portfolio\tradeactions.cpp" />
+    <ClCompile Include="ored\portfolio\tradebarrier.cpp" />
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
+    <ClCompile Include="ored\portfolio\tradestrike.cpp" />
     <ClCompile Include="ored\portfolio\underlying.cpp" />
     <ClCompile Include="ored\portfolio\vanillaoption.cpp" />
     <ClCompile Include="ored\portfolio\asianoption.cpp" />

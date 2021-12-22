@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/nettingsetdefinition.hpp>
+#include <ored/portfolio/structuredconfigurationwarning.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -67,8 +68,8 @@ void CSA::validate() {
     QL_REQUIRE(mpr_ >= Period(0, Days), "NettingSetDefinition build error;"
                                             << " negative margin period of risk");
     if (mpr_ < marginCallFreq_ || mpr_ < marginPostFreq_) {
-        LOG("NettingSetDefinition has CSA margining frequency (" << marginCallFreq_ << ", "
-            << marginPostFreq_ << ") longer than assumed margin period of risk " << mpr_);
+        LOG("NettingSetDefinition has CSA margining frequency ("
+            << marginCallFreq_ << ", " << marginPostFreq_ << ") longer than assumed margin period of risk " << mpr_);
     }
 
     for (Size i = 0; i < eligCollatCcys_.size(); i++) {
@@ -112,11 +113,10 @@ NettingSetDefinition::NettingSetDefinition(const NettingSetDetails& nettingSetDe
                                            const bool calculateIMAmount, const bool calculateVMAmount)
     : nettingSetDetails_(nettingSetDetails), activeCsaFlag_(true) {
 
-    csa_ =
-        boost::make_shared<CSA>(parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv,
-                                iaHeld, iaType, parsePeriod(marginCallFreq), parsePeriod(marginPostFreq),
-                                parsePeriod(mpr), collatSpreadPay, collatSpreadRcv, eligCollatCcys, applyInitialMargin,
-                                parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
+    csa_ = boost::make_shared<CSA>(
+        parseCsaType(bilateral), csaCurrency, index, thresholdPay, thresholdRcv, mtaPay, mtaRcv, iaHeld, iaType,
+        parsePeriod(marginCallFreq), parsePeriod(marginPostFreq), parsePeriod(mpr), collatSpreadPay, collatSpreadRcv,
+        eligCollatCcys, applyInitialMargin, parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
 
     validate();
     DLOG(nettingSetDetails_ << ": collateralised NettingSetDefinition built. ");
@@ -132,9 +132,10 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     } else {
         nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
         nettingSetDetails_ = NettingSetDetails(nettingSetId_);
-    }   
-        
+    }
+
     activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", false, true);
+    XMLNode* csaChild = XMLUtils::getChildNode(node, "CSADetails");
 
     // Load "CSA" information, if necessary
     if (activeCsaFlag_) {
@@ -153,7 +154,8 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         string mprStr = XMLUtils::getChildValue(csaChild, "MarginPeriodOfRisk", false);
         if (mprStr.empty())
             mprStr = "2W";
-        Real collatSpreadRcv = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", false, 0.0);
+        Real collatSpreadRcv =
+            XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadReceive", false, 0.0);
         Real collatSpreadPay = XMLUtils::getChildValueAsDouble(csaChild, "CollateralCompoundingSpreadPay", false, 0.0);
 
         string marginCallFreqStr, marginPostFreqStr;
@@ -165,7 +167,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
             marginCallFreqStr = "1D";
         if (marginPostFreqStr.empty())
             marginPostFreqStr = "1D";
-        
+
         Real iaHeld = 0.0;
         string iaType;
         if (XMLNode* iaChild = XMLUtils::getChildNode(csaChild, "IndependentAmount")) {
@@ -179,7 +181,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
         if (XMLNode* collatChild = XMLUtils::getChildNode(csaChild, "EligibleCollaterals")) {
             eligCollatCcys = XMLUtils::getChildrenValues(collatChild, "Currencies", "Currency", false);
         }
-       
+
         bool applyInitialMargin = XMLUtils::getChildValueAsBool(csaChild, "ApplyInitialMargin", false, false);
 
         string initialMarginType = XMLUtils::getChildValue(csaChild, "InitialMarginType", false);
@@ -194,6 +196,12 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
                                        parsePeriod(marginPostFreqStr), parsePeriod(mprStr), collatSpreadPay,
                                        collatSpreadRcv, eligCollatCcys, applyInitialMargin,
                                        parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
+    } else {
+        if (csaChild) {
+            WLOG(
+                StructuredConfigurationWarningMessage("Netting set definitions", nettingSetId_, "Inconsistent inputs",
+                                                      "ActiveCSAFlag=False, but a CSADetails node was still provided"));
+        }
     }
 
     validate();
