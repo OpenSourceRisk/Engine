@@ -19,6 +19,7 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 
@@ -77,7 +78,7 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     if (data.legType() == "Floating" && !data.isNotResetXCCY()) {
         QL_REQUIRE(!data.fxIndex().empty(), "FloatingRateLegBuilder: need fx index for fx resetting leg");
         auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), engineFactory->market(),
-                                    configuration, data.fixingCalendar(), data.fixingDays(), true);
+                                    configuration, true);       
 
         // If the domestic notional value is not specified, i.e. there are no notionals specified in the leg
         // data, then all coupons including the first will be FX linked. If the first coupon's FX fixing date
@@ -97,13 +98,13 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
 
         // Make the necessary FX linked floating rate coupons
         for (; j < result.size(); ++j) {
-            boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(result[j]);
-
+            boost::shared_ptr<FloatingRateCoupon> coupon =
+                boost::dynamic_pointer_cast<FloatingRateCoupon>(result[j]);            
             Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                 -static_cast<Integer>(fxIndex->fixingDays()), Days);
             boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
-                boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(), fxIndex,
-                                                                       coupon);
+                boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, data.foreignAmount(), 
+                    fxIndex, coupon);
             // set the same pricer
             fxLinkedCoupon->setPricer(coupon->pricer());
             result[j] = fxLinkedCoupon;
@@ -283,7 +284,8 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
         }
 
         fxIndex = buildFxIndex(eqData->fxIndex(), data.currency(), eqCurrency.code(), engineFactory->market(),
-                               configuration, eqData->fxIndexCalendar(), eqData->fxIndexFixingDays());
+                               configuration);
+
     }
 
     Leg result = makeEquityLeg(data, eqCurve, fxIndex, openEndDateReplacement);

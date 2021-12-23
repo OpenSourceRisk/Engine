@@ -44,7 +44,7 @@ namespace QuantExt {
 class DiscountingFxForwardEngine : public FxForward::engine {
 public:
     /*! \param ccy1, currency1Discountcurve
-               Currency 1 and its discount curve.
+               Currency 1 and its discount curve.y
         \param ccy2, currency2Discountcurve
                Currency 2 and its discount curve.
         \param spotFX

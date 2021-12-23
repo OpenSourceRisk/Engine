@@ -2221,6 +2221,19 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     return it->second;
 }
 
+boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, const string& ccy2) const {
+    for (auto c : data_) {
+        auto fxCon = boost::dynamic_pointer_cast<FXConvention>(c.second);
+        if (fxCon) {
+            string source = fxCon->sourceCurrency().code();
+            string target = fxCon->targetCurrency().code();
+            if ((source == ccy1 && target == ccy2) || (target == ccy1 && source == ccy2))
+                return fxCon;
+        }
+    }
+    QL_FAIL("Cannot find FX conventions for ccys " << ccy1 << " and " << ccy2);
+}
+
 pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
     auto c = data_.find(id);
     if (c == data_.end() || c->second->type() != type)

@@ -31,9 +31,11 @@ void Indexing::fromXML(XMLNode* node) {
         quantity_ = 1.0;
     }
     index_ = XMLUtils::getChildValue(node, "Index", false);
-    // defaults to 0
-    indexFixingDays_ = XMLUtils::getChildValueAsInt(node, "IndexFixingDays", false);
     indexFixingCalendar_ = XMLUtils::getChildValue(node, "IndexFixingCalendar", false);
+    if (XMLUtils::getChildNode(node, "IndexFixingDays")) {
+        WLOG("Indexing::fromXML, node IndexFixingDays has been deprecated, fixing days are "
+             "taken from conventions.");
+    }
     indexIsDirty_ = XMLUtils::getChildValueAsBool(node, "Dirty", false);
     indexIsRelative_ = XMLUtils::getChildValueAsBool(node, "Relative", false);
     indexIsConditionalOnSurvival_ = XMLUtils::getChildValueAsBool(node, "ConditionalOnSurvival", false);
@@ -57,7 +59,6 @@ XMLNode* Indexing::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Indexing");
     XMLUtils::addChild(doc, node, "Quantity", quantity_);
     XMLUtils::addChild(doc, node, "Index", index_);
-    XMLUtils::addChild(doc, node, "IndexFixingDays", static_cast<int>(indexFixingDays_));
     XMLUtils::addChild(doc, node, "IndexFixingCalendar", indexFixingCalendar_);
     XMLUtils::addChild(doc, node, "Dirty", indexIsDirty_);
     XMLUtils::addChild(doc, node, "Relative", indexIsRelative_);

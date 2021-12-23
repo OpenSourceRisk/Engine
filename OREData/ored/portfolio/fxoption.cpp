@@ -22,6 +22,7 @@
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
@@ -47,7 +48,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // Note: intentionally use null calendar and 0 day fixing lag here because we will ask the FX index for its
         //       value on the expiry date without adjustment.
         index_ = buildFxIndex(fxIndex_, currency_, assetName_, market,
-                              engineFactory->configuration(MarketContext::pricing), "NullCalendar", 0);
+                              engineFactory->configuration(MarketContext::pricing));
 
         // Populate the external index name so that fixings work.
         indexName_ = fxIndex_;

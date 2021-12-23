@@ -26,6 +26,7 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/models/carrmadanarbitragecheck.hpp>
 #include <qle/termstructures/blackdeltautilities.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
@@ -53,7 +54,7 @@ namespace ore {
 namespace data {
 
 Handle<Quote> FXLookupMap::fxPairLookup(const string& fxPair) const {
-    return getHandle<Quote>(fxPair, fxSpots_);
+    return getHandle<QuantExt::FxIndex>(fxPair, fxSpots_)->fxQuote(true);
 }
 
 Handle<Quote> FXLookupTriangulation::fxPairLookup(const string& fxPair) const {
