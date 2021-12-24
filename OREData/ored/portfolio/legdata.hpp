@@ -688,16 +688,13 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity"), initialPrice_(Null<Real>()), quantity_(Null<Real>()) {}
     //! Constructor
-    EquityLegData(EquityReturnType returnType, Real dividendFactor, const EquityUnderlying& equityUnderlying,
-                  Real initialPrice, bool notionalReset, Natural fixingDays = 0, 
-                  const ScheduleData& valuationSchedule = ScheduleData(), string eqCurrency = "", 
-                  string fxIndex = "", Natural fxIndexFixingDays = 2, string fxIndexCalendar = "",
-                  Real quantity = Null<Real>(), string initialPriceCurrency = "")
+    EquityLegData(EquityReturnType returnType, Real dividendFactor, EquityUnderlying equityUnderlying, Real initialPrice,
+                  bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData(),
+                  string eqCurrency = "", string fxIndex = "", Real quantity = Null<Real>(), string initialPriceCurrency = "")
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor),
           equityUnderlying_(equityUnderlying), initialPrice_(initialPrice), notionalReset_(notionalReset),
           fixingDays_(fixingDays), valuationSchedule_(valuationSchedule), eqCurrency_(eqCurrency), fxIndex_(fxIndex),
-          fxIndexFixingDays_(fxIndexFixingDays), fxIndexCalendar_(fxIndexCalendar), quantity_(quantity),
-          initialPriceCurrency_(initialPriceCurrency) {
+          quantity_(quantity), initialPriceCurrency_(initialPriceCurrency) {
         indices_.insert("EQ-" + eqName());
     }
 
@@ -712,8 +709,6 @@ public:
     ScheduleData valuationSchedule() const { return valuationSchedule_; }
     const string& eqCurrency() const { return eqCurrency_; }
     const string& fxIndex() const { return fxIndex_; }
-    Natural fxIndexFixingDays() const { return fxIndexFixingDays_; }
-    const string& fxIndexCalendar() const { return fxIndexCalendar_; }
     bool notionalReset() const { return notionalReset_; }
     Real quantity() const { return quantity_; }                                  // might be null
     const string& initialPriceCurrency() const { return initialPriceCurrency_; } // might be empty
@@ -734,8 +729,6 @@ private:
     ScheduleData valuationSchedule_;
     string eqCurrency_ = "";
     string fxIndex_ = "";
-    Natural fxIndexFixingDays_ = 2;
-    string fxIndexCalendar_ = "";
     Real quantity_;
     string initialPriceCurrency_;
 
@@ -787,7 +780,7 @@ public:
     //! Default constructor
     LegData()
         : isPayer_(true), notionalInitialExchange_(false), notionalFinalExchange_(false),
-          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0),
+          notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0),
           indexingFromAssetLeg_(false) {}
 
     //! Constructor with concrete leg data
@@ -798,7 +791,6 @@ public:
             const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0, const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
@@ -827,8 +819,6 @@ public:
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
-    int fixingDays() const { return fixingDays_; }
-    const string& fixingCalendar() const { return fixingCalendar_; }
     const int paymentLag() const { return paymentLag_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     const std::string& paymentCalendar() const { return paymentCalendar_; }
@@ -881,8 +871,6 @@ private:
     string foreignCurrency_;
     double foreignAmount_;
     string fxIndex_;
-    int fixingDays_;
-    string fixingCalendar_;
     std::vector<AmortizationData> amortizationData_;
     int paymentLag_;
     std::string paymentCalendar_;
@@ -1076,12 +1064,6 @@ typename vector<T>::const_iterator checkAllValuesAppearInScheduledVector(const v
     }
     return i;
 }
-
-// build an FX Index needed by legbuilders / makeLeg methods
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
-                                                  const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays = 0,
-                                                  bool useXbsCurves = false);
 
 // build a Bond Index needed by legbuilders (populates bond data from bond reference data if required)
 class BondData;

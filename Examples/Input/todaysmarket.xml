@@ -157,6 +157,8 @@
     <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
     <FxSpot pair="EURCHF">FX/EUR/CHF</FxSpot>
     <FxSpot pair="EURJPY">FX/EUR/JPY</FxSpot>
+    <FxSpot pair="GBPUSD">FX/GBP/USD</FxSpot>
+    <FxSpot pair="USDCHF">FX/USD/CHF</FxSpot>
   </FxSpots>
   <!-- fx volatility definition -->
   <FxVolatilities id="default">

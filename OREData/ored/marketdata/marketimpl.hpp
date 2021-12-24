@@ -53,12 +53,7 @@ using std::tuple;
 class MarketImpl : public Market {
 public:
     //! Default constructor
-    MarketImpl() { initialise(); }
-
-    void initialise() {
-        // if no fx spots are defined we still need an empty triangulation
-        fxSpots_[Market::defaultConfiguration] = FXTriangulation();
-    }
+    MarketImpl() { }
 
     //! \name Market interface
     //@{
@@ -89,8 +84,9 @@ public:
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
 
     //! FX
-    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& ccypair, 
+    QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, 
         const string& configuration = Market::defaultConfiguration) const;
+    Handle<Quote> fxRate(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
     Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,
                                         const string& configuration = Market::defaultConfiguration) const;
@@ -200,7 +196,7 @@ protected:
 
         Notice that correlation curves are required with '&' as a delimiter between the indexes. */
     virtual void require(const MarketObject o, const string& name, const string& configuration) const {}
-
+    
     Date asof_;
     // maps (configuration, key) => term structure
     mutable map<tuple<string, YieldCurveType, string>, Handle<YieldTermStructure>> yieldCurves_;
@@ -209,8 +205,7 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     mutable map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
-    mutable map<pair<string, string>, QuantLib::Handle<QuantExt::FxIndex>> fxIndices_;
-    mutable map<string, FXTriangulation> fxSpots_;
+    mutable map<string, FXIndexTriangulation> fxIndices_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;

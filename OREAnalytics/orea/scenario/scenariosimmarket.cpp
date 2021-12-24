@@ -306,7 +306,17 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::shared_ptr<SimpleQuote> q(
                             new SimpleQuote(initMarket->fxSpot(name, configuration)->value()));
                         Handle<Quote> qh(q);
-                        fxSpots_[Market::defaultConfiguration].addQuote(name, qh);
+
+                        // build the fxIndex
+                        auto initMarFxInd = initMarket->fxIndex(name);
+                        auto fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                            name, initMarFxInd->fixingDays(), initMarFxInd->sourceCurrency(),
+                            initMarFxInd->targetCurrency(), 
+                                initMarFxInd->fixingCalendar(), qh,
+                            discountCurve(initMarFxInd->sourceCurrency().code(), configuration),
+                            discountCurve(initMarFxInd->targetCurrency().code(), configuration), false)); 
+                            
+                        fxIndices_[Market::defaultConfiguration].addIndex(name, fxInd);
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
                             simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
@@ -370,8 +380,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << name);
                         vector<string> keys(parameters->yieldCurveTenors(name).size());
 
-			DayCounter dc = wrapperIndex->dayCounter();
-			vector<Time> yieldCurveTimes(1, 0.0);        // include today
+                        DayCounter dc = wrapperIndex->dayCounter();
+                        vector<Time> yieldCurveTimes(1, 0.0);        // include today
                         vector<Date> yieldCurveDates(1, asof_);
                         QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days,
                                    "yield curve tenors must not include t=0");
@@ -1258,8 +1268,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
 
                                     // set up a FX Index
-                                    boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(
-                                        name, 0, parseCurrency(forCcy), parseCurrency(domCcy), cal, spot, forTS, domTS);
+                                    Handle<FxIndex> fxInd = fxIndex(name);
 
                                     if (parameters->fxUseMoneyness(name)) { // moneyness
                                     } else {                                // standard deviations
@@ -1271,7 +1280,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 initForTS, initDomTS, forTS, domTS, stickyStrike);
                                         } else {
                                             fxVolCurve = boost::make_shared<BlackVarianceSurfaceStdDevs>(
-                                                cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc, fxIndex,
+                                                cal, spot, times, parameters->fxVolStdDevs(name), quotes, dc,
+                                                fxInd.currentLink(),
                                                 stickyStrike, flatExtrapolation);
                                         }
                                     }
@@ -1863,8 +1873,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<string> keys(parameters->yoyInflationTenors(name).size());
 
                         Date date0 = asof_ - yoyInflationTs->observationLag();
-			DayCounter dc = yoyInflationTs->dayCounter();
-			vector<Date> quoteDates;
+			            DayCounter dc = yoyInflationTs->dayCounter();
+			            vector<Date> quoteDates;
                         vector<Time> yoyCurveTimes(
                             1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
                         vector<Handle<Quote>> quotes;
@@ -2050,8 +2060,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // Get the configured simulation tenors. Simulation tenors being empty at this point means
                         // that we wish to use the pillar date points from the t_0 market PriceTermStructure.
                         vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
-			DayCounter commodityCurveDayCounter = initialCommodityCurve->dayCounter();
-			if (simulationTenors.empty()) {
+			            DayCounter commodityCurveDayCounter = initialCommodityCurve->dayCounter();
+			            if (simulationTenors.empty()) {
                             simulationTenors.reserve(initialCommodityCurve->pillarDates().size());
                             for (const Date& d : initialCommodityCurve->pillarDates()) {
                                 QL_REQUIRE(d >= asof_, "Commodity curve pillar date (" << io::iso_date(d)

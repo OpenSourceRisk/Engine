@@ -256,7 +256,7 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
 
                 if (domCcy != baseCcy) {
                     string fxPair = forCcy + domCcy;
-                    Real spot = simMarket_->fxSpot(fxPair)->value();
+                    Real spot = simMarket_->fxRate(fxPair)->value();
                     Real altDelta = vo->NPV() - spot * delta;
                     Real shiftSize = getShiftSize(domCcyKey, *sensitivityData_, simMarket_);
                     domCcySensi = shiftSize * altDelta * qlMult;
@@ -292,7 +292,7 @@ void SensitivityAnalysis::addAnalyticFxSensitivities() {
 
                         Real feeCcySensi;
                         if (domCcy == baseCcy) {
-                            Real spot = simMarket_->fxSpot(pairForBase)->value();
+                            Real spot = simMarket_->fxRate(pairForBase)->value();
                             Real feeNpvForCcy = fee->NPV() / spot;
                             Real shiftSize = getShiftSize(forCcyKey, *sensitivityData_, simMarket_);
                             feeCcySensi = addMults[0] * shiftSize * feeNpvForCcy;
@@ -371,7 +371,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         QL_REQUIRE(itr != sensiParams.fxShiftData().end(), "shiftData not found for " << keylabel);
         shiftSize = itr->second.shiftSize;
         if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            shiftMult = simMarket->fxSpot(keylabel, marketConfiguration)->value();
+            shiftMult = simMarket->fxRate(keylabel, marketConfiguration)->value();
         }
     } break;
     case RiskFactorKey::KeyType::EquitySpot: {

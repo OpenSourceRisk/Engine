@@ -32,6 +32,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 
@@ -111,6 +112,7 @@ private:
 
         return Handle<QuantLib::CPIVolatilitySurface>(cpiCapFloorVolSurface);
     }
+    Handle<QuantExt::FxIndex> makeFxIndex(string index, Real spot);
     Handle<ZeroInflationIndex> makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
                                                       boost::shared_ptr<ZeroInflationIndex> ii,
                                                       Handle<YieldTermStructure> yts);

@@ -263,10 +263,10 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
     Real relTolerance = 0.003;
     Real eurExpected = d.market->discountCurve("EUR")->discount(d2);
     Real eurExpected2 = d.market->discountCurve("EUR")->discount(d1);
-    Real gbpExpected = d.market->fxSpot("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d2);
-    Real gbpExpected2 = d.market->fxSpot("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d1);
-    Real usdExpected = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(d2);
-    Real usdExpected2 = d.market->fxSpot("USDEUR")->value() * d.market->discountCurve("USD")->discount(d1);
+    Real gbpExpected = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d2);
+    Real gbpExpected2 = d.market->fxRate("GBPEUR")->value() * d.market->discountCurve("GBP")->discount(d1);
+    Real usdExpected = d.market->fxRate("USDEUR")->value() * d.market->discountCurve("USD")->discount(d2);
+    Real usdExpected2 = d.market->fxRate("USDEUR")->value() * d.market->discountCurve("USD")->discount(d1);
 
     cpu_timer timer, timer2;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
@@ -277,8 +277,8 @@ void test_measure(std::string measureName, Real shiftHorizon, std::string discNa
             timer.stop();
             if (d == grid->dates().back()) {
                 Real numeraire = simMarket->numeraire();
-                Real usdeurFX = simMarket->fxSpot("USDEUR")->value();
-                Real gbpeurFX = simMarket->fxSpot("GBPEUR")->value();
+                Real usdeurFX = simMarket->fxRate("USDEUR")->value();
+                Real gbpeurFX = simMarket->fxRate("GBPEUR")->value();
                 Real eurDiscount = simMarket->discountCurve("EUR")->discount(1.0 * horizon);
                 Real gbpDiscount = simMarket->discountCurve("GBP")->discount(1.0 * horizon);
                 ;

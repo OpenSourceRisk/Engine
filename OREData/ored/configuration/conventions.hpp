@@ -123,6 +123,9 @@ public:
 
     /*! Get all conventions of a given type */
     std::set<boost::shared_ptr<Convention>> get(const Convention::Type& type) const;
+    
+    /*! Find a convention for an FX pair */
+    boost::shared_ptr<Convention> getFxConvention(const string& ccy1, const string& ccy2) const;
 
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;

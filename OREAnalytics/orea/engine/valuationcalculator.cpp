@@ -46,7 +46,7 @@ Real NPVCalculator::npv(const boost::shared_ptr<Trade>& trade, const boost::shar
     Real npv = trade->instrument()->NPV();
     if (close_enough(npv, 0.0))
         return npv;
-    Real fx = simMarket->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
+    Real fx = simMarket->fxRate(trade->npvCurrency() + baseCcyCode_)->value();
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
 }
@@ -92,7 +92,7 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
                 }
                 if (legFlow != 0) {
                     // Do FX conversion and add to netFlow
-                    Real fx = simMarket->fxSpot(trade->legCurrencies()[i] + baseCcyCode_)->value();
+                    Real fx = simMarket->fxRate(trade->legCurrencies()[i] + baseCcyCode_)->value();
                     Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
                     netFlow += legFlow * direction * longShort * fx;
                 }
@@ -132,7 +132,7 @@ Real NPVCalculatorFXT0::npv(const boost::shared_ptr<Trade>& trade, const boost::
         return npv;
     Real fx = 1.0;
     if (trade->npvCurrency() != baseCcyCode_)
-        fx = t0Market_->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
+        fx = t0Market_->fxRate(trade->npvCurrency() + baseCcyCode_)->value();
     Real numeraire = simMarket->numeraire();
     return npv * fx / numeraire;
 }
