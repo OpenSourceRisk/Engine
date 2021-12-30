@@ -208,5 +208,60 @@ protected:
     }
 };
 
+//! Abstract Engine Builder for Fx Standard Double Barrier Options using Vanna-Volga Double Barrier Engine
+/*! Pricing engines are cached by asset/currency/expiry
+
+    \ingroup builders
+ */
+class StandardDoubleBarrierOptionVVEngineBuilder : public StandardDoubleBarrierOptionEngineBuilder {
+public:
+    StandardDoubleBarrierOptionVVEngineBuilder(const string& model, const set<string>& tradeTypes,
+                                               const AssetClass& assetClass, const Date& expiryDate)
+        : StandardDoubleBarrierOptionEngineBuilder(model, "VannaVolgaDoubleBarrierEngine", tradeTypes, assetClass,
+                                                   expiryDate) {}
+
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
+                                                        const AssetClass& assetClassUnderlying,
+                                                        const Date& expiryDate) override {
+        QL_REQUIRE(assetClassUnderlying == AssetClass::FX, "this engine is for Fx Double Barrier Options");
+
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp =
+            getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
+        Handle<YieldTermStructure> domesticTS = gbsp->riskFreeRate();
+        Handle<YieldTermStructure> foreignTS = gbsp->dividendYield();
+        const string& ccyPairCode = assetName + ccy.code();
+        Handle<Quote> spotFX = market_->fxSpot(ccyPairCode);
+
+        Time ttm = gbsp->blackVolatility()->timeFromReference(expiryDate);
+        Handle<DeltaVolQuote> atmVol(
+            boost::make_shared<DeltaVolQuote>(Handle<Quote>(boost::make_shared<SimpleQuote>(
+                                                  gbsp->blackVolatility()->blackVol(expiryDate, spotFX->value()))),
+                                              DeltaVolQuote::DeltaType::Spot, ttm, DeltaVolQuote::AtmType::AtmSpot));
+        Real strike25Put = QuantExt::getStrikeFromDelta(Option::Type::Put, -0.25, DeltaVolQuote::DeltaType::Spot,
+                                                        spotFX->value(), domesticTS->discount(ttm),
+                                                        foreignTS->discount(ttm), *gbsp->blackVolatility(), ttm);
+        Real strike25Call = QuantExt::getStrikeFromDelta(Option::Type::Call, 0.25, DeltaVolQuote::DeltaType::Spot,
+                                                         spotFX->value(), domesticTS->discount(ttm),
+                                                         foreignTS->discount(ttm), *gbsp->blackVolatility(), ttm);
+        Handle<DeltaVolQuote> vol25Put(boost::make_shared<DeltaVolQuote>(
+            -0.25,
+            Handle<Quote>(boost::make_shared<SimpleQuote>(gbsp->blackVolatility()->blackVol(expiryDate, strike25Put))),
+            ttm, DeltaVolQuote::DeltaType::Spot));
+        Handle<DeltaVolQuote> vol25Call(boost::make_shared<DeltaVolQuote>(
+            0.25,
+            Handle<Quote>(boost::make_shared<SimpleQuote>(gbsp->blackVolatility()->blackVol(expiryDate, strike25Call))),
+            ttm, DeltaVolQuote::DeltaType::Spot));
+
+        bool adaptVanDelta = false;  // Default false
+        Real bsPriceWithSmile = 0.0; // Default 0.0
+
+        // TODO: Allow toggling the templated engine if deemed desirable
+        // TODO: Optional series parameter? Defaults to 5.
+        return boost::make_shared<QuantLib::VannaVolgaDoubleBarrierEngine<QuantLib::AnalyticDoubleBarrierEngine>>(
+            atmVol, vol25Put, vol25Call, spotFX, domesticTS, foreignTS, adaptVanDelta, bsPriceWithSmile, 5);
+    }
+};
+
 } // namespace data
 } // namespace ore

@@ -176,6 +176,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxStandardBarrierOptionAnalyticalEngineBuilder>());
     registerBuilder(boost::make_shared<FxStandardDoubleBarrierOptionAnalyticalEngineBuilder>());
     registerBuilder(boost::make_shared<FxStandardBarrierOptionVVEngineBuilder>());
+    registerBuilder(boost::make_shared<FxStandardDoubleBarrierOptionVVEngineBuilder>());
     registerBuilder(boost::make_shared<FxPartialTimeBarrierOptionAnalyticEngineBuilder>());
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());

@@ -62,6 +62,18 @@ public:
         : StandardBarrierOptionVVEngineBuilder("GarmanKohlhagen", {"FxBarrierOption"}, AssetClass::FX, expiryDate_) {}
 };
 
+//! Engine Builder for Standard Fx Double Barrier Options using Vanna-Volga Double Barrier Engine
+/*! Pricing engines are cached by currency pair/currency/expiry
+
+    \ingroup builders
+ */
+class FxStandardDoubleBarrierOptionVVEngineBuilder : public StandardDoubleBarrierOptionVVEngineBuilder {
+public:
+    FxStandardDoubleBarrierOptionVVEngineBuilder()
+        : StandardDoubleBarrierOptionVVEngineBuilder("GarmanKohlhagen", {"FxDoubleBarrierOption"}, AssetClass::FX,
+                                                     expiryDate_) {}
+};
+
 //! Engine Builder for Partial-time Barrier Options using Analytic Partial-time Barrier Engine
 /*! Pricing engines are cached by currency pair/currency
 
