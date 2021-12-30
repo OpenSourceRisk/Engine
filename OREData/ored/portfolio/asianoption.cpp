@@ -48,7 +48,6 @@
      case QuantLib::Exercise::Type::American: {
          ELOG("The implemented Asian pricing engines do not support American options.");
          QL_FAIL("The implemented Asian pricing engines do not support American options.");
-         //exercise = boost::make_shared<AmericanExercise>(expiryDate_, option_.payoffAtExpiry());
          break;
      }
      default:
@@ -108,17 +107,11 @@
      QL_REQUIRE(processType != "", "ProcessType must be configured, this is unexpected");
 
      if (!isEuropDeferredCS) {
-         // If the option is not a European deferred CS contract, i.e. the standard European/American physical/cash-settled ones. 
+         // If the option is not a European deferred CS contract, i.e. the standard European physical/cash-settled ones.
          if (processType == "Discrete") {
-             Real runningAccumulator = 0;
-             if (averageType == Average::Type::Geometric) {
-                 runningAccumulator = 1;
-             }
-             Size pastFixings = 0;
-
              Schedule observationSchedule;
-             if (observationDates_.hasData())
-                 observationSchedule = makeSchedule(observationDates_);
+             QL_REQUIRE(observationDates_.hasData(), "ObservationDates is missing data");
+             observationSchedule = makeSchedule(observationDates_);
              std::vector<QuantLib::Date> observationDates = observationSchedule.dates();
 
              // Sort for the engine's sake. Not needed - instrument also sorts...?
@@ -132,23 +125,18 @@
                  if (assetClassUnderlying_ == AssetClass::EQ)
                      indexName = "EQ-" + indexName;
              }
-             for (QuantLib::Date observationDate : observationDates) {
+
+             std::vector<Real> fixingValues;
+             for (const Date& observationDate : observationDates) {
                  // TODO: Verify. Should today be read too? a enforcesTodaysHistoricFixings() be used? 
-                 if (observationDate < today ||
-                     (observationDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
+                 if (observationDate <= today) {
                      requiredFixings_.addFixingDate(observationDate, indexName);
-                     Real fixingValue = index_->fixing(observationDate);
-                     if (averageType == Average::Type::Geometric) {
-                         runningAccumulator *= fixingValue;
-                     } else if (averageType == Average::Type::Arithmetic) {
-                         runningAccumulator += fixingValue;
-                     }
-                     ++pastFixings;
+                     fixingValues.push_back(index_->fixing(observationDate));
                  }
              }
 
-             asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(
-                 averageType, runningAccumulator, pastFixings, observationDates, payoff, exercise);
+             asian = boost::make_shared<QuantLib::DiscreteAveragingAsianOption>(averageType, observationDates, payoff,
+                                                                                exercise, fixingValues);
          } else if (processType == "Continuous") {
              asian = boost::make_shared<QuantLib::ContinuousAveragingAsianOption>(averageType, payoff, exercise);
          } else {
