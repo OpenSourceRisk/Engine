@@ -56,9 +56,9 @@ public:
 
     \ingroup builders
  */
-class FxStandardBarrierOptionEngineVVBuilder : public StandardBarrierOptionVVEngineBuilder {
+class FxStandardBarrierOptionVVEngineBuilder : public StandardBarrierOptionVVEngineBuilder {
 public:
-    FxStandardBarrierOptionEngineVVBuilder()
+    FxStandardBarrierOptionVVEngineBuilder()
         : StandardBarrierOptionVVEngineBuilder("GarmanKohlhagen", {"FxBarrierOption"}, AssetClass::FX, expiryDate_) {}
 };
 
