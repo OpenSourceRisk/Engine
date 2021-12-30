@@ -166,5 +166,11 @@
     <ClCompile Include="optionbarrierdata.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="fxbarrieroption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fxbarrieroption.hpp" />
   </ItemGroup>
 </Project>

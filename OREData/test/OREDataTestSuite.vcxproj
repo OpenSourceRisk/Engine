@@ -667,6 +667,7 @@
     <ClCompile Include="fittedbondcurve.cpp" />
     <ClCompile Include="fixings.cpp" />
     <ClCompile Include="fxasianoption.cpp" />
+    <ClCompile Include="fxbarrieroption.cpp" />
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
@@ -690,6 +691,9 @@
     <ClCompile Include="xmlmanipulation.cpp" />
     <ClCompile Include="yieldcurve.cpp" />
     <ClCompile Include="zerocouponswap.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="fxbarrieroption.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
