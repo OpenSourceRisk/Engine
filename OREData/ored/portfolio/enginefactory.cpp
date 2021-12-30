@@ -173,7 +173,6 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionACGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxEuropeanAsianOptionADGASEngineBuilder>());
-    registerBuilder(boost::make_shared<FxEuropeanAsianOptionADAAPEngineBuilder>());
     registerBuilder(boost::make_shared<FxStandardBarrierOptionAnalyticalEngineBuilder>());
     registerBuilder(boost::make_shared<FxStandardDoubleBarrierOptionAnalyticalEngineBuilder>());
     registerBuilder(boost::make_shared<FxStandardBarrierOptionEngineVVBuilder>());
