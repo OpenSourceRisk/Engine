@@ -61,7 +61,7 @@ protected:
         return boost::make_shared<QuantExt::DiscountingFxForwardEngine>(
             domCcy, market_->discountCurve(domCcy.code(), configuration(MarketContext::pricing)), forCcy,
             market_->discountCurve(forCcy.code(), configuration(MarketContext::pricing)),
-            market_->fxSpot(pair, configuration(MarketContext::pricing)));
+            market_->fxRate(pair, configuration(MarketContext::pricing)));
     }
 };
 

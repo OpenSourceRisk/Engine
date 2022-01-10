@@ -1154,7 +1154,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
         info.spot = initMarket->equitySpot(info.name)->value();
         string pair = info.npvCcy + simMarketData->baseCcy();
-        info.fx = initMarket->fxSpot(pair)->value();
+        info.fx = initMarket->fxRate(pair)->value();
         info.baseNpv = trn->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
             boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
@@ -1365,11 +1365,11 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
         info.domCcy = fxoTrn->soldCurrency();
         BOOST_CHECK_EQUAL(info.npvCcy, info.domCcy);
         string pair = info.npvCcy + simMarketData->baseCcy();
-        info.fx = initMarket->fxSpot(pair)->value();
+        info.fx = initMarket->fxRate(pair)->value();
         string trnPair = info.forCcy + info.domCcy;
-        info.trnFx = initMarket->fxSpot(trnPair)->value();
+        info.trnFx = initMarket->fxRate(trnPair)->value();
         string forPair = info.forCcy + simMarketData->baseCcy();
-        info.fxForBase = initMarket->fxSpot(forPair)->value();
+        info.fxForBase = initMarket->fxRate(forPair)->value();
         info.baseNpv = trn->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
             boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
@@ -1492,7 +1492,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
                 BOOST_CHECK_EQUAL(pair.length(), 6);
                 string sensiForCcy = pair.substr(0, 3);
                 string sensiDomCcy = pair.substr(3, 3);
-                Real fxSensi = initMarket->fxSpot(pair)->value();
+                Real fxSensi = initMarket->fxRate(pair)->value();
                 bool isSensiForBase = (sensiForCcy == simMarketData->baseCcy());
                 bool isSensiDomBase = (sensiDomCcy == simMarketData->baseCcy());
                 // TO-DO this could be relaxed to handle case where market stores the currency pairs the other way

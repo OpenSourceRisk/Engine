@@ -51,7 +51,11 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.075);
 
         // add fx rates
-        fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
+        fxIndices_[Market::defaultConfiguration].addIndex("EURUSD", 
+            Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+                asof_, "EURUSD", 0, parseCurrency("EUR"), parseCurrency("USD"), parseCalendar("EUR,USD"),
+                Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)), discountCurve("EUR"),
+                discountCurve("USD"), false)));
 
         // build fx vols
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
@@ -113,10 +117,11 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
     OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", "",
                               PremiumData{1.0, "EUR", expiry});
     Envelope env("CP1");
-    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
-    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
-    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
-    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    TradeStrike tradeStrike(95.0, "EUR");
+    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
     ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, exp_str, 95.0);
 
     Real expectedNPV_Put = -2.4648;           // negative for sold option
@@ -184,10 +189,11 @@ BOOST_AUTO_TEST_CASE(testEquityFutureOptionPrices) {
     EquityFutureOption eqFwdPut(env, putData, "EUR", 1.0, underlying, 95.0, expiry);
     EquityFutureOption eqFwdPutPremium(env, putDataPremium, "EUR", 1.0, underlying, 95.0, expiry);
 
-    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
-    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
-    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
-    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0);
+    TradeStrike tradeStrike(95.0, "EUR");
+    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
     
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

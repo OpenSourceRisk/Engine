@@ -369,6 +369,40 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                                                  "', is the rfr index configured in todays market parameters?";
             }
         }
+        // 8 FX curve depends on discount
+
+        if (g[*v].obj == MarketObject::FXSpot) {
+            bool foundDiscount1 = false, foundDiscount2 = false;
+            std::string fxName = g[*v].name;
+            auto fxSpec = boost::dynamic_pointer_cast<FXSpotSpec>(g[*v].curveSpec);
+            QL_REQUIRE(fxSpec, "could not cast to FXSpotSpec");
+            std::string ccy1 = fxSpec->unitCcy();
+            std::string ccy2 = fxSpec->ccy();
+            for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                if (*w != *v) {
+                    if (g[*w].obj == MarketObject::DiscountCurve && (g[*w].name == ccy1 || g[*w].name == ccy2)) {
+                        g.add_edge(*v, *w);
+                        if (g[*w].name == ccy1)
+                            foundDiscount1 = true;
+                        else 
+                            foundDiscount2 = true;
+                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
+                                                      << g[*w]);
+                    }
+                }
+                // there should be only one dependency, in any case it is enough to insert one
+                if (foundDiscount1 && foundDiscount2)
+                    break;
+            }
+            if (!foundDiscount1)
+                buildErrors[g[*v].mapping] = "did not find required discount curve " + ccy1 + " (required from " +
+                                             ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
+                                             configuration;
+            if (!foundDiscount2)
+                buildErrors[g[*v].mapping] = "did not find required discount curve " + ccy2 + " (required from " +
+                                             ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
+                                             configuration;
+        }
     }
 
     DLOG("Dependency graph built with " << boost::num_vertices(g) << " vertices, " << boost::num_edges(g) << " edges.");

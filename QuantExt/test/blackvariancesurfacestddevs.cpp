@@ -57,7 +57,8 @@ BOOST_AUTO_TEST_CASE(testFlatSurface) {
     Handle<YieldTermStructure> domTS(
         boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
 
-    boost::shared_ptr<QuantExt::FxIndex> fxIndex = boost::make_shared<QuantExt::FxIndex>("dummy", 2, EURCurrency(),
+    boost::shared_ptr<QuantExt::FxIndex> fxIndex = 
+        boost::make_shared<QuantExt::FxIndex>("dummy", 2, EURCurrency(),
         GBPCurrency(), cal, spot, forTS, domTS);
     QuantExt::BlackVarianceSurfaceStdDevs surface(cal, spot, times, stdDevs, blackVolMatrix, dc, fxIndex);
 

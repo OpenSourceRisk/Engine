@@ -65,8 +65,16 @@ Handle<SwaptionVolatilityStructure> WrappedMarket::yieldVol(const string& securi
     return market_->yieldVol(securityID, configuration);
 }
 
+Handle<QuantExt::FxIndex> WrappedMarket::fxIndex(const string& fxIndex, const string& configuration) const {
+    return market_->fxIndex(fxIndex, configuration);
+}
+
 Handle<Quote> WrappedMarket::fxSpot(const string& ccypair, const string& configuration) const {
     return market_->fxSpot(ccypair, configuration);
+}
+
+Handle<Quote> WrappedMarket::fxRate(const string& ccypair, const string& configuration) const {
+    return market_->fxRate(ccypair, configuration);
 }
 
 Handle<BlackVolTermStructure> WrappedMarket::fxVol(const string& ccypair, const string& configuration) const {

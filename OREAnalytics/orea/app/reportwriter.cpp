@@ -77,9 +77,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             string npvCcy = trade->npvCurrency();
             Real fx = 1.0, fxNotional = 1.0;
             if (npvCcy != baseCurrency)
-                fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
+                fx = market->fxRate(npvCcy + baseCurrency, configuration)->value();
             if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
-                fxNotional = market->fxSpot(trade->notionalCurrency() + baseCurrency, configuration)->value();
+                fxNotional = market->fxRate(trade->notionalCurrency() + baseCurrency, configuration)->value();
             Real npv = trade->instrument()->NPV();
             QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
@@ -1062,7 +1062,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             if (notional2 != Null<Real>() && notional2Ccy != "") {
                 Real fx = 1.0;
                 if (notional2Ccy != baseCurrency)
-                    fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
+                    fx = market->fxRate(notional2Ccy + baseCurrency)->value();
                 std::ostringstream oss;
                 oss << std::fixed << std::setprecision(8) << notional2 * fx;
                 // report.next().add(tradeId).add("notionalInBaseCurrency[2]").add("double").add(oss.str());

@@ -567,8 +567,14 @@ void EquityLegData::fromXML(XMLNode* node) {
     if (fxt) {
         eqCurrency_ = XMLUtils::getChildValue(fxt, "EquityCurrency", true);
         fxIndex_ = XMLUtils::getChildValue(fxt, "FXIndex", true);
-        fxIndexFixingDays_ = XMLUtils::getChildValueAsInt(fxt, "FXIndexFixingDays");
-        fxIndexCalendar_ = XMLUtils::getChildValue(fxt, "FXIndexCalendar");
+        if (XMLUtils::getChildNode(fxt, "FXIndexFixingDays")) {
+            WLOG("EquityLegData::fromXML, node FXIndexFixingDays has been deprecated, fixing days are "
+                 "taken from conventions.");
+        }
+        if (XMLUtils::getChildNode(fxt, "FXIndexCalendar")) {
+            WLOG("EquityLegData::fromXML, node FXIndexCalendar has been deprecated, fixing calendar is "
+                 "taken from conventions.");
+        }
         indices_.insert(fxIndex_);
     }
 
@@ -606,10 +612,6 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLNode* fxNode = doc.allocNode("FXTerms");
         XMLUtils::addChild(doc, fxNode, "EquityCurrency", eqCurrency_);
         XMLUtils::addChild(doc, fxNode, "FXIndex", fxIndex_);
-        if (fxIndexFixingDays_)
-            XMLUtils::addChild(doc, fxNode, "FXIndexFixingDays", static_cast<Integer>(fxIndexFixingDays_));
-        if (fxIndexCalendar_ != "")
-            XMLUtils::addChild(doc, fxNode, "FXIndexCalendar", fxIndexCalendar_);
         XMLUtils::appendNode(node, fxNode);
     }
     return node;
@@ -652,7 +654,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const std::vector<string>& notionalDates, const string& paymentConvention,
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
-                 const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
+                 const double foreignAmount, const string& fxIndex, 
                  const std::vector<AmortizationData>& amortizationData, const int paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
                  const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
@@ -662,7 +664,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-      fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
+      fxIndex_(fxIndex), amortizationData_(amortizationData),
       paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing),
       indexingFromAssetLeg_(indexingFromAssetLeg), lastPeriodDayCounter_(lastPeriodDayCounter) {
 
@@ -701,8 +703,14 @@ void LegData::fromXML(XMLNode* node) {
             foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount", true);
             fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
             indices_.insert(fxIndex_);
-            fixingDays_ = XMLUtils::getChildValueAsInt(fxResetNode, "FixingDays");
-            fixingCalendar_ = XMLUtils::getChildValue(fxResetNode, "FixingCalendar"); // may be empty string
+            if (XMLUtils::getChildNode(node, "FixingDays")) {
+                WLOG("LegData::fromXML, node FixingDays has been deprecated, fixing days are "
+                     "taken from conventions.");
+            }
+            if (XMLUtils::getChildNode(node, "FixingCalendar")) {
+                WLOG("LegData::fromXML, node FixingCalendar has been deprecated, fixing calendar is "
+                     "taken from conventions.");
+            }
             // TODO add schedule
         }
         XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
@@ -781,8 +789,6 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
         XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
         XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
-        XMLUtils::addChild(doc, resetNode, "FixingDays", fixingDays_);
-        XMLUtils::addChild(doc, resetNode, "FixingCalendar", fixingCalendar_);
         XMLUtils::appendNode(notionalsNodePtr, resetNode);
     }
 
@@ -2161,10 +2167,10 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                            "applyIndexing: fx index '" << indexing.index() << "' ccys do not match leg ccy ("
                                                        << data.currency() << ")");
                 std::string domestic = data.currency();
-                std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
+                std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();           
                 index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
-                                     engineFactory->configuration(MarketContext::pricing),
-                                     indexing.indexFixingCalendar(), indexing.indexFixingDays());
+                                     engineFactory->configuration(MarketContext::pricing));
+
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
                 index =
@@ -2204,51 +2210,6 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
             qlToOREIndexNames[index->name()] = indexing.index();
         }
     }
-}
-
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
-                                                  const boost::shared_ptr<Market>& market, const string& configuration,
-                                                  const string& calendar, Size fixingDays, bool useXbsCurves) {
-    // 1. Parse the index we have with no term structures
-    boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
-
-    // get market data objects - we set up the index using source/target, fixing days
-    // and calendar from legData_[i].fxIndex()
-    string source = fxIndexBase->sourceCurrency().code();
-    string target = fxIndexBase->targetCurrency().code();
-
-    // If useXbsCurves is true, try to link the FX index to xccy based curves. There will be none if source or target
-    // is equal to the base currency of the run so we must use the try/catch.
-    Handle<YieldTermStructure> sorTS;
-    Handle<YieldTermStructure> tarTS;
-    if (useXbsCurves) {
-        sorTS = xccyYieldCurve(market, source, configuration);
-        tarTS = xccyYieldCurve(market, target, configuration);
-    } else {
-        sorTS = market->discountCurve(source, configuration);
-        tarTS = market->discountCurve(target, configuration);
-    }
-
-    Handle<Quote> spot = market->fxSpot(source + target);
-    Calendar cal = parseCalendar(calendar);
-
-    // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
-    bool invertFxIndex = false;
-    if (domestic == target && foreign == source) {
-        invertFxIndex = false;
-    } else if (domestic == source && foreign == target) {
-        invertFxIndex = true;
-    } else {
-        QL_FAIL("Cannot combine FX Index " << fxIndex << " with reset ccy " << domestic << " and reset foreignCurrency "
-                                           << foreign);
-    }
-
-    auto fxi = boost::make_shared<FxIndex>(fxIndexBase->familyName(), fixingDays, fxIndexBase->sourceCurrency(),
-                                           fxIndexBase->targetCurrency(), cal, spot, sorTS, tarTS, invertFxIndex);
-
-    QL_REQUIRE(fxi, "Failed to build FXIndex " << fxIndex);
-
-    return fxi;
 }
 
 boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityData, const bool dirty,
@@ -2355,8 +2316,7 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         Real foreignNotional = data.foreignAmount();
 
         QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
-        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration,
-                                    data.fixingCalendar(), data.fixingDays(), true);
+        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration, true);
 
         Leg resettingLeg;
         for (Size j = 0; j < leg.size(); j++) {
@@ -2373,17 +2333,17 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 // Two possibilities for first coupon:
                 // 1. we have not been given a domestic notional so it is an FX linked coupon
                 // 2. we have been given an explicit domestic notional so it is a simple cashflow
-                if (data.notionals().size() == 0) {
+                if (data.notionals().size() == 0) {                    
                     fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     if (data.notionalInitialExchange()) {
                         outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                                                                     -foreignNotional, fxIndex);
+                                                                        -foreignNotional, fxIndex);
                     }
                     // if there is only one period we generate the cash flow at the period end
                     // only if there is a final notional exchange
                     if (leg.size() > 1 || data.notionalFinalExchange()) {
-                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
-                                                                    fxIndex);
+                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate,
+                            foreignNotional, fxIndex);
                     }
                 } else {
                     if (data.notionalInitialExchange()) {
@@ -2395,12 +2355,12 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 }
             } else {
                 fixingDate = fxIndex->fixingDate(c->accrualStartDate());
-                outCf =
-                    boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional, fxIndex);
+                outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional,
+                                                                fxIndex);
                 // we don't want a final one, unless there is notional exchange
                 if (j < leg.size() - 1 || data.notionalFinalExchange()) {
-                    inCf =
-                        boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional, fxIndex);
+                    inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
+                                                                fxIndex);
                 }
             }
 

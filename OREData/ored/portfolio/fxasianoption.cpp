@@ -16,6 +16,7 @@
 
  #include <ored/portfolio/fxasianoption.hpp>
  #include <ored/utilities/xmlutils.hpp>
+ #include <ored/utilities/marketdata.hpp>
  #include <ql/errors.hpp>
 
  namespace ore {
@@ -38,7 +39,9 @@
      // Note: intentionally use null calendar and 0 day fixing lag here because we will ask the FX index for its
      //       value on the expiry date without adjustment.
      index_ = buildFxIndex(fxIndex_, currency_, assetName_, market,
-                             engineFactory->configuration(MarketContext::pricing), "NullCalendar", 0);
+                           engineFactory->configuration(MarketContext::pricing));
+
+
 
      // Populate the external index name so that fixings work.
      indexName_ = fxIndex_;

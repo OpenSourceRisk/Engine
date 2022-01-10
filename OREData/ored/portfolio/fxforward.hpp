@@ -80,7 +80,6 @@ private:
     string payLag_;
     string payCalendar_;
     string payConvention_;
-    Natural fxIndexDays_ = 0;
     string fxIndexCalendar_ = "";
 };
 } // namespace data

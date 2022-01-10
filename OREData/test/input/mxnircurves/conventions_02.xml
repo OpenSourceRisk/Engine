@@ -76,4 +76,15 @@
     <SpreadIndex>USD-LIBOR-1M</SpreadIndex>
     <SpreadTenor>28D</SpreadTenor>
   </CrossCurrencyBasis>
+  <FX>
+    <Id>USD-MXN-FX</Id>
+	<!--Set spot days to 0 here as building curve without FX forwards at short end-->
+    <SpotDays>0</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>MXN</TargetCurrency>
+    <PointsFactor>1</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
 </Conventions>
