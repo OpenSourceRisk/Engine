@@ -269,7 +269,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
         if (it2 != capFloorCurves_.end())
             return it->second;
     }
-    // if key is and index name and we have a cap floor surface for its ccy, we return that
+    // if key is an index name and we have a cap floor surface for its ccy, we return that
     boost::shared_ptr<IborIndex> index;
     if (!tryParseIborIndex(key, index)) {
         QL_FAIL("did not find capfloor curve for key '" << key << "'");
