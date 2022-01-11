@@ -187,7 +187,10 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/tradeactions.hpp>
+#include <ored/portfolio/tradebarrier.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/trademonetary.hpp>
+#include <ored/portfolio/tradestrike.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/report/csvreport.hpp>
