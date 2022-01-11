@@ -39,10 +39,10 @@ namespace data {
 */
 class IndexNameTranslator : public QuantLib::Singleton<IndexNameTranslator> {
 public:
-    //! returns an empty string if qlName is not known
+    //! throws if qlName is not known
     std::string oreName(const std::string& qlName) const;
 
-    //! returns an empty string if oreName is not known
+    //! throws if oreName is not known
     std::string qlName(const std::string& oreName) const;
 
     //! adds a pair to the mapping
