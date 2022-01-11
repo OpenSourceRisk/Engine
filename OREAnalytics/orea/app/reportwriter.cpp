@@ -319,9 +319,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     fixingDate = tmp->fixingDate();
                                 }
 
-                                // get market volaility for cap / floor - ORE only has one cf vol surface per currency,
-                                // so this is easy, but once we support tenor dependent cf vol surfaces we need to
-                                // refine the vol retrieval here as well.
+                                // get market volaility for cap / floor
 
                                 if (fixingDate != Date() && fixingDate > market->asofDate()) {
                                     if (floorStrike != Null<Real>()) {
@@ -330,7 +328,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                                 market->swaptionVol(ccy, configuration)
                                                     ->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
                                         else
-                                            floorVolatility = market->capFloorVol(ccy, configuration)
+                                            floorVolatility = market
+                                                                  ->capFloorVol(IndexNameTranslator::instance().oreName(
+                                                                                    tmp->index()->name()),
+                                                                                configuration)
                                                                   ->volatility(fixingDate, floorStrike);
                                     }
                                     if (capStrike != Null<Real>()) {
@@ -339,7 +340,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                                 market->swaptionVol(ccy, configuration)
                                                     ->volatility(fixingDate, tmp->index()->tenor(), capStrike);
                                         else
-                                            capVolatility = market->capFloorVol(ccy, configuration)
+                                            capVolatility = market
+                                                                ->capFloorVol(IndexNameTranslator::instance().oreName(
+                                                                                  tmp->index()->name()),
+                                                                              configuration)
                                                                 ->volatility(fixingDate, capStrike);
                                     }
                                 }
