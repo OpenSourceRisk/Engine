@@ -216,7 +216,7 @@
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">
-              <xs:attribute type="currencyCode" name="currency" use="required"/>
+              <xs:attribute type="xs:string" name="key" use="required"/>
             </xs:extension>
           </xs:simpleContent>
         </xs:complexType>

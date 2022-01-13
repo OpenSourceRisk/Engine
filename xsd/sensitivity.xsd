@@ -368,7 +368,7 @@
       <xs:element type="indexNameType" name="Index" minOccurs="0"/>
       <xs:element type="xs:boolean" name="IsRelative" minOccurs="0"/>
     </xs:sequence>
-    <xs:attribute type="currencyCode" name="ccy" use="required"/>
+    <xs:attribute type="xs:string" name="key" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="cdsvolatility">
