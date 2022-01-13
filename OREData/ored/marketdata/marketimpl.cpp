@@ -267,7 +267,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
         require(MarketObject::CapFloorVol, key, Market::defaultConfiguration);
         auto it2 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, key));
         if (it2 != capFloorCurves_.end())
-            return it->second;
+            return it2->second;
     }
     // if key is an index name and we have a cap floor surface for its ccy, we return that
     boost::shared_ptr<IborIndex> index;
@@ -282,6 +282,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     }
     // check if we have a curve for the ccy in the default config
     if (configuration != Market::defaultConfiguration) {
+	require(MarketObject::CapFloorVol, ccy, configuration);
         auto it4 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, ccy));
         if (it4 != capFloorCurves_.end())
             return it4->second;
