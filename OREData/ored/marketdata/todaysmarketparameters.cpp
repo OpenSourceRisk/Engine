@@ -172,7 +172,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                                 n, marketObjectData[i].xmlSingleName.first, "currency", false);
                             if (!mp2.empty()) {
                                 mp.insert(mp2.begin(), mp2.end());
-                                ALOG("TodaysMarketParameters: the attribute 'currency' is deprecated for "
+                                WLOG("TodaysMarketParameters: the attribute 'currency' is deprecated for "
                                      "CapFloorVolatilities, use 'key' instead.");
                             }
                         }
