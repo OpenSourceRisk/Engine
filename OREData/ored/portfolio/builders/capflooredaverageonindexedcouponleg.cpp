@@ -30,7 +30,7 @@ boost::shared_ptr<FloatingRateCouponPricer>
 CapFlooredAverageONIndexedCouponLegEngineBuilder::engineImpl(const std::string& index) {
     std::string ccyCode = parseIborIndex(index)->currency().code();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
-    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(ccyCode, configuration(MarketContext::pricing));
+    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, configuration(MarketContext::pricing));
     return boost::make_shared<QuantExt::BlackAverageONIndexedCouponPricer>(ovs);
 }
 
