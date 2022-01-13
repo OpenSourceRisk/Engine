@@ -864,8 +864,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             setSimulateCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(capVolSimNode)));
 
         // All cap floor keys
-	auto ccys = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
-	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", true);
+	auto ccys = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", false);
+	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
 	if(!ccys.empty()) {
 	    keys.insert(keys.end(), ccys.begin(), ccys.end());
             ALOG("ScenarioSimMarketParameters: CapFloorVolatilities/Currencies is deprecated, use Keys instead.");
