@@ -102,7 +102,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
     if (auto iborNode = XMLUtils::getChildNode(node, "IborIndex")) {
-        ALOG("CapFloorVolatilityCurveConfig (" << curveID_
+        WLOG("CapFloorVolatilityCurveConfig (" << curveID_
                                                << "): The IborIndex node is deprecated, use Index instead.");
         index_ = XMLUtils::getNodeValue(iborNode);
     } else if (auto indexNode = XMLUtils::getChildNode(node, "index")) {
