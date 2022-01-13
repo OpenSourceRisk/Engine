@@ -34,8 +34,9 @@ namespace data {
 
 //! IndexNameTranslator
 /*! Allows translating from QuantLib::Index::name() to the ORE name that parses to that index and vice versa. Supported
-    indices are those that were processed by parseIborIndex() before. We can easily extend the index type coverage, if
-    there is a use case.
+    indices are those that were processed by parseIborIndex() before. We can easily extend the index type coverage.
+    TODO we might use this class to get rid of the "qlToOREIndexNames" maps in the leg builders, for this we need to
+    cover all index types in the translator first.
 */
 class IndexNameTranslator : public QuantLib::Singleton<IndexNameTranslator> {
 public:

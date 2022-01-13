@@ -28,6 +28,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/referencedata.hpp>
 #include <ored/utilities/currencycheck.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -588,11 +589,11 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     if (quantity_ != Null<Real>())
         XMLUtils::addChild(doc, node, "Quantity", quantity_);
-    
+
     XMLUtils::addChild(doc, node, "ReturnType", to_string(returnType_));
     if (returnType_ == EquityReturnType::Total)
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
-    
+
     XMLUtils::appendNode(node, equityUnderlying_.toXML(doc));
     if (initialPrice_ != Null<Real>())
         XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
@@ -654,7 +655,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const std::vector<string>& notionalDates, const string& paymentConvention,
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
-                 const double foreignAmount, const string& fxIndex, 
+                 const double foreignAmount, const string& fxIndex,
                  const std::vector<AmortizationData>& amortizationData, const int paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
                  const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
@@ -664,8 +665,8 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-      fxIndex_(fxIndex), amortizationData_(amortizationData),
-      paymentLag_(paymentLag), paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing),
+      fxIndex_(fxIndex), amortizationData_(amortizationData), paymentLag_(paymentLag),
+      paymentCalendar_(paymentCalendar), paymentDates_(paymentDates), indexing_(indexing),
       indexingFromAssetLeg_(indexingFromAssetLeg), lastPeriodDayCounter_(lastPeriodDayCounter) {
 
     indices_ = concreteLegData_->indices();
@@ -912,11 +913,10 @@ Leg makeZCFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplace
 
         double currentNotional = i < notionals.size() ? notionals[i] : notionals.back();
         double currentRate = i < rates.size() ? rates[i] : rates.back();
-        cpnDates.push_back(dates[i+1]);
-        Date paymentDate = paymentCalendar.adjust(dates[i+1], payConvention);
-        leg.push_back(boost::make_shared<ZeroFixedCoupon>(paymentDate, currentNotional, currentRate, dc,
-                                                            cpnDates, comp, zcFixedLegData->subtractNotional()));
-
+        cpnDates.push_back(dates[i + 1]);
+        Date paymentDate = paymentCalendar.adjust(dates[i + 1], payConvention);
+        leg.push_back(boost::make_shared<ZeroFixedCoupon>(paymentDate, currentNotional, currentRate, dc, cpnDates, comp,
+                                                          zcFixedLegData->subtractNotional()));
     }
     return leg;
 }
@@ -1050,7 +1050,8 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     QL_REQUIRE(builder, "No builder found for CapFlooredIborLeg");
     boost::shared_ptr<CapFlooredIborLegEngineBuilder> cappedFlooredIborBuilder =
         boost::dynamic_pointer_cast<CapFlooredIborLegEngineBuilder>(builder);
-    boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cappedFlooredIborBuilder->engine(index->currency());
+    boost::shared_ptr<FloatingRateCouponPricer> couponPricer =
+        cappedFlooredIborBuilder->engine(IndexNameTranslator::instance().oreName(index->name()));
 
     // Loop over the coupons in the leg and set pricer
     Leg tmpLeg = iborLeg;
@@ -1105,8 +1106,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
             auto builder = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponLegEngineBuilder>(
                 engineFactory->builder("CapFlooredAverageONIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredAverageONIndexedCouponLeg");
-            cfCouponPricer =
-                boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(builder->engine(index->currency()));
+            cfCouponPricer = boost::dynamic_pointer_cast<CapFlooredAverageONIndexedCouponPricer>(
+                builder->engine(IndexNameTranslator::instance().oreName(index->name())));
             QL_REQUIRE(cfCouponPricer, "internal error, could not cast to CapFlooredAverageONIndexedCouponPricer");
         }
 
@@ -1173,7 +1174,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
             auto builder = boost::dynamic_pointer_cast<CapFlooredOvernightIndexedCouponLegEngineBuilder>(
                 engineFactory->builder("CapFlooredOvernightIndexedCouponLeg"));
             QL_REQUIRE(builder, "No builder found for CapFlooredOvernightIndexedCouponLeg");
-            auto pricer = builder->engine(index->currency());
+            auto pricer = builder->engine(IndexNameTranslator::instance().oreName(index->name()));
             QuantExt::setCouponPricer(leg, pricer);
         }
 
@@ -1871,7 +1872,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
         dc = Actual365Fixed();
     else
         dc = parseDayCounter(data.dayCounter());
-    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());    
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
     Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
@@ -1901,7 +1902,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
     Natural paymentLag = data.paymentLag();
-    
+
     ScheduleBuilder scheduleBuilder;
 
     ScheduleData scheduleData = data.schedule();
@@ -1912,7 +1913,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     Schedule valuationSchedule;
     if (valuationData.hasData())
         scheduleBuilder.add(valuationSchedule, valuationData);
-    
+
     scheduleBuilder.makeSchedules(openEndDateReplacement);
 
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
@@ -2167,16 +2168,15 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                            "applyIndexing: fx index '" << indexing.index() << "' ccys do not match leg ccy ("
                                                        << data.currency() << ")");
                 std::string domestic = data.currency();
-                std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();           
+                std::string foreign = ccy1.code() == domestic ? ccy2.code() : ccy1.code();
                 index = buildFxIndex(indexing.index(), domestic, foreign, engineFactory->market(),
                                      engineFactory->configuration(MarketContext::pricing));
 
             } else if (boost::starts_with(indexing.index(), "COMM-")) {
                 auto tmp = parseCommodityIndex(indexing.index());
-                index =
-                    parseCommodityIndex(indexing.index(), true,
-                                        engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config),
-                                        tmp->fixingCalendar());
+                index = parseCommodityIndex(indexing.index(), true,
+                                            engineFactory->market()->commodityPriceCurve(tmp->underlyingName(), config),
+                                            tmp->fixingCalendar());
             } else if (boost::starts_with(indexing.index(), "BOND-")) {
                 // if we build a bond index, we add the required fixings for the bond underlying
                 boost::shared_ptr<BondIndex> bi = parseBondIndex(indexing.index());
@@ -2316,7 +2316,8 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         Real foreignNotional = data.foreignAmount();
 
         QL_REQUIRE(!data.fxIndex().empty(), "buildNotionalLeg(): need fx index for fx resetting leg");
-        auto fxIndex = buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration, true);
+        auto fxIndex =
+            buildFxIndex(data.fxIndex(), data.currency(), data.foreignCurrency(), market, configuration, true);
 
         Leg resettingLeg;
         for (Size j = 0; j < leg.size(); j++) {
@@ -2333,17 +2334,17 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 // Two possibilities for first coupon:
                 // 1. we have not been given a domestic notional so it is an FX linked coupon
                 // 2. we have been given an explicit domestic notional so it is a simple cashflow
-                if (data.notionals().size() == 0) {                    
+                if (data.notionals().size() == 0) {
                     fixingDate = fxIndex->fixingDate(c->accrualStartDate());
                     if (data.notionalInitialExchange()) {
                         outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate,
-                                                                        -foreignNotional, fxIndex);
+                                                                     -foreignNotional, fxIndex);
                     }
                     // if there is only one period we generate the cash flow at the period end
                     // only if there is a final notional exchange
                     if (leg.size() > 1 || data.notionalFinalExchange()) {
-                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate,
-                            foreignNotional, fxIndex);
+                        inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
+                                                                    fxIndex);
                     }
                 } else {
                     if (data.notionalInitialExchange()) {
@@ -2355,12 +2356,12 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
                 }
             } else {
                 fixingDate = fxIndex->fixingDate(c->accrualStartDate());
-                outCf = boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional,
-                                                                fxIndex);
+                outCf =
+                    boost::make_shared<FXLinkedCashFlow>(c->accrualStartDate(), fixingDate, -foreignNotional, fxIndex);
                 // we don't want a final one, unless there is notional exchange
                 if (j < leg.size() - 1 || data.notionalFinalExchange()) {
-                    inCf = boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional,
-                                                                fxIndex);
+                    inCf =
+                        boost::make_shared<FXLinkedCashFlow>(c->accrualEndDate(), fixingDate, foreignNotional, fxIndex);
                 }
             }
 

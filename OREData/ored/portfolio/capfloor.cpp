@@ -146,7 +146,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
             boost::shared_ptr<CapFloorEngineBuilder> capFloorBuilder =
                 boost::dynamic_pointer_cast<CapFloorEngineBuilder>(builder);
-            qlInstrument->setPricingEngine(capFloorBuilder->engine(parseCurrency(legData_.currency())));
+            qlInstrument->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
 
             maturity_ = boost::dynamic_pointer_cast<QuantLib::CapFloor>(qlInstrument)->maturityDate();
         }
