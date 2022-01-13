@@ -1495,15 +1495,15 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* capFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CapFloorVolatilities");
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "Simulate", simulateCapFloorVols());
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "ReactionToTimeDecay", capFloorVolDecayMode_);
-        XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Currencies", "Currency", capFloorVolKeys());
+        XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Keys", "Key", capFloorVolKeys());
 
-        // Write out cap floor expiries node for each currency
+        // Write out cap floor expiries node for each key
         for (auto kv : capFloorVolExpiries_) {
             // If strikes vector is empty, the node value is ATM else it is the comma separated list of strikes
             // No checks here on the string repr of each strike value - dangerous but in lots of places.
             string nodeValue = join(kv.second | transformed([](Period p) { return ore::data::to_string(p); }), ",");
             XMLNode* expiriesNode = doc.allocNode("Expiries", nodeValue);
-            XMLUtils::addAttribute(doc, expiriesNode, "ccy", kv.first);
+            XMLUtils::addAttribute(doc, expiriesNode, "key", kv.first);
             XMLUtils::appendNode(capFloorVolatilitiesNode, expiriesNode);
         }
 
@@ -1515,7 +1515,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                                    ? "ATM"
                                    : join(kv.second | transformed([](Rate s) { return ore::data::to_string(s); }), ",");
             XMLNode* strikesNode = doc.allocNode("Strikes", nodeValue);
-            XMLUtils::addAttribute(doc, strikesNode, "ccy", kv.first);
+            XMLUtils::addAttribute(doc, strikesNode, "key", kv.first);
             XMLUtils::appendNode(capFloorVolatilitiesNode, strikesNode);
         }
 
