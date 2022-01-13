@@ -303,20 +303,24 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     c = tmp->underlying();
                                 }
                                 Date fixingDate;
+				std::string qlIndexName;
                                 if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
+				    qlIndexName = tmp->index()->name();
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
+				    qlIndexName = tmp->index()->name();
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
+				    qlIndexName = tmp->index()->name();
                                 }
 
                                 // get market volaility for cap / floor
@@ -327,24 +331,26 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                             floorVolatility =
                                                 market->swaptionVol(ccy, configuration)
                                                     ->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
-                                        else
-                                            floorVolatility = market
-                                                                  ->capFloorVol(IndexNameTranslator::instance().oreName(
-                                                                                    tmp->index()->name()),
-                                                                                configuration)
-                                                                  ->volatility(fixingDate, floorStrike);
+                                        else {
+                                            floorVolatility =
+                                                market
+                                                    ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, floorStrike);
+                                        }
                                     }
                                     if (capStrike != Null<Real>()) {
                                         if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
                                             capVolatility =
                                                 market->swaptionVol(ccy, configuration)
                                                     ->volatility(fixingDate, tmp->index()->tenor(), capStrike);
-                                        else
-                                            capVolatility = market
-                                                                ->capFloorVol(IndexNameTranslator::instance().oreName(
-                                                                                  tmp->index()->name()),
-                                                                              configuration)
-                                                                ->volatility(fixingDate, capStrike);
+                                        else {
+                                            capVolatility =
+                                                market
+                                                    ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, capStrike);
+                                        }
                                     }
                                 }
                             }
