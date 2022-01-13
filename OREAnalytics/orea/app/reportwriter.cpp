@@ -303,35 +303,45 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     c = tmp->underlying();
                                 }
                                 Date fixingDate;
-				std::string qlIndexName;
+                                std::string qlIndexName;
+                                bool usesCapVol = false, usesSwaptionVol = false;
+                                Period swaptionTenor;
                                 if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
-				    qlIndexName = tmp->index()->name();
+                                    qlIndexName = tmp->index()->name();
+                                    if (boost::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
+                                        usesSwaptionVol = true;
+                                        swaptionTenor = tmp->index()->tenor();
+                                    } else if (boost::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
+                                        usesCapVol = true;
+                                    }
+
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
-				    qlIndexName = tmp->index()->name();
+                                    qlIndexName = tmp->index()->name();
+                                    usesCapVol = true;
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
-				    qlIndexName = tmp->index()->name();
+                                    qlIndexName = tmp->index()->name();
+                                    usesCapVol = true;
                                 }
 
                                 // get market volaility for cap / floor
 
                                 if (fixingDate != Date() && fixingDate > market->asofDate()) {
                                     if (floorStrike != Null<Real>()) {
-                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
-                                            floorVolatility =
-                                                market->swaptionVol(ccy, configuration)
-                                                    ->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
-                                        else {
+                                        if (usesSwaptionVol) {
+                                            floorVolatility = market->swaptionVol(ccy, configuration)
+                                                                  ->volatility(fixingDate, swaptionTenor, floorStrike);
+                                        } else if (usesCapVol) {
                                             floorVolatility =
                                                 market
                                                     ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
@@ -340,11 +350,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                         }
                                     }
                                     if (capStrike != Null<Real>()) {
-                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
-                                            capVolatility =
-                                                market->swaptionVol(ccy, configuration)
-                                                    ->volatility(fixingDate, tmp->index()->tenor(), capStrike);
-                                        else {
+                                        if (usesSwaptionVol) {
+                                            capVolatility = market->swaptionVol(ccy, configuration)
+                                                                ->volatility(fixingDate, swaptionTenor, capStrike);
+                                        } else if (usesCapVol) {
                                             capVolatility =
                                                 market
                                                     ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
