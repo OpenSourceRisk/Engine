@@ -52,7 +52,7 @@
       "smrc.csv": {
         "keys": [
             "TradeType",
-            "CcyBucket"
+            "Asset"
         ],
         "column_settings": [
           {
