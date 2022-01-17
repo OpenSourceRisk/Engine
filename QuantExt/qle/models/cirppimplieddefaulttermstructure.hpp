@@ -126,7 +126,7 @@ inline void CirppImpliedDefaultTermStructure::update() {
 
 inline Real CirppImpliedDefaultTermStructure::survivalProbabilityImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
-    if (close_enough(t, 0))
+    if (QuantLib::close_enough(t, 0))
         return 1.0;
     return model_->survivalProbability(relativeTime_, relativeTime_+ t, y_);
 }
