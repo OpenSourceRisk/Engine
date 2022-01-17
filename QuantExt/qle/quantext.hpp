@@ -163,6 +163,7 @@
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
+#include <qle/instruments/makeoiscapfloor.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/nullinstrument.hpp>
 #include <qle/instruments/oibasisswap.hpp>
