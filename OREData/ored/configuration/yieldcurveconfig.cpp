@@ -278,11 +278,12 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                 try {
                     segment->fromXML(child);
                 } catch (std::exception& ex) {
-                    ALOG("Exception parsing yield curve segment XML Node, name = " << childName << " and curveID = "
-                                                                                   << curveID_ << " : " << ex.what());
+                    QL_FAIL("Exception parsing yield curve segment XML Node, name = "
+                            << childName << " and curveID = " << curveID_ << " : " << ex.what());
                 }
             } else {
-                LOG("Unable to build yield curve segment for name = " << childName << " and curveID = " << curveID_);
+                QL_FAIL("Unable to build yield curve segment for name = " << childName
+                                                                          << " and curveID = " << curveID_);
             }
             curveSegments_.push_back(segment);
         }
