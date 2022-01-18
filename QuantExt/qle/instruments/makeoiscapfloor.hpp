@@ -66,4 +66,7 @@ private:
     ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> pricer_;
 };
 
+//! get the underlying ON coupons from an OIS cf
+Leg getOisCapFloorUnderlying(const Leg& oisCapFloor);
+
 } // namespace QuantExt

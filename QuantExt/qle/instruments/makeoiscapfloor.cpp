@@ -112,4 +112,15 @@ MakeOISCapFloor::withCouponPricer(const ext::shared_ptr<CappedFlooredOvernightIn
     return *this;
 }
 
+//! get the underlying ON coupons from an OIS cf
+Leg getOisCapFloorUnderlying(const Leg& oisCapFloor) {
+    Leg underlying;
+    for (auto const& c : oisCapFloor) {
+        auto cfon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c);
+        QL_REQUIRE(cfon, "getOisCapFloorUnderlying(): expected CappedFlooredOvernightIndexedCoupon");
+        underlying.push_back(cfon->underlying());
+    }
+    return underlying;
+}
+
 } // namespace QuantExt
