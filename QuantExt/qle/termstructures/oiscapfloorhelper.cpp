@@ -104,7 +104,7 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
 
     if (strike_ == Null<Real>()) {
         // If the strike is Null<Real>(), we want an ATM helper
-        Rate atm = CashFlows::atmRate(capFloor_, **discountHandle_, false);
+        Rate atm = CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
         CapFloor::Type capFloorType = type_ == CapFloorHelper::Cap ? CapFloor::Cap : CapFloor::Floor;
         capFloor_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, atm)
                         .withEffectiveDate(effectiveDate_);
@@ -113,7 +113,7 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
 
     } else if (type_ == CapFloorHelper::Automatic && quoteType_ != CapFloorHelper::Premium) {
         // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
-        Rate atm = CashFlows::atmRate(capFloor_, **discountHandle_, false);
+        Rate atm = CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
         CapFloor::Type capFloorType = atm > strike_ ? CapFloor::Floor : CapFloor::Cap;
         capFloor_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, strike_)
                         .withEffectiveDate(effectiveDate_);

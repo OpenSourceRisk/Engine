@@ -780,7 +780,7 @@ boost::shared_ptr<StrippedOptionlet> CapFloorVolCurve::transform(const QuantExt:
     }
 
     boost::shared_ptr<StrippedOptionlet> res = boost::make_shared<StrippedOptionlet>(
-        os.settlementDays(), os.calendar(), os.businessDayConvention(), os.iborIndex(), os.optionletFixingDates(),
+        os.settlementDays(), os.calendar(), os.businessDayConvention(), os.index(), os.optionletFixingDates(),
         os.optionletStrikes(0), vols, os.dayCounter(), os.volatilityType(), os.displacement());
 
     res->unregisterWithAll();

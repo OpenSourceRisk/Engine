@@ -61,21 +61,22 @@ public:
     const std::vector<Date>& optionletPaymentDates() const;
     const std::vector<Time>& optionletAccrualPeriods() const;
     ext::shared_ptr<CapFloorTermVolSurface> termVolSurface() const;
-    ext::shared_ptr<IborIndex> iborIndex() const;
+    ext::shared_ptr<IborIndex> index() const;
     Real displacement() const;
     VolatilityType volatilityType() const;
 
 protected:
-    OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTermVolSurface>&,
-                      const ext::shared_ptr<IborIndex>& iborIndex_,
+    // if index is OIS, rateComputationPeriod must be provided, for Ibor it is derived from the index tenor
+    OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTermVolSurface>&, const ext::shared_ptr<IborIndex>& index,
                       const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
-                      const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
+                      const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
+                      const Period& rateComputationPeriod = 0 * Days);
 
     //! Method to populate the dates, times and accruals that can be overridden in derived classes
     virtual void populateDates() const;
 
     ext::shared_ptr<CapFloorTermVolSurface> termVolSurface_;
-    ext::shared_ptr<IborIndex> iborIndex_;
+    ext::shared_ptr<IborIndex> index_;
     Handle<YieldTermStructure> discount_;
     Size nStrikes_;
     Size nOptionletTenors_;
@@ -93,6 +94,7 @@ protected:
     std::vector<Period> capFloorLengths_;
     const VolatilityType volatilityType_;
     const Real displacement_;
+    const Period rateComputationPeriod_;
 };
 
 } // namespace QuantExt

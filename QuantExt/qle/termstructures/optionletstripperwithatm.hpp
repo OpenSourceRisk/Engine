@@ -131,7 +131,7 @@ OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::OptionletStripper
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount, const QuantLib::VolatilityType atmVolatilityType,
     QuantLib::Real atmDisplacement, QuantLib::Size maxEvaluations, QuantLib::Real accuracy, const TimeInterpolator& ti,
     const SmileInterpolator& si)
-    : QuantExt::OptionletStripper(osBase->termVolSurface(), osBase->iborIndex(), discount, osBase->volatilityType(),
+    : QuantExt::OptionletStripper(osBase->termVolSurface(), osBase->index(), discount, osBase->volatilityType(),
                                   osBase->displacement()),
       osBase_(osBase), atmCurve_(atmCurve), atmVolatilityType_(atmVolatilityType), atmDisplacement_(atmDisplacement),
       maxEvaluations_(maxEvaluations), accuracy_(accuracy), dayCounter_(osBase_->termVolSurface()->dayCounter()),
@@ -200,8 +200,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     }
 
     // discount curve
-    const Handle<YieldTermStructure>& discountCurve =
-        discount_.empty() ? iborIndex_->forwardingTermStructure() : discount_;
+    const Handle<YieldTermStructure>& discountCurve = discount_.empty() ? index_->forwardingTermStructure() : discount_;
 
     // Populate ATM strikes and prices
     for (Size j = 0; j < nAtmExpiries_; ++j) {
@@ -222,7 +221,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
         // dummy vol to calculate ATM rate. Needs to be fixed in QL.
         boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
         caps_[j] =
-            MakeCapFloor(CapFloor::Cap, atmTenors[j], iborIndex_, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
+            MakeCapFloor(CapFloor::Cap, atmTenors[j], index_, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
 
         // Now set correct engine and get the ATM rate and the price
         caps_[j]->setPricingEngine(engine);

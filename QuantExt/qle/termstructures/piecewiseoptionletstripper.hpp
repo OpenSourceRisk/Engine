@@ -127,7 +127,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
         for (Size i = 0; i < tenors.size(); i++) {
             quotes_[i].push_back(boost::make_shared<SimpleQuote>(termVolSurface_->volatility(tenors[i], strikes[j])));
             helpers_[j].push_back(boost::make_shared<CapFloorHelper>(
-                CapFloorHelper::Automatic, tenors[i], strikes[j], Handle<Quote>(quotes_[i].back()), iborIndex_,
+                CapFloorHelper::Automatic, tenors[i], strikes[j], Handle<Quote>(quotes_[i].back()), index_,
                 discount_, true, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
         }
     }

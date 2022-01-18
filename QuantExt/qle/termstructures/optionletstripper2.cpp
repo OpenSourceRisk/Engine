@@ -33,7 +33,7 @@ OptionletStripper2::OptionletStripper2(const boost::shared_ptr<QuantExt::Optionl
                                        const Handle<QuantLib::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
                                        const Handle<YieldTermStructure>& discount, const VolatilityType type,
                                        const Real displacement)
-    : OptionletStripper(optionletStripper->termVolSurface(), optionletStripper->iborIndex(), discount,
+    : OptionletStripper(optionletStripper->termVolSurface(), optionletStripper->index(), discount,
                         optionletStripper->volatilityType(), optionletStripper->displacement()),
       stripper_(optionletStripper), atmCapFloorTermVolCurve_(atmCapFloorTermVolCurve),
       dc_(stripper_->termVolSurface()->dayCounter()), nOptionExpiries_(atmCapFloorTermVolCurve->optionTenors().size()),
@@ -66,7 +66,7 @@ void OptionletStripper2::performCalculations() const {
 
     // discount curve
     const Handle<YieldTermStructure>& discountCurve =
-        discount_.empty() ? iborIndex_->forwardingTermStructure() : discount_;
+        discount_.empty() ? index_->forwardingTermStructure() : discount_;
 
     for (Size j = 0; j < nOptionExpiries_; ++j) {
         // Dummy strike, doesn't get used for ATM curve
@@ -87,7 +87,7 @@ void OptionletStripper2::performCalculations() const {
         // a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp BlackCapFloorEngine with a
         // dummy vol to calculate ATM rate. Needs to be fixed in QL.
         boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
-        caps_[j] = MakeCapFloor(CapFloor::Cap, optionExpiriesTenors[j], iborIndex_, Null<Rate>(), 0 * Days)
+        caps_[j] = MakeCapFloor(CapFloor::Cap, optionExpiriesTenors[j], index_, Null<Rate>(), 0 * Days)
                        .withPricingEngine(tempEngine);
 
         // Now set correct engine and get the ATM rate and the price
