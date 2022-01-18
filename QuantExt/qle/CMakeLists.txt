@@ -233,6 +233,7 @@ termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
+termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
@@ -608,6 +609,7 @@ termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
+termstructures/oiscapfloorhelper.hpp
 termstructures/oisratehelper.hpp
 termstructures/optionletcurve.hpp
 termstructures/optionletstripper.hpp

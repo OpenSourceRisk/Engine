@@ -345,6 +345,7 @@
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
+#include <qle/termstructures/oiscapfloorhelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/optionletcurve.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
