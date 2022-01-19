@@ -310,7 +310,7 @@
       <xs:element type="xs:string" name="Tenors" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="OptionalQuotes" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="indexNameType" name="IborIndex" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="indexNameType" name="IborIndex" minOccurs="0" maxOccurs="1"/> <!-- deprecated -->
       <xs:element type="indexNameType" name="Index" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="DiscountCurve"/>
