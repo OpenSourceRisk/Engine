@@ -105,7 +105,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         WLOG("CapFloorVolatilityCurveConfig (" << curveID_
                                                << "): The IborIndex node is deprecated, use Index instead.");
         index_ = XMLUtils::getNodeValue(iborNode);
-    } else if (auto indexNode = XMLUtils::getChildNode(node, "index")) {
+    } else if (auto indexNode = XMLUtils::getChildNode(node, "Index")) {
         index_ = XMLUtils::getNodeValue(indexNode);
     } else {
         QL_FAIL("CapFloorVOlatilityCurveConfig (" << curveID_
