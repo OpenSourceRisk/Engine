@@ -39,7 +39,7 @@ OptionletStripper::OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTer
 
     QL_REQUIRE(!isOis || rateComputationPeriod != 0 * Days,
                "OptionletStripper: For an OIS index the rateComputationPeriod must be given");
-    QL_REQUIRE(isOis || rateComputationPeriod == index_->tenor(),
+    QL_REQUIRE(isOis || rateComputationPeriod == 0 * Days || rateComputationPeriod == index_->tenor(),
                "OptionletStripper: For an Ibor index the Ibor tenor ("
                    << index_->tenor() << ") must match the rateComputationPeriod (" << rateComputationPeriod
                    << ") if the latter is given.");
@@ -163,8 +163,8 @@ void OptionletStripper::populateDates() const {
             optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
             atmOptionletRate_[i] = lastCoupon->underlying()->rate();
         } else {
-            CapFloor dummyCap = MakeCapFloor(CapFloor::Cap, capFloorLengths_[i], index_, 0.04, 0 * Days)
-                                    .withPricingEngine(dummyEngine);
+            CapFloor dummyCap =
+                MakeCapFloor(CapFloor::Cap, capFloorLengths_[i], index_, 0.04, 0 * Days).withPricingEngine(dummyEngine);
             boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
             optionletDates_[i] = lastCoupon->fixingDate();
             optionletPaymentDates_[i] = lastCoupon->date();
