@@ -65,6 +65,8 @@ public:
     Real displacement() const;
     VolatilityType volatilityType() const;
 
+    const Period& rateComputationPeriod() const;
+
 protected:
     // if index is OIS, rateComputationPeriod must be provided, for Ibor it is derived from the index tenor
     OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTermVolSurface>&, const ext::shared_ptr<IborIndex>& index,
@@ -82,7 +84,7 @@ protected:
     Size nOptionletTenors_;
 
     mutable std::vector<std::vector<Rate> > optionletStrikes_;
-    mutable std::vector<std::vector<Volatility> > optionletVolatilities_;
+    mutable std::vector<std::vector<Volatility>> optionletVolatilities_;
 
     mutable std::vector<Time> optionletTimes_;
     mutable std::vector<Date> optionletDates_;

@@ -132,7 +132,7 @@ OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::OptionletStripper
     QuantLib::Real atmDisplacement, QuantLib::Size maxEvaluations, QuantLib::Real accuracy, const TimeInterpolator& ti,
     const SmileInterpolator& si)
     : QuantExt::OptionletStripper(osBase->termVolSurface(), osBase->index(), discount, osBase->volatilityType(),
-                                  osBase->displacement()),
+                                  osBase->displacement(), osBase->rateComputationPeriod()),
       osBase_(osBase), atmCurve_(atmCurve), atmVolatilityType_(atmVolatilityType), atmDisplacement_(atmDisplacement),
       maxEvaluations_(maxEvaluations), accuracy_(accuracy), dayCounter_(osBase_->termVolSurface()->dayCounter()),
       nAtmExpiries_(atmCurve_->optionTenors().size()), atmStrikes_(nAtmExpiries_), atmPrices_(nAtmExpiries_),
@@ -180,6 +180,8 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     using QuantLib::YieldTermStructure;
     using std::vector;
 
+    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
+
     // Possible update based on underlying optionlet stripper data
     optionletDates_ = osBase_->optionletFixingDates();
     optionletPaymentDates_ = osBase_->optionletPaymentDates();
@@ -205,28 +207,35 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     // Populate ATM strikes and prices
     for (Size j = 0; j < nAtmExpiries_; ++j) {
 
-        // Create a cap for each pillar point on ATM curve and attach relevant pricing engine
-        Volatility atmVol = atmCurve_->volatility(atmTimes[j], 0.01);
-        boost::shared_ptr<PricingEngine> engine;
-        if (atmVolatilityType_ == ShiftedLognormal) {
-            engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, atmVol, dayCounter_, atmDisplacement_);
-        } else if (atmVolatilityType_ == Normal) {
-            engine = boost::make_shared<BachelierCapFloorEngine>(discountCurve, atmVol, dayCounter_);
+        if (isOis) {
+
+            QL_FAIL("OIS cap vol stripping with ATM not yet supported.");
+
         } else {
-            QL_FAIL("Unknown volatility type: " << atmVolatilityType_);
+
+            // Create a cap for each pillar point on ATM curve and attach relevant pricing engine
+            Volatility atmVol = atmCurve_->volatility(atmTimes[j], 0.01);
+            boost::shared_ptr<PricingEngine> engine;
+            if (atmVolatilityType_ == ShiftedLognormal) {
+                engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, atmVol, dayCounter_, atmDisplacement_);
+            } else if (atmVolatilityType_ == Normal) {
+                engine = boost::make_shared<BachelierCapFloorEngine>(discountCurve, atmVol, dayCounter_);
+            } else {
+                QL_FAIL("Unknown volatility type: " << atmVolatilityType_);
+            }
+
+            // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL
+            // requires a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp
+            // BlackCapFloorEngine with a dummy vol to calculate ATM rate. Needs to be fixed in QL.
+            boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
+            caps_[j] =
+                MakeCapFloor(CapFloor::Cap, atmTenors[j], index_, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
+
+            // Now set correct engine and get the ATM rate and the price
+            caps_[j]->setPricingEngine(engine);
+            atmStrikes_[j] = caps_[j]->atmRate(**discountCurve);
+            atmPrices_[j] = caps_[j]->NPV();
         }
-
-        // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL requires
-        // a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp BlackCapFloorEngine with a
-        // dummy vol to calculate ATM rate. Needs to be fixed in QL.
-        boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
-        caps_[j] =
-            MakeCapFloor(CapFloor::Cap, atmTenors[j], index_, Null<Rate>(), 0 * Days).withPricingEngine(tempEngine);
-
-        // Now set correct engine and get the ATM rate and the price
-        caps_[j]->setPricingEngine(engine);
-        atmStrikes_[j] = caps_[j]->atmRate(**discountCurve);
-        atmPrices_[j] = caps_[j]->NPV();
     }
 
     // Create an optionlet volatility structure from the underlying stripped optionlet surface

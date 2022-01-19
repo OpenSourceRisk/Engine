@@ -139,6 +139,8 @@ Real OptionletStripper::displacement() const { return displacement_; }
 
 VolatilityType OptionletStripper::volatilityType() const { return volatilityType_; }
 
+const Period& OptionletStripper::rateComputationPeriod() const { return rateComputationPeriod_; }
+
 void OptionletStripper::populateDates() const {
 
     bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
