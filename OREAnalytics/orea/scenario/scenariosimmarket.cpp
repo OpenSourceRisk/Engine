@@ -1261,7 +1261,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             quotes[i][j] = Handle<Quote>(q);
                                         }
                                     }
-
+				    writeSimData(simDataTmp, absoluteSimDataTmp);
+				    simDataWritten = true;
                                     // build the surface
                                     if (useSpreadedTermStructures_) {
                                         fxVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
@@ -1324,6 +1325,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             }
                                         }
                                     }
+				    writeSimData(simDataTmp, absoluteSimDataTmp);
+				    simDataWritten = true;
 
                                     // set up a FX Index
                                     Handle<FxIndex> fxInd = fxIndex(name);
@@ -1492,6 +1495,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             quotes[i][j] = Handle<Quote>(q);
                                         }
                                     }
+				    writeSimData(simDataTmp, absoluteSimDataTmp);
+				    simDataWritten = true;
                                     LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
                                     // If true, the strikes are fixed, if false they move with the spot handle
                                     // Should probably be false, but some people like true for sensi runs.
@@ -1564,6 +1569,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                             }
                                         }
                                     }
+				    writeSimData(simDataTmp, absoluteSimDataTmp);
+				    simDataWritten = true;
                                     // If true, the strikes are fixed, if false they move with the spot handle
                                     // Should probably be false, but some people like true for sensi runs.
                                     bool stickyStrike = true;
