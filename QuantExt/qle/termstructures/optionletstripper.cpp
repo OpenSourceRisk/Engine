@@ -63,10 +63,13 @@ OptionletStripper::OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTer
                "too short (" << maxCapFloorTenor << ") capfloor term vol termVolSurface");
     Period nextCapFloorLength = capFloorLengths_.back() + rateComputationPeriod_;
     while (nextCapFloorLength <= maxCapFloorTenor) {
-        optionletTenors_.push_back(capFloorLengths_.back());
+        if (capFloorLengths_.back() > optionletTenors_.back())
+            optionletTenors_.push_back(capFloorLengths_.back());
         capFloorLengths_.push_back(nextCapFloorLength);
         nextCapFloorLength += rateComputationPeriod_;
     }
+    if(isOis)
+        optionletTenors_.push_back(capFloorLengths_.back());
     nOptionletTenors_ = optionletTenors_.size();
 
     optionletVolatilities_ = vector<vector<Volatility>>(nOptionletTenors_, vector<Volatility>(nStrikes_));

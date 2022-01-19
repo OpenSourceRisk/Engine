@@ -41,9 +41,7 @@ public:
     MakeOISCapFloor& withConvention(BusinessDayConvention bdc);
     MakeOISCapFloor& withRule(DateGeneration::Rule r);
     MakeOISCapFloor& withDayCount(const DayCounter& dc);
-
-    //! only get last coupon
-    MakeOISCapFloor& asOptionlet(bool b = true);
+    MakeOISCapFloor& withTelescopicValueDates(bool telescopicValueDates);
 
     MakeOISCapFloor& withCouponPricer(const ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer>& pricer);
 
@@ -60,8 +58,7 @@ private:
     BusinessDayConvention convention_;
     DateGeneration::Rule rule_;
     DayCounter dayCounter_;
-
-    bool asOptionlet_;
+    bool telescopicValueDates_;
 
     ext::shared_ptr<CappedFlooredOvernightIndexedCouponPricer> pricer_;
 };

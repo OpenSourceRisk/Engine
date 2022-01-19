@@ -24,7 +24,7 @@ MakeOISCapFloor::MakeOISCapFloor(CapFloor::Type type, const Period& tenor, const
                                  const Period& rateComputationPeriod, Rate strike)
     : type_(type), tenor_(tenor), index_(index), rateComputationPeriod_(rateComputationPeriod), strike_(strike),
       nominal_(1.0), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
-      rule_(DateGeneration::Backward), dayCounter_(index->dayCounter()), asOptionlet_(false) {}
+      rule_(DateGeneration::Backward), dayCounter_(index->dayCounter()), telescopicValueDates_(false) {}
 
 MakeOISCapFloor::operator Leg() const {
     Calendar calendar = index_->fixingCalendar();
@@ -57,7 +57,8 @@ MakeOISCapFloor::operator Leg() const {
                   .withPaymentAdjustment(convention_)
                   .withCaps(cap)
                   .withFloors(floor)
-                  .withNakedOption(true);
+                  .withNakedOption(true)
+                  .withTelescopicValueDates(telescopicValueDates_);
 
     if (pricer_) {
         for (auto c : leg) {
@@ -101,8 +102,8 @@ MakeOISCapFloor& MakeOISCapFloor::withDayCount(const DayCounter& dc) {
     return *this;
 }
 
-MakeOISCapFloor& MakeOISCapFloor::asOptionlet(bool b) {
-    asOptionlet_ = b;
+MakeOISCapFloor& MakeOISCapFloor::withTelescopicValueDates(bool t) {
+    telescopicValueDates_ = t;
     return *this;
 }
 

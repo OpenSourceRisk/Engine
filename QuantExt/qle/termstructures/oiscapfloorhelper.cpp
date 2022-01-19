@@ -47,9 +47,10 @@ OISCapFloorHelper::OISCapFloorHelper(CapFloorHelper::Type type, const Period& te
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(
           Handle<Quote>(boost::make_shared<DerivedQuote<boost::function<Real(Real)>>>(
               quote, boost::bind(&OISCapFloorHelper::npv, this, _1)))),
-      type_(type), tenor_(tenor), strike_(strike), index_(index), discountHandle_(discountingCurve), moving_(moving),
-      effectiveDate_(effectiveDate), quoteType_(quoteType), quoteVolatilityType_(quoteVolatilityType),
-      quoteDisplacement_(quoteDisplacement), rawQuote_(quote), initialised_(false) {
+      type_(type), tenor_(tenor), rateComputationPeriod_(rateComputationPeriod), strike_(strike), index_(index),
+      discountHandle_(discountingCurve), moving_(moving), effectiveDate_(effectiveDate), quoteType_(quoteType),
+      quoteVolatilityType_(quoteVolatilityType), quoteDisplacement_(quoteDisplacement), rawQuote_(quote),
+      initialised_(false) {
 
     if (quoteType_ == CapFloorHelper::Premium) {
         QL_REQUIRE(type_ != CapFloorHelper::Automatic,
@@ -78,9 +79,11 @@ void OISCapFloorHelper::initializeDates() {
         // The strike can be Null<Real>() to indicate an ATM cap floor helper
         Rate dummyStrike = strike_ == Null<Real>() ? 0.01 : strike_;
         capFloor_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, dummyStrike)
-                        .withEffectiveDate(effectiveDate_);
+                        .withEffectiveDate(effectiveDate_)
+                        .withTelescopicValueDates(true);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, dummyStrike)
-                            .withEffectiveDate(effectiveDate_);
+                            .withEffectiveDate(effectiveDate_)
+                            .withTelescopicValueDates(true);
 
         QL_REQUIRE(!capFloor_.empty(), "OISCapFloorHelper: got empty leg.");
 
@@ -110,7 +113,6 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
                         .withEffectiveDate(effectiveDate_);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, atm)
                             .withEffectiveDate(effectiveDate_);
-
     } else if (type_ == CapFloorHelper::Automatic && quoteType_ != CapFloorHelper::Premium) {
         // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
         Rate atm = CashFlows::atmRate(getOisCapFloorUnderlying(capFloor_), **discountHandle_, false);
@@ -119,6 +121,9 @@ void OISCapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
                         .withEffectiveDate(effectiveDate_);
         capFloorCopy_ = MakeOISCapFloor(capFloorType, tenor_, index_, rateComputationPeriod_, strike_)
                             .withEffectiveDate(effectiveDate_);
+        for (auto const& c : capFloor_) {
+	    auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+        }
     }
 
     boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, no_deletion);
