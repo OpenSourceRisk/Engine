@@ -771,7 +771,7 @@
             <xs:element name="Currencies" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="xs:string" name="Currency" maxOccurs="unbounded" minOccurs="1"/>
+                  <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="1"/>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
