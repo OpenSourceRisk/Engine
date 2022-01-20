@@ -834,7 +834,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         // Check if the risk factor is simulated before adding it
                         if (param.second.first) {
-                            LOG("Simulating Cap/Floor Optionlet vols for ccy " << name);
+                            LOG("Simulating Cap/Floor Optionlet vols for key " << name);
 
                             // Try to get the ibor index that the cap floor structure relates to
                             // We use this to convert Period to Date below to sample from `wrapper`
@@ -843,12 +843,23 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Calendar iborCalendar;
                             string strIborIndex;
                             Natural settleDays = 0;
+
+                            // get the curve config for the index, or if not available for its ccy
+                            boost::shared_ptr<CapFloorVolatilityCurveConfig> config;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
+                                config = curveConfigs.capFloorVolCurveConfig(name);
+                            } else {
+                                boost::shared_ptr<IborIndex> ind;
+                                if (tryParseIborIndex(name, ind) &&
+                                    curveConfigs.hasCapFloorVolCurveConfig(ind->currency().code())) {
+                                    config = curveConfigs.capFloorVolCurveConfig(ind->currency().code());
+                                }
+                            }
+                            if (config) {
                                 // From the cap floor config, get the ibor index name
                                 // (we do not support convention based indices there)
-                                auto config = curveConfigs.capFloorVolCurveConfig(name);
                                 settleDays = config->settleDays();
-                                strIborIndex = config->iborIndex();
+                                strIborIndex = config->index();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
                                     iborCalendar = iborIndex->fixingCalendar();
                                     Natural settlementDays = iborIndex->fixingDays();

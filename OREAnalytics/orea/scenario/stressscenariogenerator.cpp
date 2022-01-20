@@ -523,17 +523,17 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
     Date asof = baseScenario_->asof();
 
     for (auto d : std.capVolShifts) {
-        std::string ccy = d.first;
-        LOG("Apply stress scenario to cap/floor vol structure " << ccy);
+        std::string key = d.first;
+        LOG("Apply stress scenario to cap/floor vol structure " << key);
 
-        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(ccy);
+        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(key);
         // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
         if (volStrikes.empty()) {
             volStrikes = {0.0};
         }
         Size n_cfvol_strikes = volStrikes.size();
 
-        Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
+        Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(key).size();
         vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
         vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
         vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
@@ -544,19 +544,19 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         vector<Real> shifts = data.shifts;
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
-        //DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(ccy));
-        DayCounter dc = simMarket_->capFloorVol(ccy)->dayCounter();
+        //DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(key));
+        DayCounter dc = simMarket_->capFloorVol(key)->dayCounter();
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = asof + simMarketData_->capFloorVolExpiries(ccy)[j];
+            Date expiry = asof + simMarketData_->capFloorVolExpiries(key)[j];
             volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_cfvol_exp; ++j) {
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Size idx = j * n_cfvol_strikes + k;
-                RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, idx);
-                volData[j][k] = baseScenario_->get(key);
+                volData[j][k] =
+                    baseScenario_->get(RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, key, idx));
             }
         }
 
@@ -575,7 +575,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
             for (Size kk = 0; kk < n_cfvol_strikes; ++kk) {
                 Size idx = jj * n_cfvol_strikes + kk;
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, ccy, idx),
+                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, key, idx),
                               shiftedVolData[jj][kk]);
             }
         }

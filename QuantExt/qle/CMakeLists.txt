@@ -99,6 +99,7 @@ instruments/fxforward.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
+instruments/makeoiscapfloor.cpp
 instruments/multilegoption.cpp
 instruments/oibasisswap.cpp
 instruments/oiccbasisswap.cpp
@@ -232,6 +233,7 @@ termstructures/iborfallbackcurve.cpp
 termstructures/immfraratehelper.cpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
+termstructures/oiscapfloorhelper.cpp
 termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
@@ -425,6 +427,7 @@ instruments/fxforward.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
 instruments/makecds.hpp
+instruments/makeoiscapfloor.hpp
 instruments/multilegoption.hpp
 instruments/nullinstrument.hpp
 instruments/oibasisswap.hpp
@@ -606,6 +609,7 @@ termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/multisectiondefaultcurve.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
+termstructures/oiscapfloorhelper.hpp
 termstructures/oisratehelper.hpp
 termstructures/optionletcurve.hpp
 termstructures/optionletstripper.hpp

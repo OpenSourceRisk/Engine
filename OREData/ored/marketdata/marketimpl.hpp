@@ -105,7 +105,7 @@ public:
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const;
 
     //! CapFloor volatilities
-    Handle<OptionletVolatilityStructure> capFloorVol(const string& ccy,
+    Handle<OptionletVolatilityStructure> capFloorVol(const string& key,
                                                      const string& configuration = Market::defaultConfiguration) const;
 
     //! YoY Inflation CapFloor volatilities

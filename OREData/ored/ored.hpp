@@ -204,6 +204,7 @@
 #include <ored/utilities/currencyconfig.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>

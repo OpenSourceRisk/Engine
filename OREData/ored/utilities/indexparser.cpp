@@ -28,6 +28,7 @@
 #include <map>
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -268,16 +269,19 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         Currency ccy = parseCurrency(tokens[0]);
         if (auto conv = boost::dynamic_pointer_cast<OvernightIndexConvention>(c)) {
             QL_REQUIRE(tenor.empty(), "no tenor allowed for convention based overnight index ('" << s << "')");
-            return boost::make_shared<OvernightIndex>(tokens[0] + "-" + tokens[1], conv->settlementDays(), ccy,
+            auto res = boost::make_shared<OvernightIndex>(tokens[0] + "-" + tokens[1], conv->settlementDays(), ccy,
                                                       parseCalendar(conv->fixingCalendar()),
                                                       parseDayCounter(conv->dayCounter()), h);
-
+	    IndexNameTranslator::instance().add(res->name(), s);
+	    return res;
         } else if (auto conv = boost::dynamic_pointer_cast<IborIndexConvention>(c)) {
             QL_REQUIRE(!tenor.empty(), "no tenor given for convention based Ibor index ('" << s << "'");
-            return boost::make_shared<IborIndex>(tokens[0] + "-" + tokens[1], parsePeriod(tenor),
+            auto res = boost::make_shared<IborIndex>(tokens[0] + "-" + tokens[1], parsePeriod(tenor),
                                                  conv->settlementDays(), ccy, parseCalendar(conv->fixingCalendar()),
                                                  parseBusinessDayConvention(conv->businessDayConvention()),
                                                  conv->endOfMonth(), parseDayCounter(conv->dayCounter()), h);
+	    IndexNameTranslator::instance().add(res->name(), s);
+	    return res;
         } else {
             QL_FAIL("invalid convention passed to parseIborIndex(): expected OvernightIndexConvention or "
                     "IborIndexConvention");
@@ -378,14 +382,18 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     // Simple single case for USD-SIFMA (i.e. BMA)
     if (indexStem == "USD-SIFMA") {
         QL_REQUIRE(tenor.empty(), "A tenor is not allowed with USD-SIFMA as it is implied");
-        return boost::make_shared<BMAIndexWrapper>(boost::make_shared<BMAIndex>(h));
+        auto res = boost::make_shared<BMAIndexWrapper>(boost::make_shared<BMAIndex>(h));
+	IndexNameTranslator::instance().add(res->name(), s);
+	return res;
     }
 
     // Ibor indices with a tenor, this includes OIS term rates like USD-SOFR-3M
     auto it = iborIndices.find(indexStem);
     if (it != iborIndices.end() && !tenor.empty()) {
         Period p = parsePeriod(tenor);
-        return it->second->build(p, h);
+        auto res = it->second->build(p, h);
+        IndexNameTranslator::instance().add(res->name(), s);
+        return res;
     }
 
     // Overnight indices
@@ -393,14 +401,18 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     if (onIt != onIndices.end()) {
         QL_REQUIRE(tenor.empty(),
                    "A tenor is not allowed with the overnight index " << indexStem << " as it is implied");
-        return onIt->second->clone(h);
+        auto res = onIt->second->clone(h);
+	IndexNameTranslator::instance().add(res->name(), s);
+	return res;
     }
 
     // GENERIC indices
     if (tokens[1] == "GENERIC") {
         Period p = parsePeriod(tenor);
         auto ccy = parseCurrency(tokens[0]);
-        return boost::make_shared<GenericIborIndex>(p, ccy, h);
+        auto res = boost::make_shared<GenericIborIndex>(p, ccy, h);
+        IndexNameTranslator::instance().add(res->name(), s);
+        return res;
     }
 
     QL_FAIL("parseIborIndex \"" << s << "\" not recognized");
