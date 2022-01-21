@@ -117,12 +117,12 @@ private:
     EndCriteria endCriteria_;
     BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
 
-    // Cache the swation volatilities
+    // Cache the swaption volatilities
     mutable std::vector<QuantLib::Real> swaptionVolCache_;
 
     bool forceCalibration_ = false;
 
-    // LGM Oberver
+    // LGM Observer
     boost::shared_ptr<MarketObserver> marketObserver_;
 };
 } // namespace data

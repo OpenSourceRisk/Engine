@@ -95,7 +95,7 @@ public:
     const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments() const {
         return additionalInstruments_;
     }
-    /*! mutlipliers for additional instruments */
+    /*! multipliers for additional instruments */
     const std::vector<Real>& additionalMultipliers() const { return additionalMultipliers_; }
     //@}
 

@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE(testCommodityCurve) {
 
     BOOST_TEST_MESSAGE("Testing commodity price curve");
 
-    // Just test that the building suceeded - the curve itself has been tested elsewhere
+    // Just test that the building succeeded - the curve itself has been tested elsewhere
     Handle<PriceTermStructure> commodityCurve = market->commodityPriceCurve("COMDTY_GOLD_USD");
     BOOST_CHECK(*commodityCurve);
 }
@@ -948,7 +948,7 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
 
     BOOST_TEST_MESSAGE("Testing correlation curve");
 
-    // Just test that the building suceeded - the curve itself has been tested elsewhere
+    // Just test that the building succeeded - the curve itself has been tested elsewhere
     Handle<QuantExt::CorrelationTermStructure> correlationCurve1 =
         market->correlationCurve("EUR-CMS-10Y", "EUR-CMS-2Y");
     Handle<QuantExt::CorrelationTermStructure> correlationCurve2 =

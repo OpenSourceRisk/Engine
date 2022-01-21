@@ -151,7 +151,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     // identical to sim market tenor structure, we can only check this case, because the analytic engine
     // assumes either linear in zero or linear in log discount interpolation, while the sensitivity analysis
-    // assumes a lienar in zero interpolation for rebucketing, but uses the linear in log discount interpolation
+    // assumes a linear in zero interpolation for rebucketing, but uses the linear in log discount interpolation
     // of the sim market yield curves for the scenario calculation
     cvsData.shiftTenors = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
                            5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
     // build scenario sim market
     Conventions conventions = *conv();
 
-    // build porfolio
+    // build portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";

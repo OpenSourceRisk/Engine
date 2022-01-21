@@ -17,7 +17,7 @@
 */
 
 /*! \file blackvariancesurfacesparse.hpp
- \brief Black volatility surface modelled as variance surface
+ \brief Black volatility surface modeled as variance surface
  */
 
 #ifndef quantext_option_interpolator_2d_hpp
@@ -63,7 +63,7 @@ protected:
     QuantLib::Date referenceDate_;
 };
 
-//! Option surface intepolator
+//! Option surface interpolator
 //!  \ingroup interpolators
 template <class InterpolatorStrike, class InterpolatorExpiry>
 class OptionInterpolator2d : public OptionInterpolatorBase {

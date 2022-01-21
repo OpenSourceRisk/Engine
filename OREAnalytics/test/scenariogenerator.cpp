@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
     simMarket->scenarioGenerator() = sg;
 
-    // swaps for expsoure generation
+    // swaps for exposure generation
 
     boost::shared_ptr<VanillaSwap> swap_eur =
         MakeVanillaSwap(20 * Years, *simMarket->iborIndex("EUR-EURIBOR-6M"), 0.02);
@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
 
     Size samples = 5000;
 
-    // fx forward for expsoure generation (otm) and engine
+    // fx forward for exposure generation (otm) and engine
     boost::shared_ptr<FxForward> fxfwd =
         boost::make_shared<FxForward>(1.0, EURCurrency(), 1.3, USDCurrency(), grid->dates().back() + 1, false);
     boost::shared_ptr<PricingEngine> fxFwdEngine =
@@ -1075,7 +1075,7 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
 
     Size samples = 10000;
 
-    // fx forward for expsoure generation (otm) and engine
+    // fx forward for exposure generation (otm) and engine
     Date maturity = grid->dates().back() + 1; // make sure the option is live on last grid date
     boost::shared_ptr<FxForward> fxfwd =
         boost::make_shared<FxForward>(1.0, EURCurrency(), 1.3, USDCurrency(), maturity, false);

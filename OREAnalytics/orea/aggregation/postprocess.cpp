@@ -405,7 +405,7 @@ void PostProcess::updateNettingSetKVA() {
             // Preprocess:
             // 1) Effective maturity from effective expected exposure as of time j
             //    Index _1 corresponds to our perspective, index _2 to their perspective.
-            // 2) Basel EEPE as of time j, i.e. as time averge over EEE, starting at time j
+            // 2) Basel EEPE as of time j, i.e. as time average over EEE, starting at time j
             // More accuracy may be achieved here by using a Longstaff-Schwartz method / regression
             Real eee_kva_1 = 0.0, eee_kva_2 = 0.0;
             Real effMatNumer1 = 0.0, effMatNumer2 = 0.0;
@@ -516,7 +516,7 @@ void PostProcess::updateNettingSetCvaSensitivity() {
     if (!analytics_["cvaSensi"])
         return;
 
-    LOG("Update netting set CVA sensitvities");
+    LOG("Update netting set CVA sensitivities");
 
     Handle<YieldTermStructure> discountCurve = market_->discountCurve(baseCurrency_, configuration_);
 

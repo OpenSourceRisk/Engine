@@ -31,7 +31,7 @@ namespace QuantExt {
 using namespace QuantLib;
 
 // FIXME: why do we need this?
-//! HazardS preaded Default Term Structure
+//! Hazard Spreaded Default Term Structure
 /*! \ingroup termstructures
  */
 class HazardSpreadedDefaultTermStructure : public HazardRateStructure {

@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/termstructures/yoyinflationcurveobserverstatic.hpp
-    \brief Observable inflation term structure with fixed refernece date based on the
+    \brief Observable inflation term structure with fixed reference date based on the
            interpolation of yoy rate quotes.
     \ingroup termstructures
 */
@@ -122,7 +122,7 @@ YoYInflationCurveObserverStatic<Interpolator>::YoYInflationCurveObserverStatic(
     QL_REQUIRE(this->quotes_.size() == dates_.size(),
                "quotes/dates count mismatch: " << this->quotes_.size() << " vs " << dates_.size());
 
-    // initalise data vector, values are copied from quotes in performCalculations()
+    // initialise data vector, values are copied from quotes in performCalculations()
     this->data_.resize(dates_.size());
     for (Size i = 0; i < dates_.size(); i++)
         this->data_[0] = 0.0;

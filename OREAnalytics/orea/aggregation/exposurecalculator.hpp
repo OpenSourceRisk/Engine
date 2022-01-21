@@ -39,7 +39,7 @@ using namespace std;
 
 //! XVA Calculator base class
 /*!
-  Derived classes implement a constructor with the relavant additional input data
+  Derived classes implement a constructor with the relevant additional input data
   and a build function that performs the XVA calculations for all netting sets and
   along all paths.
 */
@@ -52,7 +52,7 @@ public:
         const boost::shared_ptr<NPVCube>& cube,
         //! Interpreter for cube storage (where to find which data items)
         const boost::shared_ptr<CubeInterpretation> cubeInterpretation,
-        //! Market data object to access e.g. discounting and funcing curves
+        //! Market data object to access e.g. discounting and funding curves
         const boost::shared_ptr<Market>& market,
 	    //! Flag to indicate exposure termination at the next break date
         const bool exerciseNextBreak,
@@ -72,7 +72,7 @@ public:
 
     virtual ~ExposureCalculator() {}
 
-    //! Compute exposures along all paths and fill result structurues
+    //! Compute exposures along all paths and fill result structures
     virtual void build();
 
     enum ExposureIndex {

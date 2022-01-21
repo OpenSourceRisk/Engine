@@ -77,7 +77,7 @@ void CPIBlackCapFloorEngine::calculate() const {
     Real K = pow(1.0 + arguments_.strike, timeFromStart);
     Real F = indexFixing(effectiveMaturity) / arguments_.baseCPI;
 
-    // For reading volatility in the current market volatiltiy structure
+    // For reading volatility in the current market volatility structure
     // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t), solve
     // for strikeRate(t):
     Real strikeZeroRate =

@@ -17,7 +17,7 @@
 */
 
 /*! \file fxblackvolsurface.hpp
-    \brief FX Black volatility surface that incorperates an FxSmile
+    \brief FX Black volatility surface that incorporates an FxSmile
   \ingroup termstructures
 */
 

@@ -255,7 +255,7 @@ EquityLeg::operator Leg() const {
             } else {
                 QL_REQUIRE(fxIndex_ == nullptr,
                            "EquityLeg: can not compute quantity from nominal when fx conversion is required");
-                QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
+                QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute quantity, since no notional is given");
                 QL_REQUIRE(initialPrice_ != Null<Real>(),
                            "EquityLeg: can not compute quantity, since no initialPrice is given");
                 quantity = (initialPrice_ == 0) ? notionals_.front() : notionals_.front() / initialPrice_;

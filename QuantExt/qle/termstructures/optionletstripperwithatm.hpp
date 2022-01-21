@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/termstructures/optionletstripperwithatm.hpp
-    \brief Optionlet stripper that amends existing stripped optionlets to incoroporate ATM cap floor volatilities
+    \brief Optionlet stripper that amends existing stripped optionlets to incorporate ATM cap floor volatilities
     \ingroup termstructures
 */
 
@@ -37,7 +37,7 @@
 
 namespace QuantExt {
 
-/*! Optionlet stripper that amends existing stripped optionlets to incoroporate ATM cap floor
+/*! Optionlet stripper that amends existing stripped optionlets to incorporate ATM cap floor
     term volatilities
     \ingroup termstructures
 */

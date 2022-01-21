@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(testMultiPhaseBond) {
     printBondSchedule(bond);
     auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
     BOOST_REQUIRE(qlInstr != nullptr);
-    // annualy
+    // annually
     BOOST_REQUIRE_EQUAL(qlInstr->cashflows().size(), 7);
     BOOST_CHECK_EQUAL(qlInstr->cashflows()[0]->date(), Date(6, Feb, 2017));
     BOOST_CHECK_EQUAL(qlInstr->cashflows()[1]->date(), Date(5, Feb, 2018));

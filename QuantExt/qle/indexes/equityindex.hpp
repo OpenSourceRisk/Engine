@@ -51,7 +51,7 @@ public:
     Currency currency() const { return currency_; }
     Calendar fixingCalendar() const;
     bool isValidFixingDate(const Date& fixingDate) const;
-    // Equity fixing price - can be either fixed hstorical or forecasted.
+    // Equity fixing price - can be either fixed historical or forecasted.
     // Forecasted price can include dividend returns by setting incDividend = true
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;

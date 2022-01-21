@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(testFXLinkedCashFlow) {
     forYTS->update();
     BOOST_CHECK_CLOSE(fxlcf1.amount(), 112000000.0, 1e-10);
 
-    // check foward quote is still valid
+    // check forward quote is still valid
     fwd = sq->value() * domYTS->discount(cfDate3) / forYTS->discount(cfDate3);
     BOOST_CHECK_CLOSE(fxlcf3.amount(), foreignAmount * fwd, 1e-10);
 

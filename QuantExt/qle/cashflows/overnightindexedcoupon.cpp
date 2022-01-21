@@ -213,7 +213,7 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
        of valuation dates, a front and back stub will do. However notice
        that if the global evaluation date moves forward it might run past
        the front stub of valuation dates we build here (which incorporates
-       a grace period of 7 business after the evluation date). This will
+       a grace period of 7 business after the evaluation date). This will
        lead to false coupon projections (see the warning the class header). */
 
     if (telescopicValueDates) {

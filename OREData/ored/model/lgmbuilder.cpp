@@ -191,7 +191,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         QL_REQUIRE(data_->hTimes().size() == 0,
                    "LgmBuilder: empty reversion time grid expected for constant parameter type");
         QL_REQUIRE(data_->hValues().size() == 1,
-                   "LgmBuidler: initial reversion values shouuld have size 1 for constant parameter type");
+                   "LgmBuidler: initial reversion values should have size 1 for constant parameter type");
     } else if (data_->hParamType() == ParamType::Piecewise) {
         if (data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) {
             if (data_->hTimes().size() > 0) {
@@ -329,19 +329,19 @@ void LgmBuilder::performCalculations() const {
     calibrationInfo.rmse = error_;
     if (fabs(error_) < bootstrapTolerance_ ||
         (data_->calibrationType() == CalibrationType::BestFit && error_ != QL_MAX_REAL)) {
-        // we check the log level here to avoid unncessary computations
+        // we check the log level here to avoid unnecessary computations
         if (Log::instance().filter(ORE_DATA) || setCalibrationInfo_) {
             TLOGGERSTREAM << "Basket details:";
             try {
                 TLOGGERSTREAM << getBasketDetails(calibrationInfo);
             } catch (const std::exception& e) {
-                WLOG("An error occured: " << e.what());
+                WLOG("An error occurred: " << e.what());
             }
             TLOGGERSTREAM << "Calibration details (with time grid = calibration swaption expiries):";
             try {
                 TLOGGERSTREAM << getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
             } catch (const std::exception& e) {
-                WLOG("An error occured: " << e.what());
+                WLOG("An error occurred: " << e.what());
             }
             TLOGGERSTREAM << "Parameter details (with parameter time grid)";
             TLOGGERSTREAM << getCalibrationDetails(parametrization_);
@@ -356,13 +356,13 @@ void LgmBuilder::performCalculations() const {
         try {
             WLOGGERSTREAM << getBasketDetails(calibrationInfo);
         } catch (const std::exception& e) {
-            WLOG("An error occured: " << e.what());
+            WLOG("An error occurred: " << e.what());
         }
         WLOGGERSTREAM << "Calibration details (with time grid = calibration swaption expiries):";
         try {
             WLOGGERSTREAM << getCalibrationDetails(calibrationInfo, swaptionBasket_, parametrization_);
         } catch (const std::exception& e) {
-            WLOG("An error occured: " << e.what());
+            WLOG("An error occurred: " << e.what());
         }
         WLOGGERSTREAM << "Parameter details (with parameter time grid)";
         WLOGGERSTREAM << getCalibrationDetails(parametrization_);
@@ -402,7 +402,7 @@ void LgmBuilder::getExpiryAndTerm(const Size j, Period& expiryPb, Period& termPb
         Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
         Date tmpStart = swapIndex_->iborIndex()->valueDate(swapIndex_->iborIndex()->fixingCalendar().adjust(tmpExpiry));
         // ensure that we have a term >= 1 Month, otherwise QL might throw "non-positive swap length (0)  given" from
-        // the black swaption engine during calibration helper pricing; also notice that we use the swap legnth
+        // the black swaption engine during calibration helper pricing; also notice that we use the swap length
         // calculated in the svts (i.e. a length rounded to whole months) to read the volatility from the cube, which is
         // consistent with what is done in BlackSwaptionEngine (although one might ask whether an interpolated
         // volatility would be more appropriate)

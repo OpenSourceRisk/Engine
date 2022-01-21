@@ -334,10 +334,10 @@ BOOST_AUTO_TEST_CASE(testAgainstOtherEngines) {
 
     Size no = 0;
 
-    // tolerance for comparision fd engine vs integral engines
+    // tolerance for comparison FD engine vs integral engines
     Real tol1 = 3.0E-4;
 
-    // tolerance for comparision of integral engines based
+    // tolerance for comparison of integral engines based
     // on GSR and LGM model
     Real tol2 = 1.0E-4;
 

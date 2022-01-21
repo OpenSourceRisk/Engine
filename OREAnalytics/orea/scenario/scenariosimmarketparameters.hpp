@@ -107,7 +107,7 @@ public:
     */
     bool capFloorVolAdjustOptionletPillars() const { return capFloorVolAdjustOptionletPillars_; }
     /*! If \c true, use ATM cap rate when \c capFloorVolIsAtm is \c true when querying the todaysmarket optionlet 
-        volatility structure at the confirgured expiries. Otherwise, use the index forward rate.
+        volatility structure at the configured expiries. Otherwise, use the index forward rate.
     */
     bool capFloorVolUseCapAtm() const { return capFloorVolUseCapAtm_; }
 

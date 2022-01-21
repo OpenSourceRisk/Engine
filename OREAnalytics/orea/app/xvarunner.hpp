@@ -76,7 +76,7 @@ public:
                         const boost::optional<std::set<std::string>>& currencyFilter = boost::none,
                         const bool continueOnErr = true);
 
-    // step 5: build npv, netting cube (opionally filtered on trades) and generate scenario data
+    // step 5: build npv, netting cube (optionally filtered on trades) and generate scenario data
     void buildCube(const boost::optional<std::set<std::string>>& tradeIds, bool continueOnErr = true);
 
     // get generated trade cube from step 5

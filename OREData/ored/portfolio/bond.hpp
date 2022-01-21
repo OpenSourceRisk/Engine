@@ -34,7 +34,7 @@ namespace data {
 */
 class BondData : public XMLSerializable {
 public:
-    //! Default Contructor
+    //! Default Constructor
     BondData() : hasCreditRisk_(true), faceAmount_(0.0), zeroBond_(false), bondNotional_(1.0), isPayer_(false) {}
 
     //! Constructor to set up a bond from reference data
@@ -138,7 +138,7 @@ private:
 */
 class Bond : public Trade {
 public:
-    //! Default Contructor
+    //! Default Constructor
     explicit Bond() : Trade("Bond") {}
 
     //! Constructor taking an envelope and bond data

@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/termstructures/equityforwardcurvestripper.hpp
-    \brief Imply equity forwards from option put/call partiy
+    \brief Imply equity forwards from option put/call parity
     \ingroup termstructures
 */
 

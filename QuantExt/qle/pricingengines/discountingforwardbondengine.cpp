@@ -59,7 +59,7 @@ void DiscountingForwardBondEngine::calculate() const {
     // Do some checks on data
     QL_REQUIRE(!discountCurve_.empty(), "discounting term structure handle is empty");
     QL_REQUIRE(!incomeCurve_.empty(), "income term structure handle is empty");
-    QL_REQUIRE(!bondReferenceYieldCurve_.empty(), "bond rerference term structure handle is empty");
+    QL_REQUIRE(!bondReferenceYieldCurve_.empty(), "bond reference term structure handle is empty");
 
     Date npvDate = npvDate_; // this is today when the valuation occurs
     if (npvDate == Null<Date>()) {
@@ -82,7 +82,7 @@ void DiscountingForwardBondEngine::calculate() const {
         cmpPaymentDate = npvDate;
     }
 
-    // in case that the premium payment has occured in the past, we set the amount to 0. the date itself is set to the
+    // in case that the premium payment has occurred in the past, we set the amount to 0. the date itself is set to the
     // npvDate to have a valid date for "discounting"
     Date cmpPaymentDate_use = cmpPaymentDate >= npvDate ? cmpPaymentDate : maturityDate;
     cmpPayment = cmpPaymentDate >= npvDate ? cmpPayment : 0.0; // premium cashflow is not relevant for npv if in the

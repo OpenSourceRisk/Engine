@@ -72,7 +72,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         // Set the Curve type - EquityFwd / OptionPrice / DividendYield
         curveType_ = config->type();
 
-        // declair spot and yields
+        // declare spot and yields
         Handle<Quote> equitySpot;
         Handle<YieldTermStructure> forecastYieldTermStructure;
         Handle<YieldTermStructure> dividendYieldTermStructure;
@@ -240,7 +240,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         // the curve type that we will build
         EquityCurveConfig::Type buildCurveType = curveType_;
 
-        // for curveType ForwardPrice or OptionPremium poputuate the terms_ and quotes_ with forward prices
+        // for curveType ForwardPrice or OptionPremium populate the terms_ and quotes_ with forward prices
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice ||
             curveType_ == EquityCurveConfig::Type::ForwardDividendPrice) {
 
@@ -332,7 +332,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 if (callDates.size() > 0 && putDates.size() > 0) {                    
                         DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
 
-                        DLOG("Building a Sparce Volatility surface for calls and puts");
+                        DLOG("Building a Sparse Volatility surface for calls and puts");
                         // Build a Black Variance Sparse matrix
                         boost::shared_ptr<OptionPriceSurface> callSurface =
                             boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);

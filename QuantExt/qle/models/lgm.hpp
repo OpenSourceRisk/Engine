@@ -37,7 +37,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Linear Gauss Morkov Model
+//! Linear Gauss Markov Model
 /*! LGM 1f interest rate model
     Basically the same remarks as for CrossAssetModel hold
     \ingroup models

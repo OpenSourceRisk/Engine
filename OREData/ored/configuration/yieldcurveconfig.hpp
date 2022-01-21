@@ -195,7 +195,7 @@ private:
     string projectionCurveID_;
 };
 
-//! Avergae OIS yield curve segment
+//! Average OIS yield curve segment
 /*!
   The average OIS yield curve segment is used e.g. for USD OIS curve building where
   the curve segment is determined by  a set of composite quotes and a projection curve.
@@ -210,7 +210,7 @@ public:
     //@{
     //! Default constructor
     AverageOISYieldCurveSegment() {}
-    //! Detailec constructor
+    //! Detailed constructor
     AverageOISYieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes,
                                 const string& projectionCurveID);
     //! Default destructor
@@ -374,7 +374,7 @@ private:
 //! Weighted average yield curve segment
 /*!
   A weighted average segment is used to build a yield curve from two source curves and weights. The
-  resulting disount factor is the weighted sum of the source curves' discount factors.
+  resulting discount factor is the weighted sum of the source curves' discount factors.
 
   \ingroup configuration
 */
@@ -596,7 +596,7 @@ private:
  */
 class YieldCurveConfig : public CurveConfig {
 public:
-    //! \name Constructors/Destructurs
+    //! \name Constructors/Destructors
     //@{
     //! Default constructor
     YieldCurveConfig() {}
@@ -610,7 +610,7 @@ public:
     virtual ~YieldCurveConfig() {}
     //@}
 
-    //! \name Serilalisation
+    //! \name Serialization
     //@{
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;

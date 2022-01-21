@@ -35,7 +35,7 @@ namespace data {
 
 class CreditDefaultSwapOption : public Trade {
 public:
-    /*! Hold information on a default that has occured and for which an auction has been held.
+    /*! Hold information on a default that has occurred and for which an auction has been held.
 
         If the CDS option has knockout set to false, a default payment will be made on expiry of the option in the 
         event of a default. Also, if knockout is set to true, we would still need to know this amount between the 
@@ -116,7 +116,7 @@ private:
     //! Build CDS option given that no default
     void buildNoDefault(const boost::shared_ptr<EngineFactory>& ef);
 
-    //! Build instrument given that default has occured
+    //! Build instrument given that default has occurred
     void buildDefaulted(const boost::shared_ptr<EngineFactory>& ef);
 
     //! Add the premium payment

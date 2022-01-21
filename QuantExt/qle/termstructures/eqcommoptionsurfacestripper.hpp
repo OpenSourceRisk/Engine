@@ -119,7 +119,7 @@ private:
     //! Retrieve the vector of strikes at a given expiry date.
     std::vector<QuantLib::Real> strikes(const QuantLib::Date& expiry, bool isCall) const;
 
-    /*! Imply the volatility at a given \p expiry and \p strike for the given option \p type. The excercise type is 
+    /*! Imply the volatility at a given \p expiry and \p strike for the given option \p type. The exercise type is 
         indicated by the member variable \c type_ and the target price is read off the relevant price surface i.e. 
         either \c callSurface_ or \c putSurface_.
 

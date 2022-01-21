@@ -294,7 +294,7 @@ void simulation(string dateGridString, bool checkFixings) {
         model, pathGen, scenarioFactory, parameters, today, dg, initMarket);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    // Build Porfolio
+    // Build Portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";

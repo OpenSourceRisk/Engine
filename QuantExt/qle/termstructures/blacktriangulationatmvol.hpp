@@ -24,7 +24,7 @@ using namespace QuantLib;
  *  One application of this is SIMM sensis, where the vol for XAU/EUR must be broken down
  *  into XAU/USD and EUR/USD.
  *
- *  Other methods for building a full sufrace exist, but to keep things simple we just do ATM
+ *  Other methods for building a full surface exist, but to keep things simple we just do ATM
  *
  *  \ingroup termstructures
  */

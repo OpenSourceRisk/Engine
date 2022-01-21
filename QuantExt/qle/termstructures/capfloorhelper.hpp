@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/termstructures/capfloorhelper.hpp
-    \brief Helper for bootstrapping optionlet volatilties from cap floor volatilities
+    \brief Helper for bootstrapping optionlet volatilities from cap floor volatilities
     \ingroup termstructures
 */
 
@@ -30,7 +30,7 @@
 
 namespace QuantExt {
 
-/*! Helper for bootstrapping optionlet volatilties from cap floor volatilities. The helper has a date schedule that is
+/*! Helper for bootstrapping optionlet volatilities from cap floor volatilities. The helper has a date schedule that is
     relative to the global evaluation date.
 
     \ingroup termstructures

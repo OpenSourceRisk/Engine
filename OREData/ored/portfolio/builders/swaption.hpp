@@ -37,7 +37,7 @@ namespace data {
 //! European Swaption Engine Builder
 /*! European Swaptions are priced with Black or Bachelier pricing engines,
  *  depending on the volatility type provided by Market (if it is normal, this
- *  builder returns a Bachelier engine, if it is lognormal (or lognormal shiffed)
+ *  builder returns a Bachelier engine, if it is lognormal (or lognormal shifted)
  *  it will be a Black engine.
  *
  *  Engines are cached based on currency
@@ -106,7 +106,7 @@ protected:
         const bool isNonStandard,
         //! the currency
         const string& ccy,
-        //! Excercise dates
+        //! Exercise dates
         const std::vector<Date>& dates,
         //! maturity of the underlying
         const Date& maturity,

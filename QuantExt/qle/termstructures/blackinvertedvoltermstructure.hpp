@@ -80,7 +80,7 @@ public:
     virtual void accept(AcyclicVisitor&);
     //@}
 protected:
-    // we pass through non-recipical values (0 and Null<Real>) assuming they mean ATMF.
+    // we pass through non-reciprocal values (0 and Null<Real>) assuming they mean ATMF.
     Real invertedStrike(Real strike) const { return (strike == 0.0 || strike == Null<Real>()) ? strike : 1.0 / strike; }
     virtual Real blackVarianceImpl(Time t, Real strike) const { return vol_->blackVariance(t, invertedStrike(strike)); }
     virtual Volatility blackVolImpl(Time t, Real strike) const { return vol_->blackVol(t, invertedStrike(strike)); }

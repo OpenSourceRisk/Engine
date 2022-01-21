@@ -48,7 +48,7 @@ public:
                 const Date& fwdMaturityDate, const Date& fwdSettlementDate, const bool isPhysicallySettled,
                 const bool settlementDirty, const Real compensationPayment, const Date compensationPaymentDate,
                 const Real bondNotional = 1.0);
-    //! Contructor for tlocks with lock rate
+    //! Constructor for tlocks with lock rate
     ForwardBond(const boost::shared_ptr<QuantLib::Bond>& underlying, const Real lockRate,
                 const DayCounter& lockRateDayCounter, const bool longInForward, const Date& fwdMaturityDate,
                 const Date& fwdSettlementDate, const bool isPhysicallySettled, const bool settlementDirty,

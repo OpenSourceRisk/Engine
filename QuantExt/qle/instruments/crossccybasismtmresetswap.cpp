@@ -78,7 +78,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     currencies_[2] = domesticCurrency_;
     for (Size j = 0; j < legs_[1].size(); j++) {
         boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(legs_[1][j]);
-        QL_REQUIRE(c, "Resetting XCCY - expected Coupon"); // TODO: fixed fx resetable?
+        QL_REQUIRE(c, "Resetting XCCY - expected Coupon"); // TODO: fixed fx resettable?
         // build a pair of notional flows, one at the start and one at the end of
         // the accrual period. Both with the same FX fixing date
         Date fixingDate = fxIndex_->fixingCalendar().advance(c->accrualStartDate(),

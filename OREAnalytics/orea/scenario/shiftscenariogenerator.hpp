@@ -206,7 +206,7 @@ std::pair<RiskFactorKey, std::string> deconstructFactor(const std::string& facto
 //! Reconstruct the string description from a risk factor \p key and its index description \p desc
 std::string reconstructFactor(const RiskFactorKey& key, const std::string& desc);
 
-//! risk factor key parser that takes into account additional tokens occuring in sensitivity risk factor keys
+//! risk factor key parser that takes into account additional tokens occurring in sensitivity risk factor keys
 boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
 
 inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs,

@@ -79,7 +79,7 @@ public:
         @param discountCurve  A handle to the relevant discount curve.
         @param startDate  Used to specify an explicit start date for the CDS schedule and the date from which the
                           CDS maturity is calculated via the \p tenor. Useful for off-the-run index schedules.
-        @param settlesAccrual  Set to \c true if accrued fee is paid on the occurence of a credit event and set to
+        @param settlesAccrual  Set to \c true if accrued fee is paid on the occurrence of a credit event and set to
                                \c false if it is not. Typically this is \c true.
         @param protectionPaymentTime  Time at which protection payments are made when there is a credit event.
         @param lastPeriodDayCounter  The day counter for the last fee leg coupon. See comment on \p dayCounter.

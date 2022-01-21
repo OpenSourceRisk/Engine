@@ -208,7 +208,7 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
     } else if (dimension_ == Dimension::Smile) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
     } else {
-        QL_FAIL("Unkown Dimension in GenericYieldVolatilityCurveConfig::toXML()");
+        QL_FAIL("Unknown Dimension in GenericYieldVolatilityCurveConfig::toXML()");
     }
 
     if (volatilityType_ == VolatilityType::Normal) {

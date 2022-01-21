@@ -584,11 +584,11 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
     if (preserveQuoteLinkage_)
         p_ = yieldts;
     else {
-        // Build fixed zero/discount curve that matches the boostrapped curve
+        // Build fixed zero/discount curve that matches the bootstrapped curve
         // initially, but does NOT react to quote changes: This is a workaround
         // for a QuantLib problem, where a fixed reference date piecewise
         // yield curve reacts to evaluation date changes because the bootstrap
-        // helper recompute their start date (because they are realtive date
+        // helper recompute their start date (because they are relative date
         // helper for deposits, fras, swaps, etc.).
         vector<Date> dates(instruments.size() + 1, asofDate_);
         vector<Real> zeros(instruments.size() + 1, 0.0);

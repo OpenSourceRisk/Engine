@@ -44,7 +44,7 @@ namespace QuantExt {
     its Handle is empty) or both.
 
     The currencies are deduced from the ibor indexes. The spotFx
-    be be quoted with either of these currencies, this is determined
+    to be quoted with either of these currencies, this is determined
     by the invertFxIndex flag. The settlement date of the spot is
     assumed to be equal to the settlement date of the swap itself.
 

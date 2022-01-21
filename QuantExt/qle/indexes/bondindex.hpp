@@ -58,7 +58,7 @@ public:
         with Bond::cashflows().
 
         If the bond has a pricing engine attached and today's fixing is projected, the
-        pricing engine's result will be used. Otherwise today's fixing will be calcuated
+        pricing engine's result will be used. Otherwise today's fixing will be calculated
         as projected fixings for dates > today, i.e. by simply discounting the bond's
         cashflows.
 

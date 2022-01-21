@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/marketdata/todaysmarket.cpp
-    \brief An concerte implementation of the Market class that loads todays market and builds the required curves
+    \brief An concrete implementation of the Market class that loads todays market and builds the required curves
     \ingroup
 */
 
@@ -164,7 +164,7 @@ void TodaysMarket::initialise(const Date& asof) {
                 // set error (most likely a circle), and output cycles if any
                 buildErrors["CurveDependencyGraph"] = "Topological sort of dependency graph failed for configuration " +
                                                       configuration.first + " (" + ore::data::to_string(e.what()) +
-                                                      "). Got cylcle(s): " + getCycles(g);
+                                                      "). Got cycle(s): " + getCycles(g);
             }
 
             TLOG("Can build objects in the following order:");
@@ -299,7 +299,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                     auto oi = boost::dynamic_pointer_cast<OvernightIndex>(*f->second);
                     QL_REQUIRE(oi,
                                "Found rfr index '"
-                                   << fallbackData.rfrIndex << "' as falback for ibor index '" << node.name
+                                   << fallbackData.rfrIndex << "' as fallback for ibor index '" << node.name
                                    << "', but this is not an overnight index. Are the fallback rules correct here?");
                     tmpIndex = boost::make_shared<QuantExt::FallbackIborIndex>(
                         tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
@@ -607,7 +607,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredEquityVolCurves_.find(eqvolspec->name());
             if (itr == requiredEquityVolCurves_.end()) {
                 LOG("Building EquityVol for asof " << asof_);
-                // First we need the Equity Index, we don't have a depedency for this in the graph, rather
+                // First we need the Equity Index, we don't have a dependency for this in the graph, rather
                 // pull it directly from MarketImpl, which will trigger the build if necessary -
                 // this works, but contradicts the idea of managing the dependencies fully in a graph.
                 // The EQVol builder should rather get the index from the requiredEquityCurves_.

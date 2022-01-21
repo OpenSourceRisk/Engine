@@ -58,7 +58,7 @@ struct surface {};
 */
 template <typename mode = tag::surface> class DynamicBlackVolTermStructure : public BlackVolTermStructure {
 public:
-    /* For a stickyness that involves ATM calculations, the yield term
+    /* For a stickiness that involves ATM calculations, the yield term
        structures and the spot (as of today, i.e. without settlement lag)
        must be given. They are also required if an ATM volatility with null
        strike is requested. The termstructures are expected to have a
@@ -90,7 +90,7 @@ protected:
     /* BlackVolTermStructure interface */
     Real blackVarianceImpl(Time t, Real strike) const;
     Volatility blackVolImpl(Time t, Real strike) const;
-    /* immplementations for curve and surface tags */
+    /* implementations for curve and surface tags */
     Real blackVarianceImplTag(Time t, Real strike, tag::curve) const;
     Real blackVarianceImplTag(Time t, Real strike, tag::surface) const;
 
@@ -121,14 +121,14 @@ DynamicBlackVolTermStructure<mode>::DynamicBlackVolTermStructure(const Handle<Bl
       forwardCurveSampleGrid_(forwardCurveSampleGrid) {
 
     QL_REQUIRE(stickyness == StickyStrike || stickyness == StickyLogMoneyness,
-               "stickyness (" << stickyness << ") not supported");
+               "stickiness (" << stickyness << ") not supported");
     QL_REQUIRE(decayMode == ConstantVariance || decayMode == ForwardForwardVariance,
                "reaction to time decay (" << decayMode << ") not supported");
 
     registerWith(source);
 
     if (stickyness != StickyStrike) {
-        QL_REQUIRE(atmKnown_, "for stickyness other than strike, the term "
+        QL_REQUIRE(atmKnown_, "for stickiness other than strike, the term "
                               "structures and spot must be given");
         QL_REQUIRE(riskfree_->referenceDate() == source_->referenceDate(),
                    "at construction time the reference dates of the volatility "
@@ -195,7 +195,7 @@ template <typename mode> Real DynamicBlackVolTermStructure<mode>::minStrike() co
         // source for a volatility and are not in sticky strike mode
         return 0.0;
     }
-    QL_FAIL("unexpected stickyness (" << stickyness_ << ")");
+    QL_FAIL("unexpected stickiness (" << stickyness_ << ")");
 }
 
 template <typename mode> Real DynamicBlackVolTermStructure<mode>::maxStrike() const {
@@ -206,7 +206,7 @@ template <typename mode> Real DynamicBlackVolTermStructure<mode>::maxStrike() co
         // see above
         return QL_MAX_REAL;
     }
-    QL_FAIL("unexpected stickyness (" << stickyness_ << ")");
+    QL_FAIL("unexpected stickiness (" << stickyness_ << ")");
 }
 
 template <typename mode> Volatility DynamicBlackVolTermStructure<mode>::blackVolImpl(Time t, Real strike) const {

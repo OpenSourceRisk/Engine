@@ -1602,68 +1602,68 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCirppMartingaleProperty) {
 
     Real ev = d.eurYts->discount(T2);
     if (std::abs(mean(eurzb1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for eurzb (exact discr.), excpected " << ev << ", got " << mean(eurzb1)
+        BOOST_FAIL("Martingale test failed for eurzb (exact discr.), expected " << ev << ", got " << mean(eurzb1)
                                                                                  << ", tolerance " << tol1);
     ev = d.usdYts->discount(T2) * d.fxEurUsd->value();
     if (std::abs(mean(usdzb1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for usdzb (exact discr.), excpected " << ev << ", got " << mean(usdzb1)
+        BOOST_FAIL("Martingale test failed for usdzb (exact discr.), expected " << ev << ", got " << mean(usdzb1)
                                                                                  << ", tolerance " << tol1);
     ev = d.gbpYts->discount(T2) * d.fxEurGbp->value();
     if (std::abs(mean(gbpzb1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for gbpzb (exact discr.), excpected " << ev << ", got " << mean(gbpzb1)
+        BOOST_FAIL("Martingale test failed for gbpzb (exact discr.), expected " << ev << ", got " << mean(gbpzb1)
                                                                                  << ", tolerance " << tol1);
     ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for n1eur (exact discr.), excpected " << ev << ", got " << mean(n1eur1)
+        BOOST_FAIL("Martingale test failed for n1eur (exact discr.), expected " << ev << ", got " << mean(n1eur1)
                                                                                  << ", tolerance " << tol1);
     ev = d.fxEurUsd->value() * d.usdYts->discount(T2) * d.n2Ts->survivalProbability(T2);
     if (std::abs(mean(n2usd1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for n2usd (exact discr.), excpected " << ev << ", got " << mean(n2usd1)
+        BOOST_FAIL("Martingale test failed for n2usd (exact discr.), expected " << ev << ", got " << mean(n2usd1)
                                                                                  << ", tolerance " << tol1);
     ev = d.fxEurGbp->value() * d.gbpYts->discount(T2) * d.n3Ts->survivalProbability(T2);
     if (std::abs(mean(n3gbp1) - ev) > tol1)
-        BOOST_FAIL("Martingale test failed for n3gbp (exact discr.), excpected " << ev << ", got " << mean(n3gbp1)
+        BOOST_FAIL("Martingale test failed for n3gbp (exact discr.), expected " << ev << ", got " << mean(n3gbp1)
                                                                                  << ", tolerance " << tol1);
 
     ev = d_cirpp.eurYts->discount(T2);
     if (std::abs(mean(eurzb2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for eurzb (Euler discr.), excpected " << ev << ", got " << mean(eurzb2)
+        BOOST_FAIL("Martingale test failed for eurzb (Euler discr.), expected " << ev << ", got " << mean(eurzb2)
                                                                                  << ", tolerance " << tol2);
     ev = d_cirpp.usdYts->discount(T2) * d_cirpp.fxEurUsd->value();
     if (std::abs(mean(usdzb2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for usdzb (Euler discr.), excpected "
+        BOOST_FAIL("Martingale test failed for usdzb (Euler discr.), expected "
                    << ev << ", got " << mean(usdzb2) << ", tolerance " << tol2 * error_of<tag::mean>(usdzb2));
     ev = d_cirpp.gbpYts->discount(T2) * d_cirpp.fxEurGbp->value();
     if (std::abs(mean(gbpzb2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for gbpzb (Euler discr.), excpected " << ev << ", got " << mean(gbpzb2)
+        BOOST_FAIL("Martingale test failed for gbpzb (Euler discr.), expected " << ev << ", got " << mean(gbpzb2)
                                                                                  << ", tolerance " << tol2);
 
     // CR LGM
     ev = d_cirpp.eurYts->discount(T2) * d_cirpp.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for n1eur (Euler discr.), excpected " << ev << ", got " << mean(n1eur2)
+        BOOST_FAIL("Martingale test failed for n1eur (Euler discr.), expected " << ev << ", got " << mean(n1eur2)
                                                                                  << ", tolerance " << tol2);
     ev = d_cirpp.fxEurUsd->value() * d_cirpp.usdYts->discount(T2) * d_cirpp.n2Ts->survivalProbability(T2);
     if (std::abs(mean(n2usd2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for n2usd (Euler discr.), excpected " << ev << ", got " << mean(n2usd2)
+        BOOST_FAIL("Martingale test failed for n2usd (Euler discr.), expected " << ev << ", got " << mean(n2usd2)
                                                                                  << ", tolerance " << tol2);
     ev = d_cirpp.fxEurGbp->value() * d_cirpp.gbpYts->discount(T2) * d_cirpp.n3Ts->survivalProbability(T2);
     if (std::abs(mean(n3gbp2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for n3gbp (Euler discr.), excpected " << ev << ", got " << mean(n3gbp2)
+        BOOST_FAIL("Martingale test failed for n3gbp (Euler discr.), expected " << ev << ", got " << mean(n3gbp2)
                                                                                  << ", tolerance " << tol2);
 
     // CR CIR
     ev = d_cirpp.eurYts->discount(T2) * d_cirpp.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1cir2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for n1cir (Euler discr.), excpected " << ev << ", got " << mean(n1cir2)
+        BOOST_FAIL("Martingale test failed for n1cir (Euler discr.), expected " << ev << ", got " << mean(n1cir2)
                                                                                  << ", tolerance " << tol2);
     ev = d_cirpp.fxEurUsd->value() * d_cirpp.usdYts->discount(T2) * d_cirpp.n2Ts->survivalProbability(T2);
     if (std::abs(mean(n2cir2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for n2cir2 (Euler discr.), excpected " << ev << ", got " << mean(n2cir2)
+        BOOST_FAIL("Martingale test failed for n2cir2 (Euler discr.), expected " << ev << ", got " << mean(n2cir2)
                                                                                  << ", tolerance " << tol2);
     ev = d_cirpp.fxEurGbp->value() * d_cirpp.gbpYts->discount(T2) * d_cirpp.n3Ts->survivalProbability(T2);
     if (std::abs(mean(n3cir2) - ev) > tol2)
-        BOOST_FAIL("Martingale test failed for n3cir2 (Euler discr.), excpected " << ev << ", got " << mean(n3cir2)
+        BOOST_FAIL("Martingale test failed for n3cir2 (Euler discr.), expected " << ev << ", got " << mean(n3cir2)
                                                                                  << ", tolerance " << tol2);
 
 } // testIrFxCrMartingaleProperty
@@ -1947,7 +1947,7 @@ BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
                 }
             }
         } // for creditnames
-    }     // for currenciess
+    }     // for currencies
 
 } // testIrFxCrCorrelationRecovery
 
@@ -1967,7 +1967,7 @@ struct IrFxInfCrModelTestData {
 
         Settings::instance().evaluationDate() = referenceDate;
         
-        // Store the indvidual models that will be fed to the CAM.
+        // Store the individual models that will be fed to the CAM.
         vector<boost::shared_ptr<Parametrization> > singleModels;
 
         // IR parameterisations
@@ -2363,63 +2363,63 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
     Real ev = d.eurYts->discount(T2);
     if (std::abs(mean(eurzb1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eurzb1) << ", tolerance " << tol1);
     ev = d.usdYts->discount(T2) * d.fxEurUsd->value();
     if (std::abs(mean(usdzb1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(usdzb1) << ", tolerance " << tol1);
     ev = d.gbpYts->discount(T2) * d.fxEurGbp->value();
     if (std::abs(mean(gbpzb1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(gbpzb1) << ", tolerance " << tol1);
     ev = d.eurYts->discount(T2) * std::pow(1.0 + d.infEurTs->zeroRate(T2 - d.infLag), T2);
     if (std::abs(mean(infeur1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for idx eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infeur1) << ", tolerance " << tol1);
     ev = d.gbpYts->discount(T2) * std::pow(1.0 + d.infGbpTs->zeroRate(T2 - d.infLag), T2) * d.fxEurGbp->value();
     if (std::abs(mean(infgbp1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for idx gbpzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infgbp1) << ", tolerance " << tol1);
     ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for def eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(n1eur1) << ", tolerance " << tol1);
 
     ev = d.eurYts->discount(T2);
     if (std::abs(mean(eurzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for eurzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eurzb2) << ", tolerance " << tol2);
     ev = d.usdYts->discount(T2) * d.fxEurUsd->value();
     if (std::abs(mean(usdzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for usdzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(usdzb2) << ", tolerance " << tol2 * error_of<tag::mean>(usdzb2));
     ev = d.gbpYts->discount(T2) * d.fxEurGbp->value();
     if (std::abs(mean(gbpzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for gbpzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(gbpzb2) << ", tolerance " << tol2);
     ev = d.eurYts->discount(T2) * std::pow(1.0 + d.infEurTs->zeroRate(T2 - d.infLag), T2);
     if (std::abs(mean(infeur2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for idx eurzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infeur2) << ", tolerance " << tol1);
     ev = d.gbpYts->discount(T2) * std::pow(1.0 + d.infGbpTs->zeroRate(T2 - d.infLag), T2) * d.fxEurGbp->value();
     if (std::abs(mean(infgbp2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for idx gbpzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infgbp2) << ", tolerance " << tol1);
     ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for def eurzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(n1eur1) << ", tolerance " << tol1);
 
 } // testIrFxInfCrMartingaleProperty
@@ -2931,83 +2931,83 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
     Real ev = d.eurYts->discount(T2);
     if (std::abs(mean(eurzb1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eurzb1) << ", tolerance " << tol1);
     ev = d.usdYts->discount(T2) * d.fxEurUsd->value();
     if (std::abs(mean(usdzb1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(usdzb1) << ", tolerance " << tol1);
     ev = d.gbpYts->discount(T2) * d.fxEurGbp->value();
     if (std::abs(mean(gbpzb1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(gbpzb1) << ", tolerance " << tol1);
     ev = d.eurYts->discount(T2) * std::pow(1.0 + d.infEurTs->zeroRate(T2 - d.infLag), T2);
     if (std::abs(mean(infeur1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for idx eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infeur1) << ", tolerance " << tol1);
     ev = d.gbpYts->discount(T2) * std::pow(1.0 + d.infGbpTs->zeroRate(T2 - d.infLag), T2) * d.fxEurGbp->value();
     if (std::abs(mean(infgbp1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for idx gbpzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infgbp1) << ", tolerance " << tol1);
     ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur1) - ev) > tol1)
         BOOST_FAIL("Martingale test failed for def eurzb (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(n1eur1) << ", tolerance " << tol1);
     ev = d.spSpotToday->value() * d.eqDivSp->discount(T) * d.fxEurUsd->value();
     if (std::abs(mean(eqsp1) - ev) / ev > tol1r)
         BOOST_FAIL("Martingale test failed for eq sp (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eqsp1) << ", rel tolerance " << tol1r);
     ev = d.lhSpotToday->value() * d.eqDivLh->discount(T);
     if (std::abs(mean(eqlh1) - ev) / ev > tol1r)
         BOOST_FAIL("Martingale test failed for eq lh (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eqlh1) << ", rel tolerance " << tol1r);
 
     ev = d.eurYts->discount(T2);
     if (std::abs(mean(eurzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for eurzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eurzb2) << ", tolerance " << tol2);
     ev = d.usdYts->discount(T2) * d.fxEurUsd->value();
     if (std::abs(mean(usdzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for usdzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(usdzb2) << ", tolerance " << tol2 * error_of<tag::mean>(usdzb2));
     ev = d.gbpYts->discount(T2) * d.fxEurGbp->value();
     if (std::abs(mean(gbpzb2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for gbpzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(gbpzb2) << ", tolerance " << tol2);
     ev = d.eurYts->discount(T2) * std::pow(1.0 + d.infEurTs->zeroRate(T2 - d.infLag), T2);
     if (std::abs(mean(infeur2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for idx eurzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infeur2) << ", tolerance " << tol2);
     ev = d.gbpYts->discount(T2) * std::pow(1.0 + d.infGbpTs->zeroRate(T2 - d.infLag), T2) * d.fxEurGbp->value();
     if (std::abs(mean(infgbp2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for idx gbpzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(infgbp2) << ", tolerance " << tol2);
     ev = d.eurYts->discount(T2) * d.n1Ts->survivalProbability(T2);
     if (std::abs(mean(n1eur2) - ev) > tol2)
         BOOST_FAIL("Martingale test failed for def eurzb (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(n1eur1) << ", tolerance " << tol2);
     ev = d.spSpotToday->value() * d.eqDivSp->discount(T) * d.fxEurUsd->value();
     if (std::abs(mean(eqsp2) - ev) / ev > tol2r)
         BOOST_FAIL("Martingale test failed for eq sp (Euler discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eqsp2) << ", rel tolerance " << tol2r);
     ev = d.lhSpotToday->value() * d.eqDivLh->discount(T);
     if (std::abs(mean(eqlh2) - ev) / ev > tol2r)
         BOOST_FAIL("Martingale test failed for eq lh (exact discr.),"
-                   "excpected "
+                   "expected "
                    << ev << ", got " << mean(eqlh2) << ", rel tolerance " << tol2r);
 
 } // testIrFxInfCrEqMartingaleProperty
@@ -3969,7 +3969,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
                 }
             } // for creditnames
         }     // for cpiindexes
-    }         // for currenciess
+    }         // for currencies
 } // testIrFxInfCrCorrelationRecovery
 
 BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
@@ -4165,7 +4165,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
                 } // for equity
             }     // for creditnames
         }         // for cpiindexes
-    }             // for currenciess
+    }             // for currencies
 } // testIrFxInfCrEqCorrelationRecovery
 
 BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {

@@ -31,7 +31,7 @@
      boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
 
      QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
      expiryDate_ = parseDate(option_.exerciseDates().front());
 
      // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with

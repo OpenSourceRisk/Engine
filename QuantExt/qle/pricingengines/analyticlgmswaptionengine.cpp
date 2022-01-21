@@ -65,7 +65,7 @@ void AnalyticLgmSwaptionEngine::enableCache(const bool lgm_H_constant, const boo
 
 void AnalyticLgmSwaptionEngine::clearCache() {
     S_.clear();             // indicates that H / alpha independent variables are not yet computed
-    Hj_.clear();            // indicates that H dependent variables not not yet computed
+    Hj_.clear();            // indicates that H dependent variables not yet computed
     zetaex_ = Null<Real>(); // indicates that alpha dependent variables are not yet computed
 }
 
@@ -134,7 +134,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 if (amount != Null<Real>()) {
                     Real flatAmount;
                     if (IborCoupon::usingAtParCoupons()) {
-                        // if par coupons are used, we mimick the fixing estimation in IborCoupon; we make
+                        // if par coupons are used, we mimic the fixing estimation in IborCoupon; we make
                         // sure that the estimation period does not start in the past and we do not use
                         // historical fixings
                         Date fixingValueDate = index->fixingCalendar().advance(arguments_.floatingFixingDates[k],

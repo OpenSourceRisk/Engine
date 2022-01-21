@@ -23,7 +23,7 @@
 
  void FxAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
      // Checks
-     QL_REQUIRE(quantity_ > 0, "Fx Asian option requires a positive quatity");
+     QL_REQUIRE(quantity_ > 0, "Fx Asian option requires a positive quantity");
      QL_REQUIRE(strike_ > 0, "Fx Asian option requires a positive strike");
 
      const boost::shared_ptr<Market>& market = engineFactory->market();

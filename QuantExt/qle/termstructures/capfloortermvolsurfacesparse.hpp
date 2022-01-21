@@ -131,7 +131,7 @@ void CapFloorTermVolSurfaceSparse<IS, IE>::initialiseStrikesTenors() {
     // sort the strikes
     std::sort(strikes_.begin(), strikes_.end());
 
-    // create the option intrpolator
+    // create the option interpolator
     performCalculations();
 }
 

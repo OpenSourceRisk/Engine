@@ -219,7 +219,7 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChildren(doc, node, "SourceCurves", "SourceCurve", multiSectionSourceCurveIds_);
         XMLUtils::addChildren(doc, node, "SwitchDates", "SwitchDate", multiSectionSwitchDates_);
     } else {
-        QL_FAIL("Unkown type in DefaultCurveConfig::toXML()");
+        QL_FAIL("Unknown type in DefaultCurveConfig::toXML()");
     }
     XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);

@@ -295,7 +295,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         bool expiriesWc = find(vssc.expiries().begin(), vssc.expiries().end(), "*") != vssc.expiries().end();
         bool strikesWc = find(vssc.strikes().begin(), vssc.strikes().end(), "*") != vssc.strikes().end();
         if (expiriesWc) {
-            QL_REQUIRE(vssc.expiries().size() == 1, "Wild card expiriy specified but more expiries also specified.");
+            QL_REQUIRE(vssc.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
         }
         if (strikesWc) {
             QL_REQUIRE(vssc.strikes().size() == 1, "Wild card strike specified but more strikes also specified.");

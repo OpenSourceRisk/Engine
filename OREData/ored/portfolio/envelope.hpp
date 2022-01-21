@@ -52,7 +52,7 @@ public:
     // For some reason have a ctor with:
     // map<string, string>& additionalFields = map<string,string>()
     // fails under gcc, apparently it's a gcc bug! So to workaround we just have
-    // 2 explict ctors.
+    // 2 explicit tors.
 
     //! Constructor without netting set / portfolio ids, with additional fields
     Envelope(const string& counterparty, const map<string, string>& additionalFields)

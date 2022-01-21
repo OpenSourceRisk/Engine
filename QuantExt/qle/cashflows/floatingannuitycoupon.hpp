@@ -62,7 +62,7 @@ public:
     virtual Rate adjustedFixing() const { return indexFixing(); } // FIXME
     bool isInArrears() const;
     //@}
-    //! \name Visiter interface
+    //! \name Visitor interface
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}

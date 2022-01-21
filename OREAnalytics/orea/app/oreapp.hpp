@@ -163,7 +163,7 @@ protected:
     //! Get report writer
     /*! This calls the private method getReportWriterImpl() which returns the
         actual ReportWriter implementation. The private method is virtual and
-        can be overridden in derived classes to provide a dervied ReportWriter
+        can be overridden in derived classes to provide a derived ReportWriter
         instance. This method is not virtual and can be hidden in derived
         classes by a method with the same name. This method can then return a
         shared pointer to the derived ReportWriter class.

@@ -402,7 +402,7 @@ BlackVolatilitySurfaceBFRR::BlackVolatilitySurfaceBFRR(
 
 void BlackVolatilitySurfaceBFRR::init() {
 
-    // calcluate switch time
+    // calculate switch time
 
     switchTime_ = switchTenor_ == 0 * Days ? QL_MAX_REAL : timeFromReference(optionDateFromTenor(switchTenor_));
 
@@ -621,7 +621,7 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
         }
     }
 
-    /* build a new smile using the interpolated vols and artifical conventions
+    /* build a new smile using the interpolated vols and artificial conventions
        (querying the dom / for TS at t + settlLag_ is not entirely correct, because
         - of possibly different dcs in the curves and the vol ts and
         - because settLag_ is the time from today

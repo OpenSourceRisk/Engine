@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/configuration/curveconfigurations.hpp
-    \brief Curve configuration repoistory
+    \brief Curve configuration repository
     \ingroup configuration
 */
 

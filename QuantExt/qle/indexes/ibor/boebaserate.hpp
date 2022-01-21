@@ -33,7 +33,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Bank of England Base Rate index index
+//! Bank of England Base Rate index
 
 class BOEBaseRateIndex : public QuantLib::OvernightIndex {
 public:

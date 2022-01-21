@@ -30,7 +30,7 @@
 namespace ore {
 namespace data {
 
-/*! Serializable 1-D sovler configuration
+/*! Serializable 1-D solver configuration
     \ingroup configuration
 */
 class OneDimSolverConfig : public XMLSerializable {

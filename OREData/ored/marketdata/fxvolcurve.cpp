@@ -59,7 +59,7 @@ private:
     const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots_;
 };
 
-// look-u[ fx from triangulation object
+// look-up fx from triangulation object
 class FXLookupTriangulation : public ore::data::FXLookup {
 public:
     FXLookupTriangulation(const ore::data::FXTriangulation& fxSpots) : fxSpots_(fxSpots) {}
@@ -785,7 +785,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 spotCalendar_ = fxConv->advanceCalendar();
             }
         } else {
-            WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
+            WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
         }
 

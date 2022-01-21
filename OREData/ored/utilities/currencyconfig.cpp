@@ -41,7 +41,7 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
         Integer fractionsPerUnit = parseInteger(XMLUtils::getChildValue(node, "FractionsPerUnit", false));
         Rounding::Type roundingType = parseRoundingType(XMLUtils::getChildValue(node, "RoundingType", false));
         Integer precision = parseInteger(XMLUtils::getChildValue(node, "RoundingPrecision", false));
-        // the digit where we switch form roundng down to rounding up, typically 5 and used across all
+        // the digit where we switch form rounding down to rounding up, typically 5 and used across all
         // Integer digit = parseInteger(XMLUtils::getChildValue(node, "Digit", false));
         string format = XMLUtils::getChildValue(node, "Format", false);
         Rounding rounding;

@@ -102,7 +102,7 @@ protected:
 private:
     void initialize();
 
-    //! nominal of non restting leg
+    //! nominal of non resetting leg
     Real nominal_;
     QuantLib::Currency fixedCurrency_;
     QuantLib::Schedule fixedSchedule_;

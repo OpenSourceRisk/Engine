@@ -242,7 +242,7 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, node, "SmileDelta", smileDelta_);
         XMLUtils::addChild(doc, node, "Conventions", to_string(conventionsID_));
     } else {
-        QL_FAIL("Unkown Dimension in FXVolatilityCurveConfig::toXML()");
+        QL_FAIL("Unknown Dimension in FXVolatilityCurveConfig::toXML()");
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);

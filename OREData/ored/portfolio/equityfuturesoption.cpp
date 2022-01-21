@@ -28,7 +28,7 @@ EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const s
 }
 
 void EquityFutureOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
+    QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quantity");
     assetName_ = name();
     // FIXME: use index once implemented
     // const boost::shared_ptr<Market>& market = engineFactory->market();

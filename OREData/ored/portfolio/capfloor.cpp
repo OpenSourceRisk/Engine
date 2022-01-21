@@ -284,7 +284,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 gearing = 1.0; // no gearing here
                 paymentDate = cashflow->date();
             } else {
-                QL_FAIL("Failed to interprete CPI flow");
+                QL_FAIL("Failed to interpret CPI flow");
             }
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
@@ -321,7 +321,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             engineFactory->market()->yoyInflationIndex(underlyingIndex, builder->configuration(MarketContext::pricing));
         qlIndexName = yoyIndex->name();
 
-        // we must have either an yoy or a zero inflation index in the market, if no yoy curve, get teh zero
+        // we must have either an yoy or a zero inflation index in the market, if no yoy curve, get the zero
         // and create a yoy index from it
         if (yoyIndex.empty()) {
             Handle<ZeroInflationIndex> zeroIndex = engineFactory->market()->zeroInflationIndex(

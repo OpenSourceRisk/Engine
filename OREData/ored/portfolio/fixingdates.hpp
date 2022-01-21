@@ -72,7 +72,7 @@ public:
         If the \p settlementDate is not provided or is set equal to \c QuantLib::Date(), the settlement date in the
         implementation is assumed to be the \c Settings::instance().evaluationDate().
 
-        If a cashflow payment is deemed to have already occured relative to the settlement date, then no fixing is
+        If a cashflow payment is deemed to have already occurred relative to the settlement date, then no fixing is
         needed. The determination of whether a cashflow has or has not occurred will in general rely on a call to \c
         CashFlow::hasOccurred which is important in cases where the cash flow payment date falls on the settlement date.
 

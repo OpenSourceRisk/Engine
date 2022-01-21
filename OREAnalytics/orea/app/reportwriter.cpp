@@ -289,7 +289,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                     auto tmp = qlInstr->additionalResults().find("cashFlowResults");
                     if (tmp != qlInstr->additionalResults().end()) {
                         QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
-                                   "cashflowResults type not handlded");
+                                   "cashflowResults type not handled");
                         std::vector<CashFlowResults> cfResults =
                             boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
                         std::map<Size, Size> cashflowNumber;
@@ -335,7 +335,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         } catch (std::exception& e) {
             ALOG("Exception writing cashflow report : " << e.what());
         } catch (...) {
-            ALOG("Exception writing cashflow report : Unkown Exception");
+            ALOG("Exception writing cashflow report : Unknown Exception");
         }
     }
     report.end();

@@ -32,7 +32,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Black volatility surface that that monotonises the variance in an existing surface
+//! Black volatility surface that monotonises the variance in an existing surface
 /*! This class is used when monotonic variance is required
 
             \ingroup termstructures

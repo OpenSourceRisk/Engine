@@ -61,7 +61,7 @@ public:
     //! The minimum time for which the curve can return values
     virtual QuantLib::Time minTime() const;
 
-    //! The currency in which prices are expresed
+    //! The currency in which prices are expressed
     virtual const QuantLib::Currency& currency() const = 0;
 
     //! The pillar dates for the PriceTermStructure

@@ -57,7 +57,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     bool isFixedFloating = (swap_[0].legType() == "Fixed" && swap_[1].legType() == "Floating") ||
                            (swap_[1].legType() == "Fixed" && swap_[0].legType() == "Floating");
 
-    // First elimate these
+    // First eliminate these
     QL_REQUIRE(!isCrossCcy, "Cross Currency Swaptions not supported");
     QL_REQUIRE(isFixedFloating, "Basis Swaptions not supported");
 

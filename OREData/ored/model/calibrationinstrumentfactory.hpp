@@ -40,7 +40,7 @@ namespace data {
 /*! Function that is used to build instances of CalibrationInstrument
 
     The template parameter is simply a particular instance of a \c CalibrationInstrument class that is default
-    constructable. The function returns the default constructed CalibrationInstrument object. A simple example is the
+    constructible. The function returns the default constructed CalibrationInstrument object. A simple example is the
     function to build an instance of \c CpiCapFloor would be called via \c createLegData<CpiCapFloor>().
 
     \ingroup models

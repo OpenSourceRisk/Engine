@@ -19,7 +19,7 @@
 /*! \file qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp
     \brief Interpolated YoY Inflation Cap floor term price surface -
            extends QuantLib InterpolatedYoYCapFloorTermPriceSurface to allow
-           choice of termstruture directly from YoY swap quotes or from
+           choice of termstructure directly from YoY swap quotes or from
            atm swap quotes stripped from cap/floor price surface
     \ingroup termstructures
 */
@@ -159,7 +159,7 @@ template <class I2D, class I1D> void InterpolatedYoYCapFloorTermPriceSurface<I2D
                 }
             }
         }
-        QL_REQUIRE(overlappingStrikes.size(), "No overlapping stikes between caps and floors for "
+        QL_REQUIRE(overlappingStrikes.size(), "No overlapping strikes between caps and floors for "
                                                   << "yoycapfloortermpricesurface " << yoyIndex_->name());
 
         // calculate the yoy termstructure from the first overlapping strike

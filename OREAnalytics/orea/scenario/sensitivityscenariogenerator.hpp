@@ -70,7 +70,7 @@ using namespace data;
 
   To apply shifts to the integrated hazard rates let:
   - S(t) be the survival probability at time t
-  - &lambda(t) be the "instaneous" hazard rate at time t
+  - &lambda(t) be the "instantaneous" hazard rate at time t
   - &Lambda(t) be the averaged hazard rate at time t
 
   The relationship between these three can be expressed as:
@@ -88,9 +88,9 @@ using namespace data;
 
 
   Note:
-  - For yield curves, the class generates sensitivites in the Zero rate domain only.
-  Conversion into par rate sensivities has to be implemented as a postprocessor step.
-  - Likewise, Cap/Floor volatilitiy sensitivties are computed in the optionlet domain.
+  - For yield curves, the class generates sensitivities in the Zero rate domain only.
+  Conversion into par rate sensitivities has to be implemented as a postprocessor step.
+  - Likewise, Cap/Floor volatility sensitivities are computed in the optionlet domain.
   Conversion into par (flat cap/floor) volatility sensis has to be implemented as a
   postprocessor step.
 

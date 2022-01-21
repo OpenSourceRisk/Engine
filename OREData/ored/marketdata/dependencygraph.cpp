@@ -17,7 +17,7 @@
 */
 
 /*! \file marketdata/dependencygraph.cpp
-    \brief DependencyGraph class to establish build order of marketObjects and its dependendency
+    \brief DependencyGraph class to establish build order of marketObjects and its dependency
     \ingroup marketdata
 */
 

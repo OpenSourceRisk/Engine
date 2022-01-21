@@ -64,7 +64,7 @@ public:
     Rate maxStrike() const { return surface_->maxStrike(); }
     //@}
 
-    // override Termstructure deepUpdate to ensure atm_ curve is updatesd
+    // override Termstructure deepUpdate to ensure atm_ curve is updated
     void deepUpdate() {
         atm_->update();
         update();

@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(testCalendarAdjustment) {
     CalendarAdjustmentConfig cacad;
     BOOST_REQUIRE(cac.getCalendars().empty());
 
-    // adding UK holiday not in Quantlub calendar
+    // adding UK holiday not in Quantlib calendar
     cac.addHolidays("UK", Date(29, April, 2011));
     // Checking that we get it back
     // Note getCalenders get the quantlib name

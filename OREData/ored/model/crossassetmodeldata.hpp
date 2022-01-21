@@ -70,7 +70,7 @@ public:
     //@{
     //! Populate members from XML
     virtual void fromXML(XMLNode* node);
-    //! Write class mambers to XML
+    //! Write class members to XML
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
@@ -244,7 +244,7 @@ public:
     //@{
     //! Populate members from XML
     virtual void fromXML(XMLNode* node);
-    //! Write class mambers to XML
+    //! Write class members to XML
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 

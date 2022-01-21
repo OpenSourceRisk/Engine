@@ -36,7 +36,7 @@ namespace QuantExt {
     structure's strike dimension, if there is one, is in terms of spread also. This is the standard situation for 
     single name CDS options.
 
-    The valuation follows the approach outlined in <em>Modelling Single-name and Multi-name Credit Derivatives, 
+    The valuation follows the approach outlined in <em>Modeling Single-name and Multi-name Credit Derivatives, 
     Dominic O'Kane, 2008, Section 9.3.7</em>. This is also the approach in <em>A CDS Option Miscellany, Richard 
     J. Martin, 2019, Section 2.1 and 2.2</em>. If we need the approach in Section 2.4 of that paper, we would need 
     to make adjustments to the forward spread and RPV01 in our calculation which may in turn need access to the ISDA 

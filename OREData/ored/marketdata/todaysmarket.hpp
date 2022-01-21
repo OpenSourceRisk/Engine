@@ -17,7 +17,7 @@
 */
 
 /*! \file marketdata/todaysmarket.hpp
-    \brief An concerte implementation of the Market class that loads todays market and builds the required curves
+    \brief An concrete implementation of the Market class that loads todays market and builds the required curves
     \ingroup marketdata
 */
 
@@ -64,7 +64,7 @@ class CorrelationCurve;
 // TODO: rename class
 //! Today's Market
 /*!
-  Today's Market differes from MarketImpl in that it actually loads market data
+  Today's Market differs from MarketImpl in that it actually loads market data
   and builds term structure objects.
 
   We label this object Today's Market in contrast to the Simulation Market which can

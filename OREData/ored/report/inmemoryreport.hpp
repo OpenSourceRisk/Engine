@@ -44,7 +44,7 @@ public:
         headers_.push_back(name);
         columnTypes_.push_back(rt);
         columnPrecision_.push_back(precision);
-        data_.push_back(vector<ReportType>()); // Initalise vector for
+        data_.push_back(vector<ReportType>()); // Initialise vector for
         i_++;
         return *this;
     }

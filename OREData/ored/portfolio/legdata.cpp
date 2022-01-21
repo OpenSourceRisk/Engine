@@ -983,7 +983,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     if (floatData->hasSubPeriods()) {
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "SubPeriodsLegs does not support caps or floors");
-        QL_REQUIRE(!isInArrears, "SubPeriodLegs do not support in aarears fixings");
+        QL_REQUIRE(!isInArrears, "SubPeriodLegs do not support in arrears fixings");
         Leg leg = QuantExt::SubPeriodsLeg1(schedule, index)
                       .withNotionals(notionals)
                       .withPaymentDayCounter(dc)
@@ -1323,7 +1323,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
         // set coupon pricer for the leg
         for (Size i = 0; i < leg.size(); i++) {
-            // nothing to do for the plain CPI Coupon, because the pricer is already set when the leg bilder is called
+            // nothing to do for the plain CPI Coupon, because the pricer is already set when the leg builder is called
             // nothing to do for the plain CPI CashFlow either, because it does not require a pricer
 
             boost::shared_ptr<CappedFlooredCPICoupon> cfCpiCoupon =
@@ -2301,7 +2301,7 @@ Leg buildNotionalLeg(const LegData& data, const Leg& leg, RequiredFixings& requi
         }
 
         if (data.notionalAmortizingExchange()) {
-            QL_FAIL("Cannot have an amoritizing notional with FX reset");
+            QL_FAIL("Cannot have an amortizing notional with FX reset");
         }
 
         return resettingLeg;

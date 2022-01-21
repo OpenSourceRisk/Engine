@@ -35,7 +35,7 @@ using namespace std;
 
 //! Exposure allocator base class
 /*!
-  Derived classes implement a constructor with the relavant additional input data
+  Derived classes implement a constructor with the relevant additional input data
   and a build function that performs the XVA calculations for all netting sets and
   along all paths.
 */
@@ -60,7 +60,7 @@ public:
 
     virtual ~ExposureAllocator() {}
     const boost::shared_ptr<NPVCube>& exposureCube() { return tradeExposureCube_; }
-    //! Compute exposures along all paths and fill result structurues
+    //! Compute exposures along all paths and fill result structures
     virtual void build();
 
 

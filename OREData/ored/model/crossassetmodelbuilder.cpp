@@ -167,7 +167,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     QL_REQUIRE(config_->irConfigs().size() > 0, "missing IR configurations");
     QL_REQUIRE(config_->irConfigs().size() == config_->fxConfigs().size() + 1,
-               "FX configuration size " << config_->fxConfigs().size() << " inconsisitent with IR configuration size "
+               "FX configuration size " << config_->fxConfigs().size() << " inconsistent with IR configuration size "
                                         << config_->irConfigs().size());
 
     swaptionBaskets_.resize(config_->irConfigs().size());
@@ -231,7 +231,7 @@ void CrossAssetModelBuilder::buildModel() const {
         QuantLib::Currency domCcy = ore::data::parseCurrency(fx->domesticCcy());
 
         QL_REQUIRE(ccy.code() == irParametrizations[i + 1]->currency().code(),
-                   "FX parametrization currency[" << i << "]=" << ccy << " does not match IR currrency[" << i + 1
+                   "FX parametrization currency[" << i << "]=" << ccy << " does not match IR currency[" << i + 1
                                                   << "]=" << irParametrizations[i + 1]->currency().code());
 
         QL_REQUIRE(domCcy == domesticCcy, "FX parametrization [" << i << "]=" << ccy << "/" << domCcy
@@ -453,7 +453,7 @@ void CrossAssetModelBuilder::buildModel() const {
             fxOptionCalibrationErrors_[i] = getCalibrationError(fxOptionBaskets_[i]);
             if (fx->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(fxOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    // we check the log level here to avoid unncessary computations
+                    // we check the log level here to avoid unnecessary computations
                     if (Log::instance().filter(ORE_DATA)) {
                         TLOGGERSTREAM << "Calibration details:";
                         TLOGGERSTREAM << getCalibrationDetails(fxOptionBaskets_[i], fxParametrizations[i],
@@ -518,7 +518,7 @@ void CrossAssetModelBuilder::buildModel() const {
             eqOptionCalibrationErrors_[i] = getCalibrationError(eqOptionBaskets_[i]);
             if (eq->calibrationType() == CalibrationType::Bootstrap) {
                 if (fabs(eqOptionCalibrationErrors_[i]) < config_->bootstrapTolerance()) {
-                    // we check the log level here to avoid unncessary computations
+                    // we check the log level here to avoid unnecessary computations
                     if (Log::instance().filter(ORE_DATA)) {
                         TLOGGERSTREAM << "Calibration details:";
                         TLOGGERSTREAM << getCalibrationDetails(eqOptionBaskets_[i], eqParametrizations[i],
@@ -637,7 +637,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(cb);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
-            // we check the log level here to avoid unncessary computations
+            // we check the log level here to avoid unnecessary computations
             if (Log::instance().filter(ORE_DATA)) {
                 TLOGGERSTREAM << "Calibration details:";
                 TLOGGERSTREAM << getCalibrationDetails(cb, inflationParam);
@@ -778,7 +778,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
     inflationCalibrationErrors_[modelIdx] = getCalibrationError(allHelpers);
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < cc.rmseTolerance()) {
-            // we check the log level here to avoid unncessary computations
+            // we check the log level here to avoid unnecessary computations
             if (Log::instance().filter(ORE_DATA)) {
                 TLOGGERSTREAM << "Calibration details:";
                 TLOGGERSTREAM << getCalibrationDetails(rrBasket, idxBasket, inflationParam, rrVol.calibrate());

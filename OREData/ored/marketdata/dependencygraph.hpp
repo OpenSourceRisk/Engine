@@ -17,7 +17,7 @@
 */
 
 /*! \file marketdata/dependencygraph.hpp
-    \brief DependencyGraph class to establish build order of marketObjects and its dependendency
+    \brief DependencyGraph class to establish build order of marketObjects and its dependency
     \ingroup marketdata
 */
 
@@ -64,7 +64,7 @@ template <typename Graph> string getCycles(const Graph& g) {
     return cycles.str();
 }
 
-//! Helper class to find the dependend nodes from a given start node and a topological order for them
+//! Helper class to find the dependent nodes from a given start node and a topological order for them
 template <typename Vertex> struct DfsVisitor : public boost::default_dfs_visitor {
     DfsVisitor(std::vector<Vertex>& order, bool& foundCycle) : order_(order), foundCycle_(foundCycle) {}
     template <typename Graph> void finish_vertex(Vertex u, const Graph& g) { order_.push_back(u); }

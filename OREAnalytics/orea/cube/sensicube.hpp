@@ -37,7 +37,7 @@
 namespace ore {
 namespace analytics {
 
-//! Naieve concrete implementation of NPVSensiCube
+//! Naive concrete implementation of NPVSensiCube
 template <typename T> class SensiCube : public ore::analytics::NPVSensiCube {
 public:
     SensiCube(const std::vector<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T())

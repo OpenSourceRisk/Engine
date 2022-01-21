@@ -42,7 +42,7 @@ using QuantLib::SalvagingAlgorithm;
     in addition since many use cases that require a salvaged covariance matrix also require a square root
     of this matrix e.g. for generating correlated normal random variates. A repeated computation of the
     square root can be avoided this way. The returned square root may but is not required to be the
-    unique symmetric positive semidefinite sqaure root of the salvaged covariance matrix p.
+    unique symmetric positive semidefinite square root of the salvaged covariance matrix p.
 
     If the method does not provide a square root, an empty matrix Matrix() should be returned instead,
     in which case the caller is responsible to compute a square root if required. */

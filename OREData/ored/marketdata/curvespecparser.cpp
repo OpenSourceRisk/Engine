@@ -227,7 +227,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
     case CurveSpec::CurveType::Correlation: {
         // Correlation/CorrelationCurveConfigId
-        QL_REQUIRE(tokens.size() == 2, "Unexpected number of tokens in correlatin spec " << s);
+        QL_REQUIRE(tokens.size() == 2, "Unexpected number of tokens in correlation spec " << s);
         string id = tokens[1];
         return boost::make_shared<CorrelationCurveSpec>(id);
     }

@@ -48,7 +48,7 @@ using namespace QuantLib;
 //! Cross Asset Model Builder
 /*!
   CrossAssetModelBuilder takes a market snapshot, market conventions (the latter two
-  passed to the constructor), and a model configuarion (passed to
+  passed to the constructor), and a model configuration (passed to
   the "build" member function) to build and calibrate a cross asset model.
 
   \ingroup models
@@ -140,7 +140,7 @@ private:
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
 
-    // helper flag to prcess forceRecalculate()
+    // helper flag to process forceRecalculate()
     bool forceCalibration_ = false;
 
     // market observer

@@ -200,7 +200,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
         const boost::shared_ptr<CorrelationCurveConfig>& config =
             curveConfigs.correlationCurveConfig(spec.curveConfigID());
 
-        // build default correlation termsructure
+        // build default correlation termstructure
         boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
 
         if (config->quoteType() == MarketDatum::QuoteType::NONE) {
@@ -306,7 +306,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                 times.push_back(quotePairs[i].first);
             }                       
 
-            // build correlation termsructure
+            // build correlation termstructure
             bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant || quotes.size() == 1);
             LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
 

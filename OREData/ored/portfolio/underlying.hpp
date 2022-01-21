@@ -67,7 +67,7 @@ public:
         isBasic_ = true;
     };
 
-    //! Constructor with identifer
+    //! Constructor with identifier
     explicit BasicUnderlying(const std::string& name) : Underlying("Basic", name) { isBasic_ = true; }
 
     //! \name Serialisation
@@ -85,7 +85,7 @@ public:
     //! Constructor with equity name
     explicit EquityUnderlying(const std::string& equityName) : Underlying("Equity", equityName) { isBasic_ = true; };
 
-    //! Constructor with identifer infomation
+    //! Constructor with identifier information
     EquityUnderlying(const std::string& name, const std::string& identifierType, const std::string& currency,
                      const std::string& exchange, const QuantLib::Real weight)
         : Underlying("Equity", name, weight), identifierType_(identifierType), currency_(currency),
@@ -116,7 +116,7 @@ public:
     //! Default Constructor
     CommodityUnderlying() : Underlying() { setType("Commodity"); }
 
-    //! Constructor with identifer infomation
+    //! Constructor with identifier information
     CommodityUnderlying(const std::string& name, const QuantLib::Real weight, const std::string& priceType,
                         const QuantLib::Size futureMonthOffset, const QuantLib::Size deliveryRollDays,
                         const std::string& deliveryRollCalendar)
@@ -146,7 +146,7 @@ public:
     //! Default Constructor
     explicit FXUnderlying() : Underlying() { setType("FX"); };
 
-    //! Constructor with identifer infomation
+    //! Constructor with identifier information
     FXUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
         : Underlying(type, name, weight){};
 
@@ -162,7 +162,7 @@ public:
     //! Default Constructor
     explicit InterestRateUnderlying() : Underlying() { setType("InterestRate"); };
 
-    //! Constructor with identifer infomation
+    //! Constructor with identifier information
     InterestRateUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
         : Underlying(type, name, weight){};
 
@@ -178,7 +178,7 @@ public:
     //! Default Constructor
     explicit InflationUnderlying() : Underlying() { setType("Inflation"); };
 
-    //! Constructor with identifer infomation
+    //! Constructor with identifier information
     InflationUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight,
                         const QuantLib::CPI::InterpolationType& interpolation = QuantLib::CPI::InterpolationType::Flat)
         : Underlying(type, name, weight), interpolation_(interpolation){};
@@ -198,7 +198,7 @@ public:
     //! Default Constructor
     explicit CreditUnderlying() : Underlying() { setType("Credit"); };
 
-    //! Constructor with identifer infomation
+    //! Constructor with identifier information
     CreditUnderlying(const std::string& type, const std::string& name, const QuantLib::Real weight)
         : Underlying(type, name, weight){};
 

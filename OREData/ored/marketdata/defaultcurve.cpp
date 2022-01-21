@@ -264,7 +264,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
     // If the configuration instructs us to imply a default from the market data, we do it here.
     if (config.implyDefaultFromMarket() && *config.implyDefaultFromMarket()) {
         if (recoveryRate_ != Null<Real>() && quotes.empty()) {
-            // Assume entity is in default, between event determination date and auction date. Build a survivial
+            // Assume entity is in default, between event determination date and auction date. Build a survival
             // probability curve with value 0.0 tomorrow to approximate this and allow dependent instruments to price.
             // Need to use small but positive numbers to avoid downstream issues with log linear survivals e.g. below
             // and in places like ScenarioSimMarket.

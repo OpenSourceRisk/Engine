@@ -118,7 +118,7 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
         rate = fxQuote_->value();
     }
     
-    // TODO: Add a time based adjusement for settlement days
+    // TODO: Add a time based adjustment for settlement days
     Real forward = rate * sourceYts_->discount(fixingTime)  /
         targetYts_->discount(fixingTime);
     return forward;

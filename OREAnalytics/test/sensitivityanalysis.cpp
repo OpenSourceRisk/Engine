@@ -122,7 +122,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    // build porfolio
+    // build portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
@@ -1096,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    // build porfolio
+    // build portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("EquityForward") = "DiscountedCashflows";
     data->engine("EquityForward") = "DiscountingEquityForwardEngine";
@@ -1305,7 +1305,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    // build porfolio
+    // build portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
@@ -1657,7 +1657,7 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
                                                          false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    // build porfolio
+    // build portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";

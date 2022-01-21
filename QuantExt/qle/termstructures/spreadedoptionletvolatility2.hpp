@@ -17,7 +17,7 @@
 */
 
 /*! \file spreadedoptionletvolatility2.hpp
-    \brief Optionlet volaility with overlayed bilinearly interpolated spread surface
+    \brief Optionlet volatility with overlayed bilinearly interpolated spread surface
     \ingroup termstructures
 */
 

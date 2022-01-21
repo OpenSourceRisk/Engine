@@ -136,8 +136,8 @@ public:
     /*! Build the correlation matrix according to the information provided in \p processInfo. The ProcessInfo map uses 
         the CrossAssetModel asset type as the outer map key and therefore has the correct ordering i.e. IR, FX, etc. 
         For each CrossAssetModel asset type, there is a vector of pairs where the first element in the pair is the 
-        name of the factor being modelled and the second element in the pair is the number of factors used in 
-        modelling the name. In most cases, the number of factors is 1. The first element in the vector for asset type 
+        name of the factor being modeled and the second element in the pair is the number of factors used in 
+        modeling the name. In most cases, the number of factors is 1. The first element in the vector for asset type 
         IR is assumed to be the base currency.
 
     */
