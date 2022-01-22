@@ -2261,7 +2261,7 @@ Correlation & NettingSetId & CVA & DVA & FBA & FCA \\
 \label{example:35}
 %--------------------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_35} demonstrates how ORE can be used to quickly switch perspectives in XVA calculations with minimal changes in the {\tt ore.xml} file only. In particular it does not involve manipulating the portfolio input.
+The example in folder {\tt Examples/Example\_35} demonstrates how ORE can be used to quickly switch perspectives in XVA calculations with minimal changes in the {\tt ore.xml} file only. In particular it does not involve manipulating the portfolio input or the netting set.
 
 %--------------------------------------------------------------------
 \subsection{Choice of Measure}% Example 36
@@ -2735,6 +2735,9 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     <Parameter name="fullInitialCollateralisation">true</Parameter>
+    <Parameter name="flipViewXVA">N</Parameter>
+    <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
+    <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -2808,6 +2811,9 @@ sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
 date, sample) {\em after} taking collateral into account
 \item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
+\item {\tt flipViewXVA:} If set to {\tt Y}, the perspective in XVA calculations is switched to the cpty view, the npvs and the netting sets being reverted during calculation. In order to get the lending/borrowing curve, the calculation assumes these curves being set up with the cptyname + the postfix given in the next two settings.
+\item {\tt flipViewBorrowingCurvePostfix:} postfix for the borrowing curve, the calculation assumes this is curves being set up with cptyname + postfix given.
+\item {\tt flipViewLendingCurvePostfix:} postfix for the lending curve, the calculation assumes this is curve being set up with cptyname + postfix given.
 \end{itemize}
 
 The two cube file outputs {\tt rawCubeOutputFile} and {\tt netCubeOutputFile} are provided for interactive analysis and visualisation purposes, see section

@@ -61,8 +61,14 @@ NettedExposureCalculator::NettedExposureCalculator(
       allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA) {
 
     vector<string> nettingSetIds;
-    for(auto nettingSet : nettingSetDefaultValue)
+    for (auto nettingSet : nettingSetDefaultValue) {
         nettingSetIds.push_back(nettingSet.first);
+        if (flipViewXVA_) {
+            if (nettingSetManager_->get(nettingSet.first)->activeCsaFlag()) {
+                nettingSetManager_->get(nettingSet.first)->csaDetails()->invertCSA();
+            }
+        }
+    }
 
     nettedCube_= boost::make_shared<SinglePrecisionInMemoryCube>(
             market_->asofDate(), nettingSetIds, cube->dates(),

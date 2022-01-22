@@ -50,6 +50,20 @@ std::ostream& operator<<(std::ostream& out, CSA::Type t) {
     }
 }
 
+void CSA::invertCSA() {
+    if (type_ != Bilateral) {
+        type_ = (type_ == CallOnly ? PostOnly : CallOnly);
+    }
+    if (initialMarginType_ != Bilateral) {
+        initialMarginType_ = (initialMarginType_ == CallOnly ? PostOnly : CallOnly);
+    }
+    std::swap<Real>(collatSpreadPay_, collatSpreadRcv_);
+    std::swap<Real>(thresholdPay_, thresholdRcv_);
+    std::swap<Real>(mtaPay_, mtaRcv_);
+    iaHeld_ *= -1;
+    std::swap<Period>(marginCallFreq_, marginPostFreq_);
+}
+
 void CSA::validate(string nettingSetId) {
     QL_REQUIRE(csaCurrency_.size() == 3, "NettingSetDefinition build error;"
                                              << " csa currency should be a three-letter ISO code");

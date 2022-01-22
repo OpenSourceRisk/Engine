@@ -90,10 +90,12 @@ public:
     vector<string> eligCollatCcys() const { return eligCollatCcys_; }
     /*! Apply (dynamic) initial margin in addition to variation margin */
     bool applyInitialMargin() { return applyInitialMargin_; }
-    //@}
     /*! Direction of (dynamic) initial margin */
     Type initialMarginType() { return initialMarginType_; }
     //@}
+     
+    /*! invert all relevant aspects of the CSA */
+    void invertCSA();
 
     void validate(string nettingSetId);
 
