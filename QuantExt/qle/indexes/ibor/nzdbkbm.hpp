@@ -44,7 +44,7 @@ using namespace QuantLib;
 class NZDBKBM : public IborIndex {
 public:
     NZDBKBM(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("NZD-BKBM", tenor, 2, NZDCurrency(), NewZealand(), ModifiedFollowing, false, ActualActual(), h) {}
+        : IborIndex("NZD-BKBM", tenor, 2, NZDCurrency(), NewZealand(), ModifiedFollowing, false, ActualActual(ActualActual::ISDA), h) {}
 };
 } // namespace QuantExt
 

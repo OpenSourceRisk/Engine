@@ -214,7 +214,7 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(Rate spotFx, Rate rate, Spr
     // Shared settlement conventions
     BusinessDayConvention payConvention = Following;
     Natural payLag = 0;
-    JointCalendar payCalendar = JointCalendar(UnitedStates(), UnitedKingdom(), Turkey());
+    JointCalendar payCalendar = JointCalendar(UnitedStates(UnitedStates::Settlement), UnitedKingdom(), Turkey());
 
     // Swap start and end date
     Date referenceDate = Settings::instance().evaluationDate();

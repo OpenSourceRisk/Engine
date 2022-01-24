@@ -82,7 +82,7 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     Calendar cal = parseCalendar(calString);
 
     std::string dcString = XMLUtils::getChildValue(node, "DayCounter", false);
-    DayCounter dc = dcString.empty() ? ActualActual() : parseDayCounter(dcString);
+    DayCounter dc = dcString.empty() ? ActualActual(ActualActual::ISDA) : parseDayCounter(dcString);
 
     gridString_ = XMLUtils::getChildValue(node, "Grid", true);
     std::vector<std::string> tokens;

@@ -492,7 +492,6 @@
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\austria.hpp" />
     <ClInclude Include="qle\calendars\belgium.hpp" />
-    <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\cme.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
     <ClInclude Include="qle\calendars\cyprus.hpp" />
@@ -887,7 +886,6 @@
   <ItemGroup>
     <ClCompile Include="qle\calendars\austria.cpp" />
     <ClCompile Include="qle\calendars\belgium.cpp" />
-    <ClCompile Include="qle\calendars\chile.cpp" />
     <ClCompile Include="qle\calendars\cme.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
     <ClCompile Include="qle\calendars\cyprus.cpp" />

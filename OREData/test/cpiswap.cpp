@@ -117,11 +117,11 @@ public:
 
         // build GBP discount curve
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] =
-            intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom());
+            intDiscCurve(datesGBP, dfsGBP, ActualActual(ActualActual::ISDA), UnitedKingdom());
 
         // build GBP Libor index
         hGBP = Handle<IborIndex>(
-            parseIborIndex("GBP-LIBOR-6M", intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom())));
+            parseIborIndex("GBP-LIBOR-6M", intDiscCurve(datesGBP, dfsGBP, ActualActual(ActualActual::ISDA), UnitedKingdom())));
         iborIndices_[make_pair(Market::defaultConfiguration, "GBP-LIBOR-6M")] = hGBP;
 
         // add Libor 6M fixing (lag for GBP is 0d)
@@ -143,7 +143,7 @@ public:
             Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
             boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
                 new ZeroCouponInflationSwapHelper(
-                    quote, Period(2, Months), datesZCII[i], UnitedKingdom(), ModifiedFollowing, ActualActual(), ii,
+                    quote, Period(2, Months), datesZCII[i], UnitedKingdom(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii,
                     yieldCurves_.at(make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP"))));
             ;
             instruments.push_back(anInstrument);
@@ -152,7 +152,7 @@ public:
         // we know historical is WAY off market-implied, so use market implied flat.
         Rate baseZeroRate = ratesZCII[0] / 100.0;
         boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-            asof_, UnitedKingdom(), ActualActual(), Period(2, Months), ii->frequency(), ii->interpolated(),
+            asof_, UnitedKingdom(), ActualActual(ActualActual::ISDA), Period(2, Months), ii->frequency(), ii->interpolated(),
             baseZeroRate, instruments));
         pCPIts->recalculate();
         cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
                      .withFixedRates(0.02)
                      .withNotionals(10000000)
                      .withObservationInterpolation(CPI::Flat)
-                     .withPaymentDayCounter(ActualActual())
+                     .withPaymentDayCounter(ActualActual(ActualActual::ISDA))
                      .withPaymentAdjustment(Following);
     auto pricer = boost::make_shared<CPICouponPricer>(market->hGBP->forwardingTermStructure());
     for (auto const& c : cpiLeg) {

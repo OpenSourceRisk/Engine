@@ -142,8 +142,8 @@ struct CommonVars {
         fixingDays = 0;
         settlement = calendar.advance(today, settlementDays, Days);
         startDate = settlement;
-        dcZCIIS = ActualActual();
-        dcNominal = ActualActual();
+        dcZCIIS = ActualActual(ActualActual::ISDA);
+        dcNominal = ActualActual(ActualActual::ISDA);
 
         // uk rpi index
         //      fixing data
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
     Real inflationRate = 0.02;
     Real inflationBlackVol = 0.05;
     BusinessDayConvention bdc = Unadjusted;
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Period observationLag = 3 * Months; // EUHICPXT Caps/Swaps
     Handle<YieldTermStructure> discountCurve(boost::make_shared<FlatForward>(common.evaluationDate, rate, dc));
     RelinkableHandle<ZeroInflationTermStructure> inflationCurve;

@@ -62,7 +62,7 @@ struct CommonVars {
     CommonVars() {
 
         today = Date(1, Jan, 2014);
-        dc = ActualActual();
+        dc = ActualActual(ActualActual::ISDA);
 
         Settings::instance().evaluationDate() = today;
 
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(testVannaVolgaFxVolSurface) {
                           { "2Y", 10.70, 0.65, 0.255, 2.0110, 0.960102, 0.951092 } };
 
     // Assume act/act
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Calendar cal = TARGET();
 
     // set up vectors

@@ -50,7 +50,7 @@ public:
 
         // Inputs for the optionlet surface
         Natural settlementDays = 2;
-        UnitedStates calendar;
+        UnitedStates calendar(UnitedStates::Settlement);
         BusinessDayConvention bdc = Following;
         boost::shared_ptr<IborIndex> dummyIborIndex;
         VolatilityType type = Normal;

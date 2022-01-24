@@ -401,7 +401,7 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
     // Some of these should possibly come from conventions. Also some variables used in the loop below.
     Natural settlementDays = 2;
     auto calendar = yoyInflationIndex_->fixingCalendar();
-    DayCounter dc = Thirty360();
+    DayCounter dc = Thirty360(Thirty360::BondBasis);
     auto bdc = Following;
     auto obsLag = yoyVolatility_->observationLag();
 
@@ -506,7 +506,7 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
     // Also some variables used in the loop below.
     Natural settlementDays = 2;
     auto calendar = yoyInflationIndex_->fixingCalendar();
-    auto dc = Thirty360();
+    auto dc = Thirty360(Thirty360::BondBasis);
     auto bdc = Following;
     auto obsLag = yoyTs->observationLag();
 

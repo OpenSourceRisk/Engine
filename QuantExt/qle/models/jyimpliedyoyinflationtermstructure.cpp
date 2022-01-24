@@ -149,7 +149,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
     auto yoyCurve = boost::make_shared<PiecewiseYoYInflationCurve<Linear>>(referenceDate_, calendar(), dayCounter(),
-        lag, frequency(), indexIsInterpolated(), baseRate, yts, helpers, 1e-12);
+                                                                           lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
 
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;

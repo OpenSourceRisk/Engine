@@ -21,8 +21,8 @@
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/austria.hpp>
 #include <ql/time/calendars/thailand.hpp>
+#include <ql/time/calendars/chile.hpp>
 #include <qle/calendars/belgium.hpp>
-#include <qle/calendars/chile.hpp>
 #include <qle/calendars/cyprus.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>

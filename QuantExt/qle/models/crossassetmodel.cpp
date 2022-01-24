@@ -778,7 +778,7 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
 
 std::pair<Real, Real> CrossAssetModel::crcirppS(const Size i, const Time t, const Time T, const Real y,
                                                 const Real s) const {
-    QL_REQUIRE(modelType(CR, i) == CIRPP, "model at " << i << " is not CR-CIR")
+    QL_REQUIRE(modelType(CR, i) == CIRPP, "model at " << i << " is not CR-CIR");
     if (close_enough(t, T))
         return std::make_pair(s, 1.0);
     else

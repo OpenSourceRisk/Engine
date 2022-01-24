@@ -89,11 +89,11 @@ public:
 
         // build GBP discount curve
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] =
-            intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom());
+            intDiscCurve(datesGBP, dfsGBP, ActualActual(ActualActual::ISDA), UnitedKingdom());
 
         // build GBP Libor inde
         Handle<IborIndex> hGBP = Handle<IborIndex>(
-            parseIborIndex("GBP-LIBOR-6M", intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom())));
+            parseIborIndex("GBP-LIBOR-6M", intDiscCurve(datesGBP, dfsGBP, ActualActual(ActualActual::ISDA), UnitedKingdom())));
         iborIndices_[make_pair(Market::defaultConfiguration, "GBP-LIBOR-6M")] = hGBP;
     }
 

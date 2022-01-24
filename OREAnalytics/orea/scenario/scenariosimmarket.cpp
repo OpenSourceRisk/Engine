@@ -638,7 +638,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (isCube && !isAtm) {
                                 boost::shared_ptr<SwaptionVolCubeWithATM> tmp =
                                     boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
-                                QL_REQUIRE(tmp, "swaption cube missing")
+                                QL_REQUIRE(tmp, "swaption cube missing");
                                 cube = tmp->cube();
                             }
                             vector<vector<Handle<Quote>>> quotes, atmQuotes;

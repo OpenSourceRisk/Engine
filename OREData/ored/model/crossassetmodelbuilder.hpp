@@ -77,7 +77,7 @@ public:
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
-        const DayCounter& dayCounter = ActualActual(),
+        const DayCounter& dayCounter = ActualActual(ActualActual::ISDA),
         //! calibrate the model?
         const bool dontCalibrate = false,
         //! continue if bootstrap error exceeds tolerance

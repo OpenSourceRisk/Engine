@@ -70,7 +70,7 @@ struct CommonVars {
     CommonVars() {
         asof = Date(11, Sep, 2018);
         settlementDays = 2;
-        payCalendar = JointCalendar(UnitedStates(), UnitedKingdom(), Turkey());
+        payCalendar = JointCalendar(UnitedStates(UnitedStates::Settlement), UnitedKingdom(), Turkey());
         payConvention = Following;
         payLag = 0;
         tenor = 5 * Years;

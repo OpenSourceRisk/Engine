@@ -26,7 +26,7 @@ using QuantLib::Time;
 
 namespace QuantExt {
 namespace {
-QuantLib::DayCounter underlyingDCF = QuantLib::ActualActual();
+    QuantLib::DayCounter underlyingDCF = QuantLib::ActualActual(QuantLib::ActualActual::ISDA);
 }
 
 Date::serial_type YearCounter::Impl::dayCount(const Date& d1, const Date& d2) const {

@@ -38,7 +38,7 @@ CarrMadanMarginalProbability::CarrMadanMarginalProbability(const std::vector<Rea
 
     QL_REQUIRE(strikes_.size() == callPrices_.size(), "CarrMadanMarginalProbability: strikes ("
                                                           << strikes_.size() << ") inconsistent to callPrices ("
-                                                          << callPrices_.size() << ")";)
+                                                          << callPrices_.size() << ")");
 
     QL_REQUIRE(!strikes_.empty(), "CarrMadanMarginalProbability: input moneyness is empty");
 

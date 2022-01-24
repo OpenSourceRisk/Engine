@@ -711,7 +711,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->swaptionVolCurveConfig("USD_SW_LN") = boost::make_shared<SwaptionVolatilityCurveConfig>(
         "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
         SwaptionVolatilityCurveConfig::VolatilityType::Lognormal, extrapolate, flatExtrapolate, optionTenors,
-        swapTenors, dayCounter, UnitedStates(), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
+        swapTenors, dayCounter, UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
 
     // Capfloor volatility structure tenors and strikes
     vector<string> capTenors{"1Y", "2Y", "5Y", "7Y", "10Y"};
@@ -720,7 +720,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // USD Lognormal capfloor volatility "curve" configuration
     configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(), bdc, "USD-LIBOR-3M",
+        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(UnitedStates::Settlement), bdc, "USD-LIBOR-3M",
         "Yield/USD/USD1D");
 
     vector<string> optionTenors2{"1Y"};
@@ -730,7 +730,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
-        MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(), bdc,
+        MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(UnitedStates::Settlement), bdc,
         "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR");
     configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,

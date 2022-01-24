@@ -82,7 +82,7 @@ void NettedExposureCalculator::build() {
     LOG("Compute netting set exposure profiles");
 
     const Date today = market_->asofDate();
-    const DayCounter dc = ActualActual();
+    const DayCounter dc = ActualActual(ActualActual::ISDA);
 
     vector<Real> times = vector<Real>(cube_->dates().size(), 0.0);
     for (Size i = 0; i < cube_->dates().size(); i++)
@@ -251,7 +251,7 @@ void NettedExposureCalculator::build() {
 
                 if (netting->activeCsaFlag()) {
                     Real indexValue = 0.0;
-                    DayCounter dc = ActualActual();
+                    DayCounter dc = ActualActual(ActualActual::ISDA);
                     if (csaIndexName != "") {
                         indexValue = scenarioData_->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
                         dc = csaIndex->dayCounter();

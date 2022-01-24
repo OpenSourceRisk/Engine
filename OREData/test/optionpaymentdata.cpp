@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(testRulesBasedConstruction) {
     BOOST_CHECK(opd.rulesBased());
     BOOST_CHECK(opd.dates().empty());
     BOOST_CHECK_EQUAL(opd.lag(), 5);
-    BOOST_CHECK_EQUAL(opd.calendar(), UnitedStates());
+    BOOST_CHECK_EQUAL(opd.calendar(), UnitedStates(UnitedStates::Settlement));
     BOOST_CHECK_EQUAL(opd.convention(), Following);
     BOOST_CHECK_EQUAL(opd.relativeTo(), OptionPaymentData::RelativeTo::Exercise);
 }
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(testRulesBasedFromXml) {
     BOOST_CHECK(opd.rulesBased());
     BOOST_CHECK(opd.dates().empty());
     BOOST_CHECK_EQUAL(opd.lag(), 3);
-    BOOST_CHECK_EQUAL(opd.calendar(), UnitedStates());
+    BOOST_CHECK_EQUAL(opd.calendar(), UnitedStates(UnitedStates::Settlement));
     BOOST_CHECK_EQUAL(opd.convention(), ModifiedFollowing);
     BOOST_CHECK_EQUAL(opd.relativeTo(), OptionPaymentData::RelativeTo::Expiry);
 }
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(testRulesBasedToXml) {
     BOOST_CHECK(outOpd.rulesBased());
     BOOST_CHECK(outOpd.dates().empty());
     BOOST_CHECK_EQUAL(outOpd.lag(), 3);
-    BOOST_CHECK_EQUAL(outOpd.calendar(), UnitedStates());
+    BOOST_CHECK_EQUAL(outOpd.calendar(), UnitedStates(UnitedStates::Settlement));
     BOOST_CHECK_EQUAL(outOpd.convention(), ModifiedFollowing);
     BOOST_CHECK_EQUAL(outOpd.relativeTo(), OptionPaymentData::RelativeTo::Exercise);
 }

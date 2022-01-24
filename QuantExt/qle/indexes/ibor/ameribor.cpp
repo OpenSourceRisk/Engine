@@ -23,5 +23,5 @@ using namespace QuantLib;
 namespace QuantExt {
 
 USDAmeribor::USDAmeribor(const Handle<YieldTermStructure>& h)
-  : OvernightIndex("USD-AMERIBOR", 0, USDCurrency(), UnitedStates(), Actual360(), h) {}
+    : OvernightIndex("USD-AMERIBOR", 0, USDCurrency(), UnitedStates(UnitedStates::Settlement), Actual360(), h) {}
 } // namespace QuantExt

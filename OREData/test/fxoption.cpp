@@ -84,11 +84,11 @@ public:
     }
 
 private:
-    Handle<YieldTermStructure> flatRateYts(Real forward, const DayCounter& dc = ActualActual()) {
+    Handle<YieldTermStructure> flatRateYts(Real forward, const DayCounter& dc = ActualActual(ActualActual::ISDA)) {
         boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, dc));
         return Handle<YieldTermStructure>(yts);
     }
-    Handle<BlackVolTermStructure> flatRateFxv(Volatility forward, const DayCounter& dc = ActualActual()) {
+    Handle<BlackVolTermStructure> flatRateFxv(Volatility forward, const DayCounter& dc = ActualActual(ActualActual::ISDA)) {
         boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, dc));
         return Handle<BlackVolTermStructure>(fxv);
     }

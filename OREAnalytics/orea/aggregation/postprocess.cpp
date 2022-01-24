@@ -321,7 +321,7 @@ void PostProcess::updateNettingSetKVA() {
     Size dates = dateVector.size();
     Date today = market_->asofDate();
     Handle<YieldTermStructure> discountCurve = market_->discountCurve(baseCurrency_, configuration_);
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     // Loop over all netting sets
     for (auto nettingSetId : nettingSetIds()) {

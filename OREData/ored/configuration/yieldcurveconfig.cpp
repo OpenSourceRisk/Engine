@@ -438,7 +438,7 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
         // Special case handling for AverageOIS where the quotes are stored as pairs
         // Spread and Rate.
         if (type_ == YieldCurveSegment::Type::AverageOIS) {
-            QL_REQUIRE(quotes_.size() % 2 == 0, "Invalid quotes vector should be even")
+            QL_REQUIRE(quotes_.size() % 2 == 0, "Invalid quotes vector should be even");
             for (Size i = 0; i < quotes_.size(); i = i + 2) {
                 string rateQuote = quotes_[i].first;
                 string spreadQuote = quotes_[i + 1].first;

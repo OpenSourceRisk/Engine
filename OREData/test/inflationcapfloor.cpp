@@ -47,7 +47,7 @@ public:
     TestMarket(Date asof) {
         // valuation date
 
-        dc = ActualActual();
+        dc = ActualActual(ActualActual::ISDA);
         bdc = Following;
         cal = TARGET();
 
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     Leg yyLeg =
         yoyInflationLeg(schedule, TARGET(), market->yoyInflationIndex("EUHICPXT").currentLink(), Period(3, Months))
             .withNotionals(10000000)
-            .withPaymentDayCounter(ActualActual())
+            .withPaymentDayCounter(ActualActual(ActualActual::ISDA))
             .withPaymentAdjustment(Following)
             .withRateCurve(nominalTs);
 

@@ -26,7 +26,7 @@
 // #include <qle/calendars/austria.hpp>
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/belgium.hpp>
-#include <qle/calendars/chile.hpp>
+//#include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/france.hpp>
@@ -66,7 +66,7 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             {"ATS", QuantExt::Austria()},
                             {"FRF", QuantExt::France()},
                             {"CHF", QuantExt::Switzerland()},
-                            {"USD", UnitedStates()},
+                            {"USD", UnitedStates(UnitedStates::Settlement)},
                             {"GBP", UnitedKingdom()},
                             {"CAD", Canada()},
                             {"AUD", Australia()},
@@ -130,15 +130,15 @@ TestDatum calendarData[] = {{"TGT", TARGET()},
                             // CME exchange calendar
                             {"CME", CME()},
                             // joint calendars
-                            {"US,TARGET", JointCalendar(UnitedStates(), TARGET())},
-                            {"NYB,TGT", JointCalendar(UnitedStates(), TARGET())},
-                            {"NYB,LNB", JointCalendar(UnitedStates(), UnitedKingdom())},
+                            {"US,TARGET", JointCalendar(UnitedStates(UnitedStates::Settlement), TARGET())},
+                            {"NYB,TGT", JointCalendar(UnitedStates(UnitedStates::Settlement), TARGET())},
+                            {"NYB,LNB", JointCalendar(UnitedStates(UnitedStates::Settlement), UnitedKingdom())},
                             {"LNB,ZUB", JointCalendar(UnitedKingdom(), QuantExt::Switzerland())},
-                            {"LNB,NYB,TGT", JointCalendar(UnitedKingdom(), UnitedStates(), TARGET())},
-                            {"NYB,ZUB,LNB", JointCalendar(UnitedStates(), QuantExt::Switzerland(), UnitedKingdom())},
-                            {"NYB,TRB,LNB", JointCalendar(UnitedStates(), Canada(), UnitedKingdom())},
-                            {"TKB,USD,LNB", JointCalendar(Japan(), UnitedStates(), UnitedKingdom())},
-                            {"NYB,SYB", JointCalendar(UnitedStates(), Australia())}};
+                            {"LNB,NYB,TGT", JointCalendar(UnitedKingdom(), UnitedStates(UnitedStates::Settlement), TARGET())},
+                            {"NYB,ZUB,LNB", JointCalendar(UnitedStates(UnitedStates::Settlement), QuantExt::Switzerland(), UnitedKingdom())},
+                            {"NYB,TRB,LNB", JointCalendar(UnitedStates(UnitedStates::Settlement), Canada(), UnitedKingdom())},
+                            {"TKB,USD,LNB", JointCalendar(Japan(), UnitedStates(UnitedStates::Settlement), UnitedKingdom())},
+                            {"NYB,SYB", JointCalendar(UnitedStates(UnitedStates::Settlement), Australia())}};
 
 } // namespace
 

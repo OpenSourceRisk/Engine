@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionConstruction) {
     // Check object
     BOOST_CHECK_EQUAL(convention->id(), "USD-TRY-XCCY-FIX-FLOAT");
     BOOST_CHECK_EQUAL(convention->settlementDays(), 2);
-    BOOST_CHECK_EQUAL(convention->settlementCalendar(), JointCalendar(UnitedStates(), UnitedKingdom(), Turkey()));
+    BOOST_CHECK_EQUAL(convention->settlementCalendar(), JointCalendar(UnitedStates(UnitedStates::Settlement), UnitedKingdom(), Turkey()));
     BOOST_CHECK_EQUAL(convention->settlementConvention(), Following);
     BOOST_CHECK_EQUAL(convention->fixedCurrency(), TRYCurrency());
     BOOST_CHECK_EQUAL(convention->fixedFrequency(), Annual);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionFromXml) {
     // Check parsed object
     BOOST_CHECK_EQUAL(convention->id(), "USD-TRY-XCCY-FIX-FLOAT");
     BOOST_CHECK_EQUAL(convention->settlementDays(), 2);
-    BOOST_CHECK_EQUAL(convention->settlementCalendar(), JointCalendar(UnitedStates(), UnitedKingdom(), Turkey()));
+    BOOST_CHECK_EQUAL(convention->settlementCalendar(), JointCalendar(UnitedStates(UnitedStates::Settlement), UnitedKingdom(), Turkey()));
     BOOST_CHECK_EQUAL(convention->settlementConvention(), Following);
     BOOST_CHECK_EQUAL(convention->fixedCurrency(), TRYCurrency());
     BOOST_CHECK_EQUAL(convention->fixedFrequency(), Annual);

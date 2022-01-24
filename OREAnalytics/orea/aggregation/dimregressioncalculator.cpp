@@ -391,7 +391,7 @@ void RegressionDynamicInitialMarginCalculator::exportDimEvolution(ore::data::Rep
             }
 
             Date defaultDate = dimCube_->dates()[i];
-            Time t = ActualActual().yearFraction(asof, defaultDate);
+            Time t = ActualActual(ActualActual::ISDA).yearFraction(asof, defaultDate);
             Size days = cubeInterpretation_->getMporCalendarDays(dimCube_, i);
             dimEvolutionReport.next()
                 .add(i)

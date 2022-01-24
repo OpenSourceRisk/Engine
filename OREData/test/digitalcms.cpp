@@ -85,17 +85,17 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
+        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<SwaptionVolatilityStructure> flatRateSvs(Volatility forward) {
         boost::shared_ptr<SwaptionVolatilityStructure> Svs(
-            new ConstantSwaptionVolatility(0, NullCalendar(), ModifiedFollowing, forward, ActualActual()));
+            new ConstantSwaptionVolatility(0, NullCalendar(), ModifiedFollowing, forward, ActualActual(ActualActual::ISDA)));
         return Handle<SwaptionVolatilityStructure>(Svs);
     }
     Handle<QuantExt::CorrelationTermStructure> flatCorr(Real corr) {
         boost::shared_ptr<QuantExt::CorrelationTermStructure> cs(
-            new QuantExt::FlatCorrelation(0, NullCalendar(), corr, ActualActual()));
+            new QuantExt::FlatCorrelation(0, NullCalendar(), corr, ActualActual(ActualActual::ISDA)));
 
         return Handle<QuantExt::CorrelationTermStructure>(cs);
     }
