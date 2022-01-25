@@ -21,6 +21,7 @@
 
 #include <ql/utilities/vectors.hpp>
 #include <ql/time/calendars/jointcalendar.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 using namespace QuantLib;
 
@@ -42,13 +43,13 @@ std::ostream& operator<<(std::ostream& out, EquityReturnType t) {
 }
 
 EquityReturnType parseEquityReturnType(const std::string& str) {
-    if (str == "Price")
+    if (boost::algorithm::to_upper_copy(str) == "PRICE")
         return EquityReturnType::Price;
-    else if (str == "Total")
+    else if (boost::algorithm::to_upper_copy(str) == "TOTAL")
         return EquityReturnType::Total;
-    else if (str == "Absolute")
+    else if (boost::algorithm::to_upper_copy(str) == "ABSOLUTE")
         return EquityReturnType::Absolute;
-    else if (str == "Dividend")
+    else if (boost::algorithm::to_upper_copy(str) == "DIVIDEND")
         return EquityReturnType::Dividend;
     QL_FAIL("Invalid EquityReturnType " << str);
 }
