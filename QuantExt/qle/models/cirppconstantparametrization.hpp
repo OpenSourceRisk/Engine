@@ -67,7 +67,7 @@ template <class TS> inline Real CirppConstantParametrization<TS>::direct(const S
 
 template <class TS> inline Real CirppConstantParametrization<TS>::inverse(const Size i, const Real y) const {
     constexpr Real eps = 1E-10;
-    return sqrt(y - eps);
+    return std::sqrt(y - eps);
 }
 
 template <class TS> inline Real CirppConstantParametrization<TS>::kappa(const Time) const {

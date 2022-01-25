@@ -74,7 +74,7 @@ public:
     //@}
 protected:
     virtual Real blackVarianceImpl(Time t, Real strike) const { return getMonotoneVar(t, strike); }
-    virtual Volatility blackVolImpl(Time t, Real strike) const { return sqrt(getMonotoneVar(t, strike) / t); }
+    virtual Volatility blackVolImpl(Time t, Real strike) const { return std::sqrt(getMonotoneVar(t, strike) / t); }
 
     void setMonotoneVar(const Real& strike) const {
         QL_REQUIRE(timePoints_.size() > 0, "timePoints cannot be empty");

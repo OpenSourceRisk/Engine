@@ -30,9 +30,8 @@
 #include <ql/pricingengine.hpp>
 #include <ql/settings.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 class MultiLegOption : public Instrument {
 public:

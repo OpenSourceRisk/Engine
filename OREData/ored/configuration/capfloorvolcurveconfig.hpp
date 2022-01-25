@@ -57,7 +57,7 @@ public:
         bool extrapolate, bool flatExtrapolation, bool inlcudeAtm, const std::vector<std::string>& tenors,
         const std::vector<std::string>& strikes, const QuantLib::DayCounter& dayCounter, QuantLib::Natural settleDays,
         const QuantLib::Calendar& calendar, const QuantLib::BusinessDayConvention& businessDayConvention,
-        const std::string& iborIndex, const std::string& discountCurve,
+        const std::string& index, const QuantLib::Period& rateComputationPeriod, const std::string& discountCurve,
         const std::string& interpolationMethod = "BicubicSpline", const std::string& interpolateOn = "TermVolatilities",
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig());
@@ -82,7 +82,8 @@ public:
     const QuantLib::Natural& settleDays() const { return settleDays_; }
     const QuantLib::Calendar& calendar() const { return calendar_; }
     const QuantLib::BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
-    const std::string& iborIndex() const { return iborIndex_; }
+    const std::string& index() const { return index_; }
+    const QuantLib::Period& rateComputationPeriod() const { return rateComputationPeriod_; }
     const std::string& discountCurve() const { return discountCurve_; }
     QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod interpolationMethod() const;
     const std::string& interpolateOn() const { return interpolateOn_; }
@@ -92,7 +93,7 @@ public:
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     Type type() const { return type_; }
     const string& currency() const;
-    string iborTenor() const;
+    string indexTenor() const;
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -111,7 +112,8 @@ private:
     QuantLib::Natural settleDays_;
     QuantLib::Calendar calendar_;
     QuantLib::BusinessDayConvention businessDayConvention_;
-    std::string iborIndex_;
+    std::string index_;
+    QuantLib::Period rateComputationPeriod_;
     std::string discountCurve_;
     std::string interpolationMethod_;
     std::string interpolateOn_;

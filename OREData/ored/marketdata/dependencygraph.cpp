@@ -105,7 +105,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
         if (g[*v].obj == MarketObject::CapFloorVol &&
             curveConfigs_->hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
-            string iborIndex = curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->iborIndex();
+            string iborIndex = curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index();
             bool found = false;
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                 if (*w != *v && g[*w].obj == MarketObject::IndexCurve && g[*w].name == iborIndex) {

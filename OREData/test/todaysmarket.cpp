@@ -720,7 +720,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // USD Lognormal capfloor volatility "curve" configuration
     configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(), bdc, "USD-LIBOR-3M",
+        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(), bdc, "USD-LIBOR-3M", 3 * Months,
         "Yield/USD/USD1D");
 
     vector<string> optionTenors2{"1Y"};

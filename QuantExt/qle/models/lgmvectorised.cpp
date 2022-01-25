@@ -66,7 +66,7 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
     // handle case where fixing is deterministic
     Date today = Settings::instance().evaluationDate();
     if (fixingDate <= today)
-        return RandomVariable(x.size(), index->fixing(today));
+        return RandomVariable(x.size(), index->fixing(fixingDate));
 
     // handle stochastic fixing
     if (auto ibor = boost::dynamic_pointer_cast<IborIndex>(index)) {

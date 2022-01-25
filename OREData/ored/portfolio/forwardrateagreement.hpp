@@ -43,6 +43,7 @@ public:
 
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
+    const string& index() const { return index_; }
 
 private:
     string longShort_;
