@@ -145,6 +145,9 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/trademonetary.cpp
+portfolio/tradestrike.cpp
+portfolio/tradebarrier.cpp
 portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
@@ -156,6 +159,7 @@ utilities/currencycheck.cpp
 utilities/currencyconfig.cpp
 utilities/dategrid.cpp
 utilities/flowanalysis.cpp
+utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
 utilities/log.cpp
 utilities/marketdata.cpp
@@ -353,6 +357,9 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/trademonetary.hpp
+portfolio/tradestrike.hpp
+portfolio/tradebarrier.hpp
 portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp
@@ -366,6 +373,7 @@ utilities/currencycheck.hpp
 utilities/currencyconfig.hpp
 utilities/dategrid.hpp
 utilities/flowanalysis.hpp
+utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
 utilities/log.hpp
 utilities/marketdata.hpp

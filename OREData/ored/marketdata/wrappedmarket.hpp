@@ -62,7 +62,10 @@ public:
                                const string& configuration = Market::defaultConfiguration) const override;
     Handle<SwaptionVolatilityStructure>
     yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> fxSpot(const string& ccypair,
+                         const string& configuration = Market::defaultConfiguration) const override;
+    Handle<Quote> fxRate(const string& ccypair,
                          const string& configuration = Market::defaultConfiguration) const override;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,
                                         const string& configuration = Market::defaultConfiguration) const override;
@@ -75,7 +78,7 @@ public:
     Handle<BilinearBaseCorrelationTermStructure>
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<OptionletVolatilityStructure>
-    capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const override;
+    capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::YoYOptionletVolatilitySurface>
     yoyCapFloorVol(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
     Handle<ZeroInflationIndex>

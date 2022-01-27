@@ -27,20 +27,18 @@
 namespace ore {
 namespace data {
 
-boost::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const Currency& ccy) {
-    const string& ccyCode = ccy.code();
+boost::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const std::string& index) {
+    string ccyCode = parseIborIndex(index)->currency().code();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
-    QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
-    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(ccyCode, configuration(MarketContext::pricing));
-    QL_REQUIRE(!ovs.empty(), "engineFactory error: caplet volatility structure not found for currency " << ccyCode);
+    Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(index, configuration(MarketContext::pricing));
 
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
-        LOG("Build BlackCapFloorEngine for currency " << ccyCode);
+        LOG("Build BlackCapFloorEngine for index " << index);
         return boost::make_shared<BlackCapFloorEngine>(yts, ovs, ovs->displacement());
         break;
     case Normal:
-        LOG("Build BachelierSwaptionEngine for currency " << ccyCode);
+        LOG("Build BachelierCapFloorEngine for index " << index);
         return boost::make_shared<BachelierCapFloorEngine>(yts, ovs);
         break;
     default:

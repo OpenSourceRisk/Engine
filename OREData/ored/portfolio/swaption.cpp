@@ -367,12 +367,15 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     QL_REQUIRE(swapBuilder, "No Swap Builder found for Swaption " << id());
 
     // Get Trade details
+    // We known that the notional, fixed rate, float spread, gearing are all constant in the underlying leg. To make
+    // sure we get the correct value from the leg data we take the _last_ value in the leg data vectors, because
+    // the first might contain a value that is different, but lies before the schedule start date.
     string ccy = legData_[0].currency();
     Currency currency = parseCurrency(ccy);
     Real nominal = legData_[0].notionals().back();
 
-    Real rate = fixedLegData->rates().front();
-    Real spread = floatingLegData->spreads().empty() ? 0.0 : floatingLegData->spreads().front();
+    Real rate = fixedLegData->rates().back();
+    Real spread = floatingLegData->spreads().empty() ? 0.0 : floatingLegData->spreads().back();
     string indexName = floatingLegData->index();
 
     Schedule fixedSchedule = makeSchedule(legData_[fixedLegIndex].schedule());

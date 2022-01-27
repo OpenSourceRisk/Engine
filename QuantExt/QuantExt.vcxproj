@@ -646,6 +646,7 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
     <ClInclude Include="qle\instruments\makecds.hpp" />
+    <ClInclude Include="qle\instruments\makeoiscapfloor.hpp" />
     <ClInclude Include="qle\instruments\multilegoption.hpp" />
     <ClInclude Include="qle\instruments\nullinstrument.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
@@ -799,6 +800,7 @@
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
+    <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
@@ -808,6 +810,7 @@
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\iterativebootstrap.hpp" />
     <ClInclude Include="qle\termstructures\multisectiondefaultcurve.hpp" />
+    <ClInclude Include="qle\termstructures\oiscapfloorhelper.hpp" />
     <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />
@@ -981,6 +984,7 @@
     <ClCompile Include="qle\instruments\impliedbondspread.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
     <ClCompile Include="qle\instruments\makecds.cpp" />
+    <ClCompile Include="qle\instruments\makeoiscapfloor.cpp" />
     <ClCompile Include="qle\instruments\multilegoption.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
@@ -1107,6 +1111,7 @@
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
+    <ClCompile Include="qle\termstructures\flatteneddefaultcurve.cpp" />
     <ClCompile Include="qle\termstructures\futurepricehelper.cpp" />
     <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
@@ -1115,6 +1120,7 @@
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp" />
+    <ClCompile Include="qle\termstructures\oiscapfloorhelper.cpp" />
     <ClCompile Include="qle\termstructures\oisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper1.cpp" />

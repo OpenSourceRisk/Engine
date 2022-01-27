@@ -45,6 +45,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
@@ -59,6 +60,7 @@ using namespace QuantLib;
 
 using QuantExt::CommodityIndex;
 using QuantExt::EquityIndex;
+using QuantExt::FxIndex;
 using QuantExt::PriceTermStructure;
 using QuantExt::PriceTermStructureAdapter;
 
@@ -123,24 +125,6 @@ void TodaysMarket::initialise(const Date& asof) {
         dg.buildDependencyGraph(configuration.first, buildErrors);
     }
     dependencies_ = dg.dependencies();
-
-    // build the fx spots in all configurations upfront (managing dependencies would be messy due to triangulation)
-
-    for (const auto& configuration : params_->configurations()) {
-        Graph& g = dependencies_[configuration.first];
-        VertexIterator v, vend;
-        for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
-            if (g[*v].obj == MarketObject::FXSpot) {
-                try {
-                    buildNode(configuration.first, g[*v]);
-                } catch (const std::exception& e) {
-                    buildErrors[g[*v].curveSpec->name()] = e.what();
-                    ALOG("error while building node " << g[*v] << " in configuration " << configuration.first << ": "
-                                                      << e.what());
-                }
-            }
-        }
-    }
 
     // if market is not build lazily, sort the dependency graph and build the objects
 
@@ -322,12 +306,13 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredFxSpots_.find(fxspec->name());
             if (itr == requiredFxSpots_.end()) {
                 DLOG("Building FXSpot for asof " << asof_);
-                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_);
+                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_, requiredDiscountCurves_);
                 itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
-                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle());
+                fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()->fxQuote(true));
             }
-            LOG("Adding FXSpot (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
-            fxSpots_[configuration].addQuote(node.name, itr->second->handle());
+            LOG("Adding FXIndex (" << node.name << ") with spec " << *fxspec << " to configuration " << configuration);
+            // add the market spot rate and the rate today, both are needed
+            fxIndices_[configuration].addIndex(node.name, itr->second->handle());
             break;
         }
 
@@ -416,7 +401,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
                 // Firstly, need to retrieve ibor index and discount curve
                 // Ibor index
-                Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->iborIndex(), configuration);
+                Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->index(), configuration);
                 // Discount curve
                 auto it = requiredYieldCurves_.find(cfg->discountCurve());
                 QL_REQUIRE(it != requiredYieldCurves_.end(), "Discount curve with spec, "

@@ -82,7 +82,7 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             // this pushes any additional currency into the parser's static map
             parseCurrency(c.code(), c);
 
-        } catch(std::exception& e) {
+        } catch(std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);
         }
     }

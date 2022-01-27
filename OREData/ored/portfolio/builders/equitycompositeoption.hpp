@@ -64,7 +64,7 @@ protected:
         string ccyPairCode = equityCcy.code() + strikeCcy.code();
 
         Handle<Quote> equitySpot = this->market_->equitySpot(equityName, config);
-        Handle<Quote> fxSpot = this->market_->fxSpot(ccyPairCode, config);
+        Handle<Quote> fxSpot = this->market_->fxRate(ccyPairCode, config);
         
         std::function<Real(const Real&, const Real&)> multiply = [](const Real& a, const Real& b) { return a * b; };
 
@@ -82,12 +82,8 @@ protected:
         Handle<BlackVolTermStructure> fxVol = this->market_->fxVol(ccyPairCode, config);
         
         auto strikeCcyDiscountCurve = this->market_->discountCurve(strikeCcy.code(), config);
-        auto underlingCcyDiscountCurve = this->market_->discountCurve(equityCcy.code(), config);
 
-        auto fxIndex = boost::make_shared<QuantExt::FxIndex>(
-            "FX/GENERIC", 0, equityCcy, strikeCcy, fxVol->calendar(),
-                                                  fxSpot, 
-            underlingCcyDiscountCurve, strikeCcyDiscountCurve, false);
+        auto fxIndex = market_->fxIndex(equityCcy.code() + strikeCcy.code()).currentLink();
 
         // Try Catch and 0 correlation fallback
         Handle<QuantExt::CorrelationTermStructure> correlation;

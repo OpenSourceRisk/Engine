@@ -33,14 +33,13 @@ namespace data {
 /*! Pricing engines are cached by currency
     \ingroup builders
 */
-class CapFloorEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
+class CapFloorEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
 public:
     CapFloorEngineBuilder() : CachingEngineBuilder("IborCapModel", "IborCapEngine", {"CapFloor"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
-
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override;
+    string keyImpl(const string& index) override { return index; }
+    boost::shared_ptr<PricingEngine> engineImpl(const std::string& index) override;
 };
 } // namespace data
 } // namespace ore

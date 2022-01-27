@@ -2036,9 +2036,16 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                        "Currency mismatch between spot \"" << spotRateID << "\" and fwd \""
                                                            << fxForwardQuoteIDs[i].first << "\"");
                         
-            // QL expects the FX Fwd quote to be per spot, not points.
-            Handle<Quote> qlFXForwardQuote(boost::make_shared<DerivedQuote<divide_by<Real>>>(
-                fxForwardQuote->quote(), divide_by<Real>(fxConvention->pointsFactor())));
+            // QL expects the FX Fwd quote to be per spot, not points. If the quote is an outright, handle conversion to points convention here.
+
+            Handle<Quote> qlFXForwardQuote;
+            if (fxForwardQuote->quoteType() == MarketDatum::QuoteType::PRICE) {
+                qlFXForwardQuote = Handle<Quote>(boost::make_shared<DerivedQuote<subtract<Real>>>(
+                    fxForwardQuote->quote(), subtract<Real>(fxSpotQuote->quote()->value())));
+            } else {
+                qlFXForwardQuote = Handle<Quote>(boost::make_shared<DerivedQuote<divide_by<Real>>>(
+                    fxForwardQuote->quote(), divide_by<Real>(fxConvention->pointsFactor())));
+            }
 
             Natural spotDays = fxConvention->spotDays();
             if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::ON)) {
@@ -2072,7 +2079,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                         }
                     }
                     if (tnSpread == Null<Real>()) {
-                        WLOG("YieldCurve::AddFxFowrads cannot use ON rate, when SpotDays are 2 we also require the TN "
+                        WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are 2 we also require the TN "
                              "rate");
                         continue;
                     }
@@ -2082,8 +2089,8 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                         fxSpotQuote->quote(), subtract<Real>(totalSpread)));
                     break;
                 default:
-                    WLOG("YieldCurve::AddFxFowrads cannot use ON rate, when SpotDays are " << spotDays << 
-                        ", only valid for SpotDays of 0,1 or 2.");
+                    WLOG("YieldCurve::AddFxForwards cannot use ON rate, when SpotDays are " << spotDays << 
+                        ", only valid for SpotDays of 0, 1 or 2.");
                     continue;
                 }
             } else if (matchFxFwdStringTerm(fxForwardQuote->term(), FXForwardQuote::FxFwdString::TN)) {

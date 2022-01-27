@@ -53,10 +53,14 @@ void NettingSetDetails::fromXML(XMLNode* node) {
 XMLNode* NettingSetDetails::toXML(XMLDocument& doc) {
     XMLNode* nettingSetDetailsNode = doc.allocNode("NettingSetDetails");
     XMLUtils::addChild(doc, nettingSetDetailsNode, "NettingSetId", nettingSetId_);
-    XMLUtils::addChild(doc, nettingSetDetailsNode, "AgreementType", agreementType_);
-    XMLUtils::addChild(doc, nettingSetDetailsNode, "CallType", callType_);
-    XMLUtils::addChild(doc, nettingSetDetailsNode, "InitialMarginType", initialMarginType_);
-    XMLUtils::addChild(doc, nettingSetDetailsNode, "LegalEntityId", legalEntityId_);
+    if (!agreementType_.empty())
+        XMLUtils::addChild(doc, nettingSetDetailsNode, "AgreementType", agreementType_);
+    if (!callType_.empty())
+        XMLUtils::addChild(doc, nettingSetDetailsNode, "CallType", callType_);
+    if (!initialMarginType_.empty())
+        XMLUtils::addChild(doc, nettingSetDetailsNode, "InitialMarginType", initialMarginType_);
+    if (!legalEntityId_.empty())
+        XMLUtils::addChild(doc, nettingSetDetailsNode, "LegalEntityId", legalEntityId_);
 
     return nettingSetDetailsNode;
 }
@@ -87,15 +91,9 @@ const map<string, string> NettingSetDetails::mapRepresentation() const {
 }
 
 bool operator<(const NettingSetDetails& lhs, const NettingSetDetails& rhs) {
-    if (lhs.nettingSetId() < rhs.nettingSetId())
-        return true;
-    if (lhs.agreementType() < rhs.agreementType())
-        return true;
-    if (lhs.callType() < rhs.callType())
-        return true;
-    if (lhs.initialMarginType() < rhs.initialMarginType())
-        return true;
-    return lhs.legalEntityId() < rhs.legalEntityId();
+    return std::tie(lhs.nettingSetId(), lhs.agreementType(), lhs.callType(), lhs.initialMarginType(),
+                    lhs.legalEntityId()) < std::tie(rhs.nettingSetId(), rhs.agreementType(), rhs.callType(),
+                                                    rhs.initialMarginType(), rhs.legalEntityId());
 }
 
 bool operator==(const NettingSetDetails& lhs, const NettingSetDetails& rhs) {

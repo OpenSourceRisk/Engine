@@ -38,14 +38,14 @@ class Indexing : public XMLSerializable {
 public:
     Indexing()
         : hasData_(false), quantity_(1.0), initialFixing_(Null<Real>()), fixingDays_(0), inArrearsFixing_(false) {}
-    explicit Indexing(const std::string& index, const Size indexFixingDays = 0, const string& indexFixingCalendar = "",
+    explicit Indexing(const std::string& index, const string& indexFixingCalendar = "",
                       const bool indexIsDirty = false, const bool indexIsRelative = true,
                       const bool indexIsConditionalOnSurvival = true, const Real quantity = 1.0,
                       const Real initialFixing = Null<Real>(), const ScheduleData& valuationSchedule = ScheduleData(),
                       const Size fixingDays = 0, const string& fixingCalendar = "", const string& fixingConvention = "",
                       const bool inArrearsFixing = false)
-        : hasData_(true), quantity_(quantity), index_(index), indexFixingDays_(indexFixingDays),
-          indexFixingCalendar_(indexFixingCalendar), indexIsDirty_(indexIsDirty), indexIsRelative_(indexIsRelative),
+        : hasData_(true), quantity_(quantity), index_(index), indexFixingCalendar_(indexFixingCalendar), 
+        indexIsDirty_(indexIsDirty), indexIsRelative_(indexIsRelative),
           indexIsConditionalOnSurvival_(indexIsConditionalOnSurvival), initialFixing_(initialFixing),
           valuationSchedule_(valuationSchedule), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar),
           fixingConvention_(fixingConvention), inArrearsFixing_(inArrearsFixing) {}
@@ -55,8 +55,6 @@ public:
     bool hasData() const { return hasData_; }
     Real quantity() const { return quantity_; }
     const string& index() const { return index_; }
-    // only used for FX indices
-    const Size indexFixingDays() const { return indexFixingDays_; }
     // only used for FX, Bond indices
     const string& indexFixingCalendar() const { return indexFixingCalendar_; }
     // only used for Bond indices
@@ -76,9 +74,7 @@ public:
     //@{
     Real& quantity() { return quantity_; }
     string& index() { return index_; }
-    // only used for FX indices
-    Size& indexFixingDays() { return indexFixingDays_; }
-    // only used for FX, Bond indices
+    // only used for Bond indices
     string& indexFixingCalendar() { return indexFixingCalendar_; }
     // only used for Bond indices
     bool& indexIsDirty() { return indexIsDirty_; }
@@ -102,7 +98,6 @@ private:
     bool hasData_;
     Real quantity_;
     string index_;
-    Size indexFixingDays_;
     string indexFixingCalendar_;
     bool indexIsDirty_;
     bool indexIsRelative_;

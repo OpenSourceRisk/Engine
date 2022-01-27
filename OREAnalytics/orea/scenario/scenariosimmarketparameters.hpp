@@ -95,7 +95,7 @@ public:
     const string& yieldVolDecarayMode() const { return yieldVolDecayMode_; }
 
     bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility); }
-    vector<string> capFloorVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
+    vector<string> capFloorVolKeys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
     const vector<Period>& capFloorVolExpiries(const string& key) const;
     bool hasCapFloorVolExpiries(const string& key) const { return capFloorVolExpiries_.count(key) > 0; }
     const vector<QuantLib::Rate>& capFloorVolStrikes(const std::string& key) const;
@@ -255,7 +255,7 @@ public:
     string& yieldVolDecayMode() { return yieldVolDecayMode_; }
 
     void setSimulateCapFloorVols(bool simulate);
-    void setCapFloorVolCcys(vector<string> names);
+    void setCapFloorVolKeys(vector<string> names);
     void setCapFloorVolExpiries(const string& key, const vector<Period>& p);
     void setCapFloorVolStrikes(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     void setCapFloorVolIsAtm(const std::string& key, bool isAtm);

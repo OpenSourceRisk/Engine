@@ -77,9 +77,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             string npvCcy = trade->npvCurrency();
             Real fx = 1.0, fxNotional = 1.0;
             if (npvCcy != baseCurrency)
-                fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
+                fx = market->fxRate(npvCcy + baseCurrency, configuration)->value();
             if (trade->notionalCurrency() != "" && trade->notionalCurrency() != baseCurrency)
-                fxNotional = market->fxSpot(trade->notionalCurrency() + baseCurrency, configuration)->value();
+                fxNotional = market->fxRate(trade->notionalCurrency() + baseCurrency, configuration)->value();
             Real npv = trade->instrument()->NPV();
             QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
@@ -303,44 +303,63 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     c = tmp->underlying();
                                 }
                                 Date fixingDate;
+                                std::string qlIndexName;
+                                bool usesCapVol = false, usesSwaptionVol = false;
+                                Period swaptionTenor;
                                 if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
+                                    qlIndexName = tmp->index()->name();
+                                    if (boost::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
+                                        usesSwaptionVol = true;
+                                        swaptionTenor = tmp->index()->tenor();
+                                    } else if (boost::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
+                                        usesCapVol = true;
+                                    }
+
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
+                                    qlIndexName = tmp->index()->name();
+                                    usesCapVol = true;
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredAverageONIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
+                                    qlIndexName = tmp->index()->name();
+                                    usesCapVol = true;
                                 }
 
-                                // get market volaility for cap / floor - ORE only has one cf vol surface per currency,
-                                // so this is easy, but once we support tenor dependent cf vol surfaces we need to
-                                // refine the vol retrieval here as well.
+                                // get market volaility for cap / floor
 
                                 if (fixingDate != Date() && fixingDate > market->asofDate()) {
                                     if (floorStrike != Null<Real>()) {
-                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                        if (usesSwaptionVol) {
+                                            floorVolatility = market->swaptionVol(ccy, configuration)
+                                                                  ->volatility(fixingDate, swaptionTenor, floorStrike);
+                                        } else if (usesCapVol) {
                                             floorVolatility =
-                                                market->swaptionVol(ccy, configuration)
-                                                    ->volatility(fixingDate, tmp->index()->tenor(), floorStrike);
-                                        else
-                                            floorVolatility = market->capFloorVol(ccy, configuration)
-                                                                  ->volatility(fixingDate, floorStrike);
+                                                market
+                                                    ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, floorStrike);
+                                        }
                                     }
                                     if (capStrike != Null<Real>()) {
-                                        if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(c))
+                                        if (usesSwaptionVol) {
+                                            capVolatility = market->swaptionVol(ccy, configuration)
+                                                                ->volatility(fixingDate, swaptionTenor, capStrike);
+                                        } else if (usesCapVol) {
                                             capVolatility =
-                                                market->swaptionVol(ccy, configuration)
-                                                    ->volatility(fixingDate, tmp->index()->tenor(), capStrike);
-                                        else
-                                            capVolatility = market->capFloorVol(ccy, configuration)
-                                                                ->volatility(fixingDate, capStrike);
+                                                market
+                                                    ->capFloorVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, capStrike);
+                                        }
                                     }
                                 }
                             }
@@ -1062,7 +1081,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
             if (notional2 != Null<Real>() && notional2Ccy != "") {
                 Real fx = 1.0;
                 if (notional2Ccy != baseCurrency)
-                    fx = market->fxSpot(notional2Ccy + baseCurrency)->value();
+                    fx = market->fxRate(notional2Ccy + baseCurrency)->value();
                 std::ostringstream oss;
                 oss << std::fixed << std::setprecision(8) << notional2 * fx;
                 // report.next().add(tradeId).add("notionalInBaseCurrency[2]").add("double").add(oss.str());

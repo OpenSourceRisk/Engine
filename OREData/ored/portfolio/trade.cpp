@@ -69,7 +69,7 @@ Date Trade::addPremiums(std::vector<boost::shared_ptr<Instrument>>& addInstrumen
         Handle<YieldTermStructure> yts = factory->market()->discountCurve(d.ccy, configuration);
         Handle<Quote> fx;
         if (tradeCurrency.code() != d.ccy) {
-            fx = factory->market()->fxSpot(d.ccy + tradeCurrency.code(), configuration);
+            fx = factory->market()->fxRate(d.ccy + tradeCurrency.code(), configuration);
         }
         boost::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
         fee->setPricingEngine(discountingEngine);

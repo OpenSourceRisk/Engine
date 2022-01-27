@@ -1,6 +1,7 @@
 <TodaysMarket>
   <YieldCurves/>
   <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
     <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
     <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-USD</DiscountingCurve>
   </DiscountingCurves>
@@ -17,5 +18,6 @@
   <FxSpots id="default">
     <FxSpot pair="GBPUSD">FX/GBP/USD</FxSpot>
     <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
+    <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
   </FxSpots>
 </TodaysMarket>

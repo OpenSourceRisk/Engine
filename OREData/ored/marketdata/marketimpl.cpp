@@ -21,6 +21,7 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
@@ -33,6 +34,7 @@ using namespace QuantLib;
 
 using QuantExt::PriceTermStructure;
 using QuantExt::CommodityIndex;
+using QuantExt::FxIndex;
 
 namespace ore {
 namespace data {
@@ -40,13 +42,18 @@ namespace data {
 namespace {
 
 template <class A, class B, class C>
-A lookup(const B& map, const C& key, const string& configuration, const string& type) {
+A lookup(const B& map, const C& key, const string& configuration, const string& type, bool continueOnError = false) {
     auto it = map.find(make_pair(configuration, key));
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_pair(Market::defaultConfiguration, key));
-        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration '"
-                                                           << configuration << "' or 'default'");
+        if (it == map.end()) {
+            if (!continueOnError)
+                QL_FAIL("did not find object " << key << " of type " << type 
+                    << " under configuration '" << configuration << "' or 'default'");
+            else
+                return A();
+        }
     }
     return it->second;
 }
@@ -62,7 +69,6 @@ A lookup(const B& map, const C& key, const YieldCurveType y, const string& confi
     }
     return it->second;
 }
-
 } // anonymous namespace
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
@@ -131,23 +137,73 @@ Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string&
                                                                  "yield volatility curve");
 }
 
+Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& fxIndex, const string& configuration) const {
 
-Handle<QuantExt::FxIndex> MarketImpl::fxIndex(const string& ccypair, const string& configuration) const {
-    require(MarketObject::FXSpot, ccypair, configuration);
-    auto it = fxIndices_.find(make_pair(configuration, ccypair));
-    QL_REQUIRE(it != fxIndices_.end(), "did not find object " << ccypair << " of type fx index under configuration '"
-                                                            << configuration << "' or 'default'");
-    return it->second;
+    require(MarketObject::FXSpot, fxIndex, configuration);
+    auto it = fxIndices_.find(configuration);
+    if (it == fxIndices_.end())
+        it = fxIndices_.find(Market::defaultConfiguration);
+    
+    Handle<FxIndex> fxInd;
+    if (it != fxIndices_.end()) {
+        fxInd = it->second.getIndex(fxIndex, true); // don't throw error here
+    }
+
+    // we try the inverse if an empty handle, this in mainly for lazy builds 
+    // where only the inverse is specified in the market
+    if (fxInd.empty() && !isFxIndex(fxIndex)) {
+        string ccypairInverted = fxIndex.substr(3, 3) + fxIndex.substr(0, 3);
+        require(MarketObject::FXSpot, ccypairInverted, configuration);
+        auto iti = fxIndices_.find(configuration);
+        if (iti == fxIndices_.end())
+            iti = fxIndices_.find(Market::defaultConfiguration);
+        QL_REQUIRE(iti != fxIndices_.end(), "did not find object "
+                                                << fxIndex << " of type fx index under configuration '" << configuration
+                                               << "' or 'default'");
+
+        // still look up by ccypair, not inverted ccypair, the triangulation will handle
+        fxInd = iti->second.getIndex(fxIndex); // throws error here is still not found
+    }
+
+    // if an index and doesn't already exist, build and add to cache
+    if (fxInd.empty() && isFxIndex(fxIndex)) {
+        // Parse the index we have with no term structures
+        boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(fxIndex);
+
+        // get market data objects - we set up the index using source/target, fixing days
+        // and calendar from legData_[i].fxIndex()
+        string source = fxIndexBase->sourceCurrency().code();
+        string target = fxIndexBase->targetCurrency().code();
+
+        auto sorTS = discountCurve(source);
+        auto tarTS = discountCurve(target);
+        auto spot = fxSpot(source + target);
+
+        Natural spotDays;
+        Calendar calendar;
+        getFxIndexConventions(fxIndex, spotDays, calendar);
+
+        fxInd = Handle<QuantExt::FxIndex>(boost::make_shared<QuantExt::FxIndex>(
+            fxIndexBase->familyName(), spotDays, fxIndexBase->sourceCurrency(),
+            fxIndexBase->targetCurrency(), calendar, spot, sorTS, tarTS));
+
+        fxIndices_[Market::defaultConfiguration].addIndex(fxIndex, fxInd);
+    }
+
+    return fxInd;
+}
+
+Handle<Quote> MarketImpl::fxRate(const string& ccypair, const string& configuration) const {
+    // if rate requested for a currency against itself, return 1.0
+    if (ccypair.substr(0,3) == ccypair.substr(3))
+        return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+    return fxIndex(ccypair, configuration)->fxQuote();
 }
 
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
-    require(MarketObject::FXSpot, ccypair, configuration);
-    auto it = fxSpots_.find(configuration);
-    if (it == fxSpots_.end())
-        it = fxSpots_.find(Market::defaultConfiguration);
-    QL_REQUIRE(it != fxSpots_.end(), "did not find object " << ccypair << " of type fx spot under configuration '"
-                                                            << configuration << "' or 'default'");
-    return it->second.getQuote(ccypair); // will throw if not found
+    if (ccypair.substr(0, 3) == ccypair.substr(3))
+        return Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+    return fxIndex(ccypair, configuration)->fxQuote(true);
 }
 
 Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const string& configuration) const {
@@ -203,14 +259,41 @@ MarketImpl::baseCorrelation(const string& key, const string& configuration) cons
 
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {
     require(MarketObject::CapFloorVol, key, configuration);
-    return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
+    auto it = capFloorCurves_.find(make_pair(configuration, key));
+    if (it != capFloorCurves_.end())
+        return it->second;
+    // first try the default config with the same key
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::CapFloorVol, key, Market::defaultConfiguration);
+        auto it2 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, key));
+        if (it2 != capFloorCurves_.end())
+            return it2->second;
+    }
+    // if key is an index name and we have a cap floor surface for its ccy, we return that
+    boost::shared_ptr<IborIndex> index;
+    if (!tryParseIborIndex(key, index)) {
+        QL_FAIL("did not find capfloor curve for key '" << key << "'");
+    }
+    auto ccy = index->currency().code();
+    require(MarketObject::CapFloorVol, ccy, configuration);
+    auto it3 = capFloorCurves_.find(make_pair(configuration, ccy));
+    if (it3 != capFloorCurves_.end()) {
+        return it3->second;
+    }
+    // check if we have a curve for the ccy in the default config
+    if (configuration != Market::defaultConfiguration) {
+	require(MarketObject::CapFloorVol, ccy, configuration);
+        auto it4 = capFloorCurves_.find(make_pair(Market::defaultConfiguration, ccy));
+        if (it4 != capFloorCurves_.end())
+            return it4->second;
+    }
+    QL_FAIL("did not find capfloor curve for key '" << key << "'");
 }
 
-Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
-                                                                           const string& configuration) const {
+Handle<YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {
     require(MarketObject::YoYInflationCapFloorVol, key, configuration);
     return lookup<Handle<YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
-                                                                   "yoy inflation capfloor curve");
+                                                         "yoy inflation capfloor curve");
 }
 
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
@@ -490,16 +573,6 @@ void MarketImpl::refresh(const string& configuration) {
     // therefore we need to call deepUpdate() (=update() if no such nesting is present)
     for (auto& x : it->second)
         x->deepUpdate();
-
-    // update fx spot quotes
-    auto fxSpots = fxSpots_.find(configuration);
-    if (fxSpots != fxSpots_.end()) {
-        for (auto& x : fxSpots->second.quotes()) {
-            auto dq = boost::dynamic_pointer_cast<Observer>(*x.second);
-            if (dq != nullptr)
-                dq->update();
-        }
-    }
 
 } // refresh
 

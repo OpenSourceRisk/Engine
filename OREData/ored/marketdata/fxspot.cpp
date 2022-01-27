@@ -23,12 +23,43 @@
 
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 namespace ore {
 namespace data {
 
-FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation) {
-    spot_ = fxTriangulation.getQuote(spec.unitCcy() + spec.ccy());
+FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation,
+               const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves) {
+
+    string ccyPair = spec.unitCcy() + spec.ccy();
+    auto spot = fxTriangulation.getQuote(ccyPair);
+    
+    Natural spotDays;
+    Calendar calendar;
+    getFxIndexConventions(ccyPair, spotDays, calendar);
+
+    Handle<YieldTermStructure> sorTS, tarTS;
+    // get the discount curves for the source and target currencies
+    auto itSor = requiredDiscountCurves.find(spec.unitCcy());
+    if (spotDays > 0) { // if spot days are zero we can build a curve without the discount curve
+        QL_REQUIRE(itSor != requiredDiscountCurves.end(),
+                   "Discount Curve - " << spec.unitCcy() << " - not found during Fx Spot build");
+    }
+    if (itSor != requiredDiscountCurves.end())
+        sorTS = itSor->second->handle();
+
+    auto itTar = requiredDiscountCurves.find(spec.ccy());
+    if (spotDays > 0) {
+        QL_REQUIRE(itTar != requiredDiscountCurves.end(),
+               "Discount Curve - " << spec.ccy() << " - not found during Fx Spot build");
+    }
+    if (itTar != requiredDiscountCurves.end())
+        tarTS = itTar->second->handle();
+
+    index_ = Handle<QuantExt::FxIndex>(
+        boost::make_shared<QuantExt::FxIndex>(asof, ccyPair, spotDays, parseCurrency(spec.unitCcy()), 
+            parseCurrency(spec.ccy()), calendar, spot, sorTS, tarTS, false));
+
 }
 } // namespace data
 } // namespace ore

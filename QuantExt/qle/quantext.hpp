@@ -163,6 +163,7 @@
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/makecds.hpp>
+#include <qle/instruments/makeoiscapfloor.hpp>
 #include <qle/instruments/multilegoption.hpp>
 #include <qle/instruments/nullinstrument.hpp>
 #include <qle/instruments/oibasisswap.hpp>
@@ -324,6 +325,7 @@
 #include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
+#include <qle/termstructures/flatteneddefaultcurve.hpp>
 #include <qle/termstructures/futurepricehelper.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
@@ -343,6 +345,7 @@
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
+#include <qle/termstructures/oiscapfloorhelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/optionletcurve.hpp>
 #include <qle/termstructures/optionletstripper.hpp>

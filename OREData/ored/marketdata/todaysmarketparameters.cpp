@@ -54,7 +54,7 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     {MarketObject::FXVol, "FXVol", "FxVolatilities", {"FxVolatility", "pair"}},
     {MarketObject::SwaptionVol, "SwaptionVol", "SwaptionVolatilities", {"SwaptionVolatility", "currency"}},
     {MarketObject::YieldVol, "YieldVol", "YieldVolatilities", {"YieldVolatility", "name"}},
-    {MarketObject::CapFloorVol, "CapFloorVol", "CapFloorVolatilities", {"CapFloorVolatility", "currency"}},
+    {MarketObject::CapFloorVol, "CapFloorVol", "CapFloorVolatilities", {"CapFloorVolatility", "key"}},
     {MarketObject::CDSVol, "CDSVol", "CDSVolatilities", {"CDSVolatility", "name"}},
     {MarketObject::DefaultCurve, "DefaultCurve", "DefaultCurves", {"DefaultCurve", "name"}},
     {MarketObject::YoYInflationCapFloorVol,
@@ -166,6 +166,16 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                         auto mp =
                             XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
                                                                      marketObjectData[i].xmlSingleName.second, false);
+			// deprecated attribute currency for capfloor vols
+			if(marketObjectData[i].obj == MarketObject::CapFloorVol) {
+                            auto mp2 = XMLUtils::getChildrenAttributesAndValues(
+                                n, marketObjectData[i].xmlSingleName.first, "currency", false);
+                            if (!mp2.empty()) {
+                                mp.insert(mp2.begin(), mp2.end());
+                                WLOG("TodaysMarketParameters: the attribute 'currency' is deprecated for "
+                                     "CapFloorVolatilities, use 'key' instead.");
+                            }
+                        }
                         Size nc = XMLUtils::getChildrenNodes(n, "").size();
                         QL_REQUIRE(mp.size() == nc, "TodaysMarketParameters::fromXML(): possible duplicate entry in node " 
                             << marketObjectData[i].xmlName << ", check for XMLUtils warnings.");

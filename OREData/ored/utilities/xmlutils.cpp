@@ -368,6 +368,8 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
          child = XMLUtils::getNextSibling(child, names.c_str())) {
         string first = getAttribute(child, attributeName);
         string second = getNodeValue(child);
+        if (first.empty())
+            continue;
         if (mandatory) {
             QL_REQUIRE(first != "", "empty attribute for " << names);
         }

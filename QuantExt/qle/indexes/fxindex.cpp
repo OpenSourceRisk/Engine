@@ -32,11 +32,42 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <ql/quotes/derivedquote.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/math/functional.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using namespace std;
+using namespace QuantLib;
 
 namespace QuantExt {
+
+FxRateQuote::FxRateQuote(Handle<Quote> spotQuote, const Handle<YieldTermStructure>& sourceYts,
+                         const Handle<YieldTermStructure>& targetYts, Natural fixingDays,
+                         const Calendar& fixingCalendar, Date refDate)
+    : spotQuote_(spotQuote), sourceYts_(sourceYts), targetYts_(targetYts), fixingDays_(fixingDays),
+      fixingCalendar_(fixingCalendar), refDate_(refDate) {
+    registerWith(spotQuote_);
+    registerWith(sourceYts_);
+    registerWith(targetYts_);
+}
+
+Real FxRateQuote::value() const {
+    QL_ENSURE(isValid(), "invalid FxRateQuote");
+
+    Date today = refDate_ == Null<Date>() ? Settings::instance().evaluationDate() : refDate_;
+    Date refValueDate = fixingCalendar_.advance(fixingCalendar_.adjust(today), fixingDays_, Days);
+
+    return spotQuote_->value() * targetYts_->discount(refValueDate) / sourceYts_->discount(refValueDate);
+}
+
+bool FxRateQuote::isValid() const { 
+    return !spotQuote_.empty() && spotQuote_->isValid() && !sourceYts_.empty() && !targetYts_.empty();
+}
+
+void FxRateQuote::update() { 
+    notifyObservers();
+}
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
                  const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
@@ -45,35 +76,80 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
       sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(false), fixingCalendar_(fixingCalendar),
       inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
 
-    std::ostringstream tmp;
-    tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
-    name_ = tmp.str();
+    initialise();
     registerWith(Settings::instance().evaluationDate());
-    registerWith(IndexManager::instance().notifier(name()));
-    registerWith(sourceYts_);
-    registerWith(targetYts_);
-
-    // we should register with the exchange rate manager
-    // to be notified of changes in the spot exchange rate
-    // however currently exchange rates are not quotes anyway
-    // so this is to be revisited later
 }
+
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
-                 const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
+                 const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
                  const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts,
                  bool inverseIndex, bool fixingTriangulation)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
-      sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true), fixingCalendar_(fixingCalendar),
+      sourceYts_(sourceYts), targetYts_(targetYts), fxSpot_(fxSpot), useQuote_(true), fixingCalendar_(fixingCalendar),
       inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
 
+    initialise();
+    registerWith(Settings::instance().evaluationDate());
+}
+
+FxIndex::FxIndex(const Date& referenceDate, const std::string& familyName, Natural fixingDays, const Currency& source,
+        const Currency& target, const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
+        const Handle<YieldTermStructure>& targetYts, bool inverseIndex,
+        bool fixingTriangulation)
+    : referenceDate_(referenceDate), familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source),
+      targetCurrency_(target), sourceYts_(sourceYts), targetYts_(targetYts), useQuote_(true),
+      fixingCalendar_(fixingCalendar), inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
+    
+    initialise();
+}
+
+FxIndex::FxIndex(const Date& referenceDate, const std::string& familyName, Natural fixingDays, const Currency& source,
+        const Currency& target, const Calendar& fixingCalendar, const Handle<Quote> fxSpot,
+        const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts, 
+        bool inverseIndex, bool fixingTriangulation)
+    : referenceDate_(referenceDate), familyName_(familyName),
+    fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target), sourceYts_(sourceYts),
+    targetYts_(targetYts), fxSpot_(fxSpot), useQuote_(true), fixingCalendar_(fixingCalendar),
+    inverseIndex_(inverseIndex), fixingTriangulation_(fixingTriangulation) {
+
+    initialise();
+}
+
+void FxIndex::initialise() {
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
-    registerWith(Settings::instance().evaluationDate());
+        
     registerWith(IndexManager::instance().notifier(name()));
-    registerWith(fxQuote_);
+    registerWith(fxSpot_);
     registerWith(sourceYts_);
     registerWith(targetYts_);
+}
+
+const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {   
+    Handle<Quote> quote;
+    if (withSettlementLag || fixingDays_ == 0)
+        quote = fxSpot_;
+    
+    if (quote.empty()) {
+        if (fxRate_.empty()) {
+            Handle<Quote> tmpQuote;
+            if (!useQuote_)
+                tmpQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(
+                    ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate()));
+            else
+                tmpQuote = fxSpot_;
+
+            // adjust for spot
+            fxRate_ = Handle<Quote>(boost::make_shared<FxRateQuote>(tmpQuote, sourceYts_, targetYts_, 
+                fixingDays_, fixingCalendar_, referenceDate_));
+        }
+        quote = fxRate_;
+    }
+    if (inverseIndex_)
+        // Create a derived quote to invert
+        quote = Handle<Quote>(boost::make_shared<DerivedQuote<divide<Real>>>(quote, divide<Real>(1.0)));
+    return quote;
 }
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -117,8 +193,8 @@ Real FxIndex::forecastFixing(const Time& fixingTime) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
-        rate = fxQuote_->value();
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        rate = fxSpot_->value();
     }
 
     // TODO: do we need to add this a class variable?
@@ -147,8 +223,8 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     if (!useQuote_) {
         rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
-        QL_REQUIRE(!fxQuote_.empty(), "FxIndex::forecastFixing(): fx quote required");
-        rate = fxQuote_->value();
+        QL_REQUIRE(!fxSpot_.empty(), "FxIndex::forecastFixing(): fx quote required");
+        rate = fxSpot_->value();
     }
 
     // the exchange rate is interpreted as the spot rate w.r.t. the index's
@@ -172,9 +248,18 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
 }
 
 boost::shared_ptr<FxIndex> FxIndex::clone(const Handle<Quote> fxQuote, const Handle<YieldTermStructure>& sourceYts,
-                                          const Handle<YieldTermStructure>& targetYts) {
-    return boost::make_shared<FxIndex>(familyName_, fixingDays_, sourceCurrency_, targetCurrency_, fixingCalendar_,
-                                       fxQuote, sourceYts, targetYts, inverseIndex_);
+                                          const Handle<YieldTermStructure>& targetYts, const string& familyName, bool inverseIndex) {
+    Handle<Quote> quote = fxQuote.empty() ? fxSpot_ : fxQuote;
+    Handle<YieldTermStructure> source = sourceYts.empty() ? sourceYts_ : sourceYts;
+    Handle<YieldTermStructure> target = targetYts.empty() ? targetYts_ : targetYts;
+    string famName = familyName.empty() ? familyName_ : familyName;
+    if (referenceDate_ == Null<Date>())
+        return boost::make_shared<FxIndex>(famName, fixingDays_, sourceCurrency_, targetCurrency_,
+            fixingCalendar_, quote, source, target, inverseIndex);
+    else
+        return boost::make_shared<FxIndex>(referenceDate_, famName, fixingDays_, sourceCurrency_, targetCurrency_,
+            fixingCalendar_, quote, source, target, inverseIndex);
+
 }
 
 std::string FxIndex::name() const { 
@@ -189,7 +274,8 @@ bool FxIndex::isValidFixingDate(const Date& d) const {
     return fixingCalendar().isBusinessDay(d); 
 }
 
-void FxIndex::update() { 
+void FxIndex::update() {
+    fxRate_ = Handle<Quote>();
     notifyObservers(); 
 }
 

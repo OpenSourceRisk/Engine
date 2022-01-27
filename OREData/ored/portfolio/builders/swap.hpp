@@ -119,7 +119,7 @@ protected:
             string ccyCode = ccys[i].code();
             discountCurves.push_back(xccyYieldCurve(market_, ccyCode, config));
             string pair = ccyCode + baseCcyCode;
-            fxQuotes.push_back(market_->fxSpot(pair, config));
+            fxQuotes.push_back(market_->fxRate(pair, config));
         }
 
         return boost::make_shared<QuantExt::DiscountingCurrencySwapEngine>(discountCurves, fxQuotes, ccys, base);

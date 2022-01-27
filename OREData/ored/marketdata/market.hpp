@@ -40,6 +40,7 @@
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
@@ -129,6 +130,12 @@ public:
 
     //! \name Foreign Exchange
     //@{
+    virtual QuantLib::Handle<QuantExt::FxIndex> fxIndex(const string& fxIndex, const string& configuration = Market::defaultConfiguration) 
+        const = 0;
+    // Fx Rate is the fx rate as of today
+    virtual Handle<Quote> fxRate(const string& ccypair,
+                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    // Fx Spot is the spot rate quoted in the market
     virtual Handle<Quote> fxSpot(const string& ccypair,
                                  const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<BlackVolTermStructure> fxVol(const string& ccypair,
@@ -158,7 +165,7 @@ public:
     //! \name Stripped Cap/Floor volatilities i.e. caplet/floorlet volatilities
     //@{
     virtual Handle<OptionletVolatilityStructure>
-    capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
+    capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Stripped YoY Inflation Cap/Floor volatilities i.e. caplet/floorlet volatilities
