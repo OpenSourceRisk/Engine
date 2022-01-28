@@ -77,12 +77,17 @@ void CPIBlackCapFloorEngine::calculate() const {
     Real K = pow(1.0 + arguments_.strike, timeFromStart);
     Real F = indexFixing(effectiveMaturity, maturity) / arguments_.baseCPI;
 
-    // For reading volatility in the current market volatiltiy structure
-    // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t), solve
-    // for strikeRate(t):
-    Real strikeZeroRate =
-        pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) - 1.0;
-    Real stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate));
+    // if time from base <= 0 the fixing is already known and stdDev is zero, return the intrinsic value
+    Real stdDev = 0.0;
+    if (timeFromBase > 0 && !close_enough(timeFromBase, 0.0)) {
+        // For reading volatility in the current market volatiltiy structure
+        // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
+        // solve for strikeRate(t):
+        Real strikeZeroRate =
+            pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) -
+            1.0;
+        stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate));
+    }
     results_.value = blackFormula(arguments_.type, K, F, stdDev, d);
 
     // std::cout << "CPIBlackCapFloorEngine ==========" << std::endl
