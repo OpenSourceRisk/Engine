@@ -1621,6 +1621,13 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
     QL_REQUIRE(cmsData, "Incomplete DigitalCms Leg, expected CMS data");
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+
+    Calendar paymentCalendar;
+    if (data.paymentCalendar().empty())
+        paymentCalendar = schedule.calendar();
+    else
+        paymentCalendar = parseCalendar(data.paymentCalendar());
+
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     vector<double> spreads =
@@ -1655,6 +1662,7 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
                                       .withNotionals(notionals)
                                       .withSpreads(spreads)
                                       .withGearings(gearings)
+                                      .withPaymentCalendar(paymentCalendar)
                                       .withPaymentDayCounter(dc)
                                       .withPaymentAdjustment(bdc)
                                       .withFixingDays(fixingDays)
