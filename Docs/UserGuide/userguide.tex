@@ -2807,9 +2807,9 @@ through time
 \item {\tt dimOutputNettingSet:} Netting set for the DIM regression snapshot
 \item {\tt dimOutputGridPoints:} Grid point(s) (in time) for the DIM regression snapshot, comma separated list
 \item {\tt rawCubeOutputFile:} File name for the trade NPV cube in human readable csv file format (per trade, date,
-sample)
+sample), leave empty to skip generation of this file.
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
-date, sample) {\em after} taking collateral into account
+date, sample) {\em after} taking collateral into account. Leave empty to skip generation of this file.
 \item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
 \item {\tt flipViewXVA:} If set to {\tt Y}, the perspective in XVA calculations is switched to the cpty view, the npvs and the netting sets being reverted during calculation. In order to get the lending/borrowing curve, the calculation assumes these curves being set up with the cptyname + the postfix given in the next two settings.
 \item {\tt flipViewBorrowingCurvePostfix:} postfix for the borrowing curve, the calculation assumes this is curves being set up with cptyname + postfix given.
