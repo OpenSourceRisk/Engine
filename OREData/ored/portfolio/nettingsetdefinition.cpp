@@ -199,7 +199,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     } else {
         if (csaChild) {
             WLOG(
-                StructuredConfigurationWarningMessage("Netting set definitions", nettingSetId_, "Inconsistent inputs",
+                StructuredConfigurationWarningMessage("Netting set definitions", to_string(nettingSetDetails_), "Inconsistent inputs",
                                                       "ActiveCSAFlag=False, but a CSADetails node was still provided"));
         }
     }
