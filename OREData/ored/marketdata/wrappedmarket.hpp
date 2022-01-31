@@ -37,7 +37,7 @@ namespace data {
 
   \ingroup marketdata
 */
-class WrappedMarket : public Market {
+class WrappedMarket : virtual public Market {
 public:
     explicit WrappedMarket(const boost::shared_ptr<Market>& market);
     boost::shared_ptr<Market> underlyingMarket() const;

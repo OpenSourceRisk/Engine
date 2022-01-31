@@ -41,7 +41,7 @@ using namespace ore::data;
 
   \ingroup simulation
  */
-class SimMarket : public data::MarketImpl {
+class SimMarket : virtual public ore::data::MarketImpl {
 public:
     SimMarket() : MarketImpl(), numeraire_(1.0) {}
 

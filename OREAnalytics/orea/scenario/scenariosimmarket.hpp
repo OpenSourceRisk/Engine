@@ -118,6 +118,8 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
+    ScenarioSimMarket() {}
+
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                       const std::string& configuration = Market::defaultConfiguration,
