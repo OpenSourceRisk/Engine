@@ -335,6 +335,8 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
         DLOG("Have " << vcc.quotes().size() << " explicit quotes");
 
         // Loop over quotes and process commodity option quotes that are explicitly specified in the config
+        Size quotesAdded = 0;
+        Size skippedExpiredQuotes = 0;
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
             // Go to next quote if the market data point's date does not equal our asof
@@ -350,25 +352,31 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
                     TLOG("Found the configured quote " << q->name());
 
                     Date expiryDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
-                    QL_REQUIRE(expiryDate > asof, "Commodity volatility quote '" << q->name()
-                                                                                 << "' has expiry in the past ("
-                                                                                 << io::iso_date(expiryDate) << ")");
-                    QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the date "
-                                                                     << io::iso_date(expiryDate)
-                                                                     << " provided by commodity volatility config "
-                                                                     << vc.curveID());
-                    curveData[expiryDate] = q->quote()->value();
-
-                    TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
-                                        << setprecision(9) << q->quote()->value() << ")");
+                    if (expiryDate > asof) {
+                        QL_REQUIRE(expiryDate > asof, "Commodity volatility quote '"
+                                                          << q->name() << "' has expiry in the past ("
+                                                          << io::iso_date(expiryDate) << ")");
+                        QL_REQUIRE(curveData.count(expiryDate) == 0, "Duplicate quote for the date "
+                                                                         << io::iso_date(expiryDate)
+                                                                         << " provided by commodity volatility config "
+                                                                         << vc.curveID());
+                        curveData[expiryDate] = q->quote()->value();
+                        quotesAdded++;
+                        TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
+                                            << setprecision(9) << q->quote()->value() << ")");
+                    } else {
+                        skippedExpiredQuotes++;
+                        WLOG("Skipped quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
+                                              << setprecision(9) << q->quote()->value() << ")");
+                    }
                 }
             }
         }
 
         // Check that we have found all of the explicitly configured quotes
-        QL_REQUIRE(curveData.size() == vcc.quotes().size(), "Found " << curveData.size() << " quotes, but "
-                                                                     << vcc.quotes().size()
-                                                                     << " quotes were given in config.");
+        QL_REQUIRE((quotesAdded + skippedExpiredQuotes) == vcc.quotes().size(),
+                   "Found " << quotesAdded << " live quotes and " << skippedExpiredQuotes << " expired quotes",
+                   " but " << vcc.quotes().size() << " quotes were given in config.");
     }
 
     // Create the dates and volatility vector
@@ -700,7 +708,7 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
 
     // Count the number of quotes added. We check at the end that we have added all configured quotes.
     Size quotesAdded = 0;
-
+    Size skippedExpiredQuotes = 0;
     // Loop over quotes and process commodity option quotes that have been requested
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
@@ -725,6 +733,7 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
 
         // Process the quote
         Date eDate = getExpiry(asof, q->expiry(), vc.futureConventionsId(), vc.optionExpiryRollDays());
+        
         if (eDate > asof) {
 
             // Position of quote in vector of strikes
@@ -749,6 +758,7 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
             TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
                                 << configuredStrikes[pos] << "," << q->quote()->value() << ")");
         } else {
+            skippedExpiredQuotes++;
             TLOG("Skipped quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
                                   << q->quote()->value() << ")");
         }
@@ -756,8 +766,9 @@ void CommodityVolCurve::buildVolatilityExplicit(const Date& asof, CommodityVolat
 
     LOG("CommodityVolCurve: added " << quotesAdded << " quotes in building explicit absolute strike surface.");
 
-    QL_REQUIRE(vc.quotes().size() == quotesAdded,
-               "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
+    QL_REQUIRE(vc.quotes().size() == quotesAdded + skippedExpiredQuotes,
+               "Found " << quotesAdded << " live quotes and " << skippedExpiredQuotes << "expired quotes, but " << vc.quotes().size()
+                        << " quotes required by config.");
 
     // Set up the BlackVarianceSurface. Note that the rows correspond to strikes and that the columns correspond to
     // the expiry dates in the matrix that is fed to the BlackVarianceSurface ctor.
@@ -882,7 +893,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     // Count the number of quotes added. We check at the end that we have added all configured quotes.
     Size quotesAdded = 0;
-
+    Size skippedExpiredQuotes = 0;
     // Configured delta and Atm types.
     DeltaVolQuote::DeltaType deltaType = parseDeltaType(vdsc.deltaType());
     DeltaVolQuote::AtmType atmType = parseAtmType(vdsc.atmType());
@@ -965,6 +976,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
             TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
                                 << setprecision(9) << "," << q->quote()->value() << ")");
         } else {
+            skippedExpiredQuotes++;
             TLOG("Skiped quote, already expired: " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
                                 << setprecision(9) << "," << q->quote()->value() << ")");
         }
@@ -976,8 +988,8 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     if (!expWc) {
         // If expiries were configured explicitly, the number of configured quotes should equal the
         // number of quotes added.
-        QL_REQUIRE(vc.quotes().size() == quotesAdded,
-                   "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
+        QL_REQUIRE(vc.quotes().size() == quotesAdded + skippedExpiredQuotes,
+                   "Found " << quotesAdded << " quotes and "<< skippedExpiredQuotes <<" expired quotes , but " << vc.quotes().size() << " quotes required by config.");
     } else {
         // If the expiries were configured via a wildcard, check that no surfaceData element has a Null<Real>().
         for (const auto& kv : surfaceData) {
@@ -1101,6 +1113,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
 
     // Count the number of quotes added. We check at the end that we have added all configured quotes.
     Size quotesAdded = 0;
+    Size skippedExpiredQuotes = 0;
 
     // Configured moneyness type.
     MoneynessStrike::Type moneynessType = parseMoneynessType(vmsc.moneynessType());
@@ -1175,6 +1188,7 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
                                 << setprecision(9) << "," << q->quote()->value() << ")");
         }
         else {
+            skippedExpiredQuotes++;
             TLOG("Skip quote, already expired: " << q->name() << ": (" << io::iso_date(eDate) << "," << *q->strike() << "," << fixed
                                 << setprecision(9) << "," << q->quote()->value() << ")");
         }
@@ -1187,8 +1201,9 @@ void CommodityVolCurve::buildVolatility(const Date& asof, CommodityVolatilityCon
     if (!expWc) {
         // If expiries were configured explicitly, the number of configured quotes should equal the
         // number of quotes added.
-        QL_REQUIRE(vc.quotes().size() == quotesAdded,
-                   "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
+        QL_REQUIRE(vc.quotes().size() == quotesAdded + skippedExpiredQuotes,
+                   "Found " << quotesAdded << " quotes and " << skippedExpiredQuotes << " expired quotes, but " << vc.quotes().size()
+                            << " quotes required by config.");
     } else {
         // If the expiries were configured via a wildcard, check that no surfaceData element has a Null<Real>().
         for (const auto& kv : surfaceData) {
