@@ -1365,6 +1365,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
 XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
+    XMLNode* simulationNode = doc.allocNode("Simulation");
     XMLNode* marketNode = doc.allocNode("Market");
 
     // currencies
@@ -1756,7 +1757,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, correlationsNode, "Expiries", correlationExpiries_);
     }
 
-    return marketNode;
+    XMLUtils::appendNode(simulationNode, marketNode);
+
+    return simulationNode;
 }
 } // namespace analytics
 } // namespace ore
