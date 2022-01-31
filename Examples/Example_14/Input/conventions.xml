@@ -214,7 +214,6 @@
     <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>TARGET,UK</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
-    <AdditionalSettleCalendar/>
   </FX>
   <!-- Cross Currency Basis Swaps -->
   <CrossCurrencyBasis>
