@@ -375,8 +375,8 @@ void CommodityVolCurve::buildVolatility(const QuantLib::Date& asof, const Commod
 
         // Check that we have found all of the explicitly configured quotes
         QL_REQUIRE((quotesAdded + skippedExpiredQuotes) == vcc.quotes().size(),
-                   "Found " << quotesAdded << " live quotes and " << skippedExpiredQuotes << " expired quotes",
-                   " but " << vcc.quotes().size() << " quotes were given in config.");
+                   "Found " << quotesAdded << " live quotes and " << skippedExpiredQuotes << " expired quotes"
+                            << " but " << vcc.quotes().size() << " quotes were given in config.");
     }
 
     // Create the dates and volatility vector
