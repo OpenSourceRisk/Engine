@@ -4391,10 +4391,10 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
 \item {\tt ShiftTenors:} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
 \item {\tt ShiftExpiries:} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
   separated list of periods.
-\item {\tt ShiftTerms:} For swaption volatility surfaces, the underlying terms to apply shifts to, given as a comma
-  separated list of periods.
 \item {\tt ShiftStrikes:} For cap/floor, FX option and equity option volatility surfaces, the strikes to apply shifts to, given as a comma separated
   list of absolute strikes
+\item {\tt ShiftTerms:} For swaption volatility surfaces, the underlying terms to apply shifts to, given as a comma
+  separated list of periods.
 \item {\tt Index:} For cap / floor volatility surfaces, the index which together with the currency defines the surface.
   list of absolute strikes
 \item {\tt CurveType:} In the context of Yield Curves used to identify an equity ``risk free'' rate forecasting curve; set to {\tt EquityForecast} in this case
@@ -4482,8 +4482,8 @@ Additional flags:
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
-      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
       <ShiftStrikes/>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
     </SwaptionVolatility>
   </SwaptionVolatilities>
   ...
