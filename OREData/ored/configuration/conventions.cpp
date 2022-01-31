@@ -306,13 +306,20 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SpotLag", strSpotLag_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "FixedDayCounter", strFixedDayCounter_);
-    XMLUtils::addChild(doc, node, "PaymentLag", strPaymentLag_);
-    XMLUtils::addChild(doc, node, "EOM", strEom_);
-    XMLUtils::addChild(doc, node, "FixedFrequency", strFixedFrequency_);
-    XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
-    XMLUtils::addChild(doc, node, "FixedPaymentConvention", strFixedPaymentConvention_);
-    XMLUtils::addChild(doc, node, "Rule", strRule_);
-    XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
+    if (!strPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "PaymentLag", strPaymentLag_);
+    if (!strEom_.empty())
+        XMLUtils::addChild(doc, node, "EOM", strEom_);
+    if (!strFixedFrequency_.empty())
+        XMLUtils::addChild(doc, node, "FixedFrequency", strFixedFrequency_);
+    if (!strFixedConvention_.empty())
+        XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
+    if (!strFixedPaymentConvention_.empty())
+        XMLUtils::addChild(doc, node, "FixedPaymentConvention", strFixedPaymentConvention_);
+    if (!strRule_.empty())
+        XMLUtils::addChild(doc, node, "Rule", strRule_);
+    if (!strPaymentCal_.empty())
+        XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
 
     return node;
 }
@@ -861,19 +868,19 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FlatTenor", strFlatTenor_);
     XMLUtils::addChild(doc, node, "SpreadTenor", strSpreadTenor_);
 
-    XMLUtils::addChild(doc, node, "PaymentLag", strPaymentLag_);
+    XMLUtils::addChild(doc, node, "SpreadPaymentLag", strPaymentLag_);
     XMLUtils::addChild(doc, node, "FlatPaymentLag", strFlatPaymentLag_);
 
     if (!strIncludeSpread_.empty())
-        XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
+        XMLUtils::addChild(doc, node, "SpreadIncludeSpread", strIncludeSpread_);
     if (!strLookback_.empty())
-        XMLUtils::addChild(doc, node, "Lookback", strLookback_);
+        XMLUtils::addChild(doc, node, "SpreadLookback", strLookback_);
     if (!strFixingDays_.empty())
-        XMLUtils::addChild(doc, node, "FixingDays", strFixingDays_);
+        XMLUtils::addChild(doc, node, "SpreadFixingDays", strFixingDays_);
     if (!strRateCutoff_.empty())
-        XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
+        XMLUtils::addChild(doc, node, "SpreadRateCutoff", strRateCutoff_);
     if (!strIsAveraged_.empty())
-        XMLUtils::addChild(doc, node, "IsAveraged", strIsAveraged_);
+        XMLUtils::addChild(doc, node, "SpreadIsAveraged", strIsAveraged_);
 
     if (!strFlatIncludeSpread_.empty())
         XMLUtils::addChild(doc, node, "FlatIncludeSpread", strFlatIncludeSpread_);
