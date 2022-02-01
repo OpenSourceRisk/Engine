@@ -237,11 +237,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     if (capVols) {
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
-            string ccy = XMLUtils::getAttribute(child, "ccy");
+            string key = XMLUtils::getAttribute(child, "key");
+	    if(key.empty()) {
+		string ccyAttr = XMLUtils::getAttribute(child, "ccy");
+		if(!ccyAttr.empty()) {
+		    key = ccyAttr;
+                    ALOG("SensitivityData: attribute 'ccy' for CapFloorVolatilities is deprecated, use 'key' instead.");
+                }
+	    }
             auto data = boost::make_shared<CapFloorVolShiftData>();
             volShiftDataFromXML(child, *data);
             data->indexName = XMLUtils::getChildValue(child, "Index", true);
-            capFloorVolShiftData_[ccy] = data;
+            capFloorVolShiftData_[key] = data;
         }
     }
 
@@ -540,7 +547,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         XMLNode* parent = XMLUtils::addChild(doc, root, "CapFloorVolatilities");
         for (const auto& kv : capFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CapFloorVolatility");
-            XMLUtils::addAttribute(doc, node, "ccy", kv.first);
+            XMLUtils::addAttribute(doc, node, "key", kv.first);
             volShiftDataToXML(doc, node, *kv.second);
             XMLUtils::addChild(doc, node, "Index", kv.second->indexName);
             XMLUtils::addChild(doc, node, "IsRelative", kv.second->isRelative);

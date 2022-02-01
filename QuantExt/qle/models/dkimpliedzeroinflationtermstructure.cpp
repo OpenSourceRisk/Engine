@@ -25,8 +25,8 @@ using QuantLib::Time;
 namespace QuantExt {
 
 DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
-    : ZeroInflationModelTermStructure(model, index) {}
+    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
+    : ZeroInflationModelTermStructure(model, index, indexIsInterpolated) {}
 
 Real DkImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
     QL_REQUIRE(t >= 0.0, "DkImpliedZeroInflationTermStructure::zeroRateImpl: negative time (" << t << ") given");

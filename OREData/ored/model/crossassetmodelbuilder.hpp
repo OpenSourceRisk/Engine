@@ -166,7 +166,8 @@ private:
 
     // Attach JY engines to helpers for JY calibration
     void setJyPricingEngine(QuantLib::Size modelIdx,
-        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>& calibrationBasket) const;
+        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>& calibrationBasket,
+        bool indexIsInterpolated) const;
 };
 
 } // namespace data

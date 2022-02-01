@@ -55,6 +55,6 @@ private:
     \f]
 */
 QuantLib::Real jyExpectedIndexRatio(const boost::shared_ptr<CrossAssetModel>& model,
-    QuantLib::Size index, QuantLib::Time S, QuantLib::Time T);
+    QuantLib::Size index, QuantLib::Time S, QuantLib::Time T, bool indexIsInterpolated);
 
 }

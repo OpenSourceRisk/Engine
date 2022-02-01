@@ -401,7 +401,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
                 // Firstly, need to retrieve ibor index and discount curve
                 // Ibor index
-                Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->iborIndex(), configuration);
+                Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->index(), configuration);
                 // Discount curve
                 auto it = requiredYieldCurves_.find(cfg->discountCurve());
                 QL_REQUIRE(it != requiredYieldCurves_.end(), "Discount curve with spec, "

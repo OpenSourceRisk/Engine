@@ -27,13 +27,13 @@ using QuantLib::Time;
 namespace QuantExt {
 
 YoYInflationModelTermStructure::YoYInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
-                                                               Size index)
+                                                               Size index, bool indexIsInterpolated)
     : YoYInflationTermStructure(
           inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),
           inflationTermStructure(model, index)->observationLag(), inflationTermStructure(model, index)->frequency(),
-          inflationTermStructure(model, index)->indexIsInterpolated()),
-      model_(model), index_(index), referenceDate_(inflationTermStructure(model_, index_)->referenceDate()),
-      relativeTime_(0.0) {
+          indexIsInterpolated), // the QL constructor is not up to date, but the last argument here will go soon
+      model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),
+      referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
@@ -57,7 +57,7 @@ const Date& YoYInflationModelTermStructure::referenceDate() const {
 }
 
 Date YoYInflationModelTermStructure::baseDate() const {
-    if (indexIsInterpolated()) {
+    if (indexIsInterpolated_) {
         return referenceDate_ - observationLag_;
     } else {
         return inflationPeriod(referenceDate_ - observationLag_, frequency()).first;

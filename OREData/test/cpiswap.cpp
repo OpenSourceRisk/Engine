@@ -144,7 +144,7 @@ public:
             boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
                 new ZeroCouponInflationSwapHelper(
                     quote, Period(2, Months), datesZCII[i], UnitedKingdom(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii,
-                    yieldCurves_.at(make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP"))));
+                    CPI::AsIndex, yieldCurves_.at(make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP"))));
             ;
             instruments.push_back(anInstrument);
         };
@@ -152,7 +152,7 @@ public:
         // we know historical is WAY off market-implied, so use market implied flat.
         Rate baseZeroRate = ratesZCII[0] / 100.0;
         boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-            asof_, UnitedKingdom(), ActualActual(ActualActual::ISDA), Period(2, Months), ii->frequency(), ii->interpolated(),
+            asof_, UnitedKingdom(), ActualActual(ActualActual::ISDA), Period(2, Months), ii->frequency(),
             baseZeroRate, instruments));
         pCPIts->recalculate();
         cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);

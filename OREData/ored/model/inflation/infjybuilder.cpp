@@ -336,7 +336,7 @@ Helpers InfJyBuilder::buildCpiCapFloorBasket(const CalibrationBasket& cb,
 
         // Add the helper's time to expiry.
         auto fixingDate = helper->instrument()->fixingDate();
-        auto t = inflationTime(fixingDate, *zts);
+        auto t = inflationTime(fixingDate, *zts, zeroInflationIndex_->interpolated());
         auto p = expiryTimes.insert(t);
         QL_REQUIRE(data_->ignoreDuplicateCalibrationExpiryTimes() || p.second,
                    "InfJyBuilder: a CPI cap floor calibration "
@@ -451,7 +451,7 @@ Helpers InfJyBuilder::buildYoYCapFloorBasket(const CalibrationBasket& cb, vector
 
         // Add the helper's time to expiry.
         auto fixingDate = helperInst->lastYoYInflationCoupon()->fixingDate();
-        auto t = inflationTime(fixingDate, *yoyTs);
+        auto t = inflationTime(fixingDate, *yoyTs, yoyInflationIndex_->interpolated());
         auto p = expiryTimes.insert(t);
         QL_REQUIRE(data_->ignoreDuplicateCalibrationExpiryTimes() || p.second,
                    "InfJyBuilder: a YoY cap floor calibration "
@@ -562,10 +562,10 @@ Helpers InfJyBuilder::buildYoYSwapBasket(const CalibrationBasket& cb,
         auto finalYoYCoupon = boost::dynamic_pointer_cast<YoYInflationCoupon>(helperInst->yoyLeg().back());
         Date numFixingDate = finalYoYCoupon->fixingDate();
         if (forRealRateReversion) {
-            t = inflationTime(numFixingDate, *yoyTs);
+            t = inflationTime(numFixingDate, *yoyTs, yoyInflationIndex_->interpolated());
         } else {
             auto denFixingDate = numFixingDate - 1 * Years;
-            t = inflationTime(denFixingDate, *yoyTs);
+            t = inflationTime(denFixingDate, *yoyTs, yoyInflationIndex_->interpolated());
         }
 
         if (t <= 0) {

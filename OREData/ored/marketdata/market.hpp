@@ -165,7 +165,7 @@ public:
     //! \name Stripped Cap/Floor volatilities i.e. caplet/floorlet volatilities
     //@{
     virtual Handle<OptionletVolatilityStructure>
-    capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
+    capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Stripped YoY Inflation Cap/Floor volatilities i.e. caplet/floorlet volatilities

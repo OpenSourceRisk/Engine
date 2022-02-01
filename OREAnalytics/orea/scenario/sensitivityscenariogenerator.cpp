@@ -1198,23 +1198,23 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     Date asof = baseScenario_->asof();
 
     // Log an ALERT if some cap currencies in simmarket are excluded from the list
-    for (auto sim_cap : simMarketData_->capFloorVolCcys()) {
+    for (auto sim_cap : simMarketData_->capFloorVolKeys()) {
         if (sensitivityData_->capFloorVolShiftData().find(sim_cap) == sensitivityData_->capFloorVolShiftData().end()) {
-            WLOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
+            WLOG("CapFloor key " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
 
     for (auto c : sensitivityData_->capFloorVolShiftData()) {
-        std::string ccy = c.first;
+        std::string key = c.first;
 
-        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(ccy);
+        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(key);
         // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
         if (volStrikes.empty()) {
             volStrikes = {0.0};
         }
         Size n_cfvol_strikes = volStrikes.size();
 
-        Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
+        Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(key).size();
         SensitivityScenarioData::CapFloorVolShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
@@ -1222,8 +1222,8 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
         vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
 
-        std::vector<Period> expiries = overrideTenors_ && simMarketData_->hasCapFloorVolExpiries(ccy)
-                                           ? simMarketData_->capFloorVolExpiries(ccy)
+        std::vector<Period> expiries = overrideTenors_ && simMarketData_->hasCapFloorVolExpiries(key)
+                                           ? simMarketData_->capFloorVolExpiries(key)
                                            : data.shiftExpiries;
         QL_REQUIRE(expiries.size() == data.shiftExpiries.size(), "mismatch between effective shift expiries ("
                                                                      << expiries.size() << ") and shift tenors ("
@@ -1238,22 +1238,24 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
 
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->capFloorVol(ccy)->dayCounter();
+            dc = simMarket_->capFloorVol(key)->dayCounter();
         } catch(const std::exception&)  {
-            WLOG("Day counter lookup in simulation market failed for cap/floor vol surface " << ccy << ", using default A365");
+            WLOG("Day counter lookup in simulation market failed for cap/floor vol surface " << key << ", using default A365");
         }
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = asof + simMarketData_->capFloorVolExpiries(ccy)[j];
+            Date expiry = asof + simMarketData_->capFloorVolExpiries(key)[j];
             volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         bool valid = true;
         for (Size j = 0; j < n_cfvol_exp; ++j) {
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Size idx = j * n_cfvol_strikes + k;
-                RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, idx);
-                valid = valid && tryGetBaseScenarioValue(baseScenarioAbsolute_, key, volData[j][k], continueOnError_);
+                valid = valid &&
+                        tryGetBaseScenarioValue(baseScenarioAbsolute_,
+                                                RiskFactorKey(RiskFactorKey::KeyType::OptionletVolatility, key, idx),
+                                                volData[j][k], continueOnError_);
             }
         }
         if (!valid)
@@ -1272,7 +1274,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
                 boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
 
-                scenarioDescriptions_.push_back(capFloorVolScenarioDescription(ccy, j, k, up, sensiIsAtm));
+                scenarioDescriptions_.push_back(capFloorVolScenarioDescription(key, j, k, up, sensiIsAtm));
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, true);
@@ -1281,17 +1283,17 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
                 for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
                     for (Size kk = 0; kk < n_cfvol_strikes; ++kk) {
                         Size idx = jj * n_cfvol_strikes + kk;
-                        RiskFactorKey key(RFType::OptionletVolatility, ccy, idx);
+                        RiskFactorKey rfkey(RFType::OptionletVolatility, key, idx);
 
                         if (sensitivityData_->useSpreadedTermStructures()) {
-                            scenario->add(key, shiftedVolData[jj][kk] - volData[jj][kk]);
+                            scenario->add(rfkey, shiftedVolData[jj][kk] - volData[jj][kk]);
                         } else {
-                            scenario->add(key, shiftedVolData[jj][kk]);
+                            scenario->add(rfkey, shiftedVolData[jj][kk]);
                         }
 
                         // Possibly store valid shift size
                         if (validShiftSize && up && j == jj && k == kk) {
-                            shiftSizes_[key] = shiftedVolData[jj][kk] - volData[jj][kk];
+                            shiftSizes_[rfkey] = shiftedVolData[jj][kk] - volData[jj][kk];
                         }
                     }
                 }

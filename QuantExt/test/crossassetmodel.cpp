@@ -2271,12 +2271,13 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
         // GBP zerobond
         gbpzb1(d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.model->numeraire(0, T, zeur1));
         // EUR CPI indexed bond
+        bool indexIsInterpolated = true;
         if (infEurIsDk) {
             std::pair<Real, Real> sinfeur1 = d.model->infdkI(0, T, T2, infeurz1, infeury1);
             infeur1(sinfeur1.first * sinfeur1.second * d.model->discountBond(0, T, T2, zeur1) /
                 d.model->numeraire(0, T, zeur1));
         } else {
-            infeur1(exp(infeury1) * inflationGrowth(d.model, 0, T, T2, zeur1, infeurz1) *
+            infeur1(exp(infeury1) * inflationGrowth(d.model, 0, T, T2, zeur1, infeurz1, indexIsInterpolated) *
                 d.model->discountBond(0, T, T2, zeur1) / d.model->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
@@ -2285,7 +2286,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
             infgbp1(sinfgbp1.first * sinfgbp1.second * d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.model->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.model, 1, T, T2, zgbp1, infgbpz1) *
+            infgbp1(exp(infgbpy1) * inflationGrowth(d.model, 1, T, T2, zgbp1, infgbpz1, indexIsInterpolated) *
                 d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.model->numeraire(0, T, zeur1));
         }
         // EUR defaultable zerobond
@@ -2304,7 +2305,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
             infeur2(sinfeur2.first * sinfeur2.second * d.model->discountBond(0, T, T2, zeur2) /
                 d.model->numeraire(0, T, zeur2));
         } else {
-            infeur2(exp(infeury2) * inflationGrowth(d.model, 0, T, T2, zeur2, infeurz2) *
+            infeur2(exp(infeury2) * inflationGrowth(d.model, 0, T, T2, zeur2, infeurz2, indexIsInterpolated) *
                 d.model->discountBond(0, T, T2, zeur2) / d.model->numeraire(0, T, zeur2));
         }
         // GBP CPI indexed bond
@@ -2313,7 +2314,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
             infgbp2(sinfgbp2.first * sinfgbp2.second * d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.model->numeraire(0, T, zeur2));
         } else {
-            infgbp2(exp(infgbpy2) * inflationGrowth(d.model, 1, T, T2, zgbp2, infgbpz2) *
+            infgbp2(exp(infgbpy2) * inflationGrowth(d.model, 1, T, T2, zgbp2, infgbpz2, indexIsInterpolated) *
                 d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.model->numeraire(0, T, zeur2));
         }
         // EUR defaultable zerobond

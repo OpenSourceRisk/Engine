@@ -1196,6 +1196,12 @@
       <Filter>time\calendars</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp" />
+    <ClInclude Include="qle\instruments\makeoiscapfloor.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\oiscapfloorhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2044,6 +2050,12 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\flatteneddefaultcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\makeoiscapfloor.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\oiscapfloorhelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

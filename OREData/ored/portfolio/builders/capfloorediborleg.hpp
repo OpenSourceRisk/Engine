@@ -35,14 +35,15 @@ namespace data {
 /*! The coupon pricers are cached by currency
  \ingroup builders
  */
-class CapFlooredIborLegEngineBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
+class CapFlooredIborLegEngineBuilder : public CachingCouponPricerBuilder<string, const string&> {
 public:
     CapFlooredIborLegEngineBuilder()
         : CachingEngineBuilder("BlackOrBachelier", "BlackIborCouponPricer", {"CapFlooredIborLeg"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
-    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+    string keyImpl(const string& index) override { return index; }
+    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& index) override;
 };
+
 } // namespace data
 } // namespace ore

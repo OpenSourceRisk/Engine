@@ -44,13 +44,16 @@ case the netting set can be defined within the following XML template:
 
 The meanings of the various elements are as follows:
 \begin{itemize}
-\item NettingSetId: The unique identifier for the ISDA netting set.
-\item ActiveCSAFlag: Boolean indicating whether the netting set is
-  covered by a Credit Support Annex. For uncollateralised netting sets
-  this flag should be \emph{False}.
-\item CSADetails: Node containing as children details of the governing
-  Credit Support Annex. For uncollateralised netting sets there is no
-  need to store any information within this node.
+\item \lstinline!NettingSetId!: The unique identifier for the ISDA netting set.
+\ifdefined\RiskCatalogue{Alternatively, a \lstinline!NettingSetDetails!
+node can be used, see Section \ref{sec:nettingsetdetails}.}\fi \\
+Allowable values: Any string
+\item \lstinline!ActiveCSAFlag! [Optional]: Boolean indicating whether the netting set is
+  covered by a Credit Support Annex. 
+  Allowable values: For uncollateralised netting sets
+  this flag should be \emph{False}. If left blank or omitted, defaults to \emph{True}.
+\item \lstinline!CSADetails! [Optional]: Node containing as children details of the governing
+  Credit Support Annex. For uncollateralised netting sets, this node is not needed.
 \end{itemize}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Collateralised Netting Set}
@@ -106,120 +109,131 @@ case the netting set can be defined within the following XML template:
 \label{lst:nettingSetCollat}
 \end{listing}
 
-The first few nodes are shared with the template for uncollateralised
-netting sets:
-\begin{itemize}
-\item NettingSetId: The unique identifier for the ISDA netting set.
-\item ActiveCSAFlag: Boolean indicating whether the netting set is
-  covered by a Credit Support Annex. For collateralised netting sets
-  this flag should be \emph{True}.
-\item CSADetails: Node containing as children details of the governing
-  Credit Support Annex. 
-\end{itemize}
-
 \subsubsection*{CSADetails}
 
 The \lstinline!CSADetails! node contains details of the Credit Support
 Annex which are relevant for the purposes of exposure calculation. The
 meanings of the various elements are as follows:
 
-\paragraph*{Bilateral} There are three possible values here:
 \begin{itemize}
-\item Bilateral: Both parties to the CSA are legally entitled to
-  request collateral to cover their counterparty credit risk exposure
-  on the underlying portfolio.
-\item CallOnly: Only we are entitled to hold collateral; the
-  counterparty has no such entitlement.
-\item PostOnly: Only the counterparty is entitled to hold collateral;
-  we have no such entitlement.
-\end{itemize}
+  \item \lstinline!Bilateral! [Optional]: There are three possible values here:
+  \begin{itemize}
+    \item \emph{Bilateral}: Both parties to the CSA are legally entitled to
+      request collateral to cover their counterparty credit risk exposure
+      on the underlying portfolio.
+    \item \emph{CallOnly}: Only we are entitled to hold collateral; the
+      counterparty has no such entitlement.
+    \item \emph{PostOnly}: Only the counterparty is entitled to hold collateral;
+      we have no such entitlement.
+  \end{itemize}
+  Defaults to \emph{Bilateral} if left blank or omitted.
+  
+  \item \lstinline!CSACurrency! [Optional]: A three-letter ISO code specifying the master
+  currency of the CSA. All monetary values specified within the CSA are
+  assumed to be denominated in this currency.\\
+  Allowable values: Any currency. See Table \ref{tab:currency}.
 
-\paragraph*{CSACurrency} A three-letter ISO code specifying the master
-currency of the CSA. All monetary values specified within the CSA are
-assumed to be denominated in this currency.
+  \item \lstinline!Index! [Optional]: The index is used to derive the fixing which is used
+  for compounding cash collateral in the master currency of the CSA.\\
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TENOR. CCY, INDEX and TENOR must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TENOR must be an integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}, except for Overnight indices which do not require a TENOR. See Table \ref{tab:indices}.
 
-\paragraph*{Index} The index is used to derive the fixing which is used
-for compounding cash collateral in the master currency of the CSA.
+  \item \lstinline!ThresholdPay! [Optional]: A threshold amount above which the
+  counterparty is entitled to request collateral to cover excess
+  exposure.\\
+  Allowable values: Any number.
 
-\paragraph*{ThresholdPay} A threshold amount above which the
-counterparty is entitled to request collateral to cover excess
-exposure.
+  \item \lstinline!ThresholdReceive! [Optional]: A threshold amount above which we are
+  entitled to request collateral from the counterparty to cover excess
+  exposure.\\
+  Allowable values: Any number.
 
-\paragraph*{ThresholdReceive} A threshold amount above which we are
-entitled to request collateral from the counterparty to cover excess
-exposure.
+  \item \lstinline!MinimumTransferAmountPay! [Optional]: Any margin calls issued by the
+  counterparty must exceed this minimum transfer amount. If the
+  collateral shortfall is less than this amount, the counterparty is not
+  entitled to request margin.\\
+  Allowable values: Any number.
 
-\paragraph*{MinimumTransferAmountPay} Any margin calls issued by the
-counterparty must exceed this minimum transfer amount. If the
-collateral shortfall is less than this amount, the counterparty is not
-entitled to request margin.
+  \item \lstinline!MinimumTransferAmountReceive! [Optional]: Any margin calls issued by us
+  to the counterparty must exceed this minimum transfer amount. If the
+  collateral shortfall is less than this amount, we are  not
+  entitled to request margin.\\
+  Allowable values: Any number.
 
-\paragraph*{MinimumTransferAmountReceive} Any margin calls issued by us
-to the counterparty must exceed this minimum transfer amount. If the
-collateral shortfall is less than this amount, we are  not
-entitled to request margin.
+  \item \lstinline!IndependentAmount! [Optional]: This element contains two child nodes:
+    \begin{itemize}
+      \item \lstinline!IndependentAmountHeld!: The netted sum of all independent amounts
+        covered by this ISDA agreement/CSA. \\
+        Allowable values: Any number. A negative number implies that the counterparty
+        holds the independent amount.
+      \item \lstinline!IndependentAmountType!: The nature of the independent amount as
+        defined within the Credit Support Annex. \\
+        Allowable values: The only supported value here is \emph{FIXED}.
+    \end{itemize}
 
-\paragraph*{IndependentAmount} This element contains two child nodes:
-\begin{itemize}
-\item IndependentAmountHeld: The netted sum of all independent amounts
-  covered by this ISDA agreement/CSA. A negative number implies that
-  the counterparty holds the independent amount.
-\item IndependentAmountType: The nature of the independent amount as
-  defined within the Credit Support Annex. The only supported value
-  here is \emph{FIXED}. 
-\end{itemize}
-This covers only the case where only one party has to post an
-independent amount. In a future release this will be extended to the
-situation prescribed by the Basel/IOSCO regulation (initial margin to
-be posted by both parties without netting).
+  \item \lstinline!MarginingFrequency!: This element contains two child nodes:
+  \begin{itemize}
+    \item \lstinline!CallFrequency!: The frequency with which we are entitled to
+      request additional margin from the counterparty (e.g. \emph{1D},
+      \emph{2W}, \emph{1M}). \\
+      Allowable values: 
+    \item \lstinline!PostFrequency!: The frequency with which the counterparty is entitled to
+      request additional margin from us. \\
+      Allowable values: Any period definition (e.g.\ \emph{2D}, \emph{1W}, \emph{1M},
+      \emph{1Y}).
+  \end{itemize}
+  This covers only the case where only one party has to post an
+  independent amount. In a future release this will be extended to the
+  situation prescribed by the Basel/IOSCO regulation (initial margin to
+  be posted by both parties without netting).
 
-\paragraph*{MarginingFrequency} This element contains two child nodes:
-\begin{itemize}
-\item CallFrequency: The frequency with which we are entitled to
-  request additional margin from the counterparty (e.g. \emph{1D},
-  \emph{2W}, \emph{1M}).
-\item PostFrequency: The frequency with which the counterparty is entitled to
-  request additional margin from us (e.g. \emph{1D},
-  \emph{2W}, \emph{1M}).
-\end{itemize}
+  \item \lstinline!MarginPeriodOfRisk!: The length of time assumed necessary
+  for closing out the portfolio position after a default event. \\
+    Allowable values: Any period definition (e.g.\ \emph{2D}, \emph{1W}, \emph{1M},
+      \emph{1Y}).
 
-\paragraph*{MarginPeriodOfRisk} The length of time assumed necessary
-for closing out the portfolio position after a default event  (e.g. \emph{1D},
-  \emph{2W}, \emph{1M}).
+  \item \lstinline!CollateralCompoundingSpreadReceive!: The spread over the O/N
+  interest accrual rate taken by the clearing house, when holding
+  collateral. \\
+  Allowable values: Any number.
 
-\paragraph*{CollateralCompoundingSpreadReceive} The spread over the O/N
-interest accrual rate taken by the clearing house, when holding
-collateral.
+  \item \lstinline!CollateralCompoundingSpreadPay!: The spread over the O/N
+  interest accrual rate taken by the clearing house, when collateral is
+  held by the counterparty. \\
+  Allowable values: Any number.
 
-\paragraph*{CollateralCompoundingSpreadPay} The spread over the O/N
-interest accrual rate taken by the clearing house, when collateral is
-held by the counterparty.
+  \item \lstinline!EligibleCollaterals!: For now the only supported type of
+  collateral is cash. If the CSA specifies a set of currencies which
+  are eligible as collateral, these can be listed using
+  \lstinline!Currency! nodes. \\
+  Allowable values: Any currency. See Table \ref{tab:currency}.
 
-\paragraph*{EligibleCollaterals} For now the only supported type of
-collateral is cash. If the CSA specifies a set of currencies which
-are eligible as collateral, these can be listed using
-\lstinline!Currency! nodes.
+  \item \lstinline!ApplyInitialMargin!: Apply (dynamic) initial Margin in
+  addition to variation margin \\
+  Allowable values: Boolean node, the set of allowable values is given in
+  Table \ref{tab:boolean_allowable}.
 
-\paragraph*{ApplyInitialMargin} Apply (dynamic) initial Margin in
-addition to variation margin
+  \item \lstinline!InitialMarginType! There are three possible values here:
+  \begin{itemize}
+    \item \emph{Bilateral}: Both parties to the CSA are legally entitled to
+      request collateral to cover their MPOR risk exposure
+      on the underlying portfolio.
+    \item \emph{CallOnly}: Only we are entitled to hold collateral; the
+      counterparty has no such entitlement.
+    \item \emph{PostOnly}: Only the counterparty is entitled to hold collateral;
+      we have no such entitlement.
+  \end{itemize}
 
-\paragraph*{InitialMarginType} There are three possible values here:
-\begin{itemize}
-\item Bilateral: Both parties to the CSA are legally entitled to
-  request collateral to cover their MPOR risk exposure
-  on the underlying portfolio.
-\item CallOnly: Only we are entitled to hold collateral; the
-  counterparty has no such entitlement.
-\item PostOnly: Only the counterparty is entitled to hold collateral;
-  we have no such entitlement.
+  \item \lstinline!CalculateIMAmount!: Boolean indicating whether to calculate
+    initial margin from SIMM. For uncollateralised netting sets
+    this flag will be ignored. This only applies to the SA-CCR
+    calculations. \\
+    Allowable values: Boolean node, the set of allowable values is given in
+    Table \ref{tab:boolean_allowable}.
 
-\paragraph*{CalculateIMAmount} Boolean indicating whether to calculate
-  initial margin from SIMM. For uncollateralised netting sets
-  this flag will be ignored. This only applies to the SA-CCR capital
-  calculations.
-
-\paragraph*{CalculateVMAmount} Boolean indicating whether to calculate
-  variation margin from the netting set NPV. For uncollateralised netting
-  sets this flag will be ignored. This only applies to the SA-CCR capital
-  calculations.
+  \item \lstinline!CalculateVMAmount!: Boolean indicating whether to calculate
+    variation margin from the netting set NPV. For uncollateralised netting
+    sets this flag will be ignored. This only applies to the SA-CCR
+    calculations. \\
+    Allowable values: Boolean node, the set of allowable values is given in
+    Table \ref{tab:boolean_allowable}.
 \end{itemize}

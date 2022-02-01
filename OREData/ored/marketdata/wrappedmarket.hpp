@@ -78,7 +78,7 @@ public:
     Handle<BilinearBaseCorrelationTermStructure>
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<OptionletVolatilityStructure>
-    capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const override;
+    capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
     Handle<QuantExt::YoYOptionletVolatilitySurface>
     yoyCapFloorVol(const string& indexName, const string& configuration = Market::defaultConfiguration) const override;
     Handle<ZeroInflationIndex>

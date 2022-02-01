@@ -35,15 +35,16 @@ namespace data {
 /*! The coupon pricers are cached by currency
  \ingroup builders
  */
-class CapFlooredAverageONIndexedCouponLegEngineBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
+class CapFlooredAverageONIndexedCouponLegEngineBuilder : public CachingCouponPricerBuilder<string, const string&> {
 public:
     CapFlooredAverageONIndexedCouponLegEngineBuilder()
         : CachingEngineBuilder("BlackOrBachelier", "BlackAverageONIndexedCouponPricer",
                                {"CapFlooredAverageONIndexedCouponLeg"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
-    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+    string keyImpl(const std::string& index) override { return index; }
+    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const std::string& index) override;
 };
+
 } // namespace data
 } // namespace ore

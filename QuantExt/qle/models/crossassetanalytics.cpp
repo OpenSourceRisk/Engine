@@ -61,7 +61,8 @@ pair<Real, Real> inf_jy_expectation_1(const CrossAssetModel* x, Size i, Time t0,
 
     // 2) Inflation index process drift
     const auto& zts = x->infjy(i)->realRate()->termStructure();
-    res.second = std::log(inflationGrowth(zts, t0 + dt) / inflationGrowth(zts, t0));
+    bool indexIsInterpolated = true; // FIXME, see also crossassetmodel.cpp line 706ff 
+    res.second = std::log(inflationGrowth(zts, t0 + dt, indexIsInterpolated) / inflationGrowth(zts, t0, indexIsInterpolated));
 
     res.second -= 0.5 * (vy(i).eval(x, t0 + dt) - vy(i).eval(x, t0));
 

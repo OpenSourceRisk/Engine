@@ -155,13 +155,15 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
     }
 
     case CurveSpec::CurveType::CapFloorVolatility: {
-        // e.g. CapFloorVolatility/EUR/CurveConfigID
+        // e.g. CapFloorVolatility/EUR-EURIBOR-3M/CurveConfigID
+        //      CapFloorVolatility/EUR-ESTER/CurveConfigID
+        //      CapFloorVolatility/EUR/CurveConfigID
         QL_REQUIRE(tokens.size() == 3, "Unexpected number"
                                        " of tokens in CapFloor volatility curve spec "
                                            << s);
-        const string& ccy = tokens[1];
+        const string& key = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<CapFloorVolatilityCurveSpec>(ccy, curveConfigID);
+        return boost::make_shared<CapFloorVolatilityCurveSpec>(key, curveConfigID);
     }
 
     case CurveSpec::CurveType::Inflation: {

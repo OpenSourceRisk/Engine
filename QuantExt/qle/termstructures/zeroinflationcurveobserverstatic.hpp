@@ -81,6 +81,7 @@ protected:
     //@}
     mutable std::vector<Date> dates_;
     std::vector<Handle<Quote> > quotes_;
+    bool indexIsInterpolated_;
 };
 
 // template definitions
@@ -91,8 +92,7 @@ ZeroInflationCurveObserverStatic<Interpolator>::ZeroInflationCurveObserverStatic
     Frequency frequency, bool indexIsInterpolated, const std::vector<Date>& dates,
     const std::vector<Handle<Quote>>& rates, const boost::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency,
-                                 indexIsInterpolated, seasonality),
+    : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
       quotes_(rates) {
 
@@ -157,7 +157,7 @@ template <class T> Date ZeroInflationCurveObserverStatic<T>::baseDate() const {
 
 template <class T> Date ZeroInflationCurveObserverStatic<T>::maxDate() const {
     Date d;
-    if (indexIsInterpolated()) {
+    if (indexIsInterpolated_) {
         d = dates_.back();
     } else {
         d = inflationPeriod(dates_.back(), frequency()).second;
