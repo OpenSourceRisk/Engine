@@ -592,10 +592,13 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "LongIndex", strLongIndex_);
     XMLUtils::addChild(doc, node, "ShortIndex", strShortIndex_);
-    XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
-    XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
-    XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
-    if (strSubPeriodsCouponType_ != "")
+    if (!strShortPayTenor_.empty())
+        XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
+    if (!strSpreadOnShort_.empty())
+        XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
+    if (!strIncludeSpread_.empty())
+        XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
+    if (!strSubPeriodsCouponType_.empty())
         XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
     return node;
 }
@@ -745,10 +748,15 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SourceCurrency", strSourceCurrency_);
     XMLUtils::addChild(doc, node, "TargetCurrency", strTargetCurrency_);
     XMLUtils::addChild(doc, node, "PointsFactor", strPointsFactor_);
-    XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
-    XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
-    XMLUtils::addChild(doc, node, "EOM", strEndOfMonth_);
-    XMLUtils::addChild(doc, node, "Convention", strConvention_);
+
+    if (!strAdvanceCalendar_.empty())
+        XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
+    if (!strSpotRelative_.empty())
+        XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+    if (!strEndOfMonth_.empty())
+        XMLUtils::addChild(doc, node, "EOM", strEndOfMonth_);
+    if (!strConvention_.empty())
+        XMLUtils::addChild(doc, node, "Convention", strConvention_);
 
     return node;
 }
@@ -862,14 +870,21 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "RollConvention", strRollConvention_);
     XMLUtils::addChild(doc, node, "FlatIndex", strFlatIndex_);
     XMLUtils::addChild(doc, node, "SpreadIndex", strSpreadIndex_);
-    XMLUtils::addChild(doc, node, "EOM", strEom_);
-    XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
-    XMLUtils::addChild(doc, node, "FlatIndexIsResettable", strFlatIndexIsResettable_);
-    XMLUtils::addChild(doc, node, "FlatTenor", strFlatTenor_);
-    XMLUtils::addChild(doc, node, "SpreadTenor", strSpreadTenor_);
 
-    XMLUtils::addChild(doc, node, "SpreadPaymentLag", strPaymentLag_);
-    XMLUtils::addChild(doc, node, "FlatPaymentLag", strFlatPaymentLag_);
+    if (!strEom_.empty())
+        XMLUtils::addChild(doc, node, "EOM", strEom_);
+    if (!strIsResettable_.empty())
+        XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
+    if (!strFlatIndexIsResettable_.empty())
+        XMLUtils::addChild(doc, node, "FlatIndexIsResettable", strFlatIndexIsResettable_);
+    if (!strFlatTenor_.empty())
+        XMLUtils::addChild(doc, node, "FlatTenor", strFlatTenor_);
+    if (!strSpreadTenor_.empty())
+        XMLUtils::addChild(doc, node, "SpreadTenor", strSpreadTenor_);
+    if (!strPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "SpreadPaymentLag", strPaymentLag_);
+    if (!strFlatPaymentLag_.empty())
+        XMLUtils::addChild(doc, node, "FlatPaymentLag", strFlatPaymentLag_);
 
     if (!strIncludeSpread_.empty())
         XMLUtils::addChild(doc, node, "SpreadIncludeSpread", strIncludeSpread_);
@@ -959,9 +974,13 @@ XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
     XMLUtils::addChild(doc, node, "FixedDayCounter", strFixedDayCounter_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
-    XMLUtils::addChild(doc, node, "EOM", strEom_);
-    XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
-    XMLUtils::addChild(doc, node, "FloatIndexIsResettable", strFloatIndexIsResettable_);
+
+    if (!strEom_.empty())
+        XMLUtils::addChild(doc, node, "EOM", strEom_);
+    if (!strIsResettable_.empty())
+        XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
+    if (!strFloatIndexIsResettable_.empty())
+        XMLUtils::addChild(doc, node, "FloatIndexIsResettable", strFloatIndexIsResettable_);
 
     return node;
 }
@@ -1196,14 +1215,20 @@ XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "TenorBased", tenorBased_);
     XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
-    XMLUtils::addChild(doc, node, "CompoundingFrequency", strCompoundingFrequency_);
-    XMLUtils::addChild(doc, node, "Compounding", strCompounding_);
+    if (!strCompoundingFrequency_.empty())
+        XMLUtils::addChild(doc, node, "CompoundingFrequency", strCompoundingFrequency_);
+    if (!strCompounding_.empty())
+        XMLUtils::addChild(doc, node, "Compounding", strCompounding_);
     if (tenorBased_) {
         XMLUtils::addChild(doc, node, "TenorCalendar", strTenorCalendar_);
-        XMLUtils::addChild(doc, node, "SpotLag", strSpotLag_);
-        XMLUtils::addChild(doc, node, "SpotCalendar", strSpotCalendar_);
-        XMLUtils::addChild(doc, node, "RollConvention", strRollConvention_);
-        XMLUtils::addChild(doc, node, "EOM", strEom_);
+        if (!strSpotLag_.empty())
+            XMLUtils::addChild(doc, node, "SpotLag", strSpotLag_);
+        if (!strSpotCalendar_.empty())
+            XMLUtils::addChild(doc, node, "SpotCalendar", strSpotCalendar_);
+        if (!strRollConvention_.empty())
+            XMLUtils::addChild(doc, node, "RollConvention", strRollConvention_);
+        if (!strEom_.empty())
+            XMLUtils::addChild(doc, node, "EOM", strEom_);
     }
 
     return node;
@@ -1305,10 +1330,17 @@ XMLNode* CommodityForwardConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("CommodityForward");
     XMLUtils::addChild(doc, node, "Id", id_);
-    XMLUtils::addChild(doc, node, "SpotDays", strSpotDays_);
-    XMLUtils::addChild(doc, node, "PointsFactor", strPointsFactor_);
-    XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
-    XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+
+    if (!strSpotDays_.empty())
+        XMLUtils::addChild(doc, node, "SpotDays", strSpotDays_);
+    if (!strPointsFactor_.empty())
+        XMLUtils::addChild(doc, node, "PointsFactor", strPointsFactor_);
+    if (!strAdvanceCalendar_.empty())
+        XMLUtils::addChild(doc, node, "AdvanceCalendar", strAdvanceCalendar_);
+    if (!strSpotRelative_.empty())
+        XMLUtils::addChild(doc, node, "SpotRelative", strSpotRelative_);
+
+
     XMLUtils::addChild(doc, node, "BusinessDayConvention", ore::data::to_string(bdc_));
     XMLUtils::addChild(doc, node, "Outright", outright_);
 
