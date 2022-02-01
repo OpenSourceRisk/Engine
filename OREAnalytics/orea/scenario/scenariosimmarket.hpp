@@ -118,7 +118,7 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
-    ScenarioSimMarket() {}
+    ScenarioSimMarket() : ore::data::Market() {}
 
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
@@ -170,7 +170,7 @@ public:
       spread values for all risk factor keys which support spreaded term structures and absolute values for the other
       risk factor keys. The spread values will typically be zero (e.g. for vol risk factors) or 1 (e.g. for rate curve
       risk factors, since we use discount factors there). */
-    boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+    virtual boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
 
     /*! Scenario representing the initial state of the market. This scenario contains absolute values for all risk factor
       types, no matter whether useSpreadedTermStructures is true or false. */
