@@ -1578,12 +1578,12 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                 XMLUtils::addChild(doc, fxSurfaceNode, "SimulateATMOnly", fxVolSimulateATMOnly_);
             }
             for (auto it = fxMoneyness_.begin(); it != fxMoneyness_.end(); it++) {
-                XMLUtils::addGenericChildAsList(doc, fxSurfaceNode, "Moneyness", equityMoneyness_[it->first], "name",
+                XMLUtils::addGenericChildAsList(doc, fxSurfaceNode, "Moneyness", equityMoneyness_[it->first], "ccyPair",
                                                 it->first);
             }
             for (auto it = fxStandardDevs_.begin(); it != fxStandardDevs_.end(); it++) {
                 XMLUtils::addGenericChildAsList(doc, fxSurfaceNode, "StandardDeviations",
-                                                fxStandardDevs_[it->first], "name", it->first);
+                                                fxStandardDevs_[it->first], "ccyPair", it->first);
             }
         }
     }
