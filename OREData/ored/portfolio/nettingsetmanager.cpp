@@ -66,7 +66,7 @@ const bool NettingSetManager::calculateIMAmount() const {
 const set<NettingSetDetails> NettingSetManager::calculateIMNettingSets() const {
     set<NettingSetDetails> calculateIMNettingSets = set<NettingSetDetails>();
     for (const auto& nsd : data_) {
-        if (nsd.second->csaDetails()->calculateIMAmount()) {
+        if (nsd.second->activeCsaFlag() && nsd.second->csaDetails()->calculateIMAmount()) {
             calculateIMNettingSets.insert(nsd.first);
         }
     }
