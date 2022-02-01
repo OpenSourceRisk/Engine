@@ -209,9 +209,15 @@ BOOST_AUTO_TEST_CASE(testChileanCalendar) {
     expectedHolidays.push_back(Date(30, March, 2018));
     expectedHolidays.push_back(Date(1, May, 2018));
     expectedHolidays.push_back(Date(21, May, 2018));
+    expectedHolidays.push_back(Date(2, July, 2018));
     expectedHolidays.push_back(Date(16, July, 2018));
     expectedHolidays.push_back(Date(15, August, 2018));
+    expectedHolidays.push_back(Date(17, September, 2018));
+    expectedHolidays.push_back(Date(18, September, 2018));
+    expectedHolidays.push_back(Date(19, September, 2018));
+    expectedHolidays.push_back(Date(15, October, 2018));
     expectedHolidays.push_back(Date(1, November, 2018));
+    expectedHolidays.push_back(Date(2, November, 2018));
     expectedHolidays.push_back(Date(25, December, 2018));
 
     Calendar c = Chile();
