@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsingFails) {
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), QuantLib::Error);
 }
-#include <iostream>
+
 BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
 
     BOOST_TEST_MESSAGE("Testing Swap Index name parsing...");
@@ -433,7 +433,6 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
         string str(swap_index_data[i].str);
         string index_name(swap_index_data[i].index_name);
         Period tenor(swap_index_data[i].tenor);
-        std::cout << "TEST " << index_name << " " << tenor << " " << str << std::endl;
         ore::data::InstrumentConventions::instance().conventions() = convs();
         boost::shared_ptr<SwapIndex> swap;
         try {

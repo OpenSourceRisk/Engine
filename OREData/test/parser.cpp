@@ -711,9 +711,15 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     expectedHolidays.insert(Date(30, March, 2018));
     expectedHolidays.insert(Date(1, May, 2018));
     expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(2, July, 2018));
     expectedHolidays.insert(Date(16, July, 2018));
     expectedHolidays.insert(Date(15, August, 2018));
+    expectedHolidays.insert(Date(17, September, 2018));
+    expectedHolidays.insert(Date(18, September, 2018));
+    expectedHolidays.insert(Date(19, September, 2018));
+    expectedHolidays.insert(Date(15, October, 2018));
     expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(2, November, 2018));
     expectedHolidays.insert(Date(25, December, 2018));
 
     Calendar chil = Chile();
