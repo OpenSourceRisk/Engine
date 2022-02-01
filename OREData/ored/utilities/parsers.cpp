@@ -599,7 +599,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"30/360 US", Thirty360(Thirty360::USA)},
                                         {"30U/360", Thirty360(Thirty360::USA)},
                                         {"30US/360", Thirty360(Thirty360::USA)},
-                                        {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
+                                        {"30/360 (Bond Basis)", Thirty360(Thirty360::BondBasis)},
                                         {"ACT/nACT", Thirty360(Thirty360::USA)},
                                         {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
                                         {"30/360 AIBD (Euro)", Thirty360(Thirty360::European)},
@@ -648,6 +648,7 @@ DayCounter parseDayCounter(const string& s) {
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
+        
     } else {
         QL_FAIL("DayCounter \"" << s << "\" not recognized");
     }

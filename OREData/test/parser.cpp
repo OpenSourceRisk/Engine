@@ -64,7 +64,7 @@ static struct test_daycounter_data daycounter_data[] = {
     {"ACT/365", Actual365Fixed()},
     {"T360", Thirty360(Thirty360::USA)},
     {"30/360", Thirty360(Thirty360::USA)},
-    {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
+    {"30/360 (Bond Basis)", Thirty360(Thirty360::BondBasis)},
     {"ACT/nACT", Thirty360(Thirty360::USA)},
     {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
     {"30E/360", Thirty360(Thirty360::European)},

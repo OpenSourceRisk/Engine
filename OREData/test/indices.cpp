@@ -63,17 +63,17 @@ boost::shared_ptr<data::Conventions> convs() {
     conventions->add(swapIndexJPYLongConv);
 
     boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
-        "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
+        "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360 (Bond Basis)", "EUR-EURIBOR-6M"));
     boost::shared_ptr<ore::data::Convention> swapUSDConv(
-        new ore::data::IRSwapConvention("USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360", "USD-LIBOR-3M"));
+        new ore::data::IRSwapConvention("USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360 (Bond Basis)", "USD-LIBOR-3M"));
     boost::shared_ptr<ore::data::Convention> swapGBPConv(
         new ore::data::IRSwapConvention("GBP-3M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-3M"));
     boost::shared_ptr<ore::data::Convention> swapGBPLongConv(
         new ore::data::IRSwapConvention("GBP-6M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-6M"));
     boost::shared_ptr<ore::data::Convention> swapCHFConv(
-        new ore::data::IRSwapConvention("CHF-3M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-3M"));
+        new ore::data::IRSwapConvention("CHF-3M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360 (Bond Basis)", "CHF-LIBOR-3M"));
     boost::shared_ptr<ore::data::Convention> swapCHFLongConv(
-        new ore::data::IRSwapConvention("CHF-6M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-6M"));
+        new ore::data::IRSwapConvention("CHF-6M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360 (Bond Basis)", "CHF-LIBOR-6M"));
     boost::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
         "JPY-LIBOR-6M-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M"));
 
@@ -346,6 +346,7 @@ static struct test_data index_data[] = {
     {"MYR-KLIBOR-5M", "MYR-KLIBOR5M Actual/365 (Fixed)", 5 * Months},
     {"MYR-KLIBOR-6M", "MYR-KLIBOR6M Actual/365 (Fixed)", 6 * Months}};
 
+    
 static struct test_data swap_index_data[] = {
     {"EUR-CMS-2Y", "EURLiborSwapIsdaFix2Y 30/360 (Bond Basis)", 2 * Years},
     {"EUR-CMS-30Y", "EURLiborSwapIsdaFix30Y 30/360 (Bond Basis)", 30 * Years},
@@ -419,7 +420,7 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsingFails) {
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), QuantLib::Error);
 }
-
+#include <iostream>
 BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
 
     BOOST_TEST_MESSAGE("Testing Swap Index name parsing...");
@@ -432,7 +433,7 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
         string str(swap_index_data[i].str);
         string index_name(swap_index_data[i].index_name);
         Period tenor(swap_index_data[i].tenor);
-
+        std::cout << "TEST " << index_name << " " << tenor << " " << str << std::endl;
         ore::data::InstrumentConventions::instance().conventions() = convs();
         boost::shared_ptr<SwapIndex> swap;
         try {
