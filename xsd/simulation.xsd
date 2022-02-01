@@ -933,7 +933,7 @@
             </xs:element>
             <xs:element name="Surface" minOccurs="0">
               <xs:complexType>
-                <xs:choice>
+                <xs:sequence>
                   <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
                   <xs:element name="Moneyness" maxOccurs="unbounded" minOccurs="0">
                     <xs:complexType>
@@ -953,7 +953,7 @@
                       </xs:simpleContent>
                     </xs:complexType>
                   </xs:element>
-                </xs:choice>
+                </xs:sequence>
               </xs:complexType>
             </xs:element>
             <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
