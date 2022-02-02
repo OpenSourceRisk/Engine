@@ -194,7 +194,7 @@ string StructuredMessage::json() const {
     
     if (!subFields_.empty()) {
         msg += "\", \"subFields\": [ ";
-        int i = 1;
+        QuantLib::Size i = 1;
         for (const auto& p : subFields_) {
             // Only include subFields that are non-empty.
             if (!p.second.empty()) {
