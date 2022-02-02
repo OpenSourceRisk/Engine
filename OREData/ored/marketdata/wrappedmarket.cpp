@@ -21,7 +21,7 @@
 namespace ore {
 namespace data {
 
-WrappedMarket::WrappedMarket(const boost::shared_ptr<Market>& m) : Market(), market_(m) {}
+WrappedMarket::WrappedMarket(const boost::shared_ptr<Market>& m) : market_(m) {}
 
 boost::shared_ptr<Market> WrappedMarket::underlyingMarket() const { return market_; }
 

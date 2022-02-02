@@ -75,7 +75,7 @@ public:
                                const string& configuration = Market::defaultConfiguration) const override;
     Handle<BlackVolTermStructure> cdsVol(const string& name,
                                          const string& configuration = Market::defaultConfiguration) const override;
-    Handle<BilinearBaseCorrelationTermStructure>
+    Handle<ore::data::BilinearBaseCorrelationTermStructure>
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;

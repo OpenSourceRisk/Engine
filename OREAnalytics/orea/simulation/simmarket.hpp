@@ -43,7 +43,7 @@ using namespace ore::data;
  */
 class SimMarket : public ore::data::MarketImpl {
 public:
-    SimMarket() : Market(), MarketImpl(), numeraire_(1.0) {}
+    SimMarket() : MarketImpl(), numeraire_(1.0) {}
 
     //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
     virtual void update(const Date& d) {

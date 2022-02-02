@@ -287,7 +287,7 @@ ScenarioSimMarket::ScenarioSimMarket(
     const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError,
     const bool useSpreadedTermStructures, const bool cacheSimData, const bool allowPartialScenarios,
     const IborFallbackConfig& iborFallbackConfig)
-    : Market(), SimMarket(), parameters_(parameters), fixingManager_(fixingManager),
+    : SimMarket(), parameters_(parameters), fixingManager_(fixingManager),
       filter_(boost::make_shared<ScenarioFilter>()), useSpreadedTermStructures_(useSpreadedTermStructures),
       cacheSimData_(cacheSimData), allowPartialScenarios_(allowPartialScenarios),
       iborFallbackConfig_(iborFallbackConfig) {
