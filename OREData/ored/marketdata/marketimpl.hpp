@@ -50,10 +50,10 @@ using std::tuple;
 
   \ingroup marketdata
  */
-class MarketImpl : public Market {
+class MarketImpl : virtual public Market {
 public:
     //! Default constructor
-    MarketImpl() { }
+    MarketImpl() : Market() {}
 
     //! \name Market interface
     //@{
