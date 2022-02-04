@@ -118,6 +118,8 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
+    ScenarioSimMarket() {}
+
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                       const std::string& configuration = Market::defaultConfiguration,
@@ -138,19 +140,19 @@ public:
                       const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
 
     //! Set scenario generator
-    boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
+    virtual boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
     //! Get scenario generator
-    const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() const { return scenarioGenerator_; }
+    virtual const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() const { return scenarioGenerator_; }
 
     //! Set aggregation data
-    boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
+    virtual boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
     //! Get aggregation data
-    const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
+    virtual const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
 
     //! Set scenarioFilter
-    boost::shared_ptr<ScenarioFilter>& filter() { return filter_; }
+    virtual boost::shared_ptr<ScenarioFilter>& filter() { return filter_; }
     //! Get scenarioFilter
-    const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
+    virtual const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
     //! Update
     // virtual void update(const Date&) override;
@@ -168,17 +170,17 @@ public:
       spread values for all risk factor keys which support spreaded term structures and absolute values for the other
       risk factor keys. The spread values will typically be zero (e.g. for vol risk factors) or 1 (e.g. for rate curve
       risk factors, since we use discount factors there). */
-    boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+    virtual boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
 
     /*! Scenario representing the initial state of the market. This scenario contains absolute values for all risk factor
       types, no matter whether useSpreadedTermStructures is true or false. */
-    boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
+    virtual boost::shared_ptr<Scenario> baseScenarioAbsolute() const { return baseScenarioAbsolute_; }
 
     //! Return the fixing manager
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
     //! is risk factor key simulated by this sim market instance?
-    bool isSimulated(const RiskFactorKey::KeyType& factor) const;
+    virtual bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
 protected:
     virtual void applyScenario(const boost::shared_ptr<Scenario>& scenario);
