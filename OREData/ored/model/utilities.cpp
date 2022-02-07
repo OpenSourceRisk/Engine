@@ -233,7 +233,8 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
 }
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-                                  const boost::shared_ptr<InfDkParametrization>& parametrization) {
+                                  const boost::shared_ptr<InfDkParametrization>& parametrization,
+                                  bool indexIsInterpolated) {
     std::ostringstream log;
     log << std::right << std::setw(3) << "#" << std::setw(14) << "time" << std::setw(14) << "modelValue"
         << std::setw(14) << "marketValue" << std::setw(14) << "(diff)" << std::setw(14) << "infdkAlpha" << std::setw(14)
@@ -247,7 +248,7 @@ std::string getCalibrationDetails(const std::vector<boost::shared_ptr<BlackCalib
         if (instr != nullptr && parametrization != nullptr) {
             // report alpha, H at t_expiry^-
             t = inflationYearFraction(
-                parametrization->termStructure()->frequency(), parametrization->termStructure()->indexIsInterpolated(),
+                parametrization->termStructure()->frequency(), indexIsInterpolated,
                 parametrization->termStructure()->dayCounter(), parametrization->termStructure()->baseDate(),
                 instr->instrument()->payDate() - parametrization->termStructure()->observationLag());
             modelAlpha = parametrization->alpha(t - 1.0 / 250.0);

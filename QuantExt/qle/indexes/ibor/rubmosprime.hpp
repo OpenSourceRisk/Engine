@@ -38,7 +38,7 @@ using namespace QuantLib;
 class RUBMosprime : public IborIndex {
 public:
     RUBMosprime(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("RUB-MOSPRIME", tenor, 2, RUBCurrency(), Russia(), ModifiedFollowing, false, ActualActual(), h) {}
+        : IborIndex("RUB-MOSPRIME", tenor, 2, RUBCurrency(), Russia(), ModifiedFollowing, false, ActualActual(ActualActual::ISDA), h) {}
 };
 } // namespace QuantExt
 

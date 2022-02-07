@@ -80,11 +80,11 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
+        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<BlackVolTermStructure> flatRateFxv(Volatility forward) {
-        boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, ActualActual()));
+        boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<BlackVolTermStructure>(fxv);
     }
 };

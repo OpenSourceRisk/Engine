@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(testDiscountCurve) {
 
     Size numYears = 30;
     int startYear = 2015;
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Calendar cal = NullCalendar();
 
     for (Size i = 0; i < numYears; i++) {

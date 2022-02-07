@@ -87,7 +87,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     // compute horizon shift
     Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", "", false, "0.5"));
     Date today = Settings::instance().evaluationDate();
-    shiftHorizon = ActualActual().yearFraction(today, maturity) * shiftHorizon;
+    shiftHorizon = ActualActual(ActualActual::ISDA).yearFraction(today, maturity) * shiftHorizon;
 
     // Default: no calibration, constant lambda and sigma from engine configuration
     data->reset();

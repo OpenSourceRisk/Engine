@@ -82,6 +82,7 @@ protected:
     //@}
     mutable std::vector<Date> dates_;
     std::vector<Handle<Quote> > quotes_;
+    bool indexIsInterpolated_;
 };
 
 // template definitions
@@ -95,7 +96,7 @@ YoYInflationCurveObserverStatic<Interpolator>::YoYInflationCurveObserverStatic(
     : YoYInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency,
                                 indexIsInterpolated, seasonality),
       InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
-      quotes_(rates) {
+      quotes_(rates), indexIsInterpolated_(indexIsInterpolated) {
 
     QL_REQUIRE(dates_.size() > 1, "too few dates: " << dates_.size());
 

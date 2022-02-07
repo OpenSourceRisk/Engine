@@ -76,7 +76,7 @@ std::vector<boost::shared_ptr<BootstrapHelper<T> > > makeHelpers(Datum iiData[],
         Date maturity = iiData[i].date;
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(iiData[i].rate / 100.0)));
         boost::shared_ptr<BootstrapHelper<T> > anInstrument(
-            new U(quote, observationLag, maturity, calendar, bdc, dc, ii, yts));
+            new U(quote, observationLag, maturity, calendar, bdc, dc, ii, CPI::AsIndex, yts));
         instruments.push_back(anInstrument);
     }
 
@@ -142,8 +142,8 @@ struct CommonVars {
         fixingDays = 0;
         settlement = calendar.advance(today, settlementDays, Days);
         startDate = settlement;
-        dcZCIIS = ActualActual();
-        dcNominal = ActualActual();
+        dcZCIIS = ActualActual(ActualActual::ISDA);
+        dcNominal = ActualActual(ActualActual::ISDA);
 
         // uk rpi index
         //      fixing data
@@ -244,7 +244,7 @@ struct CommonVars {
         baseZeroRate = zciisData[0].rate / 100.0;
         boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
             new PiecewiseZeroInflationCurve<Linear>(evaluationDate, calendar, dcZCIIS, observationLag, ii->frequency(),
-                                                    ii->interpolated(), baseZeroRate, helpers));
+                                                    baseZeroRate, helpers));
         pCPIts->recalculate();
         cpiUK.linkTo(pCPIts);
         hii.linkTo(ii);
@@ -305,15 +305,14 @@ public:
     FlatZeroInflationTermStructure(const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter,
                                    Rate zeroRate, const Period& observationLag, Frequency frequency, bool indexIsInterp,
                                    const Handle<YieldTermStructure>& ts)
-        : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, zeroRate, observationLag, frequency,
-                                     indexIsInterp),
-          zeroRate_(zeroRate) {}
+        : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, zeroRate, observationLag, frequency),
+          zeroRate_(zeroRate), indexIsInterp_(indexIsInterp) {}
 
     Date maxDate() const { return Date::maxDate(); }
     // Base date consistent with observation lag, interpolation and frequency
     Date baseDate() const {
         Date base = referenceDate() - observationLag();
-        if (!indexIsInterpolated()) {
+        if (!indexIsInterp_) {
             std::pair<Date, Date> ips = inflationPeriod(base, frequency());
             base = ips.first;
         }
@@ -323,6 +322,7 @@ public:
 private:
     Rate zeroRateImpl(Time t) const { return zeroRate_; }
     Real zeroRate_;
+    bool indexIsInterp_;
 };
 
 } // namespace
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
     Real inflationRate = 0.02;
     Real inflationBlackVol = 0.05;
     BusinessDayConvention bdc = Unadjusted;
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Period observationLag = 3 * Months; // EUHICPXT Caps/Swaps
     Handle<YieldTermStructure> discountCurve(boost::make_shared<FlatForward>(common.evaluationDate, rate, dc));
     RelinkableHandle<ZeroInflationTermStructure> inflationCurve;
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
     // the instrument's lag.
     Handle<CPIVolatilitySurface> inflationVol(boost::make_shared<ConstantCPIVolatility>(
         inflationBlackVol, 0, inflationCurve->calendar(), bdc, dc, inflationCurve->observationLag(),
-        inflationCurve->frequency(), inflationCurve->indexIsInterpolated()));
+        inflationCurve->frequency(), index->interpolated()));
 
     boost::shared_ptr<PricingEngine> engine =
         boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, inflationVol);

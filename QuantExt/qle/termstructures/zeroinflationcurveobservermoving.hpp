@@ -80,6 +80,7 @@ protected:
     Rate zeroRateImpl(Time t) const;
     //@}
     std::vector<Handle<Quote> > quotes_;
+    bool indexIsInterpolated_;
     mutable Date baseDate_;
 };
 
@@ -91,9 +92,8 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
     Frequency frequency, bool indexIsInterpolated, const std::vector<Time>& times,
     const std::vector<Handle<Quote>>& rates, const boost::shared_ptr<Seasonality>& seasonality,
     const Interpolator& interpolator)
-    : ZeroInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency,
-                                 indexIsInterpolated, seasonality),
-      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates) {
+    : ZeroInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency, seasonality),
+      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates), indexIsInterpolated_(indexIsInterpolated) {
 
     QL_REQUIRE(times.size() > 1, "too few times: " << times.size());
     this->times_.resize(times.size());

@@ -57,7 +57,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                             boost::shared_ptr<Market> market, const std::string& configuration,
                             boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Date today = Settings::instance().evaluationDate();
     report.addColumn("TradeId", string())
         .addColumn("TradeType", string())
@@ -649,7 +649,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
                                        const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     const vector<Real>& epe = postProcess->tradeEPE(tradeId);
     const vector<Real>& ene = postProcess->tradeENE(tradeId);
     const vector<Real>& ee_b = postProcess->tradeEE_B(tradeId);
@@ -700,7 +700,7 @@ void addNettingSetExposure(ore::data::Report& report, boost::shared_ptr<PostProc
                            const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     const vector<Real>& epe = postProcess->netEPE(nettingSetId);
     const vector<Real>& ene = postProcess->netENE(nettingSetId);
     const vector<Real>& ee_b = postProcess->netEE_B(nettingSetId);
@@ -788,7 +788,7 @@ void ReportWriter::writeNettingSetCvaSensitivities(ore::data::Report& report,
 void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
                             boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Size precision = 2;
     report.addColumn("TradeId", string())
         .addColumn("NettingSetId", string())
@@ -875,7 +875,7 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared
                                         const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     const vector<Real>& collateral = postProcess->expectedCollateral(nettingSetId);
     const vector<Real>& colvaInc = postProcess->colvaIncrements(nettingSetId);
     const vector<Real>& floorInc = postProcess->collateralFloorIncrements(nettingSetId);

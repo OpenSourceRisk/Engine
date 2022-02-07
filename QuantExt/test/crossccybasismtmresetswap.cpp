@@ -294,7 +294,7 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GB
     Handle<Quote> fxSpotQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(spotFx));
 
     // Dates and calendars
-    JointCalendar payCalendar = JointCalendar(UnitedStates(), UnitedKingdom());
+    JointCalendar payCalendar = JointCalendar(UnitedStates(UnitedStates::Settlement), UnitedKingdom());
     Date referenceDate = Settings::instance().evaluationDate();
     referenceDate = payCalendar.adjust(referenceDate);
     Date start = payCalendar.advance(referenceDate, 2 * Days);

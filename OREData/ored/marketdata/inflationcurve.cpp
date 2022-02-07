@@ -213,7 +213,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 instruments.push_back(instrument);
             }
             curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-                asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
+                asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), 
                 baseRate, instruments, config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);

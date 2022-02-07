@@ -108,7 +108,7 @@ TestMarket::TestMarket(Date asof) {
         flatRateDiv(0.0);
 
     equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>(
-        "SP5", UnitedStates(), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Discount, "USD"),
+        "SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Discount, "USD"),
         yieldCurve(YieldCurveType::EquityDividend, "SP5")));
     equityCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
         Handle<EquityIndex>(boost::make_shared<EquityIndex>(
@@ -262,7 +262,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(new ZeroCouponInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(), ii, yts));
+            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, CPI::AsIndex, yts));
         anInstrument->unregisterWith(Settings::instance().evaluationDate());
         instruments.push_back(anInstrument);
     };
@@ -270,8 +270,8 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
     // we know historical is WAY off market-implied, so use market implied flat.
     Rate baseZeroRate = rates[0] / 100.0;
     boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(
-        new PiecewiseZeroInflationCurve<Linear>(asof_, TARGET(), ActualActual(), Period(2, Months), ii->frequency(),
-                                                ii->interpolated(), baseZeroRate, instruments));
+        new PiecewiseZeroInflationCurve<Linear>(asof_, TARGET(), ActualActual(ActualActual::ISDA), Period(2, Months), ii->frequency(),
+                                                baseZeroRate, instruments));
     pCPIts->recalculate();
     cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
     cpiTS->enableExtrapolation(true);
@@ -290,14 +290,14 @@ Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector
     for (Size i = 0; i < dates.size(); i++) {
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
         boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(new YearOnYearInflationSwapHelper(
-            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(), ii, yts));
+            quote, Period(2, Months), dates[i], TARGET(), ModifiedFollowing, ActualActual(ActualActual::ISDA), ii, yts));
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
     // we know historical is WAY off market-implied, so use market implied flat.
     Rate baseZeroRate = rates[0] / 100.0;
     boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>> pYoYts(
-        new PiecewiseYoYInflationCurve<Linear>(asof_, TARGET(), ActualActual(), Period(2, Months), ii->frequency(),
+        new PiecewiseYoYInflationCurve<Linear>(asof_, TARGET(), ActualActual(ActualActual::ISDA), Period(2, Months), ii->frequency(),
                                                ii->interpolated(), baseZeroRate, instruments));
     pYoYts->recalculate();
     yoyTS = boost::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);

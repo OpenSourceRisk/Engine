@@ -1622,11 +1622,12 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
 
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
 
-    Calendar paymentCalendar;
-    if (data.paymentCalendar().empty())
-        paymentCalendar = schedule.calendar();
-    else
-        paymentCalendar = parseCalendar(data.paymentCalendar());
+    // Not used any more in the digital CMS leg of QuantLib 1.25
+    // Calendar paymentCalendar;
+    // if (data.paymentCalendar().empty())
+    //     paymentCalendar = schedule.calendar();
+    // else
+    //     paymentCalendar = parseCalendar(data.paymentCalendar());
 
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
@@ -1662,7 +1663,7 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
                                       .withNotionals(notionals)
                                       .withSpreads(spreads)
                                       .withGearings(gearings)
-                                      .withPaymentCalendar(paymentCalendar)
+                                      // .withPaymentCalendar(paymentCalendar)
                                       .withPaymentDayCounter(dc)
                                       .withPaymentAdjustment(bdc)
                                       .withFixingDays(fixingDays)

@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceCurve) {
     Natural settlementDays = 0;
     Calendar cal = TARGET();
     BusinessDayConvention bdc = Following;
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     vector<Time> times;
     vector<Date> dates;

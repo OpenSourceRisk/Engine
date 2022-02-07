@@ -27,13 +27,12 @@ using QuantLib::Time;
 namespace QuantExt {
 
 ZeroInflationModelTermStructure::ZeroInflationModelTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
-                                                                 Size index)
+                                                                 Size index, bool indexIsInterpolated)
     : ZeroInflationTermStructure(
           inflationTermStructure(model, index)->dayCounter(), inflationTermStructure(model, index)->baseRate(),
-          inflationTermStructure(model, index)->observationLag(), inflationTermStructure(model, index)->frequency(),
-          inflationTermStructure(model, index)->indexIsInterpolated()),
-      model_(model), index_(index), referenceDate_(inflationTermStructure(model_, index_)->referenceDate()),
-      relativeTime_(0.0) {
+          inflationTermStructure(model, index)->observationLag(), inflationTermStructure(model, index)->frequency()),
+      model_(model), index_(index), indexIsInterpolated_(indexIsInterpolated),
+      referenceDate_(inflationTermStructure(model_, index_)->referenceDate()), relativeTime_(0.0) {
     registerWith(model_);
     update();
 }
@@ -57,7 +56,7 @@ const Date& ZeroInflationModelTermStructure::referenceDate() const {
 }
 
 Date ZeroInflationModelTermStructure::baseDate() const {
-    if (indexIsInterpolated()) {
+    if (indexIsInterpolated_) {
         return referenceDate_ - observationLag_;
     } else {
         return inflationPeriod(referenceDate_ - observationLag_, frequency()).first;

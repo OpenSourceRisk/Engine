@@ -37,7 +37,7 @@ namespace data {
 
   \ingroup marketdata
 */
-class WrappedMarket : public Market {
+class WrappedMarket : virtual public Market {
 public:
     explicit WrappedMarket(const boost::shared_ptr<Market>& market);
     boost::shared_ptr<Market> underlyingMarket() const;
@@ -75,7 +75,7 @@ public:
                                const string& configuration = Market::defaultConfiguration) const override;
     Handle<BlackVolTermStructure> cdsVol(const string& name,
                                          const string& configuration = Market::defaultConfiguration) const override;
-    Handle<BilinearBaseCorrelationTermStructure>
+    Handle<ore::data::BilinearBaseCorrelationTermStructure>
     baseCorrelation(const string& name, const string& configuration = Market::defaultConfiguration) const override;
     Handle<OptionletVolatilityStructure>
     capFloorVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;

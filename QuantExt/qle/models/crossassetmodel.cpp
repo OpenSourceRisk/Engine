@@ -703,9 +703,10 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     // compute final results depending on z and y
     const auto& zts = infdk(i)->termStructure();
     auto dc = irlgm1f(0)->termStructure()->dayCounter();
-    Real growth_t = inflationGrowth(zts, t, dc);
+    bool indexIsInterpolated = true; // FIXME, though in line with the comment below
+    Real growth_t = inflationGrowth(zts, t, dc, indexIsInterpolated);
     Real It = growth_t * std::exp(Hyt * z - y - V0);
-    Real Itilde_t_T = inflationGrowth(zts, T, dc) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
+    Real Itilde_t_T = inflationGrowth(zts, T, dc, indexIsInterpolated) / growth_t * std::exp((HyT - Hyt) * z + V_tilde);
     // concerning interpolation there is an inaccuracy here: if the index
     // is not interpolated, we still simulate the index value as of t
     // (and T), although we should go back to t, T which corresponds to
@@ -778,7 +779,7 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
 
 std::pair<Real, Real> CrossAssetModel::crcirppS(const Size i, const Time t, const Time T, const Real y,
                                                 const Real s) const {
-    QL_REQUIRE(modelType(CR, i) == CIRPP, "model at " << i << " is not CR-CIR")
+    QL_REQUIRE(modelType(CR, i) == CIRPP, "model at " << i << " is not CR-CIR");
     if (close_enough(t, T))
         return std::make_pair(s, 1.0);
     else

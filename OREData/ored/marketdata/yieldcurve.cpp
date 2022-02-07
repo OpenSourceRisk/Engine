@@ -1120,7 +1120,7 @@ void YieldCurve::buildFittedBondCurve() {
                 Date thisMaturity = qlInstr->maturityDate();
                 lastMaturity = std::max(lastMaturity, thisMaturity);
                 firstMaturity = std::min(firstMaturity, thisMaturity);
-                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * res.inflationFactor, ActualActual(),
+                Real marketYield = qlInstr->yield(rescaledBondQuote->value() * res.inflationFactor, ActualActual(ActualActual::ISDA),
                                                   Continuous, NoFrequency);
                 DLOG("added bond " << securityID << ", maturity = " << QuantLib::io::iso_date(thisMaturity)
                                    << ", clean price = " << rescaledBondQuote->value() * res.inflationFactor
@@ -1274,7 +1274,7 @@ void YieldCurve::buildFittedBondCurve() {
     for (Size i = 0; i < bonds.size(); ++i) {
         bonds[i]->setPricingEngine(engine);
         modelPrices.push_back(bonds[i]->cleanPrice() / 100.0);
-        modelYields.push_back(bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(), Continuous, NoFrequency));
+        modelYields.push_back(bonds[i]->yield(bonds[i]->cleanPrice(), ActualActual(ActualActual::ISDA), Continuous, NoFrequency));
         DLOG("bond " << securityIDs[i] << ", model clean price = " << modelPrices.back()
                      << ", yield (cont,actact) = " << modelYields.back() << ", NPV = " << bonds[i]->NPV());
     }

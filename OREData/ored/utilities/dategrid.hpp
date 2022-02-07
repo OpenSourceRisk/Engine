@@ -44,15 +44,15 @@ public:
         BETA) indicating a hard coded grid structure
     */
     DateGrid(const std::string& grid, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
-             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
 
     //! Build a date grid from the given vector of tenors.
     DateGrid(const std::vector<QuantLib::Period>& tenors, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
-             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
 
     //! Build a date grid from an explicit set of dates, sorted in ascending order.
     DateGrid(const std::vector<QuantLib::Date>& dates, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
-             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual(QuantLib::ActualActual::ISDA));
 
     //! The size of the date grid
     QuantLib::Size size() const { return dates_.size(); }

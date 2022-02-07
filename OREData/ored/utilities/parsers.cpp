@@ -37,7 +37,7 @@
 #include <qle/calendars/amendedcalendar.hpp>
 #include <qle/calendars/austria.hpp>
 #include <qle/calendars/belgium.hpp>
-#include <qle/calendars/chile.hpp>
+//#include <qle/calendars/chile.hpp>
 #include <qle/calendars/cme.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/cyprus.hpp>
@@ -226,7 +226,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"GBLO", UnitedKingdom()},
         {"SEST", Sweden()},
         {"TRIS", Turkey()},
-        {"USNY", UnitedStates()},
+        {"USNY", UnitedStates(UnitedStates::Settlement)},
 
         // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
         {"EUTA", TARGET()},
@@ -279,7 +279,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"TR", Turkey()},
         {"UA", Ukraine()},
         {"GB", UnitedKingdom()},
-        {"US", UnitedStates()},
+        {"US", UnitedStates(UnitedStates::Settlement)},
         {"BE", Belgium()},
         {"LU", Luxembourg()},
         {"ES", Spain()},
@@ -333,7 +333,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"TUR", Turkey()},
         {"UKR", Ukraine()},
         {"GBR", UnitedKingdom()},
-        {"USA", UnitedStates()},
+        {"USA", UnitedStates(UnitedStates::Settlement)},
         {"BEL", Belgium()},
         {"LUX", Luxembourg()},
         {"ESP", Spain()},
@@ -381,7 +381,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"TRY", Turkey()},
         {"UAH", Ukraine()},
         {"GBP", UnitedKingdom()},
-        {"USD", UnitedStates()},
+        {"USD", UnitedStates(UnitedStates::Settlement)},
         {"BEF", Belgium()},
         {"LUF", Luxembourg()},
         {"ATS", QuantExt::Austria()},
@@ -458,7 +458,7 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"LNB", UnitedKingdom()},
         {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
         {"NGL", Netherlands()},
-        {"NYB", UnitedStates()},
+        {"NYB", UnitedStates(UnitedStates::Settlement)},
         {"SA", SouthAfrica()}, // TODO: consider remove it, not ISO & confuses with Saudi Arabia
         {"SS", Sweden()},      // TODO: consider remove it, not ISO & confuses with South Sudan
         {"SYB", Australia()},
@@ -597,9 +597,10 @@ DayCounter parseDayCounter(const string& s) {
                                         {"T360", Thirty360(Thirty360::USA)},
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 US", Thirty360(Thirty360::USA)},
+                                        {"30/360 (US)", Thirty360(Thirty360::USA)},
                                         {"30U/360", Thirty360(Thirty360::USA)},
                                         {"30US/360", Thirty360(Thirty360::USA)},
-                                        {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
+                                        {"30/360 (Bond Basis)", Thirty360(Thirty360::BondBasis)},
                                         {"ACT/nACT", Thirty360(Thirty360::USA)},
                                         {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
                                         {"30/360 AIBD (Euro)", Thirty360(Thirty360::European)},
@@ -648,6 +649,7 @@ DayCounter parseDayCounter(const string& s) {
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
+        
     } else {
         QL_FAIL("DayCounter \"" << s << "\" not recognized");
     }

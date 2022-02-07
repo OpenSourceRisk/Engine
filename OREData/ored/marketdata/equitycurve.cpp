@@ -287,7 +287,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 // sort quotes and terms in case of wild-card
                 if (wildcard) {
-                    QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
+                    QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.");
 
                         // sort
                         std::sort(qt.begin(), qt.end(),

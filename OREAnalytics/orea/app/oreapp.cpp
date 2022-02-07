@@ -599,7 +599,7 @@ boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<
 
     CrossAssetModelBuilder modelBuilder(market, modelData, lgmCalibrationMarketStr, fxCalibrationMarketStr,
                                         eqCalibrationMarketStr, infCalibrationMarketStr, crCalibrationMarketStr,
-                                        simulationMarketStr, ActualActual(), false, continueOnCalibrationError);
+                                        simulationMarketStr, ActualActual(ActualActual::ISDA), false, continueOnCalibrationError);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = *modelBuilder.model();
     return model;
 }

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/equityvolconstantspread.hpp
+/*! \file qle/termstructures/blackvolconstantspread.hpp
     \brief surface that combines an ATM curve and vol spreads from a surface
     \ingroup termstructures
 */

@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
     // index vol surface, check that the forward ATM vols are the same
 
     Date today = Date(1, Jan, 2020);
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     Settings::instance().evaluationDate() = today;
 
@@ -92,14 +92,14 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
         boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), dc));
 
     // set up EquityIndexes for the index and underlying
-    boost::shared_ptr<EquityIndex> index = boost::make_shared<EquityIndex>("Index", UnitedStates(), USDCurrency(),
+    boost::shared_ptr<EquityIndex> index = boost::make_shared<EquityIndex>("Index", UnitedStates(UnitedStates::Settlement), USDCurrency(),
                                                                            indexSpot, indexForecast, indexDividend);
     boost::shared_ptr<EquityIndex> underlying = boost::make_shared<EquityIndex>(
-        "Underlying", UnitedStates(), USDCurrency(), underlyingSpot, underlyingForecast, underlyingDividend);
+        "Underlying", UnitedStates(UnitedStates::Settlement), USDCurrency(), underlyingSpot, underlyingForecast, underlyingDividend);
 
     // set up a vol surface for the index
     boost::shared_ptr<BlackVolTermStructure> indexVolSurface =
-        boost::make_shared<BlackVarianceSurface>(today, UnitedStates(), dates, strikes, vols, dc);
+        boost::make_shared<BlackVarianceSurface>(today, UnitedStates(UnitedStates::Settlement), dates, strikes, vols, dc);
 
     // set up a vol surface for the underlying, to be proxied from the index surface
     boost::shared_ptr<EquityBlackVolatilitySurfaceProxy> underlyingVolSurface =

@@ -638,7 +638,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (isCube && !isAtm) {
                                 boost::shared_ptr<SwaptionVolCubeWithATM> tmp =
                                     boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
-                                QL_REQUIRE(tmp, "swaption cube missing")
+                                QL_REQUIRE(tmp, "swaption cube missing");
                                 cube = tmp->cube();
                             }
                             vector<vector<Handle<Quote>>> quotes, atmQuotes;
@@ -1851,7 +1851,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             zeroCurve = boost::make_shared<ZeroInflationCurveObserverMoving<Linear>>(
                                 0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
-                                inflationTs->frequency(), inflationTs->indexIsInterpolated(), zeroCurveTimes, quotes,
+                                inflationTs->frequency(), inflationIndex->interpolated(), zeroCurveTimes, quotes,
                                 inflationTs->seasonality());
                         }
 
@@ -2049,7 +2049,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             yoyCurve = boost::make_shared<YoYInflationCurveObserverMoving<Linear>>(
                                 0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-                                yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yoyCurveTimes,
+                                yoyInflationTs->frequency(), yoyInflationIndex->interpolated(), yoyCurveTimes,
                                 quotes, yoyInflationTs->seasonality());
                         }
 
