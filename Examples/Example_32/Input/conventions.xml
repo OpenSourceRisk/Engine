@@ -144,7 +144,6 @@
     <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>UK,TARGET</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
-    <AdditionalSettleCalendar/>
   </FX>
   <CrossCurrencyBasis>
     <Id>EUR-GBP-XCCY-BASIS</Id>

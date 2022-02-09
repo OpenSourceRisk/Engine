@@ -87,7 +87,6 @@
         <PointsFactor>100</PointsFactor>
         <AdvanceCalendar>US,JP</AdvanceCalendar>
         <SpotRelative>true</SpotRelative>
-        <AdditionalSettleCalendar />
     </FX>
     <CrossCurrencyBasis>
         <Id>EUR-USD-XCCY-BASIS</Id>

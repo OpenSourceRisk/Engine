@@ -85,8 +85,8 @@
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
-      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
       <ShiftStrikes>-0.02,-0.01,0.0,0.01,0.02</ShiftStrikes>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
     </SwaptionVolatility>
   </SwaptionVolatilities>
   
