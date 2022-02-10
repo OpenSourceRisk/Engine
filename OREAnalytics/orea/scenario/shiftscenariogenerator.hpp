@@ -96,8 +96,8 @@ public:
 
     //! Scenario Generator interface
     //@{
-    boost::shared_ptr<Scenario> next(const Date& d);
-    void reset() { counter_ = 0; }
+    boost::shared_ptr<Scenario> next(const Date& d) override;
+    void reset() override { counter_ = 0; }
     //@}
 
     //! Inspectors

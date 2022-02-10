@@ -91,8 +91,8 @@ public:
         const Size nettingSetEpeIndex = 1, const Size nettingSetEneIndex = 2);
 
 protected:
-    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample);
-    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample);
+    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample) override;
+    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample) override;
     map<string, Real> tradeValueToday_;
     map<string, Real> nettingSetPositiveValueToday_;
     map<string, Real> nettingSetNegativeValueToday_;
@@ -110,8 +110,8 @@ public:
         const Size nettingSetEpeIndex = 1, const Size nettingSetEneIndex = 2);
 
 protected:
-    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample);
-    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample);
+    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample) override;
+    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample) override;
     map<string, Real> tradeValueToday_;
     map<string, Real> nettingSetValueToday_;
 };
@@ -132,8 +132,8 @@ public:
         const Size nettingSetEpeIndex = 0, const Size nettingSetEneIndex = 1);
 
 protected:
-    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample);
-    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample);
+    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample) override;
+    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample) override;
     map<string, Real> tradeCva_;
     map<string, Real> tradeDva_;
     map<string, Real> nettingSetSumCva_;
@@ -149,8 +149,8 @@ public:
         const boost::shared_ptr<NPVCube>& nettedExposureCube);
 
 protected:
-    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample);
-    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample);
+    virtual Real calculateAllocatedEpe(const string& tid, const string& nid, const Date& date, const Size sample) override;
+    virtual Real calculateAllocatedEne(const string& tid, const string& nid, const Date& date, const Size sample) override;
 };
 
 //! Convert text representation to ExposureAllocator::AllocationMethod

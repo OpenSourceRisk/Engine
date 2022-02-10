@@ -51,13 +51,13 @@ public:
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
     //! \name BootstrapHelper interface
     //@{
-    QuantLib::Real impliedQuote() const;
-    void setTermStructure(QuantLib::YieldTermStructure*);
+    QuantLib::Real impliedQuote() const override;
+    void setTermStructure(QuantLib::YieldTermStructure*) override;
     //@}
 
     //! \name Inspectors
@@ -67,13 +67,13 @@ public:
 
     //! \name Visitability
     //@{
-    void accept(QuantLib::AcyclicVisitor&);
+    void accept(QuantLib::AcyclicVisitor&) override;
     //@}
 
 private:
     //! \name RelativeDateBootstrapHelper interface
     //@{
-    void initializeDates();
+    void initializeDates() override;
     //@}
 
     QuantLib::Handle<QuantLib::Quote> spotFx_;

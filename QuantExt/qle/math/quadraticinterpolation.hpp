@@ -120,7 +120,7 @@
              std::vector<Real> lambdas() const {
                  return lambdas_;
              }
-             void update() {
+             void update() override {
 
                  for(Size i=0; i < n_; ++i) {
                      x_[i] = this->xBegin_[i] * x_mul_ + x_offset_;
@@ -162,7 +162,7 @@
                      p_ += lambdaArray[i];
                  }
              }
-             Real value(Real x) const {
+             Real value(Real x) const override {
                  QL_REQUIRE(p_ != Null<Real>(), "failed to calibrate lambda");
                  x = x * x_mul_ + x_offset_;
                  Real l = lambdas_[0] * x;
@@ -173,10 +173,10 @@
                  l += (b - p_ * pow(x, 3)) / 6.0;
                  return (l - y_offset_) / y_mul_;
              }
-             Real primitive(Real x) const {
+             Real primitive(Real x) const override {
                  QL_FAIL("QuadraticInterpolation primitive is not implemented");
              }
-             Real derivative(Real x) const {
+             Real derivative(Real x) const override {
                  QL_REQUIRE(p_ != 0.0, "failed to calibrate lambda");
                  x = x * x_mul_ + x_offset_;
                  Real l = lambdas_[0];
@@ -187,7 +187,7 @@
                  l += (b - p_ * pow(x, 2)) / 2.0;
                  return l / y_mul_;
              }
-             Real secondDerivative(Real x) const {
+             Real secondDerivative(Real x) const override {
                  QL_REQUIRE(p_ != 0.0, "failed to calibrate lambda");
                  x = x * x_mul_ + x_offset_;
                  Real l = 0;

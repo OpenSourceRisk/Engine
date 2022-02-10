@@ -34,16 +34,16 @@ class StrippedCappedFlooredCPICoupon : public CPICoupon {
 public:
     explicit StrippedCappedFlooredCPICoupon(const ext::shared_ptr<CappedFlooredCPICoupon>& underlying);
     //! Coupon interface
-    Rate rate() const;
+    Rate rate() const override;
     Rate cap() const;
     Rate floor() const;
     Rate effectiveCap() const;
     Rate effectiveFloor() const;
 
     //! Observer interface
-    void update();
+    void update() override;
     //! Visitability
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
 
     //! Underlying coupon
     const ext::shared_ptr<CappedFlooredCPICoupon> underlying() { return underlying_; }
@@ -63,7 +63,7 @@ class StrippedCappedFlooredCPICashFlow : public CPICashFlow {
 public:
     StrippedCappedFlooredCPICashFlow(const ext::shared_ptr<CappedFlooredCPICashFlow>& underlying);
     //! Cashflow interface
-    Real amount() const;
+    Real amount() const override;
     //! Underlying cash flow
     ext::shared_ptr<CappedFlooredCPICashFlow> underlying() const { return underlying_; }
 

@@ -56,20 +56,20 @@ public:
           bma_(new BMAIndex(h)) {}
 
     // overwrite all the virtual methods
-    std::string name() const { return bma_->name(); }
-    bool isValidFixingDate(const Date& date) const {
+    std::string name() const override { return bma_->name(); }
+    bool isValidFixingDate(const Date& date) const override {
         // this is not the original BMA behaviour!
         return fixingCalendar().isBusinessDay(date);
     }
     Handle<YieldTermStructure> forwardingTermStructure() const { return bma_->forwardingTermStructure(); }
-    Date maturityDate(const Date& valueDate) const {
+    Date maturityDate(const Date& valueDate) const override {
         Date d = bma_->maturityDate(valueDate);
         // make sure that d > valueDate to avoid problems in IborCoupon, this is not the original
         // BMAIndex behaviour!
         return std::max<Date>(d, valueDate + 1);
     }
     Schedule fixingSchedule(const Date& start, const Date& end) { return bma_->fixingSchedule(start, end); }
-    Rate forecastFixing(const Date& fixingDate) const {
+    Rate forecastFixing(const Date& fixingDate) const override {
         QL_REQUIRE(!termStructure_.empty(), "null term structure set to this instance of " << name());
         Date start = fixingCalendar().advance(fixingDate, 1, Days);
         Date end = maturityDate(start);
@@ -82,12 +82,12 @@ public:
             tmp--;
         return tmp;
     }
-    Rate pastFixing(const Date& fixingDate) const {
+    Rate pastFixing(const Date& fixingDate) const override {
         // we allow for fixing dates that are not valid BMA fixing dates, so we need to make sure that we
         // read a past fixing from a valid BMA fixing date
         return bma_->fixing(adjustedFixingDate(fixingDate));
     }
-    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const {
+    boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const override {
         return boost::shared_ptr<BMAIndexWrapper>(new BMAIndexWrapper(bma(), h));
     }
 

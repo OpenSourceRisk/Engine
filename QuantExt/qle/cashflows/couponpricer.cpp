@@ -42,13 +42,13 @@ private:
 public:
     PricerSetter(const boost::shared_ptr<FloatingRateCouponPricer>& pricer) : pricer_(pricer) {}
 
-    void visit(CashFlow& c);
-    void visit(Coupon& c);
-    void visit(QuantLib::OvernightIndexedCoupon& c);
-    void visit(QuantExt::OvernightIndexedCoupon& c);
-    void visit(CappedFlooredOvernightIndexedCoupon& c);
-    void visit(AverageONIndexedCoupon& c);
-    void visit(QuantExt::SubPeriodsCoupon1& c);
+    void visit(CashFlow& c) override;
+    void visit(Coupon& c) override;
+    void visit(QuantLib::OvernightIndexedCoupon& c) override;
+    void visit(QuantExt::OvernightIndexedCoupon& c) override;
+    void visit(CappedFlooredOvernightIndexedCoupon& c) override;
+    void visit(AverageONIndexedCoupon& c) override;
+    void visit(QuantExt::SubPeriodsCoupon1& c) override;
 };
 
 void PricerSetter::visit(CashFlow&) {

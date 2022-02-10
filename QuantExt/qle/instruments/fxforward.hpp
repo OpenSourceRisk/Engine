@@ -139,9 +139,9 @@ public:
 
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
-    void fetchResults(const PricingEngine::results*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
+    void fetchResults(const PricingEngine::results*) const override;
     //@}
 
     //! \name Additional interface
@@ -160,7 +160,7 @@ public:
 private:
     //! \name Instrument interface
     //@{
-    void setupExpired() const;
+    void setupExpired() const override;
     //@}
 
     Real nominal1_;
@@ -194,7 +194,7 @@ public:
     Currency payCcy;
     boost::shared_ptr<FxIndex> fxIndex;
     Date fixingDate;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
@@ -202,7 +202,7 @@ class FxForward::results : public Instrument::results {
 public:
     Money npv;
     ExchangeRate fairForwardRate;
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments

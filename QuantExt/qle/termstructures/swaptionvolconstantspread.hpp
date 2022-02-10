@@ -43,12 +43,12 @@ public:
         registerWith(atm_);
         registerWith(cube_);
     }
-    Rate minStrike() const { return cube_->minStrike(); }
-    Rate maxStrike() const { return cube_->maxStrike(); }
-    Rate atmLevel() const { return Null<Real>(); }
+    Rate minStrike() const override { return cube_->minStrike(); }
+    Rate maxStrike() const override { return cube_->maxStrike(); }
+    Rate atmLevel() const override { return Null<Real>(); }
 
 protected:
-    Volatility volatilityImpl(Rate strike) const;
+    Volatility volatilityImpl(Rate strike) const override;
 
 private:
     const Handle<SwaptionVolatilityStructure> atm_, cube_;
@@ -79,33 +79,33 @@ public:
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const { return atm_->dayCounter(); }
-    Date maxDate() const { return atm_->maxDate(); }
-    Time maxTime() const { return atm_->maxTime(); }
-    const Date& referenceDate() const { return atm_->referenceDate(); }
-    Calendar calendar() const { return atm_->calendar(); }
-    Natural settlementDays() const { return atm_->settlementDays(); }
+    DayCounter dayCounter() const override { return atm_->dayCounter(); }
+    Date maxDate() const override { return atm_->maxDate(); }
+    Time maxTime() const override { return atm_->maxTime(); }
+    const Date& referenceDate() const override { return atm_->referenceDate(); }
+    Calendar calendar() const override { return atm_->calendar(); }
+    Natural settlementDays() const override { return atm_->settlementDays(); }
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const { return cube_->minStrike(); }
-    Rate maxStrike() const { return cube_->maxStrike(); }
+    Rate minStrike() const override { return cube_->minStrike(); }
+    Rate maxStrike() const override { return cube_->maxStrike(); }
     //@}
     //! \name SwaptionVolatilityStructure interface
     //@{
-    const Period& maxSwapTenor() const { return atm_->maxSwapTenor(); }
-    VolatilityType volatilityType() const { return atm_->volatilityType(); }
+    const Period& maxSwapTenor() const override { return atm_->maxSwapTenor(); }
+    VolatilityType volatilityType() const override { return atm_->volatilityType(); }
     //@}
     //! \name Observer interface
     //@{
-    void deepUpdate();
+    void deepUpdate() override;
     //@}
     const Handle<SwaptionVolatilityStructure>& atmVol() { return atm_; }
     const Handle<SwaptionVolatilityStructure>& cube() { return cube_; }
 
 protected:
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const;
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
-    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const;
+    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override;
 
 private:
     Handle<SwaptionVolatilityStructure> atm_, cube_;

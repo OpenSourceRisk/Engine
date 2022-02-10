@@ -50,7 +50,7 @@ public:
 
     //! \name Observer interface
     //@{
-    virtual void update() { notifyObservers(); }
+    virtual void update() override { notifyObservers(); }
     //@}
 protected:
     Handle<CPIVolatilitySurface> vol_;

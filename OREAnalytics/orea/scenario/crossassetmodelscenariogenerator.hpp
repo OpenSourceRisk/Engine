@@ -73,8 +73,8 @@ public:
                                      const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor
     ~CrossAssetModelScenarioGenerator(){};
-    std::vector<boost::shared_ptr<Scenario>> nextPath();
-    void reset() { pathGenerator_->reset(); }
+    std::vector<boost::shared_ptr<Scenario>> nextPath() override;
+    void reset() override { pathGenerator_->reset(); }
 
 private:
     boost::shared_ptr<QuantExt::CrossAssetModel> model_;

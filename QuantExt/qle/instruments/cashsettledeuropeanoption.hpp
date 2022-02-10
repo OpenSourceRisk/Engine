@@ -88,7 +88,7 @@ private:
 class CashSettledEuropeanOption::arguments : public QuantLib::VanillaOption::arguments {
 public:
     arguments() {}
-    void validate() const;
+    void validate() const override;
 
     QuantLib::Date paymentDate;
     bool automaticExercise;

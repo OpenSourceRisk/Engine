@@ -55,9 +55,9 @@ public:
     NadarayaWatsonImpl(const I1& xBegin, const I1& xEnd, const I2& yBegin, const Kernel& kernel)
         : xBegin_(xBegin), xEnd_(xEnd), yBegin_(yBegin), kernel_(kernel) {}
 
-    void update() {}
+    void update() override {}
 
-    Real value(Real x) const {
+    Real value(Real x) const override {
 
         Real tmp1 = 0.0, tmp2 = 0.0;
 
@@ -70,7 +70,7 @@ public:
         return QuantLib::close_enough(tmp2, 0.0) ? 0.0 : tmp1 / tmp2;
     }
 
-    Real standardDeviation(Real x) const {
+    Real standardDeviation(Real x) const override {
 
         Real tmp1 = 0.0, tmp1b = 0.0, tmp2 = 0.0;
 

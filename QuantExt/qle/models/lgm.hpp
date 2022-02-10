@@ -96,8 +96,8 @@ public:
                              const std::vector<Real>& weights = std::vector<Real>());
 
     /*! observer and linked calibrated model interface */
-    void update();
-    void generateArguments();
+    void update() override;
+    void generateArguments() override;
 
     /*! calibration constraints, these can be used directly, or
         through the customized calibrate methods above */

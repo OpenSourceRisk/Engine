@@ -42,8 +42,8 @@ public:
                const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>());
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name inspectors
     //@{
@@ -51,10 +51,10 @@ public:
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 protected:
-    void initializeDates();
+    void initializeDates() override;
 
     Natural settlementDays_;
     Period tenor_;

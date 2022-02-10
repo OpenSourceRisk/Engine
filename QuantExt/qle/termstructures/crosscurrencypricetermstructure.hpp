@@ -73,15 +73,15 @@ public:
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
-    QuantLib::Time maxTime() const;
+    QuantLib::Date maxDate() const override;
+    QuantLib::Time maxTime() const override;
     //@}
 
     //! \name PriceTermStructure interface
     //@{
-    QuantLib::Time minTime() const;
-    std::vector<QuantLib::Date> pillarDates() const;
-    const QuantLib::Currency& currency() const { return currency_; }
+    QuantLib::Time minTime() const override;
+    std::vector<QuantLib::Date> pillarDates() const override;
+    const QuantLib::Currency& currency() const override { return currency_; }
     //@}
 
     //! \name Inspectors
@@ -101,7 +101,7 @@ public:
 
 protected:
     //! Price calculation
-    QuantLib::Real priceImpl(QuantLib::Time t) const;
+    QuantLib::Real priceImpl(QuantLib::Time t) const override;
 
 private:
     //! Register with underlying market data

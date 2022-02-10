@@ -119,14 +119,14 @@ public:
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
-    QuantLib::Time maxTime() const;
+    QuantLib::Date maxDate() const override;
+    QuantLib::Time maxTime() const override;
     //@}
 
     //! \name PriceTermStructure interface
     //@{
-    QuantLib::Time minTime() const;
-    std::vector<QuantLib::Date> pillarDates() const;
+    QuantLib::Time minTime() const override;
+    std::vector<QuantLib::Date> pillarDates() const override;
     //@}
 
     //! \name InterpolatedPriceCurve interface
@@ -141,12 +141,12 @@ public:
 private:
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
     //! \name PriceTermStructure implementation
     //@{
-    QuantLib::Real priceImpl(QuantLib::Time t) const;
+    QuantLib::Real priceImpl(QuantLib::Time t) const override;
     //@}
 
     std::vector<boost::shared_ptr<helper> > instruments_;

@@ -112,14 +112,14 @@ public:
             bool fixingTriangulation = true);
     //! \name Index interface
     //@{
-    std::string name() const;
-    Calendar fixingCalendar() const;
-    bool isValidFixingDate(const Date& fixingDate) const;
-    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+    std::string name() const override;
+    Calendar fixingCalendar() const override;
+    bool isValidFixingDate(const Date& fixingDate) const override;
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     //@}
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
     //! \name Inspectors
     //@{
@@ -142,9 +142,9 @@ public:
     //! \name Fixing calculations
     //@{
     //! It can be overridden to implement particular conventions
-    virtual Real forecastFixing(const Time& fixingTime) const;
+    virtual Real forecastFixing(const Time& fixingTime) const override;
     virtual Real forecastFixing(const Date& fixingDate) const;
-    Real pastFixing(const Date& fixingDate) const;
+    Real pastFixing(const Date& fixingDate) const override;
     // @}
 
     //! \name Setters

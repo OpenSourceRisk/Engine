@@ -32,8 +32,8 @@ class Luxembourg : public Calendar {
 private:
     class SettlementImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "Luxembourgish settlement"; }
-        bool isBusinessDay(const Date&) const;
+        std::string name() const override { return "Luxembourgish settlement"; }
+        bool isBusinessDay(const Date&) const override;
     };
 
 public:

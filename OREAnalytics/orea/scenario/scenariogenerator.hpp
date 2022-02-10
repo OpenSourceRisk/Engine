@@ -70,7 +70,7 @@ public:
         QL_REQUIRE(dates.front() > today, "date grid must start in the future");
     }
 
-    virtual boost::shared_ptr<Scenario> next(const Date& d) {
+    virtual boost::shared_ptr<Scenario> next(const Date& d) override {
         if (d == dates_.front()) { // new path
             path_ = nextPath();
             pathStep_ = 0;

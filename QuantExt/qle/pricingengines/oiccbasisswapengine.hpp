@@ -39,7 +39,7 @@ public:
                                             // Spot FX rate quoted as 1 ccy2 = fx ccy1,
                                             // ccy1 is price currency, ccy 2 amounts to be multiplied by fx
                                             const Handle<Quote>& fx);
-    void calculate() const;
+    void calculate() const override;
     Handle<YieldTermStructure> ts1() { return ts1_; }
     Handle<YieldTermStructure> ts2() { return ts2_; }
     Currency ccy1() { return ccy1_; }

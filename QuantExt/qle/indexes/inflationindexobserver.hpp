@@ -36,11 +36,11 @@ public:
         registerWith(quote_);
     }
 
-    void update() { // called when the quote changes
+    void update() override { // called when the quote changes
         setFixing();
     }
 
-    Date maxDate() const {
+    Date maxDate() const override {
         Date today = Settings::instance().evaluationDate();
         return today;
     }

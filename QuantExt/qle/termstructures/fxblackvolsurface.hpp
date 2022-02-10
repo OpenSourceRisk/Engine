@@ -53,17 +53,17 @@ public:
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const { return dayCounter_; }
-    Date maxDate() const { return maxDate_; }
+    DayCounter dayCounter() const override { return dayCounter_; }
+    Date maxDate() const override { return maxDate_; }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const { return 0; } // we allow 0 for ATM vols
-    Real maxStrike() const { return QL_MAX_REAL; }
+    Real minStrike() const override { return 0; } // we allow 0 for ATM vols
+    Real maxStrike() const override { return QL_MAX_REAL; }
     //@}
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
     //! Return an FxSmile for the time t
     /*! Note the smile does not observe the spot or YTS handles, it will
@@ -72,7 +72,7 @@ public:
     boost::shared_ptr<FxSmileSection> blackVolSmile(Time t) const;
 
 protected:
-    virtual Volatility blackVolImpl(Time t, Real strike) const;
+    virtual Volatility blackVolImpl(Time t, Real strike) const override;
 
     //! this must be implemented.
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,

@@ -39,13 +39,13 @@ public:
                                 const Handle<Quote>& fxSpotToday, const Real sigma,
                                 const Handle<YieldTermStructure>& eqIrCurveToday,
                                 const Handle<YieldTermStructure>& eqDivYieldCurveToday);
-    Real variance(const Time t) const;
-    Real sigma(const Time t) const;
-    const boost::shared_ptr<Parameter> parameter(const Size) const;
+    Real variance(const Time t) const override;
+    Real sigma(const Time t) const override;
+    const boost::shared_ptr<Parameter> parameter(const Size) const override;
 
 protected:
-    Real direct(const Size i, const Real x) const;
-    Real inverse(const Size i, const Real y) const;
+    Real direct(const Size i, const Real x) const override;
+    Real inverse(const Size i, const Real y) const override;
 
 private:
     const boost::shared_ptr<PseudoParameter> sigma_;

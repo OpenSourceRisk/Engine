@@ -63,9 +63,9 @@ public:
       while all other methods return scaled (and shifted) values */
     Real& scaling();
 
-    Size numberOfParameters() const { return 2; }
+    Size numberOfParameters() const override { return 2; }
 
-    void update() const;
+    void update() const override;
 
 protected:
     Real shift_, scaling_;

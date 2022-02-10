@@ -308,9 +308,9 @@ public:
         : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, zeroRate, observationLag, frequency),
           zeroRate_(zeroRate), indexIsInterp_(indexIsInterp) {}
 
-    Date maxDate() const { return Date::maxDate(); }
+    Date maxDate() const override { return Date::maxDate(); }
     // Base date consistent with observation lag, interpolation and frequency
-    Date baseDate() const {
+    Date baseDate() const override {
         Date base = referenceDate() - observationLag();
         if (!indexIsInterp_) {
             std::pair<Date, Date> ips = inflationPeriod(base, frequency());
@@ -320,7 +320,7 @@ public:
     }
 
 private:
-    Rate zeroRateImpl(Time t) const { return zeroRate_; }
+    Rate zeroRateImpl(Time t) const override { return zeroRate_; }
     Real zeroRate_;
     bool indexIsInterp_;
 };

@@ -35,7 +35,7 @@ public:
     CPIBlackCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
                            const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface);
 
-    virtual void calculate() const;
+    virtual void calculate() const override;
     virtual std::string name() const { return "CPIBlackCapFloorEngine"; }
 
     virtual ~CPIBlackCapFloorEngine() {}

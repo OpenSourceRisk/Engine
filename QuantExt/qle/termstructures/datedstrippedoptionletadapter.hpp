@@ -43,27 +43,27 @@ public:
 
     //! \name TermStructure interface
     //@{
-    Date maxDate() const;
+    Date maxDate() const override;
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const;
-    Rate maxStrike() const;
+    Rate minStrike() const override;
+    Rate maxStrike() const override;
     //@}
     //! \name LazyObject interface
     //@{
-    void update();
-    void performCalculations() const;
+    void update() override;
+    void performCalculations() const override;
     //@}
 
-    VolatilityType volatilityType() const;
-    Real displacement() const;
+    VolatilityType volatilityType() const override;
+    Real displacement() const override;
 
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const;
-    Volatility volatilityImpl(Time length, Rate strike) const;
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
+    Volatility volatilityImpl(Time length, Rate strike) const override;
     //@}
 
 private:

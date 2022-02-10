@@ -67,11 +67,11 @@ public:
 
     //! \name Serialisation
     //@{
-    void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
-    void clear() { LgmData::clear(); }
-    void reset() {
+    void clear() override { LgmData::clear(); }
+    void reset() override {
         LgmData::reset();
         name_ = "";
     }

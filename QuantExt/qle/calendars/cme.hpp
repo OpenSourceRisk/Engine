@@ -35,8 +35,8 @@ class CME : public QuantLib::Calendar {
 private:
     class Impl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "CME Group"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "CME Group"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
 public:

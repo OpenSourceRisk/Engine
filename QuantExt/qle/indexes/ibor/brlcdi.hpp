@@ -41,12 +41,12 @@ public:
 
     //! \name InterestRateIndex interface
     //@{
-    QuantLib::Rate forecastFixing(const QuantLib::Date& fixingDate) const;
+    QuantLib::Rate forecastFixing(const QuantLib::Date& fixingDate) const override;
     //@}
 
     //! \name IborIndex interface
     //@{
-    boost::shared_ptr<IborIndex> clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& h) const;
+    boost::shared_ptr<IborIndex> clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& h) const override;
     //@}
 };
 

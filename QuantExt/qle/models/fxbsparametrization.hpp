@@ -47,7 +47,7 @@ public:
     virtual Real stdDeviation(const Time t) const;
     const Handle<Quote> fxSpotToday() const;
 
-    Size numberOfParameters() const { return 1; }
+    Size numberOfParameters() const override { return 1; }
 
 private:
     const Handle<Quote> fxSpotToday_;

@@ -50,23 +50,23 @@ public:
 
 protected:
     /* SwaptionVolatilityStructure interface */
-    const Period& maxSwapTenor() const;
+    const Period& maxSwapTenor() const override;
 
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const;
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
 
-    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const;
+    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override;
 
-    Real shiftImpl(Time optionTime, Time swapLength) const;
+    Real shiftImpl(Time optionTime, Time swapLength) const override;
 
     /* VolatilityTermStructure interface */
-    Real minStrike() const;
-    Real maxStrike() const;
+    Real minStrike() const override;
+    Real maxStrike() const override;
     /* TermStructure interface */
-    Date maxDate() const;
+    Date maxDate() const override;
     /* Observer interface */
-    void update();
+    void update() override;
 
-    VolatilityType volatilityType() const;
+    VolatilityType volatilityType() const override;
 
 private:
     const boost::shared_ptr<SwaptionVolatilityStructure> source_;

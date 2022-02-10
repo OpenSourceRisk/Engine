@@ -50,7 +50,7 @@ public:
                                     bool minimalResults = true,
                                     boost::optional<bool> includeSettlementDateFlows = boost::none,
                                     Date settlementDate = Date(), Date npvDate = Date());
-    void calculate() const;
+    void calculate() const override;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
 
 private:

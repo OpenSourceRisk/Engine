@@ -51,15 +51,15 @@ public:
                                          const Handle<YieldTermStructure>& domesticTermStructure,
         const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>());
 
-    Real variance(const Time t) const;
-    Real sigma(const Time t) const;
-    const Array& parameterTimes(const Size) const;
-    const boost::shared_ptr<Parameter> parameter(const Size) const;
-    void update() const;
+    Real variance(const Time t) const override;
+    Real sigma(const Time t) const override;
+    const Array& parameterTimes(const Size) const override;
+    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    void update() const override;
 
 protected:
-    Real direct(const Size i, const Real x) const;
-    Real inverse(const Size i, const Real y) const;
+    Real direct(const Size i, const Real x) const override;
+    Real inverse(const Size i, const Real y) const override;
 
 private:
     void initialize(const Array& sigma);

@@ -75,27 +75,27 @@ public:
     //! \name YieldTermStructure interface
     //@{
     //! Returns the day counter from the base curve
-    QuantLib::DayCounter dayCounter() const;
+    QuantLib::DayCounter dayCounter() const override;
     //! Returns the calendar from the base curve
-    QuantLib::Calendar calendar() const;
+    QuantLib::Calendar calendar() const override;
     //! Returns the settlement days from the base curve
-    QuantLib::Natural settlementDays() const;
+    QuantLib::Natural settlementDays() const override;
     //! Returns the reference date from the base curve
-    const QuantLib::Date& referenceDate() const;
+    const QuantLib::Date& referenceDate() const override;
     //! All range checks happen in the underlying curves
-    QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
+    QuantLib::Date maxDate() const override { return QuantLib::Date::maxDate(); }
     //@}
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
 protected:
     //! \name YieldTermStructure interface
     //@{
     //! Perform the discount factor calculation using the three yield curves
-    QuantLib::DiscountFactor discountImpl(QuantLib::Time t) const;
+    QuantLib::DiscountFactor discountImpl(QuantLib::Time t) const override;
     //@}
 
 private:

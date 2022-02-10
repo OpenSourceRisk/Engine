@@ -54,7 +54,7 @@ public:
                                   boost::optional<bool> includeSettlementDateFlows = boost::none,
                                   Date settlementDate = Date(), Date npvDate = Date(),
                                   const std::vector<Date>& spotFXSettleDateVec = std::vector<Date>());
-    void calculate() const;
+    void calculate() const override;
     std::vector<Handle<YieldTermStructure> > discountCurves() { return discountCurves_; }
     std::vector<Currency> currencies() { return currencies_; }
     Currency npvCurrency() { return npvCurrency_; }

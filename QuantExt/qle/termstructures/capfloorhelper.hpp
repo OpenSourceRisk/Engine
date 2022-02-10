@@ -86,20 +86,20 @@ public:
     //! \name BootstrapHelper interface
     //@{
     //! Returns the \p capFloor_ instrument's premium
-    QuantLib::Real impliedQuote() const;
+    QuantLib::Real impliedQuote() const override;
 
     //! Sets the helper's OptionletVolatilityStructure to \p ovts and sets up the pricing engine for \c capFloor_
-    void setTermStructure(QuantLib::OptionletVolatilityStructure* ovts);
+    void setTermStructure(QuantLib::OptionletVolatilityStructure* ovts) override;
     //@}
 
     //! \name Visitability
     //@{
-    void accept(QuantLib::AcyclicVisitor&);
+    void accept(QuantLib::AcyclicVisitor&) override;
     //@}
 
 private:
     //! RelativeDateBootstrapHelper interface
-    void initializeDates();
+    void initializeDates() override;
 
     // Details needed to construct the instrument
     Type type_;

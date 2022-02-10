@@ -49,29 +49,29 @@ public:
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const;
-    Volatility volatilityImpl(Time optionTime, Rate strike) const;
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const override;
+    Volatility volatilityImpl(Time optionTime, Rate strike) const override;
     //@}
 
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const;
-    Rate maxStrike() const;
+    Rate minStrike() const override;
+    Rate maxStrike() const override;
     //@}
 
     //! \name VolatilityTermStructure interface
     //@{
-    Date maxDate() const;
+    Date maxDate() const override;
     //@}
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
     //! Override the default implementations in OptionletVolatilityStructure
-    VolatilityType volatilityType() const;
-    Real displacement() const;
+    VolatilityType volatilityType() const override;
+    Real displacement() const override;
 
 private:
     const boost::shared_ptr<OptionletVolatilityStructure> source_;

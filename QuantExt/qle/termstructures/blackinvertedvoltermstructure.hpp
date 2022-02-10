@@ -50,24 +50,24 @@ public:
 
     //! \name TermStructure interface
     //@{
-    const Date& referenceDate() const { return vol_->referenceDate(); }
-    Date maxDate() const { return vol_->maxDate(); }
-    Natural settlementDays() const { return vol_->settlementDays(); }
-    Calendar calendar() const { return vol_->calendar(); }
+    const Date& referenceDate() const override { return vol_->referenceDate(); }
+    Date maxDate() const override { return vol_->maxDate(); }
+    Natural settlementDays() const override { return vol_->settlementDays(); }
+    Calendar calendar() const override { return vol_->calendar(); }
     //! \name Observer interface
     //@{
-    void update() { notifyObservers(); }
+    void update() override { notifyObservers(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const {
+    Real minStrike() const override {
         Real min = vol_->minStrike();
         if (min == QL_MIN_REAL || min == 0)
             return 0; // we allow ATM calls
         else
             return 1 / vol_->maxStrike();
     }
-    Real maxStrike() const {
+    Real maxStrike() const override {
         Real min = vol_->minStrike();
         if (min == QL_MIN_REAL || min == 0)
             return QL_MAX_REAL;
@@ -77,13 +77,13 @@ public:
     //@}
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 protected:
     // we pass through non-recipical values (0 and Null<Real>) assuming they mean ATMF.
     Real invertedStrike(Real strike) const { return (strike == 0.0 || strike == Null<Real>()) ? strike : 1.0 / strike; }
-    virtual Real blackVarianceImpl(Time t, Real strike) const { return vol_->blackVariance(t, invertedStrike(strike)); }
-    virtual Volatility blackVolImpl(Time t, Real strike) const { return vol_->blackVol(t, invertedStrike(strike)); }
+    virtual Real blackVarianceImpl(Time t, Real strike) const override { return vol_->blackVariance(t, invertedStrike(strike)); }
+    virtual Volatility blackVolImpl(Time t, Real strike) const override { return vol_->blackVol(t, invertedStrike(strike)); }
 
 private:
     Handle<BlackVolTermStructure> vol_;

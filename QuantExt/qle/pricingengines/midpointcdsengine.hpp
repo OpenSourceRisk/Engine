@@ -74,12 +74,12 @@ public:
     MidPointCdsEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
                       const Handle<YieldTermStructure>& discountCurve,
                       boost::optional<bool> includeSettlementDateFlows = boost::none);
-    void calculate() const;
+    void calculate() const override;
 
 protected:
-    virtual Real survivalProbability(const Date& d) const;
-    virtual Real defaultProbability(const Date& d1, const Date& d2) const;
-    virtual Real expectedLoss(const Date& defaultDate, const Date& d1, const Date& d2, const Real notional) const;
+    virtual Real survivalProbability(const Date& d) const override;
+    virtual Real defaultProbability(const Date& d1, const Date& d2) const override;
+    virtual Real expectedLoss(const Date& defaultDate, const Date& d1, const Date& d2, const Real notional) const override;
 
     Handle<DefaultProbabilityTermStructure> probability_;
     Real recoveryRate_;

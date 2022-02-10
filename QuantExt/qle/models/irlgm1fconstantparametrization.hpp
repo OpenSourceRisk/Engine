@@ -35,17 +35,17 @@ template <class TS> class Lgm1fConstantParametrization : public Lgm1fParametriza
 public:
     Lgm1fConstantParametrization(const Currency& currency, const Handle<TS>& termStructure, const Real alpha,
                                  const Real kappa, const std::string& name = std::string());
-    Real zeta(const Time t) const;
-    Real H(const Time t) const;
-    Real alpha(const Time t) const;
-    Real kappa(const Time t) const;
-    Real Hprime(const Time t) const;
-    Real Hprime2(const Time t) const;
-    const boost::shared_ptr<Parameter> parameter(const Size) const;
+    Real zeta(const Time t) const override;
+    Real H(const Time t) const override;
+    Real alpha(const Time t) const override;
+    Real kappa(const Time t) const override;
+    Real Hprime(const Time t) const override;
+    Real Hprime2(const Time t) const override;
+    const boost::shared_ptr<Parameter> parameter(const Size) const override;
 
 protected:
-    Real direct(const Size i, const Real x) const;
-    Real inverse(const Size j, const Real y) const;
+    Real direct(const Size i, const Real x) const override;
+    Real inverse(const Size j, const Real y) const override;
 
 private:
     const boost::shared_ptr<PseudoParameter> alpha_, kappa_;

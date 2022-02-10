@@ -75,7 +75,7 @@ public:
 
     //! \name PricingEngine interface
     //@{
-    void calculate() const;
+    void calculate() const override;
     //@}
 
     //! \name Inspectors

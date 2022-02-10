@@ -71,18 +71,18 @@ public:
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const { return proxySurface_->dayCounter(); }
-    Date maxDate() const { return proxySurface_->maxDate(); }
-    Time maxTime() const { return proxySurface_->maxTime(); }
-    const Date& referenceDate() const { return proxySurface_->referenceDate(); }
-    Calendar calendar() const { return proxySurface_->calendar(); }
-    Natural settlementDays() const { return proxySurface_->settlementDays(); }
+    DayCounter dayCounter() const override { return proxySurface_->dayCounter(); }
+    Date maxDate() const override { return proxySurface_->maxDate(); }
+    Time maxTime() const override { return proxySurface_->maxTime(); }
+    const Date& referenceDate() const override { return proxySurface_->referenceDate(); }
+    Calendar calendar() const override { return proxySurface_->calendar(); }
+    Natural settlementDays() const override { return proxySurface_->settlementDays(); }
     //@}
 
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const;
-    Rate maxStrike() const;
+    Rate minStrike() const override;
+    Rate maxStrike() const override;
     //@}
 
     //! \name Inspectors
@@ -94,7 +94,7 @@ public:
 
 protected:
     // Here we adjust the returned vol.
-    Volatility blackVolImpl(Time t, Real strike) const;
+    Volatility blackVolImpl(Time t, Real strike) const override;
 
 private:
     boost::shared_ptr<BlackVolTermStructure> proxySurface_;

@@ -69,7 +69,7 @@ public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
 
-    void calculate() const;
+    void calculate() const override;
 
     /*! Calculate the npv, compoundFactorSettlement, cashflowsBeforeSettlementValue and the additional CashflowResults
         as of the npvDate including cashflows eligible w.r.t. the given settlement date

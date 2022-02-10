@@ -45,8 +45,8 @@ public:
                   bool telescopicValueDates = false);
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name inspectors
     //@{
@@ -54,10 +54,10 @@ public:
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 protected:
-    void initializeDates();
+    void initializeDates() override;
 
     Natural settlementDays_;
     Period swapTenor_;
@@ -92,12 +92,12 @@ public:
                        bool telescopicValueDates = false);
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 protected:
     boost::shared_ptr<OvernightIndex> overnightIndex_;

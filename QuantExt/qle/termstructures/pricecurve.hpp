@@ -76,20 +76,20 @@ public:
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
-    QuantLib::Time maxTime() const;
+    QuantLib::Date maxDate() const override;
+    QuantLib::Time maxTime() const override;
     //@}
 
     //! \name PriceTermStructure interface
     //@{
-    QuantLib::Time minTime() const;
-    std::vector<QuantLib::Date> pillarDates() const;
-    const QuantLib::Currency& currency() const { return currency_; }
+    QuantLib::Time minTime() const override;
+    std::vector<QuantLib::Date> pillarDates() const override;
+    const QuantLib::Currency& currency() const override { return currency_; }
     //@}
 
     //! \name Inspectors
@@ -106,12 +106,12 @@ protected:
 
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
     //! \name PriceTermStructure implementation
     //@{
-    QuantLib::Real priceImpl(QuantLib::Time t) const;
+    QuantLib::Real priceImpl(QuantLib::Time t) const override;
     //@}
 
     mutable std::vector<QuantLib::Date> dates_;

@@ -59,14 +59,14 @@ public:
         bool keepDays, const Handle<QuantExt::PriceTermStructure>& priceCurve = Handle<QuantExt::PriceTermStructure>());
     //! \name Index interface
     //@{
-    std::string name() const { return name_; }
-    Calendar fixingCalendar() const { return fixingCalendar_; }
-    bool isValidFixingDate(const Date& fixingDate) const { return fixingCalendar().isBusinessDay(fixingDate); }
-    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+    std::string name() const override { return name_; }
+    Calendar fixingCalendar() const override { return fixingCalendar_; }
+    bool isValidFixingDate(const Date& fixingDate) const override { return fixingCalendar().isBusinessDay(fixingDate); }
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     //@}
     //! \name Observer interface
     //@{
-    void update() { notifyObservers(); }
+    void update() override { notifyObservers(); }
     //@}
     //! \name Inspectors
     //@{

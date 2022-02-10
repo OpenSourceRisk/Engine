@@ -43,7 +43,7 @@ public:
     //! Constructor
     BoostTestLogger() : Logger("BoostTestLogger") {}
     //! The log callback
-    virtual void log(unsigned, const string& msg) { BOOST_TEST_MESSAGE(msg); }
+    virtual void log(unsigned, const string& msg) override { BOOST_TEST_MESSAGE(msg); }
 };
 
 //! Gets passed the command line arguments from a unit test suite

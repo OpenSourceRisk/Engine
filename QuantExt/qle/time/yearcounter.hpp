@@ -41,10 +41,10 @@ public:
 private:
     class Impl : public DayCounter::Impl {
     public:
-        std::string name() const { return "Year"; }
-        QuantLib::Date::serial_type dayCount(const QuantLib::Date& d1, const QuantLib::Date& d2) const;
+        std::string name() const override { return "Year"; }
+        QuantLib::Date::serial_type dayCount(const QuantLib::Date& d1, const QuantLib::Date& d2) const override;
         QuantLib::Time yearFraction(const QuantLib::Date& d1, const QuantLib::Date& d2, const QuantLib::Date&,
-                                    const QuantLib::Date&) const;
+                                    const QuantLib::Date&) const override;
     };
 };
 

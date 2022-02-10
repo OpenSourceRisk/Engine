@@ -31,8 +31,8 @@ class Colombia : public Calendar {
 private:
     class CseImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "Colombia Stock Exchange"; }
-        bool isBusinessDay(const Date&) const;
+        std::string name() const override { return "Colombia Stock Exchange"; }
+        bool isBusinessDay(const Date&) const override;
     };
 
 public:

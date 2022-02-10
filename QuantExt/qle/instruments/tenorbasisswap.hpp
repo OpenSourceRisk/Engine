@@ -81,11 +81,11 @@ public:
     Real shortLegNPV() const;
     Spread fairShortLegSpread() const;
     //@}
-    void fetchResults(const PricingEngine::results*) const;
+    void fetchResults(const PricingEngine::results*) const override;
 
 private:
     void initializeLegs();
-    void setupExpired() const;
+    void setupExpired() const override;
 
     Real nominal_;
     bool payLongIndex_;
@@ -114,7 +114,7 @@ class TenorBasisSwap::results : public Swap::results {
 public:
     Spread fairLongSpread;
     Spread fairShortSpread;
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments
