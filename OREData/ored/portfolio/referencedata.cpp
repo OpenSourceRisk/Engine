@@ -237,7 +237,7 @@ void BasicReferenceDataManager::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ReferenceData");
     for (XMLNode* child = XMLUtils::getChildNode(node, "ReferenceDatum"); child;
          child = XMLUtils::getNextSibling(child, "ReferenceDatum")) {
-	addFromXMLNode(child);
+	    addFromXMLNode(child);
     }
 }
 
@@ -301,11 +301,11 @@ XMLNode* BasicReferenceDataManager::toXML(XMLDocument& doc) {
 
 void BasicReferenceDataManager::check(const string& type, const string& id) const {
     auto key = make_pair(type, id);
-    QL_REQUIRE(duplicates_.find(key) == duplicates_.end(),
-               "BasicReferenceDataManager: duplicate entries for type='" << type << "', id='" << id << "'");
+    if (duplicates_.find(key) != duplicates_.end())
+        ALOG("BasicReferenceDataManager: duplicate entries for type='" << type << "', id='" << id << "'");
     auto err = buildErrors_.find(key);
-    QL_REQUIRE(err == buildErrors_.end(),
-               "BasicReferenceDataManager: Build error for type='" << type << "', id='" << id << "': " << err->second);
+    if (err != buildErrors_.end())
+        ALOG("BasicReferenceDataManager: Build error for type='" << type << "', id='" << id << "': " << err->second);
 }
 
 bool BasicReferenceDataManager::hasData(const string& type, const string& id) const {
