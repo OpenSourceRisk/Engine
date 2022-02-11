@@ -118,24 +118,24 @@ public:
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
+    QuantLib::Date maxDate() const override;
     //@}
 
     //! \name VolatilityTermStructure interface
     //@{
-    QuantLib::Rate minStrike() const;
-    QuantLib::Rate maxStrike() const;
+    QuantLib::Rate minStrike() const override;
+    QuantLib::Rate maxStrike() const override;
     //@}
 
     //! \name LazyObject interface
     //@{
-    void update();
-    void performCalculations() const;
+    void update() override;
+    void performCalculations() const override;
     //@}
 
     //! \name CapFloorTermVolCurve interface
     //@{
-    std::vector<QuantLib::Period> optionTenors() const;
+    std::vector<QuantLib::Period> optionTenors() const override;
     //@}
 
     //! \name Inspectors
@@ -147,7 +147,7 @@ public:
 protected:
     //! \name CapFloorTermVolatilityStructure interface
     //@{
-    QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate) const;
+    QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate) const override;
     //@}
 
 private:

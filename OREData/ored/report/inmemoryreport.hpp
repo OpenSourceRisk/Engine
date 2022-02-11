@@ -40,7 +40,7 @@ class InMemoryReport : public Report {
 public:
     InMemoryReport() : i_(0) {}
 
-    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) {
+    Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override {
         headers_.push_back(name);
         columnTypes_.push_back(rt);
         columnPrecision_.push_back(precision);
@@ -49,13 +49,13 @@ public:
         return *this;
     }
 
-    Report& next() {
+    Report& next() override {
         QL_REQUIRE(i_ == headers_.size(), "Cannot go to next line, only " << i_ << " entires filled");
         i_ = 0;
         return *this;
     }
 
-    Report& add(const ReportType& rt) {
+    Report& add(const ReportType& rt) override {
         // check type is valid
         QL_REQUIRE(i_ < headers_.size(), "No column to add [" << rt << "] to.");
         QL_REQUIRE(rt.which() == columnTypes_[i_].which(),
@@ -67,7 +67,7 @@ public:
         return *this;
     }
 
-    void end() {
+    void end() override {
         QL_REQUIRE(i_ == headers_.size() || i_ == 0,
                    "report is finalized with incomplete row, got data for " << i_ << " columns out of " << columns());
     }

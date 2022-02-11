@@ -45,23 +45,23 @@ public:
     enum class TimeInterpolationMethod { Linear, Flat };
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
-    const QuantLib::Date& referenceDate() const { return OptionInterpolator2d::referenceDate(); }
-    QuantLib::DayCounter dayCounter() const { return OptionInterpolator2d::dayCounter(); }
+    QuantLib::Date maxDate() const override { return QuantLib::Date::maxDate(); }
+    const QuantLib::Date& referenceDate() const override { return OptionInterpolator2d::referenceDate(); }
+    QuantLib::DayCounter dayCounter() const override { return OptionInterpolator2d::dayCounter(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    QuantLib::Real minStrike() const { return 0; }
-    QuantLib::Real maxStrike() const { return QL_MAX_REAL; }
+    QuantLib::Real minStrike() const override { return 0; }
+    QuantLib::Real maxStrike() const override { return QL_MAX_REAL; }
     //@}
 
     //! \name Visitability
     //@{
-    virtual void accept(QuantLib::AcyclicVisitor&);
+    virtual void accept(QuantLib::AcyclicVisitor&) override;
     //@}
 
 protected:
-    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const;
+    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const override;
 
     bool timeFlatExtrapolation_;
 };

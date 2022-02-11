@@ -43,16 +43,16 @@ public:
 
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 
 private:
-    void initializeDates();
+    void initializeDates() override;
     Date fixingDate_;
     Size imm1_, imm2_;
     Pillar::Choice pillarChoice_;

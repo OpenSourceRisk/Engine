@@ -57,13 +57,13 @@ public:
 
     //! \name InflationCouponPricer interface
     //@{
-    virtual Real swapletPrice() const;
-    virtual Rate swapletRate() const;
-    virtual Real capletPrice(Rate effectiveCap) const;
-    virtual Rate capletRate(Rate effectiveCap) const;
-    virtual Real floorletPrice(Rate effectiveFloor) const;
-    virtual Rate floorletRate(Rate effectiveFloor) const;
-    virtual void initialize(const InflationCoupon&);
+    virtual Real swapletPrice() const override;
+    virtual Rate swapletRate() const override;
+    virtual Real capletPrice(Rate effectiveCap) const override;
+    virtual Rate capletRate(Rate effectiveCap) const override;
+    virtual Real floorletPrice(Rate effectiveFloor) const override;
+    virtual Rate floorletRate(Rate effectiveFloor) const override;
+    virtual void initialize(const InflationCoupon&) override;
     //@}
 
 protected:
@@ -98,7 +98,7 @@ public:
         : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
 
 protected:
-    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const;
+    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const override;
 };
 
 //! Unit-Displaced-Black-formula pricer for capped/floored yoy inflation coupons
@@ -111,7 +111,7 @@ public:
         : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
 
 protected:
-    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const;
+    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const override;
 };
 
 //! Bachelier-formula pricer for capped/floored yoy inflation coupons
@@ -125,7 +125,7 @@ public:
         : NonStandardYoYInflationCouponPricer(capletVol, nominalTermStructure) {}
 
 protected:
-    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const;
+    Real optionletPriceImp(Option::Type, Real strike, Real forward, Real stdDev) const override;
 };
 
 } // namespace QuantExt

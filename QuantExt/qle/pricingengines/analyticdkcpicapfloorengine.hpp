@@ -34,7 +34,7 @@ namespace QuantExt {
 class AnalyticDkCpiCapFloorEngine : public CPICapFloor::engine {
 public:
     AnalyticDkCpiCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size index, const Real baseCPI);
-    void calculate() const;
+    void calculate() const override;
 
 private:
     const boost::shared_ptr<CrossAssetModel> model_;

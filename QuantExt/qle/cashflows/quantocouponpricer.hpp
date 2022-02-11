@@ -64,7 +64,7 @@ public:
     }
 
 protected:
-    Rate adjustedFixing(Rate fixing = Null<Rate>()) const;
+    Rate adjustedFixing(Rate fixing = Null<Rate>()) const override;
 
 private:
     Handle<QuantLib::BlackVolTermStructure> fxRateBlackVolatility_;

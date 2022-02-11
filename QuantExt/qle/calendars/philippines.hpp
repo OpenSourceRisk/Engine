@@ -32,8 +32,8 @@ class Philippines : public Calendar {
 private:
     class PheImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "Philippine stock exchange"; }
-        bool isBusinessDay(const Date&) const;
+        std::string name() const override { return "Philippine stock exchange"; }
+        bool isBusinessDay(const Date&) const override;
     };
 
 public:

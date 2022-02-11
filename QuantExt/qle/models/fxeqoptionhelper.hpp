@@ -49,10 +49,10 @@ public:
         const Date& exerciseDate, const Real strike, const Handle<Quote> spot, const Handle<Quote> volatility,
         const Handle<YieldTermStructure>& domesticYield, const Handle<YieldTermStructure>& foreignYield,
         BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
-    void addTimesTo(std::list<Time>&) const {}
-    void performCalculations() const;
-    Real modelValue() const;
-    Real blackPrice(Real volatility) const;
+    void addTimesTo(std::list<Time>&) const override {}
+    void performCalculations() const override;
+    Real modelValue() const override;
+    Real blackPrice(Real volatility) const override;
     boost::shared_ptr<VanillaOption> option() const { return option_; }
     Real strike() const {
         calculate();

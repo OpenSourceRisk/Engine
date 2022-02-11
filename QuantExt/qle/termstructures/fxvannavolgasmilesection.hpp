@@ -56,7 +56,7 @@ public:
 
     //! \name FxSmileSection interface
     //@{
-    Volatility volatility(Real strike) const;
+    Volatility volatility(Real strike) const override;
     //}@
 
 private:

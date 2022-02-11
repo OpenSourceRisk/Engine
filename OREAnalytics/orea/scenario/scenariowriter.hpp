@@ -43,13 +43,13 @@ public:
     virtual ~ScenarioWriter();
 
     //! Return the next scenario for the given date.
-    virtual boost::shared_ptr<Scenario> next(const Date& d);
+    virtual boost::shared_ptr<Scenario> next(const Date& d) override;
 
     //! Write a single scenario
     void writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader);
 
     //! Reset the generator so calls to next() return the first scenario.
-    virtual void reset();
+    virtual void reset() override;
 
     //! Close the file if it is open, not normally needed by client code
     void close();

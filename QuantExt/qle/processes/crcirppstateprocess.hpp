@@ -43,11 +43,11 @@ public:
         CrCirppStateProcess::Discretization disc = CrCirppStateProcess::Discretization::BrigoAlfonsi);
 
     /*! StochasticProcess interface */
-    Size size() const;
-    Disposable<Array> initialValues() const;
-    Disposable<Array> drift(Time t, const Array& x) const;
-    Disposable<Matrix> diffusion(Time t, const Array& x) const;
-    Disposable<Array> evolve(Time t0, const Array& x0, Time dt, const Array& dw) const;
+    Size size() const override;
+    Disposable<Array> initialValues() const override;
+    Disposable<Array> drift(Time t, const Array& x) const override;
+    Disposable<Matrix> diffusion(Time t, const Array& x) const override;
+    Disposable<Array> evolve(Time t0, const Array& x0, Time dt, const Array& dw) const override;
 
     // inspector
     const CrCirpp* model() const { return model_; }

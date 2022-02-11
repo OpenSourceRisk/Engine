@@ -308,8 +308,8 @@ BOOST_AUTO_TEST_CASE(testIrLgm1fParametrizations) {
             : IrLgm1fParametrization(currency, termStructure) {}
         Handle<YieldTermStructure> termStructure() const { return Handle<YieldTermStructure>(); }
         // do not use this parametrization at home
-        Real zeta(const Time t) const { return sin(t); }
-        Real H(const Time t) const { return t * t * t; }
+        Real zeta(const Time t) const override { return sin(t); }
+        Real H(const Time t) const override { return t * t * t; }
     } irlgm1f_1((EURCurrency()), Handle<YieldTermStructure>());
 
     // check numerical differentiation scheme (in particular near zero)

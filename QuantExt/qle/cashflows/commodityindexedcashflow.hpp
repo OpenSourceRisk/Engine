@@ -60,22 +60,22 @@ public:
 
     //! \name Event interface
     //@{
-    QuantLib::Date date() const { return paymentDate_; }
+    QuantLib::Date date() const override { return paymentDate_; }
     //@}
 
     //! \name CashFlow interface
     //@{
-    QuantLib::Real amount() const;
+    QuantLib::Real amount() const override;
     //@}
 
     //! \name Visitability
     //@{
-    void accept(QuantLib::AcyclicVisitor& v);
+    void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
     //! Allow the full calculation period quantity to be updated.

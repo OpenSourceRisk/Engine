@@ -36,7 +36,7 @@ namespace QuantExt {
 class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
 public:
     AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size foreignCurrency);
-    void calculate() const;
+    void calculate() const override;
 
     /*! if cache is enabled, the integrals independent of fx
       volatility are cached, which can speed up calibtration;

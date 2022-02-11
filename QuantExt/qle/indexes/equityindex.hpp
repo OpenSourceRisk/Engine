@@ -45,15 +45,15 @@ public:
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>());
     //! \name Index interface
     //@{
-    std::string name() const;
+    std::string name() const override;
     void resetName() { name_ = familyName(); }
     std::string dividendName() const { return name() + "_div"; }
     Currency currency() const { return currency_; }
-    Calendar fixingCalendar() const;
-    bool isValidFixingDate(const Date& fixingDate) const;
+    Calendar fixingCalendar() const override;
+    bool isValidFixingDate(const Date& fixingDate) const override;
     // Equity fixing price - can be either fixed hstorical or forecasted.
     // Forecasted price can include dividend returns by setting incDividend = true
-    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const override;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;
     // Dividend Fixings
     //! stores the historical dividend fixing at the given date
@@ -66,7 +66,7 @@ public:
     //@}
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
     //! \name Inspectors
     //@{
@@ -78,10 +78,10 @@ public:
     //! \name Fixing calculations
     //@{
     virtual Real forecastFixing(const Date& fixingDate) const;
-    virtual Real forecastFixing(const Time& fixingTime) const;
+    virtual Real forecastFixing(const Time& fixingTime) const override;
     virtual Real forecastFixing(const Date& fixingDate, bool incDividend) const;
     virtual Real forecastFixing(const Time& fixingTime, bool incDividend) const;
-    virtual Real pastFixing(const Date& fixingDate) const;
+    virtual Real pastFixing(const Date& fixingDate) const override;
     // @}
     //! \name Additional methods
     //@{

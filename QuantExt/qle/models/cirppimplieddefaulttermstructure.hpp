@@ -47,10 +47,10 @@ public:
     CirppImpliedDefaultTermStructure(const boost::shared_ptr<CrCirpp>& model, const Size index,
                                      const DayCounter& dc = DayCounter(), const bool purelyTimeBased = false);
 
-    Date maxDate() const;
-    Time maxTime() const;
+    Date maxDate() const override;
+    Time maxTime() const override;
 
-    const Date& referenceDate() const;
+    const Date& referenceDate() const override;
 
     void referenceDate(const Date& d);
     void referenceTime(const Time t);
@@ -58,11 +58,11 @@ public:
     void move(const Date& d, const Real y);
     void move(const Time t, const Real y);
 
-    void update();
+    void update() override;
 
 protected:
     Rate hazardRateImpl(Time) const;
-    Probability survivalProbabilityImpl(Time) const;
+    Probability survivalProbabilityImpl(Time) const override;
 
     const boost::shared_ptr<CrCirpp> model_;
     const Size index_;

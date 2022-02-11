@@ -44,7 +44,7 @@ class AnalyticXAssetLgmEquityOptionEngine : public VanillaOption::engine {
 public:
     AnalyticXAssetLgmEquityOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size equityIdx,
                                         const Size ccyIdx);
-    void calculate() const;
+    void calculate() const override;
 
     /*! the actual option price calculation, exposed to public,
       since it is useful to directly use the core computation

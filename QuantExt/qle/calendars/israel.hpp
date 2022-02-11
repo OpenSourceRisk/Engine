@@ -42,9 +42,9 @@ class Israel : public QuantLib::Israel {
 private:
     class TelborImpl : public Calendar::Impl {
     public:
-        std::string name() const { return "Israel Telbor Implementation"; }
-        bool isWeekend(QuantLib::Weekday w) const;
-        bool isBusinessDay(const QuantLib::Date& date) const;
+        std::string name() const override { return "Israel Telbor Implementation"; }
+        bool isWeekend(QuantLib::Weekday w) const override;
+        bool isBusinessDay(const QuantLib::Date& date) const override;
     };
 
 public:

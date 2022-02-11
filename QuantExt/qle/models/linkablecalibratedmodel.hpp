@@ -41,7 +41,7 @@ class LinkableCalibratedModel : public virtual Observer, public virtual Observab
 public:
     LinkableCalibratedModel();
 
-    void update() {
+    void update() override {
         generateArguments();
         notifyObservers();
     }
@@ -103,7 +103,7 @@ private:
     public:
         Impl(const std::vector<boost::shared_ptr<Parameter> >& arguments) : arguments_(arguments) {}
 
-        bool test(const Array& params) const {
+        bool test(const Array& params) const override {
             Size k = 0;
             for (Size i = 0; i < arguments_.size(); i++) {
                 Size size = arguments_[i]->size();
@@ -116,7 +116,7 @@ private:
             return true;
         }
 
-        Array upperBound(const Array& params) const {
+        Array upperBound(const Array& params) const override {
             Size k = 0, k2 = 0;
             Size totalSize = 0;
             for (Size i = 0; i < arguments_.size(); i++) {
@@ -135,7 +135,7 @@ private:
             return result;
         }
 
-        Array lowerBound(const Array& params) const {
+        Array lowerBound(const Array& params) const override {
             Size k = 0, k2 = 0;
             Size totalSize = 0;
             for (Size i = 0; i < arguments_.size(); i++) {

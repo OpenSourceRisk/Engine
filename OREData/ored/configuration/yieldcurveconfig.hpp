@@ -80,8 +80,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node) = 0;
-    virtual XMLNode* toXML(XMLDocument& doc) = 0;
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -145,13 +145,13 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 };
 
@@ -177,8 +177,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -188,7 +188,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -219,8 +219,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -230,7 +230,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -260,8 +260,8 @@ public:
 
     //!\name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -272,7 +272,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -307,8 +307,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -321,7 +321,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -353,8 +353,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -364,7 +364,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -391,8 +391,8 @@ public:
     virtual ~WeightedAverageYieldCurveSegment() {}
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -405,7 +405,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -435,8 +435,8 @@ public:
     virtual ~YieldPlusDefaultYieldCurveSegment() {}
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -448,7 +448,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -477,8 +477,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -493,7 +493,7 @@ public:
 
     //! \name Visitability
     //@{
-    void accept(QuantLib::AcyclicVisitor& v);
+    void accept(QuantLib::AcyclicVisitor& v) override;
     //@}
 
 private:
@@ -524,8 +524,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -537,7 +537,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:
@@ -564,8 +564,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -578,7 +578,7 @@ public:
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
 private:

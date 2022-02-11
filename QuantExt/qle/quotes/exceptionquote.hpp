@@ -45,18 +45,18 @@ public:
     //@}
     //! \name Quote interface
     //@{
-    Real value() const {
+    Real value() const override {
         QL_FAIL(exception_);
         return 0;
     }
-    bool isValid() const {
+    bool isValid() const override {
         QL_FAIL(exception_);
         return false;
     }
     //@}
     //! \name Observer interface
     //@{
-    void update() { QL_FAIL(exception_); };
+    void update() override { QL_FAIL(exception_); };
     //@}
 protected:
     std::string exception_;

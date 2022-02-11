@@ -37,14 +37,14 @@ class BRLCdiCouponPricer : public QuantLib::FloatingRateCouponPricer {
 public:
     //! \name FloatingRateCouponPricer interface
     //@{
-    virtual QuantLib::Rate swapletRate() const;
-    virtual void initialize(const QuantLib::FloatingRateCoupon& coupon);
+    virtual QuantLib::Rate swapletRate() const override;
+    virtual void initialize(const QuantLib::FloatingRateCoupon& coupon) override;
 
-    virtual QuantLib::Real swapletPrice() const;
-    virtual QuantLib::Real capletPrice(QuantLib::Rate effectiveCap) const;
-    virtual QuantLib::Rate capletRate(QuantLib::Rate effectiveCap) const;
-    virtual QuantLib::Real floorletPrice(QuantLib::Rate effectiveFloor) const;
-    virtual QuantLib::Rate floorletRate(QuantLib::Rate effectiveFloor) const;
+    virtual QuantLib::Real swapletPrice() const override;
+    virtual QuantLib::Real capletPrice(QuantLib::Rate effectiveCap) const override;
+    virtual QuantLib::Rate capletRate(QuantLib::Rate effectiveCap) const override;
+    virtual QuantLib::Real floorletPrice(QuantLib::Rate effectiveFloor) const override;
+    virtual QuantLib::Rate floorletRate(QuantLib::Rate effectiveFloor) const override;
     //@}
 
 private:

@@ -31,8 +31,8 @@ class Malaysia : public Calendar {
 private:
     class MyxImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "Malaysia Stock Exchange"; }
-        bool isBusinessDay(const Date&) const;
+        std::string name() const override { return "Malaysia Stock Exchange"; }
+        bool isBusinessDay(const Date&) const override;
     };
 
 public:

@@ -49,9 +49,9 @@ public:
 
     //! \name InflationTermStructure interface
     //@{
-    Date baseDate() const;
-    Time maxTime() const;
-    Date maxDate() const;
+    Date baseDate() const override;
+    Time maxTime() const override;
+    Date maxDate() const override;
     //@}
 
     //! \name Inspectors
@@ -65,19 +65,19 @@ public:
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
 private:
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
 protected:
     //! \name ZeroInflationTermStructure Interface
     //@{
-    Rate zeroRateImpl(Time t) const;
+    Rate zeroRateImpl(Time t) const override;
     //@}
     std::vector<Handle<Quote> > quotes_;
     bool indexIsInterpolated_;

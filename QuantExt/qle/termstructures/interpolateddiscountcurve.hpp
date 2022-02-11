@@ -81,11 +81,11 @@ private:
 
     //! \name TermStructure interface
     //@{
-    Date maxDate() const { return Date::maxDate(); } // flat fwd extrapolation
+    Date maxDate() const override { return Date::maxDate(); } // flat fwd extrapolation
     //@}
 
 protected:
-    DiscountFactor discountImpl(Time t) const {
+    DiscountFactor discountImpl(Time t) const override {
         if (t > this->times_.back() && extrapolation_ == Extrapolation::flatZero) {
             Real tMax = this->times_.back();
             Real dMax = std::exp(quotes_.back()->value());

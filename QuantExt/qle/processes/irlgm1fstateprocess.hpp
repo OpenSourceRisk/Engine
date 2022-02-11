@@ -38,12 +38,12 @@ public:
     IrLgm1fStateProcess(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
     //! \name StochasticProcess interface
     //@{
-    Real x0() const;
-    Real drift(Time t, Real x) const;
-    Real diffusion(Time t, Real x) const;
-    Real expectation(Time t0, Real x0, Time dt) const;
-    Real stdDeviation(Time t0, Real x0, Time dt) const;
-    Real variance(Time t0, Real x0, Time dt) const;
+    Real x0() const override;
+    Real drift(Time t, Real x) const override;
+    Real diffusion(Time t, Real x) const override;
+    Real expectation(Time t0, Real x0, Time dt) const override;
+    Real stdDeviation(Time t0, Real x0, Time dt) const override;
+    Real variance(Time t0, Real x0, Time dt) const override;
     //@}
 private:
     const boost::shared_ptr<IrLgm1fParametrization> p_;

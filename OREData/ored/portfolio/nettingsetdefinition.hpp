@@ -184,11 +184,11 @@ public:
     /*!
       loads NettingSetDefinition object from XML
     */
-    void fromXML(XMLNode* node);
+    void fromXML(XMLNode* node) override;
     /*!
       writes object to XML
     */
-    XMLNode* toXML(XMLDocument& doc);
+    XMLNode* toXML(XMLDocument& doc) override;
 
     /*!
       validate the netting set definition including CSA details

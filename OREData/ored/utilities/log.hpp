@@ -111,7 +111,7 @@ public:
     //! Desctructor
     virtual ~StderrLogger() {}
     //! The log callback that writes to stderr
-    virtual void log(unsigned l, const string& s) {
+    virtual void log(unsigned l, const string& s) override {
         if (!alertOnly_ || l == ORE_ALERT)
             std::cerr << s << std::endl;
     }
@@ -141,7 +141,7 @@ public:
     //! Desctructor
     virtual ~FileLogger();
     //! The log callback
-    virtual void log(unsigned, const string&);
+    virtual void log(unsigned, const string&) override;
 
 private:
     string filename_;
@@ -171,7 +171,7 @@ public:
     //! Desctructor
     virtual ~BufferLogger() {}
     //! The log callback
-    virtual void log(unsigned, const string&);
+    virtual void log(unsigned, const string&) override;
 
     //! Checks if Logger has new messages
     /*!

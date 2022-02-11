@@ -44,7 +44,7 @@ private:
     class Impl : public Parameter::Impl {
     public:
         Impl() {}
-        Real value(const Array&, Time) const { QL_FAIL("pseudo-parameter can not be asked to values"); }
+        Real value(const Array&, Time) const override { QL_FAIL("pseudo-parameter can not be asked to values"); }
     };
 
 public:

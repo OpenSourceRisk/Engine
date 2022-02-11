@@ -45,9 +45,9 @@ public:
         CPI::InterpolationType observationInterpolation = CPI::AsIndex,
         BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
 
-    Real modelValue() const;
-    Real blackPrice(Volatility volatility) const;
-    void addTimesTo(std::list<Time>&) const {}
+    Real modelValue() const override;
+    Real blackPrice(Volatility volatility) const override;
+    void addTimesTo(std::list<Time>&) const override {}
 
     boost::shared_ptr<CPICapFloor> instrument() const { return instrument_; }
 

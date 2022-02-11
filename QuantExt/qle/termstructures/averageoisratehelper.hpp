@@ -52,8 +52,8 @@ public:
 
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name AverageOISRateHelper inspectors
     //@{
@@ -62,10 +62,10 @@ public:
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 protected:
-    void initializeDates();
+    void initializeDates() override;
     boost::shared_ptr<AverageOIS> averageOIS_;
     // Swap
     Period spotLagTenor_;

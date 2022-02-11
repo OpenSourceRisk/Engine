@@ -30,17 +30,17 @@ public:
                                            const Real fellerFactor = 2.0,
                                            const std::string& name = std::string());
 
-    Real kappa(const Time t) const;
-    Real theta(const Time t) const;
-    Real sigma(const Time t) const;
-    Real y0(const Time t) const;
+    Real kappa(const Time t) const override;
+    Real theta(const Time t) const override;
+    Real sigma(const Time t) const override;
+    Real y0(const Time t) const override;
 
-    const boost::shared_ptr<Parameter> parameter(const Size) const;
+    const boost::shared_ptr<Parameter> parameter(const Size) const override;
     const bool relaxed() const;
 
 protected:
-    Real direct(const Size i, const Real x) const;
-    Real inverse(const Size j, const Real y) const;
+    Real direct(const Size i, const Real x) const override;
+    Real inverse(const Size j, const Real y) const override;
 
 private:
     const boost::shared_ptr<PseudoParameter> kappa_, theta_, sigma_, y0_;

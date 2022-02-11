@@ -64,9 +64,9 @@ public:
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
-    const QuantLib::Date& referenceDate() const;
-    QuantLib::DayCounter dayCounter() const;
+    QuantLib::Date maxDate() const override;
+    const QuantLib::Date& referenceDate() const override;
+    QuantLib::DayCounter dayCounter() const override;
     //@}
 
     //! \name Inspectors
@@ -80,7 +80,7 @@ public:
 protected:
     //! \name YieldTermStructure interface
     //@{
-    QuantLib::DiscountFactor discountImpl(QuantLib::Time t) const;
+    QuantLib::DiscountFactor discountImpl(QuantLib::Time t) const override;
     //@}
 
 private:

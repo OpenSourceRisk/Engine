@@ -183,32 +183,32 @@ public:
 
     //! \name Visitor interface
     //@{
-    void visit(QuantLib::CashFlow& c);
-    void visit(QuantLib::FloatingRateCoupon& c);
-    void visit(QuantLib::IborCoupon& c);
-    void visit(QuantLib::CappedFlooredCoupon& c);
-    void visit(QuantLib::IndexedCashFlow& c);
+    void visit(QuantLib::CashFlow& c) override;
+    void visit(QuantLib::FloatingRateCoupon& c) override;
+    void visit(QuantLib::IborCoupon& c) override;
+    void visit(QuantLib::CappedFlooredCoupon& c) override;
+    void visit(QuantLib::IndexedCashFlow& c) override;
     /*! Not added in QuantLib so will never be hit automatically!
         Managed by passing off from IndexedCashFlow.
     */
-    void visit(QuantLib::CPICashFlow& c);
-    void visit(QuantLib::CPICoupon& c);
-    void visit(QuantLib::YoYInflationCoupon& c);
-    void visit(QuantExt::NonStandardYoYInflationCoupon& c);
-    void visit(QuantLib::OvernightIndexedCoupon& c);
-    void visit(QuantExt::OvernightIndexedCoupon& c);
-    void visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c);
-    void visit(QuantLib::AverageBMACoupon& c);
-    void visit(QuantLib::CmsSpreadCoupon& c);
-    void visit(QuantLib::DigitalCoupon& c);
-    void visit(QuantLib::StrippedCappedFlooredCoupon& c);
-    void visit(QuantExt::AverageONIndexedCoupon& c);
-    void visit(QuantExt::CappedFlooredAverageONIndexedCoupon& c);
-    void visit(QuantExt::EquityCoupon& c);
-    void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
-    void visit(QuantExt::FXLinkedCashFlow& c);
-    void visit(QuantExt::SubPeriodsCoupon1& c);
-    void visit(QuantExt::IndexedCoupon& c);
+    void visit(QuantLib::CPICashFlow& c) override;
+    void visit(QuantLib::CPICoupon& c) override;
+    void visit(QuantLib::YoYInflationCoupon& c) override;
+    void visit(QuantExt::NonStandardYoYInflationCoupon& c) override;
+    void visit(QuantLib::OvernightIndexedCoupon& c) override;
+    void visit(QuantExt::OvernightIndexedCoupon& c) override;
+    void visit(QuantExt::CappedFlooredOvernightIndexedCoupon& c) override;
+    void visit(QuantLib::AverageBMACoupon& c) override;
+    void visit(QuantLib::CmsSpreadCoupon& c) override;
+    void visit(QuantLib::DigitalCoupon& c) override;
+    void visit(QuantLib::StrippedCappedFlooredCoupon& c) override;
+    void visit(QuantExt::AverageONIndexedCoupon& c) override;
+    void visit(QuantExt::CappedFlooredAverageONIndexedCoupon& c) override;
+    void visit(QuantExt::EquityCoupon& c) override;
+    void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c) override;
+    void visit(QuantExt::FXLinkedCashFlow& c) override;
+    void visit(QuantExt::SubPeriodsCoupon1& c) override;
+    void visit(QuantExt::IndexedCoupon& c) override;
     //@}
 
 protected:

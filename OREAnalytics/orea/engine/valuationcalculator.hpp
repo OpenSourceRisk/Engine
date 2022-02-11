@@ -86,11 +86,11 @@ public:
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                            boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
-                           Size sample, bool isCloseOut = false);
+                           Size sample, bool isCloseOut = false) override;
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                             boost::shared_ptr<NPVCube>& outputCubeNettingSet);
+                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
     virtual Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 
@@ -114,11 +114,11 @@ public:
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                            boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
-                           Size sample, bool isCloseOut = false);
+                           Size sample, bool isCloseOut = false) override;
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) {}
+                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) override {}
 
 private:
     std::string baseCcyCode_;
@@ -143,11 +143,11 @@ public:
     virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
                            boost::shared_ptr<NPVCube>& outputCubeNettingSet, const Date& date, Size dateIndex,
-                           Size sample, bool isCloseOut = false);
+                           Size sample, bool isCloseOut = false) override;
 
     virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
                              const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                             boost::shared_ptr<NPVCube>& outputCubeNettingSet);
+                             boost::shared_ptr<NPVCube>& outputCubeNettingSet) override;
 
     Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
 

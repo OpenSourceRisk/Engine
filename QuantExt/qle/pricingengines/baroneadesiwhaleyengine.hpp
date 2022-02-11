@@ -62,7 +62,7 @@ public:
                                         QuantLib::DiscountFactor riskFreeDiscount,
                                         QuantLib::DiscountFactor dividendDiscount, QuantLib::Real variance,
                                         QuantLib::Real tolerance = 1e-6);
-    void calculate() const;
+    void calculate() const override;
 
 private:
     boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process_;
