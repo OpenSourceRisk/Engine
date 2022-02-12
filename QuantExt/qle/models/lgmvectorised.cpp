@@ -122,7 +122,7 @@ RandomVariable LgmVectorised::compoundedOnRate(const boost::shared_ptr<Overnight
                                                const std::vector<Date>& fixingDates,
                                                const std::vector<Date>& valueDates, const std::vector<Real>& dt,
                                                const Natural rateCutoff, const bool includeSpread, const Real spread,
-                                               const Real gearing, const Period lookback, const Real accrualPeriod,
+                                               const Real gearing, const Period lookback,
                                                const DayCounter& accrualDayCounter, const Real cap, const Real floor,
                                                const bool localCapFloor, const bool nakedOption, const Time t,
                                                const RandomVariable& x) const {
@@ -255,10 +255,9 @@ RandomVariable LgmVectorised::averagedOnRate(const boost::shared_ptr<OvernightIn
                                              const std::vector<Date>& fixingDates, const std::vector<Date>& valueDates,
                                              const std::vector<Real>& dt, const Natural rateCutoff,
                                              const bool includeSpread, const Real spread, const Real gearing,
-                                             const Period lookback, const Real accrualPeriod,
-                                             const DayCounter& accrualDayCounter, const Real cap, const Real floor,
-                                             const bool localCapFloor, const bool nakedOption, const Time t,
-                                             const RandomVariable& x) const {
+                                             const Period lookback, const DayCounter& accrualDayCounter, const Real cap,
+                                             const Real floor, const bool localCapFloor, const bool nakedOption,
+                                             const Time t, const RandomVariable& x) const {
 
     QL_REQUIRE(!localCapFloor, "LgmVectorised::averageOnRate(): localCapFloor = true is not supported");
     QL_REQUIRE(!nakedOption, "LgmVectorised::averagedOnRate(): nakedOption = true is not supported");
