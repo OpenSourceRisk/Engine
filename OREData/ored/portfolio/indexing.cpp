@@ -31,10 +31,7 @@ void Indexing::fromXML(XMLNode* node) {
         quantity_ = 1.0;
     }
     index_ = XMLUtils::getChildValue(node, "Index", false);
-    if (XMLUtils::getChildNode(node, "IndexFixingCalendar")) {
-        WLOG("Indexing::fromXML, node IndexFixingCalendar has been deprecated, fixing days are "
-             "taken from conventions.");
-    }
+    indexFixingCalendar_ = XMLUtils::getChildValue(node, "IndexFixingCalendar", false);
     if (XMLUtils::getChildNode(node, "IndexFixingDays")) {
         WLOG("Indexing::fromXML, node IndexFixingDays has been deprecated, fixing days are "
              "taken from conventions.");
