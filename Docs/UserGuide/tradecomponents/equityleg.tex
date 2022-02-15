@@ -84,15 +84,6 @@ Allowable values: Any non-negative integer.
 	\item FXIndex [Mandatory within \lstinline!FXTerms!]: Name of the index for FX fixings for the leg vs equity currency pair, e.g. FX-TR20H-EUR-USD for Thomson Reuters 20:00 EURUSD FX fixing. Required if FXTerms present.
 
 	Allowable values:  See Table \ref{tab:fxindex_data}
-
-	\item FXIndexFixingDays [Optional]: Number of fixing days for FX Index, defaults to \emph{0}.
-
-	Allowable values: Any non-negative integer.
-
-	\item FXIndexCalendar [Optional]: The fixing calendar for the FX Index. Typically the union of the equity leg currency calendar and the
-underlying equity currency calendar.
-
-	Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
 \end{itemize}
 \end{itemize}
 
@@ -151,8 +142,6 @@ underlying equity currency calendar.
            <FXTerms>
              <EquityCurrency>USD</EquityCurrency>
              <FXIndex>FX-TR20H-EUR-USD</FXIndex>
-             <FXIndexFixingDays>2</FXIndexFixingDays>
-             <FXIndexCalendar>TARGET,USD</FXIndexCalendar>
            <FXTerms>
         </EquityLegData>
       </LegData>

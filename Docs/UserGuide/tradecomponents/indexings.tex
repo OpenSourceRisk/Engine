@@ -118,11 +118,7 @@ The Indexings node contains the following elements:
   details, or ``EQ-NAME'' for Equity with ``Name'' being the general string representation for equity underlyings
   {IdentifierType}:{Name}:{Currency}:{Exchange}, see \ref{ss:underlying}.
 
-\item IndexFixingDays [Optional]: fixing days of the index, this is only used for FX indices
-
-  Allowable values: Non-negative whole numbers. Defaults to \emph{0} if left blank or omitted.
-
-\item IndexFixingCalendar [Optional]: Fixing calendar of the index, this is only used for FX indices and Bond indices
+\item IndexFixingCalendar [Optional]: Fixing calendar of the index, this is only used for Bond indices
 
   Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the \emph{NullCalendar} (no holidays) if left blank or omitted.
 
