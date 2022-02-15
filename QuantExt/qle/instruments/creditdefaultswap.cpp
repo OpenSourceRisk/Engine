@@ -38,6 +38,7 @@
 #include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
 
+#include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/claim.hpp>
@@ -147,11 +148,10 @@ void CreditDefaultSwap::init(const Schedule& schedule, BusinessDayConvention pay
     // Deduce the cash settlement date if not given.
     Date effectiveUpfrontDate = upfrontDate;
     if (effectiveUpfrontDate == Date()) {
-        effectiveUpfrontDate = schedule.calendar().advance(tradeDate_,
-            cashSettlementDays_, Days, paymentConvention);
+        effectiveUpfrontDate = schedule.calendar().advance(tradeDate_, cashSettlementDays_, Days, paymentConvention);
     }
-    QL_REQUIRE(effectiveUpfrontDate >= protectionStart_, "The cash settlement date must not " <<
-        "be before the protection start date.");
+    QL_REQUIRE(effectiveUpfrontDate >= protectionStart_, "The cash settlement date must not "
+                                                             << "be before the protection start date.");
 
     // Create the upfront payment. Should always be created as some downstream engines don't expect nullptr.
     Real upfrontAmount = 0.0;
@@ -162,36 +162,14 @@ void CreditDefaultSwap::init(const Schedule& schedule, BusinessDayConvention pay
     // Set the maturity date.
     maturity_ = schedule.dates().back();
 
-    // Deal with the accrual rebate. We use the standard conventions for accrual calculation introduced with the 
+    // Deal with the accrual rebate. We use the standard conventions for accrual calculation introduced with the
     // CDS Big Bang in 2009.
     if (postBigBang) {
-
-        Real rebateAmount = 0.0;
-        Date refDate = tradeDate_ + 1;
-
-        if (tradeDate_ >= schedule.dates().front()) {
-            for (Size i = 0; i < leg_.size(); ++i) {
-                const boost::shared_ptr<CashFlow>& cf = leg_[i];
-                if (refDate < cf->date()) {
-                    // Calculate the accrual. The most likely scenario.
-                    boost::shared_ptr<FixedRateCoupon> frc = boost::dynamic_pointer_cast<FixedRateCoupon>(cf);
-                    rebateAmount = frc->accruedAmount(refDate);
-                    break;
-                } else if (refDate == cf->date() && i < leg_.size() - 1) {
-                    // If not the last coupon and trade date + 1 is the next coupon payment date, 
-                    // the accrual is 0 so do nothing.
-                    break;
-                } else {
-                    // Must have trade date + 1 >= last coupon's payment date. '>' here probably does not make
-                    // sense - should possibly have an exception above if trade date >= last coupon's date.
-                    boost::shared_ptr<FixedRateCoupon> frc = boost::dynamic_pointer_cast<FixedRateCoupon>(cf);
-                    rebateAmount = frc->amount();
-                    break;
-                }
-            }
-        }
-
-        accrualRebate_ = boost::make_shared<SimpleCashFlow>(rebateAmount, effectiveUpfrontDate);
+        accrualRebate_ = boost::make_shared<SimpleCashFlow>(CashFlows::accruedAmount(leg_, false, tradeDate_ + 1),
+                                                            effectiveUpfrontDate);
+        accrualRebateAsof_ = boost::make_shared<SimpleCashFlow>(
+            CashFlows::accruedAmount(leg_, false, asof + 1),
+            schedule.calendar().advance(asof, cashSettlementDays_, Days, paymentConvention));
     }
 
     if (!claim_)
@@ -239,6 +217,7 @@ void CreditDefaultSwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->leg = leg_;
     arguments->upfrontPayment = upfrontPayment_;
     arguments->accrualRebate = accrualRebate_;
+    arguments->accrualRebateAsof = accrualRebateAsof_;
     arguments->settlesAccrual = settlesAccrual_;
     arguments->protectionPaymentTime = protectionPaymentTime_;
     arguments->claim = claim_;
@@ -254,7 +233,8 @@ void CreditDefaultSwap::fetchResults(const PricingEngine::results* r) const {
     const CreditDefaultSwap::results* results = dynamic_cast<const CreditDefaultSwap::results*>(r);
     QL_REQUIRE(results != 0, "wrong result type");
 
-    fairSpread_ = results->fairSpread;
+    fairSpreadDirty_ = results->fairSpreadDirty;
+    fairSpreadClean_ = results->fairSpreadClean;
     fairUpfront_ = results->fairUpfront;
     couponLegBPS_ = results->couponLegBPS;
     couponLegNPV_ = results->couponLegNPV;
@@ -262,6 +242,7 @@ void CreditDefaultSwap::fetchResults(const PricingEngine::results* r) const {
     upfrontNPV_ = results->upfrontNPV;
     upfrontBPS_ = results->upfrontBPS;
     accrualRebateNPV_ = results->accrualRebateNPV;
+    accrualRebateNPVAsof_ = results->accrualRebateNPVAsof;
 }
 
 Rate CreditDefaultSwap::fairUpfront() const {
@@ -270,10 +251,16 @@ Rate CreditDefaultSwap::fairUpfront() const {
     return fairUpfront_;
 }
 
-Rate CreditDefaultSwap::fairSpread() const {
+Rate CreditDefaultSwap::fairSpreadDirty() const {
     calculate();
-    QL_REQUIRE(fairSpread_ != Null<Rate>(), "fair spread not available");
-    return fairSpread_;
+    QL_REQUIRE(fairSpreadDirty_ != Null<Rate>(), "fair spread (dirtry) not available");
+    return fairSpreadDirty_;
+}
+
+Rate CreditDefaultSwap::fairSpreadClean() const {
+    calculate();
+    QL_REQUIRE(fairSpreadClean_ != Null<Rate>(), "fair spread (clean) not available");
+    return fairSpreadClen_;
 }
 
 Real CreditDefaultSwap::couponLegBPS() const {
@@ -284,8 +271,8 @@ Real CreditDefaultSwap::couponLegBPS() const {
 
 Real CreditDefaultSwap::couponLegNPV() const {
     calculate();
-    QL_REQUIRE(couponLegNPV_ != Null<Rate>(), "coupon-leg NPV not available");
-    return couponLegNPV_;
+    QL_REQUIRE(couponLegNPVDirty_ != Null<Rate>(), "coupon-leg dirty NPV not available");
+    return couponLegNPVDirty_;
 }
 
 Real CreditDefaultSwap::defaultLegNPV() const {
@@ -304,6 +291,12 @@ Real CreditDefaultSwap::accrualRebateNPV() const {
     calculate();
     QL_REQUIRE(accrualRebateNPV_ != Null<Real>(), "accrual rebate NPV not available");
     return accrualRebateNPV_;
+}
+
+Real CreditDefaultSwap::accrualRebateNPVAsof() const {
+    calculate();
+    QL_REQUIRE(accrualRebateNPVAsof_ != Null<Real>(), "accrual rebate NPV (asof) not available");
+    return accrualRebateNPVAsof_;
 }
 
 Real CreditDefaultSwap::upfrontBPS() const {
@@ -378,21 +371,13 @@ const Date& CreditDefaultSwap::protectionEndDate() const {
     return boost::dynamic_pointer_cast<Coupon>(leg_.back())->accrualEndDate();
 }
 
-const boost::shared_ptr<SimpleCashFlow>& CreditDefaultSwap::upfrontPayment() const {
-    return upfrontPayment_;
-}
+const boost::shared_ptr<SimpleCashFlow>& CreditDefaultSwap::upfrontPayment() const { return upfrontPayment_; }
 
-const boost::shared_ptr<SimpleCashFlow>& CreditDefaultSwap::accrualRebate() const {
-    return accrualRebate_;
-}
+const boost::shared_ptr<SimpleCashFlow>& CreditDefaultSwap::accrualRebate() const { return accrualRebate_; }
 
-const Date& CreditDefaultSwap::tradeDate() const {
-    return tradeDate_;
-}
+const Date& CreditDefaultSwap::tradeDate() const { return tradeDate_; }
 
-Natural CreditDefaultSwap::cashSettlementDays() const {
-    return cashSettlementDays_;
-}
+Natural CreditDefaultSwap::cashSettlementDays() const { return cashSettlementDays_; }
 
 CreditDefaultSwap::arguments::arguments() : side(Protection::Side(-1)), notional(Null<Real>()), spread(Null<Rate>()) {}
 
@@ -410,7 +395,8 @@ void CreditDefaultSwap::arguments::validate() const {
 
 void CreditDefaultSwap::results::reset() {
     Instrument::results::reset();
-    fairSpread = Null<Rate>();
+    fairSpreadClean = Null<Rate>();
+    fairSpreadDirty = Null<Rate>();
     fairUpfront = Null<Rate>();
     couponLegBPS = Null<Real>();
     couponLegNPV = Null<Real>();
@@ -418,5 +404,6 @@ void CreditDefaultSwap::results::reset() {
     upfrontBPS = Null<Real>();
     upfrontNPV = Null<Real>();
     accrualRebateNPV = Null<Real>();
+    accrualRebateNPVAsof = Null<Real>();
 }
 } // namespace QuantExt

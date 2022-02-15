@@ -85,10 +85,15 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
 
     // Accrual rebate.
     results.accrualRebateNPV = 0.;
-    if (arguments.accrualRebate &&
-        !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        results.accrualRebateNPV = discountCurve_->discount(arguments.accrualRebate->date()) *
-            arguments.accrualRebate->amount();
+    results.accrualRebateNPVAsof = 0.;
+    if (arguments.accrualRebate && !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results.accrualRebateNPV =
+            discountCurve_->discount(arguments.accrualRebate->date()) * arguments.accrualRebate->amount();
+    }
+    if (arguments.accrualRebateAsof &&
+        !arguments.accrualRebateAsof->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results.accrualRebateNPVAsof =
+            discountCurve_->discount(arguments.accrualRebateAsof->date()) * arguments.accrualRebateAsof->amount();
     }
 
     results.couponLegNPV = 0.0;
@@ -177,10 +182,13 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     results.errorEstimate = Null<Real>();
 
     if (results.couponLegNPV != 0.0) {
-        results.fairSpread =
+        results.fairSpreadDirty =
             -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPV);
+        results.fairSpreadClean =
+            -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPVAsof);
     } else {
-        results.fairSpread = Null<Rate>();
+        results.fairSpreadDirty = Null<Rate>();
+        results.fairSpreadClean = Null<Rate>();
     }
 
     Real upfrontSensitivity = upfPVO1 * arguments.notional;
@@ -207,10 +215,13 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
 
     results.additionalResults["upfrontPremium"] = arguments.upfrontPayment->amount();
     results.additionalResults["upfrontPremiumNPV"] = results.upfrontNPV;
-    results.additionalResults["premiumLegNPV"] = results.couponLegNPV;
+    results.additionalResults["premiumLegNPVDirty"] = results.couponLegNPV;
+    results.additionalResults["premiumLegNPVClean"] = results.couponLegNPV + result.accrualRebateNPVAsof;
     results.additionalResults["accrualRebateNPV"] = results.accrualRebateNPV;
+    results.additionalResults["accrualRebateNPVAsof"] = results.accrualRebateNPVAsof;
     results.additionalResults["protectionLegNPV"] = results.defaultLegNPV;
-    results.additionalResults["fairSpread"] = results.fairSpread;
+    results.additionalResults["fairSpreadDirty"] = results.fairSpreadDirty;
+    results.additionalResults["fairSpreadClean"] = results.fairSpreadClean;
     results.additionalResults["fairUpfront"] = results.fairUpfront;
     results.additionalResults["couponLegBPS"] = results.couponLegBPS;
     results.additionalResults["upfrontBPS"] = results.upfrontBPS;
