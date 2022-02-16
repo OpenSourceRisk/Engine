@@ -85,15 +85,15 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
 
     // Accrual rebate.
     results.accrualRebateNPV = 0.;
-    results.accrualRebateNPVAsof = 0.;
+    results.accrualRebateNPVCurrent = 0.;
     if (arguments.accrualRebate && !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         results.accrualRebateNPV =
             discountCurve_->discount(arguments.accrualRebate->date()) * arguments.accrualRebate->amount();
     }
-    if (arguments.accrualRebateAsof &&
-        !arguments.accrualRebateAsof->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        results.accrualRebateNPVAsof =
-            discountCurve_->discount(arguments.accrualRebateAsof->date()) * arguments.accrualRebateAsof->amount();
+    if (arguments.accrualRebateCurrent &&
+        !arguments.accrualRebateCurrent->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results.accrualRebateNPVCurrent =
+            discountCurve_->discount(arguments.accrualRebateCurrent->date()) * arguments.accrualRebateCurrent->amount();
     }
 
     results.couponLegNPV = 0.0;
@@ -168,6 +168,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     case Protection::Seller:
         results.defaultLegNPV *= -1.0;
         results.accrualRebateNPV *= -1.0;
+        results.accrualRebateNPVCurrent *= -1.0;
         break;
     case Protection::Buyer:
         results.couponLegNPV *= -1.0;
@@ -185,7 +186,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         results.fairSpreadDirty =
             -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPV);
         results.fairSpreadClean =
-            -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPVAsof);
+            -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPVCurrent);
     } else {
         results.fairSpreadDirty = Null<Rate>();
         results.fairSpreadClean = Null<Rate>();
@@ -216,9 +217,9 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     results.additionalResults["upfrontPremium"] = arguments.upfrontPayment->amount();
     results.additionalResults["upfrontPremiumNPV"] = results.upfrontNPV;
     results.additionalResults["premiumLegNPVDirty"] = results.couponLegNPV;
-    results.additionalResults["premiumLegNPVClean"] = results.couponLegNPV + result.accrualRebateNPVAsof;
+    results.additionalResults["premiumLegNPVClean"] = results.couponLegNPV + results.accrualRebateNPVCurrent;
     results.additionalResults["accrualRebateNPV"] = results.accrualRebateNPV;
-    results.additionalResults["accrualRebateNPVAsof"] = results.accrualRebateNPVAsof;
+    results.additionalResults["accrualRebateNPVCurrent"] = results.accrualRebateNPVCurrent;
     results.additionalResults["protectionLegNPV"] = results.defaultLegNPV;
     results.additionalResults["fairSpreadDirty"] = results.fairSpreadDirty;
     results.additionalResults["fairSpreadClean"] = results.fairSpreadClean;
