@@ -47,7 +47,7 @@ public:
 
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
 private:

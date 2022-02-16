@@ -3,7 +3,6 @@
 set(QuantExt_SRC calendars/amendedcalendar.cpp
 calendars/austria.cpp
 calendars/belgium.cpp
-calendars/chile.cpp
 calendars/cme.cpp
 calendars/colombia.cpp
 calendars/cyprus.cpp
@@ -272,7 +271,6 @@ set(QuantExt_HDR auto_link.hpp
 calendars/amendedcalendar.hpp
 calendars/austria.hpp
 calendars/belgium.hpp
-calendars/chile.hpp
 calendars/cme.hpp
 calendars/colombia.hpp
 calendars/cyprus.hpp

@@ -50,8 +50,8 @@ public:
 
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name BasisTwoSwapHelper inspectors
     //@{
@@ -60,11 +60,11 @@ public:
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 
 protected:
-    void initializeDates();
+    void initializeDates() override;
     Period swapTenor_;
     Calendar calendar_;
     // Long tenor swap

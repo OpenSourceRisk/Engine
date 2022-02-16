@@ -137,7 +137,7 @@ struct BermudanTestData {
           floatingSchedule(startDate, maturityDate, 6 * Months, TARGET(), ModifiedFollowing, ModifiedFollowing,
                            DateGeneration::Forward, false),
           underlying(
-              boost::make_shared<VanillaSwap>(VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(),
+              boost::make_shared<VanillaSwap>(VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(Thirty360::BondBasis),
                                                           floatingSchedule, euribor6m, 0.0, Actual360()))),
           reversion(0.03) {
         Settings::instance().evaluationDate() = evalDate;
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(testLgm1fCalibration) {
     for (Size i = 0; i < 9; ++i) {
         boost::shared_ptr<BlackCalibrationHelper> helper = boost::make_shared<SwaptionHelper>(
             (i + 1) * Years, (9 - i) * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i])), euribor6m,
-            1 * Years, Thirty360(), Actual360(), yts);
+            1 * Years, Thirty360(Thirty360::BondBasis), Actual360(), yts);
         basket.push_back(helper);
         expiryDates.push_back(
             boost::static_pointer_cast<SwaptionHelper>(helper)->swaption()->exercise()->dates().back());
@@ -1077,16 +1077,16 @@ BOOST_AUTO_TEST_CASE(testLgm5fFullCalibration) {
         Date tmp = i < d.volstepdates.size() ? d.volstepdates[i] : d.volstepdates.back() + 365;
         // EUR: atm+200bp, 150bp normal vol
         basketEur.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(),
+            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
         // USD: atm, 20%, lognormal vol
         basketUsd.push_back(boost::shared_ptr<SwaptionHelper>(
             new SwaptionHelper(tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), usdLibor3m,
-                               1 * Years, Thirty360(), Actual360(), d.usdYts,
+                               1 * Years, Thirty360(Thirty360::BondBasis), Actual360(), d.usdYts,
                                BlackCalibrationHelper::RelativePriceError, Null<Real>(), 1.0, ShiftedLognormal, 0.0)));
         // GBP: atm-200bp, 10%, shifted lognormal vol with shift = 2%
         basketGbp.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), gbpLibor3m, 1 * Years, Thirty360(),
+            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), gbpLibor3m, 1 * Years, Thirty360(Thirty360::BondBasis),
             Actual360(), d.usdYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, ShiftedLognormal, 0.02)));
     }
 
@@ -1984,7 +1984,7 @@ struct IrFxInfCrModelTestData {
         vector<Real> infRates{ 0.01, 0.01 };
         
         infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, TARGET(), dc, 3 * Months, Monthly, false, eurYts, infDates, infRates));
+            referenceDate, TARGET(), dc, 3 * Months, Monthly, false, infDates, infRates));
         infEurTs->enableExtrapolation();
         
         infLag = inflationYearFraction(Monthly, false, dc, infEurTs->baseDate(), infEurTs->referenceDate());
@@ -2006,7 +2006,7 @@ struct IrFxInfCrModelTestData {
         }
 
         infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(referenceDate,
-            UnitedKingdom(), dc, 3 * Months, Monthly, false, gbpYts, infDates, infRates));
+            UnitedKingdom(), dc, 3 * Months, Monthly, false, infDates, infRates));
         infGbpTs->enableExtrapolation();
 
         Real infGbpAlpha = 0.01;
@@ -2271,12 +2271,13 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
         // GBP zerobond
         gbpzb1(d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.model->numeraire(0, T, zeur1));
         // EUR CPI indexed bond
+        bool indexIsInterpolated = true;
         if (infEurIsDk) {
             std::pair<Real, Real> sinfeur1 = d.model->infdkI(0, T, T2, infeurz1, infeury1);
             infeur1(sinfeur1.first * sinfeur1.second * d.model->discountBond(0, T, T2, zeur1) /
                 d.model->numeraire(0, T, zeur1));
         } else {
-            infeur1(exp(infeury1) * inflationGrowth(d.model, 0, T, T2, zeur1, infeurz1) *
+            infeur1(exp(infeury1) * inflationGrowth(d.model, 0, T, T2, zeur1, infeurz1, indexIsInterpolated) *
                 d.model->discountBond(0, T, T2, zeur1) / d.model->numeraire(0, T, zeur1));
         }
         // GBP CPI indexed bond
@@ -2285,7 +2286,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
             infgbp1(sinfgbp1.first * sinfgbp1.second * d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 /
                 d.model->numeraire(0, T, zeur1));
         } else {
-            infgbp1(exp(infgbpy1) * inflationGrowth(d.model, 1, T, T2, zgbp1, infgbpz1) *
+            infgbp1(exp(infgbpy1) * inflationGrowth(d.model, 1, T, T2, zgbp1, infgbpz1, indexIsInterpolated) *
                 d.model->discountBond(2, T, T2, zgbp1) * fxgbp1 / d.model->numeraire(0, T, zeur1));
         }
         // EUR defaultable zerobond
@@ -2304,7 +2305,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
             infeur2(sinfeur2.first * sinfeur2.second * d.model->discountBond(0, T, T2, zeur2) /
                 d.model->numeraire(0, T, zeur2));
         } else {
-            infeur2(exp(infeury2) * inflationGrowth(d.model, 0, T, T2, zeur2, infeurz2) *
+            infeur2(exp(infeury2) * inflationGrowth(d.model, 0, T, T2, zeur2, infeurz2, indexIsInterpolated) *
                 d.model->discountBond(0, T, T2, zeur2) / d.model->numeraire(0, T, zeur2));
         }
         // GBP CPI indexed bond
@@ -2313,7 +2314,7 @@ BOOST_DATA_TEST_CASE(testIrFxInfCrMartingaleProperty,
             infgbp2(sinfgbp2.first * sinfgbp2.second * d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 /
                 d.model->numeraire(0, T, zeur2));
         } else {
-            infgbp2(exp(infgbpy2) * inflationGrowth(d.model, 1, T, T2, zgbp2, infgbpz2) *
+            infgbp2(exp(infgbpy2) * inflationGrowth(d.model, 1, T, T2, zgbp2, infgbpz2, indexIsInterpolated) *
                 d.model->discountBond(2, T, T2, zgbp2) * fxgbp2 / d.model->numeraire(0, T, zeur2));
         }
         // EUR defaultable zerobond
@@ -2589,9 +2590,9 @@ struct IrFxInfCrEqModelTestData {
         infRates.push_back(0.01);
         infRates.push_back(0.01);
         infEurTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
+            referenceDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
         infGbpTs = Handle<ZeroInflationTermStructure>(boost::make_shared<ZeroInflationCurve>(
-            referenceDate, UnitedKingdom(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
+            referenceDate, UnitedKingdom(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
         infEurTs->enableExtrapolation();
         infGbpTs->enableExtrapolation();
         // same for eur and gbp (doesn't matter anyway, since we are
@@ -3833,7 +3834,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(
         boost::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
-                                               3 * Months, Monthly, false, yts, infDates, infRates));
+                                               3 * Months, Monthly, false, infDates, infRates));
 
     Handle<DefaultProbabilityTermStructure> hts(
         boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
@@ -4012,7 +4013,7 @@ BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
     infRates.push_back(0.01);
     Handle<ZeroInflationTermStructure> its(
         boost::make_shared<ZeroInflationCurve>(Settings::instance().evaluationDate(), NullCalendar(), Actual365Fixed(),
-                                               3 * Months, Monthly, false, yts, infDates, infRates));
+                                               3 * Months, Monthly, false, infDates, infRates));
 
     Handle<DefaultProbabilityTermStructure> hts(
         boost::make_shared<FlatHazardRate>(0, NullCalendar(), 0.01, Actual365Fixed()));
@@ -4193,7 +4194,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(boost::make_shared<ZeroInflationCurve>(
-        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
+        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
     
@@ -4322,7 +4323,7 @@ BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
     infRates.push_back(0.0075);
     infRates.push_back(0.0075);
     Handle<ZeroInflationTermStructure> infEurTs(boost::make_shared<ZeroInflationCurve>(
-        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, eurYts, infDates, infRates));
+        refDate, TARGET(), Actual365Fixed(), 3 * Months, Monthly, false, infDates, infRates));
     infEurTs->enableExtrapolation();
     Handle<ZeroInflationIndex> infIndex(boost::make_shared<EUHICPXT>(false, infEurTs));
     infIndex->addFixing(Date(1, April, 2015), 100);

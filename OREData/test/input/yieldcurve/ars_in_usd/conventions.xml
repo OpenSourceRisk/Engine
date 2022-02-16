@@ -24,6 +24,5 @@
     <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
-    <AdditionalSettleCalendar />
   </FX>
 </Conventions>

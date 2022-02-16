@@ -86,7 +86,7 @@ using namespace QuantLib;
             const bool allowNegativeRates = false);
         //! \name TermStructure interface
         //@{
-        Date maxDate() const;
+        Date maxDate() const override;
         //@}
         //! \name other inspectors
         //@{
@@ -120,8 +120,8 @@ using namespace QuantLib;
             const bool allowNegativeRates = false);
         //! \name DefaultProbabilityTermStructure implementation
         //@{
-        Real hazardRateImpl(Time) const;
-        Probability survivalProbabilityImpl(Time) const;
+        Real hazardRateImpl(Time) const override;
+        Probability survivalProbabilityImpl(Time) const override;
         //@}
         mutable std::vector<Date> dates_;
       private:

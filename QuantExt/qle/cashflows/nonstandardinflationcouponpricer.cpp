@@ -37,7 +37,7 @@ NonStandardYoYInflationCouponPricer::NonStandardYoYInflationCouponPricer(
 }
 
 void NonStandardYoYInflationCouponPricer::setCapletVolatility(const Handle<YoYOptionletVolatilitySurface>& capletVol) {
-    QL_REQUIRE(!capletVol.empty(), "empty capletVol handle")
+    QL_REQUIRE(!capletVol.empty(), "empty capletVol handle");
     capletVol_ = capletVol;
     registerWith(capletVol_);
 }
@@ -105,11 +105,12 @@ void NonStandardYoYInflationCouponPricer::initialize(const InflationCoupon& coup
     gearing_ = coupon_->gearing();
     spread_ = coupon_->spread();
     paymentDate_ = coupon_->date();
-    rateCurve_ = !nominalTermStructure_.empty() ? nominalTermStructure_
-                                                : ext::dynamic_pointer_cast<ZeroInflationIndex>(coupon.index())
-                                                      ->zeroInflationTermStructure()
-                                                      ->nominalTermStructure();
-
+    // rateCurve_ = !nominalTermStructure_.empty() ? nominalTermStructure_
+    //                                             : ext::dynamic_pointer_cast<ZeroInflationIndex>(coupon.index())
+    //                                                   ->zeroInflationTermStructure()
+    //                                                   ->nominalTermStructure();
+    rateCurve_ = nominalTermStructure_;
+    
     // past or future fixing is managed in YoYInflationIndex::fixing()
     // use yield curve from index (which sets discount)
 

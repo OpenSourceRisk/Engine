@@ -69,11 +69,11 @@ public:
 
     //! \name LazyObject interface
     //@{
-    void update() {
+    void update() override {
         CapFloorTermVolatilityStructure::update();
         LazyObject::update();
     }
-    void performCalculations() const {};
+    void performCalculations() const override {};
     //@}
 
 protected:
@@ -116,17 +116,17 @@ public:
                            InterpolationMethod interpolationMethod = BicubicSpline);
     //! \name TermStructure interface
     //@{
-    Date maxDate() const;
+    Date maxDate() const override;
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const;
-    Real maxStrike() const;
+    Real minStrike() const override;
+    Real maxStrike() const override;
     //@}
     //! \name LazyObject interface
     //@{
-    void update();
-    void performCalculations() const;
+    void update() override;
+    void performCalculations() const override;
     //@}
     //! \name some inspectors
     //@{
@@ -135,7 +135,7 @@ public:
     InterpolationMethod interpolationMethod() const;
     //@}
 protected:
-    Volatility volatilityImpl(Time t, Rate strike) const;
+    Volatility volatilityImpl(Time t, Rate strike) const override;
 
 private:
     void checkInputs() const;

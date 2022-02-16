@@ -41,7 +41,7 @@ namespace QuantExt {
             const boost::shared_ptr<QuantLib::Exercise>& exercise, const QuantLib::Date& forwardDate)
                 : VanillaOption(payoff, exercise), forwardDate_(forwardDate) {}
 
-        void setupArguments(QuantLib::PricingEngine::arguments*) const;
+        void setupArguments(QuantLib::PricingEngine::arguments*) const override;
         
       private:
         QuantLib::Date forwardDate_;

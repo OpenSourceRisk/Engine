@@ -100,16 +100,16 @@ public:
 
     //! \name TermStructure interface
     //@{
-    Date maxDate() const { return Date::maxDate(); }
+    Date maxDate() const override { return Date::maxDate(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const { return 0; }
-    Real maxStrike() const { return QL_MAX_REAL; }
+    Real minStrike() const override { return 0; }
+    Real maxStrike() const override { return QL_MAX_REAL; }
     //@}
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
     //! \name Inspectors
@@ -128,7 +128,7 @@ public:
     boost::shared_ptr<FxSmileSection> blackVolSmile(const QuantLib::Date& d) const;
 
 protected:
-    virtual Volatility blackVolImpl(Time t, Real strike) const;
+    virtual Volatility blackVolImpl(Time t, Real strike) const override;
 
 private:
     std::vector<Date> dates_;

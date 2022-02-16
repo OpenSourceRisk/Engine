@@ -26,7 +26,7 @@ SpreadedZeroInflationCurve::SpreadedZeroInflationCurve(const Handle<ZeroInflatio
                                                        const std::vector<Handle<Quote>>& quotes)
     : ZeroInflationTermStructure(referenceCurve->dayCounter(), referenceCurve->baseRate(),
                                  referenceCurve->observationLag(), referenceCurve->frequency(),
-                                 referenceCurve->indexIsInterpolated(), referenceCurve->seasonality()),
+                                 referenceCurve->seasonality()),
       referenceCurve_(referenceCurve), times_(times), quotes_(quotes), data_(times_.size(), 1.0) {
     QL_REQUIRE(times_.size() > 1, "SpreadedZeroInflationCurve: at least two times required");
     QL_REQUIRE(times_.size() == quotes.size(),

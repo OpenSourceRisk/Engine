@@ -41,7 +41,7 @@ public:
 
     virtual ~CalibrationFunction() {}
 
-    virtual Real value(const Array& params) const {
+    virtual Real value(const Array& params) const override {
         model_->setParams(projection_.include(params));
         Real value = 0.0;
         for (Size i = 0; i < instruments_.size(); i++) {
@@ -51,7 +51,7 @@ public:
         return std::sqrt(value);
     }
 
-    virtual Disposable<Array> values(const Array& params) const {
+    virtual Disposable<Array> values(const Array& params) const override {
         model_->setParams(projection_.include(params));
         Array values(instruments_.size());
         for (Size i = 0; i < instruments_.size(); i++) {
@@ -60,7 +60,7 @@ public:
         return values;
     }
 
-    virtual Real finiteDifferenceEpsilon() const { return 1e-6; }
+    virtual Real finiteDifferenceEpsilon() const override { return 1e-6; }
 
 private:
     shared_ptr<LinkableCalibratedModel> model_;

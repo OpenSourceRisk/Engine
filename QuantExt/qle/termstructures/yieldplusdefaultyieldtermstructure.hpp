@@ -53,11 +53,11 @@ public:
         for (Size i = 0; i < rr_.size(); ++i)
             registerWith(rr_[i]);
     }
-    Date maxDate() const;
-    const Date& referenceDate() const;
+    Date maxDate() const override;
+    const Date& referenceDate() const override;
 
 protected:
-    Real discountImpl(Time t) const;
+    Real discountImpl(Time t) const override;
     const Handle<YieldTermStructure> yts_;
     const std::vector<Handle<DefaultProbabilityTermStructure> > df_;
     const std::vector<Handle<Quote> > rr_;

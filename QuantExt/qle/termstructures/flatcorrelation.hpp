@@ -46,8 +46,8 @@ public:
     //@}
     //! \name TermStructure interface
     //@{
-    Date maxDate() const { return Date::maxDate(); }
-    Time maxTime() const { return QL_MAX_REAL; }
+    Date maxDate() const override { return Date::maxDate(); }
+    Time maxTime() const override { return QL_MAX_REAL; }
     //@}
     //! \name Inspectors
     //@{
@@ -57,7 +57,7 @@ public:
 private:
     //! \name CorrelationTermStructure interface
     //@{
-    Real correlationImpl(Time, Real) const { return correlation_->value(); }
+    Real correlationImpl(Time, Real) const override { return correlation_->value(); }
     //@}
 
     Handle<Quote> correlation_;

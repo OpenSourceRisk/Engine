@@ -53,7 +53,7 @@ public:
     const Handle<YieldTermStructure> equityIrCurveToday() const;
     const Handle<YieldTermStructure> equityDivYieldCurveToday() const;
 
-    Size numberOfParameters() const { return 1; }
+    Size numberOfParameters() const override { return 1; }
 
 private:
     const Handle<Quote> eqSpotToday_, fxSpotToday_;

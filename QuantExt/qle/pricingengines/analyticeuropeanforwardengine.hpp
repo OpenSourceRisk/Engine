@@ -67,7 +67,7 @@ namespace QuantExt {
         AnalyticEuropeanForwardEngine(
              const boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess>& process,
              const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve);
-        void calculate() const;
+        void calculate() const override;
       private:
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> process_;
         QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;

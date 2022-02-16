@@ -35,23 +35,24 @@ namespace QuantExt {
 
 Time inflationTime(const Date& date,
     const boost::shared_ptr<InflationTermStructure>& inflationTs,
+    bool indexIsInterpolated,               
     const DayCounter& dayCounter) {
 
     DayCounter dc = inflationTs->dayCounter();
     if (dayCounter != DayCounter())
         dc = dayCounter;
 
-    return inflationYearFraction(inflationTs->frequency(), inflationTs->indexIsInterpolated(), 
+    return inflationYearFraction(inflationTs->frequency(), indexIsInterpolated, 
         dc, inflationTs->baseDate(), date);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const DayCounter& dc) {
-    auto lag = inflationTime(ts->referenceDate(), *ts, dc);
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, const DayCounter& dc, bool indexIsInterpolated) {
+    auto lag = inflationTime(ts->referenceDate(), *ts, indexIsInterpolated, dc);
     return pow(1.0 + ts->zeroRate(t - lag), t);
 }
 
-Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t) {
-    return inflationGrowth(ts, t, ts->dayCounter());
+Real inflationGrowth(const Handle<ZeroInflationTermStructure>& ts, Time t, bool indexIsInterpolated) {
+    return inflationGrowth(ts, t, ts->dayCounter(), indexIsInterpolated);
 }
 
 Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bond) {

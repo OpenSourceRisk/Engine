@@ -79,8 +79,8 @@ public:
     Spread fairRecLegSpread() const;
     //@}
     // other
-    void setupArguments(PricingEngine::arguments* args) const;
-    void fetchResults(const PricingEngine::results*) const;
+    void setupArguments(PricingEngine::arguments* args) const override;
+    void fetchResults(const PricingEngine::results*) const override;
 
 private:
     void initialize();
@@ -122,7 +122,7 @@ class OvernightIndexedCrossCcyBasisSwap::results : public Swap::results {
 public:
     Real fairPayLegSpread;
     Real fairRecLegSpread;
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments

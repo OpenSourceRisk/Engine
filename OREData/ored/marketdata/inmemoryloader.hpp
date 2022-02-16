@@ -32,7 +32,7 @@ public:
 
     //! Load market quotes
     const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date& d) const override {
-        QL_REQUIRE(data_.find(d) != data_.end(), "There are no quotes available for date " << d)
+        QL_REQUIRE(data_.find(d) != data_.end(), "There are no quotes available for date " << d);
         return data_.find(d)->second;
     }
 

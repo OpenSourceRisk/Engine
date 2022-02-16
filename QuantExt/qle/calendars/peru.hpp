@@ -32,8 +32,8 @@ class Peru : public Calendar {
 private:
     class LseImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "Lima stock exchange"; }
-        bool isBusinessDay(const Date&) const;
+        std::string name() const override { return "Lima stock exchange"; }
+        bool isBusinessDay(const Date&) const override;
     };
 
 public:

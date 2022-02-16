@@ -42,9 +42,9 @@ private:
     class Impl : public Calendar::Impl {
     public:
         Impl(const std::vector<QuantLib::Calendar>& calendar, QuantLib::JointCalendarRule rule);
-        std::string name() const;
-        bool isWeekend(QuantLib::Weekday) const;
-        bool isBusinessDay(const QuantLib::Date&) const;
+        std::string name() const override;
+        bool isWeekend(QuantLib::Weekday) const override;
+        bool isBusinessDay(const QuantLib::Date&) const override;
 
     private:
         QuantLib::JointCalendarRule rule_;

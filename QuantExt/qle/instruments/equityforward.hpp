@@ -59,8 +59,8 @@ public:
         const Real& strike);
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
     //@}
 
     //! \name Additional interface
@@ -91,7 +91,7 @@ public:
     Real quantity;
     Date maturityDate;
     Real strike;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments

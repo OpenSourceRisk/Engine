@@ -88,10 +88,8 @@ public:
     Type type() const { return type_; }
     //@}
 
-    //! \name Serialisation
+    //! \name convention interface definition
     //@{
-    virtual void fromXML(XMLNode* node) = 0;
-    virtual XMLNode* toXML(XMLDocument& doc) = 0;
     virtual void build() = 0;
     //@}
 
@@ -141,9 +139,9 @@ public:
     void add(const boost::shared_ptr<Convention>& convention);
 
     //! \name Serilaisation
-    //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    //@{0
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
 private:
@@ -208,9 +206,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -265,9 +263,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -314,9 +312,9 @@ public:
 
     //! Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build() {}
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override {}
     //@}
 
 private:
@@ -348,9 +346,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build() {}
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override {}
     //@}
 
 private:
@@ -392,9 +390,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -438,9 +436,9 @@ public:
     const string& businessDayConvention() const { return strBusinessDayConvention_; }
     const bool endOfMonth() const { return endOfMonth_; }
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
 
 private:
     string localId_;
@@ -465,9 +463,9 @@ public:
     const string& dayCounter() const { return strDayCounter_; }
     const Size settlementDays() const { return settlementDays_; }
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
 
 private:
     string strFixingCalendar_;
@@ -487,9 +485,9 @@ public:
     const string& conventions() const { return strConventions_; }
     const string& fixingCalendar() const { return fixingCalendar_; }
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build(){};
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override {};
 
 private:
     string strConventions_;
@@ -529,9 +527,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -587,9 +585,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 private:
     Natural spotLag_;
@@ -644,9 +642,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -700,9 +698,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -754,9 +752,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -798,9 +796,9 @@ public:
 
     //! \name Serialisation
     //
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -882,9 +880,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 private:
     Natural settlementDays_;
@@ -973,13 +971,13 @@ public:
 
     //! \name Serialisation interface
     //@{
-    void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Convention interface
     //@{
-    void build();
+    void build() override;
     //@}
 
 private:
@@ -1044,9 +1042,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node0) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 private:
     Natural settlementDays_;
@@ -1104,9 +1102,9 @@ public:
     PublicationRoll publicationRoll() const { return publicationRoll_; }
     const Schedule& publicationSchedule() const { return publicationSchedule_; }
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
 
 private:
     Calendar fixCalendar_;
@@ -1176,9 +1174,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -1232,9 +1230,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 private:
     Period forwardStart_;
@@ -1284,9 +1282,9 @@ public:
 
     //! \name Serialisation
     //
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 
 private:
@@ -1689,9 +1687,9 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    virtual void build();
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    virtual void build() override;
     //@}
 private:
     string fxConventionID_;

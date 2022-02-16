@@ -81,23 +81,23 @@ public:
 	const string& flipViewLendingCurvePostfix = "_LEND");
 
     virtual const Real calculateCvaIncrement(const string& tid, const string& cid,
-                                             const Date& d0, const Date& d1, const Real& rr);
+                                             const Date& d0, const Date& d1, const Real& rr) override;
     virtual const Real calculateDvaIncrement(const string& tid,
-                                             const Date& d0, const Date& d1, const Real& rr);
+                                             const Date& d0, const Date& d1, const Real& rr) override;
     virtual const Real calculateNettingSetCvaIncrement(
-        const string& nid, const string& cid, const Date& d0, const Date& d1, const Real& rr);
+        const string& nid, const string& cid, const Date& d0, const Date& d1, const Real& rr) override;
     virtual const Real calculateNettingSetDvaIncrement(
-        const string& nid, const Date& d0, const Date& d1, const Real& rr);
+        const string& nid, const Date& d0, const Date& d1, const Real& rr) override;
     virtual const Real calculateFbaIncrement(const string& tid, const string& cid, const string& dvaName,
-                                             const Date& d0, const Date& d1, const Real& dcf);
+                                             const Date& d0, const Date& d1, const Real& dcf) override;
     virtual const Real calculateFcaIncrement(const string& tid, const string& cid, const string& dvaName,
-                                             const Date& d0, const Date& d1, const Real& dcf);
+                                             const Date& d0, const Date& d1, const Real& dcf) override;
     virtual const Real calculateNettingSetFbaIncrement(const string& nid, const string& cid, const string& dvaName,
-                                                       const Date& d0, const Date& d1, const Real& dcf);
+                                                       const Date& d0, const Date& d1, const Real& dcf) override;
     virtual const Real calculateNettingSetFcaIncrement(const string& nid, const string& cid, const string& dvaName,
-                                                       const Date& d0, const Date& d1, const Real& dcf);
+                                                       const Date& d0, const Date& d1, const Real& dcf) override;
     virtual const Real calculateNettingSetMvaIncrement(const string& nid, const string& cid,
-                                                       const Date& d0, const Date& d1, const Real& dcf);
+                                                       const Date& d0, const Date& d1, const Real& dcf) override;
 
 protected:
     const boost::shared_ptr<NPVCube>& cptyCube_;

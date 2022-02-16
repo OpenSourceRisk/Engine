@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurface) {
     }
 
     Calendar cal = TARGET();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
 
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceConstantVol) {
     vector<Volatility> vols(strikes.size(), 0.1); // 10% everywhere
 
     Calendar cal = TARGET();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     QuantExt::BlackVarianceSurfaceSparse surface(today, cal, dates, strikes, vols, dc);
 
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceInputs) {
     vector<Volatility> vols(strikes.size(), 0.1);
 
     Calendar cal = TARGET();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     BOOST_CHECK_THROW(QuantExt::BlackVarianceSurfaceSparse(today, cal, dates, strikes, vols, dc), QuantLib::Error);
 }
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceEdgeCases) {
     vector<Volatility> vols(strikes.size(), 0.1); // 10% everywhere
 
     Calendar cal = TARGET();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     Time t = 0.0;                   // vol at reference should be 0
     Real strike1 = 0.0;             // 0 strike
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSinglePoint) {
     vector<Volatility> vols(strikes.size(), 0.1); // 10% everywhere
 
     Calendar cal = TARGET();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     QuantExt::BlackVarianceSurfaceSparse surface(today, cal, dates, strikes, vols, dc);
 
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceAxisInterp) {
     vector<Volatility> vols = { 0.105, 0.12, 0.17, 0.15 };
 
     Calendar cal = TARGET();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
 
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceFlatExtrapolation) {
     vector<Volatility> vols = { 0.105, 0.12, 0.17, 0.15 };
 
     Calendar cal = TARGET();
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
 
     auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc, true,
                                                                             true, true);

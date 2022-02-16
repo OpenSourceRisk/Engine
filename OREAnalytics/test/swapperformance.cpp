@@ -197,7 +197,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
 
     // Dump stats about portfolio
     Time maturity = 0;
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     map<string, Size> fixedFreqs;
     map<string, Size> floatFreqs;
     for (Size i = 0; i < portfolioSize; ++i) {

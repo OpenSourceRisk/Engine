@@ -38,9 +38,9 @@ private:
     class Impl : public Calendar::Impl {
     public:
         Impl(const QuantLib::Calendar& calendar, const std::string& name);
-        std::string name() const;
-        bool isWeekend(QuantLib::Weekday) const;
-        bool isBusinessDay(const QuantLib::Date&) const;
+        std::string name() const override;
+        bool isWeekend(QuantLib::Weekday) const override;
+        bool isBusinessDay(const QuantLib::Date&) const override;
 
     private:
         std::string name_;

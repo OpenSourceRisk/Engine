@@ -113,15 +113,15 @@ public:
                              const Real shift1 = Null<Real>(), const Real shift2 = Null<Real>());
 
     /* */
-    virtual Real swapletPrice() const;
-    virtual Rate swapletRate() const;
-    virtual Real capletPrice(Rate effectiveCap) const;
-    virtual Rate capletRate(Rate effectiveCap) const;
-    virtual Real floorletPrice(Rate effectiveFloor) const;
-    virtual Rate floorletRate(Rate effectiveFloor) const;
+    virtual Real swapletPrice() const override;
+    virtual Rate swapletRate() const override;
+    virtual Real capletPrice(Rate effectiveCap) const override;
+    virtual Rate capletRate(Rate effectiveCap) const override;
+    virtual Real floorletPrice(Rate effectiveFloor) const override;
+    virtual Rate floorletRate(Rate effectiveFloor) const override;
 
 private:
-    void initialize(const FloatingRateCoupon& coupon);
+    void initialize(const FloatingRateCoupon& coupon) override;
     Real rho() const { return std::max(std::min(correlation(fixingTime_), 0.9999), -0.9999); }
     Real optionletPrice(Option::Type optionType, Real strike) const;
 

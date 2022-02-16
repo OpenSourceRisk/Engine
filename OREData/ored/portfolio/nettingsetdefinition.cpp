@@ -199,7 +199,7 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     } else {
         if (csaChild) {
             WLOG(
-                StructuredConfigurationWarningMessage("Netting set definitions", nettingSetId_, "Inconsistent inputs",
+                StructuredConfigurationWarningMessage("Netting set definitions", to_string(nettingSetDetails_), "Inconsistent inputs",
                                                       "ActiveCSAFlag=False, but a CSADetails node was still provided"));
         }
     }
@@ -235,7 +235,7 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, csaSubNode, "CollateralCompoundingSpreadPay", csa_->collatSpreadPay());
         XMLUtils::addChild(doc, csaSubNode, "CollateralCompoundingSpreadReceive", csa_->collatSpreadRcv());
 
-        XMLNode* freqSubNode = doc.allocNode("MarginingFrquency");
+        XMLNode* freqSubNode = doc.allocNode("MarginingFrequency");
         XMLUtils::appendNode(csaSubNode, freqSubNode);
         XMLUtils::addChild(doc, freqSubNode, "CallFrequency", to_string(csa_->marginCallFrequency()));
         XMLUtils::addChild(doc, freqSubNode, "PostFrequency", to_string(csa_->marginPostFrequency()));
@@ -249,10 +249,10 @@ XMLNode* NettingSetDefinition::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(csaSubNode, collatSubNode);
         XMLUtils::addChildren(doc, collatSubNode, "Currencies", "Currency", csa_->eligCollatCcys());
 
-        XMLUtils::addChild(doc, node, "ApplyInitialMargin", csa_->applyInitialMargin());
-        XMLUtils::addChild(doc, node, "InitialMarginType", to_string(csa_->initialMarginType()));
-        XMLUtils::addChild(doc, node, "CalculateIMAmount", csa_->calculateIMAmount());
-        XMLUtils::addChild(doc, node, "CalculateVMAmount", csa_->calculateVMAmount());
+        XMLUtils::addChild(doc, csaSubNode, "ApplyInitialMargin", csa_->applyInitialMargin());
+        XMLUtils::addChild(doc, csaSubNode, "InitialMarginType", to_string(csa_->initialMarginType()));
+        XMLUtils::addChild(doc, csaSubNode, "CalculateIMAmount", csa_->calculateIMAmount());
+        XMLUtils::addChild(doc, csaSubNode, "CalculateVMAmount", csa_->calculateVMAmount());
     }
 
     return node;

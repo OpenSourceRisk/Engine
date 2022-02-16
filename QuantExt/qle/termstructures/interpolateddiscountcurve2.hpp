@@ -93,21 +93,21 @@ public:
     }
     //@}
 
-    Date maxDate() const { return Date::maxDate(); }
-    void update() {
+    Date maxDate() const override { return Date::maxDate(); }
+    void update() override {
         LazyObject::update();
         TermStructure::update();
     }
-    const Date& referenceDate() const {
+    const Date& referenceDate() const override {
         calculate();
         return today_;
     }
 
-    Calendar calendar() const { return NullCalendar(); }
-    Natural settlementDays() const { return 0; }
+    Calendar calendar() const override { return NullCalendar(); }
+    Natural settlementDays() const override { return 0; }
 
 protected:
-    void performCalculations() const {
+    void performCalculations() const override {
         today_ = Settings::instance().evaluationDate();
         for (Size i = 0; i < times_.size(); ++i) {
             data_[i] = quotes_[i]->value();
@@ -121,7 +121,7 @@ protected:
         dataInterpolation_->update();
     }
 
-    DiscountFactor discountImpl(Time t) const {
+    DiscountFactor discountImpl(Time t) const override {
         calculate();
         if (t <= this->times_.back()) {
             Real tmp = (*dataInterpolation_)(t, true);

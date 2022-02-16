@@ -224,9 +224,9 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QL_REQUIRE(mt == DK || mt == JY, "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
         boost::shared_ptr<ZeroInflationModelTermStructure> ts;
         if (mt == DK) {
-            ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx);
+            ts = boost::make_shared<DkImpliedZeroInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
         } else {
-            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx);
+            ts = boost::make_shared<JyImpliedZeroInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
         }
         zeroInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
     }
@@ -239,9 +239,9 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         QL_REQUIRE(mt == DK || mt == JY, "CrossAssetModelScenarioGenerator: expected inflation model to be JY or DK.");
         boost::shared_ptr<YoYInflationModelTermStructure> ts;
         if (mt == DK) {
-            ts = boost::make_shared<DkImpliedYoYInflationTermStructure>(model_, idx);
+            ts = boost::make_shared<DkImpliedYoYInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
         } else {
-            ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx);
+            ts = boost::make_shared<JyImpliedYoYInflationTermStructure>(model_, idx, initMarket_->zeroInflationIndex(name)->interpolated());
         }
         yoyInfCurves_.emplace_back(idx, ccyIdx, mt, ts);
     }
@@ -391,7 +391,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Date baseDate = index->zeroInflationTermStructure()->baseDate();
                 auto zts = index->zeroInflationTermStructure();
                 Time relativeTime =
-                    inflationYearFraction(zts->frequency(), zts->indexIsInterpolated(), zts->dayCounter(), baseDate,
+                    inflationYearFraction(zts->frequency(), index->interpolated(), zts->dayCounter(), baseDate,
                                           dates_[i] - zts->observationLag());
                 std::tie(cpi, std::ignore) = model_->infdkI(j, relativeTime, relativeTime, z, y);
                 cpi *= index->fixing(baseDate);

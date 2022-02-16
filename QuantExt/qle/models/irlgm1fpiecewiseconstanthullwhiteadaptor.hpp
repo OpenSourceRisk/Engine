@@ -49,20 +49,20 @@ public:
         const std::string& name = std::string(),
         const boost::shared_ptr<QuantLib::Constraint>& sigmaConstraint = boost::make_shared<QuantLib::NoConstraint>(),
         const boost::shared_ptr<QuantLib::Constraint>& kappaConstraint = boost::make_shared<QuantLib::NoConstraint>());
-    Real zeta(const Time t) const;
-    Real H(const Time t) const;
-    Real alpha(const Time t) const;
-    Real kappa(const Time t) const;
-    Real Hprime(const Time t) const;
-    Real Hprime2(const Time t) const;
-    Real hullWhiteSigma(const Time t) const;
-    const Array& parameterTimes(const Size) const;
-    const boost::shared_ptr<Parameter> parameter(const Size) const;
-    void update() const;
+    Real zeta(const Time t) const override;
+    Real H(const Time t) const override;
+    Real alpha(const Time t) const override;
+    Real kappa(const Time t) const override;
+    Real Hprime(const Time t) const override;
+    Real Hprime2(const Time t) const override;
+    Real hullWhiteSigma(const Time t) const override;
+    const Array& parameterTimes(const Size) const override;
+    const boost::shared_ptr<Parameter> parameter(const Size) const override;
+    void update() const override;
 
 protected:
-    Real direct(const Size i, const Real x) const;
-    Real inverse(const Size j, const Real y) const;
+    Real direct(const Size i, const Real x) const override;
+    Real inverse(const Size j, const Real y) const override;
 
 private:
     void initialize(const Array& sigma, const Array& kappa);

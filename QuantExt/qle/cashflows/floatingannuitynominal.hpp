@@ -38,8 +38,8 @@ public:
         : coupon_(floatingAnnuityCoupon) {}
 
     //! \name Cashflow interface
-    Rate amount() const;
-    Date date() const;
+    Rate amount() const override;
+    Date date() const override;
 
 private:
     boost::shared_ptr<FloatingAnnuityCoupon> coupon_;

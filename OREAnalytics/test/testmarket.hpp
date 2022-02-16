@@ -54,39 +54,39 @@ public:
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
         boost::shared_ptr<YieldTermStructure> yts(
-            new FlatForward(Settings::instance().evaluationDate(), forward, ActualActual()));
+            new FlatForward(Settings::instance().evaluationDate(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<BlackVolTermStructure> flatRateFxv(Volatility forward) {
         boost::shared_ptr<BlackVolTermStructure> fxv(
-            new BlackConstantVol(Settings::instance().evaluationDate(), NullCalendar(), forward, ActualActual()));
+            new BlackConstantVol(Settings::instance().evaluationDate(), NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<BlackVolTermStructure>(fxv);
     }
     Handle<YieldTermStructure> flatRateDiv(Real dividend) {
         boost::shared_ptr<YieldTermStructure> yts(
-            new FlatForward(Settings::instance().evaluationDate(), dividend, ActualActual()));
+            new FlatForward(Settings::instance().evaluationDate(), dividend, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<QuantLib::SwaptionVolatilityStructure>
     flatRateSvs(Volatility forward, VolatilityType type = ShiftedLognormal, Real shift = 0.0) {
         boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
             new QuantLib::ConstantSwaptionVolatility(Settings::instance().evaluationDate(), NullCalendar(),
-                                                     ModifiedFollowing, forward, ActualActual(), type, shift));
+                                                     ModifiedFollowing, forward, ActualActual(ActualActual::ISDA), type, shift));
         return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
     }
     Handle<DefaultProbabilityTermStructure> flatRateDcs(Volatility forward) {
-        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual()));
+        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
         return Handle<DefaultProbabilityTermStructure>(dcs);
     }
     Handle<OptionletVolatilityStructure> flatRateCvs(Volatility vol, VolatilityType type = Normal, Real shift = 0.0) {
         boost::shared_ptr<OptionletVolatilityStructure> ts(
             new QuantLib::ConstantOptionletVolatility(Settings::instance().evaluationDate(), NullCalendar(),
-                                                      ModifiedFollowing, vol, ActualActual(), type, shift));
+                                                      ModifiedFollowing, vol, ActualActual(ActualActual::ISDA), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
     }
     Handle<QuantExt::CorrelationTermStructure> flatCorrelation(Real correlation = 0.0) {
         boost::shared_ptr<QuantExt::CorrelationTermStructure> ts(
-            new QuantExt::FlatCorrelation(Settings::instance().evaluationDate(), correlation, ActualActual()));
+            new QuantExt::FlatCorrelation(Settings::instance().evaluationDate(), correlation, ActualActual(ActualActual::ISDA)));
         return Handle<QuantExt::CorrelationTermStructure>(ts);
     }
     Handle<CPICapFloorTermPriceSurface> flatRateCps(Handle<ZeroInflationIndex> infIndex,
@@ -95,7 +95,7 @@ private:
         boost::shared_ptr<CPICapFloorTermPriceSurface> ts(
             new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
                 1.0, 0.0, infIndex->availabilityLag(), infIndex->zeroInflationTermStructure()->calendar(), Following,
-                ActualActual(), infIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes, cfMaturities,
+                ActualActual(ActualActual::ISDA), infIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes, cfMaturities,
                 cPrice, fPrice));
         return Handle<CPICapFloorTermPriceSurface>(ts);
     }

@@ -45,11 +45,11 @@ public:
         registerWith(yts1);
         registerWith(yts2);
     }
-    Date maxDate() const;
-    const Date& referenceDate() const;
+    Date maxDate() const override;
+    const Date& referenceDate() const override;
 
 protected:
-    Real discountImpl(Time t) const;
+    Real discountImpl(Time t) const override;
     const Handle<YieldTermStructure> yts1_, yts2_;
     const Real w1_, w2_;
 };

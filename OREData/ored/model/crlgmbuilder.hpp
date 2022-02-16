@@ -31,8 +31,8 @@ public:
                  const std::string& configuration = Market::defaultConfiguration);
     boost::shared_ptr<QuantExt::CrLgm1fParametrization> parametrization() const { return parametrization_; }
 
-    bool requiresRecalibration() const { return false; }
-    void performCalculations() const {}
+    bool requiresRecalibration() const override { return false; }
+    void performCalculations() const override {}
 
 private:
     // void buildOptionBasket();

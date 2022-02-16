@@ -79,17 +79,17 @@ public:
     Real atm() const;
 
     /* VolatilityTermStructure interface */
-    Real minStrike() const;
-    Real maxStrike() const;
+    Real minStrike() const override;
+    Real maxStrike() const override;
     /* TermStructure interface */
-    Date maxDate() const;
+    Date maxDate() const override;
     /* Observer interface */
-    void update();
+    void update() override;
 
 protected:
     /* BlackVolTermStructure interface */
-    Real blackVarianceImpl(Time t, Real strike) const;
-    Volatility blackVolImpl(Time t, Real strike) const;
+    Real blackVarianceImpl(Time t, Real strike) const override;
+    Volatility blackVolImpl(Time t, Real strike) const override;
     /* immplementations for curve and surface tags */
     Real blackVarianceImplTag(Time t, Real strike, tag::curve) const;
     Real blackVarianceImplTag(Time t, Real strike, tag::surface) const;

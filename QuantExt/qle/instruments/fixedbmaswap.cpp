@@ -239,7 +239,7 @@ MakeFixedBMASwap& MakeFixedBMASwap::withNominal(Real n) {
 }
 
 MakeFixedBMASwap& MakeFixedBMASwap::withBMALegTenor(const Period& tenor) {
-    QL_REQUIRE(tenor.units() == Months, "Average BMA Leg coupons should pay as a multiple of months.")
+    QL_REQUIRE(tenor.units() == Months, "Average BMA Leg coupons should pay as a multiple of months.");
     bmaLegTenor_ = tenor;
     return *this;
 }

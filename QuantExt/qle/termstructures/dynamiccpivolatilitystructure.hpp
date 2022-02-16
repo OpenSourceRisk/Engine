@@ -46,23 +46,23 @@ public:
 protected:
     //! \name CPIVolatilitySurface interface
     //@{
-    Volatility volatilityImpl(Time length, Rate strike) const;
+    Volatility volatilityImpl(Time length, Rate strike) const override;
     //@}
 
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const;
-    Rate maxStrike() const;
+    Rate minStrike() const override;
+    Rate maxStrike() const override;
     //@}
 
     //! \name VolatilityTermStructure interface
     //@{
-    Date maxDate() const;
+    Date maxDate() const override;
     //@}
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
 private:

@@ -34,13 +34,13 @@ public:
     NormalSabrSmileSection(Time timeToExpiry, Rate forward, const std::vector<Real>& sabrParameters);
     NormalSabrSmileSection(const Date& d, Rate forward, const std::vector<Real>& sabrParameters,
                            const DayCounter& dc = Actual365Fixed());
-    Real minStrike() const { return -QL_MAX_REAL; }
-    Real maxStrike() const { return QL_MAX_REAL; }
-    Real atmLevel() const { return forward_; }
+    Real minStrike() const override { return -QL_MAX_REAL; }
+    Real maxStrike() const override { return QL_MAX_REAL; }
+    Real atmLevel() const override { return forward_; }
 
 protected:
-    Real varianceImpl(Rate strike) const;
-    Volatility volatilityImpl(Rate strike) const;
+    Real varianceImpl(Rate strike) const override;
+    Volatility volatilityImpl(Rate strike) const override;
 
 private:
     Real alpha_, nu_, rho_, forward_;

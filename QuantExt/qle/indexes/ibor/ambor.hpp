@@ -42,7 +42,7 @@ using namespace QuantLib;
 class USDAmbor : public IborIndex {
 public:
     USDAmbor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("USD-AMBOR", tenor, 2, USDCurrency(), UnitedStates(), ModifiedFollowing, false, Actual360(), h) {}
+        : IborIndex("USD-AMBOR", tenor, 2, USDCurrency(), UnitedStates(UnitedStates::Settlement), ModifiedFollowing, false, Actual360(), h) {}
 };
 } // namespace QuantExt
 

@@ -81,10 +81,10 @@ public:
 
     virtual void calculate(const std::string& name, Size nameIndex,
                            const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-                           const Date& date, Size dateIndex, Size sample, bool isCloseOut = false);
+                           const Date& date, Size dateIndex, Size sample, bool isCloseOut = false) override;
 
     virtual void calculateT0(const std::string& name, Size nameIndex,
-                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
+                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube) override;
 
 private:
     Real survProb(const std::string& name,

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/equityvolconstantspread.hpp
+/*! \file qle/termstructures/blackvolconstantspread.hpp
     \brief surface that combines an ATM curve and vol spreads from a surface
     \ingroup termstructures
 */
@@ -45,25 +45,25 @@ public:
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const;
-    Date maxDate() const;
-    Time maxTime() const;
-    const Date& referenceDate() const;
-    Calendar calendar() const;
-    Natural settlementDays() const;
+    DayCounter dayCounter() const override;
+    Date maxDate() const override;
+    Time maxTime() const override;
+    const Date& referenceDate() const override;
+    Calendar calendar() const override;
+    Natural settlementDays() const override;
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const;
-    Rate maxStrike() const;
+    Rate minStrike() const override;
+    Rate maxStrike() const override;
     //@}
 
     // override Termstructure deepUpdate to ensure atm_ curve is updatesd
-    void deepUpdate();
+    void deepUpdate() override;
 
 protected:
-    Volatility blackVolImpl(Time t, Rate strike) const;
-    Real blackVarianceImpl(Time t, Real strike) const;
+    Volatility blackVolImpl(Time t, Rate strike) const override;
+    Real blackVarianceImpl(Time t, Real strike) const override;
 
 private:
     Handle<BlackVolTermStructure> atm_, surface_;

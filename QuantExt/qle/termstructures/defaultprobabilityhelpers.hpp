@@ -106,12 +106,12 @@ public:
               CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
                   CreditDefaultSwap::ProtectionPaymentTime::atDefault,
               const DayCounter& lastPeriodDayCounter = DayCounter());
-    void setTermStructure(DefaultProbabilityTermStructure*);
+    void setTermStructure(DefaultProbabilityTermStructure*) override;
     boost::shared_ptr<QuantExt::CreditDefaultSwap> swap() const { return swap_; }
 
 protected:
-    void update();
-    void initializeDates();
+    void update() override;
+    void initializeDates() override;
     virtual void resetEngine() = 0;
     Period tenor_;
     Integer settlementDays_;
@@ -153,10 +153,10 @@ public:
                     CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
                         CreditDefaultSwap::ProtectionPaymentTime::atDefault,
                     const DayCounter& lastPeriodDayCounter = DayCounter());
-    Real impliedQuote() const;
+    Real impliedQuote() const override;
 
 private:
-    void resetEngine();
+    void resetEngine() override;
 };
 
 //! Upfront-quoted CDS hazard rate bootstrap helper.
@@ -182,14 +182,14 @@ public:
                      CreditDefaultSwap::ProtectionPaymentTime protectionPaymentTime =
                          CreditDefaultSwap::ProtectionPaymentTime::atDefault,
                      const DayCounter& lastPeriodDayCounter = DayCounter());
-    Real impliedQuote() const;
+    Real impliedQuote() const override;
     void initializeUpfront();
 
 private:
     Natural upfrontSettlementDays_;
     Date upfrontDate_;
     Rate runningSpread_;
-    void resetEngine();
+    void resetEngine() override;
 };
 } // namespace QuantExt
 

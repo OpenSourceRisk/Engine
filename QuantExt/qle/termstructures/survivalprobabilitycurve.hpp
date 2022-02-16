@@ -48,7 +48,7 @@ public:
                              const Extrapolation extrpolation = Extrapolation::flatFwd);
     //! \name TermStructure interface
     //@{
-    Date maxDate() const;
+    Date maxDate() const override;
     //@}
     //! \name other inspectors
     //@{
@@ -61,19 +61,19 @@ public:
     //@}
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 private:
     void initialize();
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
     //! \name DefaultProbabilityTermStructure implementation
     //@{
-    Probability survivalProbabilityImpl(Time) const;
-    Real defaultDensityImpl(Time t) const;
+    Probability survivalProbabilityImpl(Time) const override;
+    Real defaultDensityImpl(Time t) const override;
     //@}
     mutable std::vector<Date> dates_;
     std::vector<Handle<Quote>> quotes_;

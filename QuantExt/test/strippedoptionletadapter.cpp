@@ -53,7 +53,7 @@ public:
 
         // Inputs for the optionlet surface
         Natural settlementDays = 2;
-        UnitedStates calendar;
+        UnitedStates calendar(UnitedStates::Settlement);
         BusinessDayConvention bdc = Following;
         boost::shared_ptr<IborIndex> dummyIborIndex;
         VolatilityType type = Normal;
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(testOneStrikeColumn) {
 
     // Set up the stripped optionlet surface with one strike column
     Natural settlementDays = 2;
-    UnitedStates calendar;
+    UnitedStates calendar(UnitedStates::Settlement);
     BusinessDayConvention bdc = Following;
     Actual365Fixed dc;
     boost::shared_ptr<IborIndex> dummyIborIndex;

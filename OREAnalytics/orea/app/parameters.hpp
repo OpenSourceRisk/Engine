@@ -43,8 +43,8 @@ public:
 
     void clear();
     void fromFile(const string&);
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
     bool hasGroup(const string& groupName) const;
     bool has(const string& groupName, const string& paramName) const;

@@ -108,7 +108,7 @@ void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QL_N
             QL_FAIL("1 X 1 empty matrix given to fill."); // !is_full and 1 X 1 matrix.
         }
         if (interpRows) {
-            QL_REQUIRE(mat.columns() > 1, "Too few columns in matrix to interpolate within rows.")
+            QL_REQUIRE(mat.columns() > 1, "Too few columns in matrix to interpolate within rows.");
             fillMatrixImpl(mat, blank);
         } else {
             QL_REQUIRE(mat.rows() > 1, "Too few rows in matrix to interpolate within columns.");

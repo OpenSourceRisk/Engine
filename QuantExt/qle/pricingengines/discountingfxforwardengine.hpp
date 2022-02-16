@@ -66,7 +66,7 @@ public:
                                boost::optional<bool> includeSettlementDateFlows = boost::none,
                                const Date& settlementDate = Date(), const Date& npvDate = Date());
 
-    void calculate() const;
+    void calculate() const override;
 
     const Handle<YieldTermStructure>& currency1Discountcurve() const { return currency1Discountcurve_; }
 

@@ -133,8 +133,8 @@ public:
     Size crName(const std::string& name) const;
 
     /*! observer and linked calibrated model interface */
-    void update();
-    void generateArguments();
+    void update() override;
+    void generateArguments() override;
 
     /*! the vector of parametrizations */
     const std::vector<boost::shared_ptr<Parametrization>>& parametrizations() const { return p_; }

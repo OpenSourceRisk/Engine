@@ -40,7 +40,7 @@ ExposureCalculator::ExposureCalculator(
       baseCurrency_(baseCurrency), configuration_(configuration),
       quantile_(quantile), calcType_(calcType),
       multiPath_(multiPath), dates_(cube->dates()),
-      today_(market_->asofDate()), dc_(ActualActual()), flipViewXVA_(flipViewXVA) {
+      today_(market_->asofDate()), dc_(ActualActual(ActualActual::ISDA)), flipViewXVA_(flipViewXVA) {
 
     QL_REQUIRE(portfolio_, "portfolio is null");
 

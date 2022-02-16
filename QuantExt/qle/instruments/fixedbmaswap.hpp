@@ -64,7 +64,7 @@ public:
     Real bmaLegNPV() const;
     //@}
     // results
-    void fetchResults(const PricingEngine::results*) const;
+    void fetchResults(const PricingEngine::results*) const override;
 
 private:
     Type type_;
@@ -77,7 +77,7 @@ private:
 class FixedBMASwap::results : public Swap::results {
 public:
     Rate fairRate;
-    void reset();
+    void reset() override;
 };
 
 class FixedBMASwap::engine : GenericEngine<FixedBMASwap::arguments, FixedBMASwap::results> {};

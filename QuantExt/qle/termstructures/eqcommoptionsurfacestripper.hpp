@@ -77,7 +77,7 @@ public:
 
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
     //! Return the stripped volatility structure.

@@ -77,7 +77,7 @@ public:
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
-        const DayCounter& dayCounter = ActualActual(),
+        const DayCounter& dayCounter = ActualActual(ActualActual::ISDA),
         //! calibrate the model?
         const bool dontCalibrate = false,
         //! continue if bootstrap error exceeds tolerance
@@ -166,7 +166,8 @@ private:
 
     // Attach JY engines to helpers for JY calibration
     void setJyPricingEngine(QuantLib::Size modelIdx,
-        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>& calibrationBasket) const;
+        const std::vector<boost::shared_ptr<QuantLib::CalibrationHelper>>& calibrationBasket,
+        bool indexIsInterpolated) const;
 };
 
 } // namespace data

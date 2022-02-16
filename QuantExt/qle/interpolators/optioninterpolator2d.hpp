@@ -116,8 +116,8 @@ public:
     std::vector<std::vector<QuantLib::Real> > strikes() const;
     std::vector<std::vector<QuantLib::Real> > values() const;
     QuantLib::DayCounter dayCounter() const { return dayCounter_; }
-    QuantLib::Real getValue(QuantLib::Time t, QuantLib::Real strike) const;
-    QuantLib::Real getValue(QuantLib::Date d, QuantLib::Real strike) const;
+    QuantLib::Real getValue(QuantLib::Time t, QuantLib::Real strike) const override;
+    QuantLib::Real getValue(QuantLib::Date d, QuantLib::Real strike) const override;
     //@}
 
 protected:

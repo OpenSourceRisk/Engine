@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(testDomesicPayment) {
     Settings::instance().evaluationDate() = refDate;
     Date paymentDate = refDate + 10 * Years;
     Payment payment(100.0, EURCurrency(), paymentDate);
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, TARGET(), 0.03, ActualActual()));
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, TARGET(), 0.03, ActualActual(ActualActual::ISDA)));
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<PaymentDiscountingEngine>(yts);
     payment.setPricingEngine(engine);
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(testForeignPayment) {
     Settings::instance().evaluationDate() = refDate;
     Date paymentDate = refDate + 10 * Years;
     Payment payment(100.0, EURCurrency(), paymentDate);
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, TARGET(), 0.03, ActualActual()));
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, TARGET(), 0.03, ActualActual(ActualActual::ISDA)));
     Handle<Quote> fx(boost::make_shared<SimpleQuote>(0.789));
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<PaymentDiscountingEngine>(yts, fx);
     payment.setPricingEngine(engine);

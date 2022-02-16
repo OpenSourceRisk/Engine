@@ -43,28 +43,28 @@ public:
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
+    QuantLib::Date maxDate() const override;
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    QuantLib::Rate minStrike() const;
-    QuantLib::Rate maxStrike() const;
+    QuantLib::Rate minStrike() const override;
+    QuantLib::Rate maxStrike() const override;
     //@}
     //! \name LazyObject interface
     //@{
-    void update();
-    void performCalculations() const;
+    void update() override;
+    void performCalculations() const override;
     boost::shared_ptr<QuantLib::OptionletStripper> optionletStripper() const;
     //@}
-    QuantLib::VolatilityType volatilityType() const;
-    QuantLib::Real displacement() const;
+    QuantLib::VolatilityType volatilityType() const override;
+    QuantLib::Real displacement() const override;
 
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const;
+    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
 
-    QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const;
+    QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
     //@}
 private:
     const boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletStripper_;

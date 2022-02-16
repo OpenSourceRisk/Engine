@@ -35,8 +35,8 @@ public:
     
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
     //@}
 
     //! \name Inspectors
@@ -67,7 +67,7 @@ public:
     Option::Type type;
     QuantLib::Settlement::Type settlementType;
     QuantLib::Settlement::Method settlementMethod;
-    void validate() const;
+    void validate() const override;
 };
 
 //! base class for APO engines

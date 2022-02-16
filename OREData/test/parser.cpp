@@ -27,7 +27,7 @@
 #include <ql/time/calendars/france.hpp>
 #include <ql/time/calendars/thailand.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <qle/calendars/chile.hpp>
+#include <ql/time/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
 #include <qle/calendars/israel.hpp>
 #include <qle/calendars/largejointcalendar.hpp>
@@ -64,7 +64,7 @@ static struct test_daycounter_data daycounter_data[] = {
     {"ACT/365", Actual365Fixed()},
     {"T360", Thirty360(Thirty360::USA)},
     {"30/360", Thirty360(Thirty360::USA)},
-    {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
+    {"30/360 (Bond Basis)", Thirty360(Thirty360::BondBasis)},
     {"ACT/nACT", Thirty360(Thirty360::USA)},
     {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
     {"30E/360", Thirty360(Thirty360::European)},
@@ -711,9 +711,15 @@ BOOST_AUTO_TEST_CASE(testJointCalendar) {
     expectedHolidays.insert(Date(30, March, 2018));
     expectedHolidays.insert(Date(1, May, 2018));
     expectedHolidays.insert(Date(21, May, 2018));
+    expectedHolidays.insert(Date(2, July, 2018));
     expectedHolidays.insert(Date(16, July, 2018));
     expectedHolidays.insert(Date(15, August, 2018));
+    expectedHolidays.insert(Date(17, September, 2018));
+    expectedHolidays.insert(Date(18, September, 2018));
+    expectedHolidays.insert(Date(19, September, 2018));
+    expectedHolidays.insert(Date(15, October, 2018));
     expectedHolidays.insert(Date(1, November, 2018));
+    expectedHolidays.insert(Date(2, November, 2018));
     expectedHolidays.insert(Date(25, December, 2018));
 
     Calendar chil = Chile();

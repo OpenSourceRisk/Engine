@@ -66,12 +66,12 @@ public:
         bool resetsOnFloatLeg = true);
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
     //! \name inspectors
     //@{
@@ -79,11 +79,11 @@ public:
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 
 protected:
-    void initializeDates();
+    void initializeDates() override;
 
     QuantLib::Handle<QuantLib::Quote> spotFx_;
     QuantLib::Natural settlementDays_;

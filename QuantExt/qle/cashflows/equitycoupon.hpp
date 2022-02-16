@@ -62,18 +62,18 @@ public:
 
     //! \name CashFlow interface
     //@{
-    Real amount() const { return rate() * nominal(); }
+    Real amount() const override { return rate() * nominal(); }
     //@}
 
     //! \name Coupon interface
     //@{
     // Real price(const Handle<YieldTermStructure>& discountingCurve) const;
-    DayCounter dayCounter() const { return dayCounter_; }
-    Real accruedAmount(const Date&) const;
+    DayCounter dayCounter() const override { return dayCounter_; }
+    Real accruedAmount(const Date&) const override;
     // calculates the rate for the period, not yearly i.e. (S(t+1)-S(t))/S(t)
-    Rate rate() const;
+    Rate rate() const override;
     // nominal changes if notional is resettable
-    Real nominal() const;
+    Real nominal() const override;
     //@}
 
     //! \name Inspectors
@@ -109,12 +109,12 @@ public:
 
     //! \name Observer interface
     //@{
-    void update() { notifyObservers(); }
+    void update() override { notifyObservers(); }
     //@}
 
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
     void setPricer(const boost::shared_ptr<EquityCouponPricer>&);
     boost::shared_ptr<EquityCouponPricer> pricer() const;

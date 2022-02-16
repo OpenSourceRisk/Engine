@@ -61,8 +61,8 @@ using namespace boost::accumulators;
 namespace {
 struct CreditModelTestData_flat {
     CreditModelTestData_flat()
-        : referenceDate(29, July, 2017), dts(boost::make_shared<FlatHazardRate>(referenceDate, 0.04, ActualActual())),
-          yts(boost::make_shared<FlatForward>(referenceDate, 0.02, ActualActual())) {
+        : referenceDate(29, July, 2017), dts(boost::make_shared<FlatHazardRate>(referenceDate, 0.04, ActualActual(ActualActual::ISDA))),
+          yts(boost::make_shared<FlatForward>(referenceDate, 0.02, ActualActual(ActualActual::ISDA))) {
 
         Settings::instance().evaluationDate() = referenceDate;
 

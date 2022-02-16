@@ -52,12 +52,12 @@ BOOST_AUTO_TEST_CASE(testBlackVolSurfaceDeltaConstantVol) {
 
     // dummy spot and zero yield curve
     Handle<Quote> spot(boost::make_shared<SimpleQuote>(1.0));
-    Handle<YieldTermStructure> dts(boost::make_shared<FlatForward>(0, TARGET(), 0.011, ActualActual()));
-    Handle<YieldTermStructure> fts(boost::make_shared<FlatForward>(0, TARGET(), 0.012, ActualActual()));
+    Handle<YieldTermStructure> dts(boost::make_shared<FlatForward>(0, TARGET(), 0.011, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> fts(boost::make_shared<FlatForward>(0, TARGET(), 0.012, ActualActual(ActualActual::ISDA)));
 
     // build a vol surface
     BOOST_TEST_MESSAGE("Build Surface");
-    BlackVolatilitySurfaceDelta surface(refDate, dates, putDeltas, callDeltas, hasAtm, blackVolMatrix, ActualActual(),
+    BlackVolatilitySurfaceDelta surface(refDate, dates, putDeltas, callDeltas, hasAtm, blackVolMatrix, ActualActual(ActualActual::ISDA),
                                         TARGET(), spot, dts, fts);
 
     // ask for volatility at lots of points, should be constVol at every point

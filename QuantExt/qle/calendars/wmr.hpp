@@ -31,8 +31,8 @@ class Wmr : public QuantLib::Calendar {
 private:
     class SetImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "Thomson Reuters QM/Reuters Spot"; }
-        bool isBusinessDay(const QuantLib::Date&) const;
+        std::string name() const override { return "Thomson Reuters QM/Reuters Spot"; }
+        bool isBusinessDay(const QuantLib::Date&) const override;
     };
 
 public:

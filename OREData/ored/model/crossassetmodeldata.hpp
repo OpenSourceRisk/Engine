@@ -69,9 +69,9 @@ public:
     //! \name Serialisation
     //@{
     //! Populate members from XML
-    virtual void fromXML(XMLNode* node);
+    virtual void fromXML(XMLNode* node) override;
     //! Write class mambers to XML
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Getters
@@ -243,9 +243,9 @@ public:
     //! \name Serialisation
     //@{
     //! Populate members from XML
-    virtual void fromXML(XMLNode* node);
+    virtual void fromXML(XMLNode* node) override;
     //! Write class mambers to XML
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Operators

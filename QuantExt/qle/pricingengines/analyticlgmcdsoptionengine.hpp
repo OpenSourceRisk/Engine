@@ -36,7 +36,7 @@ public:
     AnalyticLgmCdsOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size index, const Size ccy,
                                const Real recoveryRate,
                                const Handle<YieldTermStructure>& termStructure = Handle<YieldTermStructure>());
-    void calculate() const;
+    void calculate() const override;
 
 private:
     Real Ei(const Real w, const Real strike, const Size i) const;

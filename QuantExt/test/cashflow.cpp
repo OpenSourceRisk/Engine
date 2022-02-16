@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(testFXLinkedCashFlow) {
     Real foreignAmount = 1000000; // 1M
     boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(123.45);
     Handle<Quote> spot(sq);
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Calendar cal = TARGET();
     Handle<YieldTermStructure> domYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.005, dc))); // JPY
     Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.03, dc)));  // USD
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     string eqName = "SP5";
     boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(2100);
     Handle<Quote> spot(sq);
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Calendar cal = TARGET();
     Currency ccy = USDCurrency();
     Natural fixingLag = 2;

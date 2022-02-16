@@ -69,19 +69,19 @@ public:
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
+    QuantLib::Date maxDate() const override;
     //@}
 
     //! \name VolatilityTermStructure interface
     //@{
-    QuantLib::Rate minStrike() const;
-    QuantLib::Rate maxStrike() const;
+    QuantLib::Rate minStrike() const override;
+    QuantLib::Rate maxStrike() const override;
     //@}
 
     //! \name OptionletVolatilityStructure interface
     //@{
-    QuantLib::VolatilityType volatilityType() const;
-    QuantLib::Real displacement() const;
+    QuantLib::VolatilityType volatilityType() const override;
+    QuantLib::Real displacement() const override;
     //@}
 
     //! \name Other inspectors
@@ -116,11 +116,11 @@ protected:
     /*! Gives a flat SmileSection at the requested \p optionTime. The flat value is obtained by interpolating the
         input volatilities at the given \p optionTime.
     */
-    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const;
+    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
 
     /*! Gives the interpolated optionlet volatility at the requested \p optionTime. The \p strike is ignored.
      */
-    QuantLib::Real volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const;
+    QuantLib::Real volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
     //@}
 
     //! The fixing dates of the index underlying the optionlets

@@ -27,8 +27,8 @@ using QuantLib::Time;
 namespace QuantExt {
 
 JyImpliedZeroInflationTermStructure::JyImpliedZeroInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
-    : ZeroInflationModelTermStructure(model, index) {}
+    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
+    : ZeroInflationModelTermStructure(model, index, indexIsInterpolated) {}
 
 Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
 
@@ -39,7 +39,7 @@ Real JyImpliedZeroInflationTermStructure::zeroRateImpl(Time t) const {
     // ratio holds \frac{P_r(S, T)}{P_n(S, T)}.
     auto S = relativeTime_;
     auto T = relativeTime_ + t;
-    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0]);
+    auto ratio = inflationGrowth(model_, index_, S, T, state_[2], state_[0], indexIsInterpolated_);
 
     // Return the desired z(S) = \left( \frac{P_r(S, T)}{P_n(S, T)} \right)^{\frac{1}{t}} - 1
     return std::pow(ratio, 1 / t) - 1;
@@ -52,7 +52,7 @@ void JyImpliedZeroInflationTermStructure::checkState() const {
 }
 
 Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, Size index,
-    Time S, Time T, Real irState, Real rrState) {
+    Time S, Time T, Real irState, Real rrState, bool indexIsInterpolated) {
 
     QL_REQUIRE(T >= S, "inflationGrowth: end time (" << T << ") must be >= start time (" << S << ")");
 
@@ -75,7 +75,7 @@ Real inflationGrowth(const boost::shared_ptr<CrossAssetModel>& model, Size index
     // Now, use the original zero inflation term structure to get P_r(0, S) / P_n(0, S) and P_r(0, T) / P_n(0, T) and
     // return \frac{P_r(S, T)}{P_n(S, T)}
     const auto& zts = model->infjy(index)->realRate()->termStructure();
-    return inflationGrowth(zts, T) / inflationGrowth(zts, S) * p_r / p_n;
+    return inflationGrowth(zts, T, indexIsInterpolated) / inflationGrowth(zts, S, indexIsInterpolated) * p_r / p_n;
 
 }
 

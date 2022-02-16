@@ -43,8 +43,8 @@ using std::vector;
 namespace QuantExt {
 
 JyImpliedYoYInflationTermStructure::JyImpliedYoYInflationTermStructure(
-    const boost::shared_ptr<CrossAssetModel>& model, Size index)
-    : YoYInflationModelTermStructure(model, index) {}
+    const boost::shared_ptr<CrossAssetModel>& model, Size index, bool indexIsInterpolated)
+    : YoYInflationModelTermStructure(model, index, indexIsInterpolated) {}
 
 map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>& dts, const Period& obsLag) const {
     
@@ -94,7 +94,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
             auto discount = model_->discountBond(irIdx, relativeTime_, T, state_[2]);
             if (i == 1) {
                 // The first YoY swaplet is a zero coupon swaplet because I_{start} is known.
-                auto growth = inflationGrowth(model_, index_, relativeTime_, T, state_[2], state_[0]);
+                auto growth = inflationGrowth(model_, index_, relativeTime_, T, state_[2], state_[0], indexIsInterpolated_);
                 swaplet = discount * (growth - 1.0);
             } else {
                 auto S = relativeTime_ + dayCounter().yearFraction(referenceDate_, start);
@@ -149,7 +149,7 @@ map<Date, Real> JyImpliedYoYInflationTermStructure::yoyRates(const vector<Date>&
     auto lag = obsLag == -1 * Days ? observationLag() : obsLag;
     auto baseRate = helpers.front()->quote()->value();
     auto yoyCurve = boost::make_shared<PiecewiseYoYInflationCurve<Linear>>(referenceDate_, calendar(), dayCounter(),
-        lag, frequency(), indexIsInterpolated(), baseRate, yts, helpers, 1e-12);
+                                                                           lag, frequency(), indexIsInterpolated(), baseRate, helpers, 1e-12);
 
     // Read the necessary YoY rates from the bootstrapped YoY inflation curve
     map<Date, Real> result;
@@ -181,7 +181,7 @@ Real JyImpliedYoYInflationTermStructure::yoySwaplet(Time S, Time T) const {
     auto rrRatio = exp(-(H_r_T - H_r_S) * state_[0] - 0.5 * (H_r_T * H_r_T - H_r_S * H_r_S) * zeta_r_t);
     
     const auto& zts = model_->infjy(index_)->realRate()->termStructure();
-    rrRatio *= (irTs->discount(T) * inflationGrowth(zts, T)) / (irTs->discount(S) * inflationGrowth(zts, S));
+    rrRatio *= (irTs->discount(T) * inflationGrowth(zts, T, indexIsInterpolated_)) / (irTs->discount(S) * inflationGrowth(zts, S, indexIsInterpolated_));
 
     // Calculate the correction term C(t,S,T)
     using CrossAssetAnalytics::integral;

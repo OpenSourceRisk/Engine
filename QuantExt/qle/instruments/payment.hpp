@@ -50,9 +50,9 @@ public:
 
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
-    void fetchResults(const PricingEngine::results*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
+    void fetchResults(const PricingEngine::results*) const override;
     //@}
     //! \name Additional interface
     //@{
@@ -63,7 +63,7 @@ public:
 private:
     //! \name Instrument interface
     //@{
-    void setupExpired() const;
+    void setupExpired() const override;
     //@}
     Currency currency_;
     boost::shared_ptr<SimpleCashFlow> cashflow_;
@@ -73,13 +73,13 @@ class Payment::arguments : public virtual PricingEngine::arguments {
 public:
     Currency currency;
     boost::shared_ptr<SimpleCashFlow> cashflow;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
 class Payment::results : public Instrument::results {
 public:
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments

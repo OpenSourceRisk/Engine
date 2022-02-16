@@ -63,7 +63,7 @@ public:
 
         // build SP5 Equity Curve
         hSP5 = Handle<EquityIndex>(boost::shared_ptr<EquityIndex>(
-            new EquityIndex("SP5", UnitedStates(), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
+            new EquityIndex("SP5", UnitedStates(UnitedStates::Settlement), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
 
         // add fixings
@@ -80,7 +80,7 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, UnitedStates(), forward, ActualActual()));
+        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, UnitedStates(UnitedStates::Settlement), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
 };

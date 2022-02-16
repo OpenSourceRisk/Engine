@@ -679,9 +679,9 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     Real tol1 = 1.0E-4;    // for curves (different interpolation, this is 0.1bp in zero yield)
 
     // manual copy of the initial index curves with fixed reference date (in market, they have floating ref date)
-    Handle<YieldTermStructure> eurIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.02, ActualActual()));
-    Handle<YieldTermStructure> usdIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.03, ActualActual()));
-    Handle<YieldTermStructure> gbpIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.04, ActualActual()));
+    Handle<YieldTermStructure> eurIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.02, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> usdIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.03, ActualActual(ActualActual::ISDA)));
+    Handle<YieldTermStructure> gbpIndexCurve(boost::make_shared<FlatForward>(d.referenceDate, 0.04, ActualActual(ActualActual::ISDA)));
 
     cpu_timer timer;
 
@@ -1222,7 +1222,7 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
                      .withFixedRates(1)
                      .withNotionals(1)
                      .withObservationInterpolation(CPI::Flat)
-                     .withPaymentDayCounter(ActualActual())
+                     .withPaymentDayCounter(ActualActual(ActualActual::ISDA))
                      .withPaymentAdjustment(Following)
                      .withSubtractInflationNominal(true);
 

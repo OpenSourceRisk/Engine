@@ -39,10 +39,10 @@ using namespace QuantLib;
 
  \ingroup currencies
  */
-class TNDCurrency : public Currency {
-public:
-    TNDCurrency();
-};
+// class TNDCurrency : public Currency {
+// public:
+//     TNDCurrency();
+// };
 
 //! Egyptian pound
 /*! The ISO three-letter code is EGP; the numeric code is 818.
@@ -50,10 +50,10 @@ public:
 
  \ingroup currencies
 */
-class EGPCurrency : public Currency {
-public:
-    EGPCurrency();
-};
+// class EGPCurrency : public Currency {
+// public:
+//     EGPCurrency();
+// };
 
 //! Mauritian rupee
 /*! The ISO three-letter code is MUR; the numeric code is 480.
@@ -61,10 +61,10 @@ public:
 
  \ingroup currencies
 */
-class MURCurrency : public Currency {
-public:
-    MURCurrency();
-};
+// class MURCurrency : public Currency {
+// public:
+//     MURCurrency();
+// };
 
 //! Ugandan shilling
 /*! The ISO three-letter code is UGX; the numeric code is 800.
@@ -72,10 +72,10 @@ It is the smallest unit.
 
  \ingroup currencies
 */
-class UGXCurrency : public Currency {
-public:
-    UGXCurrency();
-};
+// class UGXCurrency : public Currency {
+// public:
+//     UGXCurrency();
+// };
 
 //! Zambian kwacha
 /*! The ISO three-letter code is ZMW; the numeric code is 967.
@@ -83,10 +83,10 @@ It is divided into 100 ngwee.
 
  \ingroup currencies
 */
-class ZMWCurrency : public Currency {
-public:
-    ZMWCurrency();
-};
+// class ZMWCurrency : public Currency {
+// public:
+//     ZMWCurrency();
+// };
 
 //! Moroccan dirham
 /*! The ISO three-letter code is MAD; the numeric code is 504.
@@ -94,10 +94,10 @@ public:
 
  \ingroup currencies
 */
-class MADCurrency : public Currency {
-public:
-    MADCurrency();
-};
+// class MADCurrency : public Currency {
+// public:
+//     MADCurrency();
+// };
 
 //! Kenyan shilling
 /*! The ISO three-letter code is KES; the numeric code is 404.
@@ -105,10 +105,10 @@ public:
 
  \ingroup currencies
 */
-class KESCurrency : public Currency {
-public:
-    KESCurrency();
-};
+// class KESCurrency : public Currency {
+// public:
+//     KESCurrency();
+// };
 
 //! Ghanaian cedi
 /*! The ISO three-letter code is GHS; the numeric code is 936.
@@ -116,10 +116,10 @@ public:
 
  \ingroup currencies
 */
-class GHSCurrency : public Currency {
-public:
-    GHSCurrency();
-};
+// class GHSCurrency : public Currency {
+// public:
+//     GHSCurrency();
+// };
 
 // Angolan kwanza
 /*! The ISO three-letter code is AOA; the numeric code is 973.
@@ -127,10 +127,10 @@ public:
 
  \ingroup currencies
 */
-class AOACurrency : public Currency {
-public:
-    AOACurrency();
-};
+// class AOACurrency : public Currency {
+// public:
+//     AOACurrency();
+// };
 
 // Ethiopian birr
 /*! The ISO three-letter code is ETB; the numeric code is 230.
@@ -138,10 +138,10 @@ public:
 
  \ingroup currencies
 */
-class ETBCurrency : public Currency {
-public:
-    ETBCurrency();
-};
+// class ETBCurrency : public Currency {
+// public:
+//     ETBCurrency();
+// };
 
 // West African CFA franc
 /*! The ISO three-letter code is XOF; the numeric code is 952.
@@ -149,10 +149,10 @@ public:
 
  \ingroup currencies
 */
-class XOFCurrency : public Currency {
-public:
-    XOFCurrency();
-};
+// class XOFCurrency : public Currency {
+// public:
+//     XOFCurrency();
+// };
 
 } // namespace QuantExt
 #endif

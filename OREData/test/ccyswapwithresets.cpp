@@ -93,7 +93,7 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =
             intDiscCurve(datesEUR, dfsEUR, Actual360(), TARGET());
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] =
-            intDiscCurve(datesUSD, dfsUSD, Actual360(), UnitedStates());
+            intDiscCurve(datesUSD, dfsUSD, Actual360(), UnitedStates(UnitedStates::Settlement));
 
         // build ibor index
         Handle<IborIndex> hEUR(parseIborIndex("EUR-EURIBOR-6M", intDiscCurve(datesEUR, dfsEUR, Actual360(), TARGET())));
@@ -102,7 +102,7 @@ public:
         // add Eurib 6M fixing
         hEUR->addFixing(Date(18, Aug, 2016), -0.00191);
         Handle<IborIndex> hUSD(
-            parseIborIndex("USD-LIBOR-3M", intDiscCurve(datesUSD, dfsUSD, Actual360(), UnitedStates())));
+            parseIborIndex("USD-LIBOR-3M", intDiscCurve(datesUSD, dfsUSD, Actual360(), UnitedStates(UnitedStates::Settlement))));
         iborIndices_[make_pair(Market::defaultConfiguration, "USD-LIBOR-3M")] = hUSD;
 
         // add Libor 3M fixing

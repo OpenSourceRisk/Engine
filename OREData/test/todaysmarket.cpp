@@ -51,10 +51,10 @@ namespace {
 class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const;
-    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
-    const std::vector<Fixing>& loadFixings() const { return fixings_; }
-    const std::vector<Fixing>& loadDividends() const { return dividends_; }
+    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const override;
+    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const override;
+    const std::vector<Fixing>& loadFixings() const override { return fixings_; }
+    const std::vector<Fixing>& loadDividends() const override { return dividends_; }
     void add(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addFixing(QuantLib::Date date, const string& name, QuantLib::Real value) {}
     void addDividend(QuantLib::Date date, const string& name, QuantLib::Real value) {}
@@ -711,7 +711,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->swaptionVolCurveConfig("USD_SW_LN") = boost::make_shared<SwaptionVolatilityCurveConfig>(
         "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
         SwaptionVolatilityCurveConfig::VolatilityType::Lognormal, extrapolate, flatExtrapolate, optionTenors,
-        swapTenors, dayCounter, UnitedStates(), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
+        swapTenors, dayCounter, UnitedStates(UnitedStates::Settlement), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
 
     // Capfloor volatility structure tenors and strikes
     vector<string> capTenors{"1Y", "2Y", "5Y", "7Y", "10Y"};
@@ -720,8 +720,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     // USD Lognormal capfloor volatility "curve" configuration
     configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(), bdc, "USD-LIBOR-3M", 3 * Months,
-        "Yield/USD/USD1D");
+        extrapolate, false, false, capTenors, strikes, dayCounter, 0, UnitedStates(UnitedStates::Settlement), bdc, "USD-LIBOR-3M",
+        3 * Months, "Yield/USD/USD1D");
 
     vector<string> optionTenors2{"1Y"};
 
@@ -730,7 +730,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
         CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
-        MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(), bdc,
+        MarketDatum::QuoteType::RATE, extrapolate, optionTenors2, dayCounter, UnitedStates(UnitedStates::Settlement), bdc,
         "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR");
     configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,

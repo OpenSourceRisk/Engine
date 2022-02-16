@@ -90,25 +90,25 @@ public:
     RegularCubeInterpretation(bool flipViewXVA) : npvIdx_(0), mporFlowsIdx_(1), flipViewXVA_(flipViewXVA) {}
 
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
-                         Size depth) const;
+                         Size depth) const override;
 
-    Real getDefaultNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+    Real getDefaultNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const override;
 
-    Real getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+    Real getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const override;
 
-    Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+    Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const override;
 
-    bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const;
+    bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const override;
 
     Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
                                        const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
-                                       const std::string& qualifier = "") const;
+                                       const std::string& qualifier = "") const override;
 
     Real getCloseOutAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
                                         const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
-                                        const std::string& qualifier = "") const;
+                                        const std::string& qualifier = "") const override;
 
-    Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const;
+    Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const override;
 
 private:
     Size npvIdx_, mporFlowsIdx_;
@@ -136,25 +136,25 @@ public:
           flipViewXVA_(flipViewXVA) {}
 
     Real getGenericValue(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx,
-                         Size depth) const;
+                         Size depth) const override;
 
-    Real getDefaultNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+    Real getDefaultNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const override;
 
-    Real getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+    Real getCloseOutNpv(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const override;
 
-    Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const;
+    Real getMporFlows(const boost::shared_ptr<NPVCube>& cube, Size tradeIdx, Size dateIdx, Size sampleIdx) const override;
 
-    bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const;
+    bool hasMporFlows(const boost::shared_ptr<NPVCube>& cube) const override;
 
     Real getDefaultAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
                                        const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
-                                       const std::string& qualifier = "") const;
+                                       const std::string& qualifier = "") const override;
 
     Real getCloseOutAggrionScenarioData(const boost::shared_ptr<AggregationScenarioData>& aggScenData,
                                         const AggregationScenarioDataType& dataType, Size dateIdx, Size sampleIdx,
-                                        const std::string& qualifier = "") const;
+                                        const std::string& qualifier = "") const override;
 
-    Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const;
+    Size getMporCalendarDays(const boost::shared_ptr<NPVCube>& cube, Size dateIdx) const override;
 
 private:
     Size defaultDateNpvIdx_, closeOutDateNpvIdx_, mporFlowsIdx_;

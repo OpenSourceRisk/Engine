@@ -64,8 +64,8 @@ public:
 
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(QuantLib::PricingEngine::arguments*) const;
+    bool isExpired() const override;
+    void setupArguments(QuantLib::PricingEngine::arguments*) const override;
     //@}
 
     //! \name Inspectors
@@ -102,7 +102,7 @@ public:
     QuantLib::Real strike;
     bool physicallySettled;
     QuantLib::Date paymentDate;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments

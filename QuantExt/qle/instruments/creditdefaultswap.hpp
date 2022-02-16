@@ -211,9 +211,9 @@ public:
     //@}
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
-    void fetchResults(const PricingEngine::results*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
+    void fetchResults(const PricingEngine::results*) const override;
     //@}
     //! \name Inspectors
     //@{
@@ -318,7 +318,7 @@ public:
 protected:
     //! \name Instrument interface
     //@{
-    void setupExpired() const;
+    void setupExpired() const override;
     //@}
     // data members
     Protection::Side side_;
@@ -368,7 +368,7 @@ public:
     ProtectionPaymentTime protectionPaymentTime;
     boost::shared_ptr<Claim> claim;
     Date protectionStart, maturity;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
@@ -383,7 +383,7 @@ public:
     Real upfrontBPS;
     Real upfrontNPV;
     Real accrualRebateNPV;
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments

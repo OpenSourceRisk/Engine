@@ -53,15 +53,15 @@ private:
 public:
     AnalysisGenerator();
     void reset();
-    void visit(QuantLib::CashFlow& c);
-    void visit(QuantLib::IndexedCashFlow& c);
-    void visit(QuantLib::Coupon& c);
-    void visit(QuantLib::FloatingRateCoupon& c);
-    void visit(QuantExt::AverageONIndexedCoupon& c);
-    void visit(QuantLib::AverageBMACoupon& c);
-    void visit(QuantExt::FXLinkedCashFlow& c);
-    void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
-    void visit(QuantLib::InflationCoupon& c);
+    void visit(QuantLib::CashFlow& c) override;
+    void visit(QuantLib::IndexedCashFlow& c) override;
+    void visit(QuantLib::Coupon& c) override;
+    void visit(QuantLib::FloatingRateCoupon& c) override;
+    void visit(QuantExt::AverageONIndexedCoupon& c) override;
+    void visit(QuantLib::AverageBMACoupon& c) override;
+    void visit(QuantExt::FXLinkedCashFlow& c) override;
+    void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c) override;
+    void visit(QuantLib::InflationCoupon& c) override;
     const vector<vector<string>>& analysis() const;
 };
 

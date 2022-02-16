@@ -78,8 +78,8 @@ public:
 
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
     //@}
     //! \name Inspectors
     //@{
@@ -102,8 +102,8 @@ private:
     StrikeType strikeType_;
 
     mutable Real riskyAnnuity_;
-    void setupExpired() const;
-    void fetchResults(const PricingEngine::results*) const;
+    void setupExpired() const override;
+    void fetchResults(const PricingEngine::results*) const override;
 };
 
 //! %Arguments for CDS-option calculation
@@ -115,7 +115,7 @@ public:
     bool knocksOut;
     Real strike;
     StrikeType strikeType;
-    void validate() const;
+    void validate() const override;
 };
 
 //! %Results from CDS-option calculation
@@ -123,7 +123,7 @@ public:
 class CdsOption::results : public Option::results {
 public:
     Real riskyAnnuity;
-    void reset();
+    void reset() override;
 };
 
 //! base class for swaption engines

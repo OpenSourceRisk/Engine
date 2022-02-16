@@ -45,25 +45,25 @@ public:
     }
     //! \name TermStructure interface
     //@{
-    const Date& referenceDate() const { return vol1_->referenceDate(); }
-    Date maxDate() const { return std::min(vol1_->maxDate(), vol2_->maxDate()); }
-    Natural settlementDays() const { return vol1_->settlementDays(); }
-    Calendar calendar() const { return vol1_->calendar(); }
+    const Date& referenceDate() const override { return vol1_->referenceDate(); }
+    Date maxDate() const override { return std::min(vol1_->maxDate(), vol2_->maxDate()); }
+    Natural settlementDays() const override { return vol1_->settlementDays(); }
+    Calendar calendar() const override { return vol1_->calendar(); }
     //! \name Observer interface
     //@{
-    void update() { notifyObservers(); }
+    void update() override { notifyObservers(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const { return 0; }
-    Real maxStrike() const { return QL_MAX_REAL; }
+    Real minStrike() const override { return 0; }
+    Real maxStrike() const override { return QL_MAX_REAL; }
     //@}
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 protected:
-    virtual Volatility blackVolImpl(Time t, Real) const {
+    virtual Volatility blackVolImpl(Time t, Real) const override {
         // get ATM vols and correlation
         Volatility v1 = vol1_->blackVol(t, Null<Real>());
         Volatility v2 = vol2_->blackVol(t, Null<Real>());

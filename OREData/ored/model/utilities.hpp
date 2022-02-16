@@ -68,7 +68,8 @@ std::string getCalibrationDetails(
 
 std::string getCalibrationDetails(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
-    const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>());
+    const boost::shared_ptr<InfDkParametrization>& parametrization = boost::shared_ptr<InfDkParametrization>(),
+    bool indexIsInterpolated = true);
 
 std::string getCalibrationDetails(const std::vector<boost::shared_ptr<CalibrationHelper>>& realRateBasket,
                                   const std::vector<boost::shared_ptr<CalibrationHelper>>& indexBasket,

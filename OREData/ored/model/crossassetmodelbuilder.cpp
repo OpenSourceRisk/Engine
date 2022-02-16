@@ -630,7 +630,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
     if (data.calibrationType() == CalibrationType::Bootstrap) {
         if (fabs(inflationCalibrationErrors_[modelIdx]) < config_->bootstrapTolerance()) {
             TLOGGERSTREAM("Calibration details:");
-            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam));
+            TLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
             TLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
         } else {
             string exceptionMessage = "INF (DK) " + std::to_string(modelIdx) + " calibration error " +
@@ -638,7 +638,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfDkData& data, Size mode
                                       std::to_string(config_->bootstrapTolerance());
             WLOG(StructuredModelErrorMessage("Failed to calibrate INF DK Model", exceptionMessage));
             WLOGGERSTREAM("Calibration details:");
-            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam));
+            WLOGGERSTREAM(getCalibrationDetails(cb, inflationParam, zInfIndex->interpolated()));
             WLOGGERSTREAM("rmse = " << inflationCalibrationErrors_[modelIdx]);
             if (!continueOnError_)
                 QL_FAIL(exceptionMessage);
@@ -663,13 +663,16 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
         return;
     }
 
+    Handle<ZeroInflationIndex> zInfIndex =
+        market_->zeroInflationIndex(model_->infjy(modelIdx)->name(), configurationInfCalibration_);
+
     // We will need the 2 baskets of helpers
     auto rrBasket = jyBuilder->realRateBasket();
     auto idxBasket = jyBuilder->indexBasket();
 
     // Attach engines to the helpers.
-    setJyPricingEngine(modelIdx, rrBasket);
-    setJyPricingEngine(modelIdx, idxBasket);
+    setJyPricingEngine(modelIdx, rrBasket, zInfIndex->interpolated());
+    setJyPricingEngine(modelIdx, idxBasket, zInfIndex->interpolated());
 
     if (dontCalibrate_)
         return;
@@ -788,7 +791,7 @@ void CrossAssetModelBuilder::calibrateInflation(const InfJyData& data, Size mode
 }
 
 void CrossAssetModelBuilder::setJyPricingEngine(
-    Size modelIdx, const vector<boost::shared_ptr<CalibrationHelper>>& calibrationBasket) const {
+    Size modelIdx, const vector<boost::shared_ptr<CalibrationHelper>>& calibrationBasket, bool indexIsInterpolated) const {
 
     DLOG("Start setting pricing engines on JY calibration instruments.");
 
@@ -811,7 +814,7 @@ void CrossAssetModelBuilder::setJyPricingEngine(
 
         if (boost::shared_ptr<YoYCapFloorHelper> h = boost::dynamic_pointer_cast<YoYCapFloorHelper>(ci)) {
             if (!yoyCapFloorEngine) {
-                yoyCapFloorEngine = boost::make_shared<AnalyticJyYoYCapFloorEngine>(*model_, modelIdx);
+                yoyCapFloorEngine = boost::make_shared<AnalyticJyYoYCapFloorEngine>(*model_, modelIdx, indexIsInterpolated);
             }
             h->setPricingEngine(yoyCapFloorEngine);
             continue;

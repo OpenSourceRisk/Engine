@@ -64,11 +64,11 @@ public:
     //! \name Limits
     //@{
     //! the minimum strike for which the term structure can return vols
-    QuantLib::Real minStrike() const;
+    QuantLib::Real minStrike() const override;
     //! the maximum strike for which the term structure can return vols
-    QuantLib::Real maxStrike() const;
+    QuantLib::Real maxStrike() const override;
     //! maximum date for which the term structure can return vols
-    QuantLib::Date maxDate() const;
+    QuantLib::Date maxDate() const override;
     //@}
 
     //! \name Inspectors
@@ -79,7 +79,7 @@ public:
     //@}
 
 private:
-    QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const;
+    QuantLib::Volatility volatilityImpl(QuantLib::Time length, QuantLib::Rate strike) const override;
 
     bool chooseFloor(QuantLib::Real strike, QuantLib::Real atmRate) const;
 

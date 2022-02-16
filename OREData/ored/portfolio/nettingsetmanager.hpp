@@ -92,8 +92,8 @@ public:
     */
     vector<NettingSetDetails> uniqueKeys() const { return uniqueKeys_; }
 
-    void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     const std::map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
 
 private:

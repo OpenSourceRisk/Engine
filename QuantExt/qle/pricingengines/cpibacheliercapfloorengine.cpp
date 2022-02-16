@@ -77,14 +77,17 @@ void CPIBachelierCapFloorEngine::calculate() const {
     Real K = pow(1.0 + arguments_.strike, timeFromStart);
     Real F = indexFixing(effectiveMaturity, maturity) / arguments_.baseCPI;
 
-    // For reading volatility in the current market volatiltiy structure
-    // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t), solve
-    // for strikeRate(t):
-    Real strikeZeroRate =
-        pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) - 1.0;
-    Period obsLag = Period(0, Days); // Should be zero here if we use the lag difference to adjust maturity above
-    Real stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate, obsLag));
-
+    Real stdDev = 0.0;
+     if (timeFromBase > 0 && !close_enough(timeFromBase, 0.0)) {
+        // For reading volatility in the current market volatiltiy structure
+        // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
+        // solve for strikeRate(t):
+        Real strikeZeroRate =
+            pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) -
+            1.0;
+        Period obsLag = Period(0, Days); // Should be zero here if we use the lag difference to adjust maturity above
+        stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate, obsLag));
+    }
     results_.value = bachelierBlackFormula(arguments_.type, K, F, stdDev, d);
 }
 

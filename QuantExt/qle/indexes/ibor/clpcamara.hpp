@@ -27,7 +27,7 @@
 #include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <qle/calendars/chile.hpp>
+#include <ql/time/calendars/chile.hpp>
 
 namespace QuantExt {
 

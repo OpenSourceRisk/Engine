@@ -43,9 +43,9 @@ public:
                                      const std::vector<Rate>& strikes, const std::vector<std::vector<Handle<Quote> > >&,
                                      VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
 
-    QuantLib::Date maxDate() const;
-    void performCalculations() const;
-    void update();
+    QuantLib::Date maxDate() const override;
+    void performCalculations() const override;
+    void update() override;
 
     const std::vector<Rate>& yoyoptionletStrikes(Size i) const;
     const std::vector<Volatility>& yoyoptionletVolatilities(Size i) const;
@@ -53,18 +53,18 @@ public:
     const std::vector<Date>& yoyoptionletFixingDates() const;
     const std::vector<Time>& yoyoptionletFixingTimes() const;
 
-    DayCounter dayCounter() const;
-    Calendar calendar() const;
-    Natural settlementDays() const;
-    BusinessDayConvention businessDayConvention() const;
+    DayCounter dayCounter() const override;
+    Calendar calendar() const override;
+    Natural settlementDays() const override;
+    BusinessDayConvention businessDayConvention() const override;
 
-    QuantLib::VolatilityType volatilityType() const;
-    QuantLib::Real displacement() const;
+    QuantLib::VolatilityType volatilityType() const override;
+    QuantLib::Real displacement() const override;
 
 protected:
-    QuantLib::Rate minStrike() const;
-    QuantLib::Rate maxStrike() const;
-    QuantLib::Volatility volatilityImpl(Time length, QuantLib::Rate strike) const;
+    QuantLib::Rate minStrike() const override;
+    QuantLib::Rate maxStrike() const override;
+    QuantLib::Volatility volatilityImpl(Time length, QuantLib::Rate strike) const override;
 
 private:
     void checkInputs() const;

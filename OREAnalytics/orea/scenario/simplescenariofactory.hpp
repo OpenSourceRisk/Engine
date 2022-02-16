@@ -36,7 +36,7 @@ namespace analytics {
 class SimpleScenarioFactory : public ScenarioFactory {
 public:
     const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
-                                                    Real numeraire = 0.0) const {
+                                                    Real numeraire = 0.0) const override {
         return boost::make_shared<SimpleScenario>(asof, label, numeraire);
     }
 };

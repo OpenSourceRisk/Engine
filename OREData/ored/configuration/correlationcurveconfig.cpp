@@ -130,7 +130,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
         cal == "" ? calendar_ = QuantLib::NullCalendar() : calendar_ = parseCalendar(cal);
 
         dc = XMLUtils::getChildValue(node, "DayCounter", false);
-        dc == "" ? dayCounter_ = QuantLib::ActualActual() : dayCounter_ = parseDayCounter(dc);
+        dc == "" ? dayCounter_ = QuantLib::ActualActual(ActualActual::ISDA) : dayCounter_ = parseDayCounter(dc);
     } else { // Compulsory information for Rate and Price QuoteTypes
         cal = XMLUtils::getChildValue(node, "Calendar", true);
         calendar_ = parseCalendar(cal);
@@ -263,15 +263,15 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
     if (s1 == 0 || s1 == 1)
         return tokens1[1] < tokens2[1];
 
-    QL_REQUIRE(tokens1.size() >= 3, "at least three tokens expected in " << index1)
-    QL_REQUIRE(tokens2.size() >= 3, "at least three tokens expected in " << index2)
+    QL_REQUIRE(tokens1.size() >= 3, "at least three tokens expected in " << index1);
+    QL_REQUIRE(tokens2.size() >= 3, "at least three tokens expected in " << index2);
 
     // both CMS or both Ibor, tenor is the last token (3rd or even 4th for customised CMS indices)
     if (s1 == 3 || s1 == 4)
         return parsePeriod(tokens1.back()) < parsePeriod(tokens2.back());
 
-    QL_REQUIRE(tokens1.size() >= 4, "at least four tokens expected in " << index1)
-    QL_REQUIRE(tokens2.size() >= 4, "at least four tokens expected in " << index2)
+    QL_REQUIRE(tokens1.size() >= 4, "at least four tokens expected in " << index1);
+    QL_REQUIRE(tokens2.size() >= 4, "at least four tokens expected in " << index2);
 
     // both FX, compare CCY1 then CCY2 alphabetical
     if (s1 == 2) {

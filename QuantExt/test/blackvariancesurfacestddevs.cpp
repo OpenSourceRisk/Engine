@@ -51,11 +51,11 @@ BOOST_AUTO_TEST_CASE(testFlatSurface) {
     Volatility flatVol = 0.12;
     Handle<Quote> flatVolQ = Handle<Quote>(boost::make_shared<SimpleQuote>(flatVol));
     vector<vector<Handle<Quote> > > blackVolMatrix(stdDevs.size(), vector<Handle<Quote> >(times.size(), flatVolQ));
-    DayCounter dc = ActualActual();
+    DayCounter dc = ActualActual(ActualActual::ISDA);
     Handle<YieldTermStructure> forTS(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual()));
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), ActualActual(ActualActual::ISDA)));
     Handle<YieldTermStructure> domTS(
-        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual()));
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), ActualActual(ActualActual::ISDA)));
 
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = 
         boost::make_shared<QuantExt::FxIndex>("dummy", 2, EURCurrency(),

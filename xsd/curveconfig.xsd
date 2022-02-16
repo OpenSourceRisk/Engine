@@ -668,6 +668,7 @@
       <xs:element type="xs:string" name="MaxTenor" minOccurs="0"/>
       <xs:element type="non-negative-decimal" name="Beta" minOccurs="0"/>
     </xs:all>
+    <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
   
   <xs:simpleType name="commVolQuoteSuffix">

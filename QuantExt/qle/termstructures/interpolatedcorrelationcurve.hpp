@@ -47,22 +47,22 @@ public:
     //@}
     //! \name TermStructure interface
     //@{
-    Date maxDate() const { return Date::maxDate(); } // flat extrapolation
-    Time maxTime() const { return QL_MAX_REAL; }
+    Date maxDate() const override { return Date::maxDate(); } // flat extrapolation
+    Time maxTime() const override { return QL_MAX_REAL; }
     //@}
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 private:
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 protected:
     //! \name CorrelationTermStructure implementation
     //@{
-    Real correlationImpl(Time t, Real) const;
+    Real correlationImpl(Time t, Real) const override;
     //@}
     std::vector<Handle<Quote> > quotes_;
 };

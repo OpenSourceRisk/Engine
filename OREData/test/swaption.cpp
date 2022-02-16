@@ -55,14 +55,14 @@ public:
 
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
-        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
+        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual(ActualActual::ISDA)));
         return Handle<YieldTermStructure>(yts);
     }
     Handle<QuantLib::SwaptionVolatilityStructure>
     flatSwaptionVol(Volatility forward, VolatilityType type = ShiftedLognormal, Real shift = 0.0) {
         boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svs(
             new QuantLib::ConstantSwaptionVolatility(Settings::instance().evaluationDate(), NullCalendar(),
-                                                     ModifiedFollowing, forward, ActualActual(), type, shift));
+                                                     ModifiedFollowing, forward, ActualActual(ActualActual::ISDA), type, shift));
         return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
     }
 };

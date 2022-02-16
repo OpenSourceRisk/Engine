@@ -546,9 +546,6 @@
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\calendars\chile.hpp">
-      <Filter>time\calendars</Filter>
-    </ClInclude>
     <ClInclude Include="qle\calendars\colombia.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
@@ -1598,9 +1595,6 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\fixedbmaswap.cpp">
       <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\calendars\chile.cpp">
-      <Filter>time\calendars</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\colombia.cpp">
       <Filter>time\calendars</Filter>
