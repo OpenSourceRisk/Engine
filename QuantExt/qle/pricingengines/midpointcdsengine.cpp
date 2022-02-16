@@ -214,7 +214,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         results.upfrontBPS = Null<Rate>();
     }
 
-    results.additionalResults["upfrontPremium"] = arguments.upfrontPayment->amount();
+    results.additionalResults["upfrontPremium"] = arguments.upfrontPayment->amount() * upfrontSign;
     results.additionalResults["upfrontPremiumNPV"] = results.upfrontNPV;
     results.additionalResults["premiumLegNPVDirty"] = results.couponLegNPV;
     results.additionalResults["premiumLegNPVClean"] = results.couponLegNPV + results.accrualRebateNPVCurrent;
