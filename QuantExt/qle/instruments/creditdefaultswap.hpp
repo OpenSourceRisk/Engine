@@ -230,7 +230,7 @@ public:
     const Date& protectionEndDate() const;
     const boost::shared_ptr<SimpleCashFlow>& upfrontPayment() const;
     const boost::shared_ptr<SimpleCashFlow>& accrualRebate() const;
-    const boost::shared_ptr<SimpleCashFlow>& accrualRebateAsof() const;
+    const boost::shared_ptr<SimpleCashFlow>& accrualRebateCurrent() const;
     const Date& tradeDate() const;
     Natural cashSettlementDays() const;
     //@}
@@ -258,7 +258,7 @@ public:
     Real defaultLegNPV() const;
     Real upfrontNPV() const;
     Real accrualRebateNPV() const;
-    Real accrualRebateNPVAsof() const;
+    Real accrualRebateNPVCurrent() const;
 
     Date maturity() const { return maturity_; }
 
@@ -333,16 +333,16 @@ protected:
     boost::shared_ptr<Claim> claim_;
     Leg leg_;
     boost::shared_ptr<SimpleCashFlow> upfrontPayment_;
-    boost::shared_ptr<SimpleCashFlow> accrualRebate_, accrualRebateAsof_;
+    boost::shared_ptr<SimpleCashFlow> accrualRebate_, accrualRebateCurrent_;
     Date protectionStart_, maturity_;
     Date tradeDate_;
     Natural cashSettlementDays_;
     // results
     mutable Rate fairUpfront_;
-    mutable Rate fairSpread_;
+    mutable Rate fairSpreadDirty_, fairSpreadClean_;
     mutable Real couponLegBPS_, couponLegNPV_;
     mutable Real upfrontBPS_, upfrontNPV_;
-    mutable Real defaultLegNPV_, accrualRebateNPV_;
+    mutable Real defaultLegNPV_, accrualRebateNPV_, accrualRebateNPVCurrent_;
     //! \name Additional interface
     //@{
     virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
@@ -366,7 +366,7 @@ public:
     boost::optional<Rate> upfront;
     Rate spread;
     Leg leg;
-    boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate, accrualRebateAsof;
+    boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate, accrualRebateCurrent;
     bool settlesAccrual;
     ProtectionPaymentTime protectionPaymentTime;
     boost::shared_ptr<Claim> claim;
@@ -386,7 +386,7 @@ public:
     Real defaultLegNPV;
     Real upfrontBPS;
     Real upfrontNPV;
-    Real accrualRebateNPV, accrualRebateNPVAsof;
+    Real accrualRebateNPV, accrualRebateNPVCurrent;
     void reset() override;
 };
 
