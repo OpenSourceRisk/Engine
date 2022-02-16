@@ -412,8 +412,13 @@ private:
 class StructuredMessage {
 public:
     StructuredMessage(const string& category, const string& group, const string& message,
-                      const std::map<string, string>& subFields)
+                      const std::map<string, string>& subFields = std::map<string, string>())
         : category_(category), group_(group), message_(message), subFields_(subFields) {}
+
+    StructuredMessage(const string& category, const string& group, const string& message,
+                      const std::pair<string, string>& subField = std::pair<string, string>())
+        : StructuredMessage(category, group, message, std::map<string, string>({subField})) {}
+
     virtual ~StructuredMessage() {}
 
     static constexpr const char* name = "StructuredMessage";
@@ -421,9 +426,9 @@ public:
     //! return a string for the log file
     string msg() const { return string(name) + string(" ") + json(); }
 
-private:
     string json() const;
 
+private:
     // utility function to delimate string for json, handles \" and \\ and control characters
     string jsonify(const std::string& s) const;
 
