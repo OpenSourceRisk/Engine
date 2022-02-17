@@ -1416,6 +1416,34 @@ Examples:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Base Correlations}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{CDS\_INDEX} & \\ \hline
+    Quote Type & \emph{BASE\_CORRELATION} & \\ \hline
+    Index & String & CDS index name \\ \hline
+    Term & Period (e.g. 5Y) & Term on the base correlation curve, the curve is flat if quotes for only one term are provided\\ \hline
+    DetachmentPoint & Real in (0...1) & Detachment point of the equity tranche this quote refers to \\ \hline
+  \end{tabular}
+  \caption{Base correlation quotes}
+  \label{tab:correlation_quote}
+\end{table}
+
+This quote provides the base correlation for a CDS index' equity tranche with the specified detachment point. 
+\medskip
+Example:
+\begin{itemize}
+	\item CDS\_INDEX/BASE\_CORRELATION/2I65BYBD6/5Y/0.03
+\end{itemize}
+
+Typically there are several base correlation quotes per term for several detachment points such as 0.03, 0.07, 0.15. 
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Correlations}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1442,6 +1470,7 @@ Examples:
 \begin{itemize}
 	\item CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM
 \end{itemize}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Conditional Prepayment Rates}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
