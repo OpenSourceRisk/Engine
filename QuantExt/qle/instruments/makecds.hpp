@@ -66,8 +66,8 @@ public:
     MakeCreditDefaultSwap& withSide(Protection::Side);
     MakeCreditDefaultSwap& withNominal(Real);
     MakeCreditDefaultSwap& withCouponTenor(Period);
-    MakeCreditDefaultSwap& withDayCounter(DayCounter&);
-    MakeCreditDefaultSwap& withLastPeriodDayCounter(DayCounter&);
+    MakeCreditDefaultSwap& withDayCounter(const DayCounter&);
+    MakeCreditDefaultSwap& withLastPeriodDayCounter(const DayCounter&);
     MakeCreditDefaultSwap& withDateGenerationRule(DateGeneration::Rule rule);
     MakeCreditDefaultSwap& withCashSettlementDays(Natural cashSettlementDays);
     MakeCreditDefaultSwap& withPricingEngine(const boost::shared_ptr<PricingEngine>&);

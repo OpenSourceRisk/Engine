@@ -118,12 +118,12 @@ MakeCreditDefaultSwap& MakeCreditDefaultSwap::withCouponTenor(Period couponTenor
     return *this;
 }
 
-MakeCreditDefaultSwap& MakeCreditDefaultSwap::withDayCounter(DayCounter& dayCounter) {
+MakeCreditDefaultSwap& MakeCreditDefaultSwap::withDayCounter(const DayCounter& dayCounter) {
     dayCounter_ = dayCounter;
     return *this;
 }
 
-MakeCreditDefaultSwap& MakeCreditDefaultSwap::withLastPeriodDayCounter(DayCounter& lastPeriodDayCounter) {
+MakeCreditDefaultSwap& MakeCreditDefaultSwap::withLastPeriodDayCounter(const DayCounter& lastPeriodDayCounter) {
     lastPeriodDayCounter_ = lastPeriodDayCounter;
     return *this;
 }
