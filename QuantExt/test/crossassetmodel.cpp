@@ -4544,7 +4544,7 @@ BOOST_AUTO_TEST_CASE(testCrCalibration) {
 
     boost::shared_ptr<QuantExt::CreditDefaultSwap> underlying =
         boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
-    Real K = underlying->fairSpread();
+    Real K = underlying->fairSpreadClean();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);
 
     Settings::instance().evaluationDate() = lastMat;

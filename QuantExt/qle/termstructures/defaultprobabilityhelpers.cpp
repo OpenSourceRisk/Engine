@@ -153,7 +153,7 @@ SpreadCdsHelper::SpreadCdsHelper(Rate runningSpread, const Period& tenor, Intege
 
 Real SpreadCdsHelper::impliedQuote() const {
     swap_->deepUpdate();
-    return swap_->fairSpread();
+    return swap_->fairSpreadClean();
 }
 
 void SpreadCdsHelper::resetEngine() {
