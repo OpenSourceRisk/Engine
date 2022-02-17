@@ -46,20 +46,22 @@ MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Period& tenor, const Real cou
     : side_(Protection::Buyer), nominal_(1.0), tenor_(tenor), termDate_(boost::none), couponTenor_(3 * Months),
       couponRate_(couponRate), upfrontRate_(0.0),
       dayCounter_(Actual360()), lastPeriodDayCounter_(Actual360(true)),
-      rule_(DateGeneration::CDS2015), cashSettlementDays_(3) {}
+      rule_(DateGeneration::CDS2015), cashSettlementDays_(3), settlesAccrual_(true),
+      paysAtDefaultTime_(true), rebatesAccrual_(true) {}
 
 MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Date& termDate, const Real couponRate)
     : side_(Protection::Buyer), nominal_(1.0), tenor_(boost::none), termDate_(termDate), couponTenor_(3 * Months),
       couponRate_(couponRate), upfrontRate_(0.0),
       dayCounter_(Actual360()), lastPeriodDayCounter_(Actual360(true)),
-      rule_(DateGeneration::CDS2015), cashSettlementDays_(3) {}
+      rule_(DateGeneration::CDS2015), cashSettlementDays_(3), settlesAccrual_(true),
+      paysAtDefaultTime_(true), rebatesAccrual_(true) {}
 
 MakeCreditDefaultSwap::operator CreditDefaultSwap() const {
     boost::shared_ptr<CreditDefaultSwap> swap = *this;
     return *swap;
 }
 
-MakeCreditDefaultSwap::operator boost::shared_ptr<CreditDefaultSwap>() const {
+    MakeCreditDefaultSwap::operator boost::shared_ptr<QuantExt::CreditDefaultSwap>() const {
 
     Date tradeDate = Settings::instance().evaluationDate();
     Date upfrontDate = WeekendsOnly().advance(tradeDate, cashSettlementDays_, Days);
@@ -84,10 +86,13 @@ MakeCreditDefaultSwap::operator boost::shared_ptr<CreditDefaultSwap>() const {
 
     Schedule schedule(protectionStart, end, couponTenor_, WeekendsOnly(), Following, Unadjusted, rule_, false);
 
-    boost::shared_ptr<CreditDefaultSwap> cds = boost::make_shared<CreditDefaultSwap>(
-        side_, nominal_, upfrontRate_, couponRate_, schedule, Following, dayCounter_, true,
-        CreditDefaultSwap::atDefault, protectionStart, upfrontDate, boost::shared_ptr<Claim>(),
-        lastPeriodDayCounter_, tradeDate, cashSettlementDays_);
+    QuantExt::CreditDefaultSwap::ProtectionPaymentTime timing = paysAtDefaultTime_ ?
+        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atDefault :
+        QuantExt::CreditDefaultSwap::ProtectionPaymentTime::atPeriodEnd;
+    boost::shared_ptr<QuantExt::CreditDefaultSwap> cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
+        side_, nominal_, upfrontRate_, couponRate_, schedule, Following, dayCounter_, settlesAccrual_,
+        timing, protectionStart, upfrontDate, boost::shared_ptr<Claim>(),
+        lastPeriodDayCounter_, tradeDate, cashSettlementDays_); // FIXME: QLE CDS missing rebatesAccrual_
 
     cds->setPricingEngine(engine_);
     return cds;
@@ -135,6 +140,21 @@ MakeCreditDefaultSwap& MakeCreditDefaultSwap::withCashSettlementDays(Natural cas
 
 MakeCreditDefaultSwap& MakeCreditDefaultSwap::withPricingEngine(const boost::shared_ptr<PricingEngine>& engine) {
     engine_ = engine;
+    return *this;
+}
+
+MakeCreditDefaultSwap& MakeCreditDefaultSwap::withSettlesAccrual(bool settlesAccrual) {
+    settlesAccrual_ = settlesAccrual;
+    return *this;
+}
+    
+MakeCreditDefaultSwap& MakeCreditDefaultSwap::withPaysAtDefaultTime(bool paysAtDefaultTime) {
+    paysAtDefaultTime_ = paysAtDefaultTime;
+    return *this;
+}
+
+MakeCreditDefaultSwap& MakeCreditDefaultSwap::withRebatesAccrual(bool rebatesAccrual) {
+    rebatesAccrual_ = rebatesAccrual;
     return *this;
 }
 } // namespace QuantExt
