@@ -71,15 +71,61 @@ EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& na
     // we will call a parser on the expiry string, to ensure it is a correctly-formatted date or tenor
     Date tmpDate;
     Period tmpPeriod;
-    bool tmpBool;
-    parseDateOrPeriod(expiry, tmpDate, tmpPeriod, tmpBool);
+    bool isDate;
+    parseDateOrPeriod(expiry, tmpDate, tmpPeriod, isDate);
+
+    if (isDate)
+        QL_REQUIRE(asofDate <= tmpDate, "EquityOptionQuote: Invalid EquityOptionQuote, expiry date "
+            << tmpDate << " must be after asof date " << asofDate);
+}
+
+EquityForwardQuote::EquityForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
+    string equityName, string ccy, const Date& expiryDate)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
+      expiry_(expiryDate) {
+    if (expiry_ != Date())
+        QL_REQUIRE(asofDate <= expiry_, "EquityForwardQuote: Invalid EquityForwardQuote, expiry date "
+                                            << expiry_ << " must be after asof date " << asofDate);
+}
+
+EquityDividendYieldQuote::EquityDividendYieldQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
+    string equityName, string ccy, const Date& tenorDate)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName), ccy_(ccy),
+      tenor_(tenorDate) {
+    if (tenor_ != Date())
+        QL_REQUIRE(asofDate <= tenor_, "EquityDividendYieldQuote: Invalid EquityForwardQuote, expiry date "
+                                           << tenor_ << " must be after asof date " << asofDate);
 }
 
 IndexCDSOptionQuote::IndexCDSOptionQuote(QuantLib::Real value, const Date& asof, const string& name,
                                          const string& indexName, const boost::shared_ptr<Expiry>& expiry,
                                          const string& indexTerm, const boost::shared_ptr<BaseStrike>& strike)
     : MarketDatum(value, asof, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION), indexName_(indexName),
-      expiry_(expiry), indexTerm_(indexTerm), strike_(strike) {}
+      expiry_(expiry), indexTerm_(indexTerm), strike_(strike) {
+
+    if (auto date = boost::dynamic_pointer_cast<ExpiryDate>(expiry))
+        QL_REQUIRE(asof <= date->expiryDate(), "IndexCDSOptionQuote: Invalid INDEX_CDS_OPTION quote, expiry date "
+            << date->expiryDate() << " must be after asof date " << asof);
+}
+
+CommodityForwardQuote::CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
+                      QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
+                      const QuantLib::Date& expiryDate)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
+      quoteCurrency_(quoteCurrency), expiryDate_(expiryDate), tenorBased_(false) {
+    QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
+    QL_REQUIRE(asofDate <= expiryDate, "MarketDatumParser: Invalid COMMODITY_FWD quote, expiry date "
+                                           << expiryDate << " must be after asof date " << asofDate);
+}
+
+//! Tenor based commodity forward constructor
+CommodityForwardQuote::CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
+                      QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
+                      const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
+      quoteCurrency_(quoteCurrency), tenor_(tenor), startTenor_(startTenor), tenorBased_(true) {
+    QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
+}
 
 namespace {
 Natural yearFromExpiryString(const std::string& expiry) {
@@ -138,7 +184,12 @@ CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const s
                                            const boost::shared_ptr<BaseStrike>& strike,
                                            Option::Type optionType)
     : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
-      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike), optionType_(optionType) {}
+      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike), optionType_(optionType) {
+
+    if (auto date = boost::dynamic_pointer_cast<ExpiryDate>(expiry))
+        QL_REQUIRE(asof <= date->expiryDate(), "CommodityOptionQuote: Invalid CommodityOptionQuote, expiry date "
+                                                   << date->expiryDate() << " must be after asof date " << asof);
+}
 
 CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
                                    const string& index1, const string& index2, const string& expiry,
@@ -158,6 +209,10 @@ CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& n
     Period outPeriod;
     bool outBool;
     parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
+
+    if (outBool)
+        QL_REQUIRE(asof <= outDate, "CorrelationQuote: Invalid CorrelationQuote, expiry date "
+            << outDate << " must be after asof date " << asof);
 }
 
 template <class Archive> void MarketDatum::serialize(Archive& ar, const unsigned int version) {
