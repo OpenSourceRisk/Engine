@@ -107,8 +107,15 @@ void TodaysMarket::initialise(const Date& asof) {
     LOG("Todays Market Loading Dividends done.");
 
     // Add all FX quotes from the loader to Triangulation
+    std::vector<boost::shared_ptr<MarketDatum>> quotes;
+    try {
+        quotes = loader_->loadQuotes(asof_);
+    } catch (...) {
+        WLOG("TodaysMarket::Initialise: no quotes available for date " << asof_);
+        return;
+    }
 
-    for (auto& md : loader_->loadQuotes(asof_)) {
+    for (auto& md : quotes) {
         if (md->asofDate() == asof_ && md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT) {
             boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
             QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
