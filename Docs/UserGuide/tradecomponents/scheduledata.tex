@@ -107,18 +107,17 @@ Note that \emph{0D} is a valid value, and causes there to be no intermediate dat
 Allowable values: See Table \ref{tab:calendar} Calendar.
 
 \item \lstinline!Convention!: Determines the adjustment of the schedule dates with
-  regards to the selected calendar. 
+  regards to the selected calendar, i.e. the roll convention. 
 
-Allowable values: See \lstinline!Roll Convention! in Table
-\ref{tab:allow_stand_data}.
+Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 \item \lstinline!TermConvention! [Optional]: Determines the adjustment of the final schedule
   date with regards to the selected calendar. If left blank or omitted, defaults to the value of \lstinline!Convention!.
 
-Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 \item \lstinline!Rule! [Optional]: Rule for the generation of the schedule using given
-  start and end dates, tenor, calendar and business day conventions. 
+  start and end dates, tenor, calendar and roll conventions. 
 
 Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \emph{Forward} if omitted. Cannot be left blank.
 
@@ -150,8 +149,8 @@ Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullC
 
 \item \lstinline!Convention! [Optional]: Roll Convention to determine the accrual schedule dates, and also used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
 
-Allowable values: See \lstinline!Roll Convention! in Table
-\ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if omitted.
+Allowable values: See Table
+\ref{tab:convention} Roll Convention. Defaults to \emph{Unadjusted} if omitted.
 
 \item \lstinline!Tenor! [Optional]: Tenor used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
 
@@ -197,6 +196,6 @@ Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullC
 
 \item \lstinline!Convention! [Optional]: The roll convention to be applied to each date in the base schedule in order to obtain the derived schedule.
 
-Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if left blank or omitted.
+Allowable values: See Table \ref{tab:convention} Roll Convention. Defaults to \emph{Unadjusted} if left blank or omitted.
 
 \end{itemize}
