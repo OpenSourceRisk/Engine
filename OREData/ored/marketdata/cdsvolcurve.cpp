@@ -251,25 +251,28 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 }
 
 namespace {
-// FIXME workaround for QPR-10654: look up fair spread in market data
-Handle<Quote> getFairSpreadLevel(const Loader& loader, const Date& asof, const std::string& curveId,
-                                 const std::string& indexName, std::string indexTerm) {
-    Real fairSpreadLevel = Null<Real>();
+// FIXME workaround for QPR-10654: look up fair spread / price in market data
+Handle<Quote> getFairSpreadOrPriceLevel(const Loader& loader, const Date& asof, const std::string& curveId,
+                                        const std::string& indexName, std::string indexTerm,
+                                        const std::string& strikeType) {
+    Real fairLevel = Null<Real>();
     Period term = indexTerm.empty() ? 5 * Years : parsePeriod(indexTerm);
     for (auto const& md : loader.loadQuotes(asof)) {
         if (auto q = boost::dynamic_pointer_cast<CdsQuote>(md)) {
-            if (q->underlyingName() == indexName && q->term() == term) {
-                fairSpreadLevel = q->quote()->value();
+            if (q->underlyingName() == indexName && q->term() == term &&
+                ((q->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD && strikeType == "Spread") ||
+                 (q->quoteType() == MarketDatum::QuoteType::PRICE && strikeType == "Price"))) {
+                fairLevel = q->quote()->value();
                 break;
             }
         }
     }
-    if (fairSpreadLevel == Null<Real>()) {
+    if (fairLevel == Null<Real>()) {
         ALOG(StructuredCurveErrorMessage(curveId, "CDS Vol Curve has unknown ATM Level",
-                                         "Could not determine ATM level"));
+                                         "Did not find fair " + strikeType + " quote in market data"));
         return Handle<Quote>();
     } else {
-        return Handle<Quote>(boost::make_shared<SimpleQuote>(fairSpreadLevel));
+        return Handle<Quote>(boost::make_shared<SimpleQuote>(fairLevel));
     }
 }
 } // namespace
@@ -441,7 +444,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     vol_->enableExtrapolation(vssc.extrapolation());
 
     // FIXME add atm , workaround for QPR-10654
-    auto atm = getFairSpreadLevel(loader, asof, vc.curveID(), indexName, indexTerm);
+    auto atm = getFairSpreadOrPriceLevel(loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
     if(!atm.empty()) {
         vol_ = boost::make_shared<BlackVolatilityWithATM>(vol_, atm);
     }
@@ -612,7 +615,7 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
     vol_->enableExtrapolation(vssc.extrapolation());
 
     // FIXME add atm , workaround for QPR-10654
-    auto atm = getFairSpreadLevel(loader, asof, vc.curveID(), indexName, indexTerm);
+    auto atm = getFairSpreadOrPriceLevel(loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
     if (!atm.empty()) {
         vol_ = boost::make_shared<BlackVolatilityWithATM>(vol_, atm);
     }
