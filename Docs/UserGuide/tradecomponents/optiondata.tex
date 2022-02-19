@@ -73,7 +73,8 @@ FX Options (all variants, except Touch, Digital, Asian) &  \emph{Call}: Bought a
 \newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node. Note that barriers are not switched / unaffected. \\ \hline
 Index CDS Option &  \emph{Call/Put} values are ignored, and the OptionType field is optional. The \lstinline!Payer! field in the underlying Index CDS leg  determines if the option is to buy or sell protection. \\ \hline
 Asian FX Options &  \emph{Call}: The right to buy/receive the underlying currency at the strike price.  \newline \emph{Put}: The right to sell/pay  the underlying currency at the strike price.   \\ \hline
-Digital FX Options &  \emph{Call}: The digital payout will occur if the fx rate at the expiry date is above the givenstrike, \newline \emph{Put}: The digital payout will occur if the fx rate at the expiry date is below the given strike.   \\ \hline
+Digital FX Options &  \emph{Call}: The digital payout will occur if the fx rate at the expiry date is above the given
+strike, \newline \emph{Put}: The digital payout will occur if the fx rate at the expiry date is below the given strike.   \\ \hline
 FX Single Touch Options &  The OptionType should be \emph{Call} for Up and \emph{Put} for Down barrier types - this is used to check whether the barrier has been hit in the past.   \\ \hline
 FX Double Touch Options &  \emph{Call/Put} values are ignored, and the OptionType field is optional.  \\ \hline
 
@@ -181,7 +182,7 @@ Note that for \lstinline!IndexCreditDefaultSwapOption! PayOffAtExpiry must be se
 \item ExerciseFeeSettlementConvention [Optional]: The convention used to compute the exercise fee settlement date from
   the exercise date. Defaults to \emph{Unadjusted} if not given.
   
-  Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+  Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 \item ExerciseDates: This node contains child elements of type
   \lstinline!ExerciseDate!.  Options of style \emph{European} or
@@ -211,7 +212,7 @@ Allowable values: The \lstinline!Date! node should be a valid date as outlined i
 The first method is an explicit list of dates as shown in Listing \ref{lst:dates_payment_data}. The \lstinline!Date! node should be a valid date as outlined in Table \ref{tab:allow_stand_data}. Obviously, for European options, there should be exactly one date supplied.
 
 \item
-The second method is a set of rules that are used to generate the settlement date relative to either the exercise date of the option or the expiry date of the option. The structure of the \lstinline!PaymentData! node in this case is given in Listing \ref{lst:rules_payment_data}. The optional \lstinline!RelativeTo! node must be either \lstinline!Expiry! or \lstinline!Exercise!. If it is \lstinline!Expiry!, the expiry date is taken as the base date from which the rules are applied. If it is \lstinline!Exercise!, the exercise date is taken as the base date from which the rules are applied. These two dates are the same in the case of a European option. If not provided, \lstinline!Expiry! is assumed. The \lstinline!Lag! node is a non-negative integer giving the number of days from the base date to the cash settlement date. The \lstinline!Calendar! gives the business day calendar for the cash settlement date and should be a valid calendar code as outlined in Table \ref{tab:calendar}. The \lstinline!Convention! gives the business day convention for the cash settlement date and should be a valid business day convention as outlined in Table \ref{tab:allow_stand_data}.
+The second method is a set of rules that are used to generate the settlement date relative to either the exercise date of the option or the expiry date of the option. The structure of the \lstinline!PaymentData! node in this case is given in Listing \ref{lst:rules_payment_data}. The optional \lstinline!RelativeTo! node must be either \lstinline!Expiry! or \lstinline!Exercise!. If it is \lstinline!Expiry!, the expiry date is taken as the base date from which the rules are applied. If it is \lstinline!Exercise!, the exercise date is taken as the base date from which the rules are applied. These two dates are the same in the case of a European option. If not provided, \lstinline!Expiry! is assumed. The \lstinline!Lag! node is a non-negative integer giving the number of days from the base date to the cash settlement date. The \lstinline!Calendar! gives the business day calendar for the cash settlement date and should be a valid calendar code as outlined in Table \ref{tab:calendar}. The \lstinline!Convention! gives the roll convention for the cash settlement date and should be a valid roll convention as outlined in Table \ref{tab:convention}.
 
 \end{enumerate}
 
