@@ -32,11 +32,11 @@ Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} i
 \end{listing}
 
 
-Note that Swaps for non-deliverable currencies with payment in a deliverable currency are supported using the Indexings node (\ref{ss:indexings}). 
+Note that Swaps for non–deliverable currencies with payment in a deliverable currency are supported using the Indexings node (\ref{ss:indexings}). 
 
-A non-deliverable cross currency Swap has Settlement set to \emph{Cash}, and one leg is a regular leg in the deliverable currency without Indexings. The other leg has Currency set to the deliverable currency, Notional in the non-deliverable currency and Indexings with an FX Index between the deliverable and non-deliverable currency. See Listing \ref{lst:ndir_xccy_swap} for an example USD-CLP non-deliverable cross currency swap where CLP is the non-deliverable currency.
+A non-deliverable cross currency Swap has Settlement set to \emph{Cash}, and one leg is a regular leg in the deliverable currency without Indexings. The other leg has Currency set to the deliverable currency, Notional in the non–deliverable currency and Indexings with an FX Index between the deliverable and non–deliverable currency. See Listing \ref{lst:ndir_xccy_swap} for an example USD-CLP non–deliverable cross currency swap where CLP is the non–deliverable currency.
 
-A non-deliverable IR Swap has Currency set to the deliverable currency on both legs, Notional in the non-deliverable currency on both legs, and Indexings with an FX Index between the deliverable and non-deliverable currency on both legs. See Listing \ref{lst:ndir_swap} for an example non-deliverable IR swap where USD is the payment currency and CLP is the non-deliverable currency.
+A non-deliverable IR Swap has Currency set to the deliverable currency on both legs, Notional in the non-deliverable currency on both legs, and Indexings with an FX Index between the deliverable and non–deliverable currency on both legs. See Listing \ref{lst:ndir_swap} for an example non-deliverable IR swap where USD is the payment currency and CLP is the non–deliverable currency.
 
 
 \begin{listing}[H]
@@ -78,7 +78,7 @@ A non-deliverable IR Swap has Currency set to the deliverable currency on both l
   </LegData>
 </SwapData>
 \end{minted}
-\caption{Non-deliverable Cross Currency Swap}
+\caption{Non deliverable Cross Currency Swap}
 \label{lst:ndir_xccy_swap}
 \end{listing}
 
@@ -119,7 +119,7 @@ A non-deliverable IR Swap has Currency set to the deliverable currency on both l
   </LegData>
 </SwapData>
 \end{minted}
-\caption{Non-deliverable IR Swap}
+\caption{Non deliverable IR Swap}
 \label{lst:ndir_swap}
 \end{listing}
 
