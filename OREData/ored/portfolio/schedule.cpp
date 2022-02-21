@@ -32,6 +32,7 @@ void ScheduleRules::fromXML(XMLNode* node) {
     endDate_ = XMLUtils::getChildValue(node, "EndDate", false);
     tenor_ = XMLUtils::getChildValue(node, "Tenor");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
+    calendarQL_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar"));
     convention_ = XMLUtils::getChildValue(node, "Convention");
     termConvention_ = XMLUtils::getChildValue(node, "TermConvention", false);
     if (termConvention_.empty()) {
@@ -259,7 +260,8 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
     QL_REQUIRE(!data.endDate().empty() || data.lastDate().empty(),
                "makeSchedule(): If no end date is given, a last date is not allowed either. Please remove the last "
                "date from the schedule.");
-    Calendar calendar = parseCalendar(data.calendar());
+    // Calendar calendar = parseCalendar(data.calendar());
+    Calendar calendar = data.calendarQL();
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate().empty() ? openEndDateReplacement : parseDate(data.endDate());
     // Handle trivial case here

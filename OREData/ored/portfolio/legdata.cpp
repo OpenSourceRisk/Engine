@@ -1082,7 +1082,14 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
     QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
 
-    Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
+    auto tmp = data.schedule();
+
+    for (auto& r : tmp.modifyRules()) {  // For schedules with 1D tenor, this ensures that the index calendar supersedes the calendar provided 
+        if (r.tenor() == "1D")          // in the trade XML, to avoid differing holidays when building the schedule
+            r.modifyCalendar() = index->fixingCalendar();
+    }
+
+    Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Natural paymentLag = data.paymentLag();

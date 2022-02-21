@@ -39,9 +39,9 @@ public:
     ScheduleRules() {}
     //! Constructor
     ScheduleRules(const string& startDate, const string& endDate, const string& tenor, const string& calendar,
-                  const string& convention, const string& termConvention, const string& rule,
+                  QuantLib::Calendar& calendarQL, const string& convention, const string& termConvention, const string& rule,
                   const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "")
-        : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), convention_(convention),
+        : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), calendarQL_(calendarQL), convention_(convention),
           termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth), firstDate_(firstDate),
           lastDate_(lastDate) {}
     
@@ -55,6 +55,7 @@ public:
     const string& endDate() const { return endDate_; }
     const string& tenor() const { return tenor_; }
     const string& calendar() const { return calendar_; }
+    const QuantLib::Calendar& calendarQL() const { return calendarQL_; }
     const string& convention() const { return convention_; }
     const string& termConvention() const { return termConvention_; }
     const string& rule() const { return rule_; }
@@ -67,6 +68,8 @@ public:
     //@{
     string& modifyStartDate() { return startDate_; }
     string& modifyEndDate() { return endDate_; }
+
+    QuantLib::Calendar& modifyCalendar() { return calendarQL_; }
     //@}
 
     //! \name Serialisation
@@ -79,6 +82,7 @@ private:
     string endDate_;
     string tenor_;
     string calendar_;
+    QuantLib::Calendar calendarQL_;
     string convention_;
     string termConvention_;
     string rule_;
