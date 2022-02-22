@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/time/schedule.hpp>
 
 namespace ore {
