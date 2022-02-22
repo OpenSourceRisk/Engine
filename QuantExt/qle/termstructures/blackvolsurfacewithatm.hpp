@@ -51,7 +51,8 @@ class BlackVolatilityWithATM : public BlackVolatilityTermStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero)
     BlackVolatilityWithATM(const boost::shared_ptr<BlackVolTermStructure>& surface, const Handle<Quote>& spot,
-                           const Handle<YieldTermStructure>& yield1, const Handle<YieldTermStructure>& yield2);
+                           const Handle<YieldTermStructure>& yield1 = Handle<YieldTermStructure>(),
+                           const Handle<YieldTermStructure>& yield2 = Handle<YieldTermStructure>());
 
     //! \name TermStructure interface
     //@{
