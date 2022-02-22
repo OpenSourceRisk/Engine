@@ -64,7 +64,7 @@ void BlackCdsOptionEngine::calculate() const {
     results_.additionalResults = cds.additionalResults();
 
     // Add some entries to additional results.
-    Real forward = cds.fairSpread();
+    Real forward = cds.fairSpreadClean();
     results_.additionalResults["forwardSpread"] = forward;
     const Real& strike = arguments_.strike;
     results_.additionalResults["strikeSpread"] = strike;

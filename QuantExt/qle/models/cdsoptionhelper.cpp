@@ -56,7 +56,7 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
                                   protectionPaymentTime, protectionStart, upfrontDate, claim));
     tmp->setPricingEngine(cdsEngine);
 
-    Real strike = spread == Null<Real>() ? tmp->fairSpread() : spread;
+    Real strike = spread == Null<Real>() ? tmp->fairSpreadClean() : spread;
     if (upfront == Null<Real>())
         cds_ = boost::shared_ptr<CreditDefaultSwap>(
             new CreditDefaultSwap(side, 1.0, strike, schedule, paymentConvention, dayCounter, settlesAccrual,

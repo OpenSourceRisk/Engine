@@ -85,10 +85,15 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
 
     // Accrual rebate.
     results.accrualRebateNPV = 0.;
-    if (arguments.accrualRebate &&
-        !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        results.accrualRebateNPV = discountCurve_->discount(arguments.accrualRebate->date()) *
-            arguments.accrualRebate->amount();
+    results.accrualRebateNPVCurrent = 0.;
+    if (arguments.accrualRebate && !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results.accrualRebateNPV =
+            discountCurve_->discount(arguments.accrualRebate->date()) * arguments.accrualRebate->amount();
+    }
+    if (arguments.accrualRebateCurrent &&
+        !arguments.accrualRebateCurrent->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results.accrualRebateNPVCurrent =
+            discountCurve_->discount(arguments.accrualRebateCurrent->date()) * arguments.accrualRebateCurrent->amount();
     }
 
     results.couponLegNPV = 0.0;
@@ -163,6 +168,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     case Protection::Seller:
         results.defaultLegNPV *= -1.0;
         results.accrualRebateNPV *= -1.0;
+        results.accrualRebateNPVCurrent *= -1.0;
         break;
     case Protection::Buyer:
         results.couponLegNPV *= -1.0;
@@ -177,10 +183,13 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     results.errorEstimate = Null<Real>();
 
     if (results.couponLegNPV != 0.0) {
-        results.fairSpread =
+        results.fairSpreadDirty =
             -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPV);
+        results.fairSpreadClean =
+            -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPVCurrent);
     } else {
-        results.fairSpread = Null<Rate>();
+        results.fairSpreadDirty = Null<Rate>();
+        results.fairSpreadClean = Null<Rate>();
     }
 
     Real upfrontSensitivity = upfPVO1 * arguments.notional;
@@ -205,12 +214,15 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         results.upfrontBPS = Null<Rate>();
     }
 
-    results.additionalResults["upfrontPremium"] = arguments.upfrontPayment->amount();
+    results.additionalResults["upfrontPremium"] = arguments.upfrontPayment->amount() * upfrontSign;
     results.additionalResults["upfrontPremiumNPV"] = results.upfrontNPV;
-    results.additionalResults["premiumLegNPV"] = results.couponLegNPV;
+    results.additionalResults["premiumLegNPVDirty"] = results.couponLegNPV;
+    results.additionalResults["premiumLegNPVClean"] = results.couponLegNPV + results.accrualRebateNPVCurrent;
     results.additionalResults["accrualRebateNPV"] = results.accrualRebateNPV;
+    results.additionalResults["accrualRebateNPVCurrent"] = results.accrualRebateNPVCurrent;
     results.additionalResults["protectionLegNPV"] = results.defaultLegNPV;
-    results.additionalResults["fairSpread"] = results.fairSpread;
+    results.additionalResults["fairSpreadDirty"] = results.fairSpreadDirty;
+    results.additionalResults["fairSpreadClean"] = results.fairSpreadClean;
     results.additionalResults["fairUpfront"] = results.fairUpfront;
     results.additionalResults["couponLegBPS"] = results.couponLegBPS;
     results.additionalResults["upfrontBPS"] = results.upfrontBPS;

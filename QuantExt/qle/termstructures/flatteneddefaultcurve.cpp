@@ -63,7 +63,7 @@ void FlattenedDefaultCurve::performCalculations() const {
     auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(source_, 0.4, discount_);
 
     cds.setPricingEngine(engine);
-    Real fairSpread = cds.fairSpread();
+    Real fairSpread = cds.fairSpreadClean();
 
     CreditDefaultSwap cdsf(Protection::Buyer, 1E8, fairSpread, schedule, Following, Actual360(), true,
                            CreditDefaultSwap::ProtectionPaymentTime::atDefault, source_->referenceDate(),

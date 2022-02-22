@@ -230,6 +230,7 @@ public:
     const Date& protectionEndDate() const;
     const boost::shared_ptr<SimpleCashFlow>& upfrontPayment() const;
     const boost::shared_ptr<SimpleCashFlow>& accrualRebate() const;
+    const boost::shared_ptr<SimpleCashFlow>& accrualRebateCurrent() const;
     const Date& tradeDate() const;
     Natural cashSettlementDays() const;
     //@}
@@ -246,7 +247,8 @@ public:
         \note This calculation does not take any upfront into
               account, even if one was given.
     */
-    Rate fairSpread() const;
+    Rate fairSpreadDirty() const;
+    Rate fairSpreadClean() const;
     /*! Returns the variation of the fixed-leg value given a
         one-basis-point change in the running spread.
     */
@@ -256,6 +258,7 @@ public:
     Real defaultLegNPV() const;
     Real upfrontNPV() const;
     Real accrualRebateNPV() const;
+    Real accrualRebateNPVCurrent() const;
 
     Date maturity() const { return maturity_; }
 
@@ -330,16 +333,16 @@ protected:
     boost::shared_ptr<Claim> claim_;
     Leg leg_;
     boost::shared_ptr<SimpleCashFlow> upfrontPayment_;
-    boost::shared_ptr<SimpleCashFlow> accrualRebate_;
+    boost::shared_ptr<SimpleCashFlow> accrualRebate_, accrualRebateCurrent_;
     Date protectionStart_, maturity_;
     Date tradeDate_;
     Natural cashSettlementDays_;
     // results
     mutable Rate fairUpfront_;
-    mutable Rate fairSpread_;
+    mutable Rate fairSpreadDirty_, fairSpreadClean_;
     mutable Real couponLegBPS_, couponLegNPV_;
     mutable Real upfrontBPS_, upfrontNPV_;
-    mutable Real defaultLegNPV_, accrualRebateNPV_;
+    mutable Real defaultLegNPV_, accrualRebateNPV_, accrualRebateNPVCurrent_;
     //! \name Additional interface
     //@{
     virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
@@ -363,7 +366,7 @@ public:
     boost::optional<Rate> upfront;
     Rate spread;
     Leg leg;
-    boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate;
+    boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate, accrualRebateCurrent;
     bool settlesAccrual;
     ProtectionPaymentTime protectionPaymentTime;
     boost::shared_ptr<Claim> claim;
@@ -375,15 +378,16 @@ public:
 class CreditDefaultSwap::results : public Instrument::results {
 public:
     virtual ~results() {}
-    Rate fairSpread;
+    Rate fairSpreadDirty;
+    Rate fairSpreadClean;
     Rate fairUpfront;
     Real couponLegBPS;
     Real couponLegNPV;
     Real defaultLegNPV;
     Real upfrontBPS;
     Real upfrontNPV;
-    Real accrualRebateNPV;
-    void reset();
+    Real accrualRebateNPV, accrualRebateNPVCurrent;
+    void reset() override;
 };
 
 //! \ingroup instruments

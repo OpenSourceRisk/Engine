@@ -115,7 +115,7 @@ void CdsOption::fetchResults(const PricingEngine::results* r) const {
     riskyAnnuity_ = results->riskyAnnuity;
 }
 
-Rate CdsOption::atmRate() const { return swap_->fairSpread(); }
+Rate CdsOption::atmRate() const { return swap_->fairSpreadClean(); }
 
 Real CdsOption::riskyAnnuity() const {
     calculate();
