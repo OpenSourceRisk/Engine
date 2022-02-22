@@ -65,14 +65,16 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                    "Settlement currency must be either " << boughtCcy.code() << " or " << soldCcy.code() << ".");
     }
 
+    Date fixingDate;
     bool fixingRequired = (settlement_ == "Cash") && (payDate > maturityDate);
     if (fixingRequired) {
         QL_REQUIRE(!fxIndex_.empty(), "FX settlement index must be specified for non-deliverable forwards");
         Currency nonPayCcy = payCcy == boughtCcy ? soldCcy : boughtCcy;
         fxIndex = buildFxIndex(fxIndex_, nonPayCcy.code(), payCcy.code(), engineFactory->market(),
                                  engineFactory->configuration(MarketContext::pricing));
+        fixingDate = fxIndex->fixingCalendar().adjust(maturityDate);
         if (maturityDate < Settings::instance().evaluationDate())
-            requiredFixings_.addFixingDate(maturityDate, fxIndex_, payDate);
+            requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
     }
 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
@@ -82,7 +84,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     boost::shared_ptr<QuantLib::Instrument> instrument =
         boost::make_shared<QuantExt::FxForward>(boughtAmount_, boughtCcy, soldAmount_, soldCcy, maturityDate, false,
-                                                settlement_ == "Physical", payDate, payCcy, Date(), fxIndex);
+                                                settlement_ == "Physical", payDate, payCcy, fixingDate, fxIndex);
     instrument_.reset(new VanillaInstrument(instrument));
 
     npvCurrency_ = payCcy.code();
