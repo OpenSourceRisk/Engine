@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#pragma once
-
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
