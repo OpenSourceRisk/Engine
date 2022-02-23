@@ -25,6 +25,7 @@
 
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/schedule.hpp>
+// #include <ored/utilities/parsers.hpp>
 
 namespace ore {
 namespace data {
@@ -41,7 +42,7 @@ public:
     ScheduleRules(const string& startDate, const string& endDate, const string& tenor, const string& calendar,
                   const string& convention, const string& termConvention, const string& rule,
                   const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "")
-        : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), calendarQL_(parseCalendar(calendar)), convention_(convention),
+        : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), calendarQL_(QuantLib::NullCalendar()), convention_(convention),
           termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth), firstDate_(firstDate),
           lastDate_(lastDate) {}
     
