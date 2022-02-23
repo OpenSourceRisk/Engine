@@ -41,9 +41,9 @@ notional exchanges are {\em not} influenced by the indexing definitions. In gene
 are not enabled in combination with \lstinline!FromAssetLeg! \emph{true}, but it is not forbidden technically.  Listing \ref{lst:indexings} shows an
 example of a Floating leg indexed by both an equity price and a FX rate.
 
-Another use case for Indexings is for non-deliverable IR and Cross Currency Swaps. A non-deliverable IR Swap has Currency set to the deliverable currency on both legs, Notional in the non-deliverable currency on both legs, and Indexings with an FX Index between the deliverable and non-deliverable currency on both legs. See the Swap section \ref{ss:swaptradetype} for an example non-deliverable IR swap where USD is the payment currency and CLP is the non-deliverable currency.
+Another use case for Indexings is for non-deliverable IR and Cross Currency Swaps. A non-deliverable IR Swap has Currency set to the deliverable currency on both legs, Notional in the non-deliverable currency on both legs, and Indexings with an FX Index between the deliverable and non-deliverable currency on both legs. See the Swap section for an example non-deliverable IR swap where USD is the payment currency and CLP is the non-deliverable currency.
 
-A non-deliverable Cross Currency Swap has Settlement set to \emph{Cash}, and one leg is a regular leg in the deliverable currency without Indexings. The other leg has Currency set to the deliverable currency, Notional in the non-deliverable currency and Indexings with an FX Index between the deliverable and non-deliverable currency. See the Swap section \ref{ss:swaptradetype} for an example USD-CLP non-deliverable cross currency swap where CLP is the non-deliverable currency.
+A non-deliverable Cross Currency Swap has Settlement set to \emph{Cash}, and one leg is a regular leg in the deliverable currency without Indexings. The other leg has Currency set to the deliverable currency, Notional in the non-deliverable currency and Indexings with an FX Index between the deliverable and non-deliverable currency. See the Swap section for an example USD-CLP non-deliverable cross currency swap where CLP is the non-deliverable currency.
 
 \begin{listing}[H]
 %\hrule\medskip
