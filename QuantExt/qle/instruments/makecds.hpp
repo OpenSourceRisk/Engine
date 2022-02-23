@@ -66,12 +66,14 @@ public:
     MakeCreditDefaultSwap& withSide(Protection::Side);
     MakeCreditDefaultSwap& withNominal(Real);
     MakeCreditDefaultSwap& withCouponTenor(Period);
-    MakeCreditDefaultSwap& withDayCounter(DayCounter&);
-    MakeCreditDefaultSwap& withLastPeriodDayCounter(DayCounter&);
+    MakeCreditDefaultSwap& withDayCounter(const DayCounter&);
+    MakeCreditDefaultSwap& withLastPeriodDayCounter(const DayCounter&);
     MakeCreditDefaultSwap& withDateGenerationRule(DateGeneration::Rule rule);
     MakeCreditDefaultSwap& withCashSettlementDays(Natural cashSettlementDays);
-
     MakeCreditDefaultSwap& withPricingEngine(const boost::shared_ptr<PricingEngine>&);
+    MakeCreditDefaultSwap& withSettlesAccrual(bool);
+    MakeCreditDefaultSwap& withPaysAtDefaultTime(bool);
+    MakeCreditDefaultSwap& withRebatesAccrual(bool);
 
 private:
     Protection::Side side_;
@@ -85,7 +87,9 @@ private:
     DayCounter lastPeriodDayCounter_;
     DateGeneration::Rule rule_;
     Natural cashSettlementDays_;
-
+    bool settlesAccrual_;
+    bool paysAtDefaultTime_;
+    bool rebatesAccrual_;
     boost::shared_ptr<PricingEngine> engine_;
 };
 } // namespace QuantExt
