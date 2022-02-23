@@ -153,10 +153,14 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
     map<Date, Real> futureVols;
     vector<Real> spotVars;
     vector<Real> futureVolsVec, spotVolsVec; // additional results only
-    auto m = arguments_.flow->indices().size();
+    // auto m = arguments_.flow->indices().size();
     for (const auto& p : arguments_.flow->indices()) {
         if (p.first > today) {
-            forwards.push_back(p.second->fixing(p.first));
+            // FIXME: build the pricing dates with the correct calendar in the first place, i.e. avoid holidays
+            // so that the following adjustment is not necessary.
+            //forwards.push_back(p.second->fixing(p.first));
+            Date fixingDate = p.second->fixingCalendar().adjust(p.first, Preceding);
+            forwards.push_back(p.second->fixing(fixingDate));
             times.push_back(volStructure_->timeFromReference(p.first));
             if (arguments_.flow->useFuturePrice()) {
                 Date expiry = p.second->expiryDate();
@@ -171,6 +175,7 @@ void CommodityAveragePriceOptionAnalyticalEngine::calculate() const {
             EA += forwards.back();
         }
     }
+    Size m = forwards.size();
     EA /= m;
 
     // Expected value of A^2. Different calculation depending on whether APO references future prices or spot price.
