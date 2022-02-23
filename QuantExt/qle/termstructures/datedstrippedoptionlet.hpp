@@ -48,26 +48,26 @@ public:
 
     //! \name DatedStrippedOptionletBase interface
     //@{
-    const vector<Rate>& optionletStrikes(Size i) const;
-    const vector<Volatility>& optionletVolatilities(Size i) const;
+    const vector<Rate>& optionletStrikes(Size i) const override;
+    const vector<Volatility>& optionletVolatilities(Size i) const override;
 
-    const vector<Date>& optionletFixingDates() const;
-    const vector<Time>& optionletFixingTimes() const;
-    Size optionletMaturities() const;
+    const vector<Date>& optionletFixingDates() const override;
+    const vector<Time>& optionletFixingTimes() const override;
+    Size optionletMaturities() const override;
 
-    const vector<Rate>& atmOptionletRates() const;
+    const vector<Rate>& atmOptionletRates() const override;
 
-    const Date& referenceDate() const;
-    const Calendar& calendar() const;
-    BusinessDayConvention businessDayConvention() const;
-    const DayCounter& dayCounter() const;
-    VolatilityType volatilityType() const;
-    Real displacement() const;
+    const Date& referenceDate() const override;
+    const Calendar& calendar() const override;
+    BusinessDayConvention businessDayConvention() const override;
+    const DayCounter& dayCounter() const override;
+    VolatilityType volatilityType() const override;
+    Real displacement() const override;
     //@}
 
     //! \name LazyObject interface
     //@{
-    void performCalculations() const {
+    void performCalculations() const override {
         // Does nothing unless class becomes more dynamic e.g. take in volatilities as quote handles
     }
     //@}

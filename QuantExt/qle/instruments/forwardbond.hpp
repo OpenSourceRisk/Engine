@@ -56,9 +56,9 @@ public:
 
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
-    void fetchResults(const PricingEngine::results*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
+    void fetchResults(const PricingEngine::results*) const override;
     //@}
 
     //! \name Inspectors
@@ -99,7 +99,7 @@ public:
     Real compensationPayment;
     Date compensationPaymentDate;
     Real bondNotional;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
@@ -108,7 +108,7 @@ public:
     Real forwardValue;
     Real underlyingSpotValue;
     Real underlyingIncome;
-    void reset();
+    void reset() override;
 };
 
 //! Class for forward type payoffs
@@ -121,9 +121,9 @@ public:
     Real strike() const { return strike_; };
     //! \name Payoff interface
     //@{
-    std::string name() const { return "ForwardBond"; }
-    std::string description() const;
-    Real operator()(Real price) const;
+    std::string name() const override { return "ForwardBond"; }
+    std::string description() const override;
+    Real operator()(Real price) const override;
     //@}
 protected:
     Position::Type type_;

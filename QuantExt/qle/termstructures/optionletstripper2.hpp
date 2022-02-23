@@ -54,7 +54,7 @@ public:
 
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 private:
     vector<Volatility> spreadsVolImplied(const Handle<YieldTermStructure>& discount) const;

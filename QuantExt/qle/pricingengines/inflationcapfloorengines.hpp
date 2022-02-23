@@ -55,7 +55,7 @@ public:
 
     void setVolatility(const Handle<QuantLib::YoYOptionletVolatilitySurface>& vol);
 
-    void calculate() const;
+    void calculate() const override;
 
 protected:
     //! descendents only need to implement this
@@ -76,9 +76,9 @@ public:
                                     const Handle<YieldTermStructure>& discountCurve);
 
 protected:
-    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
+    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const override;
     virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
-                                   Real d) const;
+                                   Real d) const override;
 };
 
 //! Unit Displaced Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
@@ -89,9 +89,9 @@ public:
                                                  const Handle<YieldTermStructure>& discountCurve);
 
 protected:
-    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
+    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const override;
     virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
-                                   Real d) const;
+                                   Real d) const override;
 };
 
 //! Unit Displaced Black-formula inflation cap/floor engine (standalone, i.e. no coupon pricer)
@@ -102,9 +102,9 @@ public:
                                         const Handle<YieldTermStructure>& discountCurve);
 
 protected:
-    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const;
+    virtual Real optionletImpl(Option::Type, Real strike, Real forward, Real stdDev, Real d) const override;
     virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
-                                   Real d) const;
+                                   Real d) const override;
 };
 
 } // namespace QuantExt

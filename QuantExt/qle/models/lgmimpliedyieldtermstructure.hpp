@@ -49,10 +49,10 @@ public:
                                  const DayCounter& dc = DayCounter(), const bool purelyTimeBased = false,
                                  const bool cacheValues = false);
 
-    Date maxDate() const;
-    Time maxTime() const;
+    Date maxDate() const override;
+    Time maxTime() const override;
 
-    const Date& referenceDate() const;
+    const Date& referenceDate() const override;
 
     virtual void referenceDate(const Date& d);
     virtual void referenceTime(const Time t);
@@ -60,10 +60,10 @@ public:
     void move(const Date& d, const Real s);
     void move(const Time t, const Real s);
 
-    virtual void update();
+    virtual void update() override;
 
 protected:
-    Real discountImpl(Time t) const;
+    Real discountImpl(Time t) const override;
     mutable Real dt_;
     mutable Real zeta_;
     mutable Real Ht_;
@@ -87,11 +87,11 @@ public:
                                  const Handle<YieldTermStructure> targetCurve, const DayCounter& dc = DayCounter(),
                                  const bool purelyTimeBased = false, const bool cacheValues = false);
 
-    void referenceDate(const Date& d);
-    void referenceTime(const Time t);
+    void referenceDate(const Date& d) override;
+    void referenceTime(const Time t) override;
 
 protected:
-    Real discountImpl(Time t) const;
+    Real discountImpl(Time t) const override;
 
 private:
     const Handle<YieldTermStructure> targetCurve_;
@@ -110,7 +110,7 @@ public:
                                const bool purelyTimeBased, const bool cacheValues = false);
 
 protected:
-    Real discountImpl(Time t) const;
+    Real discountImpl(Time t) const override;
 
 private:
     const Handle<YieldTermStructure> targetCurve_;

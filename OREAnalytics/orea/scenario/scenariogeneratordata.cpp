@@ -154,10 +154,10 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
     if (grid_) {
         XMLUtils::addChild(doc, pNode, "Calendar", grid_->calendar().name());
         XMLUtils::addChild(doc, pNode, "DayCounter", grid_->dayCounter().name());
-        if (gridString_ != "") {
-            XMLUtils::addChild(doc, node, "Grid", gridString_);
+        if (!gridString_.empty()) {
+            XMLUtils::addChild(doc, pNode, "Grid", gridString_);
         } else {
-            XMLUtils::addGenericChildAsList(doc, node, "Grid", grid_->tenors());
+            XMLUtils::addGenericChildAsList(doc, pNode, "Grid", grid_->tenors());
         }
     }
 

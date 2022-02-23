@@ -44,8 +44,8 @@ public:
 
     //! \name RateHelper interface
     //@{
-    Real impliedQuote() const;
-    void setTermStructure(YieldTermStructure*);
+    Real impliedQuote() const override;
+    void setTermStructure(YieldTermStructure*) override;
     //@}
     //! \name TenorBasisSwapHelper inspectors
     //@{
@@ -53,11 +53,11 @@ public:
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 
 protected:
-    void initializeDates();
+    void initializeDates() override;
 
     Period swapTenor_;
     boost::shared_ptr<IborIndex> longIndex_;

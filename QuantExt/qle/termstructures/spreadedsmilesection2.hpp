@@ -37,12 +37,12 @@ public:
     SpreadedSmileSection2(const boost::shared_ptr<SmileSection>& base, const std::vector<Real>& volSpreads,
                           const std::vector<Real>& strikes, const bool strikesRelativeToAtm = false,
                           const Real atmLevel = Null<Real>());
-    Rate minStrike() const;
-    Rate maxStrike() const;
-    Rate atmLevel() const;
+    Rate minStrike() const override;
+    Rate maxStrike() const override;
+    Rate atmLevel() const override;
 
 protected:
-    Volatility volatilityImpl(Rate strike) const;
+    Volatility volatilityImpl(Rate strike) const override;
 
 private:
     boost::shared_ptr<SmileSection> base_;

@@ -75,13 +75,13 @@ public:
                      bool flatExtrapolation, bool volsAreSpreads = true);
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
     //! \name SwaptionVolatilityCube inspectors
     //@{
     const Matrix& volSpreads(Size i) const { return volSpreadsMatrix_[i]; }
-    boost::shared_ptr<SmileSection> smileSectionImpl(const Date& optionDate, const Period& swapTenor) const;
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const;
+    boost::shared_ptr<SmileSection> smileSectionImpl(const Date& optionDate, const Period& swapTenor) const override;
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
     //@}
 private:
     const bool flatExtrapolation_, volsAreSpreads_;

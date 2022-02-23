@@ -36,7 +36,7 @@ public:
         const ext::shared_ptr<CappedFlooredYoYInflationCoupon>& underlying);
 
     //! Coupon interface
-    Rate rate() const;
+    Rate rate() const override;
     //! cap
     Rate cap() const;
     //! floor
@@ -47,10 +47,10 @@ public:
     Rate effectiveFloor() const;
 
     //! Observer interface
-    void update();
+    void update() override;
 
     //! Visitability
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
 
     bool isCap() const;
     bool isFloor() const;

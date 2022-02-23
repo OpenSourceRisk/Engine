@@ -59,21 +59,21 @@ public:
     void move(const Time t, const Real domesticIr, const Real foreignIr, const Real logFx);
 
     /* VolatilityTermStructure interface */
-    Real minStrike() const;
-    Real maxStrike() const;
+    Real minStrike() const override;
+    Real maxStrike() const override;
     /* TermStructure interface */
-    Date maxDate() const;
-    Time maxTime() const;
-    const Date& referenceDate() const;
+    Date maxDate() const override;
+    Time maxTime() const override;
+    const Date& referenceDate() const override;
     /* Observer interface */
-    void update();
+    void update() override;
 
     Size fxIndex() const { return fxIndex_; }
 
 protected:
     /* BlackVolTermStructure interface */
-    Real blackVarianceImpl(Time t, Real strike) const;
-    Volatility blackVolImpl(Time t, Real strike) const;
+    Real blackVarianceImpl(Time t, Real strike) const override;
+    Volatility blackVolImpl(Time t, Real strike) const override;
 
 private:
     const boost::shared_ptr<CrossAssetModel> model_;

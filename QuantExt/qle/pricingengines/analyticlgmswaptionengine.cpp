@@ -133,7 +133,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 }
                 if (amount != Null<Real>()) {
                     Real flatAmount;
-                    if (IborCoupon::usingAtParCoupons()) {
+                    if (IborCoupon::Settings::instance().usingAtParCoupons()) {
                         // if par coupons are used, we mimick the fixing estimation in IborCoupon; we make
                         // sure that the estimation period does not start in the past and we do not use
                         // historical fixings

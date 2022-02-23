@@ -39,7 +39,7 @@ public:
     SpreadedSmileSection(const boost::shared_ptr<QuantLib::SpreadedSmileSection>& underlyingSection);
 
 protected:
-    Volatility volatilityImpl(Rate strike) const;
+    Volatility volatilityImpl(Rate strike) const override;
 };
 } // namespace QuantExt
 

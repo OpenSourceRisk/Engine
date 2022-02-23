@@ -102,8 +102,8 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!NoticeCalendar![Optional]: The calendar used to compute the notice date from the exercise date. If not given
   defaults to the \emph{NullCalendar} (no holidays, weekends are no holidays either). Allowable values: See Table \ref{tab:calendar} \lstinline!Calendar!.
 
-\item \lstinline!NoticeConvention![Optional]: The convention used to compute the notice date from the exercise date. Defaults to
-  \emph{Unadjusted} if not given. Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+\item \lstinline!NoticeConvention![Optional]: The roll convention used to compute the notice date from the exercise date. Defaults to
+  \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 \item  \lstinline!Settlement!: Delivery Type. The allowable values are \emph{Cash} or \emph{Physical}.
 
@@ -139,8 +139,8 @@ The relevant fields in the \lstinline!OptionData! node for a Swaption are:
 \item \lstinline!ExerciseFeeSettlementCalendar![Optional]: The calendar used to compute the exercise fee settlement date from the
   exercise date. If not given defaults to the \emph{NullCalendar} (no holidays, weekends are no holidays either). Allowable values: See Table \ref{tab:calendar} Calendar.
 
-\item \lstinline!ExerciseFeeSettlementConvention![Optional]: The convention used to compute the exercise fee settlement date from
-  the exercise date. Defaults to \emph{Unadjusted} if not given. Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+\item \lstinline!ExerciseFeeSettlementConvention![Optional]: The roll convention used to compute the exercise fee settlement date from
+  the exercise date. Defaults to \emph{Unadjusted} if not given. Allowable values: See Table \ref{tab:convention} Roll Convention.
 
 \item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given for \emph{European} style swaptions, and for \emph{Bermudan} style swaptions  at least two \lstinline!ExerciseDate! date elements must be given. \\
 

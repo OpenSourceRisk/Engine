@@ -149,8 +149,8 @@
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
-      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
       <ShiftStrikes/>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
     </SwaptionVolatility>
   </SwaptionVolatilities>
   <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->

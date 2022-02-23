@@ -50,7 +50,7 @@ public:
     LinearAnnuityMappingBuilder(const Handle<Quote>& reversion);
     boost::shared_ptr<AnnuityMapping> build(const Date& valuationDate, const Date& optionDate, const Date& paymentDate,
                                             const VanillaSwap& underlying,
-                                            const Handle<YieldTermStructure>& discountCurve);
+                                            const Handle<YieldTermStructure>& discountCurve) override;
 
 private:
     Real a_ = Null<Real>(), b_ = Null<Real>();

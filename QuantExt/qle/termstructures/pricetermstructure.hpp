@@ -55,7 +55,7 @@ public:
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
     //! The minimum time for which the curve can return values
@@ -90,13 +90,13 @@ public:
 
     //! \name Quote interface
     //@{
-    QuantLib::Real value() const;
-    bool isValid() const;
+    QuantLib::Real value() const override;
+    bool isValid() const override;
     //@}
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
 private:

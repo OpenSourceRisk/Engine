@@ -131,7 +131,7 @@ public:
 
     //! \name TermStructure interface
     //@{
-    QuantLib::Date maxDate() const;
+    QuantLib::Date maxDate() const override;
     //@}
 
     //! \name InterpolatedOptionletCurve interface
@@ -144,7 +144,7 @@ public:
 
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
 
 private:
@@ -152,12 +152,12 @@ private:
 
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
 
     //! \name OptionletVolatilityStructure interface
     //@{
-    QuantLib::Real volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const;
+    QuantLib::Real volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
     //@}
 
     //! Vector of helper instruments to be matched

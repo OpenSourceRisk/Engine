@@ -2199,7 +2199,7 @@ void applyIndexing(Leg& leg, const LegData& data, const boost::shared_ptr<Engine
                            "BondFuture Legs are not yet supported");
                 BondData bondData(bi->securityName(), 1.0);
                 index = buildBondIndex(bondData, indexing.indexIsDirty(), indexing.indexIsRelative(),
-                                       parseCalendar(indexing.indexFixingCalendar()),
+                                       parseCalendar(indexing.fixingCalendar()),
                                        indexing.indexIsConditionalOnSurvival(), engineFactory, requiredFixings);
             } else {
                 QL_FAIL("invalid index '" << indexing.index()

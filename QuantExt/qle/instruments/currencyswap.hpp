@@ -148,7 +148,7 @@ public:
     std::vector<Currency> currency;
     bool isPhysicallySettled;
     bool isResettable;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
@@ -158,7 +158,7 @@ public:
     std::vector<Real> legBPS, inCcyLegBPS;
     std::vector<DiscountFactor> startDiscounts, endDiscounts;
     DiscountFactor npvDateDiscount;
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments

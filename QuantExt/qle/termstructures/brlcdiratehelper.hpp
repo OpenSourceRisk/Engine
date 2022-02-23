@@ -48,17 +48,17 @@ public:
 
     //! \name RateHelper interface
     //@{
-    QuantLib::Real impliedQuote() const;
-    void setTermStructure(QuantLib::YieldTermStructure*);
+    QuantLib::Real impliedQuote() const override;
+    void setTermStructure(QuantLib::YieldTermStructure*) override;
     //@}
 
     //! \name Visitability
     //@{
-    void accept(QuantLib::AcyclicVisitor&);
+    void accept(QuantLib::AcyclicVisitor&) override;
     //@}
 
 protected:
-    void initializeDates();
+    void initializeDates() override;
 
     QuantLib::Period swapTenor_;
     boost::shared_ptr<BRLCdi> brlCdiIndex_;
@@ -89,13 +89,13 @@ public:
 
     //! \name RateHelper interface
     //@{
-    QuantLib::Real impliedQuote() const;
-    void setTermStructure(QuantLib::YieldTermStructure*);
+    QuantLib::Real impliedQuote() const override;
+    void setTermStructure(QuantLib::YieldTermStructure*) override;
     //@}
 
     //! \name Visitability
     //@{
-    void accept(QuantLib::AcyclicVisitor&);
+    void accept(QuantLib::AcyclicVisitor&) override;
     //@}
 
 protected:

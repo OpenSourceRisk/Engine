@@ -63,7 +63,7 @@ public:
                                                 QuantLib::Real beta = 0.0)
         : CommodityAveragePriceOptionBaseEngine(discountCurve, vol, beta) {}
 
-    void calculate() const;
+    void calculate() const override;
 };
 
 /*! Commodity APO Monte Carlo Engine
@@ -78,7 +78,7 @@ public:
                                                 const QuantLib::Size seed = 42)
         : CommodityAveragePriceOptionBaseEngine(discountCurve, vol, beta), samples_(samples), seed_(seed) {}
 
-    void calculate() const;
+    void calculate() const override;
 
 private:
     //! Calculations when underlying swap references a commodity spot price

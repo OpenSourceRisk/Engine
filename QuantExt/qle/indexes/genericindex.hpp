@@ -35,10 +35,10 @@ public:
     explicit GenericIndex(const std::string& name) : name_(name) {}
     //! \name Index interface
     //@{
-    std::string name() const { return name_; }
-    QuantLib::Calendar fixingCalendar() const { return QuantLib::NullCalendar(); }
-    bool isValidFixingDate(const QuantLib::Date& fixingDate) const { return true; }
-    QuantLib::Real fixing(const QuantLib::Date& fixingDate, bool forecastTodaysFixing = false) const {
+    std::string name() const override { return name_; }
+    QuantLib::Calendar fixingCalendar() const override { return QuantLib::NullCalendar(); }
+    bool isValidFixingDate(const QuantLib::Date& fixingDate) const override { return true; }
+    QuantLib::Real fixing(const QuantLib::Date& fixingDate, bool forecastTodaysFixing = false) const override {
         QuantLib::Real tmp = timeSeries()[fixingDate];
         QL_REQUIRE(tmp != QuantLib::Null<QuantLib::Real>(), "Missing " << name() << " fixing for " << fixingDate);
         return tmp;

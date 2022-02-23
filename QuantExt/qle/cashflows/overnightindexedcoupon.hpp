@@ -111,11 +111,11 @@ public:
     //! \name FloatingRateCoupon interface
     //@{
     //! the date when the coupon is fully determined
-    Date fixingDate() const { return fixingDates_[fixingDates_.size() - 1 - rateCutoff_]; }
+    Date fixingDate() const override { return fixingDates_[fixingDates_.size() - 1 - rateCutoff_]; }
     //@}
     //! \name Visitability
     //@{
-    void accept(AcyclicVisitor&);
+    void accept(AcyclicVisitor&) override;
     //@}
 private:
     boost::shared_ptr<OvernightIndex> overnightIndex_;

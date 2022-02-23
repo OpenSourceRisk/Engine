@@ -56,8 +56,8 @@ public:
                          boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today, DateGrid grid);
     //! Destructor
     ~LgmScenarioGenerator(){};
-    std::vector<boost::shared_ptr<Scenario>> nextPath();
-    void reset() { pathGenerator_->reset(); }
+    std::vector<boost::shared_ptr<Scenario>> nextPath() override;
+    void reset() override { pathGenerator_->reset(); }
 
 private:
     boost::shared_ptr<QuantExt::LGM> model_;

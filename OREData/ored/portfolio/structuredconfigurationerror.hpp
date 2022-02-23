@@ -30,27 +30,14 @@ namespace ore {
 namespace data {
 
 //! Utility classes for Structured configuration errors, contains the configuration type and ID (NettingSetId, CounterParty, etc.)
-class StructuredConfigurationErrorMessage : public StructuredErrorMessage {
+class StructuredConfigurationErrorMessage : public StructuredMessage {
 public:
     StructuredConfigurationErrorMessage(const std::string& configurationType, const std::string& configurationId,
-                                        const std::string& exceptionType, const std::string exceptionWhat)
-        : configurationType_(configurationType), configurationId_(configurationId), exceptionType_(exceptionType),
-          exceptionWhat_(exceptionWhat) {}
-
-    const std::string& configurationType() const { return configurationType_; }
-    const std::string& configurationId() const { return configurationId_; }
-    const std::string& exceptionType() const { return exceptionType_; }
-    const std::string& exceptionWhat() const { return exceptionWhat_; }
-
-protected:
-    std::string json() const override {
-        return "{ \"errorType\":\"Configuration\", \"configType\":\"" + configurationType_ + "\"," +
-               " \"configId\":\"" + configurationId_ + "\"," + " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + jsonify(exceptionWhat_) + "\"}";
-    }
-
-private:
-    std::string configurationType_, configurationId_, exceptionType_, exceptionWhat_;
+                                        const std::string& exceptionType, const std::string& exceptionWhat)
+        : StructuredMessage("Error", "Configuration", exceptionWhat,
+                            std::map<string, string>({{"exceptionType", exceptionType},
+                                                      {"configurationType", configurationType},
+                                                      {"configurationId", configurationId}})) {}
 };
 
 } // namespace data

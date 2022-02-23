@@ -469,7 +469,6 @@ structure of this node is shown in Listing \ref{lst:fx_conventions}.
   <PointsFactor> </PointsFactor>
   <AdvanceCalendar> </AdvanceCalendar>
   <SpotRelative> </SpotRelative>
-  <AdditionalSettleCalendar> </AdditionalSettleCalendar>
 </FX>
 \end{minted}
 \caption{FX conventions}
@@ -490,11 +489,6 @@ not provided, it defaults to a calendar with no holidays.
 \item SpotRelative [Optional]: \emph{True} if the forward tenor is to be interpreted as being relative to the spot date.
 \emph{False} if the forward tenor is to be interpreted as being relative to the valuation date. If not provided, it
 defaults to \emph{True}.
-\item AdditionalSettleCalendar [Optional]: In some cases, when the spot date is calculated using the values in the
-\lstinline!AdvanceCalendar! and \lstinline!SpotDays! nodes, it is checked against an additional settlement calendar(s)
-and if it is not a good business day then it is moved forward until it is a good business day on both the additional
-settlement calendar(s) and the AdvanceCalendar. This additional settlement calendar(s) can be specified here. If not
-provided, it defaults to a calendar with no holidays.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

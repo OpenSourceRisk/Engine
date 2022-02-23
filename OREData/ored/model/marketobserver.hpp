@@ -44,7 +44,7 @@ public:
     //! Add an observable
     void addObservable(boost::shared_ptr<Observable> observable);
     //! Observer interface
-    void update();
+    void update() override;
     //! Returns true if has been updated, reset updated flag if required
     bool hasUpdated(const bool reset);
 

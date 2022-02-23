@@ -40,8 +40,8 @@ public:
 
 private:
     /*! Gaussian1dModel interface */
-    Real numeraireImpl(const Time t, const Real y, const Handle<YieldTermStructure>& yts) const;
-    Real zerobondImpl(const Time T, const Time t, const Real y, const Handle<YieldTermStructure>& yts) const;
+    Real numeraireImpl(const Time t, const Real y, const Handle<YieldTermStructure>& yts) const override;
+    Real zerobondImpl(const Time T, const Time t, const Real y, const Handle<YieldTermStructure>& yts) const override;
 
     // add this when the preferdDeflatedZerobond is available in QuantLib
 

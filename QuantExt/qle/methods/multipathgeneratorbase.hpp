@@ -54,8 +54,8 @@ class MultiPathGeneratorMersenneTwister : public MultiPathGeneratorBase {
 public:
     MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
                                       bool antitheticSampling = false);
-    const Sample<MultiPath>& next() const;
-    void reset();
+    const Sample<MultiPath>& next() const override;
+    void reset() override;
 
 private:
     const boost::shared_ptr<StochasticProcess> process_;
@@ -84,8 +84,8 @@ class MultiPathGeneratorSobol : public MultiPathGeneratorBase {
 public:
     MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
                             SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
-    const Sample<MultiPath>& next() const;
-    void reset();
+    const Sample<MultiPath>& next() const override;
+    void reset() override;
 
 private:
     const boost::shared_ptr<StochasticProcess> process_;
@@ -105,8 +105,8 @@ public:
                                           SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                                           BigNatural seed = 0,
                                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
-    const Sample<MultiPath>& next() const;
-    void reset();
+    const Sample<MultiPath>& next() const override;
+    void reset() override;
 
 private:
     const boost::shared_ptr<StochasticProcess> process_;

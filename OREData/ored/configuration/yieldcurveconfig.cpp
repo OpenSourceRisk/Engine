@@ -95,17 +95,17 @@ public:
     SegmentIDGetter(const string& curveID, map<CurveSpec::CurveType, set<string>>& requiredCurveIds)
         : curveID_(curveID), requiredCurveIds_(requiredCurveIds) {}
 
-    void visit(YieldCurveSegment&);
-    void visit(SimpleYieldCurveSegment& s);
-    void visit(AverageOISYieldCurveSegment& s);
-    void visit(TenorBasisYieldCurveSegment& s);
-    void visit(CrossCcyYieldCurveSegment& s);
-    void visit(ZeroSpreadedYieldCurveSegment& s);
-    void visit(DiscountRatioYieldCurveSegment& s);
-    void visit(FittedBondYieldCurveSegment& s);
-    void visit(WeightedAverageYieldCurveSegment& s);
-    void visit(YieldPlusDefaultYieldCurveSegment& s);
-    void visit(IborFallbackCurveSegment& s);
+    void visit(YieldCurveSegment&) override;
+    void visit(SimpleYieldCurveSegment& s) override;
+    void visit(AverageOISYieldCurveSegment& s) override;
+    void visit(TenorBasisYieldCurveSegment& s) override;
+    void visit(CrossCcyYieldCurveSegment& s) override;
+    void visit(ZeroSpreadedYieldCurveSegment& s) override;
+    void visit(DiscountRatioYieldCurveSegment& s) override;
+    void visit(FittedBondYieldCurveSegment& s) override;
+    void visit(WeightedAverageYieldCurveSegment& s) override;
+    void visit(YieldPlusDefaultYieldCurveSegment& s) override;
+    void visit(IborFallbackCurveSegment& s) override;
 
 private:
     string curveID_;

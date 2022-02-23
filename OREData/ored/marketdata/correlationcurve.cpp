@@ -54,7 +54,7 @@ public:
 
     virtual ~CalibrationFunction() {}
 
-    virtual Real value(const Array& params) const {
+    virtual Real value(const Array& params) const override {
 
         for (Size i = 0; i < correlations_.size(); i++) {
             boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(*correlations_[i]);
@@ -69,7 +69,7 @@ public:
         return std::sqrt(value);
     }
 
-    virtual Disposable<Array> values(const Array& params) const {
+    virtual Disposable<Array> values(const Array& params) const override {
         for (Size i = 0; i < correlations_.size(); i++) {
             boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(*correlations_[i]);
             q->setValue(params[i]);
@@ -81,7 +81,7 @@ public:
         return values;
     }
 
-    virtual Real finiteDifferenceEpsilon() const { return 1e-6; }
+    virtual Real finiteDifferenceEpsilon() const override { return 1e-6; }
 
 private:
     vector<Handle<Quote>> correlations_;

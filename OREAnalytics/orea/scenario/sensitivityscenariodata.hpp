@@ -188,8 +188,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(ore::data::XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc) override;
     //@}
 
     //! \name Equality Operators

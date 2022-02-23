@@ -43,17 +43,17 @@ private:
 
     public:
         FlatExtrapolationImpl(const boost::shared_ptr<Interpolation>& i) : i_(i) {}
-        void update() { i_->update(); }
-        Real xMin() const { return i_->xMin(); }
-        Real xMax() const { return i_->xMax(); }
-        std::vector<Real> xValues() const { QL_FAIL("not implemented"); }
-        std::vector<Real> yValues() const { QL_FAIL("not implemented"); }
-        bool isInRange(Real x) const { return i_->isInRange(x); }
-        Real value(Real x) const {
+        void update() override { i_->update(); }
+        Real xMin() const override { return i_->xMin(); }
+        Real xMax() const override { return i_->xMax(); }
+        std::vector<Real> xValues() const override { QL_FAIL("not implemented"); }
+        std::vector<Real> yValues() const override { QL_FAIL("not implemented"); }
+        bool isInRange(Real x) const override { return i_->isInRange(x); }
+        Real value(Real x) const override {
             Real tmp = std::max(std::min(x, i_->xMax()), i_->xMin());
             return i_->operator()(tmp);
         }
-        Real primitive(Real x) const {
+        Real primitive(Real x) const override {
             if (x >= i_->xMin() && x <= i_->xMax()) {
                 return i_->primitive(x);
             }
@@ -63,7 +63,7 @@ private:
                 return i_->primitive(i_->xMax()) + (x - i_->xMax());
             }
         }
-        Real derivative(Real x) const {
+        Real derivative(Real x) const override {
             if (x > i_->xMin() && x < i_->xMax()) {
                 return i_->derivative(x);
             } else {
@@ -72,7 +72,7 @@ private:
                 return 0.0;
             }
         }
-        Real secondDerivative(Real x) const {
+        Real secondDerivative(Real x) const override {
             if (x > i_->xMin() && x < i_->xMax()) {
                 return i_->secondDerivative(x);
             } else {

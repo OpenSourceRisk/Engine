@@ -50,7 +50,7 @@ public:
         registerWith(correlation_);
     }
 
-    void performCalculations() const;
+    void performCalculations() const override;
 
     //! returns the actual price of the instrument (from volatility)
     QuantLib::Real marketValue() const { return marketValue_; }
@@ -59,7 +59,7 @@ public:
     QuantLib::Real modelValue() const;
 
     //! returns the error resulting from the model valuation
-    QuantLib::Real calibrationError() { return marketValue() - modelValue(); }
+    QuantLib::Real calibrationError() override { return marketValue() - modelValue(); }
 
 protected:
     Date asof_;

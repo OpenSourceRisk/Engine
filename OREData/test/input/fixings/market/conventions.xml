@@ -63,6 +63,5 @@
     <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>TARGET,US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
-    <AdditionalSettleCalendar/>
   </FX>
 </Conventions>

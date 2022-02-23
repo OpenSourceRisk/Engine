@@ -57,8 +57,8 @@ public:
     Real B(Real t, Real T) const;
 
     /*! observer and linked calibrated model interface */
-    void update();
-    void generateArguments();
+    void update() override;
+    void generateArguments() override;
 
 private:
     boost::shared_ptr<CrCirppParametrization> parametrization_;

@@ -52,27 +52,27 @@ public:
                         bool requireMonotoneVariance = true);
     //! \name TermStructure interface
     //@{
-    Date maxDate() const;
+    Date maxDate() const override;
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const;
-    Real maxStrike() const;
+    Real minStrike() const override;
+    Real maxStrike() const override;
     //@}
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 protected:
-    virtual Real blackVarianceImpl(Time t, Real) const;
+    virtual Real blackVarianceImpl(Time t, Real) const override;
 
 private:
     std::vector<Time> times_;

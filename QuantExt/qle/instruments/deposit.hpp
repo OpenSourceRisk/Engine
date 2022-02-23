@@ -53,9 +53,9 @@ public:
 
     //! \name Instrument interface
     //@{
-    bool isExpired() const;
-    void setupArguments(PricingEngine::arguments*) const;
-    void fetchResults(const PricingEngine::results*) const;
+    bool isExpired() const override;
+    void setupArguments(PricingEngine::arguments*) const override;
+    void fetchResults(const PricingEngine::results*) const override;
     //@}
     //! \name Additional interface
     //@{
@@ -73,7 +73,7 @@ public:
 private:
     //! \name Instrument interface
     //@{
-    void setupExpired() const;
+    void setupExpired() const override;
     //@}
     Date fixingDate_, startDate_, maturityDate_;
     boost::shared_ptr<IborIndex> index_;
@@ -88,14 +88,14 @@ public:
     boost::shared_ptr<IborIndex> index;
     Date maturityDate;
     Leg leg;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
 class Deposit::results : public Instrument::results {
 public:
     Real fairRate;
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments

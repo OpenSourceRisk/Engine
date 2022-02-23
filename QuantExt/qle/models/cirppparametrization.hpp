@@ -34,7 +34,7 @@ public:
     const Handle<TS> termStructure() const;
     const bool shifted() const;
 
-    Size numberOfParameters() const { return 4; }
+    Size numberOfParameters() const override { return 4; }
 
 private:
     const Handle<TS> termStructure_;

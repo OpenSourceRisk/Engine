@@ -179,7 +179,8 @@
       <xs:element type="xs:decimal" name="PointsFactor" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="AdvanceCalendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="SpotRelative" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="AdditionalSettleCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="EOM" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 

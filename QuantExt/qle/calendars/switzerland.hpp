@@ -51,13 +51,13 @@ class Switzerland : public Calendar {
 private:
     class SettlementImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "Switzerland"; }
-        bool isBusinessDay(const Date&) const;
+        std::string name() const override { return "Switzerland"; }
+        bool isBusinessDay(const Date&) const override;
     };
     class SixImpl : public Calendar::WesternImpl {
     public:
-        std::string name() const { return "SIX Swiss Exchange"; }
-        bool isBusinessDay(const Date&) const;
+        std::string name() const override { return "SIX Swiss Exchange"; }
+        bool isBusinessDay(const Date&) const override;
     };
 
 public:

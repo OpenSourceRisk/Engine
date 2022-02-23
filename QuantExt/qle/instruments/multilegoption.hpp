@@ -72,13 +72,13 @@ public:
     boost::shared_ptr<Exercise> exercise;
     Settlement::Type settlementType;
     Settlement::Method settlementMethod;
-    void validate() const {}
+    void validate() const override {}
 };
 
 class MultiLegOption::results : public Instrument::results {
 public:
     Real underlyingNpv;
-    void reset();
+    void reset() override;
 };
 
 class MultiLegOption::engine : public GenericEngine<MultiLegOption::arguments, MultiLegOption::results> {};

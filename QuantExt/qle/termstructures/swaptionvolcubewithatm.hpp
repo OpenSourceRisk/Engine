@@ -53,33 +53,33 @@ public:
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const { return cube_->dayCounter(); }
-    Date maxDate() const { return cube_->maxDate(); }
-    Time maxTime() const { return cube_->maxTime(); }
-    const Date& referenceDate() const { return cube_->referenceDate(); }
-    Calendar calendar() const { return cube_->calendar(); }
-    Natural settlementDays() const { return cube_->settlementDays(); }
+    DayCounter dayCounter() const override { return cube_->dayCounter(); }
+    Date maxDate() const override { return cube_->maxDate(); }
+    Time maxTime() const override { return cube_->maxTime(); }
+    const Date& referenceDate() const override { return cube_->referenceDate(); }
+    Calendar calendar() const override { return cube_->calendar(); }
+    Natural settlementDays() const override { return cube_->settlementDays(); }
     //! \name VolatilityTermStructure interface
     //@{
-    Rate minStrike() const { return cube_->minStrike(); }
-    Rate maxStrike() const { return cube_->maxStrike(); }
+    Rate minStrike() const override { return cube_->minStrike(); }
+    Rate maxStrike() const override { return cube_->maxStrike(); }
     //@}
     //! \name SwaptionVolatilityStructure interface
     //@{
-    const Period& maxSwapTenor() const { return cube_->maxSwapTenor(); }
-    VolatilityType volatilityType() const { return cube_->volatilityType(); }
+    const Period& maxSwapTenor() const override { return cube_->maxSwapTenor(); }
+    VolatilityType volatilityType() const override { return cube_->volatilityType(); }
     //@}
 
     boost::shared_ptr<SwaptionVolatilityCube> cube() const { return cube_; }
 
 protected:
     // Nothing to do here, just ask the cube
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const {
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override {
         return cube_->smileSection(optionTime, swapLength);
     }
 
     // Here we check if strike is Null<Real>() and ask the ATM surface if so.
-    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
+    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override {
         if (strike == Null<Real>()) {
             return cube_->atmVol()->volatility(optionTime, swapLength, 0.0);
         } else {

@@ -28,19 +28,11 @@
 namespace ore {
 namespace analytics {
 
-class StructuredAnalyticsErrorMessage : public ore::data::StructuredErrorMessage {
+class StructuredAnalyticsErrorMessage : public ore::data::StructuredMessage {
 public:
-    StructuredAnalyticsErrorMessage(const std::string& type, const std::string& what);
-
-    const std::string& type() const;
-    const std::string& what() const;
-
-protected:
-    std::string json() const override;
-
-private:
-    std::string type_;
-    std::string what_;
+    StructuredAnalyticsErrorMessage(const std::string& exceptionType, const std::string& exceptionWhat)
+        : StructuredMessage("Error", "Analytics", exceptionWhat,
+                            std::map<std::string, std::string>({{"exceptionType", exceptionType}})) {}
 };
 
 } // namespace analytics

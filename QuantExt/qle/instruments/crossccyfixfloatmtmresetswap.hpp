@@ -58,8 +58,8 @@ public:
     //@}
     //! \name Instrument interface
     //@{
-    void setupArguments(PricingEngine::arguments* args) const;
-    void fetchResults(const PricingEngine::results*) const;
+    void setupArguments(PricingEngine::arguments* args) const override;
+    void fetchResults(const PricingEngine::results*) const override;
     //@}
     //! \name Inspectors
     //@{
@@ -96,7 +96,7 @@ public:
 protected:
     //! \name Instrument interface
     //@{
-    void setupExpired() const;
+    void setupExpired() const override;
     //@}
 
 private:
@@ -133,7 +133,7 @@ class CrossCcyFixFloatMtMResetSwap::arguments : public CrossCcySwap::arguments {
 public:
     QuantLib::Spread spread;
     QuantLib::Rate fixedRate;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
@@ -141,7 +141,7 @@ class CrossCcyFixFloatMtMResetSwap::results : public CrossCcySwap::results {
 public:
     QuantLib::Spread fairSpread;
     QuantLib::Rate fairFixedRate;
-    void reset();
+    void reset() override;
 };
 } // namespace QuantExt
 

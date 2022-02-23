@@ -57,17 +57,17 @@ public:
         registerWith(fixedTargetTermStructure);
     }
 
-    Date maxDate() const { return x_->maxDate(); }
-    void update() {}
-    const Date& referenceDate() const { return x_->referenceDate(); }
+    Date maxDate() const override { return x_->maxDate(); }
+    void update() override {}
+    const Date& referenceDate() const override { return x_->referenceDate(); }
 
-    Calendar calendar() const { return x_->calendar(); }
-    Natural settlementDays() const { return x_->settlementDays(); }
+    Calendar calendar() const override { return x_->calendar(); }
+    Natural settlementDays() const override { return x_->settlementDays(); }
 
     void flushCache() { cache_c_.clear(); }
 
 protected:
-    Real discountImpl(Time t) const;
+    Real discountImpl(Time t) const override;
 
 private:
     // FIXME: remove cache

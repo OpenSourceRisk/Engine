@@ -47,11 +47,11 @@ public:
                            SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
 
     /*! StochasticProcess interface */
-    Size size() const;
-    Disposable<Array> initialValues() const;
-    Disposable<Array> drift(Time t, const Array& x) const;
-    Disposable<Matrix> diffusion(Time t, const Array& x) const;
-    Disposable<Array> evolve(Time t0, const Array& x0, Time dt, const Array& dw) const;
+    Size size() const override;
+    Disposable<Array> initialValues() const override;
+    Disposable<Array> drift(Time t, const Array& x) const override;
+    Disposable<Matrix> diffusion(Time t, const Array& x) const override;
+    Disposable<Array> evolve(Time t0, const Array& x0, Time dt, const Array& dw) const override;
 
     /*! specific members */
     virtual void flushCache() const;
@@ -73,9 +73,9 @@ protected:
     public:
         ExactDiscretization(const CrossAssetModel* const model,
                             SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
-        virtual Disposable<Array> drift(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
-        virtual Disposable<Matrix> diffusion(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
-        virtual Disposable<Matrix> covariance(const StochasticProcess&, Time t0, const Array& x0, Time dt) const;
+        virtual Disposable<Array> drift(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
+        virtual Disposable<Matrix> diffusion(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
+        virtual Disposable<Matrix> covariance(const StochasticProcess&, Time t0, const Array& x0, Time dt) const override;
         void flushCache() const;
 
     protected:

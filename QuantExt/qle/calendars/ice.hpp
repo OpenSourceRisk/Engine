@@ -35,62 +35,62 @@ class ICE : public QuantLib::Calendar {
 private:
     class FuturesUSImpl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "ICE Futures U.S."; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Futures U.S."; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class FuturesUSImpl_1 : public FuturesUSImpl {
     public:
-        std::string name() const { return "ICE Futures U.S. 1"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Futures U.S. 1"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class FuturesUSImpl_2 : public FuturesUSImpl {
     public:
-        std::string name() const { return "ICE Futures U.S. 2"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Futures U.S. 2"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class FuturesEUImpl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "ICE Futures Europe"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Futures Europe"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class FuturesEUImpl_1 : public FuturesEUImpl {
     public:
-        std::string name() const { return "ICE Futures Europe 1"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Futures Europe 1"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class EndexEnergyImpl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "ICE Endex Energy"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Endex Energy"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class EndexEquitiesImpl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "ICE Endex Equities"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Endex Equities"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class SwapTradeUSImpl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "ICE Swap Trade U.S."; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Swap Trade U.S."; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class SwapTradeUKImpl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "ICE Swap Trade U.K."; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Swap Trade U.K."; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
     class FuturesSingaporeImpl : public QuantLib::Calendar::WesternImpl {
     public:
-        std::string name() const { return "ICE Futures Singapore"; }
-        bool isBusinessDay(const QuantLib::Date& d) const;
+        std::string name() const override { return "ICE Futures Singapore"; }
+        bool isBusinessDay(const QuantLib::Date& d) const override;
     };
 
 public:

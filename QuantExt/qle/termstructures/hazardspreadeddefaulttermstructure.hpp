@@ -43,22 +43,22 @@ public:
     //@}
     //! \name TermStructure interface
     //@{
-    virtual DayCounter dayCounter() const;
-    virtual Date maxDate() const;
-    virtual Time maxTime() const;
-    virtual const Date& referenceDate() const;
-    virtual Calendar calendar() const;
-    virtual Natural settlementDays() const;
+    virtual DayCounter dayCounter() const override;
+    virtual Date maxDate() const override;
+    virtual Time maxTime() const override;
+    virtual const Date& referenceDate() const override;
+    virtual Calendar calendar() const override;
+    virtual Natural settlementDays() const override;
     //@}
 private:
     //! \name HazardRateStructure interface
     //@{
-    Rate hazardRateImpl(Time) const;
+    Rate hazardRateImpl(Time) const override;
     //@}
 
     //! \name DefaultProbabilityTermStructure interface
     //@{
-    Probability survivalProbabilityImpl(Time) const;
+    Probability survivalProbabilityImpl(Time) const override;
     //@}
 
     Handle<DefaultProbabilityTermStructure> source_;

@@ -51,8 +51,8 @@ public:
     //@}
     //! \name Instrument interface
     //@{
-    void setupArguments(PricingEngine::arguments* args) const;
-    void fetchResults(const PricingEngine::results*) const;
+    void setupArguments(PricingEngine::arguments* args) const override;
+    void fetchResults(const PricingEngine::results*) const override;
     //@}
     //! \name Additional interface
     //@{
@@ -86,7 +86,7 @@ protected:
     //@}
     //! \name Instrument interface
     //@{
-    void setupExpired() const;
+    void setupExpired() const override;
     //@}
 
     std::vector<Currency> currencies_;
@@ -101,7 +101,7 @@ private:
 class CrossCcySwap::arguments : public Swap::arguments {
 public:
     std::vector<Currency> currencies;
-    void validate() const;
+    void validate() const override;
 };
 
 //! \ingroup instruments
@@ -110,7 +110,7 @@ public:
     std::vector<Real> inCcyLegNPV;
     std::vector<Real> inCcyLegBPS;
     std::vector<DiscountFactor> npvDateDiscounts;
-    void reset();
+    void reset() override;
 };
 
 //! \ingroup instruments

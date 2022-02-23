@@ -71,10 +71,10 @@ public:
     void clear();
 
     //! Load members from XML
-    virtual void fromXML(XMLNode* node);
+    virtual void fromXML(XMLNode* node) override;
 
     //! Write members to XML
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
     //! \name Inspectors
     //@{

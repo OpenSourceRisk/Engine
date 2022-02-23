@@ -61,24 +61,24 @@ public:
 
     //! \name TermStructure interface
     //@{
-    Date maxDate() const { return Date::maxDate(); }
+    Date maxDate() const override { return Date::maxDate(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const { return 0; }
-    Real maxStrike() const { return QL_MAX_REAL; }
+    Real minStrike() const override { return 0; }
+    Real maxStrike() const override { return QL_MAX_REAL; }
     //@}
     //! \name Observer interface
     //@{
-    void update();
+    void update() override;
     //@}
     //! \name LazyObject interface
     //@{
-    void performCalculations() const;
+    void performCalculations() const override;
     //@}
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(AcyclicVisitor&) override;
     //@}
 
     //! \name Inspectors
@@ -99,7 +99,7 @@ private:
     void init();
 
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
-    virtual Real blackVarianceImpl(Time t, Real strike) const;
+    virtual Real blackVarianceImpl(Time t, Real strike) const override;
     std::vector<std::vector<Handle<Quote> > > quotes_;
     mutable Matrix variances_;
     mutable Interpolation2D varianceSurface_;
@@ -135,7 +135,7 @@ public:
                                       bool flatExtrapMoneyness = false);
 
 private:
-    virtual Real moneyness(Time t, Real strike) const;
+    virtual Real moneyness(Time t, Real strike) const override;
 };
 
 //! Black volatility surface based on forward moneyness
@@ -162,7 +162,7 @@ private:
     // Shared initialisation
     void init();
 
-    virtual Real moneyness(Time t, Real strike) const;
+    virtual Real moneyness(Time t, Real strike) const override;
     Handle<YieldTermStructure> forTS_; // calculates fwd if StickyStrike==false
     Handle<YieldTermStructure> domTS_;
     std::vector<Real> forwards_; // cache fwd values if StickyStrike==true

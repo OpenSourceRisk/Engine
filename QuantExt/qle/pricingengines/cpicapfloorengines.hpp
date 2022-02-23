@@ -55,7 +55,7 @@ class InterpolatingCPICapFloorEngine : public QuantLib::CPICapFloor::engine {
 public:
     explicit InterpolatingCPICapFloorEngine(const QuantLib::Handle<QuantLib::CPICapFloorTermPriceSurface>&);
 
-    virtual void calculate() const;
+    virtual void calculate() const override;
     virtual std::string name() const { return "InterpolatingCPICapFloorEngine"; }
 
     virtual ~InterpolatingCPICapFloorEngine() {}

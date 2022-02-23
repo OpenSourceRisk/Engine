@@ -58,7 +58,7 @@ public:
                                   const QuantLib::Interpolation atmVolCurve);
 
 private:
-    virtual Real moneyness(Time t, Real strike) const;
+    virtual Real moneyness(Time t, Real strike) const override;
     boost::shared_ptr<EqFxIndexBase> index_;
     std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
     Interpolation forwardCurve_;
