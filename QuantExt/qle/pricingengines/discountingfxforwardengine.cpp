@@ -111,6 +111,8 @@ void DiscountingFxForwardEngine::calculate() const {
         results_.additionalResults["fxSpot"] = spotFX_->value();
         results_.additionalResults["discountFactor[1]"] = disc1far;
         results_.additionalResults["discountFactor[2]"] = disc2far;
+        results_.additionalResults["legNPV[1]"] = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * tmpNominal1 / fx1;
+        results_.additionalResults["legNPV[2]"] = (tmpPayCurrency1 ? -1.0 : 1.0) * discFar / discNear * (-tmpNominal2 / fx2);
 
         // set notional
         if (arguments_.isPhysicallySettled) {

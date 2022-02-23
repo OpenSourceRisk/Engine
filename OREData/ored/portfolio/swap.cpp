@@ -181,11 +181,37 @@ const std::map<std::string,boost::any>& Swap::additionalData() const {
     Size numLegs = legData_.size();
     // use the build time as of date to determine current notionals
     Date asof = Settings::instance().evaluationDate();
+    boost::shared_ptr<QuantLib::Swap> swap = boost::dynamic_pointer_cast<QuantLib::Swap>(instrument_->qlInstrument());
+    boost::shared_ptr<QuantExt::CurrencySwap> cswap = boost::dynamic_pointer_cast<QuantExt::CurrencySwap>(instrument_->qlInstrument());
+    std::map<std::string, Real> legNpv; // by currency
     for (Size i = 0; i < numLegs; ++i) {
         string legID = to_string(i+1);
         additionalData_["legType[" + legID + "]"] = legData_[i].legType();
         additionalData_["isPayer[" + legID + "]"] = legData_[i].isPayer();
         additionalData_["notionalCurrency[" + legID + "]"] = legData_[i].currency();
+        if (!isXCCY_) {
+            if (swap)
+                additionalData_["legNPV[" + legID + "]"] = swap->legNPV(i);
+            else
+                ALOG("single currency swap underlying instrument not set, skip leg npv reporting");
+        } 
+        else {
+            if (cswap) {
+                // The currency swap has more legs than the swap wrapper (additional notional legs), so aggregate by currency
+                Real legNpv = 0;
+                Real legNpvInCcy = 0;
+                for (Size j = 0; j < cswap->legs().size(); ++j) {
+                    if (cswap->legCurrency(j).code() == legData_[i].currency()) {
+                        legNpv += cswap->legNPV(j);
+                        legNpvInCcy += cswap->inCcyLegNPV(j);
+                    }
+                }
+                additionalData_["legNPV[" + legID + "]"] = legNpv;
+                additionalData_["legNPVCCY[" + legID + "]"] = legNpvInCcy;
+            }
+            else 
+                ALOG("cross currency swap underlying instrument not set, skip leg npv reporting");
+        }
         for (Size j = 0; j < legs_[i].size(); ++j) {
             boost::shared_ptr<CashFlow> flow = legs_[i][j];
             // pick flow with earliest future payment date on this leg

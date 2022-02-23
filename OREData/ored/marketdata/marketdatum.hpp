@@ -1428,10 +1428,7 @@ public:
     EquityForwardQuote() {}
     //! Constructor
     EquityForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
-                       string ccy, const Date& expiryDate)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
-          expiry_(expiryDate) {}
-
+                       string ccy, const Date& expiryDate);
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
@@ -1471,9 +1468,7 @@ public:
     EquityDividendYieldQuote() {}
     //! Constructor
     EquityDividendYieldQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
-                             string ccy, const Date& tenorDate)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName),
-          ccy_(ccy), tenor_(tenorDate) {}
+                             string ccy, const Date& tenorDate);
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
@@ -1505,7 +1500,6 @@ Specific data comprise
 - expiry
 - strike - supported are:
            - absolute strike, e.g. 1234.5
-           - ATM/AtmSpot         (or as an alias ATM)
            - ATM/AtmFwd          (or as an alias ATMF)
            - MNY/[Spot/Fwd]/1.2
 - C (call), P (put) flag, this is optional and defaults to C
@@ -1701,20 +1695,12 @@ public:
     //! Date based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
                           QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-                          const QuantLib::Date& expiryDate)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
-          quoteCurrency_(quoteCurrency), expiryDate_(expiryDate), tenorBased_(false) {
-        QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
-    }
+                          const QuantLib::Date& expiryDate);
 
     //! Tenor based commodity forward constructor
     CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
                           QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
-                          const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
-          quoteCurrency_(quoteCurrency), tenor_(tenor), startTenor_(startTenor), tenorBased_(true) {
-        QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
-    }
+                          const QuantLib::Period& tenor, boost::optional<QuantLib::Period> startTenor = boost::none);
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {

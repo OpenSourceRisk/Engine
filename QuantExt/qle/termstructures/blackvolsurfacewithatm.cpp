@@ -27,8 +27,6 @@ BlackVolatilityWithATM::BlackVolatilityWithATM(const boost::shared_ptr<BlackVolT
       surface_(surface), spot_(spot), yield1_(yield1), yield2_(yield2) {
 
     QL_REQUIRE(!spot.empty(), "No spot handle provided");
-    QL_REQUIRE(!yield1.empty(), "No yield1 handle provided");
-    QL_REQUIRE(!yield2.empty(), "No yield2 handle provided");
 
     if (surface->allowsExtrapolation())
         this->enableExtrapolation();
@@ -42,7 +40,9 @@ BlackVolatilityWithATM::BlackVolatilityWithATM(const boost::shared_ptr<BlackVolT
 Volatility BlackVolatilityWithATM::blackVolImpl(Time t, Real strike) const {
     if (strike == Null<Real>() || strike == 0) {
         // calculate fwd(t)
-        strike = spot_->value() * yield2_->discount(t, true) / yield1_->discount(t, true);
+        strike = spot_->value();
+        if (!yield1_.empty() && !yield2_.empty())
+            strike *= yield2_->discount(t, true) / yield1_->discount(t, true);
     }
     return surface_->blackVol(t, strike);
 }
