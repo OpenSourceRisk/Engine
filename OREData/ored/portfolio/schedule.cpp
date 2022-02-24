@@ -260,8 +260,8 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
     QL_REQUIRE(!data.endDate().empty() || data.lastDate().empty(),
                "makeSchedule(): If no end date is given, a last date is not allowed either. Please remove the last "
                "date from the schedule.");
-    // Calendar calendar = parseCalendar(data.calendar());
-    Calendar calendar = data.calendarQL();
+    Calendar calendar = parseCalendar(data.calendar());
+    // Calendar calendar = data.calendarQL();
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate().empty() ? openEndDateReplacement : parseDate(data.endDate());
     // Handle trivial case here
