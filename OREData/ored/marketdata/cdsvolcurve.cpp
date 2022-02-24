@@ -18,9 +18,11 @@
 
 #include <algorithm>
 #include <ored/marketdata/cdsvolcurve.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/wildcard.hpp>
+#include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
@@ -248,6 +250,33 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
     LOG("CDSVolCurve: finished building 1-D volatility curve");
 }
 
+namespace {
+// FIXME workaround for QPR-10654: look up fair spread / price in market data
+Handle<Quote> getFairSpreadOrPriceLevel(const Loader& loader, const Date& asof, const std::string& curveId,
+                                        const std::string& indexName, std::string indexTerm,
+                                        const std::string& strikeType) {
+    Real fairLevel = Null<Real>();
+    Period term = indexTerm.empty() ? 5 * Years : parsePeriod(indexTerm);
+    for (auto const& md : loader.loadQuotes(asof)) {
+        if (auto q = boost::dynamic_pointer_cast<CdsQuote>(md)) {
+            if (q->underlyingName() == indexName && q->term() == term &&
+                ((q->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD && strikeType == "Spread") ||
+                 (q->quoteType() == MarketDatum::QuoteType::PRICE && strikeType == "Price"))) {
+                fairLevel = q->quote()->value();
+                break;
+            }
+        }
+    }
+    if (fairLevel == Null<Real>()) {
+        ALOG(StructuredCurveErrorMessage(curveId, "CDS Vol Curve has unknown ATM Level",
+                                         "Did not find fair " + strikeType + " quote in market data"));
+        return Handle<Quote>();
+    } else {
+        return Handle<Quote>(boost::make_shared<SimpleQuote>(fairLevel));
+    }
+}
+} // namespace
+
 void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc,
                                   const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader) {
 
@@ -311,6 +340,8 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     vector<Volatility> vols;
     Size quotesAdded = 0;
 
+    std::string indexName, indexTerm; // FIXME workaround for QPR-10654
+
     // Loop over quotes and process any CDS option quote that matches a wildcard
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
@@ -362,6 +393,10 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
 
         TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiries.back()) << "," << fixed << setprecision(9)
                             << strikes.back() << "," << vols.back() << ")");
+
+	// FIXME workaround for QPR-10654
+	indexName = q->indexName();
+	indexTerm = q->indexTerm();
     }
 
     LOG("CDSVolCurve: added " << quotesAdded << " quotes in building wildcard based absolute strike surface.");
@@ -408,6 +443,12 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     DLOG("Setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
     vol_->enableExtrapolation(vssc.extrapolation());
 
+    // FIXME add atm , workaround for QPR-10654
+    auto atm = getFairSpreadOrPriceLevel(loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
+    if(!atm.empty()) {
+        vol_ = boost::make_shared<BlackVolatilityWithATM>(vol_, atm);
+    }
+
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
 }
 
@@ -434,6 +475,8 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
 
     // Count the number of quotes added. We check at the end that we have added all configured quotes.
     Size quotesAdded = 0;
+
+    std::string indexName, indexTerm; // FIXME workaround for QPR-10654
 
     // Loop over quotes and process CDS option quotes that have been requested
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -478,6 +521,10 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
                             << " and the strike " << configuredStrikes[pos]);
         surfaceData[eDate][pos] = q->quote()->value();
         quotesAdded++;
+
+	// FIXME workaround for QPR-10654
+	indexName = q->indexName();
+	indexTerm = q->indexTerm();
 
         TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
                             << configuredStrikes[pos] << "," << q->quote()->value() << ")");
@@ -566,6 +613,12 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
 
     DLOG("Setting BlackVarianceSurface extrapolation to " << to_string(vssc.extrapolation()));
     vol_->enableExtrapolation(vssc.extrapolation());
+
+    // FIXME add atm , workaround for QPR-10654
+    auto atm = getFairSpreadOrPriceLevel(loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
+    if (!atm.empty()) {
+        vol_ = boost::make_shared<BlackVolatilityWithATM>(vol_, atm);
+    }
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike "
         << "surface with explicit strikes and expiries");

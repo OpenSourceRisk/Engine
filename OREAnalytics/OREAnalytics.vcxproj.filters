@@ -335,9 +335,6 @@
     <ClCompile Include="orea\engine\filteredsensitivitystream.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="orea\app\structuredanalyticserror.cpp">
-      <Filter>app</Filter>
-    </ClCompile>
     <ClCompile Include="orea\cube\cubeinterpretation.cpp">
       <Filter>cube</Filter>
     </ClCompile>
@@ -376,9 +373,6 @@
     </ClCompile>
     <ClCompile Include="orea\engine\npvrecord.cpp">
       <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="orea\app\structuredanalyticswarning.cpp">
-      <Filter>app</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

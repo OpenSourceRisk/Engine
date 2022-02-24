@@ -1,54 +1,58 @@
 \ifdefined\RiskCatalogue\renewcommand{\subsection}{\section}\fi
+\newpage
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Allowable Values for Standard Trade Data}
+\subsection{Allowable Values}
 \label{sec:allowable_values}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\begin{table}[H]
-\centering
-  \begin{tabular} {|p{4cm}|p{11cm}|}
-    \hline
-    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
-    \hline
-    \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
-%    \lstinline!Currency! &
-%\emph{AED,AFN,ALL,AMD,ANG,AOA,ARS,AUD,AWG,AZN,
-%BAM,BBD,BDT,BGN,BHD,BIF,BMD,BND,BOB,BOV,
-%BRL,BSD,BTN,BWP,BYN,BZD,CAD,CDF,CHE,CHF,
-%CHW,CLF,CLP,CNH,CNT,CNY,COP,COU,CRC,CUC,
-%CUP,CVE,CZK,DJF,DKK,DOP,DZD,EGP,ERN,ETB,
-%EUR,FJD,FKP,GBP,GEL,GGP,GHS,GIP,GMD,GNF,
-%GTQ,GYD,HKD,HNL,HRK,HTG,HUF,IDR,ILS,IMP,
-%INR,IQD,IRR,ISK,JEP,JMD,JOD,JPY,KES,KGS,
-%KHR,KID,KMF,KPW,KRW,KWD,KYD,KZT,LAK,LBP,
-%LKR,LRD,LSL,LYD,MAD,MDL,MGA,MKD,MMK,MNT,
-%MOP,MRU,MUR,MVR,MWK,MXN,MXV,MYR,MZN,NAD,
-%NGN,NIO,NOK,NPR,NZD,OMR,PAB,PEN,PGK,PHP,
-%PKR,PLN,PYG,QAR,RON,RSD,RUB,RWF,SAR,SBD,
-%SCR,SDG,SEK,SGD,SHP,SLL,SOS,SRD,SSP,STN,
-%SVC,SYP,SZL,THB,TJS,TMT,TND,TOP,TRY,TTD,
-%TWD,TZS,UAH,UGX,USD,USN,UYI,UYU,UYW,UZS,
-%VES,VND,VUV,WST,XAF,XAG,XAU,XCD,XOF,XPD,
-%XPF,XPT,XSU,XUA,YER,ZAR,ZMW,ZWL,
-%XBT,BTC,ETH,ETC,BCH,XRP,LTC.}
-%This full list of currencies is available via loading the provided {\tt currencies.xml} at start-up.
-%Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
-%\lstinline!Minor Currencies! & \emph{GBp, GBX, ILa, ILX, ZAc, ZAC, ZAX},  
-%    Note: Minor Currency codes only supported for Equity products.  \\ \hline
-    %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
-    \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
-\emph{F,  Following, FOLLOWING}\\ 
-\emph{MF, ModifiedFollowing, Modified Following, MODIFIEDF}\\ 
-\emph{P, Preceding, PRECEDING}\\ 
-\emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
-\emph{U, Unadjusted, INDIFF }\end{tabular}  \\ \hline
-  \end{tabular}
-  \caption{Allowable values for standard trade data.}
+
+\begin{longtable}{| p{.25\textwidth} | p{.80\textwidth} |}
+\hline
+\multicolumn{2}{|l|}{\lstinline!Date!}                    \\ \hline
+\textbf{Date Fields}                   & \textbf{Allowable Values}                       \\ \hline
+ \makecell[cl]{All Date fields: \\ \lstinline!StartDate! \\ \lstinline!EndDate! \\ \lstinline!Date! \\ \lstinline!ExerciseDate! \\ \lstinline!PayDate! \\ \lstinline!ValueDate! \\ \lstinline!NearDate! \\ \lstinline!FarDate! \\ etc} &   \begin{tabular}[l]{@{}l@{}} Any of the following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ \vspace{1pt} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.   \end{tabular} \\ \hline
+  \caption{Allowable Values for Date}
   \label{tab:allow_stand_data}
-\end{table}
+  \end{longtable}
 
 
+%\begin{table}[H]
+%\centering
+%  \begin{tabular} {|p{4cm}|p{11cm}|}
+%    \hline
+%    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+%    \hline
+%    \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
 
+%    \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
+%\emph{F,  Following, FOLLOWING}\\ 
+%\emph{MF, ModifiedFollowing, Modified Following, MODIFIEDF}\\ 
+%\emph{P, Preceding, PRECEDING}\\ 
+%\emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
+%\emph{U, Unadjusted, INDIFF }\end{tabular}  \\ \hline
+%  \end{tabular}
+%  \caption{Allowable values for standard trade data.}
+%  \label{tab:allow_stand_data}
+%\end{table}
+
+
+\begin{longtable}{| p{.30\textwidth} | p{.75\textwidth} |}
+\hline
+\multicolumn{2}{|l|}{\lstinline!Convention!}                    \\ \hline
+\textbf{Roll Convention Fields}                   & \textbf{Allowable Values}                       \\ \hline
+\makecell[cl]{ All Convention fields: \\ \lstinline!Convention! \\ \lstinline!TermConvention! \\ \lstinline!PaymentConvention! \\ etc} &   \makecell[cl]{
+ \emph{F,  Following, FOLLOWING}\\ 
+ \emph{MF, ModifiedFollowing, Modified Following, MODIFIEDF}\\ 
+ \emph{P, Preceding, PRECEDING}\\ 
+ \emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
+ \emph{U, Unadjusted, INDIFF } \\
+ \emph{NEAREST } (takes future date in case of equal distance) } \\ \hline
+  \caption{Allowable Values for Roll Conventions}
+  \label{tab:convention}
+  \end{longtable}
+
+
+\newpage
 \begin{longtable}{| p{.25\textwidth} | p{.80\textwidth} |}
 \hline
 \multicolumn{2}{|l|}{\lstinline!Currency!}                    \\ \hline
