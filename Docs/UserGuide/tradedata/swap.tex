@@ -5,7 +5,7 @@ and can have an unlimited number of legs. Each leg is represented by a \lstinlin
 described in section \ref{ss:leg_data}. An example structure of a two-legged \lstinline!SwapData!
 node is shown in Listing \ref{lst:swap_data}.
 \begin{itemize}
-\item Settlement [Optional]: Delivery type applicable to cross currency swaps, and ignored for all other swap types. Delivery type does not impact pricing in ORE.  
+\item Settlement [Optional]: Delivery type applicable to cross currency swaps, and ignored for all other swap types. Delivery type does not impact pricing in ORE, but npv results are produced with and without SIMM exemptions.  
 
 Settlement \emph{Cash} indicates that principal exchanges on the cross currency swap should be included in Initial Margin (IM). According to ISDA non-deliverable (\emph{Cash}) trades are excluded from the exemption from IM for the principal exchange, i.e. the principal exchanges are included in IM. 
 
@@ -29,4 +29,95 @@ Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} i
 \end{minted}
 \caption{Swap data}
 \label{lst:swap_data}
+\end{listing}
+
+
+Note that Swaps for non-deliverable currencies with payment in a deliverable currency are supported using the Indexings node (\ref{ss:indexings}). 
+
+A non-deliverable cross currency Swap has Settlement set to \emph{Cash}, and one leg is a regular leg in the deliverable currency without Indexings. The other leg has Currency set to the deliverable currency, Notional in the non–deliverable currency and Indexings with an FX Index between the deliverable and non-deliverable currency. See Listing \ref{lst:ndir_xccy_swap} for an example USD-CLP non-deliverable cross currency swap where CLP is the non–deliverable currency.
+
+A non-deliverable IR Swap has Currency set to the deliverable currency on both legs, Notional in the non-deliverable currency on both legs, and Indexings with an FX Index between the deliverable and non-deliverable currency on both legs. See Listing \ref{lst:ndir_swap} for an example non-deliverable IR swap where USD is the payment currency and CLP is the non-deliverable currency.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwapData>
+  <Settlement>Cash</Settlement>
+  <LegData>
+   <LegType>Floating</LegType>
+   <Payer>false</Payer>  
+   <Currency>USD</Currency>
+    <Notionals>
+     <Notional>1000000</Notional>
+      <Exchanges>
+       <NotionalInitialExchange>true</NotionalInitialExchange>
+       <NotionalFinalExchange>true</NotionalFinalExchange>
+      </Exchanges>
+    </Notionals>
+    ...
+  </LegData>
+  <LegData>
+   <LegType>Floating</LegType>
+   <Payer>false</Payer>  
+   <Currency>USD</Currency><!-- Payment currency is USD rather than CLP -->
+    <Notionals>
+     <Notional>850000000</Notional><!-- in CLP -->
+      <Exchanges>
+       <NotionalInitialExchange>true</NotionalInitialExchange>
+       <NotionalFinalExchange>true</NotionalFinalExchange>
+      </Exchanges>
+     </Notionals>
+     <Indexings>
+      <Indexing>
+	<Index>FX-TR20H-CLP-USD</Index><!-- to convert CLP flows into USD -->
+	<FixingCalendar>CLP,USD</FixingCalendar>
+      </Indexing>
+     </Indexings>     
+    ...
+  </LegData>
+</SwapData>
+\end{minted}
+\caption{Non deliverable Cross Currency Swap}
+\label{lst:ndir_xccy_swap}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwapData>
+  <Settlement>Cash</Settlement>
+  <LegData>
+   <LegType>Fixed</LegType>
+   <Payer>false</Payer>  
+   <Currency>USD</Currency><!-- Payment currency is USD rather than CLP -->
+    <Notionals>
+     <Notional>850000000</Notional><!-- in CLP -->
+    </Notionals>
+    <Indexings>
+      <Indexing>
+	<Index>FX-TR20H-CLP-USD</Index><!-- to convert CLP flows into USD -->
+	<FixingCalendar>CLP,USD</FixingCalendar>
+      </Indexing>
+    </Indexings> 
+    ...
+  </LegData>
+  <LegData>
+   <LegType>Floating</LegType>
+   <Payer>true</Payer>  
+   <Currency>USD</Currency><!-- Payment currency is USD rather than CLP -->
+    <Notionals>
+     <Notional>850000000</Notional><!-- in CLP -->
+     </Notionals>
+     <Indexings>
+      <Indexing>
+	<Index>FX-TR20H-CLP-USD</Index><!-- to convert CLP flows into USD -->
+	<FixingCalendar>CLP,USD</FixingCalendar>
+      </Indexing>
+     </Indexings>     
+    ...    
+  </LegData>
+</SwapData>
+\end{minted}
+\caption{Non deliverable IR Swap}
+\label{lst:ndir_swap}
 \end{listing}
