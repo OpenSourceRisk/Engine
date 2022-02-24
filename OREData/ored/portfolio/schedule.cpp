@@ -26,6 +26,14 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+ScheduleRules::ScheduleRules(const string& startDate, const string& endDate, const string& tenor,
+                             const string& calendar, const string& convention, const string& termConvention,
+                             const string& rule, const string& endOfMonth, const string& firstDate,
+                             const string& lastDate)
+    : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar),
+      calendarQL_(parseCalendar(calendar)), convention_(convention), termConvention_(termConvention), rule_(rule),
+      endOfMonth_(endOfMonth), firstDate_(firstDate), lastDate_(lastDate) {}
+
 void ScheduleRules::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Rules");
     startDate_ = XMLUtils::getChildValue(node, "StartDate");
@@ -260,8 +268,8 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
     QL_REQUIRE(!data.endDate().empty() || data.lastDate().empty(),
                "makeSchedule(): If no end date is given, a last date is not allowed either. Please remove the last "
                "date from the schedule.");
-    Calendar calendar = parseCalendar(data.calendar());
-    // Calendar calendar = data.calendarQL();
+    // Calendar calendar = parseCalendar(data.calendar());
+    Calendar calendar = data.calendarQL();
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate().empty() ? openEndDateReplacement : parseDate(data.endDate());
     // Handle trivial case here

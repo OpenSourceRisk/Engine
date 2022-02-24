@@ -38,13 +38,10 @@ class ScheduleRules : public XMLSerializable {
 public:
     //! Default constructor
     ScheduleRules() {}
-    //! Constructor
+
     ScheduleRules(const string& startDate, const string& endDate, const string& tenor, const string& calendar,
                   const string& convention, const string& termConvention, const string& rule,
-                  const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "")
-        : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), calendarQL_(QuantLib::NullCalendar()), convention_(convention),
-          termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth), firstDate_(firstDate),
-          lastDate_(lastDate) {}
+                  const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "");
     
     //! Check if key attributes are empty
     const bool hasData() const { return !startDate_.empty() && !tenor_.empty(); }
