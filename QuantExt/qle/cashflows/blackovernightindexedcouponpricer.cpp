@@ -63,12 +63,10 @@ Real BlackOvernightIndexedCouponPricer::optionletRateGlobal(Option::Type optionT
         QL_REQUIRE(!fixingDates.empty(), "BlackOvernightIndexedCouponPricer: empty fixing dates");
         Real fixingStartTime = capletVolatility()->timeFromReference(fixingDates.front());
         Real fixingEndTime = capletVolatility()->timeFromReference(fixingDates.back());
-        QL_REQUIRE(!close_enough(fixingEndTime, fixingStartTime),
-                   "BlackOvernightIndexedCouponPricer: fixingStartTime = fixingEndTime = " << fixingStartTime);
         Real sigma = capletVolatility()->volatility(lastRelevantFixingDate, effStrike);
-        Real stdDev = sigma * std::sqrt(std::max(fixingStartTime, 0.0) +
-                                        std::pow(fixingEndTime - std::max(fixingStartTime, 0.0), 3.0) /
-                                            std::pow(fixingEndTime - fixingStartTime, 2.0) / 3.0);
+        Real T = std::max(fixingStartTime, 0.0);
+        if (!close_enough(fixingEndTime, T))
+            T += std::pow(fixingEndTime - T, 3.0) / std::pow(fixingEndTime - T, 2.0) / 3.0;
         Real shift = capletVolatility()->displacement();
         bool shiftedLn = capletVolatility()->volatilityType() == ShiftedLognormal;
         Rate fixing = shiftedLn ? blackFormula(optionType, effStrike, effectiveIndexFixing_, stdDev, 1.0, shift)
