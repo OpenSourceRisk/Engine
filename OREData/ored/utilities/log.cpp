@@ -193,12 +193,12 @@ string StructuredMessage::json() const {
     string msg = "{ \"category\":\"" + category_ + "\", \"group\":\"" + group_ + "\"," + " \"message\":\"" + jsonify(message_);
     
     if (!subFields_.empty()) {
-        msg += "\", \"subFields\": [ ";
+        msg += "\", \"sub_fields\": [ ";
         QuantLib::Size i = 1;
         for (const auto& p : subFields_) {
             // Only include subFields that are non-empty.
             if (!p.second.empty()) {
-                msg += "{ \"fieldName\": \"" + p.first + "\", \"fieldValue\": \"" + jsonify(p.second) + "\" }";
+                msg += "{ \"name\": \"" + p.first + "\", \"value\": \"" + jsonify(p.second) + "\" }";
                 if (i < subFields_.size()) {
                     msg += ", ";
                 }
