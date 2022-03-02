@@ -760,7 +760,9 @@ RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const
 RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     RandomVariable tmp(x.size(), 0.0);
 
-    // determine delta (as Fries, i.e. delta = eps * sqrt(E(X^2)) for an indicator1_{X>0})
+    // We follow section 4, eq 10 in
+    // Fries, 2017: Automatic Backward Differentiation for American Monte-Carlo Algorithms -
+    //              ADD for Conditional Expectations and Indicator Functions
 
     if (QuantLib::close_enough(eps, 0.0) || x.deterministic())
         return tmp;
@@ -778,15 +780,9 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     // compute derivative
 
     for (Size i = 0; i < tmp.size(); ++i) {
-        Real ax = std::abs(x[i]);
-
-        // linear approximation of step
-        // if (ax < delta) {
-        //     tmp.set(i, 1.0 / (2.0 * delta));
-        // }
-
-        // logistic function
-        tmp.set(i, std::exp(-1.0 / delta * ax) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * ax), 2.0)));
+        if (std::abs(x[i]) < delta) {
+            tmp.set(i, 1.0 / (2.0 * delta));
+        }
     }
 
     return tmp;
