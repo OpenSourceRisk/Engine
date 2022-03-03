@@ -1086,7 +1086,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
     for (auto& r : tmp.modifyRules()) {  // For schedules with 1D tenor, this ensures that the index calendar supersedes the calendar provided 
         if (r.tenor() == "1D")          // in the trade XML, to avoid differing holidays when building the schedule
-            r.modifyCalendar() = index->fixingCalendar();
+            r.modifyCalendar() = to_string(index->fixingCalendar());
     }
 
     Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
