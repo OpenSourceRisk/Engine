@@ -40,9 +40,8 @@ public:
     ScheduleRules() {}
 
     ScheduleRules(const string& startDate, const string& endDate, const string& tenor,
-                                 const string& calendar, const string& convention, const string& termConvention,
-                                 const string& rule, const string& endOfMonth, const string& firstDate,
-                                 const string& lastDate)
+                                 const string& calendar, const string& convention, const string& termConvention, const string& rule,
+                  const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "")
         : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), convention_(convention),
           termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth), firstDate_(firstDate),
           lastDate_(lastDate) {}
