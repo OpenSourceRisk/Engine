@@ -25,6 +25,7 @@
 
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/schedule.hpp>
+// #include <ored/utilities/parsers.hpp>
 
 namespace ore {
 namespace data {
@@ -37,9 +38,9 @@ class ScheduleRules : public XMLSerializable {
 public:
     //! Default constructor
     ScheduleRules() {}
-    //! Constructor
-    ScheduleRules(const string& startDate, const string& endDate, const string& tenor, const string& calendar,
-                  const string& convention, const string& termConvention, const string& rule,
+
+    ScheduleRules(const string& startDate, const string& endDate, const string& tenor,
+                                 const string& calendar, const string& convention, const string& termConvention, const string& rule,
                   const string& endOfMonth = "N", const string& firstDate = "", const string& lastDate = "")
         : startDate_(startDate), endDate_(endDate), tenor_(tenor), calendar_(calendar), convention_(convention),
           termConvention_(termConvention), rule_(rule), endOfMonth_(endOfMonth), firstDate_(firstDate),
@@ -67,6 +68,8 @@ public:
     //@{
     string& modifyStartDate() { return startDate_; }
     string& modifyEndDate() { return endDate_; }
+
+    string& modifyCalendar() { return calendar_; }
     //@}
 
     //! \name Serialisation
