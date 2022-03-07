@@ -258,7 +258,7 @@ namespace {
 class FepPriceAdjustmentCurve : public QuantLib::YieldTermStructure {
 public:
     FepPriceAdjustmentCurve(const Date& asof, const Real fairSpread, const Real fairPrice)
-        : YieldTermStructure(Actual365Fixed()), asof_(asof), fairSpread_(fairSpread), fairPrice_(fairPrice) {}
+        : YieldTermStructure(Actual365Fixed()), asof_(asof), /*fairSpread_(fairSpread),*/ fairPrice_(fairPrice) {}
 
     Date maxDate() const override { return Date::maxDate(); }
     const Date& referenceDate() const override { return asof_; }
@@ -267,7 +267,7 @@ private:
     Real discountImpl(Time t) const override { return 1.0 - 0.05 * t / fairPrice_; }
 
     Date asof_;
-    Real fairSpread_, fairPrice_;
+    Real /*fairSpread_,*/ fairPrice_;
 };
 
 class FepSpreadAdjustmentCurve : public QuantLib::YieldTermStructure {
