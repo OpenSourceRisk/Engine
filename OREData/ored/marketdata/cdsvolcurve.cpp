@@ -264,7 +264,7 @@ public:
     const Date& referenceDate() const override { return asof_; }
 
 private:
-    Real discountImpl(Time t) const override { return 1.0 - fairSpread_ * t / fairPrice_; }
+    Real discountImpl(Time t) const override { return 1.0 - 0.05 * t / fairPrice_; }
 
     Date asof_;
     Real fairSpread_, fairPrice_;
