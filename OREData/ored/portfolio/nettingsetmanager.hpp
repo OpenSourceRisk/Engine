@@ -94,7 +94,7 @@ public:
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
-    const std::map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>>& nettingSetDefinitions() { return data_; }
+    const std::map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> nettingSetDefinitions() { return data_; }
 
 private:
     map<NettingSetDetails, const boost::shared_ptr<NettingSetDefinition>> data_;
