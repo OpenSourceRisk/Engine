@@ -32,11 +32,9 @@ namespace data {
 //! Utility classes for Structured warnings, contains the configuration type and ID (NettingSetId, CounterParty, etc.)
 class StructuredConfigurationWarningMessage : public StructuredMessage {
 public:
-    StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId,
-                                          const std::string& warningType, const std::string& warningWhat)
+    StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId, const std::string& warningWhat)
         : StructuredMessage("Warning", "Configuration", warningWhat,
-                            std::map<string, string>({{"warningType", warningType},
-                                                      {"configurationType", configurationType},
+                            std::map<string, string>({{"configurationType", configurationType},
                                                       {"configurationId", configurationId}})) {}
 };
 
