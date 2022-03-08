@@ -780,9 +780,15 @@ RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     // compute derivative
 
     for (Size i = 0; i < tmp.size(); ++i) {
-        if (std::abs(x[i]) < delta) {
-            tmp.set(i, 1.0 / (2.0 * delta));
-        }
+        Real ax = std::abs(x[i]);
+
+        // linear approximation of step
+        // if (ax < delta) {
+        //     tmp.set(i, 1.0 / (2.0 * delta));
+        // }
+
+        // logistic function
+        tmp.set(i, std::exp(-1.0 / delta * ax) / (delta * std::pow(1.0 + std::exp(-1.0 / delta * ax), 2.0)));
     }
 
     return tmp;
