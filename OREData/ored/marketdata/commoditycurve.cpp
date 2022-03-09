@@ -274,7 +274,6 @@ void CommodityCurve::add(const Date& asof, const Date& expiry, Real value, map<D
     if (expiry < asof)
         return;
 
-    //QL_REQUIRE(data.find(expiry) == data.end(), "Duplicate quote for expiry " << io::iso_date(expiry) << " found.");
     if (data.find(expiry) != data.end()) {
         WLOG("building " << spec_.name() << ": skipping duplicate expiry " << io::iso_date(expiry));
         return;
