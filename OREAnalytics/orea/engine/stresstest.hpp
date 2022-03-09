@@ -55,7 +55,7 @@ namespace analytics {
 class StressTest {
 public:
     //! Constructor
-    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio, boost::shared_ptr<ore::data::Market>& market,
+    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
                const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
                boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                const boost::shared_ptr<StressTestScenarioData>& stressData,
