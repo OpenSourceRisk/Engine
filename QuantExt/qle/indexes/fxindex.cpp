@@ -154,31 +154,32 @@ const Handle<Quote> FxIndex::fxQuote(bool withSettlementLag) const {
 
 Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
-    QL_REQUIRE(isValidFixingDate(fixingDate),
-               "Fixing date " << fixingDate << " is not valid for FxIndex '" << name() << "'");
+    Date adjustedFixingDate = fixingCalendar().adjust(fixingDate, Preceding);
+    QL_REQUIRE(isValidFixingDate(adjustedFixingDate),
+               "Fixing date " << adjustedFixingDate << " is not valid for FxIndex '" << name() << "'");
 
     Date today = Settings::instance().evaluationDate();
 
     Real result = Null<Decimal>();
 
-    if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
-        result = forecastFixing(fixingDate);
+    if (adjustedFixingDate > today || (adjustedFixingDate == today && forecastTodaysFixing))
+        result = forecastFixing(adjustedFixingDate);
 
     if (result == Null<Real>()) {
-        if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
+        if (adjustedFixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
             // must have been fixed
             // do not catch exceptions
-            result = pastFixing(fixingDate);
-            QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
+            result = pastFixing(adjustedFixingDate);
+            QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << adjustedFixingDate);
         } else {
             try {
                 // might have been fixed
-                result = pastFixing(fixingDate);
+                result = pastFixing(adjustedFixingDate);
             } catch (Error&) {
                 ; // fall through and forecast
             }
             if (result == Null<Real>())
-                result = forecastFixing(fixingDate);
+                result = forecastFixing(adjustedFixingDate);
         }
     }
 

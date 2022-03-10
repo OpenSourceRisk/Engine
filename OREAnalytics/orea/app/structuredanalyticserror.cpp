@@ -16,32 +16,24 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/app/structuredanalyticserror.hpp
-    \brief Structured analytics error
-    \ingroup app
-*/
+#include <orea/app/structuredanalyticserror.hpp>
 
-#pragma once
-
-#include <ored/utilities/log.hpp>
+using std::string;
 
 namespace ore {
 namespace analytics {
 
-class StructuredAnalyticsErrorMessage : public ore::data::StructuredErrorMessage {
-public:
-    StructuredAnalyticsErrorMessage(const std::string& type, const std::string& what);
+StructuredAnalyticsErrorMessage::StructuredAnalyticsErrorMessage(const string& type, const string& what)
+    : type_(type), what_(what) {}
 
-    const std::string& type() const;
-    const std::string& what() const;
+const string& StructuredAnalyticsErrorMessage::type() const { return type_; }
 
-protected:
-    std::string json() const override;
+const string& StructuredAnalyticsErrorMessage::what() const { return what_; }
 
-private:
-    std::string type_;
-    std::string what_;
-};
+string StructuredAnalyticsErrorMessage::json() const {
+    return "{ \"errorType\":\"Analytics\", \"exceptionType\":\"" + type_ + "\"," + " \"exceptionMessage\":\"" +
+           jsonify(what_) + "\"}";
+}
 
 } // namespace analytics
 } // namespace ore
