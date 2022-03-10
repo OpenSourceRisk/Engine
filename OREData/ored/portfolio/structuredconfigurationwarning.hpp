@@ -30,14 +30,27 @@ namespace ore {
 namespace data {
 
 //! Utility classes for Structured warnings, contains the configuration type and ID (NettingSetId, CounterParty, etc.)
-class StructuredConfigurationWarningMessage : public StructuredMessage {
+class StructuredConfigurationWarningMessage : public StructuredErrorMessage {
 public:
     StructuredConfigurationWarningMessage(const std::string& configurationType, const std::string& configurationId,
-                                          const std::string& warningType, const std::string& warningWhat)
-        : StructuredMessage("Warning", "Configuration", warningWhat,
-                            std::map<string, string>({{"warningType", warningType},
-                                                      {"configurationType", configurationType},
-                                                      {"configurationId", configurationId}})) {}
+                                          const std::string& warningType, const std::string warningWhat)
+        : configurationType_(configurationType), configurationId_(configurationId), warningType_(warningType),
+          warningWhat_(warningWhat) {}
+
+    const std::string& configurationType() const { return configurationType_; }
+    const std::string& configurationId() const { return configurationId_; }
+    const std::string& warningType() const { return warningType_; }
+    const std::string& warningWhat() const { return warningWhat_; }
+
+protected:
+    std::string json() const override {
+        return "{ \"errorType\":\"Configuration Warning\", \"configType\":\"" + configurationType_ + "\"," +
+               " \"configId\":\"" + configurationId_ + "\"," + " \"warningType\":\"" + warningType_ + "\"," +
+               " \"warningMessage\":\"" + jsonify(warningWhat_) + "\"}";
+    }
+
+private:
+    std::string configurationType_, configurationId_, warningType_, warningWhat_;
 };
 
 } // namespace data

@@ -8,11 +8,14 @@ The short version is shown in listing \ref{lst:bonddata_refdata}. The details of
 bond are read from the reference data in this case using the SecurityId as a key. The bond trade is fully specified by
 
 \begin{itemize}
-\item SecurityId: The id identifying the bond\\
+\item SecurityId: The id identifying the bond.
+
   Allowable Values: A valid bond identifier, typically the ISIN of the reference bond with the ISIN: prefix, e.g.: \verb+ISIN:XXNNNNNNNNNN+
-\item BondNotional: The notional of the position in the reference bond, expressed in the currency of the bond\\
+\item BondNotional: The notional of the position in the reference bond, expressed in the currency of the bond.
+
   Allowable Values: Any non-negative real number
-\item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. If set to \emph{false}, the product class will  not be set to \emph{Credit}, and there will be no credit sensitivities. \\
+\item CreditRisk [Optional] Boolean flag indicating whether to show Credit Risk on the Bond product. If set to \emph{false}, the product class will  not be set to \emph{Credit}, and there will be no credit sensitivities. However, if the underlying bond reference is set up without a CreditCurveId - typically for some highly rated government bonds -  the CreditRisk flag will have no impact on the product class and no credit sensitivities will be shown even if CreditRisk is set to \emph{true}. 
+
   Allowable Values: \emph{true} or \emph{false} Defaults to \emph{true} if left blank or omitted.
 \end{itemize}
 

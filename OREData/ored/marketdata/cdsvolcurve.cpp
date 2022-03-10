@@ -22,14 +22,15 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/wildcard.hpp>
-#include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/blackvolsurfacewithatm.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -251,30 +252,78 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 }
 
 namespace {
-// FIXME workaround for QPR-10654: look up fair spread / price in market data
-Handle<Quote> getFairSpreadOrPriceLevel(const Loader& loader, const Date& asof, const std::string& curveId,
-                                        const std::string& indexName, std::string indexTerm,
-                                        const std::string& strikeType) {
-    Real fairLevel = Null<Real>();
+
+// FIXME workaround for QPR-10654: add a proxy atm level to the vol curve
+
+class FepPriceAdjustmentCurve : public QuantLib::YieldTermStructure {
+public:
+    FepPriceAdjustmentCurve(const Date& asof, const Real fairSpread, const Real fairPrice)
+        : YieldTermStructure(Actual365Fixed()), asof_(asof), /*fairSpread_(fairSpread),*/ fairPrice_(fairPrice) {}
+
+    Date maxDate() const override { return Date::maxDate(); }
+    const Date& referenceDate() const override { return asof_; }
+
+private:
+    Real discountImpl(Time t) const override { return 1.0 - 0.05 * t / fairPrice_; }
+
+    Date asof_;
+    Real /*fairSpread_,*/ fairPrice_;
+};
+
+class FepSpreadAdjustmentCurve : public QuantLib::YieldTermStructure {
+public:
+    FepSpreadAdjustmentCurve(const Date& asof, const Period& term) : YieldTermStructure(Actual365Fixed()), asof_(asof) {
+        T_ = timeFromReference(asof_ + term);
+    }
+
+    Date maxDate() const override { return Date::maxDate(); }
+    const Date& referenceDate() const override { return asof_; }
+
+private:
+    Real discountImpl(Time t) const override { return 1.0 + t / T_; }
+
+    Date asof_;
+    Real T_;
+};
+
+void addAtmLevel(boost::shared_ptr<BlackVolTermStructure>& vol, const Loader& loader, const Date& asof,
+                 const std::string& curveId, const std::string& indexName, std::string indexTerm,
+                 const std::string& strikeType) {
+    Real fairPrice = Null<Real>();
+    Real fairSpread = Null<Real>();
     Period term = indexTerm.empty() ? 5 * Years : parsePeriod(indexTerm);
     for (auto const& md : loader.loadQuotes(asof)) {
         if (auto q = boost::dynamic_pointer_cast<CdsQuote>(md)) {
-            if (q->underlyingName() == indexName && q->term() == term &&
-                ((q->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD && strikeType == "Spread") ||
-                 (q->quoteType() == MarketDatum::QuoteType::PRICE && strikeType == "Price"))) {
-                fairLevel = q->quote()->value();
-                break;
+            if (q->underlyingName() == indexName && q->term() == term) {
+                if (q->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD)
+                    fairSpread = q->quote()->value();
+                else if (q->quoteType() == MarketDatum::QuoteType::PRICE)
+                    fairPrice = q->quote()->value();
             }
         }
     }
+    Real fairLevel = strikeType == "Spread" ? fairSpread : fairPrice;
+    if (fairSpread == Null<Real>()) {
+        ALOG(StructuredCurveErrorMessage(curveId, "CDS Vol Curve has unknown ATM Level",
+                                         "Did not find fair spread quote in market data to estimate FEP-Adjustment"));
+    }
+    Handle<YieldTermStructure> zeroRate(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
+    Handle<YieldTermStructure> fepAdjustmentCurve;
+    if (strikeType == "Spread")
+        fepAdjustmentCurve = Handle<YieldTermStructure>(boost::make_shared<FepSpreadAdjustmentCurve>(asof, term));
+    else
+        fepAdjustmentCurve =
+            Handle<YieldTermStructure>(boost::make_shared<FepPriceAdjustmentCurve>(asof, fairSpread, fairPrice));
     if (fairLevel == Null<Real>()) {
         ALOG(StructuredCurveErrorMessage(curveId, "CDS Vol Curve has unknown ATM Level",
-                                         "Did not find fair " + strikeType + " quote in market data"));
-        return Handle<Quote>();
+                                         "Did not find fair " + strikeType +
+                                             " quote in market data to estimate ATM strike"));
     } else {
-        return Handle<Quote>(boost::make_shared<SimpleQuote>(fairLevel));
+        vol = boost::make_shared<BlackVolatilityWithATM>(vol, Handle<Quote>(boost::make_shared<SimpleQuote>(fairLevel)),
+                                                         zeroRate, fepAdjustmentCurve);
     }
 }
+
 } // namespace
 
 void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc,
@@ -394,9 +443,9 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiries.back()) << "," << fixed << setprecision(9)
                             << strikes.back() << "," << vols.back() << ")");
 
-	// FIXME workaround for QPR-10654
-	indexName = q->indexName();
-	indexTerm = q->indexTerm();
+        // FIXME workaround for QPR-10654
+        indexName = q->indexName();
+        indexTerm = q->indexTerm();
     }
 
     LOG("CDSVolCurve: added " << quotesAdded << " quotes in building wildcard based absolute strike surface.");
@@ -444,18 +493,14 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     vol_->enableExtrapolation(vssc.extrapolation());
 
     // FIXME add atm , workaround for QPR-10654
-    auto atm = getFairSpreadOrPriceLevel(loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
-    if(!atm.empty()) {
-        vol_ = boost::make_shared<BlackVolatilityWithATM>(vol_, atm);
-    }
+    addAtmLevel(vol_, loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
 }
 
-void CDSVolCurve::buildVolatility(
-    const Date& asof, const CDSVolatilityCurveSpec& spec, const CDSVolatilityCurveConfig& vc,
-    const CDSProxyVolatilityConfig& pvc,
-    const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves) {
+void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec& spec,
+                                  const CDSVolatilityCurveConfig& vc, const CDSProxyVolatilityConfig& pvc,
+                                  const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves) {
     auto proxyVolCurve = requiredCdsVolCurves.find(CDSVolatilityCurveSpec(pvc.cdsVolatilityCurve()).name());
     QL_REQUIRE(proxyVolCurve != requiredCdsVolCurves.end(), "CDSVolCurve: Failed to find cds vol curve '"
                                                                 << pvc.cdsVolatilityCurve() << "' when building '"
@@ -522,9 +567,9 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
         surfaceData[eDate][pos] = q->quote()->value();
         quotesAdded++;
 
-	// FIXME workaround for QPR-10654
-	indexName = q->indexName();
-	indexTerm = q->indexTerm();
+        // FIXME workaround for QPR-10654
+        indexName = q->indexName();
+        indexTerm = q->indexTerm();
 
         TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
                             << configuredStrikes[pos] << "," << q->quote()->value() << ")");
@@ -615,10 +660,7 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
     vol_->enableExtrapolation(vssc.extrapolation());
 
     // FIXME add atm , workaround for QPR-10654
-    auto atm = getFairSpreadOrPriceLevel(loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
-    if (!atm.empty()) {
-        vol_ = boost::make_shared<BlackVolatilityWithATM>(vol_, atm);
-    }
+    addAtmLevel(vol_, loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike "
         << "surface with explicit strikes and expiries");

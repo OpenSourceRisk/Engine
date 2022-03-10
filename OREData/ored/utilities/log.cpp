@@ -187,32 +187,7 @@ LoggerStream::~LoggerStream() {
     }
 }
 
-
-
-string StructuredMessage::json() const {
-    string msg = "{ \"category\":\"" + category_ + "\", \"group\":\"" + group_ + "\"," + " \"message\":\"" + jsonify(message_);
-    
-    if (!subFields_.empty()) {
-        msg += "\", \"subFields\": [ ";
-        QuantLib::Size i = 1;
-        for (const auto& p : subFields_) {
-            // Only include subFields that are non-empty.
-            if (!p.second.empty()) {
-                msg += "{ \"fieldName\": \"" + p.first + "\", \"fieldValue\": \"" + jsonify(p.second) + "\" }";
-                if (i < subFields_.size()) {
-                    msg += ", ";
-                }
-            }
-            i++;
-        }
-        msg += " ]";
-    }
-    msg += " }";
-    
-    return msg;
-}
-
-string StructuredMessage::jsonify(const string& s) const {
+string StructuredErrorMessage::jsonify(const string& s) const {
     string str = s;
     boost::replace_all(str, "\\", "\\\\"); // do this before the below otherwise we get \\"
     boost::replace_all(str, "\"", "\\\"");
