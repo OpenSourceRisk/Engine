@@ -198,9 +198,9 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
                                        parseCsaType(initialMarginType), calculateIMAmount, calculateVMAmount);
     } else {
         if (csaChild) {
-            WLOG(StructuredConfigurationWarningMessage(
-                "Netting set definitions", to_string(nettingSetDetails_),
-                "Inputs are inconsistent: ActiveCSAFlag=False, but a CSADetails node was still provided"));
+            WLOG(
+                StructuredConfigurationWarningMessage("Netting set definitions", to_string(nettingSetDetails_), "Inconsistent inputs",
+                                                      "ActiveCSAFlag=False, but a CSADetails node was still provided"));
         }
     }
 

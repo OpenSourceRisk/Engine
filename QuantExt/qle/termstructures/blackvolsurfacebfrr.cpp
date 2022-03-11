@@ -463,6 +463,8 @@ Volatility BlackVolatilitySurfaceBFRR::blackVolImpl(Time t, Real strike) const {
 
     t = std::max(t, 1.0 / 365.0);
 
+    t = t <= expiryTimes_.back() ? t : expiryTimes_.back();
+
     /* if we have cached the interpolated smile at t, we use that */
 
     auto s = cachedInterpolatedSmiles_.find(t);
