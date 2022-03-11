@@ -144,10 +144,10 @@ portfolio/swap.cpp
 portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
+portfolio/tradebarrier.cpp
 portfolio/tradefactory.cpp
 portfolio/trademonetary.cpp
 portfolio/tradestrike.cpp
-portfolio/tradebarrier.cpp
 portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
@@ -349,6 +349,7 @@ portfolio/premiumdata.hpp
 portfolio/referencedata.hpp
 portfolio/referencedatafactory.hpp
 portfolio/schedule.hpp
+portfolio/structuredconfigurationerror.hpp
 portfolio/structuredconfigurationwarning.hpp
 portfolio/structuredtradeerror.hpp
 portfolio/structuredtradewarning.hpp
@@ -356,10 +357,10 @@ portfolio/swap.hpp
 portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
+portfolio/tradebarrier.hpp
 portfolio/tradefactory.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
-portfolio/tradebarrier.hpp
 portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp

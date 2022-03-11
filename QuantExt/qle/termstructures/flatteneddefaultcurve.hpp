@@ -26,8 +26,6 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/credit/survivalprobabilitystructure.hpp>
 
-#include <iostream>
-
 namespace QuantExt {
 using namespace QuantLib;
 
