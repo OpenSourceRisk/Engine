@@ -22,42 +22,47 @@
 
 #pragma once
 
-#include <ql/termstructures/credit/defaulttermstructure.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
+#include <ql/time/dategenerationrule.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 namespace QuantExt {
-using QuantLib::Date;
 
-class CdsCurve {
+class CdsCurve : public QuantLib::Observer, public QuantLib::Observable {
 public:
-    class RefData {
-        Date startDate_ = Null<Date>();
-        Date terminationDate_ = Null<Date>();
-        Period tenor = 3 * QuantLib::Months;
-        Calendar calendar_ = WeekendsOnly();
-        BusinessDayConvention convention_ = QuantLib::Following;
-        BusinessDayConvention termConvention_ = QuantLib::Following;
-        QuantLib::DateGeneration::Rule rule_ = QuantLib::CDS2015;
+    struct RefData {
+        QuantLib::Date startDate_ = QuantLib::Null<QuantLib::Date>();
+        QuantLib::Date terminationDate_ = QuantLib::Null<QuantLib::Date>();
+        QuantLib::Period tenor = 3 * QuantLib::Months;
+        QuantLib::Calendar calendar_ = QuantLib::WeekendsOnly();
+        QuantLib::BusinessDayConvention convention_ = QuantLib::Following;
+        QuantLib::BusinessDayConvention termConvention_ = QuantLib::Following;
+        QuantLib::DateGeneration::Rule rule_ = QuantLib::DateGeneration::CDS2015;
         bool endOfMonth_ = false;
-        Real couponRate_ = Null<Real>();
-        BusinessDayConvention payConvention_ = QuantLib::Following;
-        DayCounter dayCounter_ = Actual360(false);
-        DayCounter lastPeriodDayCounter_ = Actual360(true);
-        Natural cashSettlementDays_ = 3;
+        QuantLib::Real couponRate_ = QuantLib::Null<QuantLib::Real>();
+        QuantLib::BusinessDayConvention payConvention_ = QuantLib::Following;
+        QuantLib::DayCounter dayCounter_ = QuantLib::Actual360(false);
+        QuantLib::DayCounter lastPeriodDayCounter_ = QuantLib::Actual360(true);
+        QuantLib::Natural cashSettlementDays_ = 3;
     };
 
-    CdsCurve(const Handle<DefaultProbabilityTermStructure>& curve);
-    CdsCurve(const std::vector<Period>& terms, const std::vector<Handle<DefaultProbabilityTermStructure>> termCurves,
-             const CdsRefData& RefData);
+    CdsCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve);
+    CdsCurve(const std::vector<QuantLib::Period>& terms,
+             const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> termCurves,
+             const RefData& RefData);
 
     const RefData& refData() const;
-    Handle<DefaultProbabilityTermStructure> curve(const Period& term = 0 * Days);
+    QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> curve(const QuantLib::Period& term = 0 *
+                                                                                                     QuantLib::Days);
 
 protected:
-    std::vector<Perio> terms_;
-    std::vector<Handle<DefaultProbabilityTermStructure>> termCurves_;
-    CdsRefData refData_;
+    std::vector<QuantLib::Period> terms_;
+    std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> termCurves_;
+    RefData refData_;
+    std::vector<QuantLib::Real> termTimes_;
 
-    void performCalculations() const override;
+    void update() override;
 };
 
 } // namespace QuantExt

@@ -301,6 +301,8 @@
 #include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
+#include <qle/termstructures/cdscurve.hpp>
+#include <qle/termstructures/cdsvolcurve.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
@@ -398,4 +400,5 @@
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/inflation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
+#include <qle/utilities/time.hpp>
 #include <qle/version.hpp>

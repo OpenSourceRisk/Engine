@@ -205,6 +205,7 @@ termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
+termstructures/cdscurve.cpp
 termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
@@ -263,7 +264,8 @@ termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
 time/dateutilities.cpp
 time/yearcounter.cpp
-utilities/inflation.cpp)
+utilities/inflation.cpp
+utilities/time.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -564,6 +566,8 @@ termstructures/capfloorhelper.hpp
 termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
 termstructures/capfloortermvolsurfacesparse.hpp
+termstructures/cdscurve.hpp
+termstructures/cdsvolcurve.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
@@ -661,6 +665,7 @@ time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 utilities/inflation.hpp
 utilities/savedobservablesettings.hpp
+utilities/time.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
