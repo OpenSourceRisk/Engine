@@ -26,6 +26,7 @@
 #include <boost/optional.hpp>
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <qle/termstructures/cdscurve.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
@@ -59,14 +60,13 @@ public:
                        bool extrapolation = true, const string& benchmarkCurveID = "", const string& sourceCurveID = "",
                        const std::vector<string>& pillars = std::vector<string>(),
                        const Calendar& calendar = Calendar(), const Size spotLag = 0,
-                       const QuantLib::Date& startDate = QuantLib::Date(),
+                       const QuantExt::CdsCurve::RefData& refData = {},
                        const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-                       QuantLib::Real runningSpread = QuantLib::Null<Real>(),
                        const boost::optional<bool>& implyDefaultFromMarket = boost::none,
                        const bool allowNegativeRates = false);
     //! Default constructor
     DefaultCurveConfig()
-        : extrapolation_(true), spotLag_(0), runningSpread_(QuantLib::Null<Real>()), allowNegativeRates_(false) {}
+        : extrapolation_(true), spotLag_(0), allowNegativeRates_(false) {}
     //@}
 
     //! \name Serialisation
@@ -90,13 +90,12 @@ public:
     const Size& spotLag() const { return spotLag_; }
     bool extrapolation() const { return extrapolation_; }
     const std::vector<std::pair<std::string, bool>>& cdsQuotes() { return cdsQuotes_; }
-    const QuantLib::Date& startDate() const { return startDate_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
-    const Real runningSpread() const { return runningSpread_; }
     const boost::optional<bool>& implyDefaultFromMarket() const { return implyDefaultFromMarket_; }
     const vector<string>& multiSectionSourceCurveIds() const { return multiSectionSourceCurveIds_; }
     const vector<string>& multiSectionSwitchDates() const { return multiSectionSwitchDates_; }
     const bool allowNegativeRates() const { return allowNegativeRates_; }
+    const QuantExt::CdsCurve::RefData& refData() const { return refData_; }
     //@}
 
     //! \name Setters
@@ -113,11 +112,10 @@ public:
     Calendar calendar() { return calendar_; }
     Size spotLag() { return spotLag_; }
     bool& extrapolation() { return extrapolation_; }
-    QuantLib::Date& startDate() { return startDate_; }
     void setBootstrapConfig(const BootstrapConfig& bootstrapConfig) { bootstrapConfig_ = bootstrapConfig; }
-    Real& runningSpread() { return runningSpread_; }
     boost::optional<bool>& implyDefaultFromMarket() { return implyDefaultFromMarket_; }
     bool& allowNegativeRates() { return allowNegativeRates_; }
+    QuantExt::CdsCurve::RefData& refData() { return refData_; }
     //@}
 
 private:
@@ -137,9 +135,8 @@ private:
     vector<string> pillars_;
     Calendar calendar_;
     Size spotLag_;
-    QuantLib::Date startDate_;
+    QuantExt::CdsCurve::RefData refData_;
     BootstrapConfig bootstrapConfig_;
-    Real runningSpread_;
     vector<string> multiSectionSourceCurveIds_;
     vector<string> multiSectionSwitchDates_;
 

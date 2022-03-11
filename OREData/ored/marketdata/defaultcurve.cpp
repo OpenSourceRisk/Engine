@@ -297,7 +297,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
             helpers.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                 quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                 cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                config.startDate(), cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter()));
+                config.refData().startDate, cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter()));
         }
     } else {
         for (auto quote : quotes) {
@@ -305,15 +305,15 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
             // If there is no running spread encoded in the quote, the config must have one.
             Real runningSpread = quote.runningSpread;
             if (runningSpread == Null<Real>()) {
-                QL_REQUIRE(config.runningSpread() != Null<Real>(), "A running spread was not provided in the quote " <<
+                QL_REQUIRE(config.refData().runningSpread != Null<Real>(), "A running spread was not provided in the quote " <<
                     "string so it must be provided in the config for CDS upfront curve " << config.curveID());
-                runningSpread = config.runningSpread();
+                runningSpread = config.refData().runningSpread;
             }
 
             helpers.push_back(boost::make_shared<QuantExt::UpfrontCdsHelper>(
                 quote.value, runningSpread, quote.term, cdsConv->settlementDays(), cdsConv->calendar(),
                 cdsConv->frequency(), cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(),
-                recoveryRate_, discountCurve, config.startDate(), cdsConv->upfrontSettlementDays(),
+                recoveryRate_, discountCurve, config.refData().startDate, cdsConv->upfrontSettlementDays(),
                 cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter()));
         }
     }

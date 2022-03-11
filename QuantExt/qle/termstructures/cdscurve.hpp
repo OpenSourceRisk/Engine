@@ -32,19 +32,21 @@ namespace QuantExt {
 class CdsCurve : public QuantLib::Observer, public QuantLib::Observable {
 public:
     struct RefData {
-        QuantLib::Date startDate_ = QuantLib::Null<QuantLib::Date>();
-        QuantLib::Date terminationDate_ = QuantLib::Null<QuantLib::Date>();
+	std::string type = "SingleName"; // Index, SingleName
+        QuantLib::Date startDate = QuantLib::Null<QuantLib::Date>();
+	std::vector<QuantLib::Period> terms;
+	std::vector<QuantLib::Date> terminationDates;
         QuantLib::Period tenor = 3 * QuantLib::Months;
-        QuantLib::Calendar calendar_ = QuantLib::WeekendsOnly();
-        QuantLib::BusinessDayConvention convention_ = QuantLib::Following;
-        QuantLib::BusinessDayConvention termConvention_ = QuantLib::Following;
-        QuantLib::DateGeneration::Rule rule_ = QuantLib::DateGeneration::CDS2015;
-        bool endOfMonth_ = false;
-        QuantLib::Real couponRate_ = QuantLib::Null<QuantLib::Real>();
-        QuantLib::BusinessDayConvention payConvention_ = QuantLib::Following;
-        QuantLib::DayCounter dayCounter_ = QuantLib::Actual360(false);
-        QuantLib::DayCounter lastPeriodDayCounter_ = QuantLib::Actual360(true);
-        QuantLib::Natural cashSettlementDays_ = 3;
+        QuantLib::Calendar calendar = QuantLib::WeekendsOnly();
+        QuantLib::BusinessDayConvention convention = QuantLib::Following;
+        QuantLib::BusinessDayConvention termConvention = QuantLib::Following;
+        QuantLib::DateGeneration::Rule rule = QuantLib::DateGeneration::CDS2015;
+        bool endOfMonth = false;
+        QuantLib::Real runningSpread = QuantLib::Null<QuantLib::Real>();
+        QuantLib::BusinessDayConvention payConvention = QuantLib::Following;
+        QuantLib::DayCounter dayCounter = QuantLib::Actual360(false);
+        QuantLib::DayCounter lastPeriodDayCounter = QuantLib::Actual360(true);
+        QuantLib::Natural cashSettlementDays = 3;
     };
 
     CdsCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve);
