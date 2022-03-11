@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#pragma once
-
 #include <ored/configuration/bootstrapconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 

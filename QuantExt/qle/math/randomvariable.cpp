@@ -93,8 +93,10 @@ bool operator==(const Filter& a, const Filter& b) {
 Filter operator&&(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x && y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
-    if ((x.deterministic() && !x.data_[0]) || (y.deterministic() && !y.data_[0]))
+    if (x.deterministic() && !x.data_[0])
         return Filter(x.size(), false);
+    if (y.deterministic() && !y.data_[0])
+        return Filter(y.size(), false);
     if (!x.initialised() || !y.initialised())
         return Filter();
     if (!y.deterministic_)
@@ -112,8 +114,10 @@ Filter operator&&(Filter x, const Filter& y) {
 Filter operator||(Filter x, const Filter& y) {
     QL_REQUIRE(!x.initialised() || !y.initialised() || x.size() == y.size(),
                "RandomVariable: x || y: x size (" << x.size() << ") must be equal to y size (" << y.size() << ")");
-    if ((x.deterministic() && x.data_[0]) || (y.deterministic() && y.data_[0]))
+    if (x.deterministic() && x.data_[0])
         return Filter(x.size(), true);
+    if (y.deterministic() && y.data_[0])
+        return Filter(y.size(), true);
     if (!x.initialised() || !y.initialised())
         return Filter();
     if (!y.deterministic_)
@@ -756,7 +760,9 @@ RandomVariable black(const RandomVariable& omega, const RandomVariable& t, const
 RandomVariable indicatorDerivative(const RandomVariable& x, const double eps) {
     RandomVariable tmp(x.size(), 0.0);
 
-    // determine delta (as Fries, i.e. delta = eps * sqrt(E(X^2)) for an indicator1_{X>0})
+    // We follow section 4, eq 10 in
+    // Fries, 2017: Automatic Backward Differentiation for American Monte-Carlo Algorithms -
+    //              ADD for Conditional Expectations and Indicator Functions
 
     if (QuantLib::close_enough(eps, 0.0) || x.deterministic())
         return tmp;
