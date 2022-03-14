@@ -73,6 +73,12 @@ public:
         dividends_.emplace_back(Fixing(date, name, value));
     }
 
+    void reset() { 
+        data_.clear();
+        fixings_.clear();
+        dividends_.clear();
+    }
+
 protected:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;
