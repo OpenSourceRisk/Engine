@@ -29,6 +29,7 @@
 #include <ored/marketdata/loader.hpp>
 #include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
 #include <ql/termstructures/credit/piecewisedefaultcurve.hpp>
+#include <qle/termstructures/creditcurve.hpp>
 
 namespace ore {
 namespace data {
@@ -57,12 +58,12 @@ public:
     //! \name Inspectors
     //@{
     const DefaultCurveSpec& spec() const { return spec_; }
-    const boost::shared_ptr<DefaultProbabilityTermStructure>& defaultTermStructure() { return curve_; }
+    const boost::shared_ptr<QuantExt::CreditCurve>& creditCurve() const { return curve_; }
     Real recoveryRate() { return recoveryRate_; }
     //@}
 private:
     DefaultCurveSpec spec_;
-    boost::shared_ptr<DefaultProbabilityTermStructure> curve_;
+    boost::shared_ptr<QuantExt::CreditCurve> curve_;
     Real recoveryRate_;
 
     //! Build a default curve from CDS spread quotes
