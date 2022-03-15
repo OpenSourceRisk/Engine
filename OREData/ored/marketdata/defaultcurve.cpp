@@ -413,7 +413,7 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
             Date d1 = helpers[index - 1]->pillarDate();
             Date d2 = helpers[index]->pillarDate();
             Real p1 = tmp1->survivalProbability(d1);
-            Real p2 = tmp1->survivalProbability(d2);
+            Real p2 = tmp2->survivalProbability(d2);
             auto tmp1i = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
                 std::vector<Date>{d1, d1}, std::vector<Real>{p1, p1}, config.dayCounter(), Calendar(),
                 std::vector<Handle<Quote>>(), std::vector<Date>(), LogLinear(), config.allowNegativeRates());
