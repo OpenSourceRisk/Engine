@@ -58,17 +58,7 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
     }
 
     populateRequiredCurveIds();
-
-    // FIXME workaround for QPR-10654: always request PRICE quote in addition to CREDIT_SPREAD quote
-    std::set<std::string> addQuotes;
-    for(auto q: quotes_) {
-	boost::replace_first(q, "CREDIT_SPREAD", "PRICE");
-	addQuotes.insert(q);
-    }
-    for(auto const& a: addQuotes) {
-	if(std::find(quotes_.begin(), quotes_.end(), a) == quotes_.end())
-	    quotes_.push_back(a);
-    }
+    generateAdditionalQuotes();
 }
 
 void DefaultCurveConfig::populateRequiredCurveIds() {
@@ -81,6 +71,19 @@ void DefaultCurveConfig::populateRequiredCurveIds() {
     for (auto const& s : multiSectionSourceCurveIds_) {
         if (!s.empty())
             requiredCurveIds_[CurveSpec::CurveType::Default].insert(parseCurveSpec(s)->curveConfigID());
+    }
+}
+
+void DefaultCurveConfig::generateAdditionalQuotes() {
+    // FIXME workaround for QPR-10654: always request PRICE quote in addition to CREDIT_SPREAD quote
+    std::set<std::string> addQuotes;
+    for (auto q : quotes_) {
+        boost::replace_first(q, "CREDIT_SPREAD", "PRICE");
+        addQuotes.insert(q);
+    }
+    for (auto const& a : addQuotes) {
+        if (std::find(quotes_.begin(), quotes_.end(), a) == quotes_.end())
+            quotes_.push_back(a);
     }
 }
 
@@ -198,6 +201,7 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     }
 
     populateRequiredCurveIds();
+    generateAdditionalQuotes();
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {

@@ -126,6 +126,7 @@ public:
 
 private:
     void populateRequiredCurveIds();
+    void generateAdditionalQuotes();
     //! Quote and optional flag pair
     std::vector<std::pair<std::string, bool>> cdsQuotes_;
     string currency_;
