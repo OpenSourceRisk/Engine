@@ -20,6 +20,7 @@
 #include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ored/configuration/conventions.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -238,6 +239,7 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
 
     std::cout << "no eligible term found, fall back on " << creditCurveId << std::endl;
     return market->defaultCurve(creditCurveId, config);
+}
 
 } // namespace data
 } // namespace ore
