@@ -413,6 +413,7 @@
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="IndexTerm" minOccurs="0"/>
       <xs:element type="bool" name="ImplyDefaultFromMarket" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <!-- AllowNegativeRates removed by JW, but restored here -->
