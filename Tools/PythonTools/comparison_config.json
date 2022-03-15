@@ -533,6 +533,59 @@
           }
         ]
       },
+      ".*imschedule\\.csv": {
+        "keys": [
+          "Portfolio",
+          "Side"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "GrossIM",
+              "GrossCurrentRC",
+              "NetCurrentRC",
+              "NetToGrossRatio",
+              "ScheduleIM"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*imscheduledetail\\.csv": {
+        "keys": [
+          "TradeId",
+          "Portfolio",
+          "ProductClass"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "Notional",
+              "PV",
+              "Notional(Base)",
+              "PV(Base)",
+              "GrossIM(Base)"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
+      ".*totalinitialmargin\\.csv": {
+        "keys": [
+          "Side"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMargin"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          }
+        ]
+      },
       ".*scenario.*\\.csv": {
         "keys": [
           "TradeId",
