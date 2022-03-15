@@ -205,8 +205,8 @@ termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
-termstructures/cdscurve.cpp
 termstructures/correlationtermstructure.cpp
+termstructures/creditcurve.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatmtmresetswaphelper.cpp
@@ -566,11 +566,11 @@ termstructures/capfloorhelper.hpp
 termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
 termstructures/capfloortermvolsurfacesparse.hpp
-termstructures/cdscurve.hpp
 termstructures/cdsvolcurve.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
+termstructures/creditcurve.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatmtmresetswaphelper.hpp
@@ -653,6 +653,7 @@ termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
 termstructures/tenorbasisswaphelper.hpp
+termstructures/terminterpolateddefaultcurve.hpp
 termstructures/weightedyieldtermstructure.hpp
 termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp

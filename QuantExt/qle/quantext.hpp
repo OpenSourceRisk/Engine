@@ -301,11 +301,11 @@
 #include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/capfloortermvolsurfacesparse.hpp>
-#include <qle/termstructures/cdscurve.hpp>
 #include <qle/termstructures/cdsvolcurve.hpp>
 #include <qle/termstructures/commodityaveragebasispricecurve.hpp>
 #include <qle/termstructures/commoditybasispricecurve.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/termstructures/creditcurve.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatmtmresetswaphelper.hpp>
@@ -388,6 +388,7 @@
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/terminterpolateddefaultcurve.hpp>
 #include <qle/termstructures/weightedyieldtermstructure.hpp>
 #include <qle/termstructures/yieldplusdefaultyieldtermstructure.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
