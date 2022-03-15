@@ -792,7 +792,7 @@
             <xs:element type="xs:string" name="Tenor"/>
             <xs:element type="calendar" name="Calendar" minOccurs="0"/>
             <xs:element type="businessDayConvention" name="Convention"/>
-            <xs:element type="businessDayConvention" name="TermConvention"/>
+            <xs:element type="businessDayConvention" name="TermConvention" minOccurs="0"/>
             <xs:element type="dateRule" name="Rule" minOccurs="0"/>
             <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
             <xs:element type="date" name="FirstDate" minOccurs="0"/>
