@@ -22,8 +22,7 @@
 
 #pragma once
 
-#include <ql/patterns/lazyobject.hpp>
-#include <ql/termstructures/credit/defaulttermstructure.hpp>
+#include <qle/termstructures/creditcurve.hpp>
 
 namespace QuantExt {
 using QuantLib::Date;
@@ -32,9 +31,9 @@ class CdsVolCurve : public QuantLib::VolatilityTermStructure {
 public:
     enum class Type { Price, Spread };
     CdsVolCurve(const Date& referenceDate, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-                const Handle<CdsCurve>& underlyingCurve, const Type& type);
+                const std::vector<QuantLib::Period>& terms, const Handle<CreditCurve>& termCurves, const Type& type);
     CdsVolCurve(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-                const Handle<CdsCurve>& underlyingCurve, const Type& type);
+                const std::vector<QuantLib::Period>& terms, const Handle<CreditCurve>& termCurves, const Type& type);
 
     Real volatility(const Date& exerciseDate, const Period& underlyingTerm, const Real strike,
                     const Type& targetType) const;
@@ -52,29 +51,30 @@ protected:
     Rate maxStrike() const override;
 
     Type type_;
-}
+};
 
 class InterpolatingCdsVolCurve : public CdsVolCurve {
 public:
     enum class StrikeType { Relative, Absolute };
 
     InterpolatingCdsVolCurve(const Date& referenceDate, const Calendar& cal, BusinessDayConvention bdc,
-                             const DayCounter& dc, const Handle<CdsCurve>& underlyingCurve, const Type& type,
+                             const DayCounter& dc, const std::vector<Period>& terms,
+                             const std::vector<Handle<CdsCurve>>& termCurves, const Type& type,
                              const StrikeType& strikeType, const std::vector<Period>& optionTerms,
-                             const std::vector<Period>& underlyingTerms, const std::vector<Real>& strikes,
+                             const std::vector<Real>& strikes,
                              const std::vector<std::vector<std::vector<Handle<Quote>>>>& quotes);
 
     InterpolatingCdsVolCurve(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
-                             const DayCounter& dc, const Handle<CdsCurve>& underlyingCurve, const Type& type,
-                             const StrikeType& strikeType, const std::vector<Period>& optionTerms,
-                             const std::vector<Period>& underlyingTerms, const std::vector<Real>& strikes,
+                             const DayCounter& dc, const std::vector<Period>& terms,
+                             const Handle<CreditCurve>& termCurves, const Type& type, const StrikeType& strikeType,
+                             const std::vector<Period>& optionTerms, const std::vector<Real>& strikes,
                              const std::vector<std::vector<std::vector<Handle<Quote>>>>& quotes);
 
     Real volatility(const Real exerciseTime, const Real underlyingLength, const Real strike,
                     const Type& targetType) const override;
 
 private:
-    StrikeTypet strikeType_;
+    StrikeType strikeType_;
 };
 
 } // namespace QuantExt
