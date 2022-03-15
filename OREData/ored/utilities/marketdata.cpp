@@ -185,5 +185,59 @@ void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& f
     }
 }
 
+std::pair<std::string, std::string> splitCreditCurveId(const std::string& creditCurveId) {
+    Size pos = creditCurveId.rfind("_");
+    if (pos != std::string::npos) {
+	Period term;
+	string termString = creditCurveId.substr(pos + 1, creditCurveId.length());
+	if (tryParse<Period>(termString, term, parsePeriod)) {
+	    std::cout << "split " << creditCurveId << " into " << creditCurveId.substr(0, pos) << ", " << termString << std::endl;
+	    return make_pair(creditCurveId.substr(0, pos), termString);
+	}
+    }
+    std::cout << "did not split " << creditCurveId << std::endl;
+    return make_pair(creditCurveId, "");
+}
+
+/*! Get default curve for index cds from market:
+    - if creditCurveId ends on _5Y (or any other term), use that to get the curve from the market
+    - otherwise use creditCurveId + _5Y where the term "5Y" is derived from startDate and endDate;
+      if a curve with this name is not available or if no reasonable term can be derived,
+      fall back on the label creditCurveId without term suffix
+*/
+QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared_ptr<Market>& market,
+							     const std::string& creditCurveId,
+							     const std::string& config, const Date& startDate,
+							     const Date& endDate) {
+    std::cout << "getting index cds curve for " << creditCurveId;
+
+    auto p = splitCreditCurveId(creditCurveId);
+    if(!p.second.empty()) {
+	std::cout << " => " << creditCurveId << std::endl;
+	return market->defaultCurve(creditCurveId, config);
+    }
+
+    // imply the term from startDate / endDate
+
+    static const std::vector<Period> eligibleTerms = {5 * Years, 7 * Years, 10 * Years, 3 * Years, 1 * Years,
+						      2 * Years, 4 * Years, 6 * Years,  8 * Years, 9 * Years};
+    static const int gracePeriod = 15;
+
+    for(auto const& p: eligibleTerms) {
+	if(std::abs(cdsMaturity(startDate, p, DateGeneration::CDS2015) - endDate) < gracePeriod) {
+	    std::string id = creditCurveId + "_" + ore::data::to_string(p);
+	    std::cout << " => " << id << std::endl;
+	    try {
+		return market->defaultCurve(id, config);
+	    } catch(...) {
+		std::cout << "not found! fall back on " << creditCurveId << std::endl;
+		return market->defaultCurve(creditCurveId, config);
+	    }
+	}
+    }
+
+    std::cout << "no eligible term found, fall back on " << creditCurveId << std::endl;
+    return market->defaultCurve(creditCurveId, config);
+
 } // namespace data
 } // namespace ore
