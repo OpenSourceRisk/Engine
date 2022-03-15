@@ -17,7 +17,7 @@
 */
 
 /*! \file cdscurve.hpp
-    \brief default curve for cds and index cds
+    \brief wrapper for default curves, adding (index) reference data
 */
 
 #pragma once
@@ -29,13 +29,12 @@
 
 namespace QuantExt {
 
-class CdsCurve : public QuantLib::Observer, public QuantLib::Observable {
+class CreditCurve : public QuantLib::Observer, public QuantLib::Observable {
 public:
     struct RefData {
-	std::string type = "SingleName"; // Index, SingleName
+        RefData() {}
         QuantLib::Date startDate = QuantLib::Null<QuantLib::Date>();
-	std::vector<QuantLib::Period> terms;
-	std::vector<QuantLib::Date> terminationDates;
+        QuantLib::Period indexTerm = 0 * QuantLib::Days;
         QuantLib::Period tenor = 3 * QuantLib::Months;
         QuantLib::Calendar calendar = QuantLib::WeekendsOnly();
         QuantLib::BusinessDayConvention convention = QuantLib::Following;
@@ -49,21 +48,15 @@ public:
         QuantLib::Natural cashSettlementDays = 3;
     };
 
-    CdsCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve);
-    CdsCurve(const std::vector<QuantLib::Period>& terms,
-             const std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> termCurves,
-             const RefData& RefData);
+    CreditCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
+                const RefData& refData = RefData());
 
     const RefData& refData() const;
-    QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> curve(const QuantLib::Period& term = 0 *
-                                                                                                     QuantLib::Days);
+    const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve() const;
 
 protected:
-    std::vector<QuantLib::Period> terms_;
-    std::vector<QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>> termCurves_;
+    QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> curve_;
     RefData refData_;
-    std::vector<QuantLib::Real> termTimes_;
-
     void update() override;
 };
 
