@@ -81,8 +81,7 @@ Handle<BlackVolTermStructure> WrappedMarket::fxVol(const string& ccypair, const 
     return market_->fxVol(ccypair, configuration);
 }
 
-Handle<DefaultProbabilityTermStructure> WrappedMarket::defaultCurve(const string& name,
-                                                                    const string& configuration) const {
+Handle<QuantExt::CreditCurve> WrappedMarket::defaultCurve(const string& name, const string& configuration) const {
     return market_->defaultCurve(name, configuration);
 }
 

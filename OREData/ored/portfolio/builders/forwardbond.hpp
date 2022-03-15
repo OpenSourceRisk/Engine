@@ -84,7 +84,8 @@ protected:
         // credit curve may not always be used. If credit curve ID is empty proceed without it
         if (!creditCurveId.empty())
             dpts =
-                securitySpecificCreditCurve(market_, securityId, creditCurveId, configuration(MarketContext::pricing));
+                securitySpecificCreditCurve(market_, securityId, creditCurveId, configuration(MarketContext::pricing))
+                    ->curve();
         Handle<Quote> recovery;
         try {
             recovery = market_->recoveryRate(securityId, configuration(MarketContext::pricing));

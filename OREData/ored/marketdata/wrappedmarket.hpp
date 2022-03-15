@@ -69,8 +69,8 @@ public:
                          const string& configuration = Market::defaultConfiguration) const override;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,
                                         const string& configuration = Market::defaultConfiguration) const override;
-    Handle<DefaultProbabilityTermStructure>
-    defaultCurve(const string& name, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<QuantExt::CreditCurve> defaultCurve(const string& name,
+                                     const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> recoveryRate(const string& name,
                                const string& configuration = Market::defaultConfiguration) const override;
     Handle<BlackVolTermStructure> cdsVol(const string& name,

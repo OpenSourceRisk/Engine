@@ -27,7 +27,7 @@ CrLgmBuilder::CrLgmBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     string name = data->name();
     LOG("LgmCalibration for name " << name << ", configuration is " << configuration);
 
-    modelDefaultCurve_ = RelinkableHandle<DefaultProbabilityTermStructure>(*market_->defaultCurve(name, configuration));
+    modelDefaultCurve_ = RelinkableHandle<DefaultProbabilityTermStructure>(*market_->defaultCurve(name, configuration)->curve());
 
     QL_REQUIRE(!data_->calibrateA() && !data_->calibrateH(), "CrLgmBuilder does not support calibration currently");
 

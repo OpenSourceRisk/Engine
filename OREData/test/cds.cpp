@@ -75,9 +75,11 @@ private:
         yts->enableExtrapolation();
         return Handle<YieldTermStructure>(yts);
     }
-    Handle<DefaultProbabilityTermStructure> flatRateDcs(Real forward) {
-        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, SimpleDayCounter()));
-        return Handle<DefaultProbabilityTermStructure>(dcs);
+    Handle<QuantExt::CreditCurve> flatRateDcs(Volatility forward) {
+        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(
+            new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
+        return Handle<QuantExt::CreditCurve>(
+            boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
     }
 };
 
@@ -344,7 +346,7 @@ BOOST_AUTO_TEST_CASE(testSimultaneousUsageCdsQuoteTypes) {
     for (const string& curveName : curveNames) {
         BOOST_TEST_CONTEXT("Checking default curve " << curveName) {
             Handle<DefaultProbabilityTermStructure> dpts;
-            BOOST_CHECK_NO_THROW(dpts = tm->defaultCurve(curveName));
+            BOOST_CHECK_NO_THROW(dpts = tm->defaultCurve(curveName)->curve());
             BOOST_CHECK_NO_THROW(dpts->survivalProbability(1.0));
         }
     }

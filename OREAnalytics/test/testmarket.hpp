@@ -74,9 +74,11 @@ private:
                                                      ModifiedFollowing, forward, ActualActual(ActualActual::ISDA), type, shift));
         return Handle<QuantLib::SwaptionVolatilityStructure>(svs);
     }
-    Handle<DefaultProbabilityTermStructure> flatRateDcs(Volatility forward) {
-        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
-        return Handle<DefaultProbabilityTermStructure>(dcs);
+    Handle<QuantExt::CreditCurve> flatRateDcs(Volatility forward) {
+        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(
+            new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
+        return Handle<QuantExt::CreditCurve>(
+            boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
     }
     Handle<OptionletVolatilityStructure> flatRateCvs(Volatility vol, VolatilityType type = Normal, Real shift = 0.0) {
         boost::shared_ptr<OptionletVolatilityStructure> ts(

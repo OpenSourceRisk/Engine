@@ -66,7 +66,7 @@ protected:
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         Handle<BlackVolTermStructure> vol = market_->cdsVol(curveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts =
-                market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
+            market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing))->curve();
         Handle<Quote> recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         return boost::make_shared<QuantExt::BlackCdsOptionEngine>(dpts, recovery->value(), yts, vol);
     }

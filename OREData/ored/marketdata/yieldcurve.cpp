@@ -833,7 +833,7 @@ void YieldCurve::buildYieldPlusDefaultCurve() {
         auto it = requiredDefaultCurves_.find(segment->defaultCurveIDs()[i]);
         QL_REQUIRE(it != requiredDefaultCurves_.end(),
                    "Could not find default curve: " << segment->defaultCurveIDs()[i]);
-        defaultCurves.push_back(Handle<DefaultProbabilityTermStructure>(it->second->defaultTermStructure()));
+        defaultCurves.push_back(Handle<DefaultProbabilityTermStructure>(it->second->creditCurve()->curve()));
         recRates.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(it->second->recoveryRate())));
     }
     p_ = boost::make_shared<YieldPlusDefaultYieldTermStructure>(it->second->handle(), defaultCurves, recRates,

@@ -993,7 +993,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 		    bool simDataWritten = false;
                     try {
                         LOG("building " << name << " default curve..");
-                        Handle<DefaultProbabilityTermStructure> wrapper = initMarket->defaultCurve(name, configuration);
+                        auto wrapper = initMarket->defaultCurve(name, configuration);
                         vector<Handle<Quote>> quotes;
 
                         QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days,
@@ -1002,7 +1002,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Date> dates(1, asof_);
                         vector<Real> times(1, 0.0);
 
-			DayCounter dc = wrapper->dayCounter();
+			DayCounter dc = wrapper->curve()->dayCounter();
 			
                         for (Size i = 0; i < parameters->defaultTenors(name).size(); i++) {
                             dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
@@ -1012,7 +1012,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
                         quotes.push_back(Handle<Quote>(q));
                         for (Size i = 0; i < dates.size() - 1; i++) {
-                            Probability prob = wrapper->survivalProbability(dates[i + 1], true);
+                            Probability prob = wrapper->curve()->survivalProbability(dates[i + 1], true);
                             boost::shared_ptr<SimpleQuote> q =
                                 boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : prob);
                             // Check if the risk factor is simulated before adding it
@@ -1037,7 +1037,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (useSpreadedTermStructures_) {
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(
-                                    wrapper, times, quotes,
+                                    wrapper->curve(), times, quotes,
                                     parameters->defaultCurveExtrapolation() == "FlatZero"
                                         ? QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatZero
                                         : QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatFwd));
@@ -1051,8 +1051,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         : QuantExt::SurvivalProbabilityCurve<LogLinear>::Extrapolation::flatFwd));
                         }
                         defaultCurve->enableExtrapolation();
-                        defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
-                            make_pair(Market::defaultConfiguration, name), defaultCurve));
+                        defaultCurves_.insert(pair<pair<string, string>, Handle<CreditCurve>>(
+                            make_pair(Market::defaultConfiguration, name),
+                            Handle<CreditCurve>(boost::make_shared<CreditCurve>(defaultCurve, wrapper->refData()))));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, simDataWritten);
                     }

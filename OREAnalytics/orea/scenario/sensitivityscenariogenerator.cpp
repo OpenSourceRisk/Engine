@@ -1336,7 +1336,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = Actual365Fixed();
         try {
-            dc = simMarket_->defaultCurve(name)->dayCounter();
+            dc = simMarket_->defaultCurve(name)->curve()->dayCounter();
         } catch(const std::exception&)  {
             WLOG("Day counter lookup in simulation market failed for default curve " << name << ", using default A365");
         }

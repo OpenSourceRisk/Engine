@@ -446,7 +446,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             DLOG("Adding DefaultCurve (" << node.name << ") with spec " << *defaultspec << " to configuration "
                                          << configuration);
             defaultCurves_[make_pair(configuration, node.name)] =
-                Handle<DefaultProbabilityTermStructure>(itr->second->defaultTermStructure());
+                Handle<QuantExt::CreditCurve>(itr->second->creditCurve());
             recoveryRates_[make_pair(configuration, node.name)] =
                 Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->recoveryRate()));
             break;

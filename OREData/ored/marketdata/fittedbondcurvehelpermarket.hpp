@@ -48,7 +48,7 @@ public:
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const override;
 
-    Handle<DefaultProbabilityTermStructure>
+    Handle<QuantExt::CreditCurve>
     defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const override;
 
     Handle<Quote> recoveryRate(const string&,

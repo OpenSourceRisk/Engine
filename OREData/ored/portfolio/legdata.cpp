@@ -2266,7 +2266,7 @@ boost::shared_ptr<QuantExt::BondIndex> buildBondIndex(const BondData& securityDa
     Handle<DefaultProbabilityTermStructure> defaultCurve;
     if (!data.creditCurveId().empty())
         defaultCurve = securitySpecificCreditCurve(engineFactory->market(), securityId, data.creditCurveId(),
-                                                   engineFactory->configuration(MarketContext::pricing));
+                                                   engineFactory->configuration(MarketContext::pricing))->curve();
 
     Handle<YieldTermStructure> incomeCurve;
     if (!data.incomeCurveId().empty())

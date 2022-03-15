@@ -553,7 +553,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
-            Handle<DefaultProbabilityTermStructure> ts = simMarket->defaultCurve(name, marketConfiguration);
+            Handle<DefaultProbabilityTermStructure> ts = simMarket->defaultCurve(name, marketConfiguration)->curve();
             Time t = ts->dayCounter().yearFraction(asof, asof + p);
             Real prob = ts->survivalProbability(t);
             shiftMult = -std::log(prob) / t;

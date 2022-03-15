@@ -92,8 +92,8 @@ public:
                                         const string& configuration = Market::defaultConfiguration) const override;
 
     //! Default Curves and Recovery Rates
-    Handle<DefaultProbabilityTermStructure>
-    defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const override;
+    Handle<QuantExt::CreditCurve> defaultCurve(const string&,
+                                  const string& configuration = Market::defaultConfiguration) const override;
     Handle<Quote> recoveryRate(const string&, const string& configuration = Market::defaultConfiguration) const override;
 
     //! CDS volatilities
@@ -207,7 +207,7 @@ protected:
     mutable map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
     mutable map<string, FXIndexTriangulation> fxIndices_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
-    mutable map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
+    mutable map<pair<string, string>, Handle<QuantExt::CreditCurve>> defaultCurves_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;
     mutable map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
     mutable map<pair<string, string>, Handle<Quote>> recoveryRates_;

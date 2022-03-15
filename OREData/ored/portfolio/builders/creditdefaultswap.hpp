@@ -155,7 +155,7 @@ protected:
             recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
         }
 
-        return boost::make_shared<QuantExt::MidPointCdsEngine>(dpts, recoveryRate, yts);
+        return boost::make_shared<QuantExt::MidPointCdsEngine>(dpts->curve(), recoveryRate, yts);
     }
 };
 

@@ -189,8 +189,8 @@ void testDefaultCurve(boost::shared_ptr<ore::data::Market>& initMarket,
                       boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->defaultNames()) {
 
-        Handle<DefaultProbabilityTermStructure> simCurve = simMarket->defaultCurve(spec);
-        Handle<DefaultProbabilityTermStructure> initCurve = initMarket->defaultCurve(spec);
+        Handle<DefaultProbabilityTermStructure> simCurve = simMarket->defaultCurve(spec)->curve();
+        Handle<DefaultProbabilityTermStructure> initCurve = initMarket->defaultCurve(spec)->curve();
         BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
         vector<Date> dates;
         Date asof = initMarket->asofDate();

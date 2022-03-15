@@ -93,9 +93,11 @@ private:
         yts->enableExtrapolation();
         return Handle<YieldTermStructure>(yts);
     }
-    Handle<DefaultProbabilityTermStructure> flatRateDcs(Real forward) {
-        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
-        return Handle<DefaultProbabilityTermStructure>(dcs);
+    Handle<QuantExt::CreditCurve> flatRateDcs(Real forward) {
+        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(
+            new FlatHazardRate(asof_, forward, ActualActual(ActualActual::ISDA)));
+        return Handle<QuantExt::CreditCurve>(
+            boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(dcs)));
     }
 };
 

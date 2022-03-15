@@ -79,10 +79,10 @@ std::string creditCurveNameFromSecuritySpecificCreditCurveName(const std::string
     return name;
 }
 
-QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
+QuantLib::Handle<QuantExt::CreditCurve>
 securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::string& securityId,
                             const std::string& creditCurveId, const std::string& configuration) {
-    Handle<DefaultProbabilityTermStructure> curve;
+    Handle<QuantExt::CreditCurve> curve;
     std::string name = securitySpecificCreditCurveName(securityId, creditCurveId);
     try {
         curve = market->defaultCurve(name, configuration);
