@@ -123,9 +123,9 @@ def compare_files(file_1, file_2, name, config=None):
     _, ext_2 = os.path.splitext(file_2)
 
     if csv_comp_config is None:
-        if ext_1 == '.csv' or ext_1 == '.json':
+        if ext_1 == '.csv':
             raise ValueError('File, ' + file_1 + ', requires a comparison configuration but none given.')
-        if ext_2 == '.csv' or ext_2 == '.json':
+        if ext_2 == '.csv':
             raise ValueError('File, ' + file_2 + ', requires a comparison configuration but none given.')
 
     if csv_comp_config is None:
