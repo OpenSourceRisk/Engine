@@ -203,27 +203,17 @@ std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string
 
 QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared_ptr<Market>& market,
                                                              const std::string& creditCurveId,
-                                                             const std::string& config, const QuantLib::Period& term) {
-    std::cout << "getting index cds curve for " << creditCurveId;
+                                                             const std::string& config) {
+    std::cout << "getting index cds curve for " << creditCurveId << std::endl;
+
+    try {
+        return market->defaultCurve(id, config);
+    } catch (...) {
+    }
 
     auto p = splitCurveIdWithTenor(creditCurveId);
-    if (p.second != 0 * QuantLib::Days) {
-        std::cout << " => " << creditCurveId << std::endl;
-        return market->defaultCurve(creditCurveId, config);
-    }
-
-    std::string id = creditCurveId;
-    if (term != 0 * Days) {
-        id += "_" + ore::data::to_string(term);
-        try {
-            std::cout << " => " << id << std::endl;
-            return market->defaultCurve(id, config);
-        } catch (...) {
-        }
-    }
-
-    std::cout << "not found! fall back on " << creditCurveId << std::endl;
-    return market->defaultCurve(creditCurveId, config);
+    std::cout << "not found! fall back on " << p.first << std::endl;
+    return market->defaultCurve(p.first, config);
 }
 
 } // namespace data
