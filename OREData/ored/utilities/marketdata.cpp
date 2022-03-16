@@ -192,12 +192,9 @@ std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string
         Period term;
         string termString = creditCurveId.substr(pos + 1, creditCurveId.length());
         if (tryParse<Period>(termString, term, parsePeriod)) {
-            std::cout << "split " << creditCurveId << " into " << creditCurveId.substr(0, pos) << ", " << termString
-                      << std::endl;
             return make_pair(creditCurveId.substr(0, pos), term);
         }
     }
-    std::cout << "did not split " << creditCurveId << std::endl;
     return make_pair(creditCurveId, 0 * Days);
 }
 
