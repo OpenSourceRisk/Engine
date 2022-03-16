@@ -201,8 +201,6 @@ std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string
 QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared_ptr<Market>& market,
                                                              const std::string& creditCurveId,
                                                              const std::string& config) {
-    std::cout << "getting index cds curve for " << creditCurveId << std::endl;
-
     try {
         return market->defaultCurve(creditCurveId, config);
     } catch (...) {
