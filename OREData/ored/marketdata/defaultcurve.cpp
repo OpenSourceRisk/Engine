@@ -425,6 +425,8 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
                     std::vector<Handle<Quote>>(), std::vector<Date>(), LogLinear(), config.allowNegativeRates());
                 Real t1 = helperTermTimes[index - 1];
                 Real t2 = helperTermTimes[index];
+		tmp1i->enableExtrapolation();
+		tmp2i->enableExtrapolation();
                 qlCurve = boost::make_shared<QuantExt::TermInterpolatedDefaultCurve>(
                     Handle<DefaultProbabilityTermStructure>(tmp1i), Handle<DefaultProbabilityTermStructure>(tmp2i),
                     (t2 - t) / (t2 - t1));

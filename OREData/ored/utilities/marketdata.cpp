@@ -204,6 +204,7 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
     try {
         return market->defaultCurve(creditCurveId, config);
     } catch (...) {
+        DLOG("indexCdsDefaultCurve: could not get '" << creditCurveId << "', fall back on curve id without tenor.");
     }
 
     auto p = splitCurveIdWithTenor(creditCurveId);
