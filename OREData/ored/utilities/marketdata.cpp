@@ -207,7 +207,7 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
     std::cout << "getting index cds curve for " << creditCurveId << std::endl;
 
     try {
-        return market->defaultCurve(id, config);
+        return market->defaultCurve(creditCurveId, config);
     } catch (...) {
     }
 
