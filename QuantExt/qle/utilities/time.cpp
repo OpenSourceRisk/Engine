@@ -23,7 +23,12 @@
 #include <qle/utilities/time.hpp>
 
 #include <ql/errors.hpp>
+#include <ql/time/dategenerationrule.hpp>
+#include <ql/time/period.hpp>
+#include <ql/time/schedule.hpp>
 #include <ql/types.hpp>
+
+#include <vector>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -41,6 +46,20 @@ Real periodToTime(const Period& p) {
     default:
         QL_FAIL("periodToTime(): time unit (" << p.units() << ") not handled");
     }
+}
+
+QuantLib::Period implyIndexTerm(const Date& startDate, const Date& endDate) {
+    static const std::vector<Period> eligibleTerms = {5 * Years, 7 * Years, 10 * Years, 3 * Years, 1 * Years,
+                                                      2 * Years, 4 * Years, 6 * Years,  8 * Years, 9 * Years};
+    static const int gracePeriod = 15;
+
+    for (auto const& p : eligibleTerms) {
+        if (std::abs(cdsMaturity(startDate, p, DateGeneration::CDS2015) - endDate) < gracePeriod) {
+            return p;
+        }
+    }
+
+    return 0 * Days;
 }
 
 } // namespace QuantExt

@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/configuration/conventions.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
-#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/configuration/conventions.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -80,9 +80,10 @@ std::string creditCurveNameFromSecuritySpecificCreditCurveName(const std::string
     return name;
 }
 
-QuantLib::Handle<QuantExt::CreditCurve>
-securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::string& securityId,
-                            const std::string& creditCurveId, const std::string& configuration) {
+QuantLib::Handle<QuantExt::CreditCurve> securitySpecificCreditCurve(const boost::shared_ptr<Market>& market,
+                                                                    const std::string& securityId,
+                                                                    const std::string& creditCurveId,
+                                                                    const std::string& configuration) {
     Handle<QuantExt::CreditCurve> curve;
     std::string name = securitySpecificCreditCurveName(securityId, creditCurveId);
     try {
@@ -118,9 +119,9 @@ std::string prettyPrintInternalCurveName(std::string name) {
     return name;
 }
 
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, 
-    const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration,
-    bool useXbsCurves) {
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
+                                                  const boost::shared_ptr<Market>& market, const string& configuration,
+                                                  bool useXbsCurves) {
 
     // get the base index from the market for the currency pair
     Handle<QuantExt::FxIndex> fxInd = market->fxIndex(fxIndex);
@@ -151,7 +152,6 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
         return fxInd.currentLink();
 }
 
-
 void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& fixingCalendar) {
     // can take an fx index or ccy pair e.g. EURUSD
     string ccy1, ccy2;
@@ -160,12 +160,12 @@ void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& f
         ccy1 = ind->sourceCurrency().code();
         ccy2 = ind->targetCurrency().code();
     } else {
-        QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, " <<
-            "or a currency pair e.g. EURUSD.");
+        QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, "
+                                          << "or a currency pair e.g. EURUSD.");
         ccy1 = index.substr(0, 3);
         ccy2 = index.substr(3);
-    }        
-    
+    }
+
     try {
         const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
         boost::shared_ptr<Convention> con;
@@ -186,58 +186,43 @@ void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& f
     }
 }
 
-std::pair<std::string, std::string> splitCreditCurveId(const std::string& creditCurveId) {
+std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string& creditCurveId) {
     Size pos = creditCurveId.rfind("_");
     if (pos != std::string::npos) {
-	Period term;
-	string termString = creditCurveId.substr(pos + 1, creditCurveId.length());
-	if (tryParse<Period>(termString, term, parsePeriod)) {
-	    std::cout << "split " << creditCurveId << " into " << creditCurveId.substr(0, pos) << ", " << termString << std::endl;
-	    return make_pair(creditCurveId.substr(0, pos), termString);
-	}
+        Period term;
+        string termString = creditCurveId.substr(pos + 1, creditCurveId.length());
+        if (tryParse<Period>(termString, term, parsePeriod)) {
+            std::cout << "split " << creditCurveId << " into " << creditCurveId.substr(0, pos) << ", " << termString
+                      << std::endl;
+            return make_pair(creditCurveId.substr(0, pos), term);
+        }
     }
     std::cout << "did not split " << creditCurveId << std::endl;
-    return make_pair(creditCurveId, "");
+    return make_pair(creditCurveId, 0 * Days);
 }
 
-/*! Get default curve for index cds from market:
-    - if creditCurveId ends on _5Y (or any other term), use that to get the curve from the market
-    - otherwise use creditCurveId + _5Y where the term "5Y" is derived from startDate and endDate;
-      if a curve with this name is not available or if no reasonable term can be derived,
-      fall back on the label creditCurveId without term suffix
-*/
 QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared_ptr<Market>& market,
-							     const std::string& creditCurveId,
-							     const std::string& config, const Date& startDate,
-							     const Date& endDate) {
+                                                             const std::string& creditCurveId,
+                                                             const std::string& config, const QuantLib::Period& term) {
     std::cout << "getting index cds curve for " << creditCurveId;
 
-    auto p = splitCreditCurveId(creditCurveId);
-    if(!p.second.empty()) {
-	std::cout << " => " << creditCurveId << std::endl;
-	return market->defaultCurve(creditCurveId, config);
+    auto p = splitCurveIdWithTenor(creditCurveId);
+    if (p.second != 0 * QuantLib::Days) {
+        std::cout << " => " << creditCurveId << std::endl;
+        return market->defaultCurve(creditCurveId, config);
     }
 
-    // imply the term from startDate / endDate
-
-    static const std::vector<Period> eligibleTerms = {5 * Years, 7 * Years, 10 * Years, 3 * Years, 1 * Years,
-						      2 * Years, 4 * Years, 6 * Years,  8 * Years, 9 * Years};
-    static const int gracePeriod = 15;
-
-    for(auto const& p: eligibleTerms) {
-	if(std::abs(cdsMaturity(startDate, p, DateGeneration::CDS2015) - endDate) < gracePeriod) {
-	    std::string id = creditCurveId + "_" + ore::data::to_string(p);
-	    std::cout << " => " << id << std::endl;
-	    try {
-		return market->defaultCurve(id, config);
-	    } catch(...) {
-		std::cout << "not found! fall back on " << creditCurveId << std::endl;
-		return market->defaultCurve(creditCurveId, config);
-	    }
-	}
+    std::string id = creditCurveId;
+    if (term != 0 * Days) {
+        id += "_" + ore::data::to_string(term);
+        try {
+            std::cout << " => " << id << std::endl;
+            return market->defaultCurve(id, config);
+        } catch (...) {
+        }
     }
 
-    std::cout << "no eligible term found, fall back on " << creditCurveId << std::endl;
+    std::cout << "not found! fall back on " << creditCurveId << std::endl;
     return market->defaultCurve(creditCurveId, config);
 }
 

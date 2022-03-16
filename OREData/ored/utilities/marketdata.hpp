@@ -70,18 +70,17 @@ securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::
                             const std::string& creditCurveId,
                             const std::string& configuration = Market::defaultConfiguration);
 
-/*! Split default curve name NAME_5Y into (NAME, 5Y), the period can be empty if not given */
-std::pair<std::string, std::string> splitCreditCurveId(const std::string& creditCurveId);
+/*! Split curve name NAME_5Y into (NAME, 5Y), the period can be empty if not given */
+std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string& curveId);
 
 /*! Get default curve for index cds from market:
     - if creditCurveId ends on _5Y (or any other term), use that to get the curve from the market
-    - otherwise use creditCurveId + _5Y where the term "5Y" is derived from startDate and endDate;
-      if such a curve is not available or if no reasonable term can be implied, fall back to creditCurveId
+    - otherwise use creditCurveId + _5Y where the term "5Y" is the term if that is != 0*Days;
+      if such a curve is not available fall back to creditCurveId
 */
 QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared_ptr<Market>& market,
                                                              const std::string& creditCurveId,
-                                                             const std::string& config, const Date& startDate,
-                                                             const Date& endDat);
+                                                             const std::string& config, const QuantLib::Period& term);
 
 /*! Pretty print an internal curve name occuring (once or several times) in a string (e.g. in a risk factor name). */
 std::string prettyPrintInternalCurveName(std::string name);
