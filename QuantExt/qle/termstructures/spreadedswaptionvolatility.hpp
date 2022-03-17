@@ -39,12 +39,16 @@ public:
     /* If the base vol has smile sections which provide atm levels, these are also used to define the atm levels for the
       vol spreads. Otherwise, the atm levels for the vol spreads are computed from the swap indices passed to this
       class. The swap indices are only required / used if a) the base vol smile sections do not provide atm levels and
-      b) more than one strike spread is given.  */
+      b) more than one strike spread is given.  
+
+      If stickyAbsMoney is true, the swap indices must be present and represent the current ATM level, i.e. react themselves
+      to changes in the rate levels. */
     SpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
                                const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
                                const std::vector<std::vector<Handle<Quote>>>& volSpreads,
                                const boost::shared_ptr<SwapIndex>& swapIndexBase,
-                               const boost::shared_ptr<SwapIndex>& shortSwapIndexBase);
+                               const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
+			       const bool stickyAbsMoney = false);
 
     //! \name TermStructure interface
     //@{
@@ -79,6 +83,7 @@ private:
     std::vector<Real> strikeSpreads_;
     std::vector<std::vector<Handle<Quote>>> volSpreads_;
     boost::shared_ptr<SwapIndex> swapIndexBase_, shortSwapIndexBase_;
+    bool stickyAbsMoney_;
     mutable std::vector<Matrix> volSpreadValues_;
     mutable std::vector<Interpolation2D> volSpreadInterpolation_;
 };
