@@ -49,17 +49,19 @@ public:
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Period& underlyingTerm,
                               const QuantLib::Real strike, const Type& targetType) const;
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
-                              const QuantLib::Real strike, const Type& targetType) const;
-    virtual QuantLib::Real volatility(const QuantLib::Real exerciseTime, const QuantLib::Real underlyingLength,
-                                      const QuantLib::Real strike, const Type& targetType) const = 0;
+                              const QuantLib::Real strike, const Type& targetType) const = 0;
 
     virtual const std::vector<QuantLib::Period>& terms() const;
     virtual const std::vector<QuantLib::Handle<CreditCurve>>& termCurves() const;
     const Type& type() const;
 
-protected:
-    void init() const;
+    Real atmStrike(const QuantLib::Date& expiry, const QuantLib::Period& term) const;
+    Real atmStrike(const QuantLib::Date& expiry, const Real underlyingLength) const;
 
+protected:
+    Real moneyness(const Real strike, const Real atmStrike) const;
+    Real strike(const Real moneyness, const Real atmStrike) const;
+    void init() const;
     QuantLib::Date maxDate() const override;
     QuantLib::Real minStrike() const override;
     QuantLib::Real maxStrike() const override;
@@ -75,24 +77,39 @@ public:
                                 QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                 const std::vector<QuantLib::Period>& terms,
                                 const std::vector<QuantLib::Handle<CreditCurve>>& termCurves,
-                                const std::map<std::tuple<QuantLib::Period, QuantLib::Date, QuantLib::Real>,
+                                const std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>,
                                                QuantLib::Handle<QuantLib::Quote>>& quotes,
                                 const Type& type);
     InterpolatingCreditVolCurve(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal,
                                 QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                                 const std::vector<QuantLib::Period>& terms,
                                 const std::vector<QuantLib::Handle<CreditCurve>>& termCurves,
-                                const std::map<std::tuple<QuantLib::Period, QuantLib::Date, QuantLib::Real>,
+                                const std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>,
                                                QuantLib::Handle<QuantLib::Quote>>& quotes,
                                 const Type& type);
 
-    QuantLib::Real volatility(const QuantLib::Real exerciseTime, const QuantLib::Real underlyingLength,
+    QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                               const QuantLib::Real strike, const Type& targetType) const override;
 
 private:
+    void init() const;
     void update() override { LazyObject::update(); }
     void performCalculations() const override;
+    void createSmile(const Date& expiry, const Period& term, const Date& expiry_m, const Smile& smile_m,
+                     const Date& expiry_p, const Smile& smile_p);
+
     std::map<std::tuple<QuantLib::Period, QuantLib::Date, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes_;
+
+    mutable std::vector<QuantLib::Period> smileTerms_;
+    mutable std::vector<QuantLib::Date> smileExpiries_;
+    mutable std::vector<QuantLib::Real> smileTermLengths_;
+    mutable std::vector<QuantLib::Real> smileExpiryTimes_;
+
+    using Key = std::pair<QuantLib::Date, QuantLib::Period>;
+    using Smile = std::pair<Real, boost::shared_ptr<QuantLib::Interpolation>>;
+    mutable std::map<Key, std::vector<Real>> strikes_;
+    mutable std::map<Key, std::vector<Real>> vols_;
+    mutable std::map<Key, Smile> smiles_;
 };
 
 class SpreadedCreditVolCurve : public CreditVolCurve {
@@ -100,7 +117,7 @@ public:
     SpreadedCreditVolCurve(const QuantLib::Handle<CreditVolCurve> baseCurve, const std::vector<QuantLib::Date> expiries,
                            const std::vector<QuantLib::Handle<QuantLib::Quote>> spreads, const bool stickyMoneyness);
 
-    QuantLib::Real volatility(const QuantLib::Real exerciseTime, const QuantLib::Real underlyingLength,
+    QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                               const QuantLib::Real strike, const Type& targetType) const override;
 
     const std::vector<QuantLib::Period>& terms() const override;
