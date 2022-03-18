@@ -30,7 +30,7 @@ namespace QuantExt {
 /* convert period to time using 1Y = 1, 1M = 1/12, 1W = 7/365, 1D = 1/365 */
 QuantLib::Real periodToTime(const QuantLib::Period& p);
 
-/*! Imply index term from start and end date. If no reasonable term can be implied, 0 * Days is returned */
+/*! Imply cds index term from start and end date. If no reasonable term can be implied, 0 * Days is returned */
 QuantLib::Period implyIndexTerm(const QuantLib::Date& startDate, const QuantLib::Date& endDate);
 
 } // namespace QuantExt
