@@ -33,7 +33,7 @@
 
 namespace QuantExt {
 
-class CreditVolCurve : public QuantLib::VolatilityTermStructure {
+class CreditVolCurve : public QuantLib::VolatilityTermStructure, public QuantLib::LazyObject {
 public:
     enum class Type { Price, Spread };
     CreditVolCurve(QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc);
@@ -59,6 +59,7 @@ public:
     Real atmStrike(const QuantLib::Date& expiry, const Real underlyingLength) const;
 
 protected:
+    void performCalculations() const override;
     Real moneyness(const Real strike, const Real atmStrike) const;
     Real strike(const Real moneyness, const Real atmStrike) const;
     void init() const;
@@ -71,7 +72,7 @@ protected:
     Type type_;
 };
 
-class InterpolatingCreditVolCurve : public CreditVolCurve, public QuantLib::LazyObject {
+class InterpolatingCreditVolCurve : public CreditVolCurve {
 public:
     InterpolatingCreditVolCurve(const QuantLib::Natural settlementDays, const QuantLib::Calendar& cal,
                                 QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
@@ -110,6 +111,8 @@ private:
     mutable std::map<Key, std::vector<Real>> strikes_;
     mutable std::map<Key, std::vector<Real>> vols_;
     mutable std::map<Key, Smile> smiles_;
+
+    mutable std::map<std::pair<QuantLib::Date, double>, double> atmStrikeCache_;
 };
 
 class SpreadedCreditVolCurve : public CreditVolCurve {
