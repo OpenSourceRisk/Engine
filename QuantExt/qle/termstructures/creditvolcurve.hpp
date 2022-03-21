@@ -25,6 +25,7 @@
 #include <qle/termstructures/creditcurve.hpp>
 
 #include <ql/handle.hpp>
+#include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/voltermstructure.hpp>
@@ -48,21 +49,22 @@ public:
 
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Period& underlyingTerm,
                               const QuantLib::Real strike, const Type& targetType) const;
-    QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
-                              const QuantLib::Real strike, const Type& targetType) const = 0;
+    virtual QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
+                                      const QuantLib::Real strike, const Type& targetType) const = 0;
 
     virtual const std::vector<QuantLib::Period>& terms() const;
     virtual const std::vector<QuantLib::Handle<CreditCurve>>& termCurves() const;
     const Type& type() const;
 
-    Real atmStrike(const QuantLib::Date& expiry, const QuantLib::Period& term) const;
-    Real atmStrike(const QuantLib::Date& expiry, const Real underlyingLength) const;
+    QuantLib::Real atmStrike(const QuantLib::Date& expiry, const QuantLib::Period& term) const;
+    QuantLib::Real atmStrike(const QuantLib::Date& expiry, const QuantLib::Real underlyingLength) const;
 
 protected:
+    void init();
+    void update() override { LazyObject::update(); }
     void performCalculations() const override;
-    Real moneyness(const Real strike, const Real atmStrike) const;
-    Real strike(const Real moneyness, const Real atmStrike) const;
-    void init() const;
+    QuantLib::Real moneyness(const QuantLib::Real strike, const QuantLib::Real atmStrike) const;
+    QuantLib::Real strike(const QuantLib::Real moneyness, const QuantLib::Real atmStrike) const;
     QuantLib::Date maxDate() const override;
     QuantLib::Real minStrike() const override;
     QuantLib::Real maxStrike() const override;
@@ -70,6 +72,8 @@ protected:
     std::vector<QuantLib::Period> terms_;
     std::vector<QuantLib::Handle<CreditCurve>> termCurves_;
     Type type_;
+
+    mutable std::map<std::pair<QuantLib::Date, double>, double> atmStrikeCache_;
 };
 
 class InterpolatingCreditVolCurve : public CreditVolCurve {
@@ -93,26 +97,24 @@ public:
                               const QuantLib::Real strike, const Type& targetType) const override;
 
 private:
-    void init() const;
-    void update() override { LazyObject::update(); }
-    void performCalculations() const override;
-    void createSmile(const Date& expiry, const Period& term, const Date& expiry_m, const Smile& smile_m,
-                     const Date& expiry_p, const Smile& smile_p);
+    using Smile = std::pair<QuantLib::Real, boost::shared_ptr<QuantLib::Interpolation>>;
+    using Key = std::pair<QuantLib::Date, QuantLib::Period>;
 
-    std::map<std::tuple<QuantLib::Period, QuantLib::Date, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes_;
+    void init();
+    void performCalculations() const override;
+    void createSmile(const QuantLib::Date& expiry, const QuantLib::Period& term, const QuantLib::Date& expiry_m,
+                     const QuantLib::Date& expiry_p) const;
+
+    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes_;
 
     mutable std::vector<QuantLib::Period> smileTerms_;
     mutable std::vector<QuantLib::Date> smileExpiries_;
     mutable std::vector<QuantLib::Real> smileTermLengths_;
     mutable std::vector<QuantLib::Real> smileExpiryTimes_;
 
-    using Key = std::pair<QuantLib::Date, QuantLib::Period>;
-    using Smile = std::pair<Real, boost::shared_ptr<QuantLib::Interpolation>>;
-    mutable std::map<Key, std::vector<Real>> strikes_;
-    mutable std::map<Key, std::vector<Real>> vols_;
+    mutable std::map<Key, std::vector<QuantLib::Real>> strikes_;
+    mutable std::map<Key, std::vector<QuantLib::Real>> vols_;
     mutable std::map<Key, Smile> smiles_;
-
-    mutable std::map<std::pair<QuantLib::Date, double>, double> atmStrikeCache_;
 };
 
 class SpreadedCreditVolCurve : public CreditVolCurve {

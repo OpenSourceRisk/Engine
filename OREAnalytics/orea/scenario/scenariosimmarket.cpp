@@ -1053,7 +1053,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                         defaultCurve->enableExtrapolation();
                         defaultCurves_.insert(pair<pair<string, string>, Handle<CreditCurve>>(
                             make_pair(Market::defaultConfiguration, name),
-                            Handle<CreditCurve>(boost::make_shared<CreditCurve>(defaultCurve, wrapper->refData()))));
+                            Handle<CreditCurve>(boost::make_shared<CreditCurve>(
+                                defaultCurve, wrapper->rateCurve(), wrapper->recovery(), wrapper->refData()))));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, simDataWritten);
                     }

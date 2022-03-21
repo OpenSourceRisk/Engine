@@ -21,18 +21,18 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-CreditCurve::CreditCurve(const Handle<DefaultProbabilityTermStructure>& curve, const RefData& refData,
+CreditCurve::CreditCurve(const Handle<DefaultProbabilityTermStructure>& curve,
                          const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve,
                          const QuantLib::Handle<QuantLib::Quote>& recovery, const RefData& refData)
     : curve_(curve), rateCurve_(rateCurve), recovery_(recovery), refData_(refData) {
-    registerWith(curve);
-    registerWith(rateCurve);
-    registerWith(recovery);
+    registerWith(curve_);
+    registerWith(rateCurve_);
+    registerWith(recovery_);
 }
 
 void CreditCurve::update() { notifyObservers(); }
 const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& CreditCurve::curve() const { return curve_; }
-const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& CreditCurve::rateCurve() const { return rateCurve_; }
+const QuantLib::Handle<QuantLib::YieldTermStructure>& CreditCurve::rateCurve() const { return rateCurve_; }
 const QuantLib::Handle<QuantLib::Quote>& CreditCurve::recovery() const { return recovery_; }
 const CreditCurve::RefData& CreditCurve::refData() const { return refData_; }
 

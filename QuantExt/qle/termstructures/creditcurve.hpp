@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/dategenerationrule.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -48,14 +49,16 @@ public:
         QuantLib::Natural cashSettlementDays = 3;
     };
 
-    CreditCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
-                const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve = {},
-                const QuantLib::Handle<QuantLib::Quote>& recovery = {}, const RefData& refData = RefData());
+    explicit CreditCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
+                         const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve =
+                             QuantLib::Handle<QuantLib::YieldTermStructure>(),
+                         const QuantLib::Handle<QuantLib::Quote>& recovery = QuantLib::Handle<QuantLib::Quote>(),
+                         const RefData& refData = RefData());
 
     const RefData& refData() const;
     const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve() const;
     const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve() const;
-    const QuantLib::Handle<Quote>& recovery() const;
+    const QuantLib::Handle<QuantLib::Quote>& recovery() const;
 
 protected:
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> curve_;
