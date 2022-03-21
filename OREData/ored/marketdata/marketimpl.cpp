@@ -428,6 +428,8 @@ Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configurat
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) const {
+    if (swapIndices_.find(make_pair(configuration, swapIndex)) != swapIndices_.end())
+        return;
     try {
         std::vector<string> tokens;
         split(tokens, swapIndex, boost::is_any_of("-"));

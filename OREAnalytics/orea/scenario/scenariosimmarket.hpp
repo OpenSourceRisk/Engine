@@ -200,6 +200,9 @@ protected:
     getYieldCurve(const std::string& yieldSpecId, const ore::data::TodaysMarketParameters& todaysMarketParams,
                   const std::string& configuration, const boost::shared_ptr<ore::data::Market>& market = nullptr) const;
 
+    /*! add a single swap index to the market, return true if successful */
+    bool addSwapIndexToSsm(const std::string& indexName, const bool continueOnError);
+
     const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<AggregationScenarioData> asd_;
