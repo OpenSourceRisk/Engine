@@ -27,7 +27,12 @@ namespace QuantExt {
 
 using namespace QuantLib;
 
-CreditVolCurve::CreditVolCurve(BusinessDayConvention bdc, const DayCounter& dc) : VolatilityTermStructure(bdc, dc) {}
+CreditVolCurve::CreditVolCurve(BusinessDayConvention bdc, const DayCounter& dc,
+                               const std::vector<QuantLib::Period>& terms,
+                               const std::vector<QuantLib::Handle<CreditCurve>>& termCurves, const Type& type)
+    : VolatilityTermStructure(bdc, dc), terms_(terms), termCurves_(termCurves), type_(type) {
+    init();
+}
 
 CreditVolCurve::CreditVolCurve(const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                const DayCounter& dc, const std::vector<QuantLib::Period>& terms,
@@ -232,6 +237,8 @@ Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real unde
 
     QL_REQUIRE(targetType == type(), "InterpolatingCreditVolCurve: targetType != type not supported yet.");
 
+    Real effStrike = strike == Null<Real>() ? atmStrike(expiry, underlyingLength) : strike;
+
     // term interpolation
 
     Size termIndex = std::max<Size>(
@@ -286,7 +293,7 @@ Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real unde
 
     // moneyness
 
-    Real m = moneyness(strike, atmStrike(expiry, underlyingLength));
+    Real m = moneyness(effStrike, atmStrike(expiry, underlyingLength));
 
     // vol spreads at target moneyness
 
@@ -481,9 +488,14 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
 }
 
 SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> baseCurve, const std::vector<Date> expiries,
-                                               const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness)
-    : CreditVolCurve(baseCurve->businessDayConvention(), baseCurve->dayCounter()), baseCurve_(baseCurve),
-      expiries_(expiries), spreads_(spreads), stickyMoneyness_(stickyMoneyness) {}
+                                               const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness,
+                                               const std::vector<QuantLib::Period>& terms,
+                                               const std::vector<QuantLib::Handle<CreditCurve>>& termCurves)
+    : CreditVolCurve(baseCurve->businessDayConvention(), baseCurve->dayCounter(), terms, termCurves, baseCurve->type()),
+      baseCurve_(baseCurve), expiries_(expiries), spreads_(spreads), stickyMoneyness_(stickyMoneyness) {
+    for (auto const& s : spreads)
+        registerWith(s);
+}
 
 const std::vector<QuantLib::Period>& SpreadedCreditVolCurve::terms() const { return terms_; }
 
@@ -491,10 +503,27 @@ const std::vector<Handle<CreditCurve>>& SpreadedCreditVolCurve::termCurves() con
 
 const Date& SpreadedCreditVolCurve::referenceDate() const { return baseCurve_->referenceDate(); }
 
+void SpreadedCreditVolCurve::performCalculations() const {
+    times_.clear();
+    spreadValues_.clear();
+    for (auto const& d : expiries_) {
+        times_.push_back(timeFromReference(d));
+    }
+    for (auto const& s : spreads_) {
+        spreadValues_.push_back(s->value());
+    }
+    interpolatedSpreads_ = boost::make_shared<FlatExtrapolation>(
+        boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), spreadValues_.begin()));
+}
+
 Real SpreadedCreditVolCurve::volatility(const Date& exerciseDate, const Real underlyingLength, const Real strike,
                                         const Type& targetType) const {
-    // TDODO
-    return 0.0;
+    Real thisAtm =
+        (strike == Null<Real>() || stickyMoneyness_) ? this->atmStrike(exerciseDate, underlyingLength) : Null<Real>();
+    Real effStrike = strike == Null<Real>() ? thisAtm : strike;
+    Real adj = stickyMoneyness_ ? baseCurve_->atmStrike(exerciseDate, underlyingLength) - thisAtm : 0.0;
+    return baseCurve_->volatility(exerciseDate, underlyingLength, effStrike + adj, targetType) +
+           interpolatedSpreads_->operator()(timeFromReference(exerciseDate));
 }
 
 } // namespace QuantExt

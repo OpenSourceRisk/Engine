@@ -37,7 +37,9 @@ namespace QuantExt {
 class CreditVolCurve : public QuantLib::VolatilityTermStructure, public QuantLib::LazyObject {
 public:
     enum class Type { Price, Spread };
-    CreditVolCurve(QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc);
+    CreditVolCurve(QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
+                   const std::vector<QuantLib::Period>& terms,
+                   const std::vector<QuantLib::Handle<CreditCurve>>& termCurves, const Type& type);
     CreditVolCurve(const QuantLib::Natural settlementDays, const QuantLib::Calendar& cal,
                    QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc,
                    const std::vector<QuantLib::Period>& terms,
@@ -119,8 +121,12 @@ private:
 
 class SpreadedCreditVolCurve : public CreditVolCurve {
 public:
+    /* for stickyMoneyness = true the terms and termCurves should represent the moving spread while the baseCurve
+       does not react to spread movements. */
     SpreadedCreditVolCurve(const QuantLib::Handle<CreditVolCurve> baseCurve, const std::vector<QuantLib::Date> expiries,
-                           const std::vector<QuantLib::Handle<QuantLib::Quote>> spreads, const bool stickyMoneyness);
+                           const std::vector<QuantLib::Handle<QuantLib::Quote>> spreads, const bool stickyMoneyness,
+                           const std::vector<QuantLib::Period>& terms,
+                           const std::vector<QuantLib::Handle<CreditCurve>>& termCurves);
 
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                               const QuantLib::Real strike, const Type& targetType) const override;
@@ -130,10 +136,16 @@ public:
     const QuantLib::Date& referenceDate() const override;
 
 private:
+    void performCalculations() const override;
+
     QuantLib::Handle<CreditVolCurve> baseCurve_;
     std::vector<QuantLib::Date> expiries_;
     std::vector<QuantLib::Handle<QuantLib::Quote>> spreads_;
     const bool stickyMoneyness_;
+
+    mutable std::vector<QuantLib::Real> times_;
+    mutable std::vector<QuantLib::Real> spreadValues_;
+    mutable boost::shared_ptr<QuantLib::Interpolation> interpolatedSpreads_;
 };
 
 } // namespace QuantExt
