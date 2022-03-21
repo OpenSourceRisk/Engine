@@ -286,10 +286,12 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
             // and in places like ScenarioSimMarket.
             vector<Date> dates{asof, asof + 1 * Years, asof + 10 * Years};
             vector<Real> survivalProbs{1.0, 1e-16, 1e-18};
-            curve_ = boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(
-                boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
-                    dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(),
-                    std::vector<Date>(), LogLinear())));
+            curve_ = boost::make_shared<QuantExt::CreditCurve>(
+                Handle<DefaultProbabilityTermStructure>(
+                    boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+                        dates, survivalProbs, config.dayCounter(), Calendar(), std::vector<Handle<Quote>>(),
+                        std::vector<Date>(), LogLinear())),
+                refData, discountCurve, Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate_)));
             curve_->curve()->enableExtrapolation();
             WLOG("DefaultCurve: recovery rate found but no CDS quotes for "
                  << config.curveID() << " and "
@@ -484,7 +486,9 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
         DLOG("DefaultCurve: Enabled Extrapolation");
     }
 
-    curve_ = boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(qlCurve), refData);
+    curve_ = boost::make_shared<QuantExt::CreditCurve>(Handle<DefaultProbabilityTermStructure>(qlCurve), refData,
+                                                       discountCurve,
+                                                       Handle<Quote>(boost::make_shared<SimpleQuote>(recoveryRate_)));
 
     LOG("Finished building default curve of type SpreadCDS for curve " << config.curveID());
 }

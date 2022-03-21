@@ -49,13 +49,18 @@ public:
     };
 
     CreditCurve(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve,
-                const RefData& refData = RefData());
+                const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve = {},
+                const QuantLib::Handle<QuantLib::Quote>& recovery = {}, const RefData& refData = RefData());
 
     const RefData& refData() const;
     const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& curve() const;
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& rateCurve() const;
+    const QuantLib::Handle<Quote>& recovery() const;
 
 protected:
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> curve_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> rateCurve_;
+    QuantLib::Handle<QuantLib::Quote> recovery_;
     RefData refData_;
     void update() override;
 };
