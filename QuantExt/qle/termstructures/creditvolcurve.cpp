@@ -88,12 +88,15 @@ Real CreditVolCurve::atmStrike(const QuantLib::Date& expiry, const QuantLib::Per
 }
 
 Real CreditVolCurve::atmStrike(const QuantLib::Date& expiry, const Real underlyingLength) const {
+
+    // do we have the desired value in the cache?
+
     calculate();
     auto v = atmStrikeCache_.find(std::make_pair(expiry, underlyingLength));
     if (v != atmStrikeCache_.end())
         return v->second;
 
-    // we need at least on term curve
+    // we need at least on term curve to compute the atm strike
 
     QL_REQUIRE(!terms().empty(), "CreditVolCurve: at least one term curve is needed to determine ATM strike. Does the "
                                  "vol curve config contain at least one term curve?");
@@ -184,6 +187,8 @@ Real CreditVolCurve::atmStrike(const QuantLib::Date& expiry, const Real underlyi
     } else {
         QL_FAIL("InterpolatingCreditVolCurve::atmStrike(): internal error, type not handled");
     }
+
+    // add the result to the cache and return it
 
     atmStrikeCache_[std::make_pair(expiry, underlyingLength)] = atmStrike;
     return atmStrike;
