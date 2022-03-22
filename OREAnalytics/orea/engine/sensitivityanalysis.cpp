@@ -538,10 +538,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size keyIdx = key.index;
             Size expIdx = keyIdx;
             Period p_exp = expiries[expIdx];
-            Handle<BlackVolTermStructure> vts = simMarket->cdsVol(name, marketConfiguration);
-            Time t_exp = vts->dayCounter().yearFraction(asof, asof + p_exp);
-            Real strike = 0.0; // FIXME
-            Real atmVol = vts->blackVol(t_exp, strike);
+            Handle<CreditVolCurve> vts = simMarket->cdsVol(name, marketConfiguration);
+            Real atmVol = vts->volatility(asof + p_exp, 1.0, Null<Real>(), vts->type());
             shiftMult = atmVol;
         }
     } break;
