@@ -24,6 +24,7 @@
 
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
+#include <ql/time/daycounter.hpp>
 
 namespace QuantExt {
 
@@ -32,5 +33,9 @@ QuantLib::Real periodToTime(const QuantLib::Period& p);
 
 /*! Imply cds index term from start and end date. If no reasonable term can be implied, 0 * Days is returned */
 QuantLib::Period implyIndexTerm(const QuantLib::Date& startDate, const QuantLib::Date& endDate);
+
+/* For t >= 0 get the largest date d such that dc.yearFraction(refDate, d) <= t. If the condition
+   dc.yearFraction(refDate, d+1) > t is not met, an exception is thrown. */
+QuantLib::Date lowerDate(const QuantLib::Real t, const QuantLib::Date& refDate, const QuantLib::DayCounter& dc);
 
 } // namespace QuantExt

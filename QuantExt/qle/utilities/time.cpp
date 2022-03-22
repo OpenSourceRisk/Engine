@@ -23,6 +23,7 @@
 #include <qle/utilities/time.hpp>
 
 #include <ql/errors.hpp>
+#include <ql/math/comparison.hpp>
 #include <ql/time/dategenerationrule.hpp>
 #include <ql/time/period.hpp>
 #include <ql/time/schedule.hpp>
@@ -60,6 +61,34 @@ QuantLib::Period implyIndexTerm(const Date& startDate, const Date& endDate) {
     }
 
     return 0 * Days;
+}
+
+QuantLib::Date lowerDate(const Real t, const QuantLib::Date& refDate, const QuantLib::DayCounter& dc) {
+    if (close_enough(t, 0.0))
+        return refDate;
+    QL_REQUIRE(t > 0.0, "lowerDate(" << t << "," << refDate << "," << dc.name()
+                                     << ") was called with negative time, this is not allowed.");
+    bool done = false;
+    Date d = refDate + static_cast<int>(t);
+    Real tmp = dc.yearFraction(refDate, d);
+    Size attempts = 0;
+    while ((tmp < t || close_enough(tmp, t)) && (++attempts < 10000)) {
+        ++d;
+        tmp = dc.yearFraction(refDate, d);
+        done = true;
+    }
+    QL_REQUIRE(attempts < 10000, "lowerDate(" << t << "," << refDate << "," << dc.name() << ") could not be computed.");
+    if (done)
+        return --d;
+    while ((tmp > t && !close_enough(tmp, t)) && (++attempts < 10000)) {
+        --d;
+        tmp = dc.yearFraction(refDate, d);
+        done = true;
+    }
+    QL_REQUIRE(attempts < 10000, "lowerDate(" << t << "," << refDate << "," << dc.name() << ") could not be computed.");
+    if (done)
+        return d;
+    QL_FAIL("lowerDate(" << t << "," << refDate << "," << dc.name() << ") could not be computed.");
 }
 
 } // namespace QuantExt
