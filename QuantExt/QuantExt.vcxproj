@@ -669,6 +669,9 @@
     <ClInclude Include="qle\math\randomvariable_io.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
+    <ClInclude Include="qle\math\method_mt.hpp" />
+    <ClInclude Include="qle\math\problem_mt.hpp" />
+    <ClInclude Include="qle\math\differentialevolution_mt.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\methods\pathgeneratorfactory.hpp" />
     <ClInclude Include="qle\models\annuitymapping.hpp" />
@@ -996,6 +999,7 @@
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\math\randomvariable.cpp" />
     <ClCompile Include="qle\math\randomvariable_io.cpp" />
+    <ClCompile Include="qle\math\differentialevolution_mt.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\annuitymapping.cpp" />
     <ClCompile Include="qle\models\carrmadanarbitragecheck.cpp" />
