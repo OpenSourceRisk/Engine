@@ -41,7 +41,8 @@ namespace data {
 
 CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& loader,
                          const CurveConfigurations& curveConfigs,
-                         const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves) {
+                         const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
+                         const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
 
     try {
 
@@ -70,7 +71,7 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
         } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
             QL_FAIL("VolatilityApoFutureSurfaceConfig does not make sense for CDSVolCurve.");
         } else if (auto vpc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(vc)) {
-            buildVolatility(asof, spec, config, *vpc, requiredCdsVolCurves);
+            buildVolatility(asof, spec, config, *vpc, requiredCdsVolCurves, requiredCdsCurves);
         } else {
             QL_FAIL("Unexpected VolatilityConfig in CDSVolatilityConfig");
         }
@@ -251,92 +252,18 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
     LOG("CDSVolCurve: finished building 1-D volatility curve");
 }
 
-namespace {
-
-// FIXME workaround for QPR-10654: add a proxy atm level to the vol curve
-
-class FepPriceAdjustmentCurve : public QuantLib::YieldTermStructure {
-public:
-    FepPriceAdjustmentCurve(const Date& asof, const Real fairSpread, const Real fairPrice)
-        : YieldTermStructure(Actual365Fixed()), asof_(asof), /*fairSpread_(fairSpread),*/ fairPrice_(fairPrice) {}
-
-    Date maxDate() const override { return Date::maxDate(); }
-    const Date& referenceDate() const override { return asof_; }
-
-private:
-    Real discountImpl(Time t) const override { return 1.0 - 0.05 * t / fairPrice_; }
-
-    Date asof_;
-    Real /*fairSpread_,*/ fairPrice_;
-};
-
-class FepSpreadAdjustmentCurve : public QuantLib::YieldTermStructure {
-public:
-    FepSpreadAdjustmentCurve(const Date& asof, const Period& term) : YieldTermStructure(Actual365Fixed()), asof_(asof) {
-        T_ = timeFromReference(asof_ + term);
-    }
-
-    Date maxDate() const override { return Date::maxDate(); }
-    const Date& referenceDate() const override { return asof_; }
-
-private:
-    Real discountImpl(Time t) const override { return 1.0 + t / T_; }
-
-    Date asof_;
-    Real T_;
-};
-
-void addAtmLevel(boost::shared_ptr<BlackVolTermStructure>& vol, const Loader& loader, const Date& asof,
-                 const std::string& curveId, const std::string& indexName, std::string indexTerm,
-                 const std::string& strikeType) {
-    Real fairPrice = Null<Real>();
-    Real fairSpread = Null<Real>();
-    Period term = indexTerm.empty() ? 5 * Years : parsePeriod(indexTerm);
-    for (auto const& md : loader.loadQuotes(asof)) {
-        if (auto q = boost::dynamic_pointer_cast<CdsQuote>(md)) {
-            if (q->underlyingName() == indexName && q->term() == term) {
-                if (q->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD)
-                    fairSpread = q->quote()->value();
-                else if (q->quoteType() == MarketDatum::QuoteType::PRICE)
-                    fairPrice = q->quote()->value();
-            }
-        }
-    }
-    Real fairLevel = strikeType == "Spread" ? fairSpread : fairPrice;
-    if (fairSpread == Null<Real>()) {
-        ALOG(StructuredCurveErrorMessage(curveId, "CDS Vol Curve has unknown ATM Level",
-                                         "Did not find fair spread quote in market data to estimate FEP-Adjustment"));
-    }
-    Handle<YieldTermStructure> zeroRate(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, Actual365Fixed()));
-    Handle<YieldTermStructure> fepAdjustmentCurve;
-    if (strikeType == "Spread")
-        fepAdjustmentCurve = Handle<YieldTermStructure>(boost::make_shared<FepSpreadAdjustmentCurve>(asof, term));
-    else
-        fepAdjustmentCurve =
-            Handle<YieldTermStructure>(boost::make_shared<FepPriceAdjustmentCurve>(asof, fairSpread, fairPrice));
-    if (fairLevel == Null<Real>()) {
-        ALOG(StructuredCurveErrorMessage(curveId, "CDS Vol Curve has unknown ATM Level",
-                                         "Did not find fair " + strikeType +
-                                             " quote in market data to estimate ATM strike"));
-    } else {
-        vol = boost::make_shared<BlackVolatilityWithATM>(vol, Handle<Quote>(boost::make_shared<SimpleQuote>(fairLevel)),
-                                                         zeroRate, fepAdjustmentCurve);
-    }
-}
-
-} // namespace
-
 void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc,
-                                  const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader) {
+                                  const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
+                                  const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
 
     LOG("CDSVolCurve: start building 2-D volatility absolute strike surface");
 
     // We are building a cds volatility surface here of the form expiry vs strike where the strikes are absolute
     // numbers. The list of expiries may be explicit or contain a single wildcard character '*'. Similarly, the list
-    // of strikes may be explicit or contain a single wildcard character '*'. So, we have four options here which
-    // ultimately lead to two different types of surface being built:
-    // 1. explicit strikes and explicit expiries => BlackVarianceSurface
-    // 2. wildcard strikes and/or wildcard expiries (3 combinations) => BlackVarianceSurfaceSparse
+    // of strikes may be explicit or contain a single wildcard character '*'. So, we have four options here.
+    // 1. explicit strikes and explicit expiries
+    // 2. wildcard strikes and/or wildcard expiries (3 combinations)
+    // All variants are handled by CreditVolCurve.
 
     bool expWc = false;
     if (find(vssc.expiries().begin(), vssc.expiries().end(), "*") != vssc.expiries().end()) {
@@ -383,13 +310,9 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
     DLOG("Expiries and or strikes have been configured via wildcards so building a "
          << "wildcard based absolute strike surface");
 
-    // Store aligned strikes, expiries and vols found via wildcard lookup
-    vector<Real> strikes;
-    vector<Date> expiries;
-    vector<Volatility> vols;
+    // Store quotes by expiry, term, strike in a map
+    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
     Size quotesAdded = 0;
-
-    std::string indexName, indexTerm; // FIXME workaround for QPR-10654
 
     // Loop over quotes and process any CDS option quote that matches a wildcard
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -412,9 +335,19 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         if (!strike)
             continue;
 
-        // Make sure that the CDS index option quote term matches the configured term
-        if (q->indexTerm() != vc.nameTerm().second)
-            continue;
+        /* If the vol curve has more than one term specified, make sure that the quote has a term that
+           matches one of the configured terms. Otherwise we load the quote even if it does not have
+           a term. */
+        QuantLib::Period quoteTerm;
+        if (q->indexTerm().empty()) {
+            if (vc.terms().size() > 1)
+                continue;
+            quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
+        } else {
+            quoteTerm = parsePeriod(q->indexTerm);
+            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end())
+                continue;
+        }
 
         // If we have been given a list of explicit expiries, check that the quote matches one of them.
         // Move to the next quote if it does not.
@@ -434,18 +367,12 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
                 continue;
         }
 
-        // If we make it here, add the data to the aligned vectors.
-        expiries.push_back(getExpiry(asof, q->expiry()));
-        strikes.push_back(strike->strike() / vc.strikeFactor());
-        vols.push_back(q->quote()->value());
-        quotesAdded++;
+        // If we make it here, add the data to the map
+        quotes[std::make_tuple(q->expiry(), quoteTerm, strike->strike() / vc.strikeFactor()] = q->quote();
+	quotesAdded++;
 
-        TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiries.back()) << "," << fixed << setprecision(9)
-                            << strikes.back() << "," << vols.back() << ")");
-
-        // FIXME workaround for QPR-10654
-        indexName = q->indexName();
-        indexTerm = q->indexTerm();
+	TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiries.back()) << "," << fixed << setprecision(9)
+			    << strikes.back() << "," << vols.back() << ")");
     }
 
     LOG("CDSVolCurve: added " << quotesAdded << " quotes in building wildcard based absolute strike surface.");
@@ -485,22 +412,28 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
              << " strike extrapolation settings are ignored");
     }
 
-    DLOG("Creating the BlackVarianceSurfaceSparse object");
-    vol_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, calendar_, expiries, strikes, vols, dayCounter_,
-                                                          flatStrikeExtrap, flatStrikeExtrap, flatTimeExtrap);
+    DLOG("Creating the CreditVolCurve object");
 
-    DLOG("Setting BlackVarianceSurfaceSparse extrapolation to " << to_string(vssc.extrapolation()));
-    vol_->enableExtrapolation(vssc.extrapolation());
+    std::vector<QuantLib::Handle<CreditCurve>> termCurves;
+    for (auto const& c : vcc.termCurves()) {
+        auto t = requiredCdsCurves.find(c);
+        QL_REQUIRE(t != requiredCdsCurves.end(),
+                   "CDSVolCurve: required cds curve " << c << " was not found during vol curve building.");
+        termCurves.push_back(Handle<QuantExt::CreditCurve>(it->second->creditCurve()));
+    }
 
-    // FIXME add atm , workaround for QPR-10654
-    addAtmLevel(vol_, loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
+    vol_ = boost::make_shared<QuantExt::CreditVolCurve>(
+        asof, calendar_, Following, dayCounter_, vcc.terms(), termCurves, quotes,
+        vc.strikeType() == "Price" ? CreditVolCurve::Price : CreditVolCurve::Spread);
+    vol_->enableExtrapolation();
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
 }
 
 void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec& spec,
                                   const CDSVolatilityCurveConfig& vc, const CDSProxyVolatilityConfig& pvc,
-                                  const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves) {
+                                  const std::map<std::string, boost::shared_ptr<CDSVolCurve>>& requiredCdsVolCurves,
+                                  const tsd::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
     auto proxyVolCurve = requiredCdsVolCurves.find(CDSVolatilityCurveSpec(pvc.cdsVolatilityCurve()).name());
     QL_REQUIRE(proxyVolCurve != requiredCdsVolCurves.end(), "CDSVolCurve: Failed to find cds vol curve '"
                                                                 << pvc.cdsVolatilityCurve() << "' when building '"
@@ -508,20 +441,18 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveSpec
     vol_ = proxyVolCurve->second->volTermStructure();
 }
 
-void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveConfig& vc,
-                                          const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
-                                          const vector<Real>& configuredStrikes) {
+void CDSVolCurve::buildVolatilityExplicit(
+    const Date& asof, CDSVolatilityCurveConfig& vc, const VolatilityStrikeSurfaceConfig& vssc, const Loader& loader,
+    const vector<Real>& configuredStrikes,
+    const std::map<std::string, boost::shared_ptr<DefaultCurve>>& requiredCdsCurves) {
 
     LOG("CDSVolCurve: start building 2-D volatility absolute strike surface with explicit strikes and expiries");
 
-    // Map to hold the rows of the CDS volatility matrix. The keys are the expiry dates and the values are the
-    // vectors of volatilities, one for each configured strike.
-    map<Date, vector<Real>> surfaceData;
+    // Store quotes by expiry, term, strike in a map
+    std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
 
     // Count the number of quotes added. We check at the end that we have added all configured quotes.
     Size quotesAdded = 0;
-
-    std::string indexName, indexTerm; // FIXME workaround for QPR-10654
 
     // Loop over quotes and process CDS option quotes that have been requested
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -540,10 +471,19 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
         if (!strike)
             continue;
 
-        // If the quote is not in the configured quotes continue
-        auto it = find(vc.quotes().begin(), vc.quotes().end(), q->name());
-        if (it == vc.quotes().end())
-            continue;
+        /* If the vol curve has more than one term specified, make sure that the quote has a term that
+           matches one of the configured terms. Otherwise we load the quote even if it does not have
+           a term. */
+        QuantLib::Period quoteTerm;
+        if (q->indexTerm().empty()) {
+            if (vc.terms().size() > 1)
+                continue;
+            quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
+        } else {
+            quoteTerm = parsePeriod(q->indexTerm);
+            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end())
+                continue;
+        }
 
         // Process the quote
         Date eDate = getExpiry(asof, q->expiry());
@@ -558,50 +498,17 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
                           << "' is in the list of configured quotes but does not match any of the configured strikes");
 
         // Add quote to surface
-        if (surfaceData.count(eDate) == 0)
-            surfaceData[eDate] = vector<Real>(configuredStrikes.size(), Null<Real>());
+        quotes[std::make_tuple(q->expiry(), quoteTerm, strike->strike() / vc.strikeFactor()] = q->quote();
+	quotesAdded++;
 
-        QL_REQUIRE(surfaceData[eDate][pos] == Null<Real>(),
-                   "Quote " << q->name() << " provides a duplicate quote for the date " << io::iso_date(eDate)
-                            << " and the strike " << configuredStrikes[pos]);
-        surfaceData[eDate][pos] = q->quote()->value();
-        quotesAdded++;
-
-        // FIXME workaround for QPR-10654
-        indexName = q->indexName();
-        indexTerm = q->indexTerm();
-
-        TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
-                            << configuredStrikes[pos] << "," << q->quote()->value() << ")");
+	TLOG("Added quote " << q->name() << ": (" << io::iso_date(eDate) << "," << fixed << setprecision(9)
+			    << configuredStrikes[pos] << "," << q->quote()->value() << ")");
     }
 
     LOG("CDSVolCurve: added " << quotesAdded << " quotes in building explicit absolute strike surface.");
 
     QL_REQUIRE(vc.quotes().size() == quotesAdded,
                "Found " << quotesAdded << " quotes, but " << vc.quotes().size() << " quotes required by config.");
-
-    // Set up the BlackVarianceSurface. Note that the rows correspond to strikes and that the columns correspond to
-    // the expiry dates in the matrix that is fed to the BlackVarianceSurface ctor.
-    vector<Date> expiryDates;
-    Matrix volatilities = Matrix(configuredStrikes.size(), surfaceData.size());
-    Size expiryIdx = 0;
-    for (const auto& expiryRow : surfaceData) {
-        expiryDates.push_back(expiryRow.first);
-        for (Size i = 0; i < configuredStrikes.size(); i++) {
-            volatilities[i][expiryIdx] = expiryRow.second[i];
-        }
-        expiryIdx++;
-    }
-
-    // Trace log the surface
-    TLOG("Explicit strike surface grid points:");
-    TLOG("expiry,strike,volatility");
-    for (Size i = 0; i < volatilities.rows(); i++) {
-        for (Size j = 0; j < volatilities.columns(); j++) {
-            TLOG(io::iso_date(expiryDates[j])
-                 << "," << fixed << setprecision(9) << configuredStrikes[i] << "," << volatilities[i][j]);
-        }
-    }
 
     // Set the strike extrapolation which only matters if extrapolation is turned on for the whole surface.
     // BlackVarianceSurface time extrapolation is hard-coded to constant in volatility.
@@ -629,38 +536,20 @@ void CDSVolCurve::buildVolatilityExplicit(const Date& asof, CDSVolatilityCurveCo
              << " strike extrapolation settings are ignored");
     }
 
-    // Divide the configured strikes by the strike factor before using in surface
-    vector<Real> strikes = configuredStrikes;
-    for (Real& strike : strikes) {
-        strike /= vc.strikeFactor();
+    DLOG("Creating the CreditVolCurve object");
+
+    std::vector<QuantLib::Handle<CreditCurve>> termCurves;
+    for (auto const& c : vcc.termCurves()) {
+        auto t = requiredCdsCurves.find(c);
+        QL_REQUIRE(t != requiredCdsCurves.end(),
+                   "CDSVolCurve: required cds curve " << c << " was not found during vol curve building.");
+        termCurves.push_back(Handle<QuantExt::CreditCurve>(it->second->creditCurve()));
     }
 
-    DLOG("Creating BlackVarianceSurface object");
-    auto tmp = boost::make_shared<BlackVarianceSurface>(asof, calendar_, expiryDates, strikes, volatilities,
-                                                        dayCounter_, strikeExtrap, strikeExtrap);
-
-    // Set the interpolation if configured properly. The default is Bilinear.
-    if (!(vssc.timeInterpolation() == "Linear" && vssc.strikeInterpolation() == "Linear")) {
-        if (vssc.timeInterpolation() != vssc.strikeInterpolation()) {
-            DLOG("Time and strike interpolation must be the same for BlackVarianceSurface but we got strike "
-                 << "interpolation " << vssc.strikeInterpolation() << " and time interpolation "
-                 << vssc.timeInterpolation());
-        } else if (vssc.timeInterpolation() == "Cubic") {
-            DLOG("Setting interpolation to BiCubic");
-            tmp->setInterpolation<Bicubic>();
-        } else {
-            DLOG("Interpolation type " << vssc.timeInterpolation() << " not supported in 2 dimensions");
-        }
-    }
-
-    // Set the volatility_ member after we have possibly updated the interpolation.
-    vol_ = tmp;
-
-    DLOG("Setting BlackVarianceSurface extrapolation to " << to_string(vssc.extrapolation()));
-    vol_->enableExtrapolation(vssc.extrapolation());
-
-    // FIXME add atm , workaround for QPR-10654
-    addAtmLevel(vol_, loader, asof, vc.curveID(), indexName, indexTerm, vc.strikeType());
+    vol_ = boost::make_shared<QuantExt::CreditVolCurve>(
+        asof, calendar_, Following, dayCounter_, vcc.terms(), termCurves, quotes,
+        vc.strikeType() == "Price" ? CreditVolCurve::Price : CreditVolCurve::Spread);
+    vol_->enableExtrapolation();
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike "
         << "surface with explicit strikes and expiries");
