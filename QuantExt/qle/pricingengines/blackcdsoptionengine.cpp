@@ -26,8 +26,9 @@ using std::string;
 
 namespace QuantExt {
 
-BlackCdsOptionEngine::BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
-    Real recovery, const Handle<YieldTermStructure>& discount, const Handle<BlackVolTermStructure>& volatility)
+BlackCdsOptionEngine::BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability, Real recovery,
+                                           const Handle<YieldTermStructure>& discount,
+                                           const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility)
     : probability_(probability), recovery_(recovery), discount_(discount), volatility_(volatility) {
     registerWith(probability_);
     registerWith(discount_);
@@ -46,7 +47,7 @@ const Handle<YieldTermStructure> BlackCdsOptionEngine::discount() const {
     return discount_;
 }
 
-const Handle<BlackVolTermStructure> BlackCdsOptionEngine::volatility() const {
+const Handle<CreditVolCurve> BlackCdsOptionEngine::volatility() const {
     return volatility_;
 }
 
@@ -77,8 +78,10 @@ void BlackCdsOptionEngine::calculate() const {
 
     // Read the volatility from the volatility surface, assumed to have strike dimension in terms of spread.
     const Date& exerciseDate = arguments_.exercise->dates().front();
-    Real stdDev = sqrt(volatility_->blackVariance(exerciseDate, strike, true));
-    results_.additionalResults["volatility"] = volatility_->blackVol(exerciseDate, strike, true);
+    Real underlyingLength = volatility_->dayCounter().yearFraction(cds.maturity(), exerciseDate);
+    Real vol = volatility_->volatility(exerciseDate, underlyingLength, strike, CreditVolCurve::Type::Spread);
+    Real stdDev = vol * std::sqrt(volatility_->timeFromReference(exerciseDate));
+    results_.additionalResults["volatility"] = vol;
     results_.additionalResults["standardDeviation"] = stdDev;
 
     // Option type
