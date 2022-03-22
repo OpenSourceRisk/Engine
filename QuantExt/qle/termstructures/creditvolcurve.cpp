@@ -27,22 +27,21 @@ namespace QuantExt {
 
 using namespace QuantLib;
 
-CreditVolCurve::CreditVolCurve(BusinessDayConvention bdc, const DayCounter& dc,
-                               const std::vector<QuantLib::Period>& terms,
-                               const std::vector<QuantLib::Handle<CreditCurve>>& termCurves, const Type& type)
+CreditVolCurve::CreditVolCurve(BusinessDayConvention bdc, const DayCounter& dc, const std::vector<Period>& terms,
+                               const std::vector<Handle<CreditCurve>>& termCurves, const Type& type)
     : VolatilityTermStructure(bdc, dc), terms_(terms), termCurves_(termCurves), type_(type) {
     init();
 }
 
 CreditVolCurve::CreditVolCurve(const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
-                               const DayCounter& dc, const std::vector<QuantLib::Period>& terms,
+                               const DayCounter& dc, const std::vector<Period>& terms,
                                const std::vector<Handle<CreditCurve>>& termCurves, const Type& type)
     : VolatilityTermStructure(settlementDays, cal, bdc, dc), terms_(terms), termCurves_(termCurves), type_(type) {
     init();
 }
 
 CreditVolCurve::CreditVolCurve(const Date& referenceDate, const Calendar& cal, BusinessDayConvention bdc,
-                               const DayCounter& dc, const std::vector<QuantLib::Period>& terms,
+                               const DayCounter& dc, const std::vector<Period>& terms,
                                const std::vector<Handle<CreditCurve>>& termCurves, const Type& type)
     : VolatilityTermStructure(referenceDate, cal, bdc, dc), terms_(terms), termCurves_(termCurves), type_(type) {
     init();
@@ -61,7 +60,19 @@ Real CreditVolCurve::volatility(const Date& exerciseDate, const Period& underlyi
     return volatility(exerciseDate, periodToTime(underlyingTerm), strike, targetType);
 }
 
-const std::vector<QuantLib::Period>& CreditVolCurve::terms() const { return terms_; }
+Real CreditVolCurve::volatility(const Real exerciseTime, const Real underlyingLength, const Real strike,
+                                const CreditVolCurve::Type& targetType) const {
+    Date d = lowerDate(exerciseTime, referenceDate(), dayCounter());
+    Real t1 = timeFromReference(d);
+    Real t2 = timeFromReference(d + 1);
+    Real alpha = (t2 - exerciseTime) / (t2 - t1);
+    Real v1 = volatility(d, underlyingLength, strike, targetType);
+    if (close_enough(alpha, 1.0))
+        return v1;
+    return alpha * v1 + (1.0 - alpha) * volatility(d + 1, underlyingLength, strike, targetType);
+}
+
+const std::vector<Period>& CreditVolCurve::terms() const { return terms_; }
 
 const std::vector<Handle<CreditCurve>>& CreditVolCurve::termCurves() const { return termCurves_; }
 
@@ -93,11 +104,11 @@ Real CreditVolCurve::strike(const Real moneyness, const Real atmStrike) const {
     }
 }
 
-Real CreditVolCurve::atmStrike(const QuantLib::Date& expiry, const QuantLib::Period& term) const {
+Real CreditVolCurve::atmStrike(const Date& expiry, const Period& term) const {
     return atmStrike(expiry, periodToTime(term));
 }
 
-Real CreditVolCurve::atmStrike(const QuantLib::Date& expiry, const Real underlyingLength) const {
+Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) const {
 
     // do we have the desired value in the cache?
 
@@ -106,10 +117,11 @@ Real CreditVolCurve::atmStrike(const QuantLib::Date& expiry, const Real underlyi
     if (v != atmStrikeCache_.end())
         return v->second;
 
-    // we need at least on term curve to compute the atm strike
-
-    QL_REQUIRE(!terms().empty(), "CreditVolCurve: at least one term curve is needed to determine ATM strike. Does the "
-                                 "vol curve config contain at least one term curve?");
+    /* we need at least on term curve to compute the atm strike properly - we set it to 0 / 1 (spread, price) if
+       we don't have a term, so that we can build strike-independent curves without curves. It is the user's
+       responsibility to provide terms for strike-dependent curves. */
+    if (terms().empty())
+        return type() == Type::Price ? 1.0 : 0.0;
 
     // interpolate in term length
 
@@ -131,7 +143,7 @@ Real CreditVolCurve::atmStrike(const QuantLib::Date& expiry, const Real underlyi
 
     // construct cds underlying(s) for the terms we will use for the interpolation
 
-    std::map<QuantLib::Period, boost::shared_ptr<QuantExt::CreditDefaultSwap>> underlyings;
+    std::map<Period, boost::shared_ptr<QuantExt::CreditDefaultSwap>> underlyings;
 
     const CreditCurve::RefData& refData = termCurves_[termIndex - 1]->refData();
     QL_REQUIRE(refData.startDate != Null<Date>(),
@@ -213,7 +225,7 @@ void CreditVolCurve::performCalculations() const { atmStrikeCache_.clear(); }
 
 InterpolatingCreditVolCurve::InterpolatingCreditVolCurve(
     const Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-    const std::vector<QuantLib::Period>& terms, const std::vector<Handle<CreditCurve>>& termCurves,
+    const std::vector<Period>& terms, const std::vector<Handle<CreditCurve>>& termCurves,
     const std::map<std::tuple<Date, Period, Real>, Handle<Quote>>& quotes, const Type& type)
     : CreditVolCurve(settlementDays, cal, bdc, dc, terms, termCurves, type), quotes_(quotes) {
     init();
@@ -221,7 +233,7 @@ InterpolatingCreditVolCurve::InterpolatingCreditVolCurve(
 
 InterpolatingCreditVolCurve::InterpolatingCreditVolCurve(
     const Date& referenceDate, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-    const std::vector<QuantLib::Period>& terms, const std::vector<Handle<CreditCurve>>& termCurves,
+    const std::vector<Period>& terms, const std::vector<Handle<CreditCurve>>& termCurves,
     const std::map<std::tuple<Date, Period, Real>, Handle<Quote>>& quotes, const Type& type)
     : CreditVolCurve(referenceDate, cal, bdc, dc, terms, termCurves, type), quotes_(quotes) {
     init();
@@ -489,17 +501,13 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
 
 SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> baseCurve, const std::vector<Date> expiries,
                                                const std::vector<Handle<Quote>> spreads, const bool stickyMoneyness,
-                                               const std::vector<QuantLib::Period>& terms,
-                                               const std::vector<QuantLib::Handle<CreditCurve>>& termCurves)
+                                               const std::vector<Period>& terms,
+                                               const std::vector<Handle<CreditCurve>>& termCurves)
     : CreditVolCurve(baseCurve->businessDayConvention(), baseCurve->dayCounter(), terms, termCurves, baseCurve->type()),
       baseCurve_(baseCurve), expiries_(expiries), spreads_(spreads), stickyMoneyness_(stickyMoneyness) {
     for (auto const& s : spreads)
         registerWith(s);
 }
-
-const std::vector<QuantLib::Period>& SpreadedCreditVolCurve::terms() const { return terms_; }
-
-const std::vector<Handle<CreditCurve>>& SpreadedCreditVolCurve::termCurves() const { return termCurves_; }
 
 const Date& SpreadedCreditVolCurve::referenceDate() const { return baseCurve_->referenceDate(); }
 
@@ -524,6 +532,33 @@ Real SpreadedCreditVolCurve::volatility(const Date& exerciseDate, const Real und
     Real adj = stickyMoneyness_ ? baseCurve_->atmStrike(exerciseDate, underlyingLength) - thisAtm : 0.0;
     return baseCurve_->volatility(exerciseDate, underlyingLength, effStrike + adj, targetType) +
            interpolatedSpreads_->operator()(timeFromReference(exerciseDate));
+}
+
+CreditVolCurveWrapper::CreditVolCurveWrapper(const Handle<BlackVolTermStructure>& vol)
+    : CreditVolCurve(vol->businessDayConvention(), vol->dayCounter(), {}, {}, Type::Spread), vol_(vol) {
+    registerWith(vol_);
+}
+
+Real CreditVolCurveWrapper::volatility(const Date& exerciseDate, const Real underlyingLength, const Real strike,
+                                       const Type& targetType) const {
+    return vol_->blackVol(exerciseDate, strike, true);
+}
+
+const Date& CreditVolCurveWrapper::referenceDate() const { return vol_->referenceDate(); }
+
+BlackVolFromCreditVolWrapper::BlackVolFromCreditVolWrapper(const Handle<QuantExt::CreditVolCurve>& vol,
+                                                           const Real underlyingLength)
+    : BlackVolatilityTermStructure(vol->businessDayConvention(), vol->dayCounter()), vol_(vol),
+      underlyingLength_(underlyingLength) {}
+
+const Date& BlackVolFromCreditVolWrapper::referenceDate() const { return vol_->referenceDate(); }
+
+Real BlackVolFromCreditVolWrapper::minStrike() const { return vol_->minStrike(); }
+Real BlackVolFromCreditVolWrapper::maxStrike() const { return vol_->maxStrike(); }
+Date BlackVolFromCreditVolWrapper::maxDate() const { return vol_->maxDate(); }
+
+Real BlackVolFromCreditVolWrapper::blackVolImpl(Real t, Real strike) const {
+    return vol_->volatility(t, underlyingLength_, strike, vol_->type());
 }
 
 } // namespace QuantExt

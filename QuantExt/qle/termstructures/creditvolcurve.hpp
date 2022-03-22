@@ -28,7 +28,7 @@
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
-#include <ql/termstructures/voltermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
 #include <tuple>
 
@@ -54,6 +54,11 @@ public:
     virtual QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                                       const QuantLib::Real strike, const Type& targetType) const = 0;
 
+    /* Interpolates between the volatility for d and d+1 where d is a date such that
+       timeFromRef(d) <= exerciseTime <= timeFromRef(d+1). */
+    QuantLib::Real volatility(const QuantLib::Real exerciseTime, const QuantLib::Real underlyingLength,
+                              const QuantLib::Real strike, const Type& targetType) const;
+
     virtual const std::vector<QuantLib::Period>& terms() const;
     virtual const std::vector<QuantLib::Handle<CreditCurve>>& termCurves() const;
     const Type& type() const;
@@ -61,15 +66,16 @@ public:
     QuantLib::Real atmStrike(const QuantLib::Date& expiry, const QuantLib::Period& term) const;
     QuantLib::Real atmStrike(const QuantLib::Date& expiry, const QuantLib::Real underlyingLength) const;
 
+    QuantLib::Real minStrike() const override;
+    QuantLib::Real maxStrike() const override;
+    QuantLib::Date maxDate() const override;
+
 protected:
     void init();
     void update() override { LazyObject::update(); }
     void performCalculations() const override;
     QuantLib::Real moneyness(const QuantLib::Real strike, const QuantLib::Real atmStrike) const;
     QuantLib::Real strike(const QuantLib::Real moneyness, const QuantLib::Real atmStrike) const;
-    QuantLib::Date maxDate() const override;
-    QuantLib::Real minStrike() const override;
-    QuantLib::Real maxStrike() const override;
 
     std::vector<QuantLib::Period> terms_;
     std::vector<QuantLib::Handle<CreditCurve>> termCurves_;
@@ -125,14 +131,12 @@ public:
        does not react to spread movements. */
     SpreadedCreditVolCurve(const QuantLib::Handle<CreditVolCurve> baseCurve, const std::vector<QuantLib::Date> expiries,
                            const std::vector<QuantLib::Handle<QuantLib::Quote>> spreads, const bool stickyMoneyness,
-                           const std::vector<QuantLib::Period>& terms,
-                           const std::vector<QuantLib::Handle<CreditCurve>>& termCurves);
+                           const std::vector<QuantLib::Period>& terms = {},
+                           const std::vector<QuantLib::Handle<CreditCurve>>& termCurves = {});
 
     QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
                               const QuantLib::Real strike, const Type& targetType) const override;
 
-    const std::vector<QuantLib::Period>& terms() const override;
-    const std::vector<QuantLib::Handle<CreditCurve>>& termCurves() const override;
     const QuantLib::Date& referenceDate() const override;
 
 private:
@@ -146,6 +150,35 @@ private:
     mutable std::vector<QuantLib::Real> times_;
     mutable std::vector<QuantLib::Real> spreadValues_;
     mutable boost::shared_ptr<QuantLib::Interpolation> interpolatedSpreads_;
+};
+
+class CreditVolCurveWrapper : public CreditVolCurve {
+public:
+    explicit CreditVolCurveWrapper(const QuantLib::Handle<QuantLib::BlackVolTermStructure>& vol);
+
+    QuantLib::Real volatility(const QuantLib::Date& exerciseDate, const QuantLib::Real underlyingLength,
+                              const QuantLib::Real strike, const Type& targetType) const override;
+
+    const QuantLib::Date& referenceDate() const override;
+
+private:
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> vol_;
+};
+
+class BlackVolFromCreditVolWrapper : public QuantLib::BlackVolatilityTermStructure {
+public:
+    explicit BlackVolFromCreditVolWrapper(const QuantLib::Handle<QuantExt::CreditVolCurve>& vol,
+                                          const QuantLib::Real underlyingLength);
+
+    const QuantLib::Date& referenceDate() const override;
+    QuantLib::Real minStrike() const override;
+    QuantLib::Real maxStrike() const override;
+    QuantLib::Date maxDate() const override;
+
+private:
+    QuantLib::Real blackVolImpl(QuantLib::Real t, QuantLib::Real strike) const override;
+    QuantLib::Handle<QuantExt::CreditVolCurve> vol_;
+    QuantLib::Real underlyingLength_;
 };
 
 } // namespace QuantExt
