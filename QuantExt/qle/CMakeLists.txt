@@ -110,6 +110,7 @@ math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+math/differentialevolution_mt.cpp
 methods/multipathgeneratorbase.cpp
 models/annuitymapping.cpp
 models/carrmadanarbitragecheck.cpp
@@ -448,6 +449,9 @@ math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
+math/method_mt.hpp
+math/problem_mt.hpp
+math/differentialevolution_mt.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
 models/annuitymapping.hpp
