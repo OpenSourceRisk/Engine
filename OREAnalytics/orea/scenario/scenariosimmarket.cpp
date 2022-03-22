@@ -1089,16 +1089,19 @@ ScenarioSimMarket::ScenarioSimMarket(
 		    bool simDataWritten = false;
                     try {
                         LOG("building " << name << "  cds vols..");
-                        Handle<BlackVolTermStructure> wrapper = initMarket->cdsVol(name, configuration);
-                        Handle<BlackVolTermStructure> cvh;
+                        Handle<QuantExt::CreditVolCurve> wrapper = initMarket->cdsVol(name, configuration);
+                        Handle<QuantExt::CreditVolCurve> cvh;
                         if (param.second.first) {
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
                             vector<Time> times;
+			    vector<Date> expiryDates;
                             DayCounter dc = wrapper->dayCounter();
                             for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
                                 Date date = asof_ + parameters->cdsVolExpiries()[i];
-                                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+				expiryDates.push_back(date);
+				// hardcoded, single term 5y
+                                Volatility vol = wrapper->volatility(date, 5.0, Null<Real>(), wrapper->type());
                                 times.push_back(dc.yearFraction(asof_, date));
                                 boost::shared_ptr<SimpleQuote> q =
                                     boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
@@ -1117,30 +1120,34 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-                                cvh = Handle<BlackVolTermStructure>(
-                                    boost::make_shared<SpreadedBlackVolatilityCurve>(wrapper, times, quotes));
+                                // TODO support sticky money dynamics
+                                cvh = Handle<CreditVolCurve>(
+                                    boost::make_shared<SpreadedCreditVolCurve>(wrapper, expiryDates, quotes, false));
                             } else {
-                                cvh = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
-                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes, false));
+				// TODO support strike and term dependence
+                                cvh = Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(
+                                    Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
+                                        0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes,
+                                        false))));
                             }
                         } else {
                             string decayModeString = parameters->cdsVolDecayMode();
                             LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            // currently only curves (i.e. strike indepdendent) CDS volatility structures are
-                            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
-                            // strike stickyness, since then no yield term structures and no fx spot are required
-                            // that define the ATM level
-                            cvh = Handle<BlackVolTermStructure>(
-                                boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                                    wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+			    // TODO support strike and term dependence, hardcoded term 5y
+                            cvh = Handle<CreditVolCurve>(
+                                boost::make_shared<CreditVolCurveWrapper>(Handle<BlackVolTermStructure>(
+                                    boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
+                                        Handle<BlackVolTermStructure>(
+                                            boost::make_shared<BlackVolFromCreditVolWrapper>(wrapper, 5.0)),
+                                        0, NullCalendar(), decayMode, StickyStrike))));
                         }
 
                         if (wrapper->allowsExtrapolation())
                             cvh->enableExtrapolation();
-                        cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-                            make_pair(Market::defaultConfiguration, name), cvh));
+                        cdsVols_.insert(pair<pair<string, string>, Handle<QuantExt::CreditVolCurve>>(
+                            make_pair(make_pair(Market::defaultConfiguration, name), cvh)));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, simDataWritten);
                     }
