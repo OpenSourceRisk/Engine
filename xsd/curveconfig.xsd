@@ -278,7 +278,6 @@
       <xs:element type="xs:string" name="StrikeType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="positiveDecimal" name="StrikeFactor" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="bool" name="ParseTerm" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -383,6 +382,20 @@
     <xs:all>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element name="Terms" minOccurs="0">
+	<xs:complexType>
+	  <xs:sequence>
+	    <xs:element name="Term" maxOccurs="unbounded">
+	      <xs:complexType>
+		<xs:all>
+		  <xs:element type="xs:string" name="Label"/>
+		  <xs:element type="xs:string" name="Curve"/>
+		</xs:all>
+	      </xs:complexType>
+	    </xs:element>
+	  </xs:sequence>
+	</xs:complexType>
+      </xs:element>
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="defaultCurveType" name="Type"/>
       <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
