@@ -25,8 +25,9 @@
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/loader.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <qle/termstructures/creditvolcurve.hpp>
 
 namespace ore {
 namespace data {
@@ -51,14 +52,15 @@ public:
     //! \name Inspectors
     //@{
     const CDSVolatilityCurveSpec& spec() const { return spec_; }
-    const boost::shared_ptr<BlackVolTermStructure>& volTermStructure() { return vol_; }
+    const boost::shared_ptr<QuantExt::CreditVolCurve>& volTermStructure() { return vol_; }
     //@}
 
 private:
     CDSVolatilityCurveSpec spec_;
-    boost::shared_ptr<BlackVolTermStructure> vol_;
+    boost::shared_ptr<QuantExt::CreditVolCurve> vol_;
     QuantLib::Calendar calendar_;
     QuantLib::DayCounter dayCounter_;
+    QuantExt::CreditVolCurve::Type strikeType_;
 
     //! Build a volatility structure from a single constant volatlity quote
     void buildVolatility(const QuantLib::Date& asof, const CDSVolatilityCurveConfig& vc,
