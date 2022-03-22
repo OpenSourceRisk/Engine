@@ -245,9 +245,9 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
     return lookup<Handle<Quote>>(recoveryRates_, key, configuration, "recovery rate");
 }
 
-Handle<BlackVolTermStructure> MarketImpl::cdsVol(const string& key, const string& configuration) const {
+Handle<QuantExt::CreditVolCurve> MarketImpl::cdsVol(const string& key, const string& configuration) const {
     require(MarketObject::CDSVol, key, configuration);
-    return lookup<Handle<BlackVolTermStructure>>(cdsVols_, key, configuration, "cds vol curve");
+    return lookup<Handle<QuantExt::CreditVolCurve>>(cdsVols_, key, configuration, "cds vol curve");
 }
 
 Handle<BaseCorrelationTermStructure<BilinearInterpolation>>

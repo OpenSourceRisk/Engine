@@ -44,6 +44,7 @@
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/creditcurve.hpp>
+#include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 
 namespace ore {
@@ -153,8 +154,8 @@ public:
 
     //! \name (Index) CDS Option volatilities
     //@{
-    virtual Handle<BlackVolTermStructure> cdsVol(const string&,
-                                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<QuantExt::CreditVolCurve>
+    cdsVol(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Base Correlation term structures

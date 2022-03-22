@@ -89,7 +89,7 @@ Handle<Quote> WrappedMarket::recoveryRate(const string& name, const string& conf
     return market_->recoveryRate(name, configuration);
 }
 
-Handle<BlackVolTermStructure> WrappedMarket::cdsVol(const string& name, const string& configuration) const {
+Handle<QuantExt::CreditVolCurve> WrappedMarket::cdsVol(const string& name, const string& configuration) const {
     return market_->cdsVol(name, configuration);
 }
 
@@ -153,7 +153,7 @@ WrappedMarket::commodityPriceCurve(const std::string& commodityName, const std::
 }
 
 QuantLib::Handle<QuantExt::CommodityIndex> WrappedMarket::commodityIndex(const std::string& commodityName,
-    const std::string& configuration) const {
+                                                                         const std::string& configuration) const {
     return market_->commodityIndex(commodityName, configuration);
 }
 
