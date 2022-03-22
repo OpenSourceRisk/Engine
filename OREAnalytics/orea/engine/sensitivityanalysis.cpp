@@ -539,7 +539,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size expIdx = keyIdx;
             Period p_exp = expiries[expIdx];
             Handle<CreditVolCurve> vts = simMarket->cdsVol(name, marketConfiguration);
-            Real atmVol = vts->volatility(asof + p_exp, 1.0, Null<Real>(), vts->type());
+            // hardcoded 5y term
+            Real atmVol = vts->volatility(asof + p_exp, 5.0, Null<Real>(), vts->type());
             shiftMult = atmVol;
         }
     } break;
