@@ -664,6 +664,7 @@ time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 utilities/inflation.hpp
+utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
 utilities/time.hpp
 version.hpp)

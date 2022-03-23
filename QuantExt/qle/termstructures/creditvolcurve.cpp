@@ -21,6 +21,7 @@
 #include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
+#include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/time.hpp>
 
 namespace QuantExt {
@@ -51,6 +52,22 @@ void CreditVolCurve::init() {
     QL_REQUIRE(terms_.size() == termCurves_.size(), "CreditVolCurve: terms size (" << terms_.size()
                                                                                    << ") must match termCurves size ("
                                                                                    << termCurves_.size());
+    // sort terms and curves
+
+    std::vector<Size> p(terms_.size());
+    std::iota(p.begin(), p.end(), 0);
+    std::sort(p.begin(), p.end(), [this](Size i, Size j) { return this->terms_[i] < this->terms_[j]; });
+
+    std::vector<Period> sortedTerms(terms_.size());
+    std::vector<Handle<CreditCurve>> sortedCurves(terms_.size());
+    std::transform(p.begin(), p.end(), sortedTerms.begin(), [this](Size i) { return this->terms_[i]; });
+    std::transform(p.begin(), p.end(), sortedCurves.begin(), [this](Size i) { return this->termCurves_[i]; });
+
+    terms_ = sortedTerms;
+    termCurves_ = sortedCurves;
+
+    // register with curves
+
     for (const auto& c : termCurves_)
         registerWith(c);
 }
@@ -129,90 +146,95 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     for (auto const& p : terms())
         termLengths.push_back(periodToTime(p));
 
-    Size termIndex = std::max<Size>(
-        1, std::min<Size>(termLengths.size() - 1,
-                          std::distance(termLengths.begin(), std::lower_bound(termLengths.begin(), termLengths.end(),
-                                                                              underlyingLength, [](Real t1, Real t2) {
-                                                                                  return t1 < t2 &&
-                                                                                         !close_enough(t1, t2);
-                                                                              }))));
-
-    Real term_t1 = termLengths[termIndex - 1];
-    Real term_t2 = termLengths[termIndex];
-    Real term_alpha = (term_t2 - underlyingLength) / (term_t2 - term_t1);
+    Size termIndex_m, termIndex_p;
+    Real term_alpha;
+    std::tie(termIndex_m, termIndex_p, term_alpha) = interpolationIndices(termLengths, underlyingLength);
 
     // construct cds underlying(s) for the terms we will use for the interpolation
 
     std::map<Period, boost::shared_ptr<QuantExt::CreditDefaultSwap>> underlyings;
 
-    const CreditCurve::RefData& refData = termCurves_[termIndex - 1]->refData();
+    const CreditCurve::RefData& refData = termCurves_[termIndex_m]->refData();
     QL_REQUIRE(refData.startDate != Null<Date>(),
                "CreditVolCurve: need start date of index for ATM strike computation. Is this set in the term curve?");
     QL_REQUIRE(
         refData.runningSpread != Null<Real>(),
         "CreditVolCurve: need runningSpread of index for ATM strike computation. Is this set in the term curve?");
 
-    Schedule schedule(expiry, cdsMaturity(refData.startDate, terms_[termIndex - 1], refData.rule), refData.tenor,
-                      refData.calendar, refData.convention, refData.termConvention, refData.rule, refData.endOfMonth);
-    underlyings[terms_[termIndex - 1]] = boost::make_shared<CreditDefaultSwap>(
+    Date mat = cdsMaturity(refData.startDate, terms_[termIndex_m], refData.rule);
+    Date effExp = std::min(mat - 1, expiry);
+    Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
+                      refData.rule, refData.endOfMonth);
+    underlyings[terms_[termIndex_m]] = boost::make_shared<CreditDefaultSwap>(
         Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-        CreditDefaultSwap::atDefault, Date(), boost::shared_ptr<Claim>(), refData.lastPeriodDayCounter, expiry,
+        CreditDefaultSwap::atDefault, Date(), boost::shared_ptr<Claim>(), refData.lastPeriodDayCounter, effExp,
         refData.cashSettlementDays);
 
-    QL_REQUIRE(!termCurves_[termIndex - 1]->rateCurve().empty() && !termCurves_[termIndex]->rateCurve().empty(),
+    QL_REQUIRE(!termCurves_[termIndex_m]->rateCurve().empty() && !termCurves_[termIndex_p]->rateCurve().empty(),
                "CreditVolCurve: need discounting rate curve of index for ATM strike computation.");
-    QL_REQUIRE(!termCurves_[termIndex - 1]->recovery().empty() && !termCurves_[termIndex]->recovery().empty(),
+    QL_REQUIRE(!termCurves_[termIndex_m]->recovery().empty() && !termCurves_[termIndex_p]->recovery().empty(),
                "CreditVolCurve: need recovery rate of index for ATM strike computation.");
 
-    auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex - 1]->curve(),
-                                                                  termCurves_[termIndex - 1]->recovery()->value(),
-                                                                  termCurves_[termIndex - 1]->rateCurve());
+    auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex_m]->curve(),
+                                                                  termCurves_[termIndex_m]->recovery()->value(),
+                                                                  termCurves_[termIndex_m]->rateCurve());
 
-    underlyings[terms_[termIndex - 1]]->setPricingEngine(engine);
-
-    if (!close_enough(term_alpha, 1.0)) {
-        Schedule schedule(expiry, cdsMaturity(refData.startDate, terms_[termIndex - 1], refData.rule), refData.tenor,
-                          refData.calendar, refData.convention, refData.termConvention, refData.rule,
-                          refData.endOfMonth);
-        underlyings[terms_[termIndex]] = boost::make_shared<CreditDefaultSwap>(
-            Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-            CreditDefaultSwap::atDefault, Date(), boost::shared_ptr<Claim>(), refData.lastPeriodDayCounter, expiry,
-            refData.cashSettlementDays);
-        auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex]->curve(),
-                                                                      termCurves_[termIndex]->recovery()->value(),
-                                                                      termCurves_[termIndex]->rateCurve());
-        underlyings[terms_[termIndex - 1]]->setPricingEngine(engine);
-    }
+    underlyings[terms_[termIndex_m]]->setPricingEngine(engine);
 
     // compute (interpolated) ATM strike
 
     Real atmStrike;
+    Real fep1, fep2, fairSpread1, fairSpread2, rpv01_1, rpv01_2, adjFairSpread1, adjFairSpread2, discToExercise,
+        forwardPrice1, forwardPrice2, adjForwardPrice1, adjForwardPrice2;
 
-    Real fep1 = (1.0 - termCurves_[termIndex - 1]->recovery()->value()) *
-                termCurves_[termIndex - 1]->curve()->defaultProbability(expiry);
-    Real fep2 = (1.0 - termCurves_[termIndex]->recovery()->value()) *
-                termCurves_[termIndex]->curve()->defaultProbability(expiry);
+    fep1 = (1.0 - termCurves_[termIndex_m]->recovery()->value()) *
+           termCurves_[termIndex_m]->curve()->defaultProbability(effExp);
     if (type() == Type::Spread) {
-        Real fairSpread1 = underlyings[terms_[termIndex - 1]]->fairSpreadClean();
-        Real fairSpread2 = underlyings[terms_[termIndex]]->fairSpreadClean();
-        Real rpv01_1 = std::abs(underlyings[terms_[termIndex - 1]]->couponLegNPV() +
-                                underlyings[terms_[termIndex - 1]]->accrualRebateNPV()) /
-                       underlyings[terms_[termIndex - 1]]->runningSpread();
-        Real rpv01_2 = std::abs(underlyings[terms_[termIndex]]->couponLegNPV() +
-                                underlyings[terms_[termIndex]]->accrualRebateNPV()) /
-                       underlyings[terms_[termIndex]]->runningSpread();
-        Real adjFairSpread1 = fairSpread1 + fep1 / rpv01_1;
-        Real adjFairSpread2 = fairSpread2 + fep2 / rpv01_2;
-        atmStrike = term_alpha * adjFairSpread1 + (1.0 - term_alpha * adjFairSpread2);
+        fairSpread1 = underlyings[terms_[termIndex_m]]->fairSpreadClean();
+        rpv01_1 = std::abs(underlyings[terms_[termIndex_m]]->couponLegNPV() +
+                           underlyings[terms_[termIndex_m]]->accrualRebateNPV()) /
+                  underlyings[terms_[termIndex_m]]->runningSpread();
+        adjFairSpread1 = fairSpread1 + fep1 / rpv01_1;
+        atmStrike = adjFairSpread1;
     } else if (type() == Type::Price) {
-        Real discToExercise = termCurves_[termIndex - 1]->rateCurve()->discount(expiry);
-        Real forwardPrice1 = (1.0 - underlyings[terms_[termIndex - 1]]->NPV()) / discToExercise;
-        Real forwardPrice2 = (1.0 - underlyings[terms_[termIndex]]->NPV()) / discToExercise;
-        Real adjForwardPrice1 = forwardPrice1 - fep1 / discToExercise;
-        Real adjForwardPrice2 = forwardPrice2 - fep2 / discToExercise;
-        atmStrike = term_alpha * adjForwardPrice1 + (1.0 - term_alpha) * adjForwardPrice2;
+        discToExercise = termCurves_[termIndex_m]->rateCurve()->discount(effExp);
+        forwardPrice1 = (1.0 - underlyings[terms_[termIndex_m]]->NPV()) / discToExercise;
+        adjForwardPrice1 = forwardPrice1 - fep1 / discToExercise;
+        atmStrike = adjForwardPrice1;
     } else {
         QL_FAIL("InterpolatingCreditVolCurve::atmStrike(): internal error, type not handled");
+    }
+
+    if (!close_enough(term_alpha, 1.0)) {
+        Date mat = cdsMaturity(refData.startDate, terms_[termIndex_p], refData.rule);
+        Date effExp = std::min(mat - 1, expiry);
+        Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
+                          refData.rule, refData.endOfMonth);
+        underlyings[terms_[termIndex_p]] = boost::make_shared<CreditDefaultSwap>(
+            Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
+            CreditDefaultSwap::atDefault, Date(), boost::shared_ptr<Claim>(), refData.lastPeriodDayCounter, effExp,
+            refData.cashSettlementDays);
+        auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex_p]->curve(),
+                                                                      termCurves_[termIndex_p]->recovery()->value(),
+                                                                      termCurves_[termIndex_p]->rateCurve());
+        underlyings[terms_[termIndex_p]]->setPricingEngine(engine);
+
+        fep2 = (1.0 - termCurves_[termIndex_p]->recovery()->value()) *
+               termCurves_[termIndex_p]->curve()->defaultProbability(effExp);
+        if (type() == Type::Spread) {
+            fairSpread2 = underlyings[terms_[termIndex_p]]->fairSpreadClean();
+            rpv01_2 = std::abs(underlyings[terms_[termIndex_p]]->couponLegNPV() +
+                               underlyings[terms_[termIndex_p]]->accrualRebateNPV()) /
+                      underlyings[terms_[termIndex_p]]->runningSpread();
+            adjFairSpread2 = fairSpread2 + fep2 / rpv01_2;
+            atmStrike = term_alpha * adjFairSpread1 + (1.0 - term_alpha * adjFairSpread2);
+        } else if (type() == Type::Price) {
+            forwardPrice2 = (1.0 - underlyings[terms_[termIndex_p]]->NPV()) / discToExercise;
+            adjForwardPrice2 = forwardPrice2 - fep2 / discToExercise;
+            atmStrike = term_alpha * adjForwardPrice1 + (1.0 - term_alpha) * adjForwardPrice2;
+        } else {
+            QL_FAIL("InterpolatingCreditVolCurve::atmStrike(): internal error, type not handled");
+        }
     }
 
     // add the result to the cache and return it
@@ -247,6 +269,8 @@ void InterpolatingCreditVolCurve::init() {
 Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real underlyingLength, const Real strike,
                                              const Type& targetType) const {
 
+    calculate();
+
     QL_REQUIRE(targetType == type(), "InterpolatingCreditVolCurve: Vol type conversion between strike types 'Price' "
                                      "and 'Spread' is not supported. The vol "
                                      "surface used to price an option must have the same strike type as the option.");
@@ -255,36 +279,23 @@ Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real unde
 
     // term interpolation
 
-    Size termIndex = std::max<Size>(
-        1, std::min<Size>(
-               smileTermLengths_.size() - 1,
-               std::distance(smileTermLengths_.begin(),
-                             std::lower_bound(smileTermLengths_.begin(), smileTermLengths_.end(), underlyingLength,
-                                              [](Real t1, Real t2) { return t1 < t2 && !close_enough(t1, t2); }))));
-
-    Real term_t1 = smileTermLengths_[termIndex - 1];
-    Real term_t2 = smileTermLengths_[termIndex];
-    Real term_alpha = (term_t2 - underlyingLength) / (term_t2 - term_t1);
+    Size termIndex_m, termIndex_p;
+    Real term_alpha;
+    std::tie(termIndex_m, termIndex_p, term_alpha) = interpolationIndices(smileTermLengths_, underlyingLength);
 
     // expiry interpolation
 
-    Size expiryIndex = std::max<Size>(
-        1, std::min<Size>(
-               smileTermLengths_.size() - 1,
-               std::distance(smileTermLengths_.begin(),
-                             std::lower_bound(smileTermLengths_.begin(), smileTermLengths_.end(), underlyingLength,
-                                              [](Real t1, Real t2) { return t1 < t2 && !close_enough(t1, t2); }))));
-
-    Real expiry_t1 = smileTermLengths_[expiryIndex - 1];
-    Real expiry_t2 = smileTermLengths_[expiryIndex];
-    Real expiry_alpha = (expiry_t2 - underlyingLength) / (expiry_t2 - expiry_t1);
+    Size expiryIndex_m, expiryIndex_p;
+    Real expiry_alpha;
+    std::tie(expiryIndex_m, expiryIndex_p, expiry_alpha) =
+        interpolationIndices(smileExpiryTimes_, timeFromReference(expiry));
 
     // smiles by expiry / term
 
-    const Smile& smile_1_1 = smiles_[std::make_pair(smileExpiries_[expiryIndex - 1], smileTerms_[termIndex - 1])];
-    const Smile& smile_1_2 = smiles_[std::make_pair(smileExpiries_[expiryIndex - 1], smileTerms_[termIndex])];
-    const Smile& smile_2_1 = smiles_[std::make_pair(smileExpiries_[expiryIndex], smileTerms_[termIndex - 1])];
-    const Smile& smile_2_2 = smiles_[std::make_pair(smileExpiries_[expiryIndex], smileTerms_[termIndex])];
+    const Smile& smile_1_1 = smiles_[std::make_pair(smileExpiries_[expiryIndex_m], smileTerms_[termIndex_m])];
+    const Smile& smile_1_2 = smiles_[std::make_pair(smileExpiries_[expiryIndex_m], smileTerms_[termIndex_p])];
+    const Smile& smile_2_1 = smiles_[std::make_pair(smileExpiries_[expiryIndex_p], smileTerms_[termIndex_m])];
+    const Smile& smile_2_2 = smiles_[std::make_pair(smileExpiries_[expiryIndex_p], smileTerms_[termIndex_p])];
 
     // atm levels by expiry / term
 
@@ -318,8 +329,10 @@ Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real unde
 
     // result
 
-    return thisAtmVol + term_alpha * (expiry_alpha * volSpread_1_1 + (1.0 - expiry_alpha) * volSpread_1_2) +
-           (1.0 - term_alpha) * (expiry_alpha * volSpread_2_1 + (1.0 - expiry_alpha) * volSpread_2_2);
+    Real tmp = thisAtmVol + term_alpha * (expiry_alpha * volSpread_1_1 + (1.0 - expiry_alpha) * volSpread_1_2) +
+               (1.0 - term_alpha) * (expiry_alpha * volSpread_2_1 + (1.0 - expiry_alpha) * volSpread_2_2);
+
+    return tmp;
 }
 
 void InterpolatingCreditVolCurve::performCalculations() const {
@@ -514,6 +527,7 @@ SpreadedCreditVolCurve::SpreadedCreditVolCurve(const Handle<CreditVolCurve> base
 const Date& SpreadedCreditVolCurve::referenceDate() const { return baseCurve_->referenceDate(); }
 
 void SpreadedCreditVolCurve::performCalculations() const {
+    CreditVolCurve::performCalculations();
     times_.clear();
     spreadValues_.clear();
     for (auto const& d : expiries_) {
@@ -524,16 +538,19 @@ void SpreadedCreditVolCurve::performCalculations() const {
     }
     interpolatedSpreads_ = boost::make_shared<FlatExtrapolation>(
         boost::make_shared<LinearInterpolation>(times_.begin(), times_.end(), spreadValues_.begin()));
+    interpolatedSpreads_->enableExtrapolation();
 }
 
 Real SpreadedCreditVolCurve::volatility(const Date& exerciseDate, const Real underlyingLength, const Real strike,
                                         const Type& targetType) const {
+    calculate();
     Real thisAtm =
         (strike == Null<Real>() || stickyMoneyness_) ? this->atmStrike(exerciseDate, underlyingLength) : Null<Real>();
     Real effStrike = strike == Null<Real>() ? thisAtm : strike;
     Real adj = stickyMoneyness_ ? baseCurve_->atmStrike(exerciseDate, underlyingLength) - thisAtm : 0.0;
-    return baseCurve_->volatility(exerciseDate, underlyingLength, effStrike + adj, targetType) +
-           interpolatedSpreads_->operator()(timeFromReference(exerciseDate));
+    Real base = baseCurve_->volatility(exerciseDate, underlyingLength, effStrike + adj, targetType);
+    Real spread = interpolatedSpreads_->operator()(timeFromReference(exerciseDate));
+    return base + spread;
 }
 
 CreditVolCurveWrapper::CreditVolCurveWrapper(const Handle<BlackVolTermStructure>& vol)

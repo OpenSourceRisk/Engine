@@ -399,6 +399,7 @@
 #include <qle/time/futureexpirycalculator.hpp>
 #include <qle/time/yearcounter.hpp>
 #include <qle/utilities/inflation.hpp>
+#include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <qle/utilities/time.hpp>
 #include <qle/version.hpp>

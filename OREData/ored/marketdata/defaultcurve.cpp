@@ -28,6 +28,7 @@
 #include <qle/termstructures/multisectiondefaultcurve.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
 #include <qle/termstructures/terminterpolateddefaultcurve.hpp>
+#include <qle/utilities/interpolation.hpp>
 #include <qle/utilities/time.hpp>
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
@@ -379,60 +380,34 @@ void DefaultCurve::buildCdsCurve(DefaultCurveConfig& config, const Date& asof, c
         }
 
         Real t = QuantExt::periodToTime(config.indexTerm());
+        Size helperIndex_m, helperIndex_p;
+        Real alpha;
+        std::tie(helperIndex_m, helperIndex_p, alpha) = QuantExt::interpolationIndices(helperTermTimes, t);
 
-        if (t < helperTermTimes.front() || QuantLib::close_enough(t, helperTermTimes.front())) {
-            auto tmp = boost::make_shared<SpCurve>(
-                asof, std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>{helpers.front()},
-                config.dayCounter(), LogLinear(), btconfig);
-            Date d = helpers.front()->pillarDate();
-            Real p = tmp->survivalProbability(d);
-            qlCurve = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
-                std::vector<Date>{asof, d}, std::vector<Real>{1.0, p}, config.dayCounter(), Calendar(),
-                std::vector<Handle<Quote>>(), std::vector<Date>(), LogLinear(), config.allowNegativeRates());
-        } else if (t > helperTermTimes.back() || QuantLib::close_enough(t, helperTermTimes.back())) {
-            auto tmp = boost::make_shared<SpCurve>(
-                asof, std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>{helpers.back()},
-                config.dayCounter(), LogLinear(), btconfig);
-            Date d = helpers.back()->pillarDate();
-            Real p = tmp->survivalProbability(d);
-            qlCurve = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
-                std::vector<Date>{asof, d}, std::vector<Real>{1.0, p}, config.dayCounter(), Calendar(),
-                std::vector<Handle<Quote>>(), std::vector<Date>(), LogLinear(), config.allowNegativeRates());
+        auto tmp1 = boost::make_shared<SpCurve>(
+            asof, std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>{helpers[helperIndex_m]},
+            config.dayCounter(), LogLinear(), btconfig);
+        Date d1 = helpers[helperIndex_m]->pillarDate();
+        Real p1 = tmp1->survivalProbability(d1);
+        auto tmp1i = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
+            std::vector<Date>{asof, d1}, std::vector<Real>{1.0, p1}, config.dayCounter(), Calendar(),
+            std::vector<Handle<Quote>>(), std::vector<Date>(), LogLinear(), config.allowNegativeRates());
+
+        if (close_enough(alpha, 1.0)) {
+            qlCurve = tmp1i;
         } else {
-            Size index = std::max<Size>(
-                1, std::min<Size>(helperTermTimes.size() - 1,
-                                  std::distance(helperTermTimes.begin(),
-                                                std::lower_bound(helperTermTimes.begin(), helperTermTimes.end(), t,
-                                                                 [](Real t1, Real t2) {
-                                                                     return t1 < t2 && !close_enough(t1, t2);
-                                                                 }))));
             auto tmp2 = boost::make_shared<SpCurve>(
-                asof, std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>{helpers[index]},
+                asof, std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>{helpers[helperIndex_p]},
                 config.dayCounter(), LogLinear(), btconfig);
-            Date d2 = helpers[index]->pillarDate();
+            Date d2 = helpers[helperIndex_p]->pillarDate();
             Real p2 = tmp2->survivalProbability(d2);
             auto tmp2i = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
                 std::vector<Date>{asof, d2}, std::vector<Real>{1.0, p2}, config.dayCounter(), Calendar(),
                 std::vector<Handle<Quote>>(), std::vector<Date>(), LogLinear(), config.allowNegativeRates());
-            if (close_enough(t, helperTermTimes[index])) {
-                qlCurve = tmp2i;
-            } else {
-                auto tmp1 = boost::make_shared<SpCurve>(
-                    asof, std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>>{helpers[index - 1]},
-                    config.dayCounter(), LogLinear(), btconfig);
-                Date d1 = helpers[index - 1]->pillarDate();
-                Real p1 = tmp1->survivalProbability(d1);
-                auto tmp1i = boost::make_shared<QuantExt::InterpolatedSurvivalProbabilityCurve<LogLinear>>(
-                    std::vector<Date>{asof, d1}, std::vector<Real>{1.0, p1}, config.dayCounter(), Calendar(),
-                    std::vector<Handle<Quote>>(), std::vector<Date>(), LogLinear(), config.allowNegativeRates());
-                Real t1 = helperTermTimes[index - 1];
-                Real t2 = helperTermTimes[index];
-		tmp1i->enableExtrapolation();
-		tmp2i->enableExtrapolation();
-                qlCurve = boost::make_shared<QuantExt::TermInterpolatedDefaultCurve>(
-                    Handle<DefaultProbabilityTermStructure>(tmp1i), Handle<DefaultProbabilityTermStructure>(tmp2i),
-                    (t2 - t) / (t2 - t1));
-            }
+            tmp1i->enableExtrapolation();
+            tmp2i->enableExtrapolation();
+            qlCurve = boost::make_shared<QuantExt::TermInterpolatedDefaultCurve>(
+                Handle<DefaultProbabilityTermStructure>(tmp1i), Handle<DefaultProbabilityTermStructure>(tmp2i), alpha);
         }
 
     } else {

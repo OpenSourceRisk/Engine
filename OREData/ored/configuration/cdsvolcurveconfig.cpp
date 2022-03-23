@@ -18,6 +18,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -222,7 +223,8 @@ void CDSVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::CDSVolatility].insert(vc->cdsVolatilityCurve());
     }
     for (auto const& c : termCurves_) {
-        requiredCurveIds_[CurveSpec::CurveType::Default].insert(c);
+	auto spec = parseCurveSpec(c);
+        requiredCurveIds_[CurveSpec::CurveType::Default].insert(spec->curveConfigID());
     }
 }
 
