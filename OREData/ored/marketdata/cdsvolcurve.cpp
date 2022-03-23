@@ -110,7 +110,8 @@ void CDSVolCurve::buildVolatility(const Date& asof, const CDSVolatilityCurveConf
     DLOG("Creating CreditVolCurve structure");
 
     std::map<std::tuple<QuantLib::Date, QuantLib::Period, QuantLib::Real>, QuantLib::Handle<QuantLib::Quote>> quotes;
-    quotes[std::make_tuple(asof + 1 * Years, 5 * Years, strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = quote;
+    quotes[std::make_tuple(asof + 1 * Years, 5 * Years, strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] =
+        quote;
     vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(
         asof, calendar_, Following, dayCounter_, std::vector<QuantLib::Period>{},
         std::vector<Handle<QuantExt::CreditCurve>>{}, quotes, strikeType_);
@@ -152,8 +153,8 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 
                 Date expiryDate = getExpiry(asof, q->expiry());
                 if (expiryDate > asof) {
-                    quotes[std::make_tuple(expiryDate, 5 * Years, strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] =
-                        q->quote();
+                    quotes[std::make_tuple(expiryDate, 5 * Years,
+                                           strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
                     TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
                                         << setprecision(9) << q->quote()->value() << ")");
                 }
@@ -336,16 +337,21 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
 
     DLOG("Creating the CreditVolCurve object");
 
+    std::vector<QuantLib::Period> effTerms;
     std::vector<QuantLib::Handle<CreditCurve>> termCurves;
-    for (auto const& c : vc.termCurves()) {
-        auto t = requiredCdsCurves.find(c);
-        QL_REQUIRE(t != requiredCdsCurves.end(),
-                   "CDSVolCurve: required cds curve " << c << " was not found during vol curve building.");
+    for (Size i = 0; i < vc.termCurves().size(); ++i) {
+        if (vc.termCurves()[i].empty())
+            continue;
+        auto t = requiredCdsCurves.find(vc.termCurves()[i]);
+        QL_REQUIRE(t != requiredCdsCurves.end(), "CDSVolCurve: required cds curve '"
+                                                     << vc.termCurves()[i]
+                                                     << "' was not found during vol curve building.");
         termCurves.push_back(Handle<QuantExt::CreditCurve>(t->second->creditCurve()));
+        effTerms.push_back(vc.terms()[i]);
     }
 
-    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_,
-                                                                     vc.terms(), termCurves, quotes, strikeType_);
+    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
+                                                                     termCurves, quotes, strikeType_);
     vol_->enableExtrapolation();
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike surface");
@@ -422,16 +428,21 @@ void CDSVolCurve::buildVolatilityExplicit(
 
     DLOG("Creating the CreditVolCurve object");
 
+    std::vector<QuantLib::Period> effTerms;
     std::vector<QuantLib::Handle<CreditCurve>> termCurves;
-    for (auto const& c : vc.termCurves()) {
-        auto t = requiredCdsCurves.find(c);
-        QL_REQUIRE(t != requiredCdsCurves.end(),
-                   "CDSVolCurve: required cds curve " << c << " was not found during vol curve building.");
+    for (Size i = 0; i < vc.termCurves().size(); ++i) {
+        if (vc.termCurves()[i].empty())
+            continue;
+        auto t = requiredCdsCurves.find(vc.termCurves()[i]);
+        QL_REQUIRE(t != requiredCdsCurves.end(), "CDSVolCurve: required cds curve '"
+                                                     << vc.termCurves()[i]
+                                                     << "' was not found during vol curve building.");
         termCurves.push_back(Handle<QuantExt::CreditCurve>(t->second->creditCurve()));
+        effTerms.push_back(vc.terms()[i]);
     }
 
-    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_,
-                                                                     vc.terms(), termCurves, quotes, strikeType_);
+    vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(asof, calendar_, Following, dayCounter_, effTerms,
+                                                                     termCurves, quotes, strikeType_);
     vol_->enableExtrapolation();
 
     LOG("CDSVolCurve: finished building 2-D volatility absolute strike "
