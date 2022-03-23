@@ -247,7 +247,9 @@ void InterpolatingCreditVolCurve::init() {
 Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real underlyingLength, const Real strike,
                                              const Type& targetType) const {
 
-    QL_REQUIRE(targetType == type(), "InterpolatingCreditVolCurve: targetType != type not supported yet.");
+    QL_REQUIRE(targetType == type(), "InterpolatingCreditVolCurve: Vol type conversion between strike types 'Price' "
+                                     "and 'Spread' is not supported. The vol "
+                                     "surface used to price an option must have the same strike type as the option.");
 
     Real effStrike = strike == Null<Real>() ? atmStrike(expiry, underlyingLength) : strike;
 
