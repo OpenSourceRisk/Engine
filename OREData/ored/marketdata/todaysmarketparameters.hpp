@@ -101,6 +101,9 @@ public:
     //! Clear the contents
     void clear();
 
+    //! Check if any parameters
+    bool empty();
+
     //! \name Setters
     //@{
     void addConfiguration(const string& name, const MarketConfiguration& configuration);
