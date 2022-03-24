@@ -166,10 +166,16 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     Date effExp = std::min(mat - 1, expiry);
     Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
                       refData.rule, refData.endOfMonth);
+    Date protectionStartDate = (refData.rule == DateGeneration::CDS || refData.rule == DateGeneration::CDS2015)
+                                   ? effExp
+                                   : schedule.dates().front();
+    DayCounter lastPeriodDayCounter = refData.lastPeriodDayCounter.empty() && refData.dayCounter == Actual360()
+                                          ? Actual360(true)
+                                          : refData.lastPeriodDayCounter;
     underlyings[terms_[termIndex_m]] = boost::make_shared<CreditDefaultSwap>(
         Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-        CreditDefaultSwap::atDefault, Date(), boost::shared_ptr<Claim>(), refData.lastPeriodDayCounter, effExp,
-        refData.cashSettlementDays);
+        CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter,
+        effExp, refData.cashSettlementDays);
 
     QL_REQUIRE(!termCurves_[termIndex_m]->rateCurve().empty() && !termCurves_[termIndex_p]->rateCurve().empty(),
                "CreditVolCurve: need discounting rate curve of index for ATM strike computation.");
@@ -211,10 +217,13 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
         Date effExp = std::min(mat - 1, expiry);
         Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
                           refData.rule, refData.endOfMonth);
+        Date protectionStartDate = (refData.rule == DateGeneration::CDS || refData.rule == DateGeneration::CDS2015)
+                                       ? effExp
+                                       : schedule.dates().front();
         underlyings[terms_[termIndex_p]] = boost::make_shared<CreditDefaultSwap>(
             Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-            CreditDefaultSwap::atDefault, Date(), boost::shared_ptr<Claim>(), refData.lastPeriodDayCounter, effExp,
-            refData.cashSettlementDays);
+            CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter,
+            effExp, refData.cashSettlementDays);
         auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex_p]->curve(),
                                                                       termCurves_[termIndex_p]->recovery()->value(),
                                                                       termCurves_[termIndex_p]->rateCurve());
