@@ -155,13 +155,14 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     std::map<Period, boost::shared_ptr<QuantExt::CreditDefaultSwap>> underlyings;
 
     const CreditCurve::RefData& refData = termCurves_[termIndex_m]->refData();
-    QL_REQUIRE(refData.startDate != Null<Date>(),
-               "CreditVolCurve: need start date of index for ATM strike computation. Is this set in the term curve?");
-    QL_REQUIRE(
-        refData.runningSpread != Null<Real>(),
-        "CreditVolCurve: need runningSpread of index for ATM strike computation. Is this set in the term curve?");
+    QL_REQUIRE(refData.runningSpread != Null<Real>(),
+               "CreditVolCurve: need runningSpread for ATM strike computation if strike type is 'Price'. Is "
+               "the running spread in the term curve configuration?");
 
-    Date mat = cdsMaturity(refData.startDate, terms_[termIndex_m], refData.rule);
+    /* Use index maturity date based on index start date. If no start date is given, assume this is a single name option
+       running from today. */
+    Date mat = cdsMaturity(refData.startDate != Null<Date>() ? refData.startDate : referenceDate(), terms_[termIndex_m],
+                           refData.rule);
     Date effExp = std::min(mat - 1, expiry);
     Schedule schedule(effExp, mat, refData.tenor, refData.calendar, refData.convention, refData.termConvention,
                       refData.rule, refData.endOfMonth);
