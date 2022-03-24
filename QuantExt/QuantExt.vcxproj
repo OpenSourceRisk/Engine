@@ -658,6 +658,7 @@
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp" />
     <ClInclude Include="qle\instruments\cashflowresults.hpp" />
     <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
+    <ClInclude Include="qle\math\constantinterpolation.hpp" />
     <ClInclude Include="qle\math\covariancesalvage.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />

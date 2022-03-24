@@ -1213,6 +1213,9 @@
     <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\constantinterpolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
