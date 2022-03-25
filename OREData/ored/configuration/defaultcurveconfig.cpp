@@ -74,19 +74,6 @@ void DefaultCurveConfig::populateRequiredCurveIds() {
     }
 }
 
-void DefaultCurveConfig::generateAdditionalQuotes() {
-    // FIXME workaround for QPR-10654: always request PRICE quote in addition to CREDIT_SPREAD quote
-    std::set<std::string> addQuotes;
-    for (auto q : quotes_) {
-        boost::replace_first(q, "CREDIT_SPREAD", "PRICE");
-        addQuotes.insert(q);
-    }
-    for (auto const& a : addQuotes) {
-        if (std::find(quotes_.begin(), quotes_.end(), a) == quotes_.end())
-            quotes_.push_back(a);
-    }
-}
-
 void DefaultCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "DefaultCurve");
 
