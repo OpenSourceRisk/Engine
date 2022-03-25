@@ -450,6 +450,15 @@
     <ClInclude Include="qle\math\stabilisedglls.hpp">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\method_mt.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\problem_mt.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\differentialevolution_mt.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\blackvolconstantspread.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -1204,6 +1213,9 @@
     <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\constantinterpolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1560,6 +1572,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\math\deltagammavar.cpp">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\differentialevolution_mt.cpp">
       <Filter>math</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp">
