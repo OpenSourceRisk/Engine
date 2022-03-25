@@ -296,8 +296,8 @@ Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real unde
 
     Size expiryIndex_m, expiryIndex_p;
     Real expiry_alpha;
-    std::tie(expiryIndex_m, expiryIndex_p, expiry_alpha) =
-        interpolationIndices(smileExpiryTimes_, timeFromReference(expiry));
+    Real t = timeFromReference(expiry);
+    std::tie(expiryIndex_m, expiryIndex_p, expiry_alpha) = interpolationIndices(smileExpiryTimes_, t);
 
     // smiles by expiry / term
 
@@ -313,35 +313,24 @@ Real InterpolatingCreditVolCurve::volatility(const Date& expiry, const Real unde
     Real atm_2_1 = smile_2_1.first;
     Real atm_2_2 = smile_2_2.first;
 
-    // atm vols
-
-    Real atmVol_1_1 = smile_1_1.second->operator()(atm_1_1);
-    Real atmVol_1_2 = smile_1_2.second->operator()(atm_1_2);
-    Real atmVol_2_1 = smile_2_1.second->operator()(atm_2_1);
-    Real atmVol_2_2 = smile_2_2.second->operator()(atm_2_2);
-
-    // interpolated atm vol
-
-    Real thisAtmVol = term_alpha * (expiry_alpha * atmVol_1_1 + (1.0 - expiry_alpha) * atmVol_1_2) +
-                      (1.0 - term_alpha) * (expiry_alpha * atmVol_2_1 + (1.0 - expiry_alpha) * atmVol_2_2);
-
-    // moneyness
+    // vols at target moneyness
 
     Real m = moneyness(effStrike, atmStrike(expiry, underlyingLength));
+    Real vol_1_1 = smile_1_1.second->operator()(this->strike(m, atm_1_1));
+    Real vol_1_2 = smile_1_2.second->operator()(this->strike(m, atm_1_2));
+    Real vol_2_1 = smile_2_1.second->operator()(this->strike(m, atm_2_1));
+    Real vol_2_2 = smile_2_2.second->operator()(this->strike(m, atm_2_2));
 
-    // vol spreads at target moneyness
+    // interpolate in term direction
 
-    Real volSpread_1_1 = smile_1_1.second->operator()(this->strike(m, atm_1_1)) - atmVol_1_1;
-    Real volSpread_1_2 = smile_1_2.second->operator()(this->strike(m, atm_1_2)) - atmVol_1_2;
-    Real volSpread_2_1 = smile_2_1.second->operator()(this->strike(m, atm_2_1)) - atmVol_2_1;
-    Real volSpread_2_2 = smile_2_2.second->operator()(this->strike(m, atm_2_2)) - atmVol_2_2;
+    Real vol_1 = term_alpha * vol_1_1 + (1.0 - term_alpha) * vol_1_2;
+    Real vol_2 = term_alpha * vol_2_1 + (1.0 - term_alpha) * vol_2_2;
 
-    // result
+    // interpolate in expiry direction
 
-    Real tmp = thisAtmVol + term_alpha * (expiry_alpha * volSpread_1_1 + (1.0 - expiry_alpha) * volSpread_1_2) +
-               (1.0 - term_alpha) * (expiry_alpha * volSpread_2_1 + (1.0 - expiry_alpha) * volSpread_2_2);
-
-    return tmp;
+    return std::sqrt((expiry_alpha * (vol_1 * vol_1 * smileExpiryTimes_[expiryIndex_m]) +
+                      (1.0 - expiry_alpha) * (vol_2 * vol_2 * smileExpiryTimes_[expiryIndex_p])) /
+                     t);
 }
 
 void InterpolatingCreditVolCurve::performCalculations() const {
@@ -510,12 +499,10 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
         Real t_m = timeFromReference(expiry_m);
         Real t_p = timeFromReference(expiry_m);
         Real alpha = (t_p - t) / (t_p - t_m);
-        Real atmVol_m = smile_m.second->operator()(smile_m.first);
-        Real atmVol_p = smile_p.second->operator()(smile_p.first);
-        Real thisAtmVol = alpha * atmVol_m + (1.0 - alpha) * atmVol_p;
         for (auto const& k : strikes) {
-            vols.push_back(thisAtmVol + alpha * (smile_m.second->operator()(k) - atmVol_m) +
-                           (1.0 - alpha) * (smile_p.second->operator()(k) - atmVol_p));
+	    Real vol_m = smile_m.second->operator()(k);
+	    Real vol_p = smile_p.second->operator()(k);
+            vols.push_back(std::sqrt((alpha * (vol_m * vol_m * t_m) + (1.0 - alpha) * (vol_p * vol_p * t_p)) / t));
         }
         auto s = strikes_.insert(std::make_pair(std::make_pair(expiry, term), strikes));
         auto v = vols_.insert(std::make_pair(std::make_pair(expiry, term), vols));
