@@ -371,7 +371,7 @@ void InterpolatingCreditVolCurve::performCalculations() const {
         if (term != currentTerm || expiry != currentExpiry || q.first == quotes_.rbegin()->first) {
             if (!currentStrikes.empty()) {
                 if (currentStrikes.size() == 1) {
-                    currentStrikes.push_back(currentStrikes.back());
+                    currentStrikes.push_back(currentStrikes.back() + 0.01);
                     currentVols.push_back(currentVols.back());
                 }
                 auto key = std::make_pair(currentExpiry, currentTerm);
