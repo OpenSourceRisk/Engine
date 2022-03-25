@@ -151,9 +151,26 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
 
                 TLOG("The quote " << q->name() << " matched the pattern");
 
+                /* - We load quotes with empty term only if there is at most one term specified in the curve config.
+                   - We load quotes with a term, if they match a term specified in the curve config or if no term is
+                     specified in the curve config.
+                   - Quotes with an empty term get the unique term of the curve config assigned, if the curve config
+                     has no terms specified, 5 * Years. */
+                QuantLib::Period quoteTerm;
+                if (q->indexTerm().empty()) {
+                    if (vc.terms().size() > 1)
+                        continue;
+                    quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
+                } else {
+                    quoteTerm = parsePeriod(q->indexTerm());
+                    if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() &&
+                        !vc.terms().empty())
+                        continue;
+                }
+
                 Date expiryDate = getExpiry(asof, q->expiry());
                 if (expiryDate > asof) {
-                    quotes[std::make_tuple(expiryDate, 5 * Years,
+                    quotes[std::make_tuple(expiryDate, quoteTerm,
                                            strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
                     TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
                                         << setprecision(9) << q->quote()->value() << ")");
@@ -186,7 +203,14 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
                     Date expiryDate = getExpiry(asof, q->expiry());
                     QL_REQUIRE(expiryDate > asof, "CDS volatility quote '" << q->name() << "' has expiry in the past ("
                                                                            << io::iso_date(expiryDate) << ")");
-                    quotes[std::make_tuple(expiryDate, 5 * Years,
+                    // we load all quotes, just populate the term of empty quotes
+                    QuantLib::Period quoteTerm;
+                    if (q->indexTerm().empty()) {
+                        quoteTerm = vc.terms().size() == 1 ? vc.terms().front() : 5 * Years;
+                    } else {
+                        quoteTerm = parsePeriod(q->indexTerm());
+                    }
+                    quotes[std::make_tuple(expiryDate, quoteTerm,
                                            strikeType_ == CreditVolCurve::Type::Price ? 1.0 : 0.0)] = q->quote();
                     TLOG("Added quote " << q->name() << ": (" << io::iso_date(expiryDate) << "," << fixed
                                         << setprecision(9) << q->quote()->value() << ")");
@@ -291,9 +315,6 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
         if (!strike)
             continue;
 
-        /* If the vol curve has more than one term specified, make sure that the quote has a term that
-           matches one of the configured terms. Otherwise we load the quote even if it does not have
-           a term. */
         QuantLib::Period quoteTerm;
         if (q->indexTerm().empty()) {
             if (vc.terms().size() > 1)
@@ -301,7 +322,7 @@ void CDSVolCurve::buildVolatility(const Date& asof, CDSVolatilityCurveConfig& vc
             quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
         } else {
             quoteTerm = parsePeriod(q->indexTerm());
-            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end())
+            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() && !vc.terms().empty())
                 continue;
         }
 
@@ -398,9 +419,6 @@ void CDSVolCurve::buildVolatilityExplicit(
         if (!strike)
             continue;
 
-        /* If the vol curve has more than one term specified, make sure that the quote has a term that
-           matches one of the configured terms. Otherwise we load the quote even if it does not have
-           a term. */
         QuantLib::Period quoteTerm;
         if (q->indexTerm().empty()) {
             if (vc.terms().size() > 1)
@@ -408,7 +426,7 @@ void CDSVolCurve::buildVolatilityExplicit(
             quoteTerm = vc.terms().empty() ? 5 * Years : vc.terms().front();
         } else {
             quoteTerm = parsePeriod(q->indexTerm());
-            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end())
+            if (std::find(vc.terms().begin(), vc.terms().end(), quoteTerm) == vc.terms().end() && !vc.terms().empty())
                 continue;
         }
 
