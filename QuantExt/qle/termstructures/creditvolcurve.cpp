@@ -174,8 +174,8 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
                                           : refData.lastPeriodDayCounter;
     underlyings[terms_[termIndex_m]] = boost::make_shared<CreditDefaultSwap>(
         Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-        CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter,
-        effExp, refData.cashSettlementDays);
+        CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter, effExp,
+        refData.cashSettlementDays);
 
     QL_REQUIRE(!termCurves_[termIndex_m]->rateCurve().empty() && !termCurves_[termIndex_p]->rateCurve().empty(),
                "CreditVolCurve: need discounting rate curve of index for ATM strike computation.");
@@ -222,8 +222,8 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
                                        : schedule.dates().front();
         underlyings[terms_[termIndex_p]] = boost::make_shared<CreditDefaultSwap>(
             Protection::Buyer, 1.0, refData.runningSpread, schedule, refData.payConvention, refData.dayCounter, true,
-            CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter,
-            effExp, refData.cashSettlementDays);
+            CreditDefaultSwap::atDefault, protectionStartDate, boost::shared_ptr<Claim>(), lastPeriodDayCounter, effExp,
+            refData.cashSettlementDays);
         auto engine = boost::make_shared<QuantExt::MidPointCdsEngine>(termCurves_[termIndex_p]->curve(),
                                                                       termCurves_[termIndex_p]->recovery()->value(),
                                                                       termCurves_[termIndex_p]->rateCurve());
@@ -378,10 +378,10 @@ void InterpolatingCreditVolCurve::performCalculations() const {
                 auto key = std::make_pair(currentExpiry, currentTerm);
                 auto s = strikes_.insert(std::make_pair(key, currentStrikes)).first;
                 auto v = vols_.insert(std::make_pair(key, currentVols)).first;
-                smiles_[key] =
-                    std::make_pair(atmStrike(currentExpiry, currentTerm),
-                                   boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
-                                       s->second.begin(), s->second.end(), v->second.begin())));
+                auto tmp = boost::make_shared<FlatExtrapolation>(
+                    boost::make_shared<LinearInterpolation>(s->second.begin(), s->second.end(), v->second.begin()));
+                tmp->enableExtrapolation();
+                smiles_[key] = std::make_pair(atmStrike(currentExpiry, currentTerm), tmp);
                 currentStrikes.clear();
                 currentVols.clear();
                 smileTerms_.push_back(currentTerm);
@@ -473,9 +473,10 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
             vols.push_back(smile.second->operator()(k));
         auto s = strikes_.insert(std::make_pair(key, strikes));
         auto v = vols_.insert(std::make_pair(key, vols));
-        smiles_[std::make_pair(expiry, term)] =
-            std::make_pair(thisAtm, boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
-                                        s.first->second.begin(), s.first->second.end(), v.first->second.begin())));
+        auto tmp = boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
+            s.first->second.begin(), s.first->second.end(), v.first->second.begin()));
+        tmp->enableExtrapolation();
+        smiles_[std::make_pair(expiry, term)] = std::make_pair(thisAtm, tmp);
     } else if (expiry_m == Null<Date>()) {
         auto key = std::make_pair(expiry_p, term);
         const Smile& smile = smiles_[key];
@@ -488,9 +489,10 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
             vols.push_back(smile.second->operator()(k));
         auto s = strikes_.insert(std::make_pair(key, strikes));
         auto v = vols_.insert(std::make_pair(key, vols));
-        smiles_[std::make_pair(expiry, term)] =
-            std::make_pair(thisAtm, boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
-                                        s.first->second.begin(), s.first->second.end(), v.first->second.begin())));
+        auto tmp = boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
+            s.first->second.begin(), s.first->second.end(), v.first->second.begin()));
+        tmp->enableExtrapolation();
+        smiles_[std::make_pair(expiry, term)] = std::make_pair(thisAtm, tmp);
     } else {
         auto key_m = std::make_pair(expiry_m, term);
         auto key_p = std::make_pair(expiry_p, term);
@@ -518,9 +520,10 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
         }
         auto s = strikes_.insert(std::make_pair(std::make_pair(expiry, term), strikes));
         auto v = vols_.insert(std::make_pair(std::make_pair(expiry, term), vols));
-        smiles_[std::make_pair(expiry, term)] =
-            std::make_pair(thisAtm, boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
-                                        s.first->second.begin(), s.first->second.end(), v.first->second.begin())));
+        auto tmp = boost::make_shared<FlatExtrapolation>(boost::make_shared<LinearInterpolation>(
+            s.first->second.begin(), s.first->second.end(), v.first->second.begin()));
+        tmp->enableExtrapolation();
+        smiles_[std::make_pair(expiry, term)] = std::make_pair(thisAtm, tmp);
     }
 }
 
