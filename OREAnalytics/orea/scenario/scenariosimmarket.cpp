@@ -2552,7 +2552,6 @@ ScenarioSimMarket::ScenarioSimMarket(
 }
 
 bool ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName, const bool continueOnError) {
-    std::cout << "looking up " << indexName << std::endl;
     auto dsc = parameters_->swapIndices().find(indexName);
     if (dsc == parameters_->swapIndices().end()) {
 	std::cout << "index not found in params!" << std::endl;
