@@ -44,9 +44,8 @@ public:
                              const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
                              const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
                              const std::string& strikeType = "", const std::string& quoteName = "",
-                             QuantLib::Real strikeFactor = 1.0,
-                             const std::vector<QuantLib::Period>& terms = std::vector<QuantLib::Period>{5 * Years},
-                             const std::vector<std::string>& termCurves = std::vector<std::string>{std::string()});
+                             QuantLib::Real strikeFactor = 1.0, const std::vector<QuantLib::Period>& terms = {},
+                             const std::vector<std::string>& termCurves = {});
 
     //! \name Inspectors
     //@{

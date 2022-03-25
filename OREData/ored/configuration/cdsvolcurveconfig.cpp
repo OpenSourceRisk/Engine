@@ -72,8 +72,8 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
 
-    terms_ = std::vector<QuantLib::Period>{5 * Years};
-    termCurves_ = std::vector<std::string>{std::string()};
+    terms_.clear();
+    termCurves_.clear();
     if (auto n = XMLUtils::getChildNode(node, "Terms")) {
         terms_.clear();
         termCurves_.clear();
@@ -94,15 +94,21 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
              << "A volatility configuration node should be used instead.");
 
         // Get the expiries
-        vector<string> quotes = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
-        QL_REQUIRE(quotes.size() > 0, "Need at least one expiry in the Expiries node.");
+        vector<string> expiries = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
+        QL_REQUIRE(expiries.size() > 0, "Need at least one expiry in the Expiries node.");
 
         // Build the quotes by appending the expiries and terms to the quote stem.
+	std::vector<std::string> quotes;
         string stem = quoteStem();
-        for (string& q : quotes) {
+        for (const string& exp : expiries) {
             for (auto const& p : terms_) {
-                q = stem + q + "/" + ore::data::to_string(p);
+                quotes.push_back(stem + exp + "/" + ore::data::to_string(p));
             }
+        }
+
+	// If we have at most 1 term specified, we add quotes without term as well
+        for (const string& exp : expiries) {
+	    quotes.push_back(stem + exp);
         }
 
         // Create the relevant volatilityConfig_ object.
@@ -206,9 +212,11 @@ void CDSVolatilityCurveConfig::populateQuotes() {
             }
         }
 
-        // If only one term is specified we also add quotes without the term token in it
-        for (const pair<string, string>& p : vc->quotes()) {
-            quotes_.push_back(stem + p.first + "/" + p.second);
+        // If at most one term is specified we also add quotes without the term token in it
+        if (terms_.size() <= 1) {
+            for (const pair<string, string>& p : vc->quotes()) {
+                quotes_.push_back(stem + p.first + "/" + p.second);
+            }
         }
 
     } else if (auto vc = boost::dynamic_pointer_cast<CDSProxyVolatilityConfig>(volatilityConfig_)) {
@@ -223,7 +231,7 @@ void CDSVolatilityCurveConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::CDSVolatility].insert(vc->cdsVolatilityCurve());
     }
     for (auto const& c : termCurves_) {
-	auto spec = parseCurveSpec(c);
+        auto spec = parseCurveSpec(c);
         requiredCurveIds_[CurveSpec::CurveType::Default].insert(spec->curveConfigID());
     }
 }
