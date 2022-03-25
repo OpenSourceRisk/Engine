@@ -6,7 +6,7 @@ Listing \ref{lst:defaultcurve_cds_configuration} outlines the configuration requ
 
 \begin{itemize}
 \item
-\lstinline!CurveId!: Unique identifier for the bootstrapped default curve.
+\lstinline!CurveId!: Unique identifier for the bootstrapped default curve. For index term curves a suffix \lstinline!_5Y! should be appended to the name indicating the index term, since this is the prefered name looked up by index cds and index cds option pricers. If such a curve is not found, the pricers will fall back to the specified credit curve id without suffix, i.e. following this naming convention is not mandatory, but recommended.
 
 \item \lstinline!CurveDescription! [Optional]:
 A description of the default curve. It is for information only and may be left blank.
@@ -28,6 +28,19 @@ A valid recovery rate quote name as documented in Section \ref{md:cds_recovery_r
 
 \item \lstinline!StartDate! [Optional]:
 The \lstinline!StartDate! is optional and is used for index CDS to specify the start date of the index CDS. This is then used to determine the maturity associated with the index CDS spread quotes which are quoted with a tenor. For single name CDS, this should be omitted.
+
+\item \lstinline!RunningSpread! [Optional]:
+  The \lstinline!RunningSpread! is optional and is used for
+  \begin(itemize}
+    \item stripping cds curves from upfront quotes. Alternatively the upfront quote labels can contain the running spread.
+    \item the calculation of the ATM level in cds and index cds volatility surfaces that are strike dependent
+  \end{itemize}
+  The value should be set whenever one of these use cases applies.
+
+\item \lstinline!IndexTerm! [Optional]: The \lstinline!IndexTerm! is optional and is used to set up index cds curves for
+  a specific term. If several quotes are specified explicitly or via wildcards, the quote matching the specified term is
+  used to build a flat curve. If no quote is available for the specified term, an interpolated term quote will be built
+  using the adjacent terms of the provided quotes.
 
 \item \lstinline!Quotes!:
 The \lstinline!Quotes! element should be populated with a list of valid \lstinline!Quote! elements. If the \lstinline!Type! is \lstinline!SpreadCDS!, the quotes should be CDS spread quote strings as documented in Section \ref{md:cds_spread_quote} and if \lstinline!Type! is \lstinline!Price!, the quotes should be CDS upfront price quote strings as documented in Section \ref{md:cds_price_quote}. The attribute \lstinline!optional! in the \lstinline!Quote! element should be set to \lstinline!true! if the associated quote is optional and set to \lstinline!false! if the associated quote is mandatory. If a quote is mandatory and not found in the market, the default curve building will fail. The attribute \lstinline!optional! may be omitted from the quote element. In this case, it defaults to \lstinline!false! and the quote is mandatory. Note also that instead of a list of explicit quotes, a single quote may be provided with the wildcard character \lstinline!*!. In this case, the market is searched for quotes matching the pattern. For example, \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14/*! would return all quotes in the market that start with \lstinline!CDS/CREDIT_SPREAD/JPM/SNRFOR/USD/XR14!.
@@ -65,6 +78,8 @@ This node holds configuration details for the iterative bootstrap that are descr
   <DayCounter>...</DayCounter>
   <RecoveryRate>...</RecoveryRate>
   <StartDate>...</StartDate>
+  <RunningSpread>...</RunningSpread>
+  <IndexTerm>...</IndexTerm>
   <Quotes>
     <Quote optional="true">...</Quote>
     ...
