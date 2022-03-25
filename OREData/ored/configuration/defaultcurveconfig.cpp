@@ -58,7 +58,6 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
     }
 
     populateRequiredCurveIds();
-    generateAdditionalQuotes();
 }
 
 void DefaultCurveConfig::populateRequiredCurveIds() {
@@ -168,10 +167,8 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
             DLOG("'RunningSpread' is empty and type is 'Price' for default curve " << curveID_ <<
                 " so the running spread will need to be provided in the market quote.");
         }
-        if (s != "") {
-            if (type_ == Type::Price) {
-                runningSpread_ = parseReal(s);
-            }
+        if (!s.empty()) {
+            runningSpread_ = parseReal(s);
         }
 
         string t = XMLUtils::getChildValue(node, "IndexTerm", false);
@@ -188,7 +185,6 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     }
 
     populateRequiredCurveIds();
-    generateAdditionalQuotes();
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
