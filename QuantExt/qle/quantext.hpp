@@ -176,10 +176,13 @@
 #include <qle/math/constantinterpolation.hpp>
 #include <qle/math/covariancesalvage.hpp>
 #include <qle/math/deltagammavar.hpp>
+#include <qle/math/differentialevolution_mt.hpp>
 #include <qle/math/fillemptymatrix.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/logquadraticinterpolation.hpp>
+#include <qle/math/method_mt.hpp>
 #include <qle/math/nadarayawatson.hpp>
+#include <qle/math/problem_mt.hpp>
 #include <qle/math/quadraticinterpolation.hpp>
 #include <qle/math/randomvariable.hpp>
 #include <qle/math/randomvariable_io.hpp>
