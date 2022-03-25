@@ -208,7 +208,6 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
     }
 
     auto p = splitCurveIdWithTenor(creditCurveId);
-    std::cout << "not found! fall back on " << p.first << std::endl;
     return market->defaultCurve(p.first, config);
 }
 
