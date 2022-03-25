@@ -78,7 +78,7 @@ void BlackCdsOptionEngine::calculate() const {
 
     // Read the volatility from the volatility surface, assumed to have strike dimension in terms of spread.
     const Date& exerciseDate = arguments_.exercise->dates().front();
-    Real underlyingLength = volatility_->dayCounter().yearFraction(cds.maturity(), exerciseDate);
+    Real underlyingLength = volatility_->dayCounter().yearFraction(exerciseDate, cds.maturity());
     Real vol = volatility_->volatility(exerciseDate, underlyingLength, strike, CreditVolCurve::Type::Spread);
     Real stdDev = vol * std::sqrt(volatility_->timeFromReference(exerciseDate));
     results_.additionalResults["volatility"] = vol;
