@@ -224,7 +224,7 @@ void CDSVolCurve::buildVolatility(const QuantLib::Date& asof, const CDSVolatilit
                                                                   << " quotes were given in config.");
     }
 
-    DLOG("Creating BlackVarianceCurve object.");
+    DLOG("Creating InterpolatingCreditVolCurve object.");
     vol_ = boost::make_shared<QuantExt::InterpolatingCreditVolCurve>(
         asof, calendar_, Following, dayCounter_, std::vector<QuantLib::Period>{},
         std::vector<Handle<QuantExt::CreditCurve>>{}, quotes, strikeType_);
