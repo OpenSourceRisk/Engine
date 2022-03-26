@@ -337,6 +337,8 @@ void InterpolatingCreditVolCurve::performCalculations() const {
 
     CreditVolCurve::performCalculations();
 
+    QL_REQUIRE(!quotes_.empty(), "InterpolatingCreditVolCurve: no quotes given, can not build a volatility curve.");
+
     // For each term and option expiry create an interpolation object representing a vol smile.
 
     smileTerms_.clear();
@@ -351,13 +353,24 @@ void InterpolatingCreditVolCurve::performCalculations() const {
     Date currentExpiry = Null<Date>();
     std::vector<Real> currentStrikes;
     std::vector<Real> currentVols;
+    Date expiry;
+    Period term;
+    Real strike;
+    Real vol;
 
-    for (auto const& q : quotes_) {
-        Date expiry = std::get<0>(q.first);
-        Period term = std::get<1>(q.first);
-        Real strike = std::get<2>(q.first);
-        Real vol = q.second->value();
-        if (term != currentTerm || expiry != currentExpiry || q.first == quotes_.rbegin()->first) {
+    auto q = quotes_.begin();
+    for (Size i = 0; i <= quotes_.size(); ++i) {
+        if (i < quotes_.size()) {
+            expiry = std::get<0>(q->first);
+            term = std::get<1>(q->first);
+            strike = std::get<2>(q->first);
+            vol = q->second->value();
+            ++q;
+        } else {
+            currentTerm = term;
+            currentExpiry = expiry;
+        }
+        if (term != currentTerm || expiry != currentExpiry || i == quotes_.size()) {
             if (!currentStrikes.empty()) {
                 if (currentStrikes.size() == 1) {
                     currentStrikes.push_back(currentStrikes.back() + 0.01);
@@ -378,8 +391,10 @@ void InterpolatingCreditVolCurve::performCalculations() const {
             currentTerm = term;
             currentExpiry = expiry;
         }
-        currentStrikes.push_back(strike);
-        currentVols.push_back(vol);
+        if (i < quotes_.size()) {
+            currentStrikes.push_back(strike);
+            currentVols.push_back(vol);
+        }
     }
 
     // populate times vectors
@@ -500,8 +515,8 @@ void InterpolatingCreditVolCurve::createSmile(const Date& expiry, const Period& 
         Real t_p = timeFromReference(expiry_m);
         Real alpha = (t_p - t) / (t_p - t_m);
         for (auto const& k : strikes) {
-	    Real vol_m = smile_m.second->operator()(k);
-	    Real vol_p = smile_p.second->operator()(k);
+            Real vol_m = smile_m.second->operator()(k);
+            Real vol_p = smile_p.second->operator()(k);
             vols.push_back(std::sqrt((alpha * (vol_m * vol_m * t_m) + (1.0 - alpha) * (vol_p * vol_p * t_p)) / t));
         }
         auto s = strikes_.insert(std::make_pair(std::make_pair(expiry, term), strikes));
