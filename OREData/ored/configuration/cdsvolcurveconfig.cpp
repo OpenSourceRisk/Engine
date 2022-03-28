@@ -204,17 +204,14 @@ void CDSVolatilityCurveConfig::populateQuotes() {
         // Clear the quotes_ if necessary and populate with surface quotes
         quotes_.clear();
 
-        // Build the quotes by appending the expiries, term and strikes to the quote stem.
         string stem = quoteStem();
         for (const pair<string, string>& p : vc->quotes()) {
+            // build quotes of the form .../TERM/EXPIRY/STRIKE
             for (auto const& t : terms_) {
-                quotes_.push_back(stem + p.first + "/" + ore::data::to_string(t) + "/" + p.second);
+                quotes_.push_back(stem + ore::data::to_string(t) + "/" + p.first + "/" + p.second);
             }
-        }
-
-        // If at most one term is specified we also add quotes without the term token in it
-        if (terms_.size() <= 1) {
-            for (const pair<string, string>& p : vc->quotes()) {
+            // if only one or even no term is configured, also build quotes of the form .../EXPIRY/STRIKE
+            if (terms_.size() <= 1) {
                 quotes_.push_back(stem + p.first + "/" + p.second);
             }
         }
