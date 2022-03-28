@@ -231,7 +231,7 @@ void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
                           boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->correlationPairs()) {
         vector<string> tokens;
-        boost::split(tokens, spec, boost::is_any_of(":"));
+        boost::split(tokens, spec, boost::is_any_of(":&"));
         QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << spec);
         pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
         Handle<QuantExt::CorrelationTermStructure> simCurve = simMarket->correlationCurve(pair.first, pair.second);

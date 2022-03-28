@@ -834,7 +834,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string p = XMLUtils::getNodeValue(child);
                 vector<string> tokens = getCorrelationTokens(p);
                 QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << p);
-                pairs.push_back(tokens[0] + "&" + tokens[1]);
+                pairs.push_back(p);
             }
         }
         setCorrelationPairs(pairs);
