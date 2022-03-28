@@ -50,6 +50,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
@@ -1130,11 +1131,28 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-                                // TODO support sticky money dynamics
-                                cvh = Handle<CreditVolCurve>(
-                                    boost::make_shared<SpreadedCreditVolCurve>(wrapper, expiryDates, quotes, false));
+                                bool stickyMoney = false;
+                                std::vector<QuantLib::Period> simTerms;
+                                std::vector<Handle<CreditCurve>> simTermCurves;
+                                if (stickyMoney) {
+                                    if (curveConfigs.hasCdsVolCurveConfig(name)) {
+                                        // get the term curves from the curve config if possible
+                                        auto cc = curveConfigs.cdsVolCurveConfig(name);
+                                        simTerms = cc->terms();
+                                        for (auto const& c : cc->termCurves())
+                                            simTermCurves.push_back(defaultCurve(parseCurveSpec(c)->curveConfigID()));
+                                    } else {
+                                        // assume the default curve names follow the naming convention volName_5Y
+                                        simTerms = wrapper->terms();
+                                        for (auto const& t : simTerms) {
+                                            simTermCurves.push_back(defaultCurve(name + "_" + ore::data::to_string(t)));
+                                        }
+                                    }
+                                }
+                                cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
+                                    wrapper, expiryDates, quotes, stickyMoney, simTerms, simTermCurves));
                             } else {
-				// TODO support strike and term dependence
+                                // TODO support strike and term dependence
                                 cvh = Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(
                                     Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
                                         0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes,
