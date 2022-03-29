@@ -57,20 +57,24 @@ using namespace ore::data;
 struct QuoteData {
     QuoteData() : value(Null<Real>()), runningSpread(Null<Real>()) {}
 
-    QuoteData(const Period& t, Real v, Real rs = Null<Real>()) : term(t), value(v), runningSpread(rs) {}
+    QuoteData(const Period& t, Real v, string s, string c, string d, Real rs = Null<Real>())
+        : term(t), value(v), seniority(s), ccy(c), docClause(d), runningSpread(rs) {}
 
     Period term;
     Real value;
+    string seniority;
+    string ccy;
+    string docClause;
     Real runningSpread;
 };
 
 bool operator<(const QuoteData& lhs, const QuoteData& rhs) { return lhs.term < rhs.term; }
 
 void addQuote(set<QuoteData>& quotes, const string& configId, const string& name, const Period& tenor, Real value,
-              Real runningSpread = Null<Real>()) {
+              string seniority, string ccy, string docClause, Real runningSpread = Null<Real>()) {
 
     // Add to quotes, with a check that we have no duplicate tenors
-    auto r = quotes.insert(QuoteData(tenor, value, runningSpread));
+    auto r = quotes.insert(QuoteData(tenor, value, seniority, ccy, docClause, runningSpread));
     QL_REQUIRE(r.second, "duplicate term in quotes found (" << tenor << ") while loading default curve " << configId);
     TLOG("Loaded quote " << name << " for default curve " << configId);
 }
@@ -100,24 +104,44 @@ set<QuoteData> getRegexQuotes(const Wildcard& wc, const string& configId, Defaul
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
             if (wc.matches(q->name())) {
-                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
+                         q->docClause(), q->runningSpread());
             }
 
         } else if (type == DCCT::Price && (mdit == MDIT::CDS && mdqt == MDQT::PRICE)) {
 
             auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
             if (wc.matches(q->name())) {
-                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
+                         q->docClause(), q->runningSpread());
             }
 
         } else if (type == DCCT::HazardRate && (mdit == MDIT::HAZARD_RATE && mdqt == MDQT::RATE)) {
 
             auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
             if (wc.matches(q->name())) {
-                addQuote(result, configId, q->name(), q->term(), q->quote()->value());
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
+                         q->docClause());
             }
         }
     }
+
+    // check whether the set of quotes contains more than one seniority, ccy or doc clause,
+    // which probably means that the wildcard has pulled in too many quotes
+
+    std::set<string> seniorities, ccys, docClauses;
+    for (auto const& q : result) {
+        if (!q.seniority.empty())
+            seniorities.insert(q.seniority);
+        if (!q.ccy.empty())
+            ccys.insert(q.ccy);
+        if (!q.docClause.empty())
+            docClauses.insert(q.docClause);
+    }
+
+    QL_REQUIRE(seniorities.size() < 2, "More than one seniority found in wildcard quotes.");
+    QL_REQUIRE(ccys.size() < 2, "More than one seniority found in wildcard quotes.");
+    QL_REQUIRE(docClauses.size() < 2, "More than one seniority found in wildcard quotes.");
 
     // We don't check for an empty set of CDS quotes here. We check it later because under some circumstances,
     // it may be allowable to have no quotes.
@@ -142,11 +166,13 @@ set<QuoteData> getExplicitQuotes(const vector<pair<string, bool>>& quotes, const
             if (type == DCCT::SpreadCDS || type == DCCT::Price) {
                 auto q = boost::dynamic_pointer_cast<CdsQuote>(md);
                 QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a CdsQuote");
-                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->runningSpread());
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
+                         q->docClause(), q->runningSpread());
             } else {
                 auto q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
                 QL_REQUIRE(q, "Quote " << p.first << " for config " << configId << " should be a HazardRateQuote");
-                addQuote(result, configId, q->name(), q->term(), q->quote()->value());
+                addQuote(result, configId, q->name(), q->term(), q->quote()->value(), q->seniority(), q->ccy(),
+                         q->docClause());
             }
         }
     }
@@ -199,16 +225,26 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
     std::string errors;
     for (auto const& config : configs->configs()) {
         try {
-            // Set the recovery rate if necessary
             recoveryRate_ = Null<Real>();
             if (!config.second.recoveryRateQuote().empty()) {
-                // for some curve types (Benchmark, MutliSection) a numeric recovery rate is allowed, which we handle
-                // here
+		// handle case where the recovery rate is hardcoded in the curve config
                 if (!tryParseReal(config.second.recoveryRateQuote(), recoveryRate_)) {
-                    QL_REQUIRE(loader.has(config.second.recoveryRateQuote(), asof),
-                               "There is no market data for the requested recovery rate "
-                                   << config.second.recoveryRateQuote());
-                    recoveryRate_ = loader.get(config.second.recoveryRateQuote(), asof)->quote()->value();
+                    Wildcard wc(config.second.recoveryRateQuote());
+                    if (wc.hasWildcard()) {
+                        for (auto const& q : loader.loadQuotes(asof)) {
+                            if (wc.matches(q->name())) {
+                                QL_REQUIRE(recoveryRate_ == Null<Real>(),
+                                           "There is more than one recovery rate matching the pattern '" << wc.pattern()
+                                                                                                         << "'.");
+                                recoveryRate_ = q->quote()->value();
+                            }
+                        }
+                    } else {
+                        QL_REQUIRE(loader.has(config.second.recoveryRateQuote(), asof),
+                                   "There is no market data for the requested recovery rate "
+                                       << config.second.recoveryRateQuote());
+                        recoveryRate_ = loader.get(config.second.recoveryRateQuote(), asof)->quote()->value();
+                    }
                 }
             }
             // Build the default curve of the requested type
