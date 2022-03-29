@@ -67,26 +67,27 @@ private:
     Real recoveryRate_;
 
     //! Build a default curve from CDS spread quotes
-    void buildCdsCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-                       const Loader& loader, 
+    void buildCdsCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const QuantLib::Date& asof,
+                       const DefaultCurveSpec& spec, const Loader& loader,
                        std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Build a default curve from hazard rate quotes
-    void buildHazardRateCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-                              const Loader& loader);
+    void buildHazardRateCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
+                              const QuantLib::Date& asof, const DefaultCurveSpec& spec, const Loader& loader);
 
     //! Build a default curve implied from a spread over a benchmark curve
-    void buildBenchmarkCurve(DefaultCurveConfig& config, const QuantLib::Date& asof, const DefaultCurveSpec& spec,
-                             const Loader& loader,
+    void buildBenchmarkCurve(const std::string& curveID, const DefaultCurveConfig::Config& config,
+                             const QuantLib::Date& asof, const DefaultCurveSpec& spec, const Loader& loader,
                              std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves);
 
     //! Build a multi section curve
-    void buildMultiSectionCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec,
-                                const Loader& loader,
+    void buildMultiSectionCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
+                                const DefaultCurveSpec& spec, const Loader& loader,
                                 map<string, boost::shared_ptr<DefaultCurve>>& defaultCurves);
 
     //! Build a null curve (null rate, null recovery)
-    void buildNullCurve(DefaultCurveConfig& config, const Date& asof, const DefaultCurveSpec& spec);
+    void buildNullCurve(const std::string& curveID, const DefaultCurveConfig::Config& config, const Date& asof,
+                        const DefaultCurveSpec& spec);
 };
 
 } // namespace data
