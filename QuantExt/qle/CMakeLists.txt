@@ -73,6 +73,7 @@ indexes/ibor/brlcdi.cpp
 indexes/ibor/ester.cpp
 indexes/ibor/primeindex.cpp
 indexes/ibor/sofr.cpp
+indexes/ibor/sonia.cpp
 indexes/inflationindexwrapper.cpp
 indexes/offpeakpowerindex.cpp
 indexes/region.cpp
@@ -398,6 +399,7 @@ indexes/ibor/sgdsibor.hpp
 indexes/ibor/sgdsor.hpp
 indexes/ibor/skkbribor.hpp
 indexes/ibor/sofr.hpp
+indexes/ibor/sonia.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp

@@ -1210,11 +1210,23 @@
     <ClInclude Include="qle\termstructures\oiscapfloorhelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\math\constantinterpolation.hpp">
       <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\sonia.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\creditcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\creditvolcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\terminterpolateddefaultcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\utilities\time.hpp">
+      <Filter>utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2066,14 +2078,23 @@
     <ClCompile Include="qle\termstructures\blackvolconstantspread.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\flatteneddefaultcurve.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
     <ClCompile Include="qle\instruments\makeoiscapfloor.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\oiscapfloorhelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\sonia.cpp">
+      <Filter>indexes\ibor</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\creditcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\creditvolcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\utilities\time.cpp">
+      <Filter>utilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

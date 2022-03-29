@@ -617,6 +617,7 @@
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\sofr.hpp" />
+    <ClInclude Include="qle\indexes\ibor\sonia.hpp" />
     <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
@@ -784,6 +785,8 @@
     <ClInclude Include="qle\termstructures\blackvolsurfacebfrr.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacedelta.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurfacesparse.hpp" />
+    <ClInclude Include="qle\termstructures\creditcurve.hpp" />
+    <ClInclude Include="qle\termstructures\creditvolcurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
@@ -803,7 +806,6 @@
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\termstructures\eqcommoptionsurfacestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
-    <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\futurepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
@@ -875,6 +877,7 @@
     <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\terminterpolateddefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\weightedyieldtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\yieldplusdefaultyieldtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
@@ -887,6 +890,7 @@
     <ClInclude Include="qle\time\yearcounter.hpp" />
     <ClInclude Include="qle\utilities\inflation.hpp" />
     <ClInclude Include="qle\utilities\savedobservablesettings.hpp" />
+    <ClInclude Include="qle\utilities\time.hpp" />
     <ClInclude Include="qle\version.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -963,6 +967,7 @@
     <ClCompile Include="qle\indexes\ibor\ester.cpp" />
     <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\sofr.cpp" />
+    <ClCompile Include="qle\indexes\ibor\sonia.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\indexes\offpeakpowerindex.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
@@ -1092,6 +1097,8 @@
     <ClCompile Include="qle\termstructures\blackvolconstantspread.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacebfrr.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacedelta.cpp" />
+    <ClCompile Include="qle\termstructures\creditcurve.cpp" />
+    <ClCompile Include="qle\termstructures\creditvolcurve.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
@@ -1114,7 +1121,6 @@
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\termstructures\eqcommoptionsurfacestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
-    <ClCompile Include="qle\termstructures\flatteneddefaultcurve.cpp" />
     <ClCompile Include="qle\termstructures\futurepricehelper.cpp" />
     <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
@@ -1155,6 +1161,7 @@
     <ClCompile Include="qle\time\dateutilities.cpp" />
     <ClCompile Include="qle\time\yearcounter.cpp" />
     <ClCompile Include="qle\utilities\inflation.cpp" />
+    <ClCompile Include="qle\utilities\time.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
