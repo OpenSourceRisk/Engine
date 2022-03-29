@@ -285,7 +285,7 @@
     <Correlations>
         <Simulate>false</Simulate>
         <Pairs>
-            <Pair>EUR-CMS-10Y,EUR-CMS-2Y</Pair>
+            <Pair>EUR-CMS-10Y:EUR-CMS-2Y</Pair>
         </Pairs>
         <Expiries>1Y,2Y</Expiries>
     </Correlations>
