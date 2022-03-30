@@ -1222,11 +1222,11 @@
     <ClInclude Include="qle\termstructures\creditvolcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\terminterpolateddefaultcurve.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\utilities\time.hpp">
       <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\terminterpolateddefaultcurve.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
