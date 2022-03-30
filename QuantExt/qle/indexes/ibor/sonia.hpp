@@ -28,13 +28,6 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! %SONIA (Sterling Overnight Index Average).
-
-//class Sonia : public OvernightIndex {
-//public:
-//    explicit Sonia(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
-//};
-
 //! %Sonia term index, see https://www.bankofengland.co.uk/-/media/boe/files/markets/benchmarks/rfr/rfrwg-term-sonia-reference-rate-summary.pdf#
 class SoniaTerm : public IborIndex {
 public:

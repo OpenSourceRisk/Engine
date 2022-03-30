@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -23,9 +23,6 @@
 #include <ql/time/daycounters/actual360.hpp>
 
 namespace QuantExt {
-
-//Sonia::Sonia(const Handle<YieldTermStructure>& h)
-//    : OvernightIndex("SONIA", 0, GBPCurrency(), UnitedKingdom(UnitedKingdom::Exchange), Actual360(), h) {}
 
 SoniaTerm::SoniaTerm(const Period& tenor, const Handle<YieldTermStructure>& h)
     : IborIndex("SONIA-TERM", tenor, 2, GBPCurrency(), UnitedKingdom(UnitedKingdom::Exchange), ModifiedFollowing,
