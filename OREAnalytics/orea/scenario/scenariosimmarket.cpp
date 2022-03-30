@@ -741,28 +741,25 @@ ScenarioSimMarket::ScenarioSimMarket(
                             if (useSpreadedTermStructures_) {
                                 bool stickyAbsMoney = true;
                                 boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
+                                boost::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
                                 if (stickyAbsMoney) {
-				    // use swap indices from sim market and set sticky money flag to true
-				    // in the SpreadedSwaptionVolatility ctor will result in sticky money dynamics
-                                    if (!swapIndexBase.empty() && addSwapIndexToSsm(swapIndexBase, continueOnError)) {
-                                        swapIndex = *this->swapIndex(swapIndexBase, configuration);
+                                    if (addSwapIndexToSsm(swapIndexBase, continueOnError)) {
+                                        simSwapIndex = *this->swapIndex(swapIndexBase, configuration);
                                     }
-                                    if (!shortSwapIndexBase.empty() &&
-                                        addSwapIndexToSsm(shortSwapIndexBase, continueOnError)) {
-                                        shortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
+                                    if (addSwapIndexToSsm(shortSwapIndexBase, continueOnError)) {
+                                        simShortSwapIndex = *this->swapIndex(shortSwapIndexBase, configuration);
                                     }
-                                } else {
-				    // using the wrapper from t0 and init market swap indices means we
-				    // have a sticky strike dynamics
-                                    if (!swapIndexBase.empty())
-                                        swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
-                                    if (!shortSwapIndexBase.empty())
-                                        shortSwapIndex = *initMarket->swapIndex(shortSwapIndexBase, configuration);
+                                    if (simSwapIndex == nullptr || simShortSwapIndex == nullptr)
+                                        stickyAbsMoney = false;
                                 }
+				if(!swapIndexBase.empty())
+				    swapIndex = *initMarket->swapIndex(swapIndexBase, configuration);
+				if(!shortSwapIndexBase.empty())
+				    shortSwapIndex = *initMarket->swapIndex(shortSwapIndexBase, configuration);
                                 svp =
                                     Handle<SwaptionVolatilityStructure>(boost::make_shared<SpreadedSwaptionVolatility>(
                                         wrapper, optionTenors, underlyingTenors, strikeSpreads, quotes, swapIndex,
-                                        shortSwapIndex, stickyAbsMoney));
+                                        shortSwapIndex, simSwapIndex, simShortSwapIndex, stickyAbsMoney));
                             } else {
                                 Handle<SwaptionVolatilityStructure> atm;
                                 atm = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityMatrix>(
@@ -2581,7 +2578,6 @@ ScenarioSimMarket::ScenarioSimMarket(
 bool ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName, const bool continueOnError) {
     auto dsc = parameters_->swapIndices().find(indexName);
     if (dsc == parameters_->swapIndices().end()) {
-	std::cout << "index not found in params!" << std::endl;
         return false;
     }
     DLOG("Adding swap index " << indexName << " with discounting index " << dsc->second);
