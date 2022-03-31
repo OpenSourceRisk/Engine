@@ -24,9 +24,9 @@
 #ifndef quantext_black_cds_option_engine_hpp
 #define quantext_black_cds_option_engine_hpp
 
-#include <qle/instruments/cdsoption.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <qle/instruments/cdsoption.hpp>
+#include <qle/termstructures/creditvolcurve.hpp>
 
 namespace QuantExt {
 
@@ -47,14 +47,14 @@ public:
     BlackCdsOptionEngine(const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability,
         QuantLib::Real recovery,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
-        const QuantLib::Handle<QuantLib::BlackVolTermStructure>& volatility);
+        const QuantLib::Handle<QuantExt::CreditVolCurve>& volatility);
 
     //! \name Inspectors
     //@{
     const QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>& probability() const;
     QuantLib::Real recovery() const;
     const QuantLib::Handle<QuantLib::YieldTermStructure> discount() const;
-    const QuantLib::Handle<QuantLib::BlackVolTermStructure> volatility() const;
+    const QuantLib::Handle<QuantExt::CreditVolCurve> volatility() const;
     //@}
 
     //! \name Instrument interface
@@ -66,8 +66,7 @@ private:
     QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure> probability_;
     QuantLib::Real recovery_;
     QuantLib::Handle<QuantLib::YieldTermStructure> discount_;
-    QuantLib::Handle<QuantLib::BlackVolTermStructure> volatility_;
-
+    QuantLib::Handle<QuantExt::CreditVolCurve> volatility_;
 };
 
 }

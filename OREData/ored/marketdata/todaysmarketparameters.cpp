@@ -124,6 +124,10 @@ void TodaysMarketParameters::clear() {
     marketObjects_.clear();
 }
 
+bool TodaysMarketParameters::empty() { 
+    return marketObjects_.size() == 0;
+}
+
 void TodaysMarketParameters::fromXML(XMLNode* node) {
 
     // add default configuration if we do not have one (may be overwritten below)

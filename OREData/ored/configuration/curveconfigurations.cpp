@@ -251,8 +251,9 @@ std::set<string> CurveConfigurations::conventions() const {
     }
 
     for (auto& d : defaultCurveConfigs_) {
-        if (d.second->conventionID() != "")
-            conventions.insert(d.second->conventionID());
+        for (auto const& c : d.second->configs())
+            if (c.second.conventionID() != "")
+                conventions.insert(c.second.conventionID());
     }
 
     for (auto& i : inflationCurveConfigs_) {

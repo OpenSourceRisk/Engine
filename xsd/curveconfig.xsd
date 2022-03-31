@@ -273,12 +273,25 @@
         <xs:element type="volatilityCurveConfig" name="Curve"/>
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
       </xs:choice>
+      <xs:element name="Terms" minOccurs="0">
+	<xs:complexType>
+	  <xs:sequence>
+	    <xs:element name="Term" maxOccurs="unbounded">
+	      <xs:complexType>
+		<xs:all>
+		  <xs:element type="xs:string" name="Label"/>
+		  <xs:element type="xs:string" name="Curve"/>
+		</xs:all>
+	      </xs:complexType>
+	    </xs:element>
+	  </xs:sequence>
+	</xs:complexType>
+      </xs:element>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="StrikeType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="positiveDecimal" name="StrikeFactor" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="bool" name="ParseTerm" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -383,10 +396,56 @@
     <xs:all>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="defaultCurveType" name="Type"/>
+      <xs:element name="Configurations" minOccurs="0">
+	<xs:complexType>
+	  <xs:sequence>
+	    <xs:element name="Configuration" minOccurs="0" maxOccurs="unbounded">
+	      <xs:complexType>
+		<xs:all>
+		  <xs:element type="currencyCode" name="Currency"/>
+		  <xs:element type="defaultCurveType" name="Type"/>
+		  <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="dayCounter" name="DayCounter"/>
+		  <xs:element type="xs:string" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
+		  <xs:element name="SourceCurves" minOccurs="0">
+		    <xs:complexType>
+		      <xs:sequence>
+			<xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="unbounded"/>
+		      </xs:sequence>
+		    </xs:complexType>
+		  </xs:element>
+		  <xs:element name="SwitchDates" minOccurs="0">
+		    <xs:complexType>
+		      <xs:sequence>
+			<xs:element type="xs:string" name="SwitchDate" minOccurs="0" maxOccurs="unbounded"/>
+		      </xs:sequence>
+		    </xs:complexType>
+		  </xs:element>
+		  <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="xs:string" name="IndexTerm" minOccurs="0"/>
+		  <xs:element type="bool" name="ImplyDefaultFromMarket" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
+		  <xs:element type="bool" name="AllowNegativeRates" minOccurs="0" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+	      </xs:complexType>
+	    </xs:element>
+	  </xs:sequence>
+	</xs:complexType>
+      </xs:element>
+      <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
+      <xs:element type="defaultCurveType" name="Type" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="dayCounter" name="DayCounter"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element type="xs:string" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
@@ -413,6 +472,7 @@
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="IndexTerm" minOccurs="0"/>
       <xs:element type="bool" name="ImplyDefaultFromMarket" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <!-- AllowNegativeRates removed by JW, but restored here -->

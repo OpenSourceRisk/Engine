@@ -197,7 +197,7 @@ void StressScenarioGenerator::addSurvivalProbabilityShifts(StressTestScenarioDat
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         //DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
-        DayCounter dc = simMarket_->defaultCurve(name)->dayCounter();
+        DayCounter dc = simMarket_->defaultCurve(name)->curve()->dayCounter();
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->defaultTenors(name)[j];

@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/configuration/conventions.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
-#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/configuration/conventions.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -79,10 +80,11 @@ std::string creditCurveNameFromSecuritySpecificCreditCurveName(const std::string
     return name;
 }
 
-QuantLib::Handle<QuantLib::DefaultProbabilityTermStructure>
-securitySpecificCreditCurve(const boost::shared_ptr<Market>& market, const std::string& securityId,
-                            const std::string& creditCurveId, const std::string& configuration) {
-    Handle<DefaultProbabilityTermStructure> curve;
+QuantLib::Handle<QuantExt::CreditCurve> securitySpecificCreditCurve(const boost::shared_ptr<Market>& market,
+                                                                    const std::string& securityId,
+                                                                    const std::string& creditCurveId,
+                                                                    const std::string& configuration) {
+    Handle<QuantExt::CreditCurve> curve;
     std::string name = securitySpecificCreditCurveName(securityId, creditCurveId);
     try {
         curve = market->defaultCurve(name, configuration);
@@ -117,9 +119,9 @@ std::string prettyPrintInternalCurveName(std::string name) {
     return name;
 }
 
-boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, 
-    const string& foreign, const boost::shared_ptr<Market>& market, const string& configuration,
-    bool useXbsCurves) {
+boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const string& domestic, const string& foreign,
+                                                  const boost::shared_ptr<Market>& market, const string& configuration,
+                                                  bool useXbsCurves) {
 
     // get the base index from the market for the currency pair
     Handle<QuantExt::FxIndex> fxInd = market->fxIndex(fxIndex);
@@ -150,7 +152,6 @@ boost::shared_ptr<QuantExt::FxIndex> buildFxIndex(const string& fxIndex, const s
         return fxInd.currentLink();
 }
 
-
 void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& fixingCalendar) {
     // can take an fx index or ccy pair e.g. EURUSD
     string ccy1, ccy2;
@@ -159,12 +160,12 @@ void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& f
         ccy1 = ind->sourceCurrency().code();
         ccy2 = ind->targetCurrency().code();
     } else {
-        QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, " <<
-            "or a currency pair e.g. EURUSD.");
+        QL_REQUIRE(index.size() == 6, "getFxIndexConventions: index must be an FXIndex of form FX-ECB-EUR-USD, "
+                                          << "or a currency pair e.g. EURUSD.");
         ccy1 = index.substr(0, 3);
         ccy2 = index.substr(3);
-    }        
-    
+    }
+
     try {
         const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
         boost::shared_ptr<Convention> con;
@@ -183,6 +184,31 @@ void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& f
         fixingDays = 2;
         fixingCalendar = parseCalendar(ccy1 + "," + ccy2);
     }
+}
+
+std::pair<std::string, QuantLib::Period> splitCurveIdWithTenor(const std::string& creditCurveId) {
+    Size pos = creditCurveId.rfind("_");
+    if (pos != std::string::npos) {
+        Period term;
+        string termString = creditCurveId.substr(pos + 1, creditCurveId.length());
+        if (tryParse<Period>(termString, term, parsePeriod)) {
+            return make_pair(creditCurveId.substr(0, pos), term);
+        }
+    }
+    return make_pair(creditCurveId, 0 * Days);
+}
+
+QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared_ptr<Market>& market,
+                                                             const std::string& creditCurveId,
+                                                             const std::string& config) {
+    try {
+        return market->defaultCurve(creditCurveId, config);
+    } catch (...) {
+        DLOG("indexCdsDefaultCurve: could not get '" << creditCurveId << "', fall back on curve id without tenor.");
+    }
+
+    auto p = splitCurveIdWithTenor(creditCurveId);
+    return market->defaultCurve(p.first, config);
 }
 
 } // namespace data

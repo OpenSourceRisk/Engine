@@ -233,9 +233,9 @@ Handle<BlackVolTermStructure> MarketImpl::fxVol(const string& ccypair, const str
     }
 }
 
-Handle<DefaultProbabilityTermStructure> MarketImpl::defaultCurve(const string& key, const string& configuration) const {
+Handle<QuantExt::CreditCurve> MarketImpl::defaultCurve(const string& key, const string& configuration) const {
     require(MarketObject::DefaultCurve, key, configuration);
-    return lookup<Handle<DefaultProbabilityTermStructure>>(defaultCurves_, key, configuration, "default curve");
+    return lookup<Handle<QuantExt::CreditCurve>>(defaultCurves_, key, configuration, "default curve");
 }
 
 Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configuration) const {
@@ -245,9 +245,9 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
     return lookup<Handle<Quote>>(recoveryRates_, key, configuration, "recovery rate");
 }
 
-Handle<BlackVolTermStructure> MarketImpl::cdsVol(const string& key, const string& configuration) const {
+Handle<QuantExt::CreditVolCurve> MarketImpl::cdsVol(const string& key, const string& configuration) const {
     require(MarketObject::CDSVol, key, configuration);
-    return lookup<Handle<BlackVolTermStructure>>(cdsVols_, key, configuration, "cds vol curve");
+    return lookup<Handle<QuantExt::CreditVolCurve>>(cdsVols_, key, configuration, "cds vol curve");
 }
 
 Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
@@ -511,7 +511,7 @@ void MarketImpl::refresh(const string& configuration) {
         }
         for (auto& x : defaultCurves_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(*x.second);
+                it->second.insert(*x.second->curve());
         }
         for (auto& x : cdsVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)

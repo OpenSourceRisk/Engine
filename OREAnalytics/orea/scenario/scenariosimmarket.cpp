@@ -50,6 +50,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
@@ -1003,7 +1004,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 		    bool simDataWritten = false;
                     try {
                         LOG("building " << name << " default curve..");
-                        Handle<DefaultProbabilityTermStructure> wrapper = initMarket->defaultCurve(name, configuration);
+                        auto wrapper = initMarket->defaultCurve(name, configuration);
                         vector<Handle<Quote>> quotes;
 
                         QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days,
@@ -1012,7 +1013,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         vector<Date> dates(1, asof_);
                         vector<Real> times(1, 0.0);
 
-			DayCounter dc = wrapper->dayCounter();
+			DayCounter dc = wrapper->curve()->dayCounter();
 			
                         for (Size i = 0; i < parameters->defaultTenors(name).size(); i++) {
                             dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
@@ -1022,7 +1023,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
                         quotes.push_back(Handle<Quote>(q));
                         for (Size i = 0; i < dates.size() - 1; i++) {
-                            Probability prob = wrapper->survivalProbability(dates[i + 1], true);
+                            Probability prob = wrapper->curve()->survivalProbability(dates[i + 1], true);
                             boost::shared_ptr<SimpleQuote> q =
                                 boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 1.0 : prob);
                             // Check if the risk factor is simulated before adding it
@@ -1047,7 +1048,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         if (useSpreadedTermStructures_) {
                             defaultCurve = Handle<DefaultProbabilityTermStructure>(
                                 boost::make_shared<QuantExt::SpreadedSurvivalProbabilityTermStructure>(
-                                    wrapper, times, quotes,
+                                    wrapper->curve(), times, quotes,
                                     parameters->defaultCurveExtrapolation() == "FlatZero"
                                         ? QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatZero
                                         : QuantExt::SpreadedSurvivalProbabilityTermStructure::Extrapolation::flatFwd));
@@ -1061,8 +1062,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         : QuantExt::SurvivalProbabilityCurve<LogLinear>::Extrapolation::flatFwd));
                         }
                         defaultCurve->enableExtrapolation();
-                        defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
-                            make_pair(Market::defaultConfiguration, name), defaultCurve));
+                        defaultCurves_.insert(pair<pair<string, string>, Handle<CreditCurve>>(
+                            make_pair(Market::defaultConfiguration, name),
+                            Handle<CreditCurve>(boost::make_shared<CreditCurve>(
+                                defaultCurve, wrapper->rateCurve(), wrapper->recovery(), wrapper->refData()))));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, simDataWritten);
                     }
@@ -1097,16 +1100,19 @@ ScenarioSimMarket::ScenarioSimMarket(
 		    bool simDataWritten = false;
                     try {
                         LOG("building " << name << "  cds vols..");
-                        Handle<BlackVolTermStructure> wrapper = initMarket->cdsVol(name, configuration);
-                        Handle<BlackVolTermStructure> cvh;
+                        Handle<QuantExt::CreditVolCurve> wrapper = initMarket->cdsVol(name, configuration);
+                        Handle<QuantExt::CreditVolCurve> cvh;
                         if (param.second.first) {
                             LOG("Simulating CDS Vols for " << name);
                             vector<Handle<Quote>> quotes;
                             vector<Time> times;
+			    vector<Date> expiryDates;
                             DayCounter dc = wrapper->dayCounter();
                             for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
                                 Date date = asof_ + parameters->cdsVolExpiries()[i];
-                                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+				expiryDates.push_back(date);
+				// hardcoded, single term 5y
+                                Volatility vol = wrapper->volatility(date, 5.0, Null<Real>(), wrapper->type());
                                 times.push_back(dc.yearFraction(asof_, date));
                                 boost::shared_ptr<SimpleQuote> q =
                                     boost::make_shared<SimpleQuote>(useSpreadedTermStructures_ ? 0.0 : vol);
@@ -1125,30 +1131,51 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-                                cvh = Handle<BlackVolTermStructure>(
-                                    boost::make_shared<SpreadedBlackVolatilityCurve>(wrapper, times, quotes));
+                                bool stickyMoney = false;
+                                std::vector<QuantLib::Period> simTerms;
+                                std::vector<Handle<CreditCurve>> simTermCurves;
+                                if (stickyMoney) {
+                                    if (curveConfigs.hasCdsVolCurveConfig(name)) {
+                                        // get the term curves from the curve config if possible
+                                        auto cc = curveConfigs.cdsVolCurveConfig(name);
+                                        simTerms = cc->terms();
+                                        for (auto const& c : cc->termCurves())
+                                            simTermCurves.push_back(defaultCurve(parseCurveSpec(c)->curveConfigID()));
+                                    } else {
+                                        // assume the default curve names follow the naming convention volName_5Y
+                                        simTerms = wrapper->terms();
+                                        for (auto const& t : simTerms) {
+                                            simTermCurves.push_back(defaultCurve(name + "_" + ore::data::to_string(t)));
+                                        }
+                                    }
+                                }
+                                cvh = Handle<CreditVolCurve>(boost::make_shared<SpreadedCreditVolCurve>(
+                                    wrapper, expiryDates, quotes, stickyMoney, simTerms, simTermCurves));
                             } else {
-                                cvh = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
-                                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes, false));
+                                // TODO support strike and term dependence
+                                cvh = Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(
+                                    Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
+                                        0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes,
+                                        false))));
                             }
                         } else {
                             string decayModeString = parameters->cdsVolDecayMode();
                             LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            // currently only curves (i.e. strike indepdendent) CDS volatility structures are
-                            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
-                            // strike stickyness, since then no yield term structures and no fx spot are required
-                            // that define the ATM level
-                            cvh = Handle<BlackVolTermStructure>(
-                                boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                                    wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+			    // TODO support strike and term dependence, hardcoded term 5y
+                            cvh = Handle<CreditVolCurve>(
+                                boost::make_shared<CreditVolCurveWrapper>(Handle<BlackVolTermStructure>(
+                                    boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
+                                        Handle<BlackVolTermStructure>(
+                                            boost::make_shared<BlackVolFromCreditVolWrapper>(wrapper, 5.0)),
+                                        0, NullCalendar(), decayMode, StickyStrike))));
                         }
 
                         if (wrapper->allowsExtrapolation())
                             cvh->enableExtrapolation();
-                        cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-                            make_pair(Market::defaultConfiguration, name), cvh));
+                        cdsVols_.insert(pair<pair<string, string>, Handle<QuantExt::CreditVolCurve>>(
+                            make_pair(make_pair(Market::defaultConfiguration, name), cvh)));
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, simDataWritten);
                     }
@@ -2552,7 +2579,6 @@ ScenarioSimMarket::ScenarioSimMarket(
 }
 
 bool ScenarioSimMarket::addSwapIndexToSsm(const std::string& indexName, const bool continueOnError) {
-    std::cout << "looking up " << indexName << std::endl;
     auto dsc = parameters_->swapIndices().find(indexName);
     if (dsc == parameters_->swapIndices().end()) {
 	std::cout << "index not found in params!" << std::endl;

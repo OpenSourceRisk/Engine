@@ -43,6 +43,8 @@
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/termstructures/creditcurve.hpp>
+#include <qle/termstructures/creditvolcurve.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 
 namespace ore {
@@ -144,7 +146,7 @@ public:
 
     //! \name Default Curves and Recovery Rates
     //@{
-    virtual Handle<DefaultProbabilityTermStructure>
+    virtual Handle<QuantExt::CreditCurve>
     defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<Quote> recoveryRate(const string&,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
@@ -152,8 +154,8 @@ public:
 
     //! \name (Index) CDS Option volatilities
     //@{
-    virtual Handle<BlackVolTermStructure> cdsVol(const string&,
-                                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<QuantExt::CreditVolCurve>
+    cdsVol(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Base Correlation term structures

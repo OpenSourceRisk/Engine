@@ -450,6 +450,15 @@
     <ClInclude Include="qle\math\stabilisedglls.hpp">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\method_mt.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\problem_mt.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\differentialevolution_mt.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\blackvolconstantspread.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -1201,7 +1210,19 @@
     <ClInclude Include="qle\termstructures\oiscapfloorhelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\flatteneddefaultcurve.hpp">
+    <ClInclude Include="qle\math\constantinterpolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\creditcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\creditvolcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\utilities\time.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\terminterpolateddefaultcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1560,6 +1581,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\math\deltagammavar.cpp">
+      <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\differentialevolution_mt.cpp">
       <Filter>math</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp">
@@ -2051,14 +2075,20 @@
     <ClCompile Include="qle\termstructures\blackvolconstantspread.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\flatteneddefaultcurve.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
     <ClCompile Include="qle\instruments\makeoiscapfloor.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\oiscapfloorhelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\creditcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\creditvolcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\utilities\time.cpp">
+      <Filter>utilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

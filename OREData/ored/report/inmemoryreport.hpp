@@ -87,9 +87,9 @@ public:
     }
 
     void toFile(const string& filename, const char sep = ',', const bool commentCharacter = true, char quoteChar = '\0',
-                const string& nullString = "#N/A") {
+                const string& nullString = "#N/A", bool lowerHeader = false) {
 
-        CSVFileReport cReport(filename, sep, commentCharacter, quoteChar, nullString);
+        CSVFileReport cReport(filename, sep, commentCharacter, quoteChar, nullString, lowerHeader);
 
         for (Size i = 0; i < headers_.size(); i++) {
             cReport.addColumn(headers_[i], columnTypes_[i], columnPrecision_[i]);

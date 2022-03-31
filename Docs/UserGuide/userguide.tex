@@ -5321,9 +5321,9 @@ floor price surface.
 
 When configuring volatility structures for CDS and index CDS options, there are three options:
 \begin{enumerate}
-\item a constant volatility for all expiries and strikes.
-\item a volatility curve with a dependency on expiry but no strike dimension.
-\item a volatility surface with an expiry and strike dimension.
+\item a constant volatility for all expiries, strikes and terms.
+\item a volatility curve with a dependency on expiry and term, but no strike dimension.
+\item a volatility surface with an expiry, term and strike dimension.
 \end{enumerate}
 
 Firstly, the constant volatility configuration layout is given in Listing \ref{lst:cdsvol_constant_config}. The single volatility quote ID, \lstinline!constant_quote_id!, in the \lstinline!Quote! node should be a CDS option volatility quote as described in Section \ref{md:cds_option_iv}. The \lstinline!DayCounter! node is optional and defaults to \lstinline!A365F!. The \lstinline!Calendar! node is optional and defaults to \lstinline!NullCalendar!. The \lstinline!DayCounter! and \lstinline!Calendar! nodes are common to all three CDS volatility configurations.
@@ -5363,6 +5363,12 @@ The optional boolean parameter \lstinline!EnforceMontoneVariance! should be set 
     <Extrapolation>...</Extrapolation>
     <EnforceMontoneVariance></EnforceMontoneVariance>
   </Curve>
+  <Terms>
+    <Term>
+      <Label>...</Label>
+      <Curve>...</Curve>
+    </Term>
+  </Terms>
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
 </CDSVolatility>
@@ -5373,23 +5379,19 @@ The optional boolean parameter \lstinline!EnforceMontoneVariance! should be set 
 
 For backwards compatibility, the volatility curve configuration can also be given using a single \lstinline!Expiries! node as shown in Listing \ref{lst:cdsvol_curve_config_alt}. Note that this configuration is deprecated and the configuration in \ref{lst:cdsvol_curve_config} is preferred. The \lstinline!Expiries! node should take a comma separated list of tenors and or expiry dates e.g.\ \lstinline!<Expiries>1M,3M,6M</Expiries>!. The list of expiries are extracted and a set of quotes are created of the form \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[EXPIRY]! or \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/[EXPIRY]!. There is one quote for each expiry in the list where the \lstinline![EXPIRY]! field is understood to be replaced with the expiry string extracted from the list.
 
-The \lstinline![NAME]! field, and possible \lstinline![TERM]! field, in the quote depends on the values of the optional string node \lstinline!QuoteName! and the optional boolean node \lstinline!ParseTerm!. The following logic is used to populate the \lstinline![NAME]! field and possibly the \lstinline![TERM]! field:
+The \lstinline![NAME]! field is populated with the curve id or with the \lstinline![QuoteName]! if that is specified. The rules for including market quotes into the volatility surface construction are as follows:
 
 \begin{itemize}
-\item
-if \lstinline!QuoteName! is provided, it is used directly to populate the \lstinline![NAME]! field. In other words, the quotes will be of the first form i.e.\ \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/QuoteName/[EXPIRY]! and the \lstinline![TERM]! field is not added to the quote string. Note that there is nothing stopping the user from adding the term directly to the \lstinline!QuoteName! i.e.\ using a \lstinline!QuoteName! of \lstinline!SubQuoteName/Term!. In this way, the quotes will be of the second form i.e.\ \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/SubQuoteName/Term/[EXPIRY]! and \lstinline![NAME]! has been populated with \lstinline!SubQuoteName! and \lstinline![TERM]! has been populated with \lstinline!Term!. Obviously, for the quote to be parsed properly, \lstinline!Term! needs to be a valid tenor string.
-
-\item
-if \lstinline!QuoteName! is not provided and \lstinline!ParseTerm! is provided and is \lstinline!true!, an attempt is made to parse a \lstinline!SubCurveId! and \lstinline!Term! from the \lstinline!CurveId! node. In particular, the parsing routine expects the \lstinline!CurveId! to be of the form \lstinline!SubCurveId-Term!. If this is the case, the \lstinline![NAME]! field is populated with \lstinline!SubCurveId/Term!. The reason for this logic is to easily allow different volatility structures for different terms of the same index CDS series or the same CDS reference entity.
-
-As a concrete example, we could have two volatility structures with \lstinline!CurveId!s equal to \lstinline!CDXHYS34V1-5Y! and \lstinline!CDXHYS34V1-10Y!. Assume that \lstinline!QuoteName! is not provided and \lstinline!ParseTerm! is provided and is \lstinline!true! in both configurations. For \lstinline!CDXHYS34V1-5Y!, quotes will be of the form \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/CDXHYS34V1/5Y/[EXPIRY]! and for \lstinline!CDXHYS34V1-10Y!, quotes will be of the form \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/CDXHYS34V1/10Y/[EXPIRY]!.
-
-If the attempt to parse a \lstinline!SubCurveId! and \lstinline!Term! from the \lstinline!CurveId! node fails, the \lstinline![NAME]! field is simply populated with the \lstinline!CurveId! node value.
-
-\item
-if \lstinline!QuoteName! is not provided and \lstinline!ParseTerm! is not provided or is provided and is \lstinline!false!, the \lstinline![NAME]! field is simply populated with the \lstinline!CurveId! node value.
-
+\item All quotes explicitly specified with their full name are loaded (applies to configs of type constant or curve
+  without wildcards)
+\item If a quote does not contain a term, we only load it if at most one term is specified in the vol curve config. The
+  quote gets the unique term specified in the vol curve configs assigned or 5Y if the config does not specify any terms.
+\item If a quote contains a term if this matches one of the configured terms in the curve configuration or if the curve
+  configuration does not specify any terms.
 \end{itemize}
+
+The \lstinline![Terms]! node specifies a list of term labels ``5Y'', ``7Y'', ... and associated credit curve spec names
+representing the curve suitable to estimate the ATM level for that term.
 
 If only one expiry is provided in the list, there is only one quote and a constant volatility structure is configured as in Listing \ref{lst:cdsvol_constant_config}. If more than one expiry is provided, a curve is configured as in \ref{lst:cdsvol_curve_config}. The interpolation is \lstinline!Linear!, the extrapolation is \lstinline!Flat! and \lstinline!EnforceMontoneVariance! is \lstinline!true!.
 
@@ -5402,7 +5404,12 @@ If only one expiry is provided in the list, there is only one quote and a consta
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
   <QuoteName>...</QuoteName>
-  <ParseTerm>...</ParseTerm>
+  <Terms>
+    <Term>
+      <Label>...</Label>
+      <Curve>...</Curve>
+    </Term>
+  </Terms>
 </CDSVolatility>
 \end{minted}
 \caption{Legacy deprecated CDS volatility curve configuration}
@@ -5447,12 +5454,9 @@ Thirdly, the volatility surface configuration layout is given in Listing \ref{ls
 \item
 \lstinline!StrikeFactor!: this node is optional and the allowable value is any postive real number. It defaults to 1. The strikes configured and found in the market data quote strings may not be in absolute terms. For example, a quote string such as \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/CDXIGS33V1/5Y/1M/115! could be given to indicate an index CDS option volatility quote for CDX IG Series 33 Version 1, with underlying index term 5Y expiring in 1M with a strike spread of 115 bps. The strike here is in bps and needs to be divided by 10,000 before being used in the ORE volatility objects. The \lstinline!StrikeFactor! would be set to \lstinline!10000! here.
 
-\item
-\lstinline!ParseTerm!: this node is an optional boolean and defaults to \lstinline!false!. This value can be used in determining the name and term that appears in the quote strings that are searched for in the market data to feed into the CDS volatility surface construction. How it is used has been outlined above when describing the derprecated CDS volatility curve configuration.
-
 \end{itemize}
 
-When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surface_config}, the market is searched for quote strings of the form \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[EXPIRY]/[STRIKE]! or \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/[EXPIRY]/[STRIKE]!. The population of the \lstinline![NAME]! field, and possibly the \lstinline![TERM]! field, and how they depend on the \lstinline!QuoteName! and \lstinline!ParseTerm! nodes has been discussed at length above when describing the derprecated CDS volatility curve configuration. When both the \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, it is clear that the \lstinline![EXPIRY]! field is populated from the list of expiries in turn and the \lstinline![STRIKE]! field is populated from the list of strikes in turn. If there are $m$ expiries in the \lstinline!Expiries! list and $n$ strikes in the \lstinline!Strikes! list, there will be $m \times n$ quotes created and searched for in the market data. If \lstinline!Expiries! are configured via the wildcard character, \lstinline!*!, all quotes in the market data matching the pattern \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/*/[STRIKE]! will be used if \lstinline![TERM]! has not been populated and all quotes in the market data matching the pattern \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/*/[STRIKE]! will be used if \lstinline![TERM]! has been populated. Similarly for \lstinline!Strikes! configured via the wildcard character, \lstinline!*!.
+When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surface_config}, the market is searched for quote strings of the form \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[EXPIRY]/[STRIKE]! or \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/[EXPIRY]/[STRIKE]!. The population of the \lstinline![NAME]! field, and possibly the \lstinline![TERM]! field has been discussed above. When both the \lstinline!Strikes! and \lstinline!Expiries! are configured explicitly, it is clear that the \lstinline![EXPIRY]! field is populated from the list of expiries in turn and the \lstinline![STRIKE]! field is populated from the list of strikes in turn. If there are $m$ expiries in the \lstinline!Expiries! list and $n$ strikes in the \lstinline!Strikes! list, there will be $m \times n$ quotes created and searched for in the market data. If \lstinline!Expiries! are configured via the wildcard character, \lstinline!*!, all quotes in the market data matching the pattern \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/*/[STRIKE]! will be used if \lstinline![TERM]! has not been populated and all quotes in the market data matching the pattern \lstinline!INDEX_CDS_OPTION/RATE_LNVOL/[NAME]/[TERM]/*/[STRIKE]! will be used if \lstinline![TERM]! has been populated. Similarly for \lstinline!Strikes! configured via the wildcard character, \lstinline!*!.
 
 \begin{longlisting}
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -5468,6 +5472,12 @@ When the CDS volatility surface is configured as in Listing \ref{lst:cdsvol_surf
     <TimeExtrapolation>...</TimeExtrapolation>
     <StrikeExtrapolation>...</StrikeExtrapolation>
   </StrikeSurface>
+  <Terms>
+    <Term>
+      <Label>...</Label>
+      <Curve>...</Curve>
+    </Term>
+  </Terms>
   <DayCounter>...</DayCounter>
   <Calendar>...</Calendar>
   <StrikeType>...</StrikeType>

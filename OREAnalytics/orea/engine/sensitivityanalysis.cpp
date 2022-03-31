@@ -538,10 +538,9 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size keyIdx = key.index;
             Size expIdx = keyIdx;
             Period p_exp = expiries[expIdx];
-            Handle<BlackVolTermStructure> vts = simMarket->cdsVol(name, marketConfiguration);
-            Time t_exp = vts->dayCounter().yearFraction(asof, asof + p_exp);
-            Real strike = 0.0; // FIXME
-            Real atmVol = vts->blackVol(t_exp, strike);
+            Handle<CreditVolCurve> vts = simMarket->cdsVol(name, marketConfiguration);
+            // hardcoded 5y term
+            Real atmVol = vts->volatility(asof + p_exp, 5.0, Null<Real>(), vts->type());
             shiftMult = atmVol;
         }
     } break;
@@ -553,7 +552,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
-            Handle<DefaultProbabilityTermStructure> ts = simMarket->defaultCurve(name, marketConfiguration);
+            Handle<DefaultProbabilityTermStructure> ts = simMarket->defaultCurve(name, marketConfiguration)->curve();
             Time t = ts->dayCounter().yearFraction(asof, asof + p);
             Real prob = ts->survivalProbability(t);
             shiftMult = -std::log(prob) / t;

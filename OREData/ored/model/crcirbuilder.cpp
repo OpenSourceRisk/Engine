@@ -35,7 +35,7 @@ CrCirBuilder::CrCirBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     LOG("CIR CR Calibration for name " << data_->name());
 
     rateCurve_ = market->discountCurve(data_->currency(), configuration);
-    creditCurve_ = market->defaultCurve(data_->name(), configuration);
+    creditCurve_ = market->defaultCurve(data_->name(), configuration)->curve();
     recoveryRate_ = market->recoveryRate(data_->name(), configuration);
 
     registerWith(rateCurve_);

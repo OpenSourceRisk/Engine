@@ -621,7 +621,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     for (auto it : defaultCurves) {
         DLOG("default curve - " << it.first);
         try {
-            probabilityCurves.push_back(market->defaultCurve(it.first, configID));
+            probabilityCurves.push_back(market->defaultCurve(it.first, configID)->curve());
             report.addColumn(it.first, double(), 15);
         } catch (const std::exception& e) {
             if (continueOnError) {

@@ -74,7 +74,8 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
     Handle<BlackVolTermStructure> h(
         boost::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(blackVol_), Actual365Fixed()));
 
-    blackEngine_ = boost::make_shared<BlackCdsOptionEngine>(probability, recoveryRate, termStructure, h);
+    blackEngine_ = boost::make_shared<BlackCdsOptionEngine>(
+        probability, recoveryRate, termStructure, Handle<CreditVolCurve>(boost::make_shared<CreditVolCurveWrapper>(h)));
 }
 
 Real CdsOptionHelper::modelValue() const {

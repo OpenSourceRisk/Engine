@@ -339,7 +339,7 @@ void PostProcess::updateNettingSetKVA() {
 
         // PD from counterparty Dts, floored to avoid 0 ...
         // Today changed to today+1Y to get the one-year PD
-        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid, configuration_);
+        Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid, configuration_)->curve();
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
         Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
         Real PD1 = std::max(cvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
@@ -353,7 +353,7 @@ void PostProcess::updateNettingSetKVA() {
             dvaName_ = nettedExposureCalculator_->counterparty(nettingSetId);
         }
         if (dvaName_ != "") {
-            dvaDts = market_->defaultCurve(dvaName_, configuration_);
+            dvaDts = market_->defaultCurve(dvaName_, configuration_)->curve();
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
             PD2 = std::max(dvaDts->defaultProbability(today + 1 * Years), 0.000000000001);
         } else {
@@ -531,7 +531,7 @@ void PostProcess::updateNettingSetCvaSensitivity() {
         } else {
             cid = nettedExposureCalculator_->counterparty(nettingSetId);
         }
-        cvaDts = market_->defaultCurve(cid);
+        cvaDts = market_->defaultCurve(cid)->curve();
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
         cvaRR = market_->recoveryRate(cid, configuration_)->value();
 

@@ -110,6 +110,7 @@ math/deltagammavar.cpp
 math/fillemptymatrix.cpp
 math/randomvariable.cpp
 math/randomvariable_io.cpp
+math/differentialevolution_mt.cpp
 methods/multipathgeneratorbase.cpp
 models/annuitymapping.cpp
 models/carrmadanarbitragecheck.cpp
@@ -206,6 +207,8 @@ termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
 termstructures/correlationtermstructure.cpp
+termstructures/creditcurve.cpp
+termstructures/creditvolcurve.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatmtmresetswaphelper.cpp
@@ -223,7 +226,6 @@ termstructures/eqcommoptionsurfacestripper.cpp
 termstructures/equityblackvolsurfaceproxy.cpp
 termstructures/equityforwardcurvestripper.cpp
 termstructures/flatcorrelation.cpp
-termstructures/flatteneddefaultcurve.cpp
 termstructures/futurepricehelper.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
@@ -263,7 +265,8 @@ termstructures/tenorbasisswaphelper.cpp
 termstructures/yoyinflationoptionletvolstripper.cpp
 time/dateutilities.cpp
 time/yearcounter.cpp
-utilities/inflation.cpp)
+utilities/inflation.cpp
+utilities/time.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -448,6 +451,9 @@ math/randomvariable.hpp
 math/randomvariable_io.hpp
 math/stabilisedglls.hpp
 math/trace.hpp
+math/method_mt.hpp
+math/problem_mt.hpp
+math/differentialevolution_mt.hpp
 methods/multipathgeneratorbase.hpp
 methods/pathgeneratorfactory.hpp
 models/annuitymapping.hpp
@@ -567,6 +573,8 @@ termstructures/capfloortermvolsurfacesparse.hpp
 termstructures/commodityaveragebasispricecurve.hpp
 termstructures/commoditybasispricecurve.hpp
 termstructures/correlationtermstructure.hpp
+termstructures/creditcurve.hpp
+termstructures/creditvolcurve.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatmtmresetswaphelper.hpp
@@ -587,7 +595,6 @@ termstructures/eqcommoptionsurfacestripper.hpp
 termstructures/equityblackvolsurfaceproxy.hpp
 termstructures/equityforwardcurvestripper.hpp
 termstructures/flatcorrelation.hpp
-termstructures/flatteneddefaultcurve.hpp
 termstructures/futurepricehelper.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
@@ -649,6 +656,7 @@ termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
 termstructures/tenorbasisswaphelper.hpp
+termstructures/terminterpolateddefaultcurve.hpp
 termstructures/weightedyieldtermstructure.hpp
 termstructures/yieldplusdefaultyieldtermstructure.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
@@ -660,7 +668,9 @@ time/dateutilities.hpp
 time/futureexpirycalculator.hpp
 time/yearcounter.hpp
 utilities/inflation.hpp
+utilities/interpolation.hpp
 utilities/savedobservablesettings.hpp
+utilities/time.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

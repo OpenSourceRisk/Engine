@@ -47,7 +47,7 @@ Real SurvivalProbabilityCalculator::survProb(const std::string& name,
     Real survivalProb = 1.0;
 
     try {
-        Handle<DefaultProbabilityTermStructure> dts = simMarket->defaultCurve(name, configuration_);
+        Handle<DefaultProbabilityTermStructure> dts = simMarket->defaultCurve(name, configuration_)->curve();
         QL_REQUIRE(!dts.empty(), "Default curve missing for counterparty " << name);
         survivalProb = dts->survivalProbability(date == Date() ? dts->referenceDate() : date);
     } catch (std::exception& e) {
