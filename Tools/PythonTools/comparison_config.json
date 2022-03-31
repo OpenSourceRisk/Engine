@@ -919,6 +919,28 @@
             "rel_tol": 1e-12
           }
         ]
+      },
+      "criftotrade_trade_summary.csv": {
+        "keys": [
+          "trade_id",
+          "trade_type",
+          "maturity",
+          "currency1",
+          "currency2",
+          "settlement",
+          "xccy_fx_reset",
+          "xccy_capitalexchange"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "notional1",
+              "notional2"
+            ],
+            "abs_tol": 1,
+            "rel_tol": 1e-4
+          }
+        ]
       }
     }
   }
