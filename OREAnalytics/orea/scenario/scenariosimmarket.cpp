@@ -241,6 +241,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     std::map<RiskFactorKey, Real> absoluteSimDataTmp;
     for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
         Real val = wrapper->discount(yieldCurveDates[i + 1]);
+        DLOG("ScenarioSimMarket yield curve " << rf << " " << key << " discount[" << i << "]=" << val);
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spreaded ? 1.0 : val));
         Handle<Quote> qh(q);
         quotes.push_back(qh);
