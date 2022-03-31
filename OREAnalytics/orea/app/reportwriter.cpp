@@ -1068,14 +1068,10 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 notional2Ccy = trade->additionalDatum<string>("notionalCurrency[2]");
             }
 
-	    // FIXME, see ore ticket 2136
-            if (trade->instrument()->qlInstrument(false)) {
-                auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
-                if (additionalResults.count("notional[2]") != 0 &&
-                    additionalResults.count("notionalCurrency[2]") != 0) {
-                    notional2 = trade->instrument()->qlInstrument()->result<Real>("notional[2]");
-                    notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalCurrency[2]");
-                }
+            auto additionalResults = trade->instrument()->additionalResults();
+            if (additionalResults.count("notional[2]") != 0 && additionalResults.count("notionalCurrency[2]") != 0) {
+                notional2 = trade->instrument()->qlInstrument()->result<Real>("notional[2]");
+                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalCurrency[2]");
             }
 
             if (notional2 != Null<Real>() && notional2Ccy != "") {
@@ -1097,27 +1093,23 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                        "Expected the number of "
                            << "additional instruments (" << instruments.size() << ") to equal the number of "
                            << "additional multipliers (" << multipliers.size() << ").");
-	    // FIXME, see ore ticket 2136
-            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument(false));
-            multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
 
-            for (Size i = 0; i < instruments.size(); ++i) {
+            for (Size i = 0; i <= instruments.size(); ++i) {
 
-                const auto& instrument = instruments[i];
-
-                if (!instrument)
+                if (i > 0 && instruments[i - 1] == nullptr)
                     continue;
+
+                std::map<std::string, boost::any> thisAddResults =
+                    i == 0 ? additionalResults : instruments[i - 1]->additionalResults();
 
                 // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in
                 // the portfolio (still a risk).
                 tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
 
-                // Get the additional results for the current instrument.
-                auto additionalResults = instrument->additionalResults();
                 // Add the multiplier if there are additional results.
                 // Check on 'instMultiplier' already existing is probably unnecessary.
-                if (!additionalResults.empty() && additionalResults.count("instMultiplier") == 0) {
-                    additionalResults["instMultiplier"] = multipliers[i];
+                if (!thisAddResults.empty() && thisAddResults.count("instMultiplier") == 0) {
+                    thisAddResults["instMultiplier"] = i == 0 ? trade->instrument()->multiplier() : multipliers[i - 1];
                 }
 
                 // Write current instrument's additional results.
