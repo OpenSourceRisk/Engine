@@ -41,7 +41,12 @@ Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engin
 Leg ZeroCouponFixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                         RequiredFixings& requiredFixings, const string& configuration,
                                         const QuantLib::Date& openEndDateReplacement) const {
-    return makeZCFixedLeg(data);
+    Leg leg = makeZCFixedLeg(data);
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(leg, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+    addToRequiredFixings(leg, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    return leg;
+
 }
 
 Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
@@ -131,8 +136,10 @@ Leg CPILegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     string inflationIndexName = cpiData->index();
     auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
     Leg result = makeCPILeg(data, index, engineFactory, openEndDateReplacement);
-    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(
-                                     requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+    qlToOREIndexNames[index->name()] = inflationIndexName;
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
 
@@ -144,18 +151,21 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFa
     string inflationIndexName = yyData->index();
     bool irregularYoY = yyData->irregularYoY();
     Leg result;
+    std::map<std::string, std::string> qlToOREIndexNames;
     if (!irregularYoY) {
         auto index = *engineFactory->market()->yoyInflationIndex(inflationIndexName, configuration);
         result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
+        applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+        qlToOREIndexNames[index->name()] = inflationIndexName;
         addToRequiredFixings(result,
-                             boost::make_shared<FixingDateGetter>(
-                                 requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
+                             boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     } else {
         auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
         result = makeYoYLeg(data, index, engineFactory, openEndDateReplacement);
+        applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+        qlToOREIndexNames[index->name()] = inflationIndexName;
         addToRequiredFixings(result,
-                             boost::make_shared<FixingDateGetter>(
-                                 requiredFixings, std::map<string, string>{{index->name(), inflationIndexName}}));
+                             boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     }
     return result;
 }
