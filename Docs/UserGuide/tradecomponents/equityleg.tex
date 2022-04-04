@@ -8,8 +8,9 @@ b) an InitialPrice and a Notional in the leg
 The EquityLegData block contains the following elements:
 
 \begin{itemize}
-\item Quantity[Mandatory if FXTerms is used (except if NotionalReset is \emph{false}), Optional otherwise]: 
-\\ The number of shares. Either a Notional or the Quantity must be given for the leg, but not both at the same time. Note that when FXTerms is used and NotionalReset is set to  \emph{true}, Quantity must be given, and Notional cannot be used.
+\item Quantity[Optional with one exception]: The number of shares. Either a Notional or the Quantity must be given for the leg, but not both at the same time. 
+
+Quantity is optional with the exception that when FXTerms is used and NotionalReset is set to  \emph{true}, and the InitialPriceCurrency differs from the leg currency, Quantity must be given, and Notional cannot be used.
 
   Allowable values: Any positive real number
 
