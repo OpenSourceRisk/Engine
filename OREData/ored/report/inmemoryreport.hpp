@@ -76,6 +76,7 @@ public:
     Size columns() const { return headers_.size(); }
     Size rows() const { return data_[0].size(); }
     const string& header(Size i) const { return headers_[i]; }
+    bool hasHeader(string h) const { return std::find(headers_.begin(), headers_.end(), h) != headers_.end(); }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
     Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
