@@ -1103,7 +1103,7 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 }
 
                 // Write current instrument's additional results.
-                for (const auto& kv : additionalResults) {
+                for (const auto& kv : thisAddResults) {
                     // some results are stored as maps. We loop over these so that there is one result per line
                     if (kv.second.type() == typeid(result_type_matrix)) {
                         addMapResults<result_type_matrix>(kv.second, tradeId, kv.first, report);
