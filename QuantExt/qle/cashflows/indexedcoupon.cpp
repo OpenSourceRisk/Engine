@@ -74,6 +74,47 @@ void IndexedCoupon::accept(AcyclicVisitor& v) {
         Coupon::accept(v);
 }
 
+IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty,
+    const boost::shared_ptr<Index>& index,const Date& fixingDate)
+    : c_(c), qty_(qty), index_(index), fixingDate_(fixingDate), initialFixing_(Null<Real>()) {
+    QL_REQUIRE(index, "IndexWrappedCashFlow: index is null");
+    QL_REQUIRE(fixingDate != Date(), "IndexWrappedCashFlow: fixingDate is null");
+    registerWith(c);
+    registerWith(index);
+}
+
+IndexWrappedCashFlow::IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty,
+    const Real initialFixing)
+    : c_(c), qty_(qty), initialFixing_(initialFixing) {
+    QL_REQUIRE(initialFixing != Null<Real>(), "IndexWrappedCashFlow: initial fixing is null");
+    registerWith(c);
+}
+
+void IndexWrappedCashFlow::update() { notifyObservers(); }
+
+Date IndexWrappedCashFlow::date() const { return c_->date(); }
+Real IndexWrappedCashFlow::amount() const { return c_->amount() * multiplier(); }
+
+Real IndexWrappedCashFlow::multiplier() const { return index_ ? qty_ * index_->fixing(fixingDate_) : qty_ * initialFixing_; }
+
+boost::shared_ptr<CashFlow> IndexWrappedCashFlow::underlying() const { return c_; }
+
+Real IndexWrappedCashFlow::quantity() const { return qty_; }
+
+const Date& IndexWrappedCashFlow::fixingDate() const { return fixingDate_; }
+
+Real IndexWrappedCashFlow::initialFixing() const { return initialFixing_; }
+
+boost::shared_ptr<Index> IndexWrappedCashFlow::index() const { return index_; }
+
+void IndexWrappedCashFlow::accept(AcyclicVisitor& v) {
+    Visitor<IndexWrappedCashFlow>* v1 = dynamic_cast<Visitor<IndexWrappedCashFlow>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        CashFlow::accept(v);
+}
+
 IndexedCouponLeg::IndexedCouponLeg(const Leg& underlyingLeg, const Real qty, const boost::shared_ptr<Index>& index)
     : underlyingLeg_(underlyingLeg), qty_(qty), index_(index), initialFixing_(Null<Real>()), fixingDays_(0),
       fixingCalendar_(NullCalendar()), fixingConvention_(Preceding) {
@@ -115,43 +156,56 @@ IndexedCouponLeg::operator Leg() const {
     resultLeg.reserve(underlyingLeg_.size());
 
     for (Size i = 0; i < underlyingLeg_.size(); ++i) {
-        auto cpn = boost::dynamic_pointer_cast<Coupon>(underlyingLeg_[i]);
-        QL_REQUIRE(cpn, "IndexedCouponLeg: coupon required");
-
         bool firstValuationDate = (i == 0);
         Date fixingDate;
-        if (valuationSchedule_.empty()) {
-            fixingDate = inArrearsFixing_ ? cpn->accrualEndDate() : cpn->accrualStartDate();
-        } else {
-            if (valuationSchedule_.size() == underlyingLeg_.size() + 1) {
-                // valuation schedule corresponds one to one to underlying schedule
-                fixingDate = inArrearsFixing_ ? valuationSchedule_.date(i + 1) : valuationSchedule_.date(i);
+
+        if (auto cpn = boost::dynamic_pointer_cast<Coupon>(underlyingLeg_[i])) {
+            if (valuationSchedule_.empty()) {
+                fixingDate = inArrearsFixing_ ? cpn->accrualEndDate() : cpn->accrualStartDate();
             } else {
-                // look for the latest valuation date less or equal to the underlying accrual start date (if
-                // the indexing is using in advance fixing) resp. accrual end date (for in arrears fixing)
-                auto valDates = valuationSchedule_.dates();
-                Date refDate = inArrearsFixing_ ? cpn->accrualEndDate() : cpn->accrualStartDate();
-                Size index =
-                    std::distance(valDates.begin(), std::upper_bound(valDates.begin(), valDates.end(), refDate));
-                QL_REQUIRE(index > 0, "IndexedCouponLeg: First valuation date ("
-                                          << valDates.front() << ") must be leq accrual "
-                                          << (inArrearsFixing_ ? "end" : "start") << " date ("
-                                          << cpn->accrualStartDate() << ") of the " << (i + 1)
-                                          << "th coupon in the underlying leg");
-                fixingDate = valuationSchedule_.date(index - 1);
-                firstValuationDate = (index == 1);
+                if (valuationSchedule_.size() == underlyingLeg_.size() + 1) {
+                    // valuation schedule corresponds one to one to underlying schedule
+                    fixingDate = inArrearsFixing_ ? valuationSchedule_.date(i + 1) : valuationSchedule_.date(i);
+                } else {
+                    // look for the latest valuation date less or equal to the underlying accrual start date (if
+                    // the indexing is using in advance fixing) resp. accrual end date (for in arrears fixing)
+                    auto valDates = valuationSchedule_.dates();
+                    Date refDate = inArrearsFixing_ ? cpn->accrualEndDate() : cpn->accrualStartDate();
+                    Size index =
+                        std::distance(valDates.begin(), std::upper_bound(valDates.begin(), valDates.end(), refDate));
+                    QL_REQUIRE(index > 0, "IndexedCouponLeg: First valuation date ("
+                                              << valDates.front() << ") must be leq accrual "
+                                              << (inArrearsFixing_ ? "end" : "start") << " date ("
+                                              << cpn->accrualStartDate() << ") of the " << (i + 1)
+                                              << "th coupon in the underlying leg");
+                    fixingDate = valuationSchedule_.date(index - 1);
+                    firstValuationDate = (index == 1);
+                }
             }
-        }
 
-        fixingDate = fixingCalendar_.advance(fixingDate, -static_cast<int>(fixingDays_), Days, fixingConvention_);
-	if(index_ != nullptr)
-            fixingDate = index_->fixingCalendar().adjust(fixingDate, Preceding);
+            fixingDate = fixingCalendar_.advance(fixingDate, -static_cast<int>(fixingDays_), Days, fixingConvention_);
+            if (index_ != nullptr)
+                fixingDate = index_->fixingCalendar().adjust(fixingDate, Preceding);
 
-        if (firstValuationDate && initialFixing_ != Null<Real>()) {
-            resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_));
+            if (firstValuationDate && initialFixing_ != Null<Real>()) {
+                resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, initialFixing_));
+            } else {
+                resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, index_, fixingDate));
+            }
+        } else if (auto csf = boost::dynamic_pointer_cast<CashFlow>(underlyingLeg_[i])) {
+            fixingDate = fixingCalendar_.advance(csf->date(), -static_cast<int>(fixingDays_), Days, fixingConvention_);
+            // use the initial fixing if the cashflow date equals the first date in the schedule
+            if (!valuationSchedule_.empty() && valuationSchedule_.dates().size() > 0 &&
+                valuationSchedule_.date(0) == csf->date() && initialFixing_ != Null<Real>()) {
+                resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, initialFixing_));
+            } else {
+                resultLeg.push_back(boost::make_shared<IndexWrappedCashFlow>(csf, qty_, index_, fixingDate));
+            }
         } else {
-            resultLeg.push_back(boost::make_shared<IndexedCoupon>(cpn, qty_, index_, fixingDate));
+            QL_FAIL("IndexedCouponLeg: coupon or cashflow required");
         }
+
+        
     }
 
     return resultLeg;
