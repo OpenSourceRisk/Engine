@@ -4893,7 +4893,7 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
 
 \begin{longlisting}
 %\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
+\begin{minted}[fontsize=\footnotesize, texcomments]{xml}
 <EquityCurves>
   <EquityCurve>
     <CurveId>SP5</CurveId>
@@ -4918,7 +4918,7 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <DividendInterpolation>
       <!-- Zero, Discount -->
       <InterpolationVariable>Zero</InterpolationVariable>
-      <!-- See \ref{tab:allow_interp_methods} -->
+      <!-- See Table \ref{tab:allow_interp_methods} for allowed interpolation methods -->
       <InterpolationMethod>LogLinear</InterpolationMethod>
     </DividendInterpolation>
     <!-- Optional node, defaults to true -->
