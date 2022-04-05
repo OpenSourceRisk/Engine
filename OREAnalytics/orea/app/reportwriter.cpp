@@ -165,8 +165,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
         // if trade provides cashflows as additional results, we use that information instead of the legs
 
-        bool useAdditionalResults = trades[k]->instrument()->additionalResults().find("cashFlowResults") !=
-                                    trades[k]->instrument()->additionalResults().end();
+        bool useAdditionalResults = false;
+        try {
+            useAdditionalResults = trades[k]->instrument()->additionalResults().find("cashFlowResults") !=
+                                   trades[k]->instrument()->additionalResults().end();
+        } catch (...) {
+        }
 
         try {
 
