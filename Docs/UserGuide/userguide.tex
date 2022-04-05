@@ -2606,7 +2606,7 @@ section).  Key {\tt grid} defines the time grid on which the yield curves are ev
 this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by
 a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
 
-The additionalResults analytic writes a report containing any additional results generated for the portfolio. The results are pricingengine specific but Table \ref{additionalreport} shows the output for a vanilla swaption.
+The additionalResults analytic writes a report containing any additional results generated for the portfolio. The results are pricing engine specific but Table \ref{additionalreport} shows the output for a vanilla swaption.
 
 \begin{table}[hbt]
 \scriptsize
@@ -4866,7 +4866,7 @@ The meaning of each of the elements in Listings \ref{lst:fxoptionvol_configurati
     ATM} or {\tt Delta} or {\tt BFRR} curves.
 \item Deltas [Optional]: Strike grid, required in case of SmileType {\tt Delta} \\ Allowable values: {\tt ATM, *P, *C},
   see example in Listing \ref{lst:fxoptionvol_configuration_smile_delta}
-\item SmileDeltas [Optional]: Strike grid for SmileType {\tt VannaVolga} and {\tt BFRR}, defaults to 25 for VannaVolga
+\item SmileDelta [Optional]: Strike grid for SmileType {\tt VannaVolga} and {\tt BFRR}, defaults to 25 for VannaVolga
   resp. 10,25 for BFRR \\ Allowable values: a list of integers, see example in Listing
   \ref{lst:fxoptionvol_configuration_smile_bfrr}
 \item FXSpotID: ORE representation of the relevant FX spot quote in the form FX/CCY1/CCY2 
@@ -5128,7 +5128,7 @@ see \ref{md:equity_option_iv} for details of the market data.
 \label{lst:eqoptionvol_mny_surface}
 \end{longlisting}
 
-Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!ProxySurface! field, which must match the \lstinline!CurveId! of another configuration. The proxy surface looks up the volatility in the reference surface bases on moneyness.
+Finally, the volatility proxy surface configuration layout is given in Listing \ref{lst:eqoptionvol_proxy}. This allows us to use any other surface as a proxy, in cases where there is no option data for a given equity. We provide a name in the \lstinline!ProxySurface! field, which must match the \lstinline!CurveId! of another configuration. The proxy surface looks up the volatility in the reference surface based on moneyness.
  
 \begin{longlisting}
 %\hrule\medskip
