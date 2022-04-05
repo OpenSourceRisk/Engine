@@ -30,17 +30,33 @@ namespace QuantExt {
 SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
     const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
     const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
-    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const boost::shared_ptr<SwapIndex>& swapIndexBase,
-    const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, const bool stickyAbsMoney)
+    const std::vector<std::vector<Handle<Quote>>>& volSpreads, const boost::shared_ptr<SwapIndex>& baseSwapIndexBase,
+    const boost::shared_ptr<SwapIndex>& baseShortSwapIndexBase,
+    const boost::shared_ptr<SwapIndex>& simulatedSwapIndexBase,
+    const boost::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase, const bool stickyAbsMoney)
     : SwaptionVolatilityDiscrete(optionTenors, swapTenors, 0, base->calendar(), base->businessDayConvention(),
                                  base->dayCounter()),
-      base_(base), strikeSpreads_(strikeSpreads), volSpreads_(volSpreads), swapIndexBase_(swapIndexBase),
-      shortSwapIndexBase_(shortSwapIndexBase), stickyAbsMoney_(stickyAbsMoney) {
+      base_(base), strikeSpreads_(strikeSpreads), volSpreads_(volSpreads), baseSwapIndexBase_(baseSwapIndexBase),
+      baseShortSwapIndexBase_(baseShortSwapIndexBase), simulatedSwapIndexBase_(simulatedSwapIndexBase),
+      simulatedShortSwapIndexBase_(simulatedShortSwapIndexBase), stickyAbsMoney_(stickyAbsMoney) {
     enableExtrapolation(base_->allowsExtrapolation());
     registerWith(base_);
-    QL_REQUIRE((swapIndexBase_ == nullptr && shortSwapIndexBase_ == nullptr) ||
-                   (swapIndexBase_ != nullptr && shortSwapIndexBase_ != nullptr),
-               "SpreadedSwaptionVolatility: swapIndexBase and shortSwapIndexBase must be both null or non-null");
+    QL_REQUIRE(
+        (baseSwapIndexBase_ == nullptr && baseShortSwapIndexBase_ == nullptr) ||
+            (baseSwapIndexBase_ != nullptr && baseShortSwapIndexBase_ != nullptr),
+        "SpreadedSwaptionVolatility: baseSwapIndexBase and baseShortSwapIndexBase must be both null or non-null");
+    QL_REQUIRE((simulatedSwapIndexBase_ == nullptr && simulatedShortSwapIndexBase_ == nullptr) ||
+                   (simulatedSwapIndexBase_ != nullptr && simulatedShortSwapIndexBase_ != nullptr),
+               "SpreadedSwaptionVolatility: simulatedSwapIndexBase and simulatedShortSwapIndexBase must be both null "
+               "or non-null");
+    if (baseSwapIndexBase_)
+        registerWith(baseSwapIndexBase_);
+    if (baseShortSwapIndexBase_)
+        registerWith(baseShortSwapIndexBase_);
+    if (simulatedSwapIndexBase_)
+        registerWith(simulatedSwapIndexBase_);
+    if (simulatedShortSwapIndexBase_)
+        registerWith(simulatedShortSwapIndexBase_);
     QL_REQUIRE(!strikeSpreads_.empty(), "SpreadedSwaptionVolatility: empty strike spreads");
     QL_REQUIRE(!optionTenors_.empty(), "SpreadedSwaptionVolatility: empty option tenors");
     QL_REQUIRE(!swapTenors_.empty(), "SpreadedSwaptionVolatility: empty swap tenors");
@@ -74,29 +90,38 @@ void SpreadedSwaptionVolatility::deepUpdate() {
     update();
 }
 const Handle<SwaptionVolatilityStructure>& SpreadedSwaptionVolatility::baseVol() { return base_; }
+
+Real SpreadedSwaptionVolatility::getAtmLevel(const Real optionTime, const Real swapLength,
+                                             const boost::shared_ptr<SwapIndex> swapIndexBase,
+                                             const boost::shared_ptr<SwapIndex> shortSwapIndexBase) const {
+    Date optionDate = optionDateFromTime(optionTime);
+    Rounding rounder(0);
+    Period swapTenor(static_cast<Integer>(rounder(swapLength * 12.0)), Months);
+    optionDate = swapTenor > shortSwapIndexBase->tenor()
+                     ? swapIndexBase->fixingCalendar().adjust(optionDate, Following)
+                     : shortSwapIndexBase->fixingCalendar().adjust(optionDate, Following);
+    if (swapTenor > shortSwapIndexBase->tenor()) {
+        return swapIndexBase->clone(swapTenor)->fixing(optionDate);
+    } else {
+        return shortSwapIndexBase->clone(swapTenor)->fixing(optionDate);
+    }
+}
+
 boost::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Time optionTime, Time swapLength) const {
     calculate();
     auto baseSection = base_->smileSection(optionTime, swapLength);
-    Real atmLevel = Null<Real>();
-    if (stickyAbsMoney_ || (baseSection->atmLevel() == Null<Real>() && strikeSpreads_.size() > 1)) {
-        // determine atm level if it is required (more than one strike spread) and the base section does not have it
-        // OR if we want sticky abs money dynamics, then we need to provide an atmLevel linked to the swap indices in
-        //    addition to the base section's atm level (this is checked in SpreadedSmileSection2).
-        QL_REQUIRE(swapIndexBase_ != nullptr,
-                   "SpreadedSwaptionVolatility::smileSectionImpl: require swapIndexBase, since the base vol smile "
-                   "section does not provide an atm level and we have more than one strike spread given ("
-                       << strikeSpreads_.size() << ")");
-        Date optionDate = optionDateFromTime(optionTime);
-        Rounding rounder(0);
-        Period swapTenor(static_cast<Integer>(rounder(swapLength * 12.0)), Months);
-        optionDate = swapTenor > shortSwapIndexBase_->tenor()
-                         ? swapIndexBase_->fixingCalendar().adjust(optionDate, Following)
-                         : shortSwapIndexBase_->fixingCalendar().adjust(optionDate, Following);
-        if (swapTenor > shortSwapIndexBase_->tenor()) {
-            atmLevel = swapIndexBase_->clone(swapTenor)->fixing(optionDate);
-        } else {
-            atmLevel = shortSwapIndexBase_->clone(swapTenor)->fixing(optionDate);
-        }
+    Real baseAtmLevel = Null<Real>();
+    Real simulatedAtmLevel = Null<Real>();
+    if ((stickyAbsMoney_ || strikeSpreads_.size() > 1) && baseSection->atmLevel() == Null<Real>()) {
+        QL_REQUIRE(baseSwapIndexBase_ != nullptr,
+                   "SpreadedSwaptionVolatility::smileSecitonImpl: require baseSwapIndexBase, since stickyAbsMoney is "
+                   "true and the base vol smile section does not provide an ATM level.");
+        baseAtmLevel = getAtmLevel(optionTime, swapLength, baseSwapIndexBase_, baseShortSwapIndexBase_);
+    }
+    if (stickyAbsMoney_) {
+        QL_REQUIRE(simulatedSwapIndexBase_ != nullptr, "SpreadedSwaptionVolatility::smileSectionImpl: required "
+                                                       "simualtedSwapIndexBase, since stickyAbsMoney is true");
+        simulatedAtmLevel = getAtmLevel(optionTime, swapLength, simulatedSwapIndexBase_, simulatedShortSwapIndexBase_);
     }
     // interpolate vol spreads
     std::vector<Real> volSpreads(strikeSpreads_.size());
@@ -105,7 +130,8 @@ boost::shared_ptr<SmileSection> SpreadedSwaptionVolatility::smileSectionImpl(Tim
     }
     // create smile section
     return boost::make_shared<SpreadedSmileSection2>(base_->smileSection(optionTime, swapLength), volSpreads,
-                                                     strikeSpreads_, true, atmLevel, stickyAbsMoney_);
+                                                     strikeSpreads_, true, baseAtmLevel, simulatedAtmLevel,
+                                                     stickyAbsMoney_);
 }
 
 Volatility SpreadedSwaptionVolatility::volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
