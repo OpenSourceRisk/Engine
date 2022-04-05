@@ -530,10 +530,17 @@
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Regulation"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
-      ".*imschedule\\.csv": {
+      ".*imschedule_summary\\.csv": {
         "keys": [
           "Portfolio",
           "Side"
@@ -549,10 +556,17 @@
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Regulation"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
-      ".*imscheduledetail\\.csv": {
+      ".*imschedule_detail\\.csv": {
         "keys": [
           "TradeId",
           "Portfolio",
@@ -572,7 +586,7 @@
           }
         ]
       },
-      ".*totalinitialmargin\\.csv": {
+      ".*total_initial_margin\\.csv": {
         "keys": [
           "Side"
         ],
@@ -583,6 +597,97 @@
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Regulation"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      ".*simm_impact\\.csv": {
+        "keys": [
+          "Portfolio",
+          "ProductClass",
+          "RiskClass",
+          "MarginType",
+          "SimmSide"
+        ],
+        "rename_cols": {
+          "portfolio": "Portfolio",
+          "product_class": "ProductClass",
+          "riskClass": "RiskClass",
+          "marginType": "MarginType",
+          "initialMargin": "InitialMargin"
+        },
+        "column_settings": [
+          {
+            "names": [
+              "InitialMarginBefore",
+              "InitialMarginAfter",
+              "InitialMarginImpact"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "RegulationBefore",
+              "RegulationAfter"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      ".*imschedule_summary_impact\\.csv": {
+        "keys": [
+          "Portfolio",
+          "Side"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMarginBefore",
+              "InitialMarginAfter",
+              "InitialMarginImpact"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "RegulationBefore",
+              "RegulationAfter"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      ".*total_initial_margin_impact\\.csv": {
+        "keys": [
+          "Side",
+          "Portfolio"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMarginBefore",
+              "InitialMarginAfter"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "RegulationBefore",
+              "RegulationAfter"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
