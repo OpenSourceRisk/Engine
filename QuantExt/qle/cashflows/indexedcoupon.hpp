@@ -64,7 +64,6 @@ public:
     boost::shared_ptr<Index> index() const; // might be null
     const Date& fixingDate() const;         // might be null
     Real initialFixing() const;             // might be null
-    bool flipIndex() const;
     //@}
 
     //! \name Visitability
@@ -82,6 +81,53 @@ private:
     const Real initialFixing_;
 };
 
+//! indexed cashflow
+/*!
+    \ingroup cashflows
+*/
+class IndexWrappedCashFlow : public CashFlow, public Observer {
+public:
+    /*! pays c->amount() * qty * index(fixingDate) */
+    IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty, const boost::shared_ptr<Index>& index,
+                  const Date& fixingDate);
+    /*! pays c->amount() * qty * initialFixing */
+    IndexWrappedCashFlow(const boost::shared_ptr<CashFlow>& c, const Real qty, const Real initialFixing);
+
+    //! \name Observer interface
+    //@{
+    void update() override;
+    //@}
+
+    //! \name Cashflow interface
+    //@{
+    Date date() const override;
+    Real amount() const override;
+    //@}
+
+    //! \name Inspectors
+    //@{
+    boost::shared_ptr<CashFlow> underlying() const;
+    Real quantity() const;
+    boost::shared_ptr<Index> index() const; // might be null
+    const Date& fixingDate() const;         // might be null
+    Real initialFixing() const;             // might be null
+    //@}
+
+    //! \name Visitability
+    //@{
+    void accept(AcyclicVisitor&) override;
+    //@}
+
+private:
+    Real multiplier() const;
+
+    const boost::shared_ptr<CashFlow> c_;
+    const Real qty_;
+    const boost::shared_ptr<Index> index_;
+    const Date fixingDate_;
+    const Real initialFixing_;
+
+};
 
 boost::shared_ptr<Coupon> unpackIndexedCoupon(const boost::shared_ptr<Coupon>& c);
 
