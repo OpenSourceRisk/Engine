@@ -86,12 +86,13 @@ EndCriteria::Type DifferentialEvolution_MT::minimize(Problem_MT& p, const EndCri
             population[i].values = configuration().initialPopulation[i];
             QL_REQUIRE(population[i].values.size() == p.currentValue().size(),
                        "wrong values size in initial population");
-            population[i].cost = p.costFunction(0)->value(population[i].values);
         }
     } else {
         population = std::vector<Candidate>(configuration().populationMembers, Candidate(p.currentValue().size()));
         fillInitialPopulation(population, p);
     }
+
+    updateCost(population, p);
 
     std::partial_sort(population.begin(), population.begin() + 1, population.end(), sort_by_cost());
     bestMemberEver_ = population.front();
@@ -286,6 +287,30 @@ void DifferentialEvolution_MT::crossover(const std::vector<Candidate>& oldPopula
         }
     }
 
+    updateCost(population, p);
+}
+
+void DifferentialEvolution_MT::updateCost(std::vector<Candidate>& population, Problem_MT& p) const {
+    struct Worker {
+        Worker(std::vector<Candidate>& p, const Size s, const Size e, const boost::shared_ptr<CostFunction> c)
+            : population(p), start(s), end(e), costFunction(c) {}
+        void operator()() {
+            for (Size popIter = start; popIter < end; popIter++) {
+                // evaluate objective function as soon as possible to avoid unnecessary loops
+                try {
+                    population[popIter].cost = costFunction->value(population[popIter].values);
+                } catch (Error&) {
+                    population[popIter].cost = QL_MAX_REAL;
+                }
+                if (!std::isfinite(population[popIter].cost))
+                    population[popIter].cost = QL_MAX_REAL;
+            }
+        }
+        std::vector<Candidate>& population;
+        const Size start, end;
+        const boost::shared_ptr<CostFunction> costFunction;
+    };
+
     Size threads = p.costFunctions().size();
     QL_REQUIRE(threads > 0, "DifferentialEvolution_MT: number of available threads is zero");
 
@@ -318,19 +343,6 @@ void DifferentialEvolution_MT::crossover(const std::vector<Candidate>& oldPopula
 
     for (Size thread = 0; thread < threads; ++thread) {
         workers[thread]->join();
-    }
-}
-
-void DifferentialEvolution_MT::Worker::operator()() {
-    for (Size popIter = start; popIter < end; popIter++) {
-        // evaluate objective function as soon as possible to avoid unnecessary loops
-        try {
-            population[popIter].cost = costFunction->value(population[popIter].values);
-        } catch (Error&) {
-            population[popIter].cost = QL_MAX_REAL;
-        }
-        if (!std::isfinite(population[popIter].cost))
-            population[popIter].cost = QL_MAX_REAL;
     }
 }
 
@@ -401,14 +413,12 @@ void DifferentialEvolution_MT::fillInitialPopulation(std::vector<Candidate>& pop
 
     // use initial values provided by the user
     population.front().values = p.currentValue();
-    population.front().cost = p.costFunction(0)->value(population.front().values);
     // rest of the initial population is random
     for (Size j = 1; j < population.size(); ++j) {
         for (Size i = 0; i < p.currentValue().size(); ++i) {
             Real l = lowerBound_[i], u = upperBound_[i];
             population[j].values[i] = l + (u - l) * rng_.nextReal();
         }
-        population[j].cost = p.costFunction(0)->value(population[j].values);
     }
 }
 

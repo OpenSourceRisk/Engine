@@ -54,15 +54,7 @@ public:
     const Configuration& configuration() const { return configuration_; }
 
 private:
-    // MT worker class
-    struct Worker {
-        Worker(std::vector<Candidate>& p, const Size s, const Size e, const boost::shared_ptr<CostFunction> c)
-            : population(p), start(s), end(e), costFunction(c) {}
-        void operator()();
-        std::vector<Candidate>& population;
-        const Size start, end;
-        const boost::shared_ptr<CostFunction> costFunction;
-    };
+    void updateCost(std::vector<Candidate>& population, Problem_MT& p) const;
 
     Configuration configuration_;
     std::string maxTime_;
