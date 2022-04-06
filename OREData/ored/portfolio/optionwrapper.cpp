@@ -100,6 +100,19 @@ Real OptionWrapper::NPV() const {
     }
 }
 
+const std::map<std::string, boost::any>& OptionWrapper::additionalResults() const {
+    static std::map<std::string, boost::any> emptyMap;
+    NPV();
+    if (exercised_) {
+        if (activeUnderlyingInstrument_ != nullptr)
+            return activeUnderlyingInstrument_->additionalResults();
+        else
+            return emptyMap;
+    } else {
+        return instrument_->additionalResults();
+    }
+}
+
 bool EuropeanOptionWrapper::exercise() const {
     if (!exercisable_)
         return false;

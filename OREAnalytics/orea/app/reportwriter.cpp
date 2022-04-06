@@ -166,13 +166,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         // if trade provides cashflows as additional results, we use that information instead of the legs
 
         bool useAdditionalResults = false;
-        boost::shared_ptr<QuantLib::Instrument> qlInstr;
         try {
-            // trigger calculation before getting additional resuls, is a call to calculate() missing in
-            // QuantLib::Instrument::additionalResults()?
-            qlInstr = trades[k]->instrument()->qlInstrument(true);
-            useAdditionalResults = qlInstr != nullptr && qlInstr->additionalResults().find("cashFlowResults") !=
-                                                             qlInstr->additionalResults().end();
+            useAdditionalResults = trades[k]->instrument()->additionalResults().find("cashFlowResults") !=
+                                   trades[k]->instrument()->additionalResults().end();
         } catch (...) {
         }
 
@@ -395,79 +391,77 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
                 // additional result based cashflow reporting
 
-                if (qlInstr) {
-                    auto tmp = qlInstr->additionalResults().find("cashFlowResults");
-                    if (tmp != qlInstr->additionalResults().end()) {
-                        QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
-                                   "cashflowResults type not handlded");
-                        std::vector<CashFlowResults> cfResults =
-                            boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
-                        std::map<Size, Size> cashflowNumber;
-                        for (auto const& cf : cfResults) {
-                            string ccy = "";
-                            if (!cf.currency.empty()) {
-                                ccy = cf.currency;
-                            } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
-                                ccy = trades[k]->legCurrencies()[cf.legNumber];
-                            } else {
-                                ccy = trades[k]->npvCurrency();
-                            }
-
-                            Real effectiveAmount = Null<Real>();
-                            Real discountFactor = Null<Real>();
-                            Real presentValue = Null<Real>();
-                            Real floorStrike = Null<Real>();
-                            Real capStrike = Null<Real>();
-                            Real floorVolatility = Null<Real>();
-                            Real capVolatility = Null<Real>();
-
-                            if (cf.amount != Null<Real>())
-                                effectiveAmount = cf.amount * multiplier;
-                            if (cf.discountFactor != Null<Real>())
-                                discountFactor = cf.discountFactor;
-                            else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
-                                discountFactor =
-                                    cf.payDate < asof ? 0.0 : market->discountCurve(cf.currency)->discount(cf.payDate);
-                            }
-                            if (cf.presentValue != Null<Real>()) {
-                                presentValue = cf.presentValue * multiplier;
-                            } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
-                                presentValue = effectiveAmount * discountFactor;
-                            }
-                            if (cf.floorStrike != Null<Real>())
-                                floorStrike = cf.floorStrike;
-                            if (cf.capStrike != Null<Real>())
-                                capStrike = cf.capStrike;
-                            if (cf.floorVolatility != Null<Real>())
-                                floorVolatility = cf.floorVolatility;
-                            if (cf.capVolatility != Null<Real>())
-                                capVolatility = cf.capVolatility;
-
-                            report.next()
-                                .add(trades[k]->id())
-                                .add(trades[k]->tradeType())
-                                .add(++cashflowNumber[cf.legNumber])
-                                .add(cf.legNumber)
-                                .add(cf.payDate)
-                                .add(cf.type)
-                                .add(effectiveAmount)
-                                .add(ccy)
-                                .add(cf.rate)
-                                .add(cf.accrualPeriod)
-                                .add(cf.accrualStartDate)
-                                .add(cf.accrualEndDate)
-                                .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
-                                .add(cf.fixingDate)
-                                .add(cf.fixingValue)
-                                .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier))
-                                .add(discountFactor)
-                                .add(presentValue)
-                                .add(floorStrike)
-                                .add(capStrike)
-                                .add(floorVolatility)
-                                .add(capVolatility);
-                        }
+                auto tmp = trades[k]->instrument()->additionalResults().find("cashFlowResults");
+                QL_REQUIRE(
+                    tmp != trades[k]->instrument()->additionalResults().end(),
+                    "internal error: expected cashFlowResults in additional results when writing cashflow report");
+                QL_REQUIRE(tmp->second.type() == typeid(std::vector<CashFlowResults>),
+                           "cashflowResults type not handlded");
+                std::vector<CashFlowResults> cfResults = boost::any_cast<std::vector<CashFlowResults>>(tmp->second);
+                std::map<Size, Size> cashflowNumber;
+                for (auto const& cf : cfResults) {
+                    string ccy = "";
+                    if (!cf.currency.empty()) {
+                        ccy = cf.currency;
+                    } else if (trades[k]->legCurrencies().size() > cf.legNumber) {
+                        ccy = trades[k]->legCurrencies()[cf.legNumber];
+                    } else {
+                        ccy = trades[k]->npvCurrency();
                     }
+
+                    Real effectiveAmount = Null<Real>();
+                    Real discountFactor = Null<Real>();
+                    Real presentValue = Null<Real>();
+                    Real floorStrike = Null<Real>();
+                    Real capStrike = Null<Real>();
+                    Real floorVolatility = Null<Real>();
+                    Real capVolatility = Null<Real>();
+
+                    if (cf.amount != Null<Real>())
+                        effectiveAmount = cf.amount * multiplier;
+                    if (cf.discountFactor != Null<Real>())
+                        discountFactor = cf.discountFactor;
+                    else if (!cf.currency.empty() && cf.payDate != Null<Date>() && market) {
+                        discountFactor =
+                            cf.payDate < asof ? 0.0 : market->discountCurve(cf.currency)->discount(cf.payDate);
+                    }
+                    if (cf.presentValue != Null<Real>()) {
+                        presentValue = cf.presentValue * multiplier;
+                    } else if (effectiveAmount != Null<Real>() && discountFactor != Null<Real>()) {
+                        presentValue = effectiveAmount * discountFactor;
+                    }
+                    if (cf.floorStrike != Null<Real>())
+                        floorStrike = cf.floorStrike;
+                    if (cf.capStrike != Null<Real>())
+                        capStrike = cf.capStrike;
+                    if (cf.floorVolatility != Null<Real>())
+                        floorVolatility = cf.floorVolatility;
+                    if (cf.capVolatility != Null<Real>())
+                        capVolatility = cf.capVolatility;
+
+                    report.next()
+                        .add(trades[k]->id())
+                        .add(trades[k]->tradeType())
+                        .add(++cashflowNumber[cf.legNumber])
+                        .add(cf.legNumber)
+                        .add(cf.payDate)
+                        .add(cf.type)
+                        .add(effectiveAmount)
+                        .add(ccy)
+                        .add(cf.rate)
+                        .add(cf.accrualPeriod)
+                        .add(cf.accrualStartDate)
+                        .add(cf.accrualEndDate)
+                        .add(cf.accruedAmount * (cf.accruedAmount == Null<Real>() ? 1.0 : multiplier))
+                        .add(cf.fixingDate)
+                        .add(cf.fixingValue)
+                        .add(cf.notional * (cf.notional == Null<Real>() ? 1.0 : multiplier))
+                        .add(discountFactor)
+                        .add(presentValue)
+                        .add(floorStrike)
+                        .add(capStrike)
+                        .add(floorVolatility)
+                        .add(capVolatility);
                 }
             }
 
@@ -1068,14 +1062,10 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                 notional2Ccy = trade->additionalDatum<string>("notionalCurrency[2]");
             }
 
-	    // FIXME, see ore ticket 2136
-            if (trade->instrument()->qlInstrument(false)) {
-                auto additionalResults = trade->instrument()->qlInstrument()->additionalResults();
-                if (additionalResults.count("notional[2]") != 0 &&
-                    additionalResults.count("notionalCurrency[2]") != 0) {
-                    notional2 = trade->instrument()->qlInstrument()->result<Real>("notional[2]");
-                    notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalCurrency[2]");
-                }
+            auto additionalResults = trade->instrument()->additionalResults();
+            if (additionalResults.count("notional[2]") != 0 && additionalResults.count("notionalCurrency[2]") != 0) {
+                notional2 = trade->instrument()->qlInstrument()->result<Real>("notional[2]");
+                notional2Ccy = trade->instrument()->qlInstrument()->result<string>("notionalCurrency[2]");
             }
 
             if (notional2 != Null<Real>() && notional2Ccy != "") {
@@ -1097,31 +1087,27 @@ void ReportWriter::writeAdditionalResultsReport(Report& report, boost::shared_pt
                        "Expected the number of "
                            << "additional instruments (" << instruments.size() << ") to equal the number of "
                            << "additional multipliers (" << multipliers.size() << ").");
-	    // FIXME, see ore ticket 2136
-            instruments.insert(instruments.begin(), trade->instrument()->qlInstrument(false));
-            multipliers.insert(multipliers.begin(), trade->instrument()->multiplier());
 
-            for (Size i = 0; i < instruments.size(); ++i) {
+            for (Size i = 0; i <= instruments.size(); ++i) {
 
-                const auto& instrument = instruments[i];
-
-                if (!instrument)
+                if (i > 0 && instruments[i - 1] == nullptr)
                     continue;
+
+                std::map<std::string, boost::any> thisAddResults =
+                    i == 0 ? additionalResults : instruments[i - 1]->additionalResults();
 
                 // Trade ID suffix for additional instruments. Put underscores to reduce risk of clash with other IDs in
                 // the portfolio (still a risk).
                 tradeId = i == 0 ? trade->id() : ("_" + trade->id() + "_" + to_string(i));
 
-                // Get the additional results for the current instrument.
-                auto additionalResults = instrument->additionalResults();
                 // Add the multiplier if there are additional results.
                 // Check on 'instMultiplier' already existing is probably unnecessary.
-                if (!additionalResults.empty() && additionalResults.count("instMultiplier") == 0) {
-                    additionalResults["instMultiplier"] = multipliers[i];
+                if (!thisAddResults.empty() && thisAddResults.count("instMultiplier") == 0) {
+                    thisAddResults["instMultiplier"] = i == 0 ? trade->instrument()->multiplier() : multipliers[i - 1];
                 }
 
                 // Write current instrument's additional results.
-                for (const auto& kv : additionalResults) {
+                for (const auto& kv : thisAddResults) {
                     // some results are stored as maps. We loop over these so that there is one result per line
                     if (kv.second.type() == typeid(result_type_matrix)) {
                         addMapResults<result_type_matrix>(kv.second, tradeId, kv.first, report);
