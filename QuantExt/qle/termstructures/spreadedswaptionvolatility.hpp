@@ -36,19 +36,20 @@ using namespace QuantLib;
 
 class SpreadedSwaptionVolatility : public SwaptionVolatilityDiscrete {
 public:
-    /* If the base vol has smile sections which provide atm levels, these are also used to define the atm levels for the
-      vol spreads. Otherwise, the atm levels for the vol spreads are computed from the swap indices passed to this
-      class. The swap indices are only required / used if a) the base vol smile sections do not provide atm levels and
-      b) more than one strike spread is given.  
-
-      If stickyAbsMoney is true, the swap indices must be present and represent the current ATM level, i.e. react themselves
-      to changes in the rate levels. */
+    /* - The base vol is required to provide smile sections with atm levels, if there is more than one strike spread
+         given. Alternatively, baseSwapIndexBase and baseShortSwapIndexBase can be provided to compute these ATM levels.
+       - If stickyAbsMoney is true, the simulatedSwapIndexBase and simulatedShortSwapIndexBase must be provided and
+         represent an ATM level reacting to changes in rate levels. The ATM levels implied by base vol,
+         baseSwapIndexBase, baseShortSwapIndexBase must not react to changes in the rate levels on the other hand.
+    */
     SpreadedSwaptionVolatility(const Handle<SwaptionVolatilityStructure>& base, const std::vector<Period>& optionTenors,
                                const std::vector<Period>& swapTenors, const std::vector<Real>& strikeSpreads,
                                const std::vector<std::vector<Handle<Quote>>>& volSpreads,
-                               const boost::shared_ptr<SwapIndex>& swapIndexBase,
-                               const boost::shared_ptr<SwapIndex>& shortSwapIndexBase,
-			       const bool stickyAbsMoney = false);
+                               const boost::shared_ptr<SwapIndex>& baseSwapIndexBase = nullptr,
+                               const boost::shared_ptr<SwapIndex>& baseShortSwapIndexBase = nullptr,
+                               const boost::shared_ptr<SwapIndex>& simulatedSwapIndexBase = nullptr,
+                               const boost::shared_ptr<SwapIndex>& simulatedShortSwapIndexBase = nullptr,
+                               const bool stickyAbsMoney = false);
 
     //! \name TermStructure interface
     //@{
@@ -78,11 +79,14 @@ private:
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const override;
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const override;
     void performCalculations() const override;
+    Real getAtmLevel(const Real optionTime, const Real swapLength, const boost::shared_ptr<SwapIndex> swapIndexBase,
+                     const boost::shared_ptr<SwapIndex> shortSwapIndexBase) const;
 
     Handle<SwaptionVolatilityStructure> base_;
     std::vector<Real> strikeSpreads_;
     std::vector<std::vector<Handle<Quote>>> volSpreads_;
-    boost::shared_ptr<SwapIndex> swapIndexBase_, shortSwapIndexBase_;
+    boost::shared_ptr<SwapIndex> baseSwapIndexBase_, baseShortSwapIndexBase_;
+    boost::shared_ptr<SwapIndex> simulatedSwapIndexBase_, simulatedShortSwapIndexBase_;
     bool stickyAbsMoney_;
     mutable std::vector<Matrix> volSpreadValues_;
     mutable std::vector<Interpolation2D> volSpreadInterpolation_;

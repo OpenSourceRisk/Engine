@@ -617,6 +617,7 @@
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\sofr.hpp" />
+    <ClInclude Include="qle\indexes\ibor\sonia.hpp" />
     <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
@@ -966,6 +967,7 @@
     <ClCompile Include="qle\indexes\ibor\ester.cpp" />
     <ClCompile Include="qle\indexes\ibor\primeindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\sofr.cpp" />
+    <ClCompile Include="qle\indexes\ibor\sonia.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\indexes\offpeakpowerindex.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />

@@ -96,6 +96,7 @@
       <xs:enumeration value="CUC"/>
       <xs:enumeration value="CUP"/>
       <xs:enumeration value="CVE"/>
+      <xs:enumeration value="CYP"/>
       <xs:enumeration value="CZK"/>
       <xs:enumeration value="DJF"/>
       <xs:enumeration value="DKK"/>
@@ -147,6 +148,8 @@
       <xs:enumeration value="LKR"/>
       <xs:enumeration value="LRD"/>
       <xs:enumeration value="LSL"/>
+      <xs:enumeration value="LTL"/>
+      <xs:enumeration value="LVL"/>
       <xs:enumeration value="LYD"/>
       <xs:enumeration value="MAD"/>
       <xs:enumeration value="MDL"/>
@@ -190,6 +193,7 @@
       <xs:enumeration value="SGD"/>
       <xs:enumeration value="SHP"/>
       <xs:enumeration value="SLL"/>
+      <xs:enumeration value="SKK"/>
       <xs:enumeration value="SOS"/>
       <xs:enumeration value="SRD"/>
       <xs:enumeration value="SSP"/>
@@ -328,6 +332,7 @@
       <xs:enumeration value="T360"/>
       <xs:enumeration value="30/360"/>
       <xs:enumeration value="30/360 US"/>
+      <xs:enumeration value="30/360 (US)"/>
       <xs:enumeration value="30U/360"/>
       <xs:enumeration value="30US/360"/>
       <xs:enumeration value="30/360 (Bond Basis)"/>
@@ -500,6 +505,7 @@
 
   <xs:simpleType name="fxVolInterpolation">
     <xs:restriction base="xs:string">
+      <xs:enumeration value=""/>
       <xs:enumeration value="VannaVolga1"/>
       <xs:enumeration value="VannaVolga2"/>
       <xs:enumeration value="Linear"/>

@@ -62,7 +62,7 @@ SwaptionData swaptionData(const boost::shared_ptr<Swaption> swaption, const Hand
     swaption->setPricingEngine(engine);
 
     SwaptionData sd;
-    sd.timeToExpiry = svts->timeFromReference(swaption->exercise()->dates().back());
+    sd.timeToExpiry = yts->timeFromReference(swaption->exercise()->dates().back());
     sd.swapLength = swaption->result<Real>("swapLength");
     sd.strike = swaption->result<Real>("strike");
     sd.atmForward = swaption->result<Real>("atmForward");

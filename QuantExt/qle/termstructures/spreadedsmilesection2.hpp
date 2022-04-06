@@ -34,11 +34,15 @@ using namespace QuantLib;
 
 class SpreadedSmileSection2 : public SmileSection {
 public:
-    /*! If stickyAbsMoney = true, the base smile section must provide an atmLevel and the parameter
-        atmLevel must reflect the current atmLevel. */
+    /*! - If stickyAbsMoney = true or if strikes are relative to atm and more than one strike is giv en, the base smile
+          section must provide an ATM level that does not react to changes in the rate levels. Alternatively, baseAtmLevel
+          can be provided.
+        - If stickyAbsMoney = true, simulatedAtmLevel must be provided and represent the ATM
+          level that _does_ react to changes in the rate levels. */
     SpreadedSmileSection2(const boost::shared_ptr<SmileSection>& base, const std::vector<Real>& volSpreads,
                           const std::vector<Real>& strikes, const bool strikesRelativeToAtm = false,
-                          const Real atmLevel = Null<Real>(), const bool stickyAbsMoney = false);
+                          const Real baseAtmLevel = Null<Real>(), const Real simulatedAtmLevel = Null<Real>(),
+                          const bool stickyAbsMoney = false);
     Rate minStrike() const override;
     Rate maxStrike() const override;
     Rate atmLevel() const override;
@@ -51,7 +55,8 @@ private:
     std::vector<Real> volSpreads_;
     std::vector<Real> strikes_;
     bool strikesRelativeToAtm_;
-    Real atmLevel_;
+    Real baseAtmLevel_;
+    Real simulatedAtmLevel_;
     bool stickyAbsMoney_;
     Interpolation volSpreadInterpolation_;
 };

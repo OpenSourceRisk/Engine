@@ -359,7 +359,7 @@ Real FxIndex::pastFixing(const Date& fixingDate) const {
                         forName = familyName_ + " " + keyDomestic + "/" + foreign;
                         if (IndexManager::instance().hasHistoricalFixing(forName, fixingDate)) {
                             Real forFixing = IndexManager::instance().getHistory(forName)[fixingDate];
-                            return fixing / forFixing;
+                            return forFixing / fixing;
                         }
                     }
                 }
