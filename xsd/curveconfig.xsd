@@ -306,8 +306,30 @@
     <xs:all>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="volatilityType" name="VolatilityType"/>
-      <xs:element type="extrapolationType" name="Extrapolation"/>
+      <xs:element name="ProxyConfig" minOccurs="0">
+	<xs:complexType>
+	  <xs:all>
+	    <xs:element name="Source">
+	      <xs:complexType>
+		<xs:all>
+		  <xs:element type="xs:string" name="CurveId"/>
+		  <xs:element type="xs:string" name="Index"/>
+		</xs:all>
+	      </xs:complexType>
+	    </xs:element>
+	    <xs:element name="Target">
+	      <xs:complexType>
+		<xs:all>
+		  <xs:element type="xs:string" name="Index"/>
+		  <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0"/>
+		</xs:all>
+	      </xs:complexType>
+	    </xs:element>
+	  </xs:all>
+	</xs:complexType>
+      </xs:element>
+      <xs:element type="volatilityType" name="VolatilityType" minOccurs="0"/>
+      <xs:element type="extrapolationType" name="Extrapolation" minOccurs="0"/>
       <xs:element name="InterpolationMethod" minOccurs="0">
         <xs:simpleType>
           <xs:restriction base="xs:string">
@@ -316,17 +338,17 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element type="bool" name="IncludeAtm"/>
-      <xs:element type="dayCounter" name="DayCounter"/>
-      <xs:element type="calendar" name="Calendar"/>
-      <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
+      <xs:element type="bool" name="IncludeAtm" minOccurs="0"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0"/>
       <xs:element type="xs:string" name="Tenors" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Strikes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="OptionalQuotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="indexNameType" name="IborIndex" minOccurs="0" maxOccurs="1"/> <!-- deprecated -->
       <xs:element type="indexNameType" name="Index" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="DiscountCurve"/>
+      <xs:element type="xs:string" name="DiscountCurve" minOccurs="0"/>
       <xs:element type="xs:string" name="AtmTenors" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="SettlementDays" minOccurs="0" maxOccurs="1"/>
       <xs:element name="InterpolateOn" minOccurs="0" maxOccurs="1">
