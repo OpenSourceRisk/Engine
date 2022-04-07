@@ -83,10 +83,12 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     populateQuotes();
 }
 
-CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
-                              const std::string proxySourceCurveId_, const std::string& proxySourceIndex,
-                              const std::string& proxyTargetIndex,
-                              const QuantLib::Period& proxyTargetRateComputationPeriod)
+CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(const std::string& curveID,
+                                                             const std::string& curveDescription,
+                                                             const std::string proxySourceCurveId,
+                                                             const std::string& proxySourceIndex,
+                                                             const std::string& proxyTargetIndex,
+                                                             const QuantLib::Period& proxyTargetRateComputationPeriod)
     : CurveConfig(curveID, curveDescription), proxySourceCurveId_(proxySourceCurveId),
       proxySourceIndex_(proxySourceIndex), proxyTargetIndex_(proxyTargetIndex),
       proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod) {
@@ -232,12 +234,12 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         // write out proxy config
         auto proxy = XMLUtils::addChild(doc, node, "ProxyConfig");
         auto source = XMLUtils::addChild(doc, proxy, "Source");
-        auto target = XMLUtils::addChild(doc, target, "Target");
+        auto target = XMLUtils::addChild(doc, proxy, "Target");
         XMLUtils::addChild(doc, source, "CurveId", proxySourceCurveId_);
         XMLUtils::addChild(doc, source, "Index", proxySourceIndex_);
-        XMLUtils::addChild(doc, taregt, "Index", proxyTargetIndex_);
-        if (proxyTargetRateComputationPeriod_)
-            XMLUtils::addChild(doc, target, "RateComputationPeriod", proxyRateComputationPeriod_);
+        XMLUtils::addChild(doc, target, "Index", proxyTargetIndex_);
+        if (proxyTargetRateComputationPeriod_ != 0 * Days)
+            XMLUtils::addChild(doc, target, "RateComputationPeriod", proxyTargetRateComputationPeriod_);
     } else {
         // write out quote based config
         XMLUtils::addChild(doc, node, "VolatilityType", toString(volatilityType_));

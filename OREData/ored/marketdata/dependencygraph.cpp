@@ -125,7 +125,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                     }
                 }
                 if (!found)
-                    buildErrors[g[*v].mapping] = "did not find required ibor index " + iborIndex + " (required from " +
+                    buildErrors[g[*v].mapping] = "did not find required ibor index " + ind + " (required from " +
                                                  ore::data::to_string(g[*v]) +
                                                  ") in dependency graph for configuration " + configuration;
             }
