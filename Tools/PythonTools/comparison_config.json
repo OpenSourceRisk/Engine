@@ -634,8 +634,7 @@
           "portfolio": "Portfolio",
           "product_class": "ProductClass",
           "riskClass": "RiskClass",
-          "marginType": "MarginType",
-          "initialMargin": "InitialMargin"
+          "marginType": "MarginType"
         },
         "column_settings": [
           {
