@@ -101,25 +101,34 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
 
-        // 1 CapFloorVolatility depends on underlying index curve
+        // 1 CapFloorVolatility depends on underlying index curve(s)
 
         if (g[*v].obj == MarketObject::CapFloorVol &&
             curveConfigs_->hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
-            string iborIndex = curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index();
-            bool found = false;
-            for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
-                if (*w != *v && g[*w].obj == MarketObject::IndexCurve && g[*w].name == iborIndex) {
-                    g.add_edge(*v, *w);
-                    TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " " << g[*w]);
-                    found = true;
-                    // there should be only one dependency, in any case it is enough to insert one
-                    break;
+	    std::set<string> indices;
+	    if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index().empty())
+		indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index());
+	    if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex().empty())
+		indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex());
+	    if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex().empty())
+		indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex());
+            for (auto const& ind : indices) {
+                bool found = false;
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v && g[*w].obj == MarketObject::IndexCurve && g[*w].name == ind) {
+                        g.add_edge(*v, *w);
+                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
+                                                      << g[*w]);
+                        found = true;
+                        // there should be only one dependency, in any case it is enough to insert one
+                        break;
+                    }
                 }
+                if (!found)
+                    buildErrors[g[*v].mapping] = "did not find required ibor index " + iborIndex + " (required from " +
+                                                 ore::data::to_string(g[*v]) +
+                                                 ") in dependency graph for configuration " + configuration;
             }
-            if (!found)
-                buildErrors[g[*v].mapping] = "did not find required ibor index " + iborIndex + " (required from " +
-                                             ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
-                                             configuration;
         }
 
         // 2 Correlation depends on underlying swap indices (if CMS Spread Correlations are calibrated to prices)
