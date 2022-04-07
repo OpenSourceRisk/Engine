@@ -180,7 +180,7 @@ public:
                             const string& firstName, const string& secondName, const map<string, string>& values);
 
     // If mandatory == true, we throw if the node is not present, otherwise we return a default vale.
-    static string getChildValue(XMLNode* node, const string& name, bool mandatory = false);
+    static string getChildValue(XMLNode* node, const string& name, bool mandatory = false, const string& defaultValue = string());
     static Real getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory = false, double defaultValue = 0.0);
     static int getChildValueAsInt(XMLNode* node, const string& name, bool mandatory = false, int defaultValue = 0);
     static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false, bool defaultValue = true);
