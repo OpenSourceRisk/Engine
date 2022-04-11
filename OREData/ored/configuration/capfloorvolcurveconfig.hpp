@@ -104,7 +104,7 @@ public:
     const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
     const std::string& proxySourceIndex() const { return proxySourceIndex_; }
     const std::string& proxyTargetIndex() const { return proxyTargetIndex_; };
-    const QuantLib::Period& proxyTargetRateComputationPeriod() const { return proxyTargetRateComputationPeriod_; }
+    const QuantLib::Period& proxyRateComputationPeriod() const { return proxyRateComputationPeriod_; }
     //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
@@ -139,7 +139,7 @@ private:
     std::string proxySourceCurveId_;
     std::string proxySourceIndex_;
     std::string proxyTargetIndex_;
-    QuantLib::Period proxyTargetRateComputationPeriod_;
+    QuantLib::Period proxyRateComputationPeriod_;
     //
     ReportConfig reportConfig_;
 

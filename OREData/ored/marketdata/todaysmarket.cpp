@@ -409,14 +409,17 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // Firstly, need to retrieve ibor index and discount curve
                 // Ibor index
                 Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->index(), configuration);
+		Handle<YieldTermStructure> discountCurve;
                 // Discount curve
-                auto it = requiredYieldCurves_.find(cfg->discountCurve());
-                QL_REQUIRE(it != requiredYieldCurves_.end(), "Discount curve with spec, "
-                                                                 << cfg->discountCurve()
-                                                                 << ", not found in loaded yield curves");
-                Handle<YieldTermStructure> discountCurve = it->second->handle();
+                if (!cfg->discountCurve().empty()) {
+                    auto it = requiredYieldCurves_.find(cfg->discountCurve());
+                    QL_REQUIRE(it != requiredYieldCurves_.end(), "Discount curve with spec, "
+                                                                     << cfg->discountCurve()
+                                                                     << ", not found in loaded yield curves");
+                    discountCurve = it->second->handle();
+                }
 
-		// for proxy curves we need the source and target indices
+                // for proxy curves we need the source and target indices
                 boost::shared_ptr<IborIndex> sourceIndex, targetIndex;
                 if (!cfg->proxySourceCurveId().empty()) {
                     if (!cfg->proxySourceIndex().empty())
