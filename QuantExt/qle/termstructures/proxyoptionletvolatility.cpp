@@ -92,9 +92,15 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
     : OptionletVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
       baseIndex_(baseIndex), targetIndex_(targetIndex), rateComputationPeriod_(rateComputationPeriod) {
 
-    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(targetIndex) == nullptr ||
+    QL_REQUIRE(baseIndex != nullptr, "ProxyOptionletVolatility: no base index given.");
+    QL_REQUIRE(targetIndex != nullptr, "ProxyOptionletVolatility: no target index given.");
+    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(targetIndex_) == nullptr ||
                    rateComputationPeriod != 0 * Days,
                "ProxyOptionletVolatility: target index is OIS ("
+                   << targetIndex->name() << "), so rateComputationPeriod must be given and != 0D.");
+    QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(baseIndex_) == nullptr ||
+                   rateComputationPeriod != 0 * Days,
+               "ProxyOptionletVolatility: base index is OIS ("
                    << targetIndex->name() << "), so rateComputationPeriod must be given and != 0D.");
     registerWith(baseVol_);
     registerWith(baseIndex_);
@@ -130,6 +136,7 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(Time 
 
     // build the atm-adjusted smile section and return it
 
+    QL_REQUIRE(!baseVol_.empty(), "ProxyOptionletVolatility: no base vol given.");
     return boost::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(optionTime), baseAtmLevel,
                                                        targetAtmLevel);
 }
