@@ -34,6 +34,7 @@
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 
 #include <ql/math/comparison.hpp>
@@ -60,15 +61,23 @@ bool interpOnOpt(CapFloorVolatilityCurveConfig& config) {
     return config.interpolateOn() == "OptionletVolatilities";
 }
 
-CapFloorVolCurve::CapFloorVolCurve(const Date& asof, const CapFloorVolatilityCurveSpec& spec, const Loader& loader,
-                                   const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
-                                   Handle<YieldTermStructure> discountCurve)
+CapFloorVolCurve::CapFloorVolCurve(
+    const Date& asof, const CapFloorVolatilityCurveSpec& spec, const Loader& loader,
+    const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
+    Handle<YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
+    const boost::shared_ptr<IborIndex> targetIndex,
+    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves)
     : spec_(spec) {
 
     try {
         // The configuration
         const boost::shared_ptr<CapFloorVolatilityCurveConfig>& config =
             curveConfigs.capFloorVolCurveConfig(spec_.curveConfigID());
+
+	// handle proxy vol surfaces
+	if(!config->proxySourceCurveId().empty()) {
+            buildProxyCurve(*config, sourceIndex, targetIndex, requiredCapFloorVolCurves);
+        }
 
         // Read the shift early if the configured volatility type is shifted lognormal
         Real shift = 0.0;
@@ -100,6 +109,21 @@ CapFloorVolCurve::CapFloorVolCurve(const Date& asof, const CapFloorVolatilityCur
 
     // force bootstrap so that errors are thrown during the build, not later
     capletVol_->volatility(QL_EPSILON, capletVol_->minStrike());
+}
+
+void CapFloorVolCurve::buildProxyCurve(
+    const CapFloorVolatilityCurveConfig& config, const boost::shared_ptr<IborIndex>& sourceIndex,
+    const boost::shared_ptr<IborIndex>& targetIndex,
+    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves) {
+
+    auto sourceVol = requiredCapFloorVolCurves.find(config.proxySourceCurveId());
+    QL_REQUIRE(sourceVol != requiredCapFloorVolCurves.end(),
+               "CapFloorVolCurve::buildProxyCurve(): required source cap vol curve '" << config.proxySourceCurveId()
+                                                                                      << "' not found.");
+
+    capletVol_ = boost::make_shared<ProxyOptionletVolatility>(
+        Handle<OptionletVolatilityStructure>(sourceVol->second->capletVolStructure()), sourceIndex, targetIndex,
+        config.rateComputationPeriod());
 }
 
 void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,

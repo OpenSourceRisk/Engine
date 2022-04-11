@@ -416,9 +416,19 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                                                                  << ", not found in loaded yield curves");
                 Handle<YieldTermStructure> discountCurve = it->second->handle();
 
+		// for proxy curves we need the source and target indices
+                boost::shared_ptr<IborIndex> sourceIndex, targetIndex;
+                if (!cfg->proxySourceCurveId().empty()) {
+                    if (!cfg->proxySourceIndex().empty())
+                        sourceIndex = *MarketImpl::iborIndex(cfg->proxySourceIndex(), configuration);
+                    if (!cfg->proxyTargetIndex().empty())
+                        targetIndex = *MarketImpl::iborIndex(cfg->proxyTargetIndex(), configuration);
+                }
+
                 // Now create cap/floor vol curve
                 boost::shared_ptr<CapFloorVolCurve> capFloorVolCurve = boost::make_shared<CapFloorVolCurve>(
-                    asof_, *cfVolSpec, *loader_, *curveConfigs_, iborIndex.currentLink(), discountCurve);
+                    asof_, *cfVolSpec, *loader_, *curveConfigs_, iborIndex.currentLink(), discountCurve, sourceIndex,
+                    targetIndex, requiredCapFloorVolCurves_);
                 calibrationInfo_->irVolCalibrationInfo[cfVolSpec->name()] = capFloorVolCurve->calibrationInfo();
                 itr = requiredCapFloorVolCurves_.insert(make_pair(cfVolSpec->name(), capFloorVolCurve)).first;
             }
