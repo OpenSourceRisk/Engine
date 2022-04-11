@@ -314,6 +314,7 @@
 		<xs:all>
 		  <xs:element type="xs:string" name="CurveId"/>
 		  <xs:element type="xs:string" name="Index"/>
+		  <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0"/>
 		</xs:all>
 	      </xs:complexType>
 	    </xs:element>

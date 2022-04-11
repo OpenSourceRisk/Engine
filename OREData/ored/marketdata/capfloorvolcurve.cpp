@@ -122,7 +122,7 @@ void CapFloorVolCurve::buildProxyCurve(
 
     capletVol_ = boost::make_shared<ProxyOptionletVolatility>(
         Handle<OptionletVolatilityStructure>(sourceVol->second->capletVolStructure()), sourceIndex, targetIndex,
-        config.rateComputationPeriod());
+        config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod());
 }
 
 void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,

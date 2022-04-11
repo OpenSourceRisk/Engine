@@ -66,6 +66,7 @@ public:
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
                                   const std::string proxySourceCurveId_, const std::string& proxySourceIndex,
                                   const std::string& proxyTargetIndex,
+                                  const QuantLib::Period& proxySourceRateComputationPeriod = 0 * Days,
                                   const QuantLib::Period& proxyTargetRateComputationPeriod = 0 * Days);
 
     //! \name XMLSerializable interface
@@ -104,7 +105,8 @@ public:
     const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
     const std::string& proxySourceIndex() const { return proxySourceIndex_; }
     const std::string& proxyTargetIndex() const { return proxyTargetIndex_; };
-    const QuantLib::Period& proxyRateComputationPeriod() const { return proxyRateComputationPeriod_; }
+    const QuantLib::Period& proxySourceRateComputationPeriod() const { return proxySourceRateComputationPeriod_; }
+    const QuantLib::Period& proxyTargetRateComputationPeriod() const { return proxyTargetRateComputationPeriod_; }
     //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
@@ -139,7 +141,8 @@ private:
     std::string proxySourceCurveId_;
     std::string proxySourceIndex_;
     std::string proxyTargetIndex_;
-    QuantLib::Period proxyRateComputationPeriod_;
+    QuantLib::Period proxySourceRateComputationPeriod_;
+    QuantLib::Period proxyTargetRateComputationPeriod_;
     //
     ReportConfig reportConfig_;
 

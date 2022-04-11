@@ -91,20 +91,22 @@ private:
 ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatilityStructure>& baseVol,
                                                    const boost::shared_ptr<IborIndex>& baseIndex,
                                                    const boost::shared_ptr<IborIndex>& targetIndex,
-                                                   const Period& rateComputationPeriod)
+                                                   const Period& baseRateComputationPeriod,
+                                                   const Period& targetRateComputationPeriod)
     : OptionletVolatilityStructure(baseVol->businessDayConvention(), baseVol->dayCounter()), baseVol_(baseVol),
-      baseIndex_(baseIndex), targetIndex_(targetIndex), rateComputationPeriod_(rateComputationPeriod) {
+      baseIndex_(baseIndex), targetIndex_(targetIndex), baseRateComputationPeriod_(baseRateComputationPeriod),
+      targetRateComputationPeriod_(targetRateComputationPeriod) {
 
     QL_REQUIRE(baseIndex != nullptr, "ProxyOptionletVolatility: no base index given.");
     QL_REQUIRE(targetIndex != nullptr, "ProxyOptionletVolatility: no target index given.");
     QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(targetIndex_) == nullptr ||
-                   rateComputationPeriod != 0 * Days,
+                   targetRateComputationPeriod != 0 * Days,
                "ProxyOptionletVolatility: target index is OIS ("
-                   << targetIndex->name() << "), so rateComputationPeriod must be given and != 0D.");
+                   << targetIndex->name() << "), so targetRateComputationPeriod must be given and != 0D.");
     QL_REQUIRE(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(baseIndex_) == nullptr ||
-                   rateComputationPeriod != 0 * Days,
+                   baseRateComputationPeriod != 0 * Days,
                "ProxyOptionletVolatility: base index is OIS ("
-                   << targetIndex->name() << "), so rateComputationPeriod must be given and != 0D.");
+                   << baseIndex->name() << "), so baseRateComputationPeriod must be given and != 0D.");
     registerWith(baseVol_);
     registerWith(baseIndex_);
     registerWith(targetIndex_);
@@ -124,8 +126,9 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const
     Date baseFixingDate = fixingDate;
 
     if (!isOis(baseIndex_) && isOis(targetIndex_))
-        baseFixingDate = baseIndex_->fixingDate(getStartDate(
-            boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(targetIndex_), fixingDate, rateComputationPeriod_));
+        baseFixingDate =
+            baseIndex_->fixingDate(getStartDate(boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(targetIndex_),
+                                                fixingDate, targetRateComputationPeriod_));
     else if (isOis(baseIndex_) && !isOis(targetIndex_))
         baseFixingDate = baseIndex_->fixingCalendar().advance(getEndDate(targetIndex_, fixingDate),
                                                               -static_cast<int>(baseIndex_->fixingDays()) * Days);
@@ -135,11 +138,11 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const
 
     // compute the base and target forward rate levels
     Real baseAtmLevel = isOis(baseIndex_) ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(baseIndex_),
-                                                           baseFixingDate, rateComputationPeriod_)
+                                                           baseFixingDate, baseRateComputationPeriod_)
                                           : baseIndex_->fixing(baseFixingDate);
     Real targetAtmLevel = isOis(targetIndex_)
                               ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(targetIndex_), fixingDate,
-                                               rateComputationPeriod_)
+                                               targetRateComputationPeriod_)
                               : targetIndex_->fixing(fixingDate);
 
     // build the atm-adjusted smile section and return it

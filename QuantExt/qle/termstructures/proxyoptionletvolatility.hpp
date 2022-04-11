@@ -32,7 +32,8 @@ public:
     ProxyOptionletVolatility(const QuantLib::Handle<OptionletVolatilityStructure>& baseVol,
                              const boost::shared_ptr<QuantLib::IborIndex>& baseIndex,
                              const boost::shared_ptr<QuantLib::IborIndex>& targetIndex,
-                             const QuantLib::Period& rateComputationPeriod = 0 * QuantLib::Days);
+                             const QuantLib::Period& baseRateComputationPeriod = 0 * QuantLib::Days,
+                             const QuantLib::Period& targetRateComputationPeriod = 0 * QuantLib::Days);
 
     QuantLib::Rate minStrike() const override { return baseVol_->minStrike(); }
     QuantLib::Rate maxStrike() const override { return baseVol_->maxStrike(); }
@@ -50,7 +51,8 @@ private:
     QuantLib::Handle<QuantLib::OptionletVolatilityStructure> baseVol_;
     boost::shared_ptr<QuantLib::IborIndex> baseIndex_;
     boost::shared_ptr<QuantLib::IborIndex> targetIndex_;
-    QuantLib::Period rateComputationPeriod_;
+    QuantLib::Period baseRateComputationPeriod_;
+    QuantLib::Period targetRateComputationPeriod_;
 };
 
 } // namespace QuantExt
