@@ -74,31 +74,30 @@ CapFloorVolCurve::CapFloorVolCurve(
         const boost::shared_ptr<CapFloorVolatilityCurveConfig>& config =
             curveConfigs.capFloorVolCurveConfig(spec_.curveConfigID());
 
-	// handle proxy vol surfaces
-	if(!config->proxySourceCurveId().empty()) {
+        if (!config->proxySourceCurveId().empty()) {
+            // handle proxy vol surfaces
             buildProxyCurve(*config, sourceIndex, targetIndex, requiredCapFloorVolCurves);
-        }
-
-        // Read the shift early if the configured volatility type is shifted lognormal
-        Real shift = 0.0;
-        if (config->volatilityType() == CfgVolType::ShiftedLognormal) {
-            shift = shiftQuote(asof, *config, loader);
-        }
-
-        // There are three possible cap floor configurations
-        if (config->type() == CfgType::Atm) {
-            atmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
-        } else if (config->type() == CfgType::Surface || config->type() == CfgType::SurfaceWithAtm) {
-            optSurface(asof, *config, loader, iborIndex, discountCurve, shift);
         } else {
-            QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) << ") for cap floor config "
-                                        << config->curveID());
+            // Read the shift early if the configured volatility type is shifted lognormal
+            Real shift = 0.0;
+            if (config->volatilityType() == CfgVolType::ShiftedLognormal) {
+                shift = shiftQuote(asof, *config, loader);
+            }
+
+            // There are three possible cap floor configurations
+            if (config->type() == CfgType::Atm) {
+                atmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
+            } else if (config->type() == CfgType::Surface || config->type() == CfgType::SurfaceWithAtm) {
+                optSurface(asof, *config, loader, iborIndex, discountCurve, shift);
+            } else {
+                QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) << ") for cap floor config "
+                                            << config->curveID());
+            }
+            // Turn on or off extrapolation
+            capletVol_->enableExtrapolation(config->extrapolate());
         }
 
-        // Turn on or off extrapolation
-        capletVol_->enableExtrapolation(config->extrapolate());
-
-	// Build calibration info
+        // Build calibration info
         buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
 
     } catch (exception& e) {
