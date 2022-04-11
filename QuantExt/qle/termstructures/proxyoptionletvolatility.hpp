@@ -38,8 +38,12 @@ public:
     QuantLib::Rate maxStrike() const override { return baseVol_->maxStrike(); }
     QuantLib::Date maxDate() const override { return baseVol_->maxDate(); }
     const QuantLib::Date& referenceDate() const override { return baseVol_->referenceDate(); }
+    VolatilityType volatilityType() const override { return baseVol_->volatilityType(); }
+    Real displacement() const override { return baseVol_->displacement(); }
+    Calendar calendar() const override { return baseVol_->calendar(); }
 
 private:
+    boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(const QuantLib::Date& optionDate) const override;
     boost::shared_ptr<QuantLib::SmileSection> smileSectionImpl(QuantLib::Time optionTime) const override;
     QuantLib::Volatility volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const override;
 

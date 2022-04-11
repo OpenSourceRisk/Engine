@@ -50,9 +50,12 @@ Date getEndDate(const boost::shared_ptr<IborIndex>& ibor, const Date& fixingDate
 
 Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fixingDate,
                     const Period& rateComputationPeriod) {
+    Date today = Settings::instance().evaluationDate();
     Date start = getStartDate(on, fixingDate, rateComputationPeriod);
     Date end = on->fixingCalendar().advance(start, rateComputationPeriod);
-    OvernightIndexedCoupon cpn(end, 1.0, start, end, on);
+    Date minStart = on->fixingCalendar().advance(today, on->fixingDays() * Days);
+    Date minEnd = std::max(minStart + 1, end);
+    OvernightIndexedCoupon cpn(end, 1.0, minStart, minEnd, on);
     cpn.setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
     return cpn.rate();
 }
@@ -105,13 +108,16 @@ ProxyOptionletVolatility::ProxyOptionletVolatility(const Handle<OptionletVolatil
     registerWith(baseVol_);
     registerWith(baseIndex_);
     registerWith(targetIndex_);
+    enableExtrapolation(baseVol->allowsExtrapolation());
 }
 
-boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(Time optionTime) const {
-
+boost::shared_ptr<QuantLib::SmileSection> ProxyOptionletVolatility::smileSectionImpl(QuantLib::Time optionTime) const {
     // imply a fixing date from the optionTime
-
     Date fixingDate = lowerDate(optionTime, referenceDate(), dayCounter());
+    return smileSectionImpl(fixingDate);
+}
+
+boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const Date& fixingDate) const {
 
     // if base and target are both ibor or both ois the base fixing date will be the same as the target fixing date
 
@@ -124,8 +130,10 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(Time 
         baseFixingDate = baseIndex_->fixingCalendar().advance(getEndDate(targetIndex_, fixingDate),
                                                               -static_cast<int>(baseIndex_->fixingDays()) * Days);
 
-    // compute the base and target forward rate levels
+    Date today = Settings::instance().evaluationDate();
+    baseFixingDate = std::max(today + 1, baseFixingDate);
 
+    // compute the base and target forward rate levels
     Real baseAtmLevel = isOis(baseIndex_) ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(baseIndex_),
                                                            baseFixingDate, rateComputationPeriod_)
                                           : baseIndex_->fixing(baseFixingDate);
@@ -137,7 +145,7 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(Time 
     // build the atm-adjusted smile section and return it
 
     QL_REQUIRE(!baseVol_.empty(), "ProxyOptionletVolatility: no base vol given.");
-    return boost::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(optionTime), baseAtmLevel,
+    return boost::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(baseFixingDate, true), baseAtmLevel,
                                                        targetAtmLevel);
 }
 
