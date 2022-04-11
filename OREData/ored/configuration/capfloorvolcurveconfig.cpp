@@ -104,15 +104,15 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (auto p = XMLUtils::getChildNode(node, "ProxyConfig")) {
         // read in proxy config
 
-        auto source = XMLUtils::getChildNode(node, "Source");
+        auto source = XMLUtils::getChildNode(p, "Source");
         QL_REQUIRE(source != nullptr,
                    "CapFloorVolatilityCurveConfig (" << curveID_ << "): ProxyConfig requires child node 'Source'");
         proxySourceCurveId_ = XMLUtils::getChildValue(source, "CurveId", true);
         proxySourceIndex_ = XMLUtils::getChildValue(source, "Index", true);
 
-        auto target = XMLUtils::getChildNode(node, "Source");
-        QL_REQUIRE(source != nullptr,
-                   "CapFloorVolatilityCurveConfig (" << curveID_ << "): ProxyConfig requires child node 'Source'");
+        auto target = XMLUtils::getChildNode(p, "Target");
+        QL_REQUIRE(target != nullptr,
+                   "CapFloorVolatilityCurveConfig (" << curveID_ << "): ProxyConfig requires child node 'Target'");
         proxyTargetIndex_ = XMLUtils::getChildValue(target, "Index", true);
         proxyTargetRateComputationPeriod_ =
             parsePeriod(XMLUtils::getChildValue(target, "RateComputationPeriod", false, "0D"));
