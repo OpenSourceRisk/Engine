@@ -360,15 +360,29 @@ void DefaultCurve::buildCdsCurve(const std::string& curveID, const DefaultCurveC
 
     if (config.type() == DefaultCurveConfig::Config::Type::SpreadCDS) {
         for (auto quote : quotes) {
-            auto tmp = boost::make_shared<QuantExt::SpreadCdsHelper>(
-                quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
-                cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                config.startDate(), cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter());
-            if (tmp->latestDate() > asof) {
-                helpers.push_back(tmp);
-                runningSpread = config.runningSpread();
+            boost::shared_ptr<QuantExt::SpreadCdsHelper> tmp;
+            try {
+                tmp = boost::make_shared<QuantExt::SpreadCdsHelper>(
+                    quote.value, quote.term, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
+                    cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
+                    config.startDate(), cdsConv->settlesAccrual(), ppt, cdsConv->lastPeriodDayCounter());
+
+            } catch (exception& e) {
+                if (quote.term == Period(0, Months)) {
+                    WLOG("DefaultCurve:: Cannot add quote of term 0M to CDS curve " << curveID << 
+                        " for asof date " << asof);
+                } else {
+                    QL_FAIL("DefaultCurve:: Failed to add quote of term " << quote.term << " to CDS curve " 
+                        << curveID << " for asof date " << asof << ", with error: " << e.what());
+                }
             }
-            helperQuoteTerms[tmp->latestDate()] = quote.term;
+            if (tmp) {
+                if (tmp->latestDate() > asof) {
+                    helpers.push_back(tmp);
+                    runningSpread = config.runningSpread();
+                }
+                helperQuoteTerms[tmp->latestDate()] = quote.term;
+            }
         }
     } else {
         for (auto quote : quotes) {

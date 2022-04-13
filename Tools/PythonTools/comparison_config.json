@@ -528,12 +528,26 @@
             "names": [
               "InitialMargin"
             ],
+            "optional_names": [
+              "InitialMargin(Report)"
+            ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Regulation",
+              "Currency"
+            ],
+            "optional_names": [
+              "ReportCurrency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
-      ".*imschedule\\.csv": {
+      ".*imschedule_summary\\.csv": {
         "keys": [
           "Portfolio",
           "Side"
@@ -547,12 +561,26 @@
               "NetToGrossRatio",
               "ScheduleIM"
             ],
+            "optional_names": [
+              "ScheduleIM(Report)"
+            ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Regulation",
+              "Currency"
+            ],
+            "optional_names": [
+              "ReportCurrency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
-      ".*imscheduledetail\\.csv": {
+      ".*imschedule_detail\\.csv": {
         "keys": [
           "TradeId",
           "Portfolio",
@@ -572,9 +600,10 @@
           }
         ]
       },
-      ".*totalinitialmargin\\.csv": {
+      ".*total_initial_margin\\.csv": {
         "keys": [
-          "Side"
+          "Side",
+          "Portfolio"
         ],
         "column_settings": [
           {
@@ -583,6 +612,124 @@
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "Regulation"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      ".*simm_impact\\.csv": {
+        "keys": [
+          "Portfolio",
+          "ProductClass",
+          "RiskClass",
+          "MarginType",
+          "SimmSide"
+        ],
+        "rename_cols": {
+          "portfolio": "Portfolio",
+          "product_class": "ProductClass",
+          "riskClass": "RiskClass",
+          "marginType": "MarginType"
+        },
+        "column_settings": [
+          {
+            "names": [
+              "InitialMarginBefore",
+              "InitialMarginAfter",
+              "InitialMarginImpact"
+            ],
+            "optional_names": [
+              "InitialMarginBefore(Report)",
+              "InitialMarginAfter(Report)",
+              "InitialMarginImpact(Report)"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "RegulationBefore",
+              "RegulationAfter",
+              "Currency"
+            ],
+            "optional_names": [
+              "ReportCurrency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      ".*imschedule_summary_impact\\.csv": {
+        "keys": [
+          "Portfolio",
+          "Side"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMarginBefore",
+              "InitialMarginAfter",
+              "InitialMarginImpact"
+            ],
+            "optional_names": [
+              "InitialMarginBefore(Report)",
+              "InitialMarginAfter(Report)",
+              "InitialMarginImpact(Report)"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "RegulationBefore",
+              "RegulationAfter",
+              "Currency"
+            ],
+            "optional_names": [
+              "ReportCurrency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
+          }
+        ]
+      },
+      ".*total_initial_margin_impact\\.csv": {
+        "keys": [
+          "Side",
+          "Portfolio"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "InitialMarginBefore",
+              "InitialMarginAfter",
+              "InitialMarginImpact"
+            ],
+            "optional_names": [
+              "InitialMarginBefore(Report)",
+              "InitialMarginAfter(Report)",
+              "InitialMarginImpact(Report)"
+            ],
+            "abs_tol": 0.1,
+            "rel_tol": 1e-12
+          },
+          {
+            "names": [
+              "RegulationBefore",
+              "RegulationAfter",
+              "Currency"
+            ],
+            "optional_names": [
+              "ReportCurrency"
+            ],
+            "abs_tol": null,
+            "rel_tol": null
           }
         ]
       },
@@ -917,6 +1064,28 @@
             ],
             "abs_tol": 1e-6,
             "rel_tol": 1e-12
+          }
+        ]
+      },
+      "criftotrade_trade_summary.csv": {
+        "keys": [
+          "trade_id",
+          "trade_type",
+          "maturity",
+          "currency1",
+          "currency2",
+          "settlement",
+          "xccy_fx_reset",
+          "xccy_capitalexchange"
+        ],
+        "column_settings": [
+          {
+            "names": [
+              "notional1",
+              "notional2"
+            ],
+            "abs_tol": 1,
+            "rel_tol": 1e-4
           }
         ]
       }

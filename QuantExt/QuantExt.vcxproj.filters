@@ -1213,6 +1213,9 @@
     <ClInclude Include="qle\math\constantinterpolation.hpp">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\sonia.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\creditcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -2080,6 +2083,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\oiscapfloorhelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\ibor\sonia.cpp">
+      <Filter>indexes\ibor</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\creditcurve.cpp">
       <Filter>termstructures</Filter>
