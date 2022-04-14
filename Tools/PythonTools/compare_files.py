@@ -240,9 +240,6 @@ def compare_files_df(name, file_1, file_2, config):
             if okey in df_1.columns and okey in df_2.columns:
                 keys.append(okey)
 
-    print(keys)
-
-
     # If we are told to use only certain columns, drop the others in each DataFrame. We first check that both
     # DataFrames have all of the explicitly listed columns to use.
     if 'use_cols' in config:
