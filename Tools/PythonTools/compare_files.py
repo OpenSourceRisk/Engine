@@ -218,6 +218,29 @@ def compare_files_df(name, file_1, file_2, config):
                            str(list(df.columns.values)), idx + 1, str(keys))
             return False
 
+    # We check for columns that would be used as keys but are not always necessary, 
+    # e.g. netting set details, collect_regulations, post_regualtions
+    if 'optional_keys' in config:
+        optional_keys = config['optional_keys']
+
+        # Check that optional keys are non-empty strings
+        if any([elem == '' for elem in optional_keys]):
+            logger.warning('The list of optional keys, %s, must be non-empty and each key must be a non-empty string.', str(keys))
+            return False
+
+        # Check that optional keys contain no duplicates (within itself or with keys)
+        combined_keys = keys.extend(optional_keys)
+        dup_keys = [elem for elem, count in collections.Counter(combined_keys).items() if count > 1]
+        if dup_keys:
+            logger.warning('The keys, %s, contain duplicates, %s.', str(combined_keys), str(dup_keys))
+            return False
+
+        # For each optional key, check whether it is found in at each DataFrame. If so, add it to the keys.
+        for okey in optional_keys:
+            if okey in df_1.columns and okey in df_2.columns:
+                keys.append(okey)
+
+
     # If we are told to use only certain columns, drop the others in each DataFrame. We first check that both
     # DataFrames have all of the explicitly listed columns to use.
     if 'use_cols' in config:
