@@ -229,7 +229,7 @@ def compare_files_df(name, file_1, file_2, config):
             return False
 
         # Check that optional keys contain no duplicates (within itself or with keys)
-        combined_keys = keys.extend(optional_keys)
+        combined_keys = keys + optional_keys
         dup_keys = [elem for elem, count in collections.Counter(combined_keys).items() if count > 1]
         if dup_keys:
             logger.warning('The keys, %s, contain duplicates, %s.', str(combined_keys), str(dup_keys))
@@ -239,6 +239,8 @@ def compare_files_df(name, file_1, file_2, config):
         for okey in optional_keys:
             if okey in df_1.columns and okey in df_2.columns:
                 keys.append(okey)
+
+    print(keys)
 
 
     # If we are told to use only certain columns, drop the others in each DataFrame. We first check that both
