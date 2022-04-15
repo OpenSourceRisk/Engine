@@ -31,7 +31,7 @@ NettingSetDetails::NettingSetDetails(const map<string, string>& nettingSetMap) {
         } else if (m.first == "AgreementType") {
             agreementType_ = nettingSetMap.at(m.first);
         } else if (m.first == "CallType") {
-            agreementType_ = nettingSetMap.at(m.first);
+            callType_ = nettingSetMap.at(m.first);
         } else if (m.first == "InitialMarginType") {
             initialMarginType_ = nettingSetMap.at(m.first);
         } else if (m.first == "LegalEntityId") {
