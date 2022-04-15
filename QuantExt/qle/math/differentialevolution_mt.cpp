@@ -327,15 +327,9 @@ void DifferentialEvolution_MT::updateCost(std::vector<Candidate>& population, Pr
 
     std::vector<boost::shared_ptr<std::thread>> workers(threads);
 
-    Size start = 0, end, prevChunkSize, countChunkSize = 0;
+    Size start = 0, end;
     for (Size thread = 0; thread < threads; ++thread) {
         end = std::min(start + chunks[thread], population.size());
-        if (thread == 0 || (end - start == prevChunkSize)) {
-            countChunkSize++;
-        } else {
-            countChunkSize = 1;
-        }
-        prevChunkSize = end - start;
         Worker worker(population, start, end, p.costFunctions()[thread]);
         workers[thread] = boost::make_shared<std::thread>(worker);
         start = end;
