@@ -83,110 +83,146 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     populateQuotes();
 }
 
+CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
+    const std::string& curveID, const std::string& curveDescription, const std::string proxySourceCurveId,
+    const std::string& proxySourceIndex, const std::string& proxyTargetIndex,
+    const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod)
+    : CurveConfig(curveID, curveDescription), proxySourceCurveId_(proxySourceCurveId),
+      proxySourceIndex_(proxySourceIndex), proxyTargetIndex_(proxyTargetIndex),
+      proxySourceRateComputationPeriod_(proxySourceRateComputationPeriod),
+      proxyTargetRateComputationPeriod_(proxyTargetRateComputationPeriod) {
+    populateRequiredCurveIds();
+}
+
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "CapFloorVolatility");
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
 
-    // Set the volatility type
-    configureVolatilityType(XMLUtils::getChildValue(node, "VolatilityType", true));
+    if (auto p = XMLUtils::getChildNode(node, "ProxyConfig")) {
+        // read in proxy config
 
-    // Set the extrapolation variables
-    extrapolation_ = XMLUtils::getChildValue(node, "Extrapolation", true);
-    configureExtrapolation(extrapolation_);
+        auto source = XMLUtils::getChildNode(p, "Source");
+        QL_REQUIRE(source != nullptr,
+                   "CapFloorVolatilityCurveConfig (" << curveID_ << "): ProxyConfig requires child node 'Source'");
+        proxySourceCurveId_ = XMLUtils::getChildValue(source, "CurveId", true);
+        proxySourceIndex_ = XMLUtils::getChildValue(source, "Index", true);
+        proxySourceRateComputationPeriod_ =
+            parsePeriod(XMLUtils::getChildValue(source, "RateComputationPeriod", false, "0D"));
 
-    // The mandatory variables
-    includeAtm_ = XMLUtils::getChildValueAsBool(node, "IncludeAtm", true);
-    calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
-    dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
-    businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
-    if (auto iborNode = XMLUtils::getChildNode(node, "IborIndex")) {
-        WLOG("CapFloorVolatilityCurveConfig (" << curveID_
-                                               << "): The IborIndex node is deprecated, use Index instead.");
-        index_ = XMLUtils::getNodeValue(iborNode);
-    } else if (auto indexNode = XMLUtils::getChildNode(node, "Index")) {
-        index_ = XMLUtils::getNodeValue(indexNode);
+        auto target = XMLUtils::getChildNode(p, "Target");
+        QL_REQUIRE(target != nullptr,
+                   "CapFloorVolatilityCurveConfig (" << curveID_ << "): ProxyConfig requires child node 'Target'");
+        proxyTargetIndex_ = index_ = XMLUtils::getChildValue(target, "Index", true);
+        proxyTargetRateComputationPeriod_ = rateComputationPeriod_ =
+            parsePeriod(XMLUtils::getChildValue(target, "RateComputationPeriod", false, "0D"));
+
+        populateRequiredCurveIds();
+
     } else {
-        QL_FAIL("CapFloorVOlatilityCurveConfig (" << curveID_
-                                                  << "): Index node (or the deprecated IborIndex node) expected");
+        // read in quote-based config
+
+        // Set the volatility type
+        configureVolatilityType(XMLUtils::getChildValue(node, "VolatilityType", true));
+
+        // Set the extrapolation variables
+        extrapolation_ = XMLUtils::getChildValue(node, "Extrapolation", true);
+        configureExtrapolation(extrapolation_);
+
+        // The mandatory variables
+        includeAtm_ = XMLUtils::getChildValueAsBool(node, "IncludeAtm", true);
+        calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
+        dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
+        businessDayConvention_ =
+            parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
+        if (auto iborNode = XMLUtils::getChildNode(node, "IborIndex")) {
+            WLOG("CapFloorVolatilityCurveConfig (" << curveID_
+                                                   << "): The IborIndex node is deprecated, use Index instead.");
+            index_ = XMLUtils::getNodeValue(iborNode);
+        } else if (auto indexNode = XMLUtils::getChildNode(node, "Index")) {
+            index_ = XMLUtils::getNodeValue(indexNode);
+        } else {
+            QL_FAIL("CapFloorVOlatilityCurveConfig (" << curveID_
+                                                      << "): Index node (or the deprecated IborIndex node) expected");
+        }
+        discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+
+        // rate computation period, only required for OIS indices (which we don't check here)
+        rateComputationPeriod_ = 0 * Days;
+        if (auto rcpNode = XMLUtils::getChildNode(node, "RateComputationPeriod")) {
+            rateComputationPeriod_ = parsePeriod(XMLUtils::getNodeValue(rcpNode));
+        }
+
+        // Settlement days (optional)
+        settleDays_ = 0;
+        if (XMLNode* n = XMLUtils::getChildNode(node, "SettlementDays")) {
+            Integer d = parseInteger(XMLUtils::getNodeValue(n));
+            QL_REQUIRE(d >= 0, "SettlementDays (" << d << ") must be non-negative");
+            settleDays_ = static_cast<Natural>(d);
+        }
+
+        // Variable on which to interpolate (optional)
+        interpolateOn_ = "TermVolatilities";
+        if (XMLNode* n = XMLUtils::getChildNode(node, "InterpolateOn")) {
+            interpolateOn_ = XMLUtils::getNodeValue(n);
+        }
+
+        // Interpolation in time direction (optional)
+        timeInterpolation_ = "LinearFlat";
+        if (XMLNode* n = XMLUtils::getChildNode(node, "TimeInterpolation")) {
+            timeInterpolation_ = XMLUtils::getNodeValue(n);
+        }
+
+        // Interpolation in strike direction (optional)
+        strikeInterpolation_ = "LinearFlat";
+        if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeInterpolation")) {
+            strikeInterpolation_ = XMLUtils::getNodeValue(n);
+        }
+
+        // Tenors and strikes. Optional as we may have an ATM curve and hence only AtmTenors.
+        tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", false);
+        strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", false);
+
+        // Optional flag, if set to true some tenor/strike quotes can be omitted
+        optionalQuotes_ = XMLUtils::getChildValueAsBool(node, "OptionalQuotes", false, false);
+
+        // Interpolation for cap floor term volatilities (optional)
+        interpolationMethod_ = "BicubicSpline";
+        if (XMLNode* n = XMLUtils::getChildNode(node, "InterpolationMethod")) {
+            interpolationMethod_ = XMLUtils::getNodeValue(n);
+        }
+
+        // Tenors for ATM volatilities.
+        atmTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "AtmTenors", false);
+        QL_REQUIRE(!tenors_.empty() || !atmTenors_.empty(), "Tenors and AtmTenors cannot both be empty");
+        if (includeAtm_ && atmTenors_.empty()) {
+            // swap so tenors_ is empty
+            atmTenors_.swap(tenors_);
+        }
+
+        // Optional bootstrap configuration
+        if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
+            bootstrapConfig_.fromXML(n);
+        }
+
+        // Set type_
+        configureType();
+
+        // Optional report config
+        if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+            reportConfig_.fromXML(tmp);
+        }
+
+        // Check that we have a valid configuration
+        validate();
+
+        // Populate quotes
+        populateQuotes();
+
+        // Populate required curve ids
+        populateRequiredCurveIds();
     }
-    discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
-
-    // rate computation period, only required for OIS indices (which we don't check here)
-    rateComputationPeriod_ = 0 * Days;
-    if (auto rcpNode = XMLUtils::getChildNode(node, "RateComputationPeriod")) {
-        rateComputationPeriod_ = parsePeriod(XMLUtils::getNodeValue(rcpNode));
-    }
-
-    // Settlement days (optional)
-    settleDays_ = 0;
-    if (XMLNode* n = XMLUtils::getChildNode(node, "SettlementDays")) {
-        Integer d = parseInteger(XMLUtils::getNodeValue(n));
-        QL_REQUIRE(d >= 0, "SettlementDays (" << d << ") must be non-negative");
-        settleDays_ = static_cast<Natural>(d);
-    }
-
-    // Variable on which to interpolate (optional)
-    interpolateOn_ = "TermVolatilities";
-    if (XMLNode* n = XMLUtils::getChildNode(node, "InterpolateOn")) {
-        interpolateOn_ = XMLUtils::getNodeValue(n);
-    }
-
-    // Interpolation in time direction (optional)
-    timeInterpolation_ = "LinearFlat";
-    if (XMLNode* n = XMLUtils::getChildNode(node, "TimeInterpolation")) {
-        timeInterpolation_ = XMLUtils::getNodeValue(n);
-    }
-
-    // Interpolation in strike direction (optional)
-    strikeInterpolation_ = "LinearFlat";
-    if (XMLNode* n = XMLUtils::getChildNode(node, "StrikeInterpolation")) {
-        strikeInterpolation_ = XMLUtils::getNodeValue(n);
-    }
-
-    // Tenors and strikes. Optional as we may have an ATM curve and hence only AtmTenors.
-    tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", false);
-    strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", false);
-
-    // Optional flag, if set to true some tenor/strike quotes can be omitted
-    optionalQuotes_ = XMLUtils::getChildValueAsBool(node, "OptionalQuotes", false, false);
-
-    // Interpolation for cap floor term volatilities (optional)
-    interpolationMethod_ = "BicubicSpline";
-    if (XMLNode* n = XMLUtils::getChildNode(node, "InterpolationMethod")) {
-        interpolationMethod_ = XMLUtils::getNodeValue(n);
-    }
-
-    // Tenors for ATM volatilities.
-    atmTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "AtmTenors", false);
-    QL_REQUIRE(!tenors_.empty() || !atmTenors_.empty(), "Tenors and AtmTenors cannot both be empty");
-    if (includeAtm_ && atmTenors_.empty()) {
-        // swap so tenors_ is empty
-        atmTenors_.swap(tenors_);
-    }
-
-    // Optional bootstrap configuration
-    if (XMLNode* n = XMLUtils::getChildNode(node, "BootstrapConfig")) {
-        bootstrapConfig_.fromXML(n);
-    }
-
-    // Set type_
-    configureType();
-
-    // Optional report config
-    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
-        reportConfig_.fromXML(tmp);
-    }
-
-    // Check that we have a valid configuration
-    validate();
-
-    // Populate required curve ids
-    populateRequiredCurveIds();
-
-    // Populate quotes
-    populateQuotes();
 }
 
 XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -195,28 +231,43 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
 
-    XMLUtils::addChild(doc, node, "VolatilityType", toString(volatilityType_));
-    XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
-    XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
-    XMLUtils::addChild(doc, node, "IncludeAtm", includeAtm_);
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
-    XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
-    XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
-    XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
-    XMLUtils::addChild(doc, node, "OptionalQuotes", optionalQuotes_);
-    XMLUtils::addChild(doc, node, "Index", index_);
-    if (rateComputationPeriod_ != 0 * Days) {
-        XMLUtils::addChild(doc, node, "RateComputationPeriod", rateComputationPeriod_);
+    if (!proxySourceCurveId_.empty()) {
+        // write out proxy config
+        auto proxy = XMLUtils::addChild(doc, node, "ProxyConfig");
+        auto source = XMLUtils::addChild(doc, proxy, "Source");
+        auto target = XMLUtils::addChild(doc, proxy, "Target");
+        XMLUtils::addChild(doc, source, "CurveId", proxySourceCurveId_);
+        XMLUtils::addChild(doc, source, "Index", proxySourceIndex_);
+        XMLUtils::addChild(doc, target, "Index", proxyTargetIndex_);
+        if (proxySourceRateComputationPeriod_ != 0 * Days)
+            XMLUtils::addChild(doc, source, "RateComputationPeriod", proxySourceRateComputationPeriod_);
+        if (proxyTargetRateComputationPeriod_ != 0 * Days)
+            XMLUtils::addChild(doc, target, "RateComputationPeriod", proxyTargetRateComputationPeriod_);
+    } else {
+        // write out quote based config
+        XMLUtils::addChild(doc, node, "VolatilityType", toString(volatilityType_));
+        XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
+        XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
+        XMLUtils::addChild(doc, node, "IncludeAtm", includeAtm_);
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+        XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+        XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
+        XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
+        XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
+        XMLUtils::addChild(doc, node, "OptionalQuotes", optionalQuotes_);
+        XMLUtils::addChild(doc, node, "Index", index_);
+        if (rateComputationPeriod_ != 0 * Days) {
+            XMLUtils::addChild(doc, node, "RateComputationPeriod", rateComputationPeriod_);
+        }
+        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
+        XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);
+        XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settleDays_));
+        XMLUtils::addChild(doc, node, "InterpolateOn", interpolateOn_);
+        XMLUtils::addChild(doc, node, "TimeInterpolation", timeInterpolation_);
+        XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
+        XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+        XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     }
-    XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
-    XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);
-    XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settleDays_));
-    XMLUtils::addChild(doc, node, "InterpolateOn", interpolateOn_);
-    XMLUtils::addChild(doc, node, "TimeInterpolation", timeInterpolation_);
-    XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
-    XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
-    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
 }
@@ -240,6 +291,10 @@ string CapFloorVolatilityCurveConfig::toString(VolatilityType type) const {
 void CapFloorVolatilityCurveConfig::populateRequiredCurveIds() {
     if (!discountCurve().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(discountCurve())->curveConfigID());
+    if (!proxySourceCurveId_.empty()) {
+        requiredCurveIds_[CurveSpec::CurveType::CapFloorVolatility].insert(
+            parseCurveSpec(proxySourceCurveId_)->curveConfigID());
+    }
 }
 
 string CapFloorVolatilityCurveConfig::indexTenor() const {

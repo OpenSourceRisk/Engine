@@ -23,7 +23,7 @@ namespace QuantExt {
 MakeOISCapFloor::MakeOISCapFloor(CapFloor::Type type, const Period& tenor, const ext::shared_ptr<OvernightIndex>& index,
                                  const Period& rateComputationPeriod, Rate strike)
     : type_(type), tenor_(tenor), index_(index), rateComputationPeriod_(rateComputationPeriod), strike_(strike),
-      nominal_(1.0), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
+      nominal_(1.0), settlementDays_(2), calendar_(index->fixingCalendar()), convention_(ModifiedFollowing),
       rule_(DateGeneration::Backward), dayCounter_(index->dayCounter()), telescopicValueDates_(false) {}
 
 MakeOISCapFloor::operator Leg() const {
@@ -34,7 +34,7 @@ MakeOISCapFloor::operator Leg() const {
         startDate = effectiveDate_;
     } else {
         Date refDate = Settings::instance().evaluationDate();
-        startDate = calendar.advance(calendar.adjust(refDate), index_->fixingDays() * Days);
+        startDate = calendar.advance(calendar.adjust(refDate), settlementDays_ * Days);
     }
 
     Date endDate = calendar.adjust(startDate + tenor_, ModifiedFollowing);
@@ -79,6 +79,11 @@ MakeOISCapFloor& MakeOISCapFloor::withNominal(Real n) {
 
 MakeOISCapFloor& MakeOISCapFloor::withEffectiveDate(const Date& effectiveDate) {
     effectiveDate_ = effectiveDate;
+    return *this;
+}
+
+MakeOISCapFloor& MakeOISCapFloor::withSettlementDays(Natural settlementDays) {
+    settlementDays_ = settlementDays;
     return *this;
 }
 
