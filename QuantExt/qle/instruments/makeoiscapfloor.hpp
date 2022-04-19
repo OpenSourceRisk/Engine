@@ -37,6 +37,7 @@ public:
 
     MakeOISCapFloor& withNominal(Real n);
     MakeOISCapFloor& withEffectiveDate(const Date& effectiveDate);
+    MakeOISCapFloor& withSettlementDays(Natural settlementDays);
     MakeOISCapFloor& withCalendar(const Calendar& cal);
     MakeOISCapFloor& withConvention(BusinessDayConvention bdc);
     MakeOISCapFloor& withRule(DateGeneration::Rule r);
@@ -54,6 +55,7 @@ private:
 
     Real nominal_;
     Date effectiveDate_;
+    Natural settlementDays_;
     Calendar calendar_;
     BusinessDayConvention convention_;
     DateGeneration::Rule rule_;

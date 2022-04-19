@@ -69,7 +69,7 @@ QuantLib::Date lowerDate(const Real t, const QuantLib::Date& refDate, const Quan
     QL_REQUIRE(t > 0.0, "lowerDate(" << t << "," << refDate << "," << dc.name()
                                      << ") was called with negative time, this is not allowed.");
     bool done = false;
-    Date d = refDate + static_cast<int>(t);
+    Date d = refDate + static_cast<int>(t * 365.25);
     Real tmp = dc.yearFraction(refDate, d);
     Size attempts = 0;
     while ((tmp < t || close_enough(tmp, t)) && (++attempts < 10000)) {
