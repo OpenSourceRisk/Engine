@@ -128,6 +128,7 @@
       <xs:element type="xs:string" name="FixedCalendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="FixedPaymentConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="FixedFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="OnTenor" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="RateCutoff" minOccurs="1" maxOccurs="1"/>

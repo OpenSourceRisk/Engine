@@ -565,8 +565,8 @@ public:
     //! Detailed constructor
     AverageOisConvention(const string& id, const string& spotLag, const string& fixedTenor,
                          const string& fixedDayCounter, const string& fixedCalendar, const string& fixedConvention,
-                         const string& fixedPaymentConvention, const string& index, const string& onTenor,
-                         const string& rateCutoff);
+                         const string& fixedPaymentConvention, const string& fixedFrequency, const string& index,
+                         const string& onTenor, const string& rateCutoff);
     //@}
 
     //! \name Inspectors
@@ -577,6 +577,7 @@ public:
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
+    Frequency fixedFrequency() const { return fixedFrequency_; }
     const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const Period& onTenor() const { return onTenor_; }
@@ -596,6 +597,7 @@ private:
     Calendar fixedCalendar_;
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention fixedPaymentConvention_;
+    Frequency fixedFrequency_;
     boost::shared_ptr<OvernightIndex> index_;
     Period onTenor_;
     Natural rateCutoff_;
@@ -607,6 +609,7 @@ private:
     string strFixedCalendar_;
     string strFixedConvention_;
     string strFixedPaymentConvention_;
+    string strFixedFrequency_;
     string strIndex_;
     string strOnTenor_;
     string strRateCutoff_;

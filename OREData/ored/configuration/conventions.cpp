@@ -490,7 +490,8 @@ XMLNode* IRSwapConvention::toXML(XMLDocument& doc) {
 AverageOisConvention::AverageOisConvention(const string& id, const string& spotLag, const string& fixedTenor,
                                            const string& fixedDayCounter, const string& fixedCalendar,
                                            const string& fixedConvention, const string& fixedPaymentConvention,
-                                           const string& index, const string& onTenor, const string& rateCutoff)
+                                           const string& fixedFrequency, const string& index, const string& onTenor,
+                                           const string& rateCutoff)
     : Convention(id, Type::AverageOIS), strSpotLag_(spotLag), strFixedTenor_(fixedTenor),
       strFixedDayCounter_(fixedDayCounter), strFixedCalendar_(fixedCalendar), strFixedConvention_(fixedConvention),
       strFixedPaymentConvention_(fixedPaymentConvention), strIndex_(index), strOnTenor_(onTenor),
@@ -509,6 +510,7 @@ void AverageOisConvention::build() {
     fixedCalendar_ = parseCalendar(strFixedCalendar_);
     fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
     fixedPaymentConvention_ = parseBusinessDayConvention(strFixedPaymentConvention_);
+    fixedFrequency_ = strFixedFrequency_.empty() ? Annual : parseFrequency(strFixedFrequency_);
     onTenor_ = parsePeriod(strOnTenor_);
     rateCutoff_ = lexical_cast<Natural>(strRateCutoff_);
 }
@@ -526,6 +528,7 @@ void AverageOisConvention::fromXML(XMLNode* node) {
     strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", true);
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
     strFixedPaymentConvention_ = XMLUtils::getChildValue(node, "FixedPaymentConvention", true);
+    strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", false);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     strOnTenor_ = XMLUtils::getChildValue(node, "OnTenor", true);
     strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", true);
@@ -543,6 +546,8 @@ XMLNode* AverageOisConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FixedCalendar", strFixedCalendar_);
     XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
     XMLUtils::addChild(doc, node, "FixedPaymentConvention", strFixedPaymentConvention_);
+    if (!strFixedFrequency_.empty())
+        XMLUtils::addChild(doc, node, "FixedFrequency", strFixedFrequency_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "OnTenor", strOnTenor_);
     XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
