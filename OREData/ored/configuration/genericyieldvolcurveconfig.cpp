@@ -103,7 +103,8 @@ const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
         for (auto s : underlyingTenors_) {
             if (volatilityType_ == VolatilityType::ShiftedLognormal) {
                 std::stringstream ss;
-                ss << marketDatumInstrumentLabel_ << "/SHIFT/" << qualifier_ << "/" << s;
+                ss << marketDatumInstrumentLabel_ << "/SHIFT/" << qualifier_ << "/"
+                   << (quoteTag_.empty() ? "" : quoteTag_ + "/") << s;
                 quotes_.push_back(ss.str());
             }
         }

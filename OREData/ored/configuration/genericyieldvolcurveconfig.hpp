@@ -100,6 +100,7 @@ public:
     const vector<string>& smileOptionTenors() const { return smileOptionTenors_; }
     const vector<string>& smileUnderlyingTenors() const { return smileUnderlyingTenors_; }
     const vector<string>& smileSpreads() const { return smileSpreads_; }
+    const string& quoteTag() const { return quoteTag_; }
     const vector<string>& quotes() override;
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
@@ -121,6 +122,7 @@ public:
     vector<string>& smileOptionTenors() { return smileOptionTenors_; }
     vector<string>& smileUnderlyingTenors() { return smileUnderlyingTenors_; }
     vector<string>& smileSpreads() { return smileSpreads_; }
+    string& quoteTag() { return quoteTag_; }
     //@}
 
 private:
@@ -141,6 +143,7 @@ private:
     vector<string> smileOptionTenors_;
     vector<string> smileUnderlyingTenors_;
     vector<string> smileSpreads_;
+    string quoteTag_;
     ReportConfig reportConfig_;
 };
 
