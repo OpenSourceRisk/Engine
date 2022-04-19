@@ -436,7 +436,7 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         QL_REQUIRE(tokens.size() == 3 || tokens.size() == 4,
                    "three or four tokens required in " << swapIndex << ": CCY-CMS-TENOR or CCY-CMS-TAG-TENOR");
         QL_REQUIRE(tokens[0].size() == 3, "invalid currency code in " << swapIndex);
-        QL_REQUIRE(tokens[1] == "CMS", "expected CMS as middle token in " << swapIndex);
+        QL_REQUIRE(tokens[1] == "CMS", "expected CMS as second token in " << swapIndex);
 
         Handle<YieldTermStructure> discounting, forwarding;
         boost::shared_ptr<IborIndex> dummeyIndex;
@@ -445,17 +445,20 @@ void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountInd
         else
             discounting = yieldCurve(discountIndex, configuration);
 
-        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();        
+        const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
         auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
         QL_REQUIRE(swapCon, "expected SwapIndexConvention for " << swapIndex);
-        auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
-        QL_REQUIRE(con, "expected IRSwapConvention for " << swapCon->conventions());
-        
-        string fi = con->indexName();
+        auto conIbor = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
+        auto conOisComp = boost::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
+        auto conOisAvg = boost::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
+        QL_REQUIRE(conIbor || conOisComp || conOisAvg,
+                   "expected IRSwapConvention, OisConvention, AverageOisConvention for " << swapCon->conventions());
+
+        string fi = conIbor ? conIbor->indexName() : (conOisComp ? conOisComp->indexName() : conOisAvg->indexName());
         if (isGenericIborIndex(fi))
             forwarding = discounting;
         else
-            forwarding = iborIndex(con->indexName(), configuration)->forwardingTermStructure();
+            forwarding = iborIndex(fi, configuration)->forwardingTermStructure();
 
         boost::shared_ptr<SwapIndex> si = data::parseSwapIndex(swapIndex, forwarding, discounting);
         swapIndices_[make_pair(configuration, swapIndex)] = Handle<SwapIndex>(si);
