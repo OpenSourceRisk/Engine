@@ -455,25 +455,30 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::SWAPTION: {
-        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6 || tokens.size() == 7,
-                   "4, 6 or 7 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 8, "4...8 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        Period expiry = tokens.size() >= 6 ? parsePeriod(tokens[3]) : Period(0 * QuantLib::Days);
-        Period term = tokens.size() >= 6 ? parsePeriod(tokens[4]) : parsePeriod(tokens[3]);
+        Period dummy;
+        Size offset = tryParse<Period>(tokens[3], dummy, &parsePeriod) ? 0 : 1;
+        std::string quoteTag;
+        if (offset == 1)
+            quoteTag = tokens[3];
         if (tokens.size() >= 6) { // volatility
-            const string& dimension = tokens[5];
+            Period expiry = parsePeriod(tokens[3 + offset]);
+            Period term = parsePeriod(tokens[4 + offset]);
+            const string& dimension = tokens[5 + offset];
             Real strike = 0.0;
             if (dimension == "ATM")
-                QL_REQUIRE(tokens.size() == 6, "6 tokens expected in ATM quote " << datumName);
+                QL_REQUIRE(tokens.size() == 6 + offset, 6 + offset << " tokens expected in ATM quote " << datumName);
             else if (dimension == "Smile") {
-                QL_REQUIRE(tokens.size() == 7, "7 tokens expected in Smile quote " << datumName);
-                strike = parseReal(tokens[6]);
+                QL_REQUIRE(tokens.size() == 7 + offset, 7 + offset << " tokens expected in Smile quote " << datumName);
+                strike = parseReal(tokens[6 + offset]);
             } else
                 QL_FAIL("Swaption vol quote dimension " << dimension << " not recognised");
             return boost::make_shared<SwaptionQuote>(value, asof, datumName, quoteType, ccy, expiry, term, dimension,
-                                                     strike);
+                                                     strike, quoteTag);
         } else { // SLN volatility shift
-            return boost::make_shared<SwaptionShiftQuote>(value, asof, datumName, quoteType, ccy, term);
+            return boost::make_shared<SwaptionShiftQuote>(value, asof, datumName, quoteType, ccy,
+                                                          parsePeriod(tokens[3 + offset]), quoteTag);
         }
     }
 
