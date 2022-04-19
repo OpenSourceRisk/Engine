@@ -74,6 +74,8 @@ const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         std::stringstream ssBase;
         ssBase << marketDatumInstrumentLabel_ << "/" << volatilityType_ << "/" << qualifier_ << "/";
+        if (!quoteTag_.empty())
+            ssBase << quoteTag_ << "/";
         string base = ssBase.str();
 
         // add atm vols (always required)
@@ -195,6 +197,9 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (qualifier_ == "")
         qualifier_ = ccyFromSwapIndexBase();
 
+    // optional quote tag to include
+    quoteTag_ = XMLUtils::getChildValue(node, "QuoteTag", false);
+
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
     }
@@ -245,6 +250,10 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, node, "SmileOptionTenors", smileOptionTenors_);
         XMLUtils::addGenericChildAsList(doc, node, "Smile" + underlyingLabel_ + "Tenors", smileUnderlyingTenors_);
         XMLUtils::addGenericChildAsList(doc, node, "SmileSpreads", smileSpreads_);
+    }
+
+    if (!quoteTag_.empty()) {
+        XMLUtils::addChild(doc, node, "QuoteTag", quoteTag_);
     }
 
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
