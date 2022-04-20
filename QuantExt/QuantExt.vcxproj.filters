@@ -1228,6 +1228,9 @@
     <ClInclude Include="qle\termstructures\terminterpolateddefaultcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\proxyoptionletvolatility.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2095,6 +2098,9 @@
     </ClCompile>
     <ClCompile Include="qle\utilities\time.cpp">
       <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\proxyoptionletvolatility.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

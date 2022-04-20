@@ -365,6 +365,7 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>

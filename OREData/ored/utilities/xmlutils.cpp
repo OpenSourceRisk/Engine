@@ -287,13 +287,13 @@ void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& name
     }
 }
 
-string XMLUtils::getChildValue(XMLNode* node, const string& name, bool mandatory) {
+string XMLUtils::getChildValue(XMLNode* node, const string& name, bool mandatory, const string& defaultValue) {
     QL_REQUIRE(node, "XMLNode is NULL (was looking for child " << name << ")");
     xml_node<>* child = node->first_node(name.c_str());
     if (mandatory) {
         QL_REQUIRE(child, "Error: No XML Child Node " << name << " found.");
     }
-    return child ? getNodeValue(child) : "";
+    return child ? getNodeValue(child) : defaultValue;
 }
 
 Real XMLUtils::getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory, double defaultValue) {
