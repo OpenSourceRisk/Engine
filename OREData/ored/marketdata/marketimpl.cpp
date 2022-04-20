@@ -117,17 +117,76 @@ Handle<SwapIndex> MarketImpl::swapIndex(const string& key, const string& configu
 Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::swaptionVol(const string& key,
                                                                       const string& configuration) const {
     require(MarketObject::SwaptionVol, key, configuration);
-    return lookup<Handle<QuantLib::SwaptionVolatilityStructure>>(swaptionCurves_, key, configuration, "swaption curve");
+    auto it = swaptionCurves_.find(make_pair(configuration, key));
+    if (it != swaptionCurves_.end())
+        return it->second;
+    // try the default config with the same key
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::SwaptionVol, key, Market::defaultConfiguration);
+        auto it2 = swaptionCurves_.find(make_pair(Market::defaultConfiguration, key));
+        if (it2 != swaptionCurves_.end())
+            return it2->second;
+    }
+    // if key is an index name and we have a swaption curve for its ccy, we return that
+    boost::shared_ptr<IborIndex> index;
+    if (!tryParseIborIndex(key, index)) {
+        QL_FAIL("did not find swaption curve for key '" << key << "'");
+    }
+    auto ccy = index->currency().code();
+    require(MarketObject::SwaptionVol, ccy, configuration);
+    auto it3 = swaptionCurves_.find(make_pair(configuration, ccy));
+    if (it3 != swaptionCurves_.end()) {
+        return it3->second;
+    }
+    // check if we have a curve for the ccy in the default config
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::SwaptionVol, ccy, configuration);
+        auto it4 = swaptionCurves_.find(make_pair(Market::defaultConfiguration, ccy));
+        if (it4 != swaptionCurves_.end())
+            return it4->second;
+    }
+    QL_FAIL("did not find swaption curve for key '" << key << "'");
+}
+
+pair<string, string> MarketImpl::swapIndexBases(const string& key, const string& configuration) const {
+    require(MarketObject::SwaptionVol, key, configuration);
+    auto it = swaptionIndexBases_.find(make_pair(configuration, key));
+    if (it != swaptionIndexBases_.end())
+        return it->second;
+    // try the default config with the same key
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::SwaptionVol, key, Market::defaultConfiguration);
+        auto it2 = swaptionIndexBases_.find(make_pair(Market::defaultConfiguration, key));
+        if (it2 != swaptionIndexBases_.end())
+            return it2->second;
+    }
+    // if key is an index name and we have a swaption curve for its ccy, we return that
+    boost::shared_ptr<IborIndex> index;
+    if (!tryParseIborIndex(key, index)) {
+        QL_FAIL("did not find swaption index bases for key '" << key << "'");
+    }
+    auto ccy = index->currency().code();
+    require(MarketObject::SwaptionVol, ccy, configuration);
+    auto it3 = swaptionIndexBases_.find(make_pair(configuration, ccy));
+    if (it3 != swaptionIndexBases_.end()) {
+        return it3->second;
+    }
+    // check if we have a curve for the ccy in the default config
+    if (configuration != Market::defaultConfiguration) {
+        require(MarketObject::SwaptionVol, ccy, configuration);
+        auto it4 = swaptionIndexBases_.find(make_pair(Market::defaultConfiguration, ccy));
+        if (it4 != swaptionIndexBases_.end())
+            return it4->second;
+    }
+    QL_FAIL("did not find swaption index bases for key '" << key << "'");
 }
 
 const string MarketImpl::shortSwapIndexBase(const string& key, const string& configuration) const {
-    require(MarketObject::SwaptionVol, key, configuration);
-    return lookup<pair<string, string>>(swaptionIndexBases_, key, configuration, "short swap index base").first;
+    return swapIndexBases(key, configuration).first;
 }
 
 const string MarketImpl::swapIndexBase(const string& key, const string& configuration) const {
-    require(MarketObject::SwaptionVol, key, configuration);
-    return lookup<pair<string, string>>(swaptionIndexBases_, key, configuration, "swap index base").second;
+    return swapIndexBases(key, configuration).second;
 }
 
 Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(const string& key,
