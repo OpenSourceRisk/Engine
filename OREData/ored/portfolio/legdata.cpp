@@ -1359,11 +1359,9 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     QL_REQUIRE(n > 0, "Empty CPI Leg");
 
     if (couponCapFloor || finalFlowCapFloor) {
-
-        string indexName = index->name();
-        // remove blanks (FIXME)
-        indexName.replace(indexName.find(" ", 0), 1, "");
-
+        
+        string indexName = cpiLegData->index();
+        
         // get a coupon pricer for the leg
         boost::shared_ptr<EngineBuilder> cpBuilder = engineFactory->builder("CappedFlooredCpiLegCoupons");
         QL_REQUIRE(cpBuilder, "No builder found for CappedFlooredCpiLegCoupons");
@@ -1478,7 +1476,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
             QL_REQUIRE(builder, "No builder found for CapFlooredYYLeg");
             boost::shared_ptr<CapFlooredYoYLegEngineBuilder> cappedFlooredYoYBuilder =
                 boost::dynamic_pointer_cast<CapFlooredYoYLegEngineBuilder>(builder);
-            string indexname = yoyIndex->name();
+            string indexname = yoyLegData->index();
             boost::shared_ptr<InflationCouponPricer> couponPricer =
                 cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
 
