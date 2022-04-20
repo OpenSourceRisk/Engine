@@ -33,6 +33,7 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/timer/timer.hpp>
@@ -234,7 +235,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
                                        positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
                                        swaptionBuilder->configuration(MarketContext::pricing));
 
-    swaption->setPricingEngine(swaptionBuilder->engine(ccy));
+    swaption->setPricingEngine(
+        swaptionBuilder->engine(IndexNameTranslator::instance().oreName(swap->iborIndex()->name())));
 
     if (settlementType_ == Settlement::Physical) {
         instrument_ = boost::make_shared<EuropeanOptionWrapper>(

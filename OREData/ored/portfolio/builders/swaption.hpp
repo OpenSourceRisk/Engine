@@ -44,15 +44,15 @@ namespace data {
 
     \ingroup builders
  */
-class EuropeanSwaptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
+class EuropeanSwaptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
 public:
     EuropeanSwaptionEngineBuilder()
         : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
+    virtual string keyImpl(const string& key) override { return key; }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override;
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& key) override;
 };
 
 //! Abstract BermudanSwaptionEngineBuilder class
