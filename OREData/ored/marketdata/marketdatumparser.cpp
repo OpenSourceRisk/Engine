@@ -438,19 +438,27 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::CAPFLOOR: {
-        QL_REQUIRE(tokens.size() == 8 || tokens.size() == 4, "Either 4 or 8 tokens expected in " << datumName);
+        QL_REQUIRE(tokens.size() == 8 || tokens.size() == 9 || tokens.size() == 4 || tokens.size() == 5,
+                   "Either 4, 5 or 8, 9 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        if (tokens.size() == 8) {
-            Period term = parsePeriod(tokens[3]);
-            Period tenor = parsePeriod(tokens[4]);
-            bool atm = parseBool(tokens[5].c_str());
-            bool relative = parseBool(tokens[6].c_str());
-            Real strike = parseReal(tokens[7]);
+	Size offset = 0;
+	std::string indexName;
+	if(tokens.size() == 9 || tokens.size() == 5) {
+	    offset = 1;
+	    indexName = tokens[3];
+	}
+        if (tokens.size() == 8 || tokens.size() == 9) {
+            Period term = parsePeriod(tokens[3 + offset]);
+            Period tenor = parsePeriod(tokens[4 + offset]);
+            bool atm = parseBool(tokens[5 + offset].c_str());
+            bool relative = parseBool(tokens[6 + offset].c_str());
+            Real strike = parseReal(tokens[7 + offset]);
             return boost::make_shared<CapFloorQuote>(value, asof, datumName, quoteType, ccy, term, tenor, atm, relative,
-                                                     strike);
+                                                     strike, indexName);
         } else {
-            Period indexTenor = parsePeriod(tokens[3]);
-            return boost::make_shared<CapFloorShiftQuote>(value, asof, datumName, quoteType, ccy, indexTenor);
+            Period indexTenor = parsePeriod(tokens[3 + offset]);
+            return boost::make_shared<CapFloorShiftQuote>(value, asof, datumName, quoteType, ccy, indexTenor,
+                                                          indexName);
         }
     }
 

@@ -1001,13 +1001,14 @@ public:
     CapFloorQuote() {}
     //! Constructor
     CapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period term,
-                  Period underlying, bool atm, bool relative, Real strike = 0.0)
+                  Period underlying, bool atm, bool relative, Real strike = 0.0, const string& indexName = string())
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CAPFLOOR), ccy_(ccy), term_(term),
-          underlying_(underlying), atm_(atm), relative_(relative), strike_(strike) {}
-    
+          underlying_(underlying), atm_(atm), relative_(relative), strike_(strike), indexName_(indexName) {}
+
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
-        return boost::make_shared<CapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_, underlying_, atm_, relative_, strike_);
+        return boost::make_shared<CapFloorQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, term_,
+                                                 underlying_, atm_, relative_, strike_, indexName_);
     }
 
     //! \name Inspectors
@@ -1018,6 +1019,7 @@ public:
     bool atm() const { return atm_; }
     bool relative() const { return relative_; }
     Real strike() { return strike_; }
+    const string& indexName() const { return indexName_; }
     //@}
 private:
     string ccy_;
@@ -1026,6 +1028,7 @@ private:
     bool atm_;
     bool relative_;
     Real strike_;
+    string indexName_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -1040,22 +1043,26 @@ class CapFloorShiftQuote : public MarketDatum {
 public:
     CapFloorShiftQuote() {}
     CapFloorShiftQuote(Real value, const Date& asofDate, const string& name, QuoteType quoteType, const string& ccy,
-                       const Period& indexTenor)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CAPFLOOR), ccy_(ccy), indexTenor_(indexTenor) {
+                       const Period& indexTenor, const string& indexName = string())
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CAPFLOOR), ccy_(ccy), indexTenor_(indexTenor),
+          indexName_(indexName) {
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "Quote type must be SHIFT for shift data");
     }
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
-        return boost::make_shared<CapFloorShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, indexTenor_);
+        return boost::make_shared<CapFloorShiftQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, indexTenor_,
+                                                      indexName_);
     }
 
     const string& ccy() const { return ccy_; }
     const Period& indexTenor() const { return indexTenor_; }
+    const string& indexName() const { return indexName_; }
 
 private:
     string ccy_;
     Period indexTenor_;
+    string indexName_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
