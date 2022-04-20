@@ -180,6 +180,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             strikeInterpolation_ = XMLUtils::getNodeValue(n);
         }
 
+	quoteIncludesIndexName_ = XMLUtils::getChildValueAsBool(node, "QuoteIncludesIndexName", false, false);
+
         // Tenors and strikes. Optional as we may have an ATM curve and hence only AtmTenors.
         tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", false);
         strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", false);
@@ -209,11 +211,6 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         // Set type_
         configureType();
 
-        // Optional report config
-        if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
-            reportConfig_.fromXML(tmp);
-        }
-
         // Check that we have a valid configuration
         validate();
 
@@ -222,6 +219,11 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
         // Populate required curve ids
         populateRequiredCurveIds();
+    }
+
+    // Optional report config
+    if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
+        reportConfig_.fromXML(tmp);
     }
 }
 
@@ -265,10 +267,11 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "InterpolateOn", interpolateOn_);
         XMLUtils::addChild(doc, node, "TimeInterpolation", timeInterpolation_);
         XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
+        XMLUtils::addChild(doc, node, "QuoteIncludesIndexName", quoteIncludesIndexName_);
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
-        XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     }
 
+    XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }
 
@@ -316,13 +319,16 @@ const string& CapFloorVolatilityCurveConfig::currency() const {
 void CapFloorVolatilityCurveConfig::populateQuotes() {
 
     // Cap floor quotes are for the form:
-    // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE>
+    // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE> or
+    // CAPFLOOR/(RATE_LNVOL|RATE_NVOL|RATE_SLNVOL)/<CCY>/<IndexName>/<TENOR>/<IBOR_TENOR>/<ATM>/<RELATIVE>/<STRIKE>
     string ccy = currency();
     string tenor = indexTenor();
 
     // Volatility quote stem
     MarketDatum::QuoteType qType = quoteType();
     string stem = "CAPFLOOR/" + to_string(qType) + "/" + ccy + "/";
+    if(quoteIncludesIndexName())
+	stem += index() + "/";
 
     // Cap floor matrix quotes. So, ATM flag is false i.e. 0 and RELATIVE flag is false also as strikes are absolute.
     for (const string& t : tenors_) {
@@ -339,9 +345,10 @@ void CapFloorVolatilityCurveConfig::populateQuotes() {
     }
 
     // Cap floor shift quote depends only on the currency and ibor tenor and is of the form:
-    // CAPFLOOR/SHIFT/<CCY>/<IBOR_TERM>
+    // CAPFLOOR/SHIFT/<CCY>/<IBOR_TERM> or
+    // CAPFLOOR/SHIFT/<CCY>/<IndexName>/<IBOR_TERM> or
     if (volatilityType_ == VolatilityType::ShiftedLognormal) {
-        quotes_.push_back("CAPFLOOR/SHIFT/" + ccy + "/" + tenor);
+        quotes_.push_back("CAPFLOOR/SHIFT/" + ccy + "/" + (quoteIncludesIndexName() ? index() + "/" : "") + tenor);
     }
 }
 

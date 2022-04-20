@@ -96,6 +96,7 @@ public:
     const std::string& interpolateOn() const { return interpolateOn_; }
     const std::string& timeInterpolation() const { return timeInterpolation_; }
     const std::string& strikeInterpolation() const { return strikeInterpolation_; }
+    bool quoteIncludesIndexName() const { return quoteIncludesIndexName_; }
     const std::vector<std::string>& atmTenors() const { return atmTenors_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     Type type() const { return type_; }
@@ -133,6 +134,7 @@ private:
     std::string interpolateOn_;
     std::string timeInterpolation_;
     std::string strikeInterpolation_;
+    bool quoteIncludesIndexName_ = false;
     std::vector<std::string> atmTenors_;
     BootstrapConfig bootstrapConfig_;
     Type type_;

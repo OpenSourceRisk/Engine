@@ -323,6 +323,9 @@ Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extr
 \item \lstinline!StrikeInterpolation!:
 Indicates the interpolation and extrapolation, if allowed by the \lstinline!Extrapolation! node, in the strike direction. Again, as \lstinline!InterpolateOn! is set to \lstinline!OptionletVolatilities! here, the interpolation is used to interpolate the optionlet volatilities in the strike direction. The allowable values are \lstinline!Linear!, \lstinline!LinearFlat!, \lstinline!Cubic! and \lstinline!CubicFlat!. If not set, \lstinline!LinearFlat! is assumed.
 
+\item \lstinline!QuoteIncludesIndexName! [Optional]:
+If true, the quote labels that are looked up in the market data to build the surface include the index name as e.g. in \lstinline!CAPFLOOR/RATE_NVOL/USD/USD-LIBOR-3M/1Y/3M/0/0/0.01!. If false, the index name is not include as in \lstinline!CAPFLOOR/RATE_NVOL/USD/1Y/3M/0/0/0.01!. If the flag is not given, it defaults to false. Including the index name in the market quotes allows to build cap surfaces on different underlying indices with the same tenor. The flag also affects shift quotes as e.g. \lstinline!CAPFLOOR/SHIFT/USD/USD-LIBOR-3M/5Y! (index included in quote) vs. \lstinline!CAPFLOOR/SHIFT/USD/5Y! (index not included in quote).
+
 \item \lstinline!BootstrapConfig! [Optional]:
 This node holds configuration details for the iterative bootstrap that are described in section \ref{sec:bootstrap_config}. If omitted, this node's default values described in section \ref{sec:bootstrap_config} are used.
 
@@ -349,6 +352,7 @@ This node holds configuration details for the iterative bootstrap that are descr
   <InterpolateOn>OptionletVolatilities</InterpolateOn>
   <TimeInterpolation>...</TimeInterpolation>
   <StrikeInterpolation>...</StrikeInterpolation>
+  <QuoteIncludesIndexName>...</QuoteIncludesIndexName>
   <BootstrapConfig>...</BootstrapConfig>
 </CapFloorVolatility>
 \end{minted}
