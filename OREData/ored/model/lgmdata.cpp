@@ -177,8 +177,8 @@ void LgmData::fromFile(const std::string& fileName, const std::string& qualifier
     XMLNode* root = doc.getFirstNode("Models");
     Size count = 0;
     for (XMLNode* child = XMLUtils::getChildNode(root, "LGM"); child; child = XMLUtils::getNextSibling(child, "LGM")) {
-        std::string childCcy = XMLUtils::getAttribute(child, "qualifier");
-        if (qualifier == childCcy) {
+        std::string childQual = XMLUtils::getAttribute(child, "qualifier");
+        if (qualifier == childQual) {
             fromXML(child);
             count++;
             break;

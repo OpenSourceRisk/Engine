@@ -34,6 +34,7 @@
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/strike.hpp>
 
 using namespace QuantLib;
@@ -131,21 +132,27 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
       calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
 
     marketObserver_ = boost::make_shared<MarketObserver>();
-    QuantLib::Currency ccy = parseCurrency(data_->ccy());
-    LOG("LgmCalibration for ccy " << ccy << ", configuration is " << configuration_);
+    string qualifier = data_->qualifier();
+    string currency = qualifier;
+    boost::shared_ptr<IborIndex> index;
+    if(tryParseIborIndex(qualifier,index)) {
+	currency = index->currency().code();
+    }
+    LOG("LgmCalibration for qualifier " << qualifier << " (ccy=" << currency << "), configuration is " << configuration_);
+    Currency ccy = parseCurrency(currency);
 
     requiresCalibration_ =
         (data_->calibrateA() || data_->calibrateH()) && data_->calibrationType() != CalibrationType::None;
 
     // the discount curve underlying the model might be relinked to a different curve outside this builder
     // the calibration curve should always stay the same though, therefore we create a different handle for this
-    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(ccy.code(), configuration_));
+    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(currency, configuration_));
     calibrationDiscountCurve_ = Handle<YieldTermStructure>(*modelDiscountCurve_);
 
     if (requiresCalibration_) {
-        svts_ = market_->swaptionVol(data_->ccy(), configuration_);
-        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->ccy(), configuration_), configuration_);
-        shortSwapIndex_ = market_->swapIndex(market_->shortSwapIndexBase(data_->ccy(), configuration_), configuration_);
+        svts_ = market_->swaptionVol(data_->qualifier(), configuration_);
+        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->qualifier(), configuration_), configuration_);
+        shortSwapIndex_ = market_->swapIndex(market_->shortSwapIndexBase(data_->qualifier(), configuration_), configuration_);
         registerWith(svts_);
         marketObserver_->addObservable(swapIndex_->forwardingTermStructure());
         marketObserver_->addObservable(swapIndex_->discountingTermStructure());
@@ -212,19 +219,19 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
-        DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
+        DLOG("IR parametrization for " << qualifier << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
-        DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
+        DLOG("IR parametrization for " << qualifier << ": IrLgm1fPiecewiseConstant");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
             ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
     } else if (data_->reversionType() == LgmData::ReversionType::Hagan &&
                data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
             ccy, modelDiscountCurve_, aTimes, alpha, hTimes, h);
-        DLOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
+        DLOG("IR parametrization for " << qualifier << ": IrLgm1fPiecewiseLinear");
     } else {
         QL_FAIL("LgmBuilder: Reversion type Hagan and volatility type HullWhite not covered");
     }
@@ -262,7 +269,7 @@ bool LgmBuilder::requiresRecalibration() const {
 
 void LgmBuilder::performCalculations() const {
 
-    DLOG("Recalibrate LGM model for currency " << data_->ccy());
+    DLOG("Recalibrate LGM model for currency " << data_->qualifier());
 
     if (!requiresRecalibration()) {
         DLOG("Skipping calibration as nothing has changed");
@@ -321,7 +328,7 @@ void LgmBuilder::performCalculations() const {
                 model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
         }
-        TLOG("LGM " << data_->ccy() << " calibration errors:");
+        TLOG("LGM " << data_->qualifier() << " calibration errors:");
         error_ = getCalibrationError(swaptionBasket_);
     } catch (const std::exception& e) {
         // just log a warning, we check below if we meet the bootstrap tolerance and handle the result there
@@ -352,7 +359,7 @@ void LgmBuilder::performCalculations() const {
             calibrationInfo.valid = true;
         }
     } else {
-        std::string exceptionMessage = "LGM (" + data_->ccy() + ") calibration error " + std::to_string(error_) +
+        std::string exceptionMessage = "LGM (" + data_->qualifier() + ") calibration error " + std::to_string(error_) +
                                        " exceeds tolerance " + std::to_string(bootstrapTolerance_);
         WLOG(StructuredModelErrorMessage("Failed to calibrate LGM Model", exceptionMessage));
         WLOGGERSTREAM("Basket details:");
@@ -386,13 +393,13 @@ void LgmBuilder::performCalculations() const {
 
     if (data_->shiftHorizon() > 0.0) {
         Real value = -parametrization_->H(data_->shiftHorizon());
-        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->ccy()
+        DLOG("Apply shift horizon " << data_->shiftHorizon() << " (C=" << value << ") to the " << data_->qualifier()
                                     << " LGM model");
         parametrization_->shift() = value;
     }
 
     if (data_->scaling() != 1.0) {
-        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->ccy() << " LGM model");
+        DLOG("Apply scaling " << data_->scaling() << " to the " << data_->qualifier() << " LGM model");
         parametrization_->scaling() = data_->scaling();
     }
 } // performCalculations()
@@ -495,7 +502,7 @@ void LgmBuilder::buildSwaptionBasket() const {
 
     std::ostringstream log;
 
-    Handle<YieldTermStructure> yts = market_->discountCurve(data_->ccy(), configuration_);
+    Handle<YieldTermStructure> yts = market_->discountCurve(data_->qualifier(), configuration_);
 
     std::vector<Time> expiryTimes;
     std::vector<Time> maturityTimes;
@@ -599,7 +606,7 @@ void LgmBuilder::buildSwaptionBasket() const {
 
 std::string LgmBuilder::getBasketDetails(LgmCalibrationInfo& info) const {
     std::ostringstream log;
-    Handle<YieldTermStructure> yts = market_->discountCurve(data_->ccy(), configuration_);
+    Handle<YieldTermStructure> yts = market_->discountCurve(data_->qualifier(), configuration_);
     log << std::right << std::setw(3) << "#" << std::setw(16) << "expiry" << std::setw(16) << "swapLength"
         << std::setw(16) << "strike" << std::setw(16) << "atmForward" << std::setw(16) << "annuity" << std::setw(16)
         << "vega" << std::setw(16) << "vol\n";
