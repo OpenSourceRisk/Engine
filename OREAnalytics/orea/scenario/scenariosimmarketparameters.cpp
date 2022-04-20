@@ -364,7 +364,7 @@ void ScenarioSimMarketParameters::setFxCcyPairs(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::FXSpot, names);
 }
 
-void ScenarioSimMarketParameters::setSwapVolCcys(vector<string> names) {
+void ScenarioSimMarketParameters::setSwapVolKeys(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::SwaptionVolatility, names);
 }
 
@@ -737,47 +737,69 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (swapVolSimNode)
             setSimulateSwapVols(ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode)));
         swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-        setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
 
-        set<string> currencies = params_.find(RiskFactorKey::KeyType::SwaptionVolatility)->second.second;
-        QL_REQUIRE(currencies.size() > 0, "SwaptionVolatilities needs at least one currency");
+	auto ccys = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", false);
+	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
+	if(!ccys.empty()) {
+	    keys.insert(keys.end(), ccys.begin(), ccys.end());
+            ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Currencies is deprecated, use Keys instead.");
+        }
+        setSwapVolKeys(keys);
+        QL_REQUIRE(!keys.empty(), "SwaptionVolatilities needs at least one currency");
 
         // Get the configured expiries. They are of the form:
         // - <Expiries ccy="CCY">t_1,...,t_n</Expiries> for currency specific expiries
         // - <Expiries>t_1,...,t_n</Expiries> or <Expiries ccy="">t_1,...,t_n</Expiries> for default set of expiries
         // Only need a default expiry set if every currency has not been given an expiry set explicitly
         vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
-        set<string> currenciesCheck = currencies;
+        QL_REQUIRE(!expiryNodes.empty(), "SwaptionVolatilities needs at least one Expiries node");
+        set<string> keysCheck(keys.begin(),keys.end());
         bool defaultProvided = false;
         for (XMLNode* expiryNode : expiryNodes) {
-            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
-            string ccy = XMLUtils::getAttribute(expiryNode, "ccy");
+            // If there is no "key" attribute, getAttribute returns "" which is what we want in any case
+            string key = XMLUtils::getAttribute(expiryNode, "key");
+            if (key.empty()) {
+                string ccyAttr = XMLUtils::getAttribute(expiryNode, "ccy");
+                if (!ccyAttr.empty()) {
+                    key = ccyAttr;
+                    ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Expiries: 'ccy' attribute is deprecated, "
+                         "use 'key' instead.");
+                }
+            }
             vector<Period> expiries = parseListOfValues<Period>(XMLUtils::getNodeValue(expiryNode), &parsePeriod);
-            QL_REQUIRE(swapVolExpiries_.insert(make_pair(ccy, expiries)).second,
-                       "SwaptionVolatilities has duplicate expiries for key '" << ccy << "'");
-            currenciesCheck.erase(ccy);
-            defaultProvided = ccy == "";
+            QL_REQUIRE(swapVolExpiries_.insert(make_pair(key, expiries)).second,
+                       "SwaptionVolatilities has duplicate expiries for key '" << key << "'");
+            keysCheck.erase(key);
+            defaultProvided = defaultProvided || key.empty();
         }
-        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no expiries for "
-                                                                       << "currencies '" << join(currenciesCheck, ",")
-                                                                       << "' and no default expiry set has been given");
+        QL_REQUIRE(defaultProvided || keysCheck.empty(), "SwaptionVolatilities has no expiries for "
+                                                                 << "keys '" << join(keysCheck, ",")
+                                                                 << "' and no default expiry set has been given");
 
         // Get the configured terms, similar to expiries above
         vector<XMLNode*> termNodes = XMLUtils::getChildrenNodes(nodeChild, "Terms");
-        currenciesCheck = currencies;
+        keysCheck = set<string>(keys.begin(), keys.end());
         defaultProvided = false;
         for (XMLNode* termNode : termNodes) {
-            // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
-            string ccy = XMLUtils::getAttribute(termNode, "ccy");
+            // If there is no "key" attribute, getAttribute returns "" which is what we want in any case
+            string key = XMLUtils::getAttribute(termNode, "key");
+            if (key.empty()) {
+                string ccyAttr = XMLUtils::getAttribute(termNode, "ccy");
+                if (!ccyAttr.empty()) {
+                    key = ccyAttr;
+                    ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/Terms: 'ccy' attribute is deprecated, "
+                         "use 'key' instead.");
+                }
+            }
             vector<Period> terms = parseListOfValues<Period>(XMLUtils::getNodeValue(termNode), &parsePeriod);
-            QL_REQUIRE(swapVolTerms_.insert(make_pair(ccy, terms)).second,
-                       "SwaptionVolatilities has duplicate terms for key '" << ccy << "'");
-            currenciesCheck.erase(ccy);
-            defaultProvided = ccy == "";
+            QL_REQUIRE(swapVolTerms_.insert(make_pair(key, terms)).second,
+                       "SwaptionVolatilities has duplicate terms for key '" << key << "'");
+            keysCheck.erase(key);
+            defaultProvided = defaultProvided || key.empty();
         }
-        QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0, "SwaptionVolatilities has no terms for "
-                                                                       << "currencies '" << join(currenciesCheck, ",")
-                                                                       << "' and no default term set has been given");
+        QL_REQUIRE(defaultProvided || keysCheck.empty(), "SwaptionVolatilities has no terms for "
+                                                             << "keys '" << join(keysCheck, ",")
+                                                             << "' and no default term set has been given");
 
         XMLNode* atmOnlyNode = XMLUtils::getChildNode(nodeChild, "SimulateATMOnly");
         if (atmOnlyNode)
@@ -786,11 +808,19 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (!swapVolSimulateATMOnly_) {
             vector<XMLNode*> spreadNodes = XMLUtils::getChildrenNodes(nodeChild, "StrikeSpreads");
             if (spreadNodes.size() > 0) {
-                currenciesCheck = currencies;
+                keysCheck = set<string>(keys.begin(), keys.end());
                 defaultProvided = false;
                 for (XMLNode* spreadNode : spreadNodes) {
                     // If there is no "ccy" attribute, getAttribute returns "" which is what we want in any case
-                    string ccy = XMLUtils::getAttribute(spreadNode, "ccy");
+                    string key = XMLUtils::getAttribute(spreadNode, "key");
+                    if (key.empty()) {
+                        string ccyAttr = XMLUtils::getAttribute(spreadNode, "ccy");
+                        if (!ccyAttr.empty()) {
+                            key = ccyAttr;
+                            ALOG("ScenarioSimMarketParameters: SwaptionVolatilities/StrikeSpreads: 'ccy' attribute is "
+                                 "deprecated, use 'key' instead.");
+                        }
+                    }
                     vector<Rate> strikes;
                     string strStrike = XMLUtils::getNodeValue(spreadNode);
                     if (strStrike == "ATM" || strStrike == "0" || strStrike == "0.0") {
@@ -799,13 +829,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                     } else {
                         strikes = parseListOfValues<Rate>(strStrike, &parseReal);
                     }
-                    setSwapVolStrikeSpreads(ccy, strikes);
-                    currenciesCheck.erase(ccy);
-                    defaultProvided = ccy == "";
+                    setSwapVolStrikeSpreads(key, strikes);
+                    keysCheck.erase(key);
+                    defaultProvided = defaultProvided || key.empty();
                 }
-                QL_REQUIRE(defaultProvided || currenciesCheck.size() == 0,
+                QL_REQUIRE(defaultProvided || keysCheck.empty(),
                            "SwaptionVolatilities has no strike spreads for "
-                               << "currencies '" << join(currenciesCheck, ",")
+                               << "currencies '" << join(keysCheck, ",")
                                << "' and no default strike spreads set has been given");
             }
         }
@@ -1454,18 +1484,18 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // swaption volatilities
-    if (!swapVolCcys().empty()) {
+    if (!swapVolKeys().empty()) {
         DLOG("Writing swaption volatilities");
         XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "Simulate", simulateSwapVols());
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "ReactionToTimeDecay", swapVolDecayMode_);
-        XMLUtils::addChildren(doc, swaptionVolatilitiesNode, "Currencies", "Currency", swapVolCcys());
+        XMLUtils::addChildren(doc, swaptionVolatilitiesNode, "Keys", "Key", swapVolKeys());
         for (auto it = swapVolExpiries_.begin(); it != swapVolExpiries_.end(); it++) {
             XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Expiries", swapVolExpiries_[it->first],
-                                            "ccy", it->first);
+                                            "key", it->first);
         }
         for (auto it = swapVolTerms_.begin(); it != swapVolTerms_.end(); it++) {
-            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Terms", swapVolTerms_[it->first], "ccy",
+            XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Terms", swapVolTerms_[it->first], "key",
                                             it->first);
         }
 
@@ -1474,7 +1504,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         } else {
             for (auto it = swapVolStrikeSpreads_.begin(); it != swapVolStrikeSpreads_.end(); it++) {
                 XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "StrikeSpreads",
-                                                swapVolStrikeSpreads_[it->first], "ccy", it->first);
+                                                swapVolStrikeSpreads_[it->first], "key", it->first);
             }
         }
     }
