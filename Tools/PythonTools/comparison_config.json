@@ -635,7 +635,7 @@
           }
         ]
       },
-      ".*simm_impact\\.csv": {
+      ".*im_impact\\.csv": {
         "keys": [
           "Portfolio",
           "ProductClass",
