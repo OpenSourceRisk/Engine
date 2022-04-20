@@ -560,7 +560,7 @@
           }
         ]
       },
-      ".*imschedule_summary\\.csv": {
+      ".*imschedule\\.csv": {
         "keys": [
           "Portfolio",
           "Side"
@@ -678,7 +678,7 @@
           }
         ]
       },
-      ".*imschedule_summary_impact\\.csv": {
+      ".*imschedule_impact\\.csv": {
         "keys": [
           "Portfolio",
           "Side"
