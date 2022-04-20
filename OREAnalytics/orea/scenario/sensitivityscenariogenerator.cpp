@@ -1172,9 +1172,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     LOG("starting swapVol sgen");
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
-    for (auto sim_ccy : simMarketData_->swapVolCcys()) {
-        if (sensitivityData_->swaptionVolShiftData().find(sim_ccy) == sensitivityData_->swaptionVolShiftData().end()) {
-            WLOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
+    for (auto sim_key : simMarketData_->swapVolKeys()) {
+        if (sensitivityData_->swaptionVolShiftData().find(sim_key) == sensitivityData_->swaptionVolShiftData().end()) {
+            WLOG("Swaption key " << sim_key << " in simmarket is not included in sensitivities analysis");
         }
     }
     generateGenericYieldVolScenarios(up, RFType::SwaptionVolatility);
