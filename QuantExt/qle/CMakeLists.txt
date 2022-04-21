@@ -243,6 +243,7 @@ termstructures/optionletstripper2.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
+termstructures/proxyswaptionvolatility.cpp
 termstructures/spreadedblackvolatilitycurve.cpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.cpp
 termstructures/spreadedcorrelationcurve.cpp
