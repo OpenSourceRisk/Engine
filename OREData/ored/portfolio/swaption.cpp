@@ -290,9 +290,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                         firstFixedRate = cpn->rate();
                 } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                     firstFloatSpread = cpn->spread();
-                    if (index == nullptr)
+                    if (index == nullptr) {
                         index = boost::dynamic_pointer_cast<IborIndex>(cpn->index());
-		    DLOG("found ibor / ois index " << index->name());
+			DLOG("found ibor / ois index " << index->name());
+		    }
                 }
             }
         }
