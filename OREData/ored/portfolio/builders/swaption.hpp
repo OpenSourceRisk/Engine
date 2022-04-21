@@ -69,7 +69,7 @@ public:
         : CachingEngineBuilder(model, engine, {"BermudanSwaption"}) {}
 
 protected:
-    virtual string keyImpl(const string& id, const string& ccy, const std::vector<Date>& dates, const Date& maturity,
+    virtual string keyImpl(const string& id, const string& key, const std::vector<Date>& dates, const Date& maturity,
                            const std::vector<Real>& strikes) override {
         return id;
     }
@@ -85,7 +85,7 @@ public:
     LGMBermudanSwaptionEngineBuilder(const string& engine) : BermudanSwaptionEngineBuilder("LGM", engine) {}
 
 protected:
-    boost::shared_ptr<QuantExt::LGM> model(const string& id, const string& ccy, const std::vector<Date>& dates,
+    boost::shared_ptr<QuantExt::LGM> model(const string& id, const string& key, const std::vector<Date>& dates,
                                            const Date& maturity, const std::vector<Real>& strikes);
 };
 
@@ -100,8 +100,8 @@ protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(
         //! a unique (trade) id, for caching
         const string& id,
-        //! the currency
-        const string& ccy,
+        //! the key (index or ccy)
+        const string& key,
         //! Excercise dates
         const std::vector<Date>& dates,
         //! maturity of the underlying

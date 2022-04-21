@@ -277,7 +277,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                                                      exerciseBuilder_->exercise(), settlementType_, settlementMethod_);
 
     // determine strikes for calibration basket (simple approach, a la summit)
+    // also determine the ibor index (if several, chose the first) to get the engine
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
+    boost::shared_ptr<IborIndex> index;
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Real firstFixedRate = Null<Real>();
         Real firstFloatSpread = Null<Real>();
@@ -288,6 +290,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                         firstFixedRate = cpn->rate();
                 } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                     firstFloatSpread = cpn->spread();
+                    if (index == nullptr)
+                        index = boost::dynamic_pointer_cast<IborIndex>(cpn->index());
+		    DLOG("found ibor / ois index " << index->name());
                 }
             }
         }
@@ -313,8 +318,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     QL_REQUIRE(swapBuilder, "internal error: could not cast to SwapEngineBuilder");
 
     cpu_timer timer;
-    auto swaptionEngine =
-        swaptionBuilder->engine(id(), npvCurrency_, exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes);
+    // use ibor / ois index as key, if possible, otherwise the npv currency
+    auto swaptionEngine = swaptionBuilder->engine(
+        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
+        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes);
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);
