@@ -70,6 +70,33 @@ BOOST_AUTO_TEST_CASE(testBlackVolSurfaceDeltaConstantVol) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testInterpolatedSmileSectionConstruction) {
+
+    BOOST_TEST_MESSAGE("Testing QuantExt::InterpolatedSmileSection...");
+    // Set up the parameters with some arbitrary data
+    Real spot = 100;
+    Real rd = 0.05;
+    Real rf = 0.03;
+    Time t = 1.0;
+    vector<Real> strikes = { 90, 100, 110 };
+    vector<Volatility> vols = { 0.15, 0.1, 0.15 };
+    vector<InterpolatedSmileSection::InterpolationMethod> methods = {
+        InterpolatedSmileSection::InterpolationMethod::Linear,
+        InterpolatedSmileSection::InterpolationMethod::FinancialCubic,
+        InterpolatedSmileSection::InterpolationMethod::NaturalCubic,
+        InterpolatedSmileSection::InterpolationMethod::CubicSpline
+    };
+
+    // Construct the smile section
+    boost::shared_ptr<InterpolatedSmileSection> section;
+    for (auto method : methods) {
+        BOOST_TEST_MESSAGE("Trying to construct InterpolatedSmileSection with interpolation method: " << method << ".");
+        BOOST_CHECK_NO_THROW(section =
+                                 boost::make_shared<InterpolatedSmileSection>(spot, rd, rf, t, strikes, vols, method));
+        BOOST_CHECK_EQUAL(section->volatility(strikes.at(1)), vols.at(1));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
