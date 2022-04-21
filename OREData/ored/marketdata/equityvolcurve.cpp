@@ -159,7 +159,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
     if (wildcard) {
         DLOG("Have single quote with pattern " << (*wildcard).regex());
 
-        // Loop over quotes and process commodity option quotes matching pattern on asof
+        // Loop over quotes and process equity option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
             // Go to next quote if the market data point's date does not equal our asof
@@ -193,7 +193,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
         DLOG("Have " << vcc.quotes().size() << " explicit quotes");
 
-        // Loop over quotes and process commodity option quotes that are explicitly specified in the config
+        // Loop over quotes and process equity option quotes that are explicitly specified in the config
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
             // Go to next quote if the market data point's date does not equal our asof
             if (md->asofDate() != asof)
@@ -571,7 +571,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         if (md->asofDate() != asof)
             continue;
 
-        // Go to next quote if not a commodity option quote.
+        // Go to next quote if not a equity option quote.
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         if (!q)
             continue;
@@ -806,7 +806,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         if (md->asofDate() != asof)
             continue;
 
-        // Go to next quote if not a commodity option quote.
+        // Go to next quote if not a equity option quote.
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         if (!q)
             continue;
