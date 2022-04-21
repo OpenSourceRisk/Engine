@@ -59,7 +59,8 @@ public:
 
     //! \name Inspectors
     //@{
-    std::string currency() { return data_->ccy(); }
+    std::string qualifier() { return data_->qualifier(); }
+    std::string ccy() { return currency_; }
     boost::shared_ptr<QuantExt::LGM> model() const;
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization() const;
     RelinkableHandle<YieldTermStructure> discountCurve() { return modelDiscountCurve_; }
@@ -93,6 +94,7 @@ private:
     const std::string referenceCalibrationGrid_;
     const bool setCalibrationInfo_;
     bool requiresCalibration_ = false;
+    std::string currency_; // derived from data->qualifier()
 
     mutable Real error_;
     mutable boost::shared_ptr<QuantExt::LGM> model_;

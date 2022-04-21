@@ -133,20 +133,20 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     marketObserver_ = boost::make_shared<MarketObserver>();
     string qualifier = data_->qualifier();
-    string currency = qualifier;
+    currency_ = qualifier;
     boost::shared_ptr<IborIndex> index;
     if(tryParseIborIndex(qualifier,index)) {
-	currency = index->currency().code();
+	currency_ = index->currency().code();
     }
-    LOG("LgmCalibration for qualifier " << qualifier << " (ccy=" << currency << "), configuration is " << configuration_);
-    Currency ccy = parseCurrency(currency);
+    LOG("LgmCalibration for qualifier " << qualifier << " (ccy=" << currency_ << "), configuration is " << configuration_);
+    Currency ccy = parseCurrency(currency_);
 
     requiresCalibration_ =
         (data_->calibrateA() || data_->calibrateH()) && data_->calibrationType() != CalibrationType::None;
 
     // the discount curve underlying the model might be relinked to a different curve outside this builder
     // the calibration curve should always stay the same though, therefore we create a different handle for this
-    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(currency, configuration_));
+    modelDiscountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(currency_, configuration_));
     calibrationDiscountCurve_ = Handle<YieldTermStructure>(*modelDiscountCurve_);
 
     if (requiresCalibration_) {
@@ -269,7 +269,7 @@ bool LgmBuilder::requiresRecalibration() const {
 
 void LgmBuilder::performCalculations() const {
 
-    DLOG("Recalibrate LGM model for currency " << data_->qualifier());
+    DLOG("Recalibrate LGM model for qualifier " << data_->qualifier() << " currency " << currency_);
 
     if (!requiresRecalibration()) {
         DLOG("Skipping calibration as nothing has changed");
@@ -502,7 +502,7 @@ void LgmBuilder::buildSwaptionBasket() const {
 
     std::ostringstream log;
 
-    Handle<YieldTermStructure> yts = market_->discountCurve(data_->qualifier(), configuration_);
+    Handle<YieldTermStructure> yts = market_->discountCurve(currency_, configuration_);
 
     std::vector<Time> expiryTimes;
     std::vector<Time> maturityTimes;
@@ -606,7 +606,7 @@ void LgmBuilder::buildSwaptionBasket() const {
 
 std::string LgmBuilder::getBasketDetails(LgmCalibrationInfo& info) const {
     std::ostringstream log;
-    Handle<YieldTermStructure> yts = market_->discountCurve(data_->qualifier(), configuration_);
+    Handle<YieldTermStructure> yts = market_->discountCurve(currency_, configuration_);
     log << std::right << std::setw(3) << "#" << std::setw(16) << "expiry" << std::setw(16) << "swapLength"
         << std::setw(16) << "strike" << std::setw(16) << "atmForward" << std::setw(16) << "annuity" << std::setw(16)
         << "vega" << std::setw(16) << "vol\n";
