@@ -22,28 +22,31 @@ namespace QuantExt {
 
 class AtmAdjustedSmileSection : public QuantLib::SmileSection {
 public:
-    AtmAdjustedSmileSection(const boost::shared_ptr<SmileSection>& base, const Real baseAtmLevel,
-                            const Real targetAtmLevel)
+    AtmAdjustedSmileSection(const boost::shared_ptr<QuantLib::SmileSection>& base, const QuantLib::Real baseAtmLevel,
+                            const QuantLib::Real targetAtmLevel)
         : SmileSection(), base_(base), baseAtmLevel_(baseAtmLevel), targetAtmLevel_(targetAtmLevel) {}
-    Real minStrike() const override { return base_->minStrike(); }
-    Real maxStrike() const override { return base_->maxStrike(); }
-    Real atmLevel() const override { return targetAtmLevel_; }
-    const Date& exerciseDate() const override { return base_->exerciseDate(); }
-    VolatilityType volatilityType() const override { return base_->volatilityType(); }
-    Rate shift() const override { return base_->shift(); }
-    const Date& referenceDate() const override { return base_->referenceDate(); }
-    Time exerciseTime() const override { return base_->exerciseTime(); }
-    const DayCounter& dayCounter() const override { return base_->dayCounter(); }
+    QuantLib::Real minStrike() const override { return base_->minStrike(); }
+    QuantLib::Real maxStrike() const override { return base_->maxStrike(); }
+    QuantLib::Real atmLevel() const override { return targetAtmLevel_; }
+    const QuantLib::Date& exerciseDate() const override { return base_->exerciseDate(); }
+    QuantLib::VolatilityType volatilityType() const override { return base_->volatilityType(); }
+    QuantLib::Rate shift() const override { return base_->shift(); }
+    const QuantLib::Date& referenceDate() const override { return base_->referenceDate(); }
+    QuantLib::Time exerciseTime() const override { return base_->exerciseTime(); }
+    const QuantLib::DayCounter& dayCounter() const override { return base_->dayCounter(); }
 
 private:
-    Volatility volatilityImpl(Rate strike) const override {
+    QuantLib::Volatility volatilityImpl(QuantLib::Rate strike) const override {
+        if (strike == QuantLib::Null<QuantLib::Real>()) {
+            return base_->volatility(baseAtmLevel_);
+        }
         // just a moneyness, but no vol adjustment, so this is only suitable for normal vols
         return base_->volatility(strike + baseAtmLevel_ - targetAtmLevel_);
     };
 
-    boost::shared_ptr<SmileSection> base_;
-    Real baseAtmLevel_;
-    Real targetAtmLevel_;
+    boost::shared_ptr<QuantLib::SmileSection> base_;
+    QuantLib::Real baseAtmLevel_;
+    QuantLib::Real targetAtmLevel_;
 };
 
 } // namespace QuantExt
