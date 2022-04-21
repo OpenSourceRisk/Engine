@@ -45,6 +45,7 @@ vector<string> commodityNames = {
     "ice_wti_midland_basis",
     "ice_pmi",
     "ice_erh",
+    "ice_eiw",
     "ice_hen_basis",
     "ice_his_basis",
     "cme_myr_palm_oil"

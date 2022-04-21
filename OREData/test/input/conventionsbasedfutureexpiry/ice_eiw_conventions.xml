@@ -1,0 +1,15 @@
+<Conventions>
+<!-- This is mock up convention to test weekly expiries>-->
+  <CommodityFuture>
+    <Id>ice_eiw</Id>
+    <AnchorDay>
+      <WeeklyDayOfTheWeek>Thu</WeeklyDayOfTheWeek>
+    </AnchorDay>
+    <ContractFrequency>Weekly</ContractFrequency>
+    <Calendar>ICE_FuturesUS</Calendar>
+    <ExpiryCalendar>ICE_FuturesUS_1</ExpiryCalendar>
+    <BusinessDayConvention>Following</BusinessDayConvention>
+    <AdjustBeforeOffset>true</AdjustBeforeOffset>
+    <IsAveraging>false</IsAveraging>
+  </CommodityFuture>
+</Conventions>
