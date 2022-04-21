@@ -551,6 +551,7 @@ quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/adjusteddefaultcurve.hpp
 termstructures/aposurface.hpp
+termstructures/atmadjustedsmilesection.hpp
 termstructures/averagefuturepricehelper.hpp
 termstructures/averageoffpeakpowerhelper.hpp
 termstructures/averageoisratehelper.hpp
@@ -634,6 +635,7 @@ termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
 termstructures/probabilitytraits.hpp
 termstructures/proxyoptionletvolatility.hpp
+termstructures/proxyswaptionvolatility.hpp
 termstructures/spreadedblackvolatilitycurve.hpp
 termstructures/spreadedblackvolatilitysurfacemoneyness.hpp
 termstructures/spreadedcorrelationcurve.hpp

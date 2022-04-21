@@ -18,6 +18,7 @@
 
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/termstructures/atmadjustedsmilesection.hpp>
 #include <qle/utilities/time.hpp>
 
 #include <ql/indexes/iborindex.hpp>
@@ -59,32 +60,6 @@ Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fix
     cpn.setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
     return cpn.rate();
 }
-
-class AtmAdjustedSmileSection : public QuantLib::SmileSection {
-public:
-    AtmAdjustedSmileSection(const boost::shared_ptr<SmileSection>& base, const Real baseAtmLevel,
-                            const Real targetAtmLevel)
-        : SmileSection(), base_(base), baseAtmLevel_(baseAtmLevel), targetAtmLevel_(targetAtmLevel) {}
-    Real minStrike() const override { return base_->minStrike(); }
-    Real maxStrike() const override { return base_->maxStrike(); }
-    Real atmLevel() const override { return targetAtmLevel_; }
-    const Date& exerciseDate() const override { return base_->exerciseDate(); }
-    VolatilityType volatilityType() const override { return base_->volatilityType(); }
-    Rate shift() const override { return base_->shift(); }
-    const Date& referenceDate() const override { return base_->referenceDate(); }
-    Time exerciseTime() const override { return base_->exerciseTime(); }
-    const DayCounter& dayCounter() const override { return base_->dayCounter(); }
-
-private:
-    Volatility volatilityImpl(Rate strike) const override {
-        // just a moneyness, but no vol adjustment, so this is only suitable for normal vols
-        return base_->volatility(strike + baseAtmLevel_ - targetAtmLevel_);
-    };
-
-    boost::shared_ptr<SmileSection> base_;
-    Real baseAtmLevel_;
-    Real targetAtmLevel_;
-};
 
 } // namespace
 
