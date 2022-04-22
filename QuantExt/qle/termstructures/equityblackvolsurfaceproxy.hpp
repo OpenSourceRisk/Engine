@@ -21,8 +21,8 @@
     \ingroup termstructures
 */
 
-#ifndef quantext_blackvolsurfacewithatm_hpp
-#define quantext_blackvolsurfacewithatm_hpp
+#ifndef quantext_equity_black_volatility_surface_proxy_hpp
+#define quantext_equity_black_volatility_surface_proxy_hpp
 
 #include <boost/shared_ptr.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
