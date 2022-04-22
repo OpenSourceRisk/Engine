@@ -62,6 +62,13 @@ public:
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig());
 
+    //! Detailled constructor for proxy config
+    CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
+                                  const std::string proxySourceCurveId_, const std::string& proxySourceIndex,
+                                  const std::string& proxyTargetIndex,
+                                  const QuantLib::Period& proxySourceRateComputationPeriod = 0 * Days,
+                                  const QuantLib::Period& proxyTargetRateComputationPeriod = 0 * Days);
+
     //! \name XMLSerializable interface
     //@{
     void fromXML(XMLNode* node) override;
@@ -89,11 +96,19 @@ public:
     const std::string& interpolateOn() const { return interpolateOn_; }
     const std::string& timeInterpolation() const { return timeInterpolation_; }
     const std::string& strikeInterpolation() const { return strikeInterpolation_; }
+    bool quoteIncludesIndexName() const { return quoteIncludesIndexName_; }
     const std::vector<std::string>& atmTenors() const { return atmTenors_; }
     const BootstrapConfig& bootstrapConfig() const { return bootstrapConfig_; }
     Type type() const { return type_; }
     const string& currency() const;
     string indexTenor() const;
+    //
+    const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
+    const std::string& proxySourceIndex() const { return proxySourceIndex_; }
+    const std::string& proxyTargetIndex() const { return proxyTargetIndex_; };
+    const QuantLib::Period& proxySourceRateComputationPeriod() const { return proxySourceRateComputationPeriod_; }
+    const QuantLib::Period& proxyTargetRateComputationPeriod() const { return proxyTargetRateComputationPeriod_; }
+    //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -119,10 +134,18 @@ private:
     std::string interpolateOn_;
     std::string timeInterpolation_;
     std::string strikeInterpolation_;
+    bool quoteIncludesIndexName_ = false;
     std::vector<std::string> atmTenors_;
     BootstrapConfig bootstrapConfig_;
     Type type_;
     std::string extrapolation_;
+    //
+    std::string proxySourceCurveId_;
+    std::string proxySourceIndex_;
+    std::string proxyTargetIndex_;
+    QuantLib::Period proxySourceRateComputationPeriod_;
+    QuantLib::Period proxyTargetRateComputationPeriod_;
+    //
     ReportConfig reportConfig_;
 
     //! Populate required curve ids

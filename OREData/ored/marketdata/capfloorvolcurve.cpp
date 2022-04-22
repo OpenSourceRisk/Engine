@@ -34,6 +34,7 @@
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
 
 #include <ql/math/comparison.hpp>
@@ -60,9 +61,12 @@ bool interpOnOpt(CapFloorVolatilityCurveConfig& config) {
     return config.interpolateOn() == "OptionletVolatilities";
 }
 
-CapFloorVolCurve::CapFloorVolCurve(const Date& asof, const CapFloorVolatilityCurveSpec& spec, const Loader& loader,
-                                   const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
-                                   Handle<YieldTermStructure> discountCurve)
+CapFloorVolCurve::CapFloorVolCurve(
+    const Date& asof, const CapFloorVolatilityCurveSpec& spec, const Loader& loader,
+    const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
+    Handle<YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
+    const boost::shared_ptr<IborIndex> targetIndex,
+    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves)
     : spec_(spec) {
 
     try {
@@ -70,26 +74,30 @@ CapFloorVolCurve::CapFloorVolCurve(const Date& asof, const CapFloorVolatilityCur
         const boost::shared_ptr<CapFloorVolatilityCurveConfig>& config =
             curveConfigs.capFloorVolCurveConfig(spec_.curveConfigID());
 
-        // Read the shift early if the configured volatility type is shifted lognormal
-        Real shift = 0.0;
-        if (config->volatilityType() == CfgVolType::ShiftedLognormal) {
-            shift = shiftQuote(asof, *config, loader);
-        }
-
-        // There are three possible cap floor configurations
-        if (config->type() == CfgType::Atm) {
-            atmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
-        } else if (config->type() == CfgType::Surface || config->type() == CfgType::SurfaceWithAtm) {
-            optSurface(asof, *config, loader, iborIndex, discountCurve, shift);
+        if (!config->proxySourceCurveId().empty()) {
+            // handle proxy vol surfaces
+            buildProxyCurve(*config, sourceIndex, targetIndex, requiredCapFloorVolCurves);
         } else {
-            QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) << ") for cap floor config "
-                                        << config->curveID());
+            // Read the shift early if the configured volatility type is shifted lognormal
+            Real shift = 0.0;
+            if (config->volatilityType() == CfgVolType::ShiftedLognormal) {
+                shift = shiftQuote(asof, *config, loader);
+            }
+
+            // There are three possible cap floor configurations
+            if (config->type() == CfgType::Atm) {
+                atmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
+            } else if (config->type() == CfgType::Surface || config->type() == CfgType::SurfaceWithAtm) {
+                optSurface(asof, *config, loader, iborIndex, discountCurve, shift);
+            } else {
+                QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) << ") for cap floor config "
+                                            << config->curveID());
+            }
+            // Turn on or off extrapolation
+            capletVol_->enableExtrapolation(config->extrapolate());
         }
 
-        // Turn on or off extrapolation
-        capletVol_->enableExtrapolation(config->extrapolate());
-
-	// Build calibration info
+        // Build calibration info
         buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
 
     } catch (exception& e) {
@@ -100,6 +108,21 @@ CapFloorVolCurve::CapFloorVolCurve(const Date& asof, const CapFloorVolatilityCur
 
     // force bootstrap so that errors are thrown during the build, not later
     capletVol_->volatility(QL_EPSILON, capletVol_->minStrike());
+}
+
+void CapFloorVolCurve::buildProxyCurve(
+    const CapFloorVolatilityCurveConfig& config, const boost::shared_ptr<IborIndex>& sourceIndex,
+    const boost::shared_ptr<IborIndex>& targetIndex,
+    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves) {
+
+    auto sourceVol = requiredCapFloorVolCurves.find(config.proxySourceCurveId());
+    QL_REQUIRE(sourceVol != requiredCapFloorVolCurves.end(),
+               "CapFloorVolCurve::buildProxyCurve(): required source cap vol curve '" << config.proxySourceCurveId()
+                                                                                      << "' not found.");
+
+    capletVol_ = boost::make_shared<ProxyOptionletVolatility>(
+        Handle<OptionletVolatilityStructure>(sourceVol->second->capletVolStructure()), sourceIndex, targetIndex,
+        config.proxySourceRateComputationPeriod(), config.proxyTargetRateComputationPeriod());
 }
 
 void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,

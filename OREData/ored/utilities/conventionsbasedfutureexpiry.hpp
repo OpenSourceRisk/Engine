@@ -63,7 +63,7 @@ private:
     QuantLib::Size maxIterations_;
 
     //! Given a \p contractMonth, a \p contractYear and \p conventions, calculate the contract expiry date
-    QuantLib::Date expiry(QuantLib::Month contractMonth, QuantLib::Year contractYear, QuantLib::Natural monthOffset,
+    QuantLib::Date expiry(QuantLib::Day dayOfMonth, QuantLib::Month contractMonth, QuantLib::Year contractYear, QuantLib::Natural monthOffset,
                           bool forOption) const;
 
     //! Do the next expiry work

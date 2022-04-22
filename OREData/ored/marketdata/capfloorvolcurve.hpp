@@ -46,9 +46,12 @@ public:
     CapFloorVolCurve() {}
 
     //! Detailed constructor
-    CapFloorVolCurve(const QuantLib::Date& asof, const CapFloorVolatilityCurveSpec& spec, const Loader& loader,
-                     const CurveConfigurations& curveConfigs, boost::shared_ptr<QuantLib::IborIndex> iborIndex,
-                     QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve);
+    CapFloorVolCurve(
+        const QuantLib::Date& asof, const CapFloorVolatilityCurveSpec& spec, const Loader& loader,
+        const CurveConfigurations& curveConfigs, boost::shared_ptr<QuantLib::IborIndex> iborIndex,
+        QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
+        const boost::shared_ptr<IborIndex> targetIndex,
+        const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves);
 
     //! \name Inspectors
     //@{
@@ -82,6 +85,12 @@ private:
     //! Build an ATM cap floor term volatility curve
     boost::shared_ptr<QuantExt::CapFloorTermVolCurve>
     atmCurve(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;
+
+    //! Build proxy curve
+    void buildProxyCurve(
+        const CapFloorVolatilityCurveConfig& config, const boost::shared_ptr<IborIndex>& sourceIndex,
+        const boost::shared_ptr<IborIndex>& targetIndex,
+        const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves);
 
     //! Get a shift quote value from the configured quotes
     Real shiftQuote(const QuantLib::Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const;
