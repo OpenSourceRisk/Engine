@@ -19,6 +19,7 @@
 #include <ored/model/irlgmdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 namespace ore {
 namespace data {
@@ -62,5 +63,11 @@ XMLNode* IrLgmData::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+std::string IrLgmData::ccy() const {
+    boost::shared_ptr<IborIndex> index;
+    return tryParseIborIndex(qualifier_, index) ? index->currency().code() : qualifier_;
+}
+
 } // namespace data
 } // namespace ore
