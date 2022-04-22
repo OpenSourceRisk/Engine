@@ -265,9 +265,9 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
                                                 << " " << config->optionStrikes()[i]);
             }
 
-            irDataMap[config->ccy()] = config;
+            irDataMap[config->qualifier()] = config;
 
-            LOG("CrossAssetModelData: IR config built for key " << config->ccy());
+            LOG("CrossAssetModelData: IR config built for key " << config->qualifier());
 
         } // end of  for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
     }     // end of if (irNode)
@@ -278,7 +278,8 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     buildIrConfigs(irDataMap);
 
     for (Size i = 0; i < irConfigs_.size(); i++)
-        LOG("CrossAssetModelData: IR config currency " << i << " = " << irConfigs_[i]->ccy());
+        LOG("CrossAssetModelData: IR config currency " << i << " = " << irConfigs_[i]->ccy() << " for qualifier "
+                                                       << irConfigs_[i]->qualifier());
 
     // Configure FX model components
 
@@ -445,8 +446,16 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
     irConfigs_.resize(currencies_.size());
     for (Size i = 0; i < currencies_.size(); i++) {
         string ccy = currencies_[i];
-        if (irDataMap.find(ccy) != irDataMap.end())
-            irConfigs_[i] = irDataMap[ccy];
+	std::string ccyKey;
+	for(auto const& d: irDataMap) {
+	    std::cout << "found d.second = " << d.second->qualifier() << " has ccy " << d.second->ccy() << " for look up ccy " << ccy << std::endl;
+	    if(d.second->ccy() == ccy) {
+                QL_REQUIRE(ccyKey.empty(), "CrossAssetModelData: duplicate ir config for ccy " << ccy);
+                ccyKey = d.first;
+            }
+	}
+        if (!ccyKey.empty())
+            irConfigs_[i] = irDataMap.at(ccyKey);
         else { // copy from default
             LOG("IR configuration missing for currency " << ccy << ", using default");
             if (irDataMap.find("default") == irDataMap.end()) {
