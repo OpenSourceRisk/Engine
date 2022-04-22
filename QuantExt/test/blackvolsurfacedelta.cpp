@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedSmileSectionConstruction) {
     // Construct the smile section
     boost::shared_ptr<InterpolatedSmileSection> section;
     for (auto method : methods) {
-        BOOST_TEST_MESSAGE("Trying to construct InterpolatedSmileSection with interpolation method: " << method << ".");
+        BOOST_TEST_MESSAGE("Trying to construct InterpolatedSmileSection with interpolation method: " << Integer(method) << ".");
         BOOST_CHECK_NO_THROW(section =
                                  boost::make_shared<InterpolatedSmileSection>(spot, rd, rf, t, strikes, vols, method));
         BOOST_CHECK_EQUAL(section->volatility(strikes.at(1)), vols.at(1));
