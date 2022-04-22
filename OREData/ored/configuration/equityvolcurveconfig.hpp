@@ -75,7 +75,7 @@ public:
     const string& proxySurface() const { return proxySurface_; }
     const string quoteStem() const;
     void populateQuotes();
-    bool isProxySurface() { return !proxySurface_.empty(); };
+    bool isProxySurface() const { return !proxySurface_.empty(); };
     OneDimSolverConfig solverConfig() const;
     const boost::optional<bool>& preferOutOfTheMoney() const {
         return preferOutOfTheMoney_;
