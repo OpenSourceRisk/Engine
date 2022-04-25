@@ -63,7 +63,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         boost::shared_ptr<SwapIndex> swapIndexBase;
         boost::shared_ptr<SwapIndex> shortSwapIndexBase;
 
-        if (config->proxySourceCurveId().empty()) {
+        if (!config->proxySourceCurveId().empty()) {
 
             // Build proxy surface
 

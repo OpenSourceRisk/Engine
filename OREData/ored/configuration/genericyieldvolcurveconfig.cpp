@@ -100,7 +100,7 @@ void GenericYieldVolatilityCurveConfig::populateRequiredCurveIds() {
 
 const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
 
-    if (quotes_.size() == 0 && !proxySourceCurveId_.empty()) {
+    if (quotes_.size() == 0 && proxySourceCurveId_.empty()) {
         std::stringstream ssBase;
         ssBase << marketDatumInstrumentLabel_ << "/" << volatilityType_ << "/" << qualifier_ << "/";
         if (!quoteTag_.empty())
