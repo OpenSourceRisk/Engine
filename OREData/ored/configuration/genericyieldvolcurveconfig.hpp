@@ -56,34 +56,34 @@ public:
     //@{
     //! Default constructor
     GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
-                                      const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel,
-                                      const bool allowSmile, const bool requireSwapIndexBases)
-        : underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
-          marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel),
-          allowSmile_(allowSmile), requireSwapIndexBases_(requireSwapIndexBases) {}
+				      const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel,
+				      const bool allowSmile, const bool requireSwapIndexBases)
+	: underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
+	  marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel),
+	  allowSmile_(allowSmile), requireSwapIndexBases_(requireSwapIndexBases) {}
     //! Detailed constructor
     GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
-                                      const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel,
-                                      const string& curveID, const string& curveDescription, const string& qualifier,
-                                      const Dimension& dimension, const VolatilityType& volatilityType,
-                                      const bool extrapolate, const bool flatExtrapolation,
-                                      const vector<string>& optionTenors, const vector<string>& underlyingTenors,
-                                      const DayCounter& dayCounter, const Calendar& calendar,
-                                      const BusinessDayConvention& businessDayConvention,
-                                      const string& shortSwapIndexBase = "", const string& swapIndexBase = "",
-                                      // Only required for smile
-                                      const vector<string>& smileOptionTenors = vector<string>(),
-                                      const vector<string>& smileUnderlyingTenors = vector<string>(),
-                                      const vector<string>& smileSpreads = vector<string>());
+				      const std::string& marketDatumInstrumentLabel, const std::string& qualifierLabel,
+				      const string& curveID, const string& curveDescription, const string& qualifier,
+				      const Dimension& dimension, const VolatilityType& volatilityType,
+				      const bool extrapolate, const bool flatExtrapolation,
+				      const vector<string>& optionTenors, const vector<string>& underlyingTenors,
+				      const DayCounter& dayCounter, const Calendar& calendar,
+				      const BusinessDayConvention& businessDayConvention,
+				      const string& shortSwapIndexBase = "", const string& swapIndexBase = "",
+				      // Only required for smile
+				      const vector<string>& smileOptionTenors = vector<string>(),
+				      const vector<string>& smileUnderlyingTenors = vector<string>(),
+				      const vector<string>& smileSpreads = vector<string>());
     //! Detailed contructor for proxy config
     GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
-                                      const std::string& qualifierLabel, const string& curveID,
-                                      const string& curveDescription, const string& qualifier,
-                                      const std::string& proxySourceCurveId,
-                                      const std::string& proxySourceShortSwapIndexBase,
-                                      const std::string& proxySourceSwapIndexBase,
-                                      const std::string& proxyTargetShortSwapIndexBase,
-                                      const std::string& proxyTargetSwapIndexBase);
+				      const std::string& qualifierLabel, const string& curveID,
+				      const string& curveDescription, const string& qualifier,
+				      const std::string& proxySourceCurveId,
+				      const std::string& proxySourceShortSwapIndexBase,
+				      const std::string& proxySourceSwapIndexBase,
+				      const std::string& proxyTargetShortSwapIndexBase,
+				      const std::string& proxyTargetSwapIndexBase);
 
     //@}
 
@@ -168,7 +168,7 @@ private:
     string proxySourceSwapIndexBase_;
     string proxyTargetShortSwapIndexBase_;
     string proxyTargetSwapIndexBase_;
-    
+
     ReportConfig reportConfig_;
 };
 
