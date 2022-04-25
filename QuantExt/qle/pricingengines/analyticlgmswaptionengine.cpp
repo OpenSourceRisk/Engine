@@ -146,7 +146,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         for (Size j = j1_; j < fixedLeg_.size(); ++j) {
             Real sum1 = 0.0, sum2 = 0.0;
             for (Size rr = 0; rr < ratio && k < floatingLeg_.size(); ++rr, ++k) {
-                Real amount = floatingLeg_[k]->amount();
+                Real amount = Null<Real>();
+		// same strategy as in VanillaSwap::setupArguments()
+                try {
+                    amount = floatingLeg_[k]->amount();
+                } catch (...) {
+                }
                 Real lambda1 = 0.0, lambda2 = 1.0;
                 if (floatSpreadMapping_ == proRata) {
                     // we do not use the exact pay dates but the ratio to determine
@@ -163,7 +168,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                         QL_REQUIRE(
                             !on->valueDates().empty(),
                             "AnalyticalLgmSwaptionEngine::calculate(): internal error, no value dates in ois coupon.");
-                        Date v1 = std::max(c_->referenceDate(), on->valueDates().front());
+                        Date v1 = std::max(reference, on->valueDates().front());
                         Date v2 = std::max(v1 + 1, on->valueDates().back());
                         Real rate;
                         if (on->averagingMethod() == QuantLib::RateAveraging::Compound)
@@ -207,9 +212,9 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                             flatAmount = flatIbor->fixing(fixingDate) * floatingLeg_[k]->accrualPeriod() * nominal_;
                         }
 		    }
-                        Real correction = (amount - flatAmount) * c_->discount(floatingLeg_[k]->date());
-                        sum1 += lambda1 * correction;
-                        sum2 += lambda2 * correction;
+                    Real correction = (amount - flatAmount) * c_->discount(floatingLeg_[k]->date());
+                    sum1 += lambda1 * correction;
+                    sum2 += lambda2 * correction;
                 } else {
                     // if no amount is given, we do not need a spread correction
                     // due to different forward / discounting curves since then
