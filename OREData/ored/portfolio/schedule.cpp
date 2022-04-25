@@ -222,8 +222,10 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
 
     string strCalendar = data.calendar();
     Calendar calendar;
-    if (strCalendar.empty())
+    if (strCalendar.empty()) {
         calendar = NullCalendar();
+        WLOG("No calendar provided in Schedule, attempting to use a null calendar.");
+    }
     else
         calendar = parseCalendar(strCalendar);
 
