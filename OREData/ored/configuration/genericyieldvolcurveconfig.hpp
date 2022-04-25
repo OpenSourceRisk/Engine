@@ -75,6 +75,16 @@ public:
                                       const vector<string>& smileOptionTenors = vector<string>(),
                                       const vector<string>& smileUnderlyingTenors = vector<string>(),
                                       const vector<string>& smileSpreads = vector<string>());
+    //! Detailed contructor for proxy config
+    GenericYieldVolatilityCurveConfig(const std::string& underlyingLabel, const std::string& rootNodeLabel,
+                                      const std::string& qualifierLabel, const string& curveID,
+                                      const string& curveDescription, const string& qualifier,
+                                      const std::string& proxySourceCurveId,
+                                      const std::string& proxySourceShortSwapIndexBase,
+                                      const std::string& proxySourceSwapIndexBase,
+                                      const std::string& proxyTargetShortSwapIndexBase,
+                                      const std::string& proxyTargetSwapIndexBase);
+
     //@}
 
     //! \name Serialisation
@@ -102,6 +112,13 @@ public:
     const vector<string>& smileSpreads() const { return smileSpreads_; }
     const string& quoteTag() const { return quoteTag_; }
     const vector<string>& quotes() override;
+    //
+    const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
+    const std::string& proxySourceShortSwapIndexBase() const { return proxySourceCurveId_; }
+    const std::string& proxySourceSwapIndexBase() const { return proxySourceCurveId_; }
+    const std::string& proxyTargetShortSwapIndexBase() const { return proxySourceCurveId_; }
+    const std::string& proxyTargetSwapIndexBase() const { return proxySourceCurveId_; }
+    //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
 
@@ -126,7 +143,8 @@ public:
     //@}
 
 private:
-    string ccyFromSwapIndexBase();
+    void populateRequiredCurveIds();
+    string ccyFromSwapIndexBase(const std::string& swapIndexBase);
     //
     const string underlyingLabel_, rootNodeLabel_, marketDatumInstrumentLabel_, qualifierLabel_;
     const bool allowSmile_, requireSwapIndexBases_;
@@ -144,6 +162,13 @@ private:
     vector<string> smileUnderlyingTenors_;
     vector<string> smileSpreads_;
     string quoteTag_;
+
+    string proxySourceCurveId_;
+    string proxySourceShortSwapIndexBase_;
+    string proxySourceSwapIndexBase_;
+    string proxyTargetShortSwapIndexBase_;
+    string proxyTargetSwapIndexBase_;
+    
     ReportConfig reportConfig_;
 };
 
