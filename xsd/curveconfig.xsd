@@ -218,16 +218,39 @@
     <xs:all>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="dimensionType" name="Dimension"/>
-      <xs:element type="volatilityType" name="VolatilityType"/>
-      <xs:element type="extrapolationType" name="Extrapolation"/>
-      <xs:element type="dayCounter" name="DayCounter"/>
-      <xs:element type="calendar" name="Calendar"/>
-      <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
-      <xs:element type="xs:string" name="OptionTenors"/>
-      <xs:element type="xs:string" name="SwapTenors"/>
-      <xs:element type="xs:string" name="ShortSwapIndexBase"/>
-      <xs:element type="xs:string" name="SwapIndexBase"/>
+      <xs:element name="ProxyConfig" minOccurs="0">
+	<xs:complexType>
+	  <xs:all>
+	    <xs:element name="Source">
+	      <xs:complexType>
+		<xs:all>
+		  <xs:element type="xs:string" name="CurveId"/>
+		  <xs:element type="xs:string" name="ShortSwapIndexBase"/>
+		  <xs:element type="xs:string" name="SwapIndexBase"/>
+		</xs:all>
+	      </xs:complexType>
+	    </xs:element>
+	    <xs:element name="Target">
+	      <xs:complexType>
+		<xs:all>
+		  <xs:element type="xs:string" name="ShortSwapIndexBase"/>
+		  <xs:element type="xs:string" name="SwapIndexBase"/>
+		</xs:all>
+	      </xs:complexType>
+	    </xs:element>
+	  </xs:all>
+	</xs:complexType>
+      </xs:element>
+      <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
+      <xs:element type="volatilityType" name="VolatilityType" minOccurs="0"/>
+      <xs:element type="extrapolationType" name="Extrapolation" minOccurs="0"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0"/>
+      <xs:element type="xs:string" name="OptionTenors" minOccurs="0"/>
+      <xs:element type="xs:string" name="SwapTenors" minOccurs="0"/>
+      <xs:element type="xs:string" name="ShortSwapIndexBase" minOccurs="0"/>
+      <xs:element type="xs:string" name="SwapIndexBase" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileOptionTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSwapTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSpreads" minOccurs="0"/>
