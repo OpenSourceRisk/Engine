@@ -353,13 +353,14 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 boost::dynamic_pointer_cast<SwaptionVolatilityCurveSpec>(spec);
             QL_REQUIRE(swvolspec, "Failed to convert spec " << *spec);
 
-            auto itr = requiredSwaptionVolCurves_.find(swvolspec->name());
-            if (itr == requiredSwaptionVolCurves_.end()) {
+            auto itr = requiredGenericYieldVolCurves_.find(swvolspec->name());
+            if (itr == requiredGenericYieldVolCurves_.end()) {
                 DLOG("Building Swaption Volatility for asof " << asof_);
                 boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve = boost::make_shared<SwaptionVolCurve>(
-                    asof_, *swvolspec, *loader_, *curveConfigs_, requiredSwapIndices_[configuration]);
+                    asof_, *swvolspec, *loader_, *curveConfigs_, requiredSwapIndices_[configuration],
+                    requiredGenericYieldVolCurves_);
                 calibrationInfo_->irVolCalibrationInfo[swvolspec->name()] = swaptionVolCurve->calibrationInfo();
-                itr = requiredSwaptionVolCurves_.insert(make_pair(swvolspec->name(), swaptionVolCurve)).first;
+                itr = requiredGenericYieldVolCurves_.insert(make_pair(swvolspec->name(), swaptionVolCurve)).first;
             }
 
             boost::shared_ptr<SwaptionVolatilityCurveConfig> cfg =
@@ -379,13 +380,13 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             boost::shared_ptr<YieldVolatilityCurveSpec> ydvolspec =
                 boost::dynamic_pointer_cast<YieldVolatilityCurveSpec>(spec);
             QL_REQUIRE(ydvolspec, "Failed to convert spec " << *spec);
-            auto itr = requiredYieldVolCurves_.find(ydvolspec->name());
-            if (itr == requiredYieldVolCurves_.end()) {
+            auto itr = requiredGenericYieldVolCurves_.find(ydvolspec->name());
+            if (itr == requiredGenericYieldVolCurves_.end()) {
                 DLOG("Building Yield Volatility for asof " << asof_);
                 boost::shared_ptr<YieldVolCurve> yieldVolCurve =
                     boost::make_shared<YieldVolCurve>(asof_, *ydvolspec, *loader_, *curveConfigs_);
                 calibrationInfo_->irVolCalibrationInfo[ydvolspec->name()] = yieldVolCurve->calibrationInfo();
-                itr = requiredYieldVolCurves_.insert(make_pair(ydvolspec->name(), yieldVolCurve)).first;
+                itr = requiredGenericYieldVolCurves_.insert(make_pair(ydvolspec->name(), yieldVolCurve)).first;
             }
             DLOG("Adding YieldVol (" << node.name << ") with spec " << *ydvolspec << " to configuration "
                                      << configuration);
@@ -727,7 +728,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building CorrelationCurve for asof " << asof_);
                 boost::shared_ptr<CorrelationCurve> corrCurve = boost::make_shared<CorrelationCurve>(
                     asof_, *corrspec, *loader_, *curveConfigs_, requiredSwapIndices_[configuration],
-                    requiredYieldCurves_, requiredSwaptionVolCurves_);
+                    requiredYieldCurves_, requiredGenericYieldVolCurves_);
                 itr = requiredCorrelationCurves_.insert(make_pair(corrspec->name(), corrCurve)).first;
             }
 
