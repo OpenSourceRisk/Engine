@@ -1312,8 +1312,8 @@ class CommodityFutureConvention : public Convention {
 public:
     /*! The anchor day type of commodity future convention
      */
-    enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter };
-    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday };
+    enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter, WeeklyDayOfTheWeek };
+    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek };
 
     //! Classes to differentiate constructors below
     //@{
@@ -1332,6 +1332,11 @@ public:
         std::string businessDaysAfter_;
     };
 
+    struct WeeklyWeekday {
+        WeeklyWeekday(const std::string& weekday) : weekday_(weekday) {}
+        std::string weekday_;
+    };
+
 
     struct OptionExpiryAnchorDateRule {
         OptionExpiryAnchorDateRule()
@@ -1346,6 +1351,9 @@ public:
             : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday) {}
         OptionExpiryAnchorDateRule(const std::string& lastWeekday)
             : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday) {}
+        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday)
+            : type_(OptionAnchorType::WeeklyDayOfTheWeek), daysBefore_(""), expiryDay_(""), nth_(""),
+              weekday_(weekday.weekday_) {}
 
         OptionAnchorType type_;
         std::string daysBefore_;
