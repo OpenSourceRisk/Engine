@@ -217,10 +217,24 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
             QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << swapIndex);
             auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
-            QL_REQUIRE(con, "Cannot find IRSwapConventions " << swapCon->conventions());
-            std::string iborIndex = con->indexName();
+            auto conOisComp =
+                boost::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
+            auto conOisAvg =
+                boost::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
+	    std::string indexName;
+	    if(con)
+		indexName = con->indexName();
+	    else if(conOisComp)
+		indexName = conOisComp->indexName();
+	    else if(conOisAvg)
+                indexName = conOisAvg->indexName();
+                else {
+                    QL_FAIL("DependencyGraph: internal errors, expected IRSwapConvention, OisConvention, "
+                            "AverageOisConvention for '"
+                            << swapCon->conventions() << "' from conventions for swap index '" << swapIndex << "'");
+                }
             std::string discountIndex = g[*v].mapping;
-            if (isGenericIborIndex(iborIndex))
+            if (isGenericIborIndex(indexName))
                 foundIbor = true;
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                 if (*w != *v) {
@@ -231,7 +245,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                             TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
                                                           << g[*w]);
                         }
-                        if (g[*w].name == iborIndex) {
+                        if (g[*w].name == indexName) {
                             g.add_edge(*v, *w);
                             foundIbor = true;
                             TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
@@ -244,7 +258,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                     break;
             }
             if (!foundIbor)
-                buildErrors[g[*v].mapping] = "did not find required ibor index " + iborIndex + " (required from " +
+                buildErrors[g[*v].mapping] = "did not find required ibor/ois index " + indexName + " (required from " +
                                              ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
                                              configuration;
             if (!foundDiscount)
