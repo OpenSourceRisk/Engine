@@ -114,10 +114,10 @@ public:
     const vector<string>& quotes() override;
     //
     const std::string& proxySourceCurveId() const { return proxySourceCurveId_; }
-    const std::string& proxySourceShortSwapIndexBase() const { return proxySourceCurveId_; }
-    const std::string& proxySourceSwapIndexBase() const { return proxySourceCurveId_; }
-    const std::string& proxyTargetShortSwapIndexBase() const { return proxySourceCurveId_; }
-    const std::string& proxyTargetSwapIndexBase() const { return proxySourceCurveId_; }
+    const std::string& proxySourceShortSwapIndexBase() const { return proxySourceShortSwapIndexBase_; }
+    const std::string& proxySourceSwapIndexBase() const { return proxySourceSwapIndexBase_; }
+    const std::string& proxyTargetShortSwapIndexBase() const { return proxyTargetShortSwapIndexBase_; }
+    const std::string& proxyTargetSwapIndexBase() const { return proxyTargetSwapIndexBase_; }
     //
     const ReportConfig& reportConfig() const { return reportConfig_; }
     //@}
