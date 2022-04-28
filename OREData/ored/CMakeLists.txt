@@ -361,7 +361,7 @@ portfolio/tradebarrier.hpp
 portfolio/tradefactory.hpp
 portfolio/trademonetary.hpp
 portfolio/tradestrike.hpp
-portfolio/types.cpp
+portfolio/types.hpp
 portfolio/underlying.hpp
 portfolio/vanillaoption.hpp
 report/csvreport.hpp
