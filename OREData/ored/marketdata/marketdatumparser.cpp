@@ -470,7 +470,6 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         std::string quoteTag;
         if (offset == 1)
             quoteTag = tokens[3];
-	std::cout << "parse " << datumName << ": offset = " << offset << " parsed period " << dummy << std::endl;
         if (tokens.size() >= 6) { // volatility
             Period expiry = parsePeriod(tokens[3 + offset]);
             Period term = parsePeriod(tokens[4 + offset]);
