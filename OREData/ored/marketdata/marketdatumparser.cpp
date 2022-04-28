@@ -466,7 +466,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 8, "4...8 tokens expected in " << datumName);
         const string& ccy = tokens[2];
         Period dummy;
-        Size offset = tryParse<Period>(tokens[3], dummy, &parsePeriod) ? 0 : 1;
+        Size offset = tryParse<Period>(tokens[3], dummy, &parsePeriod) ? 1 : 0;
         std::string quoteTag;
         if (offset == 1)
             quoteTag = tokens[3];
