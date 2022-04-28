@@ -987,6 +987,17 @@ Month parseMonth(const string& s) {
     }
 }
 
+PaymentLag parsePaymentLag(const string& s) {   
+    PaymentLag pl;
+    if (!tryParse<Period>(s, pl, parsePeriod)) {
+        Natural n = 0;
+        tryParse<Natural>(s, n, parseInteger);
+        pl = Period(n, Days);
+    }
+    QL_REQUIRE(pl.units() == Days, "parsePaymentLag: PaymentLag must be given in Days");
+    return pl;
+}
+
 std::vector<string> parseListOfValues(string s) {
     boost::trim(s);
     std::vector<string> vec;

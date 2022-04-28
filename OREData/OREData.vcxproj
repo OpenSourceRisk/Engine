@@ -197,6 +197,7 @@
     <ClInclude Include="ored\portfolio\optionexercisedata.hpp" />
     <ClInclude Include="ored\portfolio\optionpaymentdata.hpp" />
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
+    <ClInclude Include="ored\portfolio\types.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
     <ClInclude Include="ored\portfolio\premiumdata.hpp" />
     <ClInclude Include="ored\portfolio\referencedata.hpp" />

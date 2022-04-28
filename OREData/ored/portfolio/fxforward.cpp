@@ -42,7 +42,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Date payDate;
     if (payDate_.empty()) {
         //LOG("Attempting paydate advance");
-        Period payLag = payLag_.empty() ? 0 * Days : parsePeriod(payLag_);
+        Period payLag = parsePaymentLag(payLag_);
         Calendar payCalendar = payCalendar_.empty() ? NullCalendar() : parseCalendar(payCalendar_);
         BusinessDayConvention payConvention =
             payConvention_.empty() ? Unadjusted : parseBusinessDayConvention(payConvention_);

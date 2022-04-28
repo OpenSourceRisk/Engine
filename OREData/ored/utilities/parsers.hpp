@@ -27,6 +27,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
+#include <ored/portfolio/types.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
@@ -236,6 +237,13 @@ QuantLib::Weekday parseWeekday(const std::string& s);
     \ingroup utilities
 */
 QuantLib::Month parseMonth(const std::string& s);
+
+
+//! Convert text to PaymentLag
+/*!
+\ingroup utilities
+*/
+PaymentLag parsePaymentLag(const string& s);
 
 //! Convert comma separated list of values to vector of values
 /*!
