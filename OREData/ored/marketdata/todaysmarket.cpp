@@ -355,7 +355,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
             auto itr = requiredGenericYieldVolCurves_.find(swvolspec->name());
             if (itr == requiredGenericYieldVolCurves_.end()) {
-                DLOG("Building Swaption Volatility for asof " << asof_);
+                DLOG("Building Swaption Volatility (" << node.name << ") for asof " << asof_);
                 boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve = boost::make_shared<SwaptionVolCurve>(
                     asof_, *swvolspec, *loader_, *curveConfigs_, requiredSwapIndices_[configuration],
                     requiredGenericYieldVolCurves_);
