@@ -335,8 +335,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 if (fixingDate != Date() && fixingDate > market->asofDate()) {
                                     if (floorStrike != Null<Real>()) {
                                         if (usesSwaptionVol) {
-                                            floorVolatility = market->swaptionVol(ccy, configuration)
-                                                                  ->volatility(fixingDate, swaptionTenor, floorStrike);
+                                            floorVolatility =
+                                                market
+                                                    ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, swaptionTenor, floorStrike);
                                         } else if (usesCapVol) {
                                             floorVolatility =
                                                 market
@@ -347,8 +350,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     }
                                     if (capStrike != Null<Real>()) {
                                         if (usesSwaptionVol) {
-                                            capVolatility = market->swaptionVol(ccy, configuration)
-                                                                ->volatility(fixingDate, swaptionTenor, capStrike);
+                                            capVolatility =
+                                                market
+                                                    ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, swaptionTenor, capStrike);
                                         } else if (usesCapVol) {
                                             capVolatility =
                                                 market
