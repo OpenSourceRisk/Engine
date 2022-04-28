@@ -291,9 +291,19 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                 } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                     firstFloatSpread = cpn->spread();
                     if (index == nullptr) {
-                        index = boost::dynamic_pointer_cast<IborIndex>(cpn->index());
-			DLOG("found ibor / ois index " << index->name());
-		    }
+                        if (auto tmp = boost::dynamic_pointer_cast<IborIndex>(cpn->index())) {
+                            DLOG("found ibor / ois index '" << tmp->name() << "'");
+                            index = tmp;
+                        } else if (auto tmp = boost::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
+                            DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
+                                                    << "' to look up vol");
+                            index = tmp->iborIndex();
+                        } else {
+                            DLOG("found index != ibor, ois, cms '"
+                                 << cpn->index()->name()
+                                 << "', use ccy key if not other floating index is found in underlying legs");
+                        }
+                    }
                 }
             }
         }
