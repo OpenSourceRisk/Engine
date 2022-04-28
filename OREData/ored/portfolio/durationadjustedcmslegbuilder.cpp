@@ -78,7 +78,7 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
     auto builder = boost::dynamic_pointer_cast<DurationAdjustedCmsCouponPricerBuilder>(
         engineFactory->builder("DurationAdjustedCMS"));
     QL_REQUIRE(builder != nullptr, "No builder found for DurationAdjustedCmsLeg");
-    auto couponPricer = builder->engine(index->currency());
+    auto couponPricer = builder->engine(index->iborIndex());
 
     // Loop over the coupons in the leg and set pricer
     Leg result = leg;
