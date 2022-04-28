@@ -471,9 +471,9 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         }
     } break;
     case RiskFactorKey::KeyType::SwaptionVolatility: {
-        string ccy = keylabel;
-        auto itr = sensiParams.swaptionVolShiftData().find(ccy);
-        QL_REQUIRE(itr != sensiParams.swaptionVolShiftData().end(), "shiftData not found for " << ccy);
+        string key = keylabel;
+        auto itr = sensiParams.swaptionVolShiftData().find(key);
+        QL_REQUIRE(itr != sensiParams.swaptionVolShiftData().end(), "shiftData not found for " << key);
         shiftSize = itr->second.shiftSize;
         if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
             vector<Real> strikes = itr->second.shiftStrikes;
@@ -485,7 +485,7 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size tenIdx = keyIdx % tenors.size();
             Period p_ten = tenors[tenIdx];
             Real strike = Null<Real>(); // for cubes this will be ATM
-            Handle<SwaptionVolatilityStructure> vts = simMarket->swaptionVol(ccy, marketConfiguration);
+            Handle<SwaptionVolatilityStructure> vts = simMarket->swaptionVol(key, marketConfiguration);
             // Time t_exp = vts->dayCounter().yearFraction(asof, asof + p_exp);
             // Time t_ten = vts->dayCounter().yearFraction(asof, asof + p_ten);
             // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());

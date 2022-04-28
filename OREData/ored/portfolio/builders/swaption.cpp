@@ -57,7 +57,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     auto calibration = parseCalibrationType(modelParameter("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
     std::string referenceCalibrationGrid = modelParameter("ReferenceCalibrationGrid", "", false, "");
-    Real lambda = parseReal(modelParameter("Reversion", ccy));
+    Real lambda = parseReal(modelParameter("Reversion", {key, ccy}));
     vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
     vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", "", false), &parseReal);
     QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()

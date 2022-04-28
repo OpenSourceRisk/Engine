@@ -441,11 +441,11 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
     Date asof = baseScenario_->asof();
 
     for (auto d : std.swaptionVolShifts) {
-        std::string ccy = d.first;
-        LOG("Apply stress scenario to swaption vol structure " << ccy);
+        std::string key = d.first;
+        LOG("Apply stress scenario to swaption vol structure '" << key << "'");
 
-        Size n_swvol_term = simMarketData_->swapVolTerms(ccy).size();
-        Size n_swvol_exp = simMarketData_->swapVolExpiries(ccy).size();
+        Size n_swvol_term = simMarketData_->swapVolTerms(key).size();
+        Size n_swvol_exp = simMarketData_->swapVolExpiries(key).size();
 
         vector<vector<Real>> volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
         vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
@@ -459,23 +459,22 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-        //DayCounter dc = parseDayCounter(simMarketData_->swapVolDayCounter(ccy));
-        DayCounter dc = simMarket_->swaptionVol(ccy)->dayCounter();
+        DayCounter dc = simMarket_->swaptionVol(key)->dayCounter();
 
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
-            Date expiry = asof + simMarketData_->swapVolExpiries(ccy)[j];
+            Date expiry = asof + simMarketData_->swapVolExpiries(key)[j];
             volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_swvol_term; ++j) {
-            Date term = asof + simMarketData_->swapVolTerms(ccy)[j];
+            Date term = asof + simMarketData_->swapVolTerms(key)[j];
             volTermTimes[j] = dc.yearFraction(asof, term);
         }
         for (Size j = 0; j < n_swvol_exp; ++j) {
             for (Size k = 0; k < n_swvol_term; ++k) {
                 Size idx = j * n_swvol_term + k;
 
-                RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx);
+                RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
                 volData[j][k] = baseScenario_->get(key);
             }
         }
@@ -510,7 +509,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         for (Size jj = 0; jj < n_swvol_exp; ++jj) {
             for (Size kk = 0; kk < n_swvol_term; ++kk) {
                 Size idx = jj * n_swvol_term + kk;
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx),
+                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, key, idx),
                               shiftedVolData[jj][kk]);
             }
         }

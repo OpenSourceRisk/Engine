@@ -34,9 +34,12 @@ namespace data {
 using namespace QuantExt;
 
 boost::shared_ptr<FloatingRateCouponPricer>
-LinearTsrDurationAdjustedCmsCouponPricerBuilder::engineImpl(const Currency& ccy) {
-
-    Real reversion = parseReal(engineParameter("MeanReversion", ccy.code(), true));
+LinearTsrDurationAdjustedCmsCouponPricerBuilder::engineImpl(const std::string& key) {
+    std::string ccy = key;
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(key, index))
+        ccy = index->currency().code();
+    Real reversion = parseReal(engineParameter("MeanReversion", {key, ccy}, true));
 
     Handle<Quote> reversionQuote(boost::make_shared<SimpleQuote>(reversion));
     Handle<SwaptionVolatilityStructure> vol;
@@ -44,7 +47,7 @@ LinearTsrDurationAdjustedCmsCouponPricerBuilder::engineImpl(const Currency& ccy)
         vol = Handle<SwaptionVolatilityStructure>(boost::make_shared<ConstantSwaptionVolatility>(
             0, NullCalendar(), Unadjusted, 0.0, Actual365Fixed(), Normal));
     } else {
-        vol = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
+        vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
     }
 
     string lowerBoundStr =
