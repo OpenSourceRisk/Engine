@@ -542,6 +542,18 @@ Calendar parseCalendar(const string& s, const string& newName) {
     }
 }
 
+bool isOnePeriod(const string& s) {
+    if (s.empty())
+        return false;
+    char c = std::toupper(s.back());
+    if (c == 'D' || c == 'W' || c == 'M' || c == 'Y')
+        return false;
+    for (auto const& c : s.begin(); std::next(s.end(), -1); ++c)
+        if (*c < '0' || *c > '9')
+            return false;
+    return true;
+}
+
 Period parsePeriod(const string& s) { return PeriodParser::parse(s); }
 
 BusinessDayConvention parseBusinessDayConvention(const string& s) {
