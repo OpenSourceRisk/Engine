@@ -58,13 +58,15 @@ namespace ore {
 namespace data {
 
 namespace {
-std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p, const std::string& q,
-                         const bool mandatory, const std::string& defaultValue) {
-    // first look for p_q if a qualifier is given
-    if (!q.empty()) {
-        auto r = m.find(p + "_" + q);
-        if (r != m.end())
-            return r->second;
+std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p,
+                         const std::vector<std::string>& qs, const bool mandatory, const std::string& defaultValue) {
+    // first look for p_q if one or several qualifiers are given
+    for (auto const& q : qs) {
+        if (!q.empty()) {
+            auto r = m.find(p + "_" + q);
+            if (r != m.end())
+                return r->second;
+        }
     }
     // no qualifier given, or fall back on p because p_q was not found
     auto r = m.find(p);
@@ -84,8 +86,18 @@ std::string EngineBuilder::engineParameter(const std::string& p, const std::stri
     return getParameter(engineParameters_, p, qualifier, mandatory, defaultValue);
 }
 
+std::string EngineBuilder::engineParameter(const std::string& p, const std::vector<std::string>& qualifiers,
+                                           const bool mandatory, const std::string& defaultValue) const {
+    return getParameter(engineParameters_, p, qualifier, mandatory, defaultValue);
+}
+
 std::string EngineBuilder::modelParameter(const std::string& p, const std::string qualifier, const bool mandatory,
                                           const std::string& defaultValue) const {
+    return getParameter(modelParameters_, p, qualifier, mandatory, defaultValue);
+}
+
+std::string EngineBuilder::modelParameter(const std::string& p, const std::vector<std::string>& qualifiers,
+                                          const bool mandatory, const std::string& defaultValue) const {
     return getParameter(modelParameters_, p, qualifier, mandatory, defaultValue);
 }
 
