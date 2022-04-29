@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/atmadjustedsmilesection.hpp>
+#include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/utilities/time.hpp>
 
 namespace QuantExt {
@@ -43,12 +43,16 @@ boost::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(Time o
 
 boost::shared_ptr<SmileSection> ProxySwaptionVolatility::smileSectionImpl(const Date& optionDate,
                                                                           const Period& swapTenor) const {
-    Real baseAtmLevel = swapTenor > baseShortSwapIndexBase_->tenor()
-                            ? baseSwapIndexBase_->clone(swapTenor)->fixing(optionDate)
-                            : baseShortSwapIndexBase_->clone(swapTenor)->fixing(optionDate);
-    Real targetAtmLevel = swapTenor > targetShortSwapIndexBase_->tenor()
-                              ? targetSwapIndexBase_->clone(swapTenor)->fixing(optionDate)
-                              : targetShortSwapIndexBase_->clone(swapTenor)->fixing(optionDate);
+    Real baseAtmLevel =
+        swapTenor > baseShortSwapIndexBase_->tenor()
+            ? baseSwapIndexBase_->clone(swapTenor)->fixing(baseSwapIndexBase_->fixingCalendar().adjust(optionDate))
+            : baseShortSwapIndexBase_->clone(swapTenor)->fixing(
+                  baseShortSwapIndexBase_->fixingCalendar().adjust(optionDate));
+    Real targetAtmLevel =
+        swapTenor > targetShortSwapIndexBase_->tenor()
+            ? targetSwapIndexBase_->clone(swapTenor)->fixing(targetSwapIndexBase_->fixingCalendar().adjust(optionDate))
+            : targetShortSwapIndexBase_->clone(swapTenor)->fixing(
+                  targetShortSwapIndexBase_->fixingCalendar().adjust(optionDate));
     return boost::make_shared<AtmAdjustedSmileSection>(baseVol_->smileSection(optionDate, swapTenor, true),
                                                        baseAtmLevel, targetAtmLevel);
 }
