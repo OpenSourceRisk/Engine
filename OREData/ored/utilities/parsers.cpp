@@ -548,7 +548,7 @@ bool isOnePeriod(const string& s) {
     char c = std::toupper(s.back());
     if (c == 'D' || c == 'W' || c == 'M' || c == 'Y')
         return false;
-    for (auto const& c : s.begin(); std::next(s.end(), -1); ++c)
+    for (auto c = s.cbegin(); c != std::next(s.end(), -1); std::advance(c, 1))
         if (*c < '0' || *c > '9')
             return false;
     return true;
