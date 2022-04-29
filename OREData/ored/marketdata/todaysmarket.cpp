@@ -371,7 +371,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             swaptionCurves_[make_pair(configuration, node.name)] =
                 Handle<SwaptionVolatilityStructure>(itr->second->volTermStructure());
             swaptionIndexBases_[make_pair(configuration, node.name)] =
-                make_pair(cfg->shortSwapIndexBase(), cfg->swapIndexBase());
+                cfg->proxySourceCurveId().empty()
+                    ? make_pair(cfg->shortSwapIndexBase(), cfg->swapIndexBase())
+                    : make_pair(cfg->proxyTargetShortSwapIndexBase(), cfg->proxyTargetSwapIndexBase());
             break;
         }
 
