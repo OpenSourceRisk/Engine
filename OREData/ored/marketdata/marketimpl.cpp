@@ -49,7 +49,7 @@ A lookup(const B& map, const C& key, const string& configuration, const string& 
         it = map.find(make_pair(Market::defaultConfiguration, key));
         if (it == map.end()) {
             if (!continueOnError)
-                QL_FAIL("did not find object " << key << " of type " << type 
+                QL_FAIL("did not find object '" << key << "' of type " << type
                     << " under configuration '" << configuration << "' or 'default'");
             else
                 return A();
