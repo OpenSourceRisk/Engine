@@ -298,10 +298,6 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                             DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
                                                     << "' to look up vol");
                             index = tmp->iborIndex();
-                        } else {
-                            DLOG("found index != ibor, ois, cms '"
-                                 << cpn->index()->name()
-                                 << "', use ccy key if not other floating index is found in underlying legs");
                         }
                     }
                 }
@@ -318,6 +314,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
              << (strikes[i] == Null<Real>() ? "ATMF" : std::to_string(strikes[i])) << " (fixed rate "
              << (firstFixedRate == Null<Real>() ? "NA" : std::to_string(firstFixedRate)) << ", spread "
              << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ")");
+    }
+
+    if (index == nullptr) {
+        DLOG("no ibor, ois, cms index found, use ccy key to look up vol");
     }
 
     auto builder = engineFactory->builder("BermudanSwaption");
