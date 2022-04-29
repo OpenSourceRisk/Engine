@@ -43,7 +43,7 @@ LinearTsrDurationAdjustedCmsCouponPricerBuilder::engineImpl(const std::string& k
 
     Handle<Quote> reversionQuote(boost::make_shared<SimpleQuote>(reversion));
     Handle<SwaptionVolatilityStructure> vol;
-    if (parseBool(engineParameter("ZeroVolatility", "", false, "false"))) {
+    if (parseBool(engineParameter("ZeroVolatility", {}, false, "false"))) {
         vol = Handle<SwaptionVolatilityStructure>(boost::make_shared<ConstantSwaptionVolatility>(
             0, NullCalendar(), Unadjusted, 0.0, Actual365Fixed(), Normal));
     } else {

@@ -46,7 +46,7 @@ boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder:
     boost::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(key, index))
         ccyCode = index->currency().code();
-    Real rev = engineParameter("MeanReversion", {key, ccyCode}, true);
+    Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string ycmstr = engineParameter("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
 
@@ -65,7 +65,7 @@ boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder
     boost::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(key, index))
         ccyCode = index->currency().code();
-    Real rev = engineParameter("MeanReversion", {key, ccyCode}, true);
+    Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string ycmstr = engineParameter("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
     Rate llim = parseReal(engineParameter("LowerLimit"));
@@ -88,7 +88,7 @@ boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::eng
     boost::shared_ptr<IborIndex> index;
     if (tryParseIborIndex(key, index))
         ccyCode = index->currency().code();
-    Real rev = engineParameter("MeanReversion", {key, ccyCode}, true);
+    Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string policy = engineParameter("Policy");
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));

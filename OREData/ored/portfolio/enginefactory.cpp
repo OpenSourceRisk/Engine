@@ -54,6 +54,8 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <boost/algorithm/string/join.hpp>
+
 namespace ore {
 namespace data {
 
@@ -75,30 +77,20 @@ std::string getParameter(const std::map<std::string, std::string>& m, const std:
     }
     // if parameter is mandatory throw, otherwise return the default value
     if (mandatory) {
-        QL_FAIL("parameter " << p << " not found (qualifier was \"" << q << "\")");
+        QL_FAIL("parameter " << p << " not found (qualifier list was \"" << boost::algorithm::join(qs, ", ") << "\")");
     }
     return defaultValue;
 }
 } // namespace
 
-std::string EngineBuilder::engineParameter(const std::string& p, const std::string qualifier, const bool mandatory,
-                                           const std::string& defaultValue) const {
-    return getParameter(engineParameters_, p, qualifier, mandatory, defaultValue);
-}
-
 std::string EngineBuilder::engineParameter(const std::string& p, const std::vector<std::string>& qualifiers,
                                            const bool mandatory, const std::string& defaultValue) const {
-    return getParameter(engineParameters_, p, qualifier, mandatory, defaultValue);
-}
-
-std::string EngineBuilder::modelParameter(const std::string& p, const std::string qualifier, const bool mandatory,
-                                          const std::string& defaultValue) const {
-    return getParameter(modelParameters_, p, qualifier, mandatory, defaultValue);
+    return getParameter(engineParameters_, p, qualifiers, mandatory, defaultValue);
 }
 
 std::string EngineBuilder::modelParameter(const std::string& p, const std::vector<std::string>& qualifiers,
                                           const bool mandatory, const std::string& defaultValue) const {
-    return getParameter(modelParameters_, p, qualifier, mandatory, defaultValue);
+    return getParameter(modelParameters_, p, qualifiers, mandatory, defaultValue);
 }
 
 EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, const boost::shared_ptr<Market>& market,

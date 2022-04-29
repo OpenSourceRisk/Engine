@@ -201,7 +201,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Natural settlementDays = parseInteger(bondData_.settlementDays());
     boost::shared_ptr<QuantLib::Bond> bond;
 
-    std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", "", false, "");
+    std::string openEndDateStr = builder->modelParameter("OpenEndDateReplacement", {}, false, "");
     Date openEndDateReplacement = getOpenEndDateReplacement(openEndDateStr, calendar);
     Real mult = bondData_.bondNotional() * (bondData_.isPayer() ? -1.0 : 1.0);
     std::vector<Leg> separateLegs;

@@ -19,6 +19,7 @@
 #include <ored/portfolio/builders/durationadjustedcms.hpp>
 #include <ored/portfolio/durationadjustedcmslegbuilder.hpp>
 #include <ored/portfolio/durationadjustedcmslegdata.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
 #include <qle/cashflows/durationadjustedcmscoupon.hpp>
 
@@ -78,7 +79,7 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
     auto builder = boost::dynamic_pointer_cast<DurationAdjustedCmsCouponPricerBuilder>(
         engineFactory->builder("DurationAdjustedCMS"));
     QL_REQUIRE(builder != nullptr, "No builder found for DurationAdjustedCmsLeg");
-    auto couponPricer = builder->engine(index->iborIndex());
+    auto couponPricer = builder->engine(IndexNameTranslator::instance().oreName(index->iborIndex()->name()));
 
     // Loop over the coupons in the leg and set pricer
     Leg result = leg;
