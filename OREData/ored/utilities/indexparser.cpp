@@ -527,7 +527,7 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
                                       : parseCalendar(swapIndexConvention->fixingCalendar());
         return boost::make_shared<OvernightIndexedSwapIndex>(
             familyName, p, oisCompConvention->spotLag(), ccy,
-            boost::dynamic_pointer_cast<OvernightIndex>(oisCompConvention->index()->clone(f)), false,
+            boost::dynamic_pointer_cast<OvernightIndex>(oisCompConvention->index()->clone(f)), true,
             RateAveraging::Compound, Period(oisCompConvention->fixedFrequency()), d);
     } else if (oisAvgConvention) {
         Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
@@ -535,7 +535,7 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
                                       : parseCalendar(swapIndexConvention->fixingCalendar());
         return boost::make_shared<OvernightIndexedSwapIndex>(
             familyName, p, oisAvgConvention->spotLag(), ccy,
-            boost::dynamic_pointer_cast<OvernightIndex>(oisAvgConvention->index()->clone(f)), false,
+            boost::dynamic_pointer_cast<OvernightIndex>(oisAvgConvention->index()->clone(f)), true,
             RateAveraging::Simple, Period(oisAvgConvention->fixedFrequency()), d);
     }
     QL_FAIL("internal error: expected irSwapConvention, oisConvention, averageOisConvention to be not null");
