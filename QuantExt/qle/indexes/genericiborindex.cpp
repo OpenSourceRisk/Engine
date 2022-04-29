@@ -27,7 +27,6 @@ GenericIborIndex::GenericIborIndex(const Period& tenor, const Currency& ccy, con
 
 Rate GenericIborIndex::pastFixing(const Date& fixingDate) const {
     Date fixDate = fixingCalendar().adjust(Settings::instance().evaluationDate(), Following);
-    //  return fixing(Settings::instance().evaluationDate(), true);
     return fixing(fixDate, true);
 }
 
