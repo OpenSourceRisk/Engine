@@ -1,0 +1,14 @@
+<jxb:bindings 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+    xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+    xmlns:pd="http://chubb.com/cpi/polsvc/xmlobj"
+    xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+    jxb:extensionBindingPrefixes="inheritance"
+    version="2.1">
+    <jxb:bindings schemaLocation="ore_types.xsd">
+        <jxb:bindings node="//xs:complexType[@name='scheduleData']/xs:choice/xs:element[@name='Dates']/xs:complexType/xs:all/xs:element[@name='Dates']/xs:complexType">
+            <jxb:class name="ScheduleDates"/>
+        </jxb:bindings>
+    </jxb:bindings>
+</jxb:bindings>

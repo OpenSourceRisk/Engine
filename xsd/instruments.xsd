@@ -3,28 +3,6 @@
 
   <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element type="portfolio" name="Portfolio"/>
-
-  <xs:element type="trade" name="Trade"/>
-
-  <xs:complexType name="portfolio">
-    <xs:sequence>
-      <xs:element type="trade" name="Trade" maxOccurs="unbounded" minOccurs="0">
-      </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="trade">
-    <xs:sequence>
-      <xs:element type="oreTradeType" name="TradeType"/>
-      <xs:element type="envelope" name="Envelope"/>
-      <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
-      <!-- Could the group just be replaced with the choice -->
-      <xs:group ref="oreTradeData"/>
-    </xs:sequence>
-    <xs:attribute type="xs:string" name="id" use="required"/>
-  </xs:complexType>
-
   <xs:group name="oreTradeData">
     <xs:choice>
       <xs:element type="swapData" name="SwapData"/>
