@@ -465,7 +465,6 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::SWAPTION: {
         QL_REQUIRE(tokens.size() >= 4 && tokens.size() <= 8, "4...8 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        Period dummy;
         Size offset = isOnePeriod(tokens[3]) ? 0 : 1;
         std::string quoteTag;
         if (offset == 1)

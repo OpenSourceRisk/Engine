@@ -474,8 +474,8 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
             for (Size k = 0; k < n_swvol_term; ++k) {
                 Size idx = j * n_swvol_term + k;
 
-                RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
-                volData[j][k] = baseScenario_->get(key);
+                RiskFactorKey rf(RiskFactorKey::KeyType::SwaptionVolatility, key, idx);
+                volData[j][k] = baseScenario_->get(rf);
             }
         }
 
