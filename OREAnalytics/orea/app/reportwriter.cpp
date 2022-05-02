@@ -255,6 +255,20 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 fixingValue = ptrFloat->index()->fixing(fixingDate);
                                 if (fixingDate > asof)
                                     flowType = "InterestProjected";
+                                // for ON coupons the fixing value is the compounded / averaged rate, not the last
+                                // single ON fixing
+                                if (boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat) !=
+                                        nullptr ||
+                                    boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(ptrFloat) !=
+                                        nullptr) {
+                                    fixingValue = ptrFloat->rate();
+                                } else if (auto c = boost::dynamic_pointer_cast<
+                                               QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
+                                    fixingValue = c->underlying()->rate();
+                                } else if (auto c = boost::dynamic_pointer_cast<
+                                               QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
+                                    fixingValue = c->underlying()->rate();
+                                }
                             } else if (ptrInfl) {
                                 fixingDate = ptrInfl->fixingDate();
                                 fixingValue = ptrInfl->indexFixing();
