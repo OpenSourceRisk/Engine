@@ -52,7 +52,7 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     {MarketObject::FXSpot, "FXSpot", "FxSpots", {"FxSpot", "pair"}},
     {MarketObject::BaseCorrelation, "BaseCorrelation", "BaseCorrelations", {"BaseCorrelation", "name"}},
     {MarketObject::FXVol, "FXVol", "FxVolatilities", {"FxVolatility", "pair"}},
-    {MarketObject::SwaptionVol, "SwaptionVol", "SwaptionVolatilities", {"SwaptionVolatility", "currency"}},
+    {MarketObject::SwaptionVol, "SwaptionVol", "SwaptionVolatilities", {"SwaptionVolatility", "key"}},
     {MarketObject::YieldVol, "YieldVol", "YieldVolatilities", {"YieldVolatility", "name"}},
     {MarketObject::CapFloorVol, "CapFloorVol", "CapFloorVolatilities", {"CapFloorVolatility", "key"}},
     {MarketObject::CDSVol, "CDSVol", "CDSVolatilities", {"CDSVolatility", "name"}},
@@ -170,14 +170,15 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                         auto mp =
                             XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
                                                                      marketObjectData[i].xmlSingleName.second, false);
-			// deprecated attribute currency for capfloor vols
-			if(marketObjectData[i].obj == MarketObject::CapFloorVol) {
+			// deprecated attribute currency for capfloor vols and swaption vols
+                        if (marketObjectData[i].obj == MarketObject::CapFloorVol ||
+                            marketObjectData[i].obj == MarketObject::SwaptionVol) {
                             auto mp2 = XMLUtils::getChildrenAttributesAndValues(
                                 n, marketObjectData[i].xmlSingleName.first, "currency", false);
                             if (!mp2.empty()) {
                                 mp.insert(mp2.begin(), mp2.end());
-                                WLOG("TodaysMarketParameters: the attribute 'currency' is deprecated for "
-                                     "CapFloorVolatilities, use 'key' instead.");
+                                WLOG("TodaysMarketParameters: the attribute 'currency' is deprecated for '" +
+                                     marketObjectData[i].xmlName + "', use 'key' instead.");
                             }
                         }
                         Size nc = XMLUtils::getChildrenNodes(n, "").size();

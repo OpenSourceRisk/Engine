@@ -49,7 +49,7 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     vector<std::string> strikes = {"ATM", "ATM", "ATM"};
 
     // First instance
-    lgmData1->ccy() = "EUR";
+    lgmData1->qualifier() = "EUR";
 
     lgmData1->calibrationType() = parseCalibrationType("BOOTSTRAP");
     lgmData1->reversionType() = parseReversionType("HULLWHITE");
@@ -79,7 +79,7 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData1->scaling() = 1.0;
 
     // Second instance
-    lgmData2->ccy() = "USD";
+    lgmData2->qualifier() = "USD";
 
     lgmData2->calibrationType() = parseCalibrationType("BOOTSTRAP");
     lgmData2->reversionType() = parseReversionType("HULLWHITE");
@@ -104,7 +104,7 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData2->scaling() = 1.0;
 
     // Third instance
-    lgmData3->ccy() = "JPY";
+    lgmData3->qualifier() = "JPY";
 
     lgmData3->calibrationType() = parseCalibrationType("BOOTSTRAP");
     lgmData3->reversionType() = parseReversionType("HULLWHITE");

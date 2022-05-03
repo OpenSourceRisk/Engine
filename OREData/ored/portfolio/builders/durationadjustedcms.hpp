@@ -31,13 +31,13 @@
 namespace ore {
 namespace data {
 
-class DurationAdjustedCmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
+class DurationAdjustedCmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const string&> {
 public:
     DurationAdjustedCmsCouponPricerBuilder(const string& model, const string& engine)
         : CachingEngineBuilder(model, engine, {"DurationAdjustedCMS"}) {}
 
 protected:
-    string keyImpl(const Currency& ccy) override { return ccy.code(); }
+    string keyImpl(const string& key) override { return key; }
 };
 
 class LinearTsrDurationAdjustedCmsCouponPricerBuilder : public DurationAdjustedCmsCouponPricerBuilder {
@@ -46,7 +46,7 @@ public:
         : DurationAdjustedCmsCouponPricerBuilder("LinearTSR", "LinearTSRPricer") {}
 
 protected:
-    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+    boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& key) override;
 };
 
 } // namespace data

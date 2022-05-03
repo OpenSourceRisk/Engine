@@ -93,9 +93,8 @@ private:
 void CorrelationCurve::calibrateCMSSpreadCorrelations(
     const boost::shared_ptr<CorrelationCurveConfig>& config, Date asof, const vector<Handle<Quote>>& prices,
     vector<Handle<Quote>>& correlations, boost::shared_ptr<QuantExt::CorrelationTermStructure>& curve,
-    map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
-    map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-    map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
+    map<string, boost::shared_ptr<SwapIndex>>& swapIndices, map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+    map<string, boost::shared_ptr<GenericYieldVolCurve>>& swaptionVolCurves) {
 
     boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
     
@@ -195,7 +194,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                                    const CurveConfigurations& curveConfigs,
                                    map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
                                    map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-                                   map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
+                                   map<string, boost::shared_ptr<GenericYieldVolCurve>>& swaptionVolCurves) {
 
     try {
 

@@ -23,8 +23,8 @@
 #pragma once
 
 #include <ql/time/date.hpp>
-#include <ql/time/period.hpp>
 #include <ql/time/daycounter.hpp>
+#include <ql/time/period.hpp>
 
 namespace QuantExt {
 
@@ -37,5 +37,8 @@ QuantLib::Period implyIndexTerm(const QuantLib::Date& startDate, const QuantLib:
 /* For t >= 0 get the largest date d such that dc.yearFraction(refDate, d) <= t. If the condition
    dc.yearFraction(refDate, d+1) > t is not met, an exception is thrown. */
 QuantLib::Date lowerDate(const QuantLib::Real t, const QuantLib::Date& refDate, const QuantLib::DayCounter& dc);
+
+/* Find period such that the difference to length is < 1.0 / 365.25 and prefer unit years > months > days */
+QuantLib::Period tenorFromLength(const QuantLib::Real length);
 
 } // namespace QuantExt

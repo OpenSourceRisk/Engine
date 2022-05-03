@@ -829,13 +829,14 @@ public:
     SwaptionQuote() {}
     //! Constructor
     SwaptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period expiry,
-                  Period term, string dimension, Real strike = 0.0)
+                  Period term, string dimension, Real strike = 0.0, const std::string& quoteTag = std::string())
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SWAPTION), ccy_(ccy), expiry_(expiry),
-          term_(term), dimension_(dimension), strike_(strike) {}
+          term_(term), dimension_(dimension), strike_(strike), quoteTag_(quoteTag) {}
 
     //! Make a copy of the market datum
     boost::shared_ptr<MarketDatum> clone() override {
-        return boost::make_shared<SwaptionQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, term_, dimension_, strike_);
+        return boost::make_shared<SwaptionQuote>(quote_->value(), asofDate_, name_, quoteType_, ccy_, expiry_, term_,
+                                                 dimension_, strike_, quoteTag_);
     }
 
     //! \name Inspectors
@@ -845,6 +846,7 @@ public:
     const Period& term() const { return term_; }
     const string& dimension() const { return dimension_; }
     Real strike() { return strike_; }
+    const string& quoteTag() const { return quoteTag_; }
     //@}
 private:
     string ccy_;
@@ -852,6 +854,7 @@ private:
     Period term_;
     string dimension_;
     Real strike_;
+    string quoteTag_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);
@@ -871,8 +874,10 @@ class SwaptionShiftQuote : public MarketDatum {
 public:
     SwaptionShiftQuote() {}
     //! Constructor
-    SwaptionShiftQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period term)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SWAPTION), ccy_(ccy), term_(term) {
+    SwaptionShiftQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Period term,
+                       const std::string& quoteTag = std::string())
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::SWAPTION), ccy_(ccy), term_(term),
+          quoteTag_(quoteTag) {
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "quote type must be SHIFT for shift data");
     }
 
@@ -885,10 +890,12 @@ public:
     //@{
     const string& ccy() const { return ccy_; }
     const Period& term() const { return term_; }
+    const string& quoteTag() const { return quoteTag_; }
     //@}
 private:
     string ccy_;
     Period term_;
+    string quoteTag_;
     //! Serialization
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int version);

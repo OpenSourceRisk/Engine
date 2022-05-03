@@ -55,7 +55,7 @@ public:
     Handle<SwapIndex> swapIndex(const string& indexName,
                                 const string& configuration = Market::defaultConfiguration) const override;
     Handle<SwaptionVolatilityStructure>
-    swaptionVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const override;
+    swaptionVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
     const string shortSwapIndexBase(const string& ccy,
                                     const string& configuration = Market::defaultConfiguration) const override;
     const string swapIndexBase(const string& ccy,

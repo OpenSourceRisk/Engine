@@ -26,6 +26,8 @@
 #define quantext_analytic_lgm_swaption_engine_hpp
 
 #include <ql/instruments/swaption.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
 namespace QuantExt {
@@ -101,6 +103,9 @@ private:
     mutable Real H0_, D0_, zetaex_, S_m1, u_, w_;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
+    mutable std::vector<boost::shared_ptr<FixedRateCoupon>> fixedLeg_;
+    mutable std::vector<boost::shared_ptr<FloatingRateCoupon>> floatingLeg_;
+    mutable Real nominal_;
 };
 
 } // namespace QuantExt

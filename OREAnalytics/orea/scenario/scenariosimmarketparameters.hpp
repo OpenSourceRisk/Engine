@@ -84,7 +84,7 @@ public:
     bool simulateSwapVolATMOnly() const { return swapVolSimulateATMOnly_; }
     const vector<Period>& swapVolTerms(const string& key) const;
     const vector<Period>& swapVolExpiries(const string& key) const;
-    vector<string> swapVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::SwaptionVolatility); }
+    vector<string> swapVolKeys() const { return paramsLookup(RiskFactorKey::KeyType::SwaptionVolatility); }
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
     const vector<Real>& swapVolStrikeSpreads(const string& key) const;
 
@@ -243,7 +243,7 @@ public:
     void setSwapVolIsCube(const string& key, bool isCube);
     bool& simulateSwapVolATMOnly() { return swapVolSimulateATMOnly_; }
     void setSwapVolTerms(const string& key, const vector<Period>& p);
-    void setSwapVolCcys(vector<string> names);
+    void setSwapVolKeys(vector<string> names);
     void setSwapVolExpiries(const string& key, const vector<Period>& p);
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& swapVolDecayMode() { return swapVolDecayMode_; }

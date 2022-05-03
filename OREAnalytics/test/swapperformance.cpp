@@ -290,7 +290,7 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     parameters->setSimulateSwapVols(false);
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
-    parameters->swapVolCcys() = ccys;
+    parameters->swapVolKeys() = ccys;
     parameters->swapVolDecayMode() = "ForwardVariance";
 
     parameters->setFxVolExpiries("",

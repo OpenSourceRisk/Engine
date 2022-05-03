@@ -107,6 +107,9 @@ bool parseBool(const string& s);
 */
 QuantLib::Calendar parseCalendar(const string& s, const string& newName = "");
 
+//! return true if s represents a period of the form [0-9][D|W|M|Y] (i.e. 1Y6M would return false)
+bool isOnePeriod(const string& s);
+
 //! Convert text to QuantLib::Period
 /*!
   \ingroup utilities

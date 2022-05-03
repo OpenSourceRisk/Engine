@@ -46,7 +46,7 @@ class ReferenceDataManager;
 class YieldCurve;
 class FXSpot;
 class FXVolCurve;
-class SwaptionVolCurve;
+class GenericYieldVolCurve;
 class YieldVolCurve;
 class CapFloorVolCurve;
 class DefaultCurve;
@@ -147,8 +147,7 @@ private:
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
     mutable map<string, boost::shared_ptr<FXSpot>> requiredFxSpots_;
     mutable map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
-    mutable map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves_;
-    mutable map<string, boost::shared_ptr<YieldVolCurve>> requiredYieldVolCurves_;
+    mutable map<string, boost::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;
     mutable map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves_;
     mutable map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves_;
     mutable map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves_;

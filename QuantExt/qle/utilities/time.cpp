@@ -91,4 +91,12 @@ QuantLib::Date lowerDate(const Real t, const QuantLib::Date& refDate, const Quan
     QL_FAIL("lowerDate(" << t << "," << refDate << "," << dc.name() << ") could not be computed.");
 }
 
+QuantLib::Period tenorFromLength(const QuantLib::Real length) {
+    if (std::abs(length - std::round(length)) < 1.0 / 365.25)
+        return std::lround(length) * Years;
+    if (std::abs(length * 12.0 - std::round(length * 12.0)) < 12.0 / 365.25)
+        return std::lround(length * 12.0) * Months;
+    return std::lround(length * 365.25) * Days;
+}
+
 } // namespace QuantExt

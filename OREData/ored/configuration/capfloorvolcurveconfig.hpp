@@ -64,7 +64,7 @@ public:
 
     //! Detailled constructor for proxy config
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
-                                  const std::string proxySourceCurveId_, const std::string& proxySourceIndex,
+                                  const std::string& proxySourceCurveId, const std::string& proxySourceIndex,
                                   const std::string& proxyTargetIndex,
                                   const QuantLib::Period& proxySourceRateComputationPeriod = 0 * Days,
                                   const QuantLib::Period& proxyTargetRateComputationPeriod = 0 * Days);

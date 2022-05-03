@@ -29,6 +29,7 @@
 #include <ql/settings.hpp>
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
 using QuantExt::SavedObservableSettings;
 using QuantLib::IndexManager;
@@ -57,6 +58,8 @@ public:
         IndexManager::instance().clearHistories();
 	// Clear conventions that have been set
         ore::data::InstrumentConventions::instance().conventions() = boost::make_shared<ore::data::Conventions>();
+	// Clear contents of the index name translator
+	ore::data::IndexNameTranslator::instance().clear();
     }
 
     bool updatesEnabled() { return savedObservableSettings.updatesEnabled(); }
