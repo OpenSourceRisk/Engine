@@ -448,7 +448,6 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
         string ccy = currencies_[i];
 	std::string ccyKey;
 	for(auto const& d: irDataMap) {
-	    std::cout << "found d.second = " << d.second->qualifier() << " has ccy " << d.second->ccy() << " for look up ccy " << ccy << std::endl;
 	    if(d.second->ccy() == ccy) {
                 QL_REQUIRE(ccyKey.empty(), "CrossAssetModelData: duplicate ir config for ccy " << ccy);
                 ccyKey = d.first;
