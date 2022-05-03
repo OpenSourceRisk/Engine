@@ -775,7 +775,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
-    if (paymentLag_ != Null<PaymentLag>())
+    if (paymentLag_ != 0)
         XMLUtils::addChild(doc, node, "PaymentLag", to_string(paymentLag_));
     if (!paymentCalendar_.empty())
         XMLUtils::addChild(doc, node, "PaymentCalendar", paymentCalendar_);
