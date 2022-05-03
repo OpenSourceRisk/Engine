@@ -740,7 +740,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = wrapper->dayCounter();
 			    
                             if (useSpreadedTermStructures_) {
-                                bool stickyAbsMoney = true;
+                                bool stickyAbsMoney = false;
                                 boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 boost::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
                                 if (stickyAbsMoney) {
@@ -1129,7 +1129,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-                                bool stickyMoney = true;
+                                bool stickyMoney = false;
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
                                 if (stickyMoney) {
