@@ -20,7 +20,7 @@
 
 #include <boost/make_shared.hpp>
 
-#include <ql/errors.hpp>
+#include <ql/errors.hpp> 
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/vanillaoption.hpp>
