@@ -169,25 +169,6 @@ std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type) {
     return oss;
 }
 
-// TODO: use fromXML here, filtering is not done during parsing.
-void LgmData::fromFile(const std::string& fileName, const std::string& qualifier) {
-    LOG("load model configuration from " << fileName);
-    clear();
-    XMLDocument doc(fileName);
-    XMLNode* root = doc.getFirstNode("Models");
-    Size count = 0;
-    for (XMLNode* child = XMLUtils::getChildNode(root, "LGM"); child; child = XMLUtils::getNextSibling(child, "LGM")) {
-        std::string childCcy = XMLUtils::getAttribute(child, "qualifier");
-        if (qualifier == childCcy) {
-            fromXML(child);
-            count++;
-            break;
-        }
-    }
-    QL_REQUIRE(count == 1, "LGM configuration not found for qualifier '" << qualifier << "'");
-    LOG("load model configuration from " << fileName << " done.");
-}
-
 void LgmData::clear() {
 
     optionExpiries_.clear();

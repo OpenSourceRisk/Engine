@@ -357,12 +357,14 @@ template <class Archive> void SwaptionQuote::serialize(Archive& ar, const unsign
     ar& term_;
     ar& dimension_;
     ar& strike_;
+    ar& quoteTag_;
 }
 
 template <class Archive> void SwaptionShiftQuote::serialize(Archive& ar, const unsigned int version) {
     ar& boost::serialization::base_object<MarketDatum>(*this);
     ar& ccy_;
     ar& term_;
+    ar& quoteTag_;
 }
 
 template <class Archive> void BondOptionQuote::serialize(Archive& ar, const unsigned int version) {

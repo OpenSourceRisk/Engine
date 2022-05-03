@@ -140,9 +140,9 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         QL_REQUIRE(tokens.size() == 3, "Unexpected number"
                                        " of tokens in swaption vol curve spec "
                                            << s);
-        const string& ccy = tokens[1];
+        const string& key = tokens[1];
         const string& curveConfigID = tokens[2];
-        return boost::make_shared<SwaptionVolatilityCurveSpec>(ccy, curveConfigID);
+        return boost::make_shared<SwaptionVolatilityCurveSpec>(key, curveConfigID);
     }
 
     case CurveSpec::CurveType::YieldVolatility: {

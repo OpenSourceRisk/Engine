@@ -74,10 +74,10 @@ public:
 
     //! Swaptions
     Handle<QuantLib::SwaptionVolatilityStructure>
-    swaptionVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const override;
-    const string shortSwapIndexBase(const string& ccy,
+    swaptionVol(const string& key, const string& configuration = Market::defaultConfiguration) const override;
+    const string shortSwapIndexBase(const string& key,
                                     const string& configuration = Market::defaultConfiguration) const override;
-    const string swapIndexBase(const string& ccy, const string& configuration = Market::defaultConfiguration) const override;
+    const string swapIndexBase(const string& key, const string& configuration = Market::defaultConfiguration) const override;
 
     //! Yield volatility
     Handle<QuantLib::SwaptionVolatilityStructure>
@@ -232,6 +232,10 @@ protected:
 
     // set of term structure pointers for refresh (per configuration)
     map<string, std::set<boost::shared_ptr<TermStructure>>> refreshTs_;
+
+private:
+    pair<string, string> swapIndexBases(const string& key,
+                                        const string& configuration = Market::defaultConfiguration) const;
 };
 
 } // namespace data

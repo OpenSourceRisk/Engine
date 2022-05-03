@@ -325,7 +325,8 @@
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
     </xs:sequence>
-    <xs:attribute type="currencyCode" name="ccy" use="required"/>
+    <xs:attribute type="xs:string" name="key"/>
+    <xs:attribute type="currencyCode" name="ccy"/> <!-- deprecated -->
   </xs:complexType>
 
   <xs:complexType name="yieldvolatility">

@@ -4710,6 +4710,7 @@ Listing \ref{lst:swaptionvol_configuration} shows an example of a Swaption volat
     <SmileOptionTenors>6M,1Y,10Y</SmileOptionTenors>
     <SmileSwapTenors>2Y,5Y</SmileSwapTenors>
     <SmileSpreads>-0.02,-0.01,0.01,0.02</SmileSpreads>
+    <QuoteTag/>
   </SwaptionVolatility>
   ...
 </SwaptionVolatilities>
@@ -4745,6 +4746,10 @@ In the case of {\tt ShiftedLognormal}, a matrix of shifts (by option and swap te
 	\item SmileSwapTenors: Underlying Swap term, in period form, where smile section data is to be taken into account
 	\item SmileSpreads: Strikes in smile direction expressed as strike spreads, relative to the ATM strike at the expiry/term point of the ATM matrix
 	\end{itemize}
+\item QuoteTag [Optional]: If non-empty, a tag will be included in the market datum labels. This can be used to set up
+  underlying specific volatility date. For example, if the quote tag is set to EUR-EURIBOR-3M, the market datum labels
+  will be \verb+SWAPTION/RATE\_LNVOL/EUR/EUR-EURIBOR-3M/5Y/10Y/ATM+ instead of
+  \verb+SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/ATM+.
 \end{itemize}
 
 \include{curve_configurations/capfloorvolatility}

@@ -203,17 +203,17 @@ public:
     //! Default constructor
     SwaptionVolatilityCurveSpec() {}
     //! Detailed constructor
-    SwaptionVolatilityCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
+    SwaptionVolatilityCurveSpec(const string& key, const string& curveConfigID) : CurveSpec(curveConfigID), key_(key) {}
     //@}
 
     //! \name Inspectors
     //@{
     CurveType baseType() const override { return CurveType::SwaptionVolatility; }
-    const string& ccy() const { return ccy_; }
-    string subName() const override { return ccy() + "/" + curveConfigID(); }
+    const string& key() const { return key_; }
+    string subName() const override { return key() + "/" + curveConfigID(); }
     //@}
 private:
-    string ccy_;
+    string key_;
 };
 
 //! Yield volatility curve description

@@ -38,12 +38,12 @@ using namespace ore::data;
 /*! The coupon pricers are cached by currency
  \ingroup builders
  */
-class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
+class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const string&> {
 public:
     CmsCouponPricerBuilder(const string& model, const string& engine) : CachingEngineBuilder(model, engine, {"CMS"}) {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
+    virtual string keyImpl(const string& key) override { return key; }
 };
 
 class AnalyticHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
@@ -51,7 +51,7 @@ public:
     AnalyticHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Analytic") {}
 
 protected:
-    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& key) override;
 };
 
 class NumericalHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
@@ -59,7 +59,7 @@ public:
     NumericalHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Numerical") {}
 
 protected:
-    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& key) override;
 };
 
 class LinearTSRCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
@@ -67,7 +67,7 @@ public:
     LinearTSRCmsCouponPricerBuilder() : CmsCouponPricerBuilder("LinearTSR", "LinearTSRPricer") {}
 
 protected:
-    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const string& key) override;
 };
 } // namespace data
 } // namespace ore

@@ -689,7 +689,8 @@
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
-                    <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                    <xs:attribute name="key" type="xs:string" use="optional"/>
+                    <xs:attribute name="ccy" type="xs:string" use="optional"/> <!-- deprecated -->
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>
@@ -698,7 +699,8 @@
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
-                    <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                    <xs:attribute name="key" type="xs:string" use="optional"/>
+                    <xs:attribute name="ccy" type="xs:string" use="optional"/> <!-- deprecated -->
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>
@@ -708,7 +710,8 @@
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:string">
-                    <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                    <xs:attribute name="key" type="xs:string" use="optional"/>
+                    <xs:attribute name="ccy" type="xs:string" use="optional"/> <!-- deprecated -->
                   </xs:extension>
                 </xs:simpleContent>
               </xs:complexType>
@@ -720,7 +723,8 @@
                     <xs:complexType>
                       <xs:simpleContent>
                         <xs:extension base="xs:string">
-                          <xs:attribute name="ccy" type="xs:string" use="optional"/>
+			  <xs:attribute name="key" type="xs:string" use="optional"/>
+			  <xs:attribute name="ccy" type="xs:string" use="optional"/> <!-- deprecated -->
                         </xs:extension>
                       </xs:simpleContent>
                     </xs:complexType>

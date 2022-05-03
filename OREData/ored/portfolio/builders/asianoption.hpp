@@ -88,13 +88,13 @@
      virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
-         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
-         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
-         bool controlVariate = ore::data::parseBool(engineParameter("ControlVariate", "", false, "true"));
-         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
-         Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", "", false, "0"));
-         Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", "", false, "0"));
-         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", "", false, "123456"));
+         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", {}, false, "true"));
+         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", {}, false, "true"));
+         bool controlVariate = ore::data::parseBool(engineParameter("ControlVariate", {}, false, "true"));
+         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", {}, false, "0"));
+         Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", {}, false, "0"));
+         Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", {}, false, "0"));
+         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", {}, false, "123456"));
 
          // Check if values defaulted to 0, if so replace by Null<T>().
          if (requiredSamples == 0)
@@ -131,12 +131,12 @@
      virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
-         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
-         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
-         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
-         Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", "", false, "0"));
-         Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", "", false, "0"));
-         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", "", false, "123456"));
+         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", {}, false, "true"));
+         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", {}, false, "true"));
+         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", {}, false, "0"));
+         Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", {}, false, "0"));
+         Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", {}, false, "0"));
+         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", {}, false, "123456"));
 
          // Check if values defaulted to 0, if so replace by Null<T>().
          if (requiredSamples == 0)
@@ -172,12 +172,12 @@
      virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
                                                          const AssetClass& assetClassUnderlying,
                                                          const Date& expiryDate) override {
-         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", "", false, "true"));
-         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", "", false, "true"));
-         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", "", false, "0"));
-         Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", "", false, "0"));
-         Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", "", false, "0"));
-         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", "", false, "123456"));
+         bool brownianBridge = ore::data::parseBool(engineParameter("BrownianBridge", {}, false, "true"));
+         bool antitheticVariate = ore::data::parseBool(engineParameter("AntitheticVariate", {}, false, "true"));
+         Size requiredSamples = ore::data::parseInteger(engineParameter("RequiredSamples", {}, false, "0"));
+         Real requiredTolerance = ore::data::parseReal(engineParameter("RequiredTolerance", {}, false, "0"));
+         Size maxSamples = ore::data::parseInteger(engineParameter("MaxSamples", {}, false, "0"));
+         BigNatural seed = ore::data::parseInteger(engineParameter("Seed", {}, false, "123456"));
 
          // Check if values defaulted to 0, if so replace by Null<T>().
          if (requiredSamples == 0)

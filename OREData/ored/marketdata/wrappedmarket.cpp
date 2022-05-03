@@ -48,8 +48,8 @@ Handle<SwapIndex> WrappedMarket::swapIndex(const string& indexName, const string
     return market_->swapIndex(indexName, configuration);
 }
 
-Handle<SwaptionVolatilityStructure> WrappedMarket::swaptionVol(const string& ccy, const string& configuration) const {
-    return market_->swaptionVol(ccy, configuration);
+Handle<SwaptionVolatilityStructure> WrappedMarket::swaptionVol(const string& key, const string& configuration) const {
+    return market_->swaptionVol(key, configuration);
 }
 
 const string WrappedMarket::shortSwapIndexBase(const string& ccy, const string& configuration) const {

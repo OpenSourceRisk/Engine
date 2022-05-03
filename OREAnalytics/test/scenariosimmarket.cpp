@@ -72,7 +72,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
 
     parameters->setSwapVolTerms("", {6 * Months, 1 * Years});
     parameters->setSwapVolExpiries("", {1 * Years, 2 * Years});
-    parameters->setSwapVolCcys({"EUR", "USD"});
+    parameters->setSwapVolKeys({"EUR", "USD"});
     parameters->swapVolDecayMode() = "ForwardVariance";
 
     parameters->setDefaultNames({"dc2"});

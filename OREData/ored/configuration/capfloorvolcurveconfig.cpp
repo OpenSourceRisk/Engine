@@ -84,7 +84,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 }
 
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
-    const std::string& curveID, const std::string& curveDescription, const std::string proxySourceCurveId,
+    const std::string& curveID, const std::string& curveDescription, const std::string& proxySourceCurveId,
     const std::string& proxySourceIndex, const std::string& proxyTargetIndex,
     const QuantLib::Period& proxySourceRateComputationPeriod, const QuantLib::Period& proxyTargetRateComputationPeriod)
     : CurveConfig(curveID, curveDescription), proxySourceCurveId_(proxySourceCurveId),

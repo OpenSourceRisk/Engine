@@ -139,7 +139,6 @@ public:
 
     //! \name Serialisation
     //@{
-    void fromFile(const std::string& fileName, const std::string& ccy = "");
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
