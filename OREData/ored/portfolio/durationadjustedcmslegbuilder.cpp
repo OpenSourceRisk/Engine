@@ -61,7 +61,7 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
                                      .withGearings(gearings)
                                      .withPaymentDayCounter(dc)
                                      .withPaymentAdjustment(bdc)
-                                     .withPaymentLag(data.paymentLag().length())
+                                     .withPaymentLag(data.paymentLag())
                                      .withFixingDays(fixingDays)
                                      .inArrears(cmsData->isInArrears());
 

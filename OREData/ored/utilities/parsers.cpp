@@ -988,13 +988,14 @@ Month parseMonth(const string& s) {
 }
 
 PaymentLag parsePaymentLag(const string& s) {   
-    PaymentLag pl;
-    if (!tryParse<Period>(s, pl, parsePeriod)) {
-        Natural n = 0;
-        tryParse<Natural>(s, n, parseInteger);
-        pl = Period(n, Days);
+    Natural pl = 0;
+    if (!tryParse<Natural>(s, pl, parseInteger)) {
+        Period p;
+        if (tryParse<Period>(s, p, parsePeriod)) {
+            QL_REQUIRE(p.units() == Days, "parsePaymentLag: PaymentLag must be given in Days");
+            pl = p.length();
+        }
     }
-    QL_REQUIRE(pl.units() == Days, "parsePaymentLag: PaymentLag must be given in Days");
     return pl;
 }
 

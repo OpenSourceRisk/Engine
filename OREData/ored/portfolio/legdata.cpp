@@ -775,8 +775,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
-    if (paymentLag_ != Period())
-        XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+    if (paymentLag_ != Null<PaymentLag>())
+        XMLUtils::addChild(doc, node, "PaymentLag", to_string(paymentLag_));
     if (!paymentCalendar_.empty())
         XMLUtils::addChild(doc, node, "PaymentCalendar", paymentCalendar_);
     if (dayCounter_ != "")
@@ -871,7 +871,7 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
                   .withNotionals(notionals)
                   .withCouponRates(rates, dc)
                   .withPaymentAdjustment(bdc)
-                  .withPaymentLag(paymentLag.length())
+                  .withPaymentLag(paymentLag)
                   .withPaymentCalendar(paymentCalendar);
     return leg;
 }
@@ -1035,7 +1035,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                           .withFixingDays(fixingDays)
                           .inArrears(isInArrears)
                           .withGearings(gearings)
-                          .withPaymentLag(data.paymentLag().length());
+                          .withPaymentLag(data.paymentLag());
 
     // If no caps or floors or in arrears fixing, return the leg
     if (!hasCapsFloors && !isInArrears)
@@ -1132,7 +1132,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .withGearings(gearings)
                 .withPaymentDayCounter(dc)
                 .withPaymentAdjustment(bdc)
-                .withPaymentLag(paymentLag.length())
+                .withPaymentLag(paymentLag)
                 .withInArrears(isInArrears)
                 .withLastRecentPeriod(floatData->lastRecentPeriod())
                 .withLastRecentPeriodCalendar(floatData->lastRecentPeriodCalendar().empty()
@@ -1159,7 +1159,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                       .withPaymentDayCounter(dc)
                       .withPaymentAdjustment(bdc)
                       .withPaymentCalendar(paymentCalendar)
-                      .withPaymentLag(paymentLag.length())
+                      .withPaymentLag(paymentLag)
                       .withGearings(gearings)
                       .withInArrears(isInArrears)
                       .withLastRecentPeriod(floatData->lastRecentPeriod())
@@ -1951,7 +1951,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(paymentCalendar)
-                  .withPaymentLag(paymentLag.length())
+                  .withPaymentLag(paymentLag)
                   .withReturnType(eqLegData->returnType())
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)

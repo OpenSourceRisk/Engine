@@ -28,7 +28,7 @@
 namespace ore {
 namespace data {
 
-typedef QuantLib::Period PaymentLag;
+typedef QuantLib::Natural PaymentLag;
 
 } // namespace data
 } // namespace ore
