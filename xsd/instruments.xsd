@@ -600,7 +600,7 @@
       <xs:element type="legType" name="LegType"/>
       <xs:element type="extendedCurrencyCode" name="Currency"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
-      <xs:element type="xs:integer" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0"/>
       <xs:element name="Amortizations" minOccurs="0" maxOccurs="1">
@@ -656,7 +656,7 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="dayCounter" name="DayCounter"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
-      <xs:element type="xs:integer" name="PaymentLag" minOccurs="0"/>
+      <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
       <xs:element name="Notionals">
         <xs:complexType>
@@ -775,7 +775,7 @@
       <xs:element name="Rules" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:all>
-            <xs:element type="xs:string" name="PaymentLag" maxOccurs="1" minOccurs="0"/>
+            <xs:element type="paymentLag" name="PaymentLag" maxOccurs="1" minOccurs="0"/>
             <xs:element type="calendar" name="PaymentCalendar" maxOccurs="1" minOccurs="0"/>
             <xs:element type="businessDayConvention" name="PaymentConvention" maxOccurs="1" minOccurs="0"/>
           </xs:all>
@@ -1043,5 +1043,4 @@
   <xs:element name="levelGroup" abstract="true"/>
   <xs:element type="xs:string" name="Level" substitutionGroup="levelGroup"/>
   <xs:element type="levelData" name="LevelData" substitutionGroup="levelGroup"/>
-
 </xs:schema>

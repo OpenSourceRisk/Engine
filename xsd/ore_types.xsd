@@ -20,6 +20,20 @@
       <xs:pattern value="(\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01]))?"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="period">
+    <!-- period can be 1D, 5M, 10w, 20Y etc -->
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(\d*(d|D|m|M|y|Y))?"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="paymentLag">
+    <!-- paymentLag can be either integer or a period 1D, 5M, 10w, 20Y etc -->
+    <xs:restriction base="xs:string">
+      <xs:pattern value="(\d|(\d*(d|D|m|M|y|Y)))?"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="indexNameType">
     <!-- Index name is of form CCY-NAME or CCY-NAME-TENOR max length is EUR-EURIBOR-12M or FX-SOURCE-CCY1-CCY2 -->
