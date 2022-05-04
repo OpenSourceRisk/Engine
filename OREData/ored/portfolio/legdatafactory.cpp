@@ -25,6 +25,7 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = map_.find(legType);
     if (it == map_.end())
         return nullptr;
@@ -32,6 +33,7 @@ boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType
 }
 
 void LegDataFactory::addBuilder(const string& legType, function<boost::shared_ptr<LegAdditionalData>()> builder) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     map_[legType] = builder;
 }
 
