@@ -72,8 +72,8 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
 
     // initialise some pointers
     conventions_ = boost::make_shared<Conventions>();
-    InstrumentConventions::instance().conventions() = conventions_;
-    
+    InstrumentConventions::instance().setConventions(conventions_);
+
     marketParameters_ = boost::make_shared<TodaysMarketParameters>();
     curveConfigs_ = boost::make_shared<CurveConfigurations>();
 

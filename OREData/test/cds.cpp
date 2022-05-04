@@ -208,8 +208,8 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
 
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.conventions)));
-    InstrumentConventions::instance().conventions() = conventions;
-    
+    InstrumentConventions::instance().setConventions(conventions);
+
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/" + tmf.curveConfig)));
 
