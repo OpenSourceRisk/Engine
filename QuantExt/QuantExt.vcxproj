@@ -769,6 +769,7 @@
     <ClInclude Include="qle\quantext.hpp" />
     <ClInclude Include="qle\termstructures\adjusteddefaultcurve.hpp" />
     <ClInclude Include="qle\termstructures\aposurface.hpp" />
+    <ClInclude Include="qle\termstructures\atmadjustedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\averagefuturepricehelper.hpp" />
     <ClInclude Include="qle\termstructures\averageoffpeakpowerhelper.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
@@ -852,6 +853,7 @@
     <ClInclude Include="qle\termstructures\pricetermstructure.hpp" />
     <ClInclude Include="qle\termstructures\probabilitytraits.hpp" />
     <ClInclude Include="qle\termstructures\proxyoptionletvolatility.hpp" />
+    <ClInclude Include="qle\termstructures\proxyswaptionvolatility.hpp" />
     <ClInclude Include="qle\termstructures\spreadedblackvolatilitycurve.hpp" />
     <ClInclude Include="qle\termstructures\spreadedblackvolatilitysurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\spreadedcorrelationcurve.hpp" />
@@ -1138,6 +1140,7 @@
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp" />
     <ClCompile Include="qle\termstructures\proxyoptionletvolatility.cpp" />
+    <ClCompile Include="qle\termstructures\proxyswaptionvolatility.cpp" />
     <ClCompile Include="qle\termstructures\spreadedblackvolatilitycurve.cpp" />
     <ClCompile Include="qle\termstructures\spreadedblackvolatilitysurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\spreadedcorrelationcurve.cpp" />
