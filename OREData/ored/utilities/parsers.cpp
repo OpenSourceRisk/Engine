@@ -695,18 +695,23 @@ Currency parseCurrency(const string& s, const Currency& currency) {
         {"XBT", BTCCurrency()}, {"BTC", BTCCurrency()}, {"ETH", ETHCurrency()}, {"ETC", ETCCurrency()},
         {"BCH", BCHCurrency()}, {"XRP", XRPCurrency()}, {"LTC", LTCCurrency()} 
     };
+    static boost::shared_mutex mutex;
 
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        if (!currency.empty()) {
-            LOG("Adding external currency " << currency.code() << " to the parser map");
-            m[s] = currency;
-            return currency;
-        } else {
-            QL_FAIL("Currency \"" << s << "\" not recognized");
+    {
+        boost::shared_lock<boost::shared_mutex> lock(mutex);
+        auto it = m.find(s);
+        if (it != m.end()) {
+            return it->second;
         }
+    }
+
+    QL_REQUIRE(!currency.empty(), "Currency \"" << s << "\" not recognized");
+
+    {
+	boost::unique_lock<boost::shared_mutex> lock(mutex);
+	LOG("Adding external currency " << currency.code() << " to the parser map");
+	m[s] = currency;
+	return currency;
     }
 }
 
