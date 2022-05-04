@@ -43,7 +43,7 @@ void IndexNameTranslator::add(const std::string& qlName, const std::string& oreN
 }
 
 void IndexNameTranslator::clear() {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     data_.clear();
 }
 
