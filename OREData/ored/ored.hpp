@@ -192,6 +192,7 @@
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/portfolio/tradestrike.hpp>
+#include <ored/portfolio/types.hpp>
 #include <ored/portfolio/underlying.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/report/csvreport.hpp>
