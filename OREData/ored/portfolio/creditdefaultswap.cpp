@@ -127,7 +127,11 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     legPayers_ = {legData.isPayer()};
     notionalCurrency_ = legData.currency();
 
-    additionalData_["startDate"] = to_string(swap_.protectionStart());
+    if (swap_.protectionStart() != Date())
+        additionalData_["startDate"] = to_string(swap_.protectionStart());
+    else
+        additionalData_["startDate"] = to_string(schedule.dates().front());
+      
 }
 
 QuantLib::Real CreditDefaultSwap::notional() const {

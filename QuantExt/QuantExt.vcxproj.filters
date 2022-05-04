@@ -1231,6 +1231,12 @@
     <ClInclude Include="qle\termstructures\proxyoptionletvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\atmadjustedsmilesection.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\proxyswaptionvolatility.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -2100,6 +2106,9 @@
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\proxyoptionletvolatility.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\proxyswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
