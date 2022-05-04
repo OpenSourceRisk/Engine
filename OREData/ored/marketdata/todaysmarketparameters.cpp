@@ -82,7 +82,7 @@ std::ostream& operator<<(std::ostream& out, const MarketObject& o) {
 }
 
 std::set<MarketObject> getMarketObjectTypes() {
-    static std::set<MarketObject> result;
+    thread_local static std::set<MarketObject> result;
     if (result.empty()) {
         for (auto const& o : marketObjectData) {
             result.insert(o.obj);
