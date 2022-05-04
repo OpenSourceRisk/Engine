@@ -490,56 +490,72 @@ Calendar parseCalendar(const string& s, const string& newName) {
         {"UNMAPPED", WeekendsOnly()},
         {"NullCalendar", NullCalendar()},
         {"", NullCalendar()}};
+
     static bool isInitialised = false;
-    if (!isInitialised) {
-        // extend the static map to include quantlib map names
-        // allCals should be set, but it doesn't know how to order calendar
-        vector<Calendar> allCals;
-        for (auto it : m)
-            allCals.push_back(it.second);
-        for (auto cal : allCals)
-            m[cal.name()] = cal;
-        isInitialised = true;
-    }
+    static boost::shared_mutex mutex;
 
-    auto it = m.find(s);
-    if (it != m.end()) {
-        Calendar cal = it->second;
-        if (newName != "") {
-            Calendar newCal = AmendedCalendar(cal, newName);
-            m[newName] = newCal;
-            return newCal;
-        } else {
-            return cal;
-        }
-    } else {
-        // Try to split them up
-        vector<string> calendarNames;
-        split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
-        // if we have only one token, we won't make progress and exit here to avoid an infinite loop by calling
-        // parseCalendar() recursively below
-        QL_REQUIRE(calendarNames.size() > 1, "Cannot convert \"" << s << "\" to calendar");
-        // now remove any leading strings indicating a joint calendar
-        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
-                            calendarNames.end());
-        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
-                            calendarNames.end());
-        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
-        // Populate a vector of calendars.
-        vector<Calendar> calendars;
-        for (Size i = 0; i < calendarNames.size(); i++) {
-            boost::trim(calendarNames[i]);
-            try {
-                calendars.push_back(parseCalendar(calendarNames[i]));
-            } catch (std::exception& e) {
-                QL_FAIL("Cannot convert \"" << s << "\" to Calendar [exception:" << e.what() << "]");
-            } catch (...) {
-                QL_FAIL("Cannot convert \"" << s << "\" to Calendar [unhandled exception]");
+    {
+	boost::shared_lock<boost::shared_mutex> lock(mutex);
+	if(isInitialised && newName.empty()) {
+	    auto it = m.find(s);
+	    if(it != m.end())
+		return it->second;
+	    else {
+                // Try to split them up
+                vector<string> calendarNames;
+                split(calendarNames, s,
+                      boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+                // if we have only one token, we won't make progress and exit here to avoid an infinite loop by calling
+                // parseCalendar() recursively below
+                QL_REQUIRE(calendarNames.size() > 1, "Cannot convert \"" << s << "\" to calendar");
+                // now remove any leading strings indicating a joint calendar
+                calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
+                                    calendarNames.end());
+                calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
+                                    calendarNames.end());
+                calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
+                // Populate a vector of calendars.
+                vector<Calendar> calendars;
+                for (Size i = 0; i < calendarNames.size(); i++) {
+                    boost::trim(calendarNames[i]);
+                    try {
+                        calendars.push_back(parseCalendar(calendarNames[i]));
+                    } catch (std::exception& e) {
+                        QL_FAIL("Cannot convert \"" << s << "\" to Calendar [exception:" << e.what() << "]");
+                    } catch (...) {
+                        QL_FAIL("Cannot convert \"" << s << "\" to Calendar [unhandled exception]");
+                    }
+                }
+                return LargeJointCalendar(calendars);
             }
+	}
+    }
+
+    {
+        boost::unique_lock<boost::shared_mutex> lock(mutex);
+
+        if (!isInitialised) {
+                // extend the static map to include quantlib map names
+                // allCals should be set, but it doesn't know how to order calendar
+                vector<Calendar> allCals;
+                for (auto it : m)
+                    allCals.push_back(it.second);
+                for (auto cal : allCals)
+                    m[cal.name()] = cal;
+                isInitialised = true;
         }
 
-        return LargeJointCalendar(calendars);
+	if(!newName.empty()) {
+	    auto it = m.find(s);
+	    if(it != m.end()) {
+		Calendar newCal = AmendedCalendar(it->second, newName);
+		m[newName] = newCal;
+		return newCal;
+	    }
+	}
     }
+
+    return parseCalendar(s);
 }
 
 bool isOnePeriod(const string& s) {
