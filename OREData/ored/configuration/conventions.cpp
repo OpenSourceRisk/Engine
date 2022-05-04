@@ -2296,15 +2296,20 @@ XMLNode* Conventions::toXML(XMLDocument& doc) {
     return conventionsNode;
 }
 
-void Conventions::clear() { data_.clear(); }
+void Conventions::clear() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    data_.clear();
+}
 
 boost::shared_ptr<Convention> Conventions::get(const string& id) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = data_.find(id);
     QL_REQUIRE(it != data_.end(), "Cannot find conventions for id " << id);
     return it->second;
 }
 
 boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, const string& ccy2) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto c : data_) {
         auto fxCon = boost::dynamic_pointer_cast<FXConvention>(c.second);
         if (fxCon) {
@@ -2318,6 +2323,7 @@ boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, c
 }
 
 pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, const Convention::Type& type) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto c = data_.find(id);
     if (c == data_.end() || c->second->type() != type)
         return make_pair(false, nullptr);
@@ -2326,6 +2332,7 @@ pair<bool, boost::shared_ptr<Convention>> Conventions::get(const string& id, con
 }
 
 std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type& type) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     std::set<boost::shared_ptr<Convention>> result;
     for (auto const& d : data_) {
         if (d.second->type() == type)
@@ -2334,13 +2341,17 @@ std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type&
     return result;
 }
 
-bool Conventions::has(const string& id) const { return data_.count(id) == 1; }
+bool Conventions::has(const string& id) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    return data_.count(id) == 1;
+}
 
 bool Conventions::has(const std::string& id, const Convention::Type& type) const {
     return get(id, type).first;
 }
 
 void Conventions::add(const boost::shared_ptr<Convention>& convention) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     const string& id = convention->id();
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);
     data_[id] = convention;

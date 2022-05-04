@@ -34,7 +34,8 @@
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/commodityindex.hpp>
-#include <boost/enable_shared_from_this.hpp>
+
+#include <boost/thread/shared_mutex.hpp>
 
 namespace ore {
 namespace data {
@@ -104,7 +105,7 @@ protected:
 /*!
   \ingroup market
 */
-class Conventions : public XMLSerializable, public boost::enable_shared_from_this<Conventions> {
+class Conventions : public XMLSerializable {
 public:
     //! Default constructor
     Conventions() {}
@@ -146,24 +147,32 @@ public:
 
 private:
     map<string, boost::shared_ptr<Convention>> data_;
+    mutable boost::shared_mutex mutex_;
 };
 
 //! Singleton to hold conventions
 //
-class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions> {
-    friend class QuantLib::Singleton<InstrumentConventions>;
+class InstrumentConventions : public QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>> {
+    friend class QuantLib::Singleton<InstrumentConventions, std::integral_constant<bool, true>>;
 
 private:
     // may be empty but never uninitialised
     InstrumentConventions() : conventions_(boost::make_shared<ore::data::Conventions>()) {}
 
     boost::shared_ptr<ore::data::Conventions> conventions_;
+    mutable boost::shared_mutex mutex_;
 
 public:
-    const boost::shared_ptr<ore::data::Conventions>& conventions() const { return conventions_; }
-    boost::shared_ptr<ore::data::Conventions>& conventions() { return conventions_; }
+    const boost::shared_ptr<ore::data::Conventions>& conventions() const {
+        boost::shared_lock<boost::shared_mutex> lock(mutex_);
+        return conventions_;
+    }
+    void setConventions(const boost::shared_ptr<ore::data::Conventions>& conventions) {
+        boost::unique_lock<boost::shared_mutex> lock(mutex_);
+        conventions_ = conventions;
+    }
 };
-    
+
 //! Container for storing Zero Rate conventions
 /*!
   \ingroup marketdata
