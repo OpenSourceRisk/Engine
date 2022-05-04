@@ -79,23 +79,29 @@ Log::Log() : loggers_(), enabled_(false), mask_(255), ls_() {
 }
 
 void Log::registerLogger(const boost::shared_ptr<Logger>& logger) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(loggers_.find(logger->name()) == loggers_.end(),
                "Logger with name " << logger->name() << " already registered");
     loggers_[logger->name()] = logger;
 }
 
 boost::shared_ptr<Logger>& Log::logger(const string& name) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     QL_REQUIRE(loggers_.find(name) != loggers_.end(), "No logger found with name " << name);
     return loggers_[name];
 }
 
 void Log::removeLogger(const string& name) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     map<string, boost::shared_ptr<Logger>>::iterator it = loggers_.find(name);
     QL_REQUIRE(it != loggers_.end(), "No logger found with name " << name);
     loggers_.erase(it);
 }
 
-void Log::removeAllLoggers() { loggers_.clear(); }
+void Log::removeAllLoggers() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    loggers_.clear();
+}
 
 void Log::header(unsigned m, const char* filename, int lineNo) {
     // 1. Reset stringstream
@@ -180,6 +186,7 @@ LoggerStream::~LoggerStream() {
     while (getline(ss_, text)) {
         // we expand the MLOG macro here so we can overwrite __FILE__ and __LINE__
         if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask_)) {
+            boost::unique_lock<boost::shared_mutex> lock(ore::data::Log::instance().mutex());
             ore::data::Log::instance().header(mask_, filename_, lineNo_);
             ore::data::Log::instance().logStream() << text;
             ore::data::Log::instance().log(mask_);
