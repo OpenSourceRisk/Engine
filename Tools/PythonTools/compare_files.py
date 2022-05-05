@@ -99,21 +99,24 @@ def create_df(file, col_types=None):
                     saccr_df = pd.DataFrame(saccr_json['saccr'])
 
                     saccr_cols = {
-                        'addOn': 'AddOn',
                         'assetClass': 'AssetClass',
+                        'hedgingSet': 'HedgingSet',
+                        'nettingSetId': 'NettingSet',
+                        'addOn': 'AddOn',
                         'cC': 'CC',
                         'eAD': 'EAD',
-                        'hedgingSet': 'HedgingSet',
                         'multiplier': 'Multiplier',
-                        'nettingSetId': 'NettingSet',
                         'npv': 'NPV',
                         'pfe': 'PFE',
                         'rC': 'RC',
                         'rW': 'RW'
                     }
 
-                    for col in saccr_cols.keys():
+                    for col in ['addOn', 'cC', 'eAD', 'multiplier', 'npv', 'pfe', 'rC', 'assetClass', 'hedgingSet', 'nettingSetId']:
                         saccr_df[col].replace('', np.nan, inplace=True)
+
+                    for col in ['rW']:
+                        saccr_df[col].replace(0.0, np.nan, inplace=True)
 
                     saccr_df.rename(columns=saccr_cols, inplace=True)
                     saccr_df.drop(columns='jobId', inplace=True)
@@ -133,7 +136,7 @@ def create_df(file, col_types=None):
                     # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
                     # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
                     # portfolio column so that everything works downstream.
-                    npv_df['nettingSetId'].replace('', np.nan, inplace=True)
+                    # npv_df['nettingSetId'].replace('', np.nan, inplace=True)
 
                     frtb_cols = {
                         'bucket': 'Bucket',
@@ -143,7 +146,7 @@ def create_df(file, col_types=None):
                         'risk_class': 'RiskClass'
                     }
                     for col in frtb_cols.keys():
-                        saccr_df[col].replace('', np.nan, inplace=True)
+                        frtb_df[col].replace('', np.nan, inplace=True)
                     frtb_df.rename(columns=frtb_cols, inplace=True)
                     frtb_df.drop(columns='jobId', inplace=True)
                     return frtb_df

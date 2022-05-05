@@ -294,6 +294,7 @@
               "Multiplier",
               "PFE",
               "EAD",
+              "RW",
               "CC"
             ],
             "abs_tol": 0.05,
@@ -367,7 +368,7 @@
             "names": [
                 "FrtbCharge"
             ],
-            "abs_tol": null,
+            "abs_tol": 0.01,
             "rel_tol": 1e-12
           }
         ]
