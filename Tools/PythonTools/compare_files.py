@@ -86,11 +86,69 @@ def create_df(file, col_types=None):
                     flownpv_df = pd.DataFrame(flownpv_json['cashflowNpv'])
                     flownpv_df.rename(columns={"baseCurrency" : "BaseCurrency", "horizon" : "Horizon", "presentValue" : "PresentValue", "tradeId" : "TradeId"}, inplace=True)
                     flownpv_df.drop(columns='jobId', inplace=True)
-                    print(flownpv_df)
                     return flownpv_df
 
                 else:
                     logger.warning('Expected flownpv json file %s to contain the field cashflowNpv.', file)
+                    return None
+        if filename == 'saccr.json':
+            with open(file, 'r') as json_file:
+                saccr_json = json.load(json_file)
+                if 'saccr' in saccr_json:
+                    logger.debug('Creating DataFrame from saccr json file %s.', file)
+                    saccr_df = pd.DataFrame(saccr_json['saccr'])
+
+                    saccr_cols = {
+                        'addOn': 'AddOn',
+                        'assetClass': 'AssetClass',
+                        'cC': 'CC',
+                        'eAD': 'EAD',
+                        'hedgingSet': 'HedgingSet',
+                        'multiplier': 'Multiplier',
+                        'nettingSetId': 'NettingSet',
+                        'npv': 'NPV',
+                        'pfe': 'PFE',
+                        'rC': 'RC',
+                        'rW': 'RW'
+                    }
+
+                    for col in saccr_cols.keys():
+                        saccr_df[col].replace('', np.nan, inplace=True)
+
+                    saccr_df.rename(columns=saccr_cols, inplace=True)
+                    saccr_df.drop(columns='jobId', inplace=True)
+                    return saccr_df
+                else:
+                    logger.warning('Expected saccr json file %s to contain the field saccr', file)
+                    return None
+        if filename == 'frtb.json':
+            with open(file, 'r') as json_file:
+                frtb_json = json.load(json_file)
+                if 'frtb' in frtb_json:
+                    logger.debug('Creating DataFrame from frtb json file %s.', file)
+                    frtb_df = pd.DataFrame(frtb_json['frtb'])
+
+                    # In a lot of regression tests, the NettingSetId field was left blank which in the simm JSON
+                    # response is an empty string. This empty string is then in the portfolio column in the DataFrame
+                    # created from the simm JSON. When the simm csv file is read in to a DataFrame, the empty field
+                    # under Portfolio is read in to a DataFrame as Nan. We replace the empty string here with Nan in
+                    # portfolio column so that everything works downstream.
+                    npv_df['nettingSetId'].replace('', np.nan, inplace=True)
+
+                    frtb_cols = {
+                        'bucket': 'Bucket',
+                        'capitalRequirement': 'CapitalRequirement',
+                        'correlationScenario': 'CorrelationScenario',
+                        'frtbCharge': 'FrtbCharge',
+                        'risk_class': 'RiskClass'
+                    }
+                    for col in frtb_cols.keys():
+                        saccr_df[col].replace('', np.nan, inplace=True)
+                    frtb_df.rename(columns=frtb_cols, inplace=True)
+                    frtb_df.drop(columns='jobId', inplace=True)
+                    return frtb_df
+                else:
+                    logger.warning('Expected frtb json file %s to contain the field frtb', file)
                     return None
     else:
         logger.warning('File %s is neither a csv nor a json file so cannot create DataFrame.', file)
