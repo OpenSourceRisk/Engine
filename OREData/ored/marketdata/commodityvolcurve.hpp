@@ -52,6 +52,8 @@ public:
                       const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
                       const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {},
                       const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
+                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves = {},
+                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves = {},
                       const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
     //@}
 
@@ -119,7 +121,7 @@ private:
                          const map<string, boost::shared_ptr<CommodityCurve>>& comCurves,
                          const map<string, boost::shared_ptr<CommodityVolCurve>>& volCurves,
                          const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
-                         const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
+                         const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
                          const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future

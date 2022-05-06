@@ -711,7 +711,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building commodity volatility for asof " << asof_);
                 boost::shared_ptr<CommodityVolCurve> commodityVolCurve = boost::make_shared<CommodityVolCurve>(
                     asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredCommodityCurves_,
-                    requiredCommodityVolCurves_, fxIndexTri);
+                    requiredCommodityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, fxIndexTri);
                 itr = requiredCommodityVolCurves_.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
             }
 
