@@ -444,7 +444,7 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(ore::data::XMLDocument& doc) override;
 
-    void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node);
+    void loadVolatiltyConfigs(XMLNode* node);
 
     const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
 
