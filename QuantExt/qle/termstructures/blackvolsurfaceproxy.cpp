@@ -75,13 +75,11 @@ Volatility BlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) const 
 }
 
 Rate BlackVolatilitySurfaceProxy::minStrike() const {
-    auto today = Settings::instance().evaluationDate();
-    return proxySurface_->minStrike() * index_->fixing(today) / proxyIndex_->fixing(today);
+    return proxySurface_->minStrike() * index_->forecastFixing(0.0) / proxyIndex_->forecastFixing(0.0);
 }
 
 Rate BlackVolatilitySurfaceProxy::maxStrike() const {
-    auto today = Settings::instance().evaluationDate();
-    return proxySurface_->maxStrike() * index_->fixing(today) / proxyIndex_->fixing(today);
+    return proxySurface_->maxStrike() * index_->forecastFixing(0.0) / proxyIndex_->forecastFixing(0.0);
 }
 
 } // namespace QuantExt
