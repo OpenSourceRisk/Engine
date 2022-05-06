@@ -45,9 +45,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("CapFloor::build() called for trade " << id() << ", leg type is " << legData_.legType());
 
     QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") ||
-                   (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CPI") ||
+                   (legData_.legType() == "DurationAdjustedCMS") || (legData_.legType() == "CMSSpread") || (legData_.legType() == "CPI") ||
                    (legData_.legType() == "YY"),
-               "CapFloor build error, LegType must be Floating, CMS, DurationAdjustedCMS, CPI or YY");
+               "CapFloor build error, LegType must be Floating, CMS, DurationAdjustedCMS, CMSSpread, CPI or YY");
 
     QL_REQUIRE(caps_.size() > 0 || floors_.size() > 0, "CapFloor build error, no cap rates or floor rates provided");
     QuantLib::CapFloor::Type capFloorType;
@@ -201,7 +201,29 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         qlInstrument->setPricingEngine(
             boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
         maturity_ = CashFlows::maturityDate(legs_.front());
-    } else if (legData_.legType() == "CPI") {
+    }
+    else if (legData_.legType() == "CMSSpread") {
+        builder = engineFactory->builder("Swap");
+        boost::shared_ptr<CMSSpreadLegData> cmsSpreadData = boost::dynamic_pointer_cast<CMSSpreadLegData>(legData_.concreteLegData());
+        QL_REQUIRE(cmsSpreadData, "Wrong LegType, expected CMSSpread");	
+        LegData tmpLegData = legData_;
+        boost::shared_ptr<CMSSpreadLegData> tmpFloatData = boost::make_shared<CMSSpreadLegData>(*cmsSpreadData);
+        tmpFloatData->floors() = floors_;
+        tmpFloatData->caps() = caps_;
+        tmpFloatData->nakedOption() = true;
+        tmpLegData.concreteLegData() = tmpFloatData;
+        legs_.push_back(engineFactory->legBuilder(tmpLegData.legType())
+                            ->buildLeg(tmpLegData, engineFactory, requiredFixings_,
+                                       engineFactory->configuration(MarketContext::pricing)));
+        // if both caps and floors are given, we have to use a payer leg, since in this case
+        // the StrippedCappedFlooredCoupon used to extract the naked options assumes a long floor
+        // and a short cap while we have documented a collar to be a short floor and long cap
+        qlInstrument = boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>{!floors_.empty() && !caps_.empty()});
+        qlInstrument->setPricingEngine(
+            boost::make_shared<DiscountingSwapEngine>(engineFactory->market()->discountCurve(legData_.currency())));
+        maturity_ = CashFlows::maturityDate(legs_.front());
+    }
+    else if (legData_.legType() == "CPI") {
         DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
 
         builder = engineFactory->builder("CpiCapFloor");
