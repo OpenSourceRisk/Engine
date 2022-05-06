@@ -54,7 +54,7 @@ void VolatilityConfig::toXMLNode(XMLDocument& doc, XMLNode* node) {
 void ProxyVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ProxySurface");
     VolatilityConfig::fromXMLNode(node);
-    proxyVolatilityCurve_ = XMLUtils::getChildValue(node, "EquityVolatilityCurve", true);
+    proxyVolatilityCurve_ = XMLUtils::getChildValue(node, "ProxyVolatilityCurve", true);
     fxVolatilityCurve_ = XMLUtils::getChildValue(node, "FXVolatilityCurve", false);
     correlationCurve_ = XMLUtils::getChildValue(node, "CorrelationCurve", false);
 }
@@ -62,7 +62,7 @@ void ProxyVolatilityConfig::fromXML(XMLNode* node) {
 XMLNode* ProxyVolatilityConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ProxySurface");
     VolatilityConfig::toXMLNode(doc, node);
-    XMLUtils::addChild(doc, node, "EquityVolatilityCurve", proxyVolatilityCurve_);
+    XMLUtils::addChild(doc, node, "ProxyVolatilityCurve", proxyVolatilityCurve_);
     if (!fxVolatilityCurve_.empty())
         XMLUtils::addChild(doc, node, "FXVolatilityCurve", fxVolatilityCurve_);
     if (!correlationCurve_.empty())
@@ -557,7 +557,7 @@ void VolatilityConfigBuilder::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(node, "VolatilityConfig"))
         loadVolatiltyConfigs(n);
     else 
-        loadVolatiltyConfigs(n);
+        loadVolatiltyConfigs(node);
 }
 
 XMLNode* VolatilityConfigBuilder::toXML(XMLDocument& doc) { return NULL; }

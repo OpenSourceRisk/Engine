@@ -172,11 +172,11 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         auto config = *curveConfigs.commodityVolatilityConfig(spec.curveConfigID());
 
         boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-        
+
         if (!config.futureConventionsId().empty()) {
             const auto& cId = config.futureConventionsId();
-            QL_REQUIRE(conventions->has(cId), "Conventions, " << cId <<
-                " for config " << config.curveID() << " not found.");
+            QL_REQUIRE(conventions->has(cId),
+                       "Conventions, " << cId << " for config " << config.curveID() << " not found.");
             convention_ = boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(cId));
             QL_REQUIRE(convention_, "Convention with ID '" << cId << "' should be of type CommodityFutureConvention");
             expCalc_ = boost::make_shared<ConventionsBasedFutureExpiry>(*convention_);
@@ -185,72 +185,90 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
         calendar_ = parseCalendar(config.calendar());
         dayCounter_ = parseDayCounter(config.dayCounter());
 
-        // Do different things depending on the type of volatility configured
-        boost::shared_ptr<VolatilityConfig> vc = config.volatilityConfig();
-        if (auto eqvc = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
-            buildVolatility(asof, spec, curveConfigs, *eqvc, commodityCurves, commodityVolCurves, fxVolCurves,
-                            correlationCurves, fxIndices);
-        } else if (auto qvc = boost::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
+        // loop over the volatility configs attempting to build in the order provided
+        DLOG("CommodityVolCurve: Attempting to build equity vol curve from volatilityConfig, "
+             << config.volatilityConfig().size() << " volatility configs provided.");
+        for (auto vc : config.volatilityConfig()) {
+            try {
+                // if the volatility config has it's own calendar, we use that.
+                if (!vc->calendar().empty())
+                    calendar_ = vc->calendar();
+                // Do different things depending on the type of volatility configured
+                if (auto eqvc = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
+                    buildVolatility(asof, spec, curveConfigs, *eqvc, commodityCurves, commodityVolCurves, fxVolCurves,
+                                    correlationCurves, fxIndices);
+                } else if (auto qvc = boost::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
 
-            if (auto cvc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
-                buildVolatility(asof, config, *cvc, loader);
-            } else if (auto vcc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
-                buildVolatility(asof, config, *vcc, loader);
-            } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
-                // Try to populate the price and yield term structure. Need them in some cases here.
-                populateCurves(config, yieldCurves, commodityCurves, true, true);
-                buildVolatility(asof, config, *vssc, loader);
-            } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
-                // Need a yield curve and price curve to create a delta surface.
-                populateCurves(config, yieldCurves, commodityCurves, true);
-                buildVolatility(asof, config, *vdsc, loader);
-            } else if (auto vmsc = boost::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
-                // Need a yield curve (if forward moneyness) and price curve to create a moneyness surface.
-                MoneynessStrike::Type moneynessType = parseMoneynessType(vmsc->moneynessType());
-                bool fwdMoneyness = moneynessType == MoneynessStrike::Type::Forward;
-                populateCurves(config, yieldCurves, commodityCurves, fwdMoneyness);
-                buildVolatility(asof, config, *vmsc, loader);
-            } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+                    if (auto cvc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(vc)) {
+                        buildVolatility(asof, config, *cvc, loader);
+                    } else if (auto vcc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(vc)) {
+                        buildVolatility(asof, config, *vcc, loader);
+                    } else if (auto vssc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(vc)) {
+                        // Try to populate the price and yield term structure. Need them in some cases here.
+                        populateCurves(config, yieldCurves, commodityCurves, true, true);
+                        buildVolatility(asof, config, *vssc, loader);
+                    } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
+                        // Need a yield curve and price curve to create a delta surface.
+                        populateCurves(config, yieldCurves, commodityCurves, true);
+                        buildVolatility(asof, config, *vdsc, loader);
+                    } else if (auto vmsc = boost::dynamic_pointer_cast<VolatilityMoneynessSurfaceConfig>(vc)) {
+                        // Need a yield curve (if forward moneyness) and price curve to create a moneyness surface.
+                        MoneynessStrike::Type moneynessType = parseMoneynessType(vmsc->moneynessType());
+                        bool fwdMoneyness = moneynessType == MoneynessStrike::Type::Forward;
+                        populateCurves(config, yieldCurves, commodityCurves, fwdMoneyness);
+                        buildVolatility(asof, config, *vmsc, loader);
+                    } else if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
 
-                // Get the base conventions and create the associated expiry calculator.
-                QL_REQUIRE(!vapo->baseConventionsId().empty(),
-                           "The APO FutureConventions must be populated to build a future APO surface");
-                QL_REQUIRE(conventions->has(vapo->baseConventionsId()),
-                           "Conventions, " << vapo->baseConventionsId() << " for config " << config.curveID()
-                                           << " not found.");
-                auto convention =
-                    boost::dynamic_pointer_cast<CommodityFutureConvention>(conventions->get(vapo->baseConventionsId()));
-                QL_REQUIRE(convention, "Convention with ID '" << config.futureConventionsId()
-                                                              << "' should be of type CommodityFutureConvention");
-                auto baseExpCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
+                        // Get the base conventions and create the associated expiry calculator.
+                        QL_REQUIRE(!vapo->baseConventionsId().empty(),
+                                   "The APO FutureConventions must be populated to build a future APO surface");
+                        QL_REQUIRE(conventions->has(vapo->baseConventionsId()),
+                                   "Conventions, " << vapo->baseConventionsId() << " for config " << config.curveID()
+                                                   << " not found.");
+                        auto convention = boost::dynamic_pointer_cast<CommodityFutureConvention>(
+                            conventions->get(vapo->baseConventionsId()));
+                        QL_REQUIRE(convention, "Convention with ID '"
+                                                   << config.futureConventionsId()
+                                                   << "' should be of type CommodityFutureConvention");
+                        auto baseExpCalc = boost::make_shared<ConventionsBasedFutureExpiry>(*convention);
 
-                // Need to get the base commodity volatility structure.
-                QL_REQUIRE(!vapo->baseVolatilityId().empty(),
-                           "The APO VolatilityId must be populated to build a future APO surface.");
-                auto itVs = commodityVolCurves.find(vapo->baseVolatilityId());
-                QL_REQUIRE(itVs != commodityVolCurves.end(),
-                           "Can't find commodity volatility with id " << vapo->baseVolatilityId());
-                auto baseVs = Handle<BlackVolTermStructure>(itVs->second->volatility());
+                        // Need to get the base commodity volatility structure.
+                        QL_REQUIRE(!vapo->baseVolatilityId().empty(),
+                                   "The APO VolatilityId must be populated to build a future APO surface.");
+                        auto itVs = commodityVolCurves.find(vapo->baseVolatilityId());
+                        QL_REQUIRE(itVs != commodityVolCurves.end(),
+                                   "Can't find commodity volatility with id " << vapo->baseVolatilityId());
+                        auto baseVs = Handle<BlackVolTermStructure>(itVs->second->volatility());
 
-                // Need to get the base price curve
-                QL_REQUIRE(!vapo->basePriceCurveId().empty(),
-                           "The APO PriceCurveId must be populated to build a future APO surface.");
-                auto itPts = commodityCurves.find(vapo->basePriceCurveId());
-                QL_REQUIRE(itPts != commodityCurves.end(),
-                           "Can't find price curve with id " << vapo->basePriceCurveId());
-                auto basePts = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
+                        // Need to get the base price curve
+                        QL_REQUIRE(!vapo->basePriceCurveId().empty(),
+                                   "The APO PriceCurveId must be populated to build a future APO surface.");
+                        auto itPts = commodityCurves.find(vapo->basePriceCurveId());
+                        QL_REQUIRE(itPts != commodityCurves.end(),
+                                   "Can't find price curve with id " << vapo->basePriceCurveId());
+                        auto basePts = Handle<PriceTermStructure>(itPts->second->commodityPriceCurve());
 
-                // Need a yield curve and price curve to create an APO surface.
-                populateCurves(config, yieldCurves, commodityCurves, true);
+                        // Need a yield curve and price curve to create an APO surface.
+                        populateCurves(config, yieldCurves, commodityCurves, true);
 
-                buildVolatility(asof, config, *vapo, baseVs, basePts);
+                        buildVolatility(asof, config, *vapo, baseVs, basePts);
 
-            } else {
-                QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
+                    } else {
+                        QL_FAIL("Unexpected VolatilityConfig in CommodityVolatilityConfig");
+                    }
+                } else {
+                    QL_FAIL("CommodityVolCurve: VolatilityConfig must be QuoteBased or a Proxy");
+                }
+
+            } catch (std::exception& e) {
+                DLOG("CommodityVolCurve: equity vol curve building failed :" << e.what());
+            } catch (...) {
+                DLOG("CommodityVolCurve: equity vol curve building failed: unknown error");
             }
-        } else {
-            QL_FAIL("CommodityVolCurve: VolatilityConfig must be QuoteBased or a Proxy");
-        } 
+        }
+        QL_REQUIRE(volatility_ , "CommodityVolCurve: Failed to build commodity volatility structure from "
+                    << config.volatilityConfig().size() << " volatility configs provided.");
+
         LOG("CommodityVolCurve: finished building commodity volatility structure with ID " << spec.curveConfigID());
 
     } catch (exception& e) {

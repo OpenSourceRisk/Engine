@@ -33,7 +33,7 @@ CommodityVolatilityConfig::CommodityVolatilityConfig()
 
 CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, const string& curveDescription,
                                                      const std::string& currency,
-                                                     const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                                                     const vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig,
                                                      const string& dayCounter, const string& calendar,
                                                      const std::string& futureConventionsId,
                                                      QuantLib::Natural optionExpiryRollDays,
@@ -54,9 +54,19 @@ void CommodityVolatilityConfig::populateRequiredCurveIds() {
         requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(parseCurveSpec(priceCurveId())->curveConfigID());
     if (!yieldCurveId().empty())
         requiredCurveIds_[CurveSpec::CurveType::Yield].insert(parseCurveSpec(yieldCurveId())->curveConfigID());
-    if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(volatilityConfig())) {
-        requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(
-            parseCurveSpec(vapo->baseVolatilityId())->curveConfigID());
+    for (auto vc : volatilityConfig()) {
+        if (auto vapo = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+            requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(
+                parseCurveSpec(vapo->baseVolatilityId())->curveConfigID());
+        }
+        if (auto p = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
+            requiredCurveIds_[CurveSpec::CurveType::Commodity].insert(p->proxyVolatilityCurve());
+            requiredCurveIds_[CurveSpec::CurveType::CommodityVolatility].insert(p->proxyVolatilityCurve());
+            if (!p->fxVolatilityCurve().empty())
+                requiredCurveIds_[CurveSpec::CurveType::FXVolatility].insert(p->fxVolatilityCurve());
+            if (!p->correlationCurve().empty())
+                requiredCurveIds_[CurveSpec::CurveType::Correlation].insert(p->correlationCurve());
+        }
     }
 }
 
@@ -64,7 +74,7 @@ const string& CommodityVolatilityConfig::currency() const { return currency_; }
 
 const string& CommodityVolatilityConfig::dayCounter() const { return dayCounter_; }
 
-const boost::shared_ptr<VolatilityConfig>& CommodityVolatilityConfig::volatilityConfig() const {
+const vector<boost::shared_ptr<VolatilityConfig>>& CommodityVolatilityConfig::volatilityConfig() const {
     return volatilityConfig_;
 }
 
@@ -105,37 +115,22 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
 
-    XMLNode* n;
-    if ((n = XMLUtils::getChildNode(node, "Constant"))) {
-        volatilityConfig_ = boost::make_shared<ConstantVolatilityConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "Curve"))) {
-        volatilityConfig_ = boost::make_shared<VolatilityCurveConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "StrikeSurface"))) {
-        volatilityConfig_ = boost::make_shared<VolatilityStrikeSurfaceConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "DeltaSurface"))) {
-        volatilityConfig_ = boost::make_shared<VolatilityDeltaSurfaceConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "MoneynessSurface"))) {
-        volatilityConfig_ = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
-    } else if ((n = XMLUtils::getChildNode(node, "ApoFutureSurface"))) {
-        volatilityConfig_ = boost::make_shared<VolatilityApoFutureSurfaceConfig>();
-    } else {
-        QL_FAIL("CommodityVolatility node expects one child node with name in list: Constant,"
-                << " Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ApoFutureSurface.");
-    }
-    volatilityConfig_->fromXML(n);
-
+    VolatilityConfigBuilder vcb;
+    vcb.fromXML(node);
+    volatilityConfig_ = vcb.volatilityConfig();
+    
     dayCounter_ = "A365";
-    if ((n = XMLUtils::getChildNode(node, "DayCounter")))
+    if (XMLNode* n = XMLUtils::getChildNode(node, "DayCounter"))
         dayCounter_ = XMLUtils::getNodeValue(n);
 
     calendar_ = "NullCalendar";
-    if ((n = XMLUtils::getChildNode(node, "Calendar")))
+    if (XMLNode* n = XMLUtils::getChildNode(node, "Calendar"))
         calendar_ = XMLUtils::getNodeValue(n);
 
     futureConventionsId_ = XMLUtils::getChildValue(node, "FutureConventions", false);
 
     optionExpiryRollDays_ = 0;
-    if ((n = XMLUtils::getChildNode(node, "OptionExpiryRollDays")))
+    if (XMLNode* n = XMLUtils::getChildNode(node, "OptionExpiryRollDays"))
         optionExpiryRollDays_ = parseInteger(XMLUtils::getNodeValue(n));
 
     priceCurveId_ = XMLUtils::getChildValue(node, "PriceCurveId", false);
@@ -165,8 +160,12 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
-    XMLNode* n = volatilityConfig_->toXML(doc);
-    XMLUtils::appendNode(node, n);
+    XMLNode* vnode = doc.allocNode("VolatilityConfig");
+    for (auto vc : volatilityConfig_) {
+        XMLNode* n = vc->toXML(doc);
+        XMLUtils::appendNode(vnode, n);
+    }
+    XMLUtils::appendNode(node, vnode);
 
     XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
@@ -189,24 +188,23 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
 
 void CommodityVolatilityConfig::populateQuotes() {
 
-    // The quotes depend on the type of volatility structure that has been configured.
-    if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(volatilityConfig_)) {
-        quotes_ = {vc->quote()};
-    } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(volatilityConfig_)) {
-        quotes_ = vc->quotes();
-    } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(volatilityConfig_)) {
-        // Clear the quotes_ if necessary and populate with surface quotes
-        quotes_.clear();
-        string quoteType = to_string(vc->quoteType());
-        string stem = "COMMODITY_OPTION/" + quoteType + "/" + curveID_ + "/" + currency_ + "/";
-        for (const pair<string, string>& p : vc->quotes()) {
-            string q = stem + p.first + "/" + p.second;
-            if (!quoteSuffix_.empty())
-                q += "/" + quoteSuffix_;
-            quotes_.push_back(q);
+    for (auto config : volatilityConfig_) {
+        // The quotes depend on the type of volatility structure that has been configured.
+        if (auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(config)) {
+            quotes_.push_back(vc->quote());
+        } else if (auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(config)) {
+            auto qs = vc->quotes();
+            quotes_.insert(quotes_.end(), qs.begin(), qs.end());
+        } else if (auto vc = boost::dynamic_pointer_cast<VolatilitySurfaceConfig>(config)) {
+            string quoteType = to_string(vc->quoteType());
+            string stem = "COMMODITY_OPTION/" + quoteType + "/" + curveID_ + "/" + currency_ + "/";
+            for (const pair<string, string>& p : vc->quotes()) {
+                string q = stem + p.first + "/" + p.second;
+                if (!quoteSuffix_.empty())
+                    q += "/" + quoteSuffix_;
+                quotes_.push_back(q);
+            }
         }
-    } else {
-        QL_FAIL("CommodityVolatilityConfig expected a constant, curve or surface");
     }
 }
 
