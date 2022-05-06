@@ -93,7 +93,6 @@ public:
 
 private:
     void populateRequiredCurveIds();
-    void loadVolatiltyConfigs(XMLNode* node);
 
     string ccy_;
     std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;

@@ -51,19 +51,19 @@ private:
 
 bool operator<(const VolatilityConfig& vc1, const VolatilityConfig& vc2);
 
-class EquityProxyVolatilityConfig : public VolatilityConfig {
+class ProxyVolatilityConfig : public VolatilityConfig {
 public:
-    EquityProxyVolatilityConfig() {}
-    EquityProxyVolatilityConfig(const std::string& equityVolatilityCurve, const std::string& fxVolatilityCurve = "",
+    ProxyVolatilityConfig() {}
+    ProxyVolatilityConfig(const std::string& proxyVolatilityCurve, const std::string& fxVolatilityCurve = "",
                                 const std::string& correlationCurve = "", std::string calendarStr = std::string(),
                                 QuantLib::Natural priority = 0)
         : VolatilityConfig(calendarStr, priority), 
-        equityVolatilityCurve_(equityVolatilityCurve), fxVolatilityCurve_(fxVolatilityCurve),
+        proxyVolatilityCurve_(proxyVolatilityCurve), fxVolatilityCurve_(fxVolatilityCurve),
         correlationCurve_(correlationCurve) {}
 
     //! \name Inspectors
     //@{
-    const std::string& equityVolatilityCurve() const;
+    const std::string& proxyVolatilityCurve() const;
     const std::string& fxVolatilityCurve() const;
     const std::string& correlationCurve() const;
     //@}
@@ -75,7 +75,7 @@ public:
     //@}
 
 private:
-    std::string equityVolatilityCurve_;
+    std::string proxyVolatilityCurve_;
     std::string fxVolatilityCurve_;
     std::string correlationCurve_;
 };
@@ -437,6 +437,21 @@ private:
     QuantLib::Real beta_;
     std::string maxTenor_;
 };
+
+class VolatilityConfigBuilder : public XMLSerializable {
+public:
+    explicit VolatilityConfigBuilder() {}
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(ore::data::XMLDocument& doc) override;
+
+    void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node);
+
+    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() { return volatilityConfig_; };
+
+private:
+    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
+};
+
 
 } // namespace data
 } // namespace ore

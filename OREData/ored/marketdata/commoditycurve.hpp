@@ -58,11 +58,13 @@ public:
     //@{
     const CommodityCurveSpec& spec() const { return spec_; }
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve() const { return commodityPriceCurve_; }
+    boost::shared_ptr<QuantExt::CommodityIndex> commodityIndex() const { return commodityIndex_; }
     //@}
 
 private:
     CommodityCurveSpec spec_;
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve_;
+    boost::shared_ptr<QuantExt::CommodityIndex> commodityIndex_;
 
     //! Store the commodity spot value with \c Null<Real>() indicating that none has been provided.
     QuantLib::Real commoditySpot_;

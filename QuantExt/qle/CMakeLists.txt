@@ -203,6 +203,7 @@ termstructures/blackvariancesurfacestddevs.cpp
 termstructures/blackvolconstantspread.cpp
 termstructures/blackvolsurfacebfrr.cpp
 termstructures/blackvolsurfacedelta.cpp
+termstructures/blackvolsurfaceproxy.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloorhelper.cpp
@@ -224,7 +225,6 @@ termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
 termstructures/dynamicyoyoptionletvolatilitystructure.cpp
 termstructures/eqcommoptionsurfacestripper.cpp
-termstructures/equityblackvolsurfaceproxy.cpp
 termstructures/equityforwardcurvestripper.cpp
 termstructures/flatcorrelation.cpp
 termstructures/futurepricehelper.cpp
@@ -569,6 +569,7 @@ termstructures/blackvariancesurfacestddevs.hpp
 termstructures/blackvolconstantspread.hpp
 termstructures/blackvolsurfacebfrr.hpp
 termstructures/blackvolsurfacedelta.hpp
+termstructures/blackvolsurfaceproxy.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
@@ -597,7 +598,6 @@ termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/eqcommoptionsurfacestripper.hpp
-termstructures/equityblackvolsurfaceproxy.hpp
 termstructures/equityforwardcurvestripper.hpp
 termstructures/flatcorrelation.hpp
 termstructures/futurepricehelper.hpp

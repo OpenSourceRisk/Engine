@@ -27,7 +27,7 @@
 #include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/indexes/equityindex.hpp>
-#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
+#include <qle/termstructures/blackvolsurfaceproxy.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -36,11 +36,11 @@ using namespace std;
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(EquityBlackVolSurfaceProxy)
+BOOST_AUTO_TEST_SUITE(BlackVolSurfaceProxy)
 
-BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
+BOOST_AUTO_TEST_CASE(testBlackVolSurfaceProxy) {
 
-    BOOST_TEST_MESSAGE("Testing QuantExt::EquityBlackVolSurfaceProxy...");
+    BOOST_TEST_MESSAGE("Testing QuantExt::BlackVolSurfaceProxy...");
 
     // take an index and one of it's underlyings, proxy the underlyings vol surface off the
     // index vol surface, check that the forward ATM vols are the same
@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(testEquityBlackVolSurfaceProxy) {
         boost::make_shared<BlackVarianceSurface>(today, UnitedStates(UnitedStates::Settlement), dates, strikes, vols, dc);
 
     // set up a vol surface for the underlying, to be proxied from the index surface
-    boost::shared_ptr<EquityBlackVolatilitySurfaceProxy> underlyingVolSurface =
-        boost::make_shared<EquityBlackVolatilitySurfaceProxy>(indexVolSurface, underlying, index);
+    boost::shared_ptr<BlackVolatilitySurfaceProxy> underlyingVolSurface =
+        boost::make_shared<BlackVolatilitySurfaceProxy>(indexVolSurface, underlying, index);
 
     // Check the ATM forward vols
     for (auto d : dates) {

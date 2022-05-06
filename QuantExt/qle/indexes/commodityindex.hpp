@@ -26,9 +26,9 @@
 
 #include <ql/currency.hpp>
 #include <ql/handle.hpp>
-#include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
+#include <qle/indexes/eqfxindexbase.hpp>
 #include <qle/termstructures/pricetermstructure.hpp>
 
 namespace QuantExt {
@@ -50,7 +50,7 @@ using namespace QuantLib;
 
     \ingroup indexes
 */
-class CommodityIndex : public Index, public Observer {
+class CommodityIndex : public EqFxIndexBase {
 public:
     /*! spot quote is interpreted as of today */
     CommodityIndex(const std::string& underlyingName, const QuantLib::Date& expiryDate, const Calendar& fixingCalendar,
@@ -79,7 +79,8 @@ public:
     //! \name Fixing calculations
     //@{
     virtual Real forecastFixing(const Date& fixingDate) const;
-    virtual Real pastFixing(const Date& fixingDate) const;
+    virtual Real forecastFixing(const Time& fixingTime) const override;
+    virtual Real pastFixing(const Date& fixingDate) const override;
     // @}
 
     /*! Returns a copy of itself with a potentially different expiry date and pricing curve.

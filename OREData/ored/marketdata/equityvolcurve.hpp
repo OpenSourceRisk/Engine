@@ -52,9 +52,9 @@ public:
                    const CurveConfigurations& curveConfigs, const QuantLib::Handle<QuantExt::EquityIndex>& eqIndex,
                    const std::map<std::string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves = {},
                    const std::map<std::string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {},
-                   const FXTriangulation& fxSpots = {},
                    const std::map<std::string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves = {},
-                   const std::map<std::string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves = {});
+                   const std::map<std::string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves = {},
+                   const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
     //@}
 
     //! \name Inspectors
@@ -87,12 +87,12 @@ public:
     //! Build a volatility surface as a proxy from another volatility surface
     void buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                          const CurveConfigurations& curveConfigs,
-                         const EquityProxyVolatilityConfig& epvc,
+                         const ProxyVolatilityConfig& epvc,
                          const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
                          const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves,
-                         const FXLookup& fxSpots,
                          const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
-                         const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves);
+                         const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
+                         const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
 
     //! Build the calibration info
     void buildCalibrationInfo(const QuantLib::Date& asof, const CurveConfigurations& curveConfigs,

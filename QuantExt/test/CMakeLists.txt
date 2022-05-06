@@ -7,6 +7,7 @@ blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 blackvariancesurfacestddevs.cpp
 blackvolsurfacedelta.cpp
+blackvolsurfaceproxy.cpp
 bonds.cpp
 calendars.cpp
 capfloortermvolcurve.cpp
@@ -32,7 +33,6 @@ discountratiomodifiedcurve.cpp
 durationadjustedcmscoupon.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
-equityblackvolsurfaceproxy.cpp
 equityforwardcurvestripper.cpp
 exactbachelierimpliedvolatility.cpp
 fillemptymatrix.cpp

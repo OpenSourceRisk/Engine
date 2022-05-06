@@ -412,7 +412,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // Firstly, need to retrieve ibor index and discount curve
                 // Ibor index
                 Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->index(), configuration);
-		Handle<YieldTermStructure> discountCurve;
+                Handle<YieldTermStructure> discountCurve;
                 // Discount curve
                 if (!cfg->discountCurve().empty()) {
                     auto it = requiredYieldCurves_.find(cfg->discountCurve());
@@ -610,6 +610,12 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
         case CurveSpec::CurveType::EquityVolatility: {
             boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
                 boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
+
+            boost::optional<FXIndexTriangulation> fxIndexTri;
+            auto itFxTri = fxIndices_.find(configuration);
+            if (itFxTri != end(fxIndices_))
+                fxIndexTri = itFxTri->second;
+
             QL_REQUIRE(eqvolspec, "Failed to convert spec " << *spec);
             auto itr = requiredEquityVolCurves_.find(eqvolspec->name());
             if (itr == requiredEquityVolCurves_.end()) {
@@ -623,7 +629,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
                 boost::shared_ptr<EquityVolCurve> eqVolCurve =
                     boost::make_shared<EquityVolCurve>(asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex,
-                        requiredEquityCurves_, requiredEquityVolCurves_, fxT_, requiredFxVolCurves_, requiredCorrelationCurves_);
+                        requiredEquityCurves_, requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, fxIndexTri);
                 itr = requiredEquityVolCurves_.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                 calibrationInfo_->eqVolCalibrationInfo[eqvolspec->name()] = eqVolCurve->calibrationInfo();
             }
@@ -684,14 +690,18 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
             DLOG("Adding CommodityCurve, " << node.name << ", with spec " << *commodityCurveSpec << " to configuration "
                                            << configuration);
-            Handle<PriceTermStructure> pts(itr->second->commodityPriceCurve());
-            Handle<CommodityIndex> commIdx(parseCommodityIndex(node.name, false, pts));
+            Handle<CommodityIndex> commIdx(itr->second->commodityIndex());
             commodityIndices_[make_pair(configuration, node.name)] = commIdx;
             break;
         }
 
         // Commodity Vol
         case CurveSpec::CurveType::CommodityVolatility: {
+
+            boost::optional<FXIndexTriangulation> fxIndexTri;
+            auto itFxTri = fxIndices_.find(configuration);
+            if (itFxTri != end(fxIndices_))
+                fxIndexTri = itFxTri->second;
 
             boost::shared_ptr<CommodityVolatilityCurveSpec> commodityVolSpec =
                 boost::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(spec);
@@ -700,8 +710,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredCommodityVolCurves_.end()) {
                 DLOG("Building commodity volatility for asof " << asof_);
                 boost::shared_ptr<CommodityVolCurve> commodityVolCurve = boost::make_shared<CommodityVolCurve>(
-                    asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_,
-                    requiredCommodityCurves_, requiredCommodityVolCurves_);
+                    asof_, *commodityVolSpec, *loader_, *curveConfigs_, requiredYieldCurves_, requiredCommodityCurves_,
+                    requiredCommodityVolCurves_, fxIndexTri);
                 itr = requiredCommodityVolCurves_.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
             }
 
