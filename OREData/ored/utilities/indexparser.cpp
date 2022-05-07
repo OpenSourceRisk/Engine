@@ -99,6 +99,7 @@
 #include <qle/indexes/ibor/skkbribor.hpp>
 #include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/sonia.hpp>
+#include <qle/indexes/ibor/sora.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
@@ -297,6 +298,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"EUR-ESTER", boost::make_shared<Ester>()},
         {"GBP-SONIA", boost::make_shared<Sonia>()},
         {"JPY-TONAR", boost::make_shared<Tonar>()},
+        {"SGD-SORA", boost::make_shared<Sora>()},
         {"CHF-TOIS", boost::make_shared<CHFTois>()},
         {"CHF-SARON", boost::make_shared<CHFSaron>()},
         {"USD-FedFunds", boost::make_shared<FedFunds>()},
