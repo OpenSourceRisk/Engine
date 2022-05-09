@@ -69,7 +69,7 @@ QuantLib::Date lowerDate(const Real t, const QuantLib::Date& refDate, const Quan
     QL_REQUIRE(t > 0.0, "lowerDate(" << t << "," << refDate << "," << dc.name()
                                      << ") was called with negative time, this is not allowed.");
     bool done = false;
-    Date d = refDate + static_cast<int>(t);
+    Date d = refDate + static_cast<int>(t * 365.25);
     Real tmp = dc.yearFraction(refDate, d);
     Size attempts = 0;
     while ((tmp < t || close_enough(tmp, t)) && (++attempts < 10000)) {
@@ -89,6 +89,14 @@ QuantLib::Date lowerDate(const Real t, const QuantLib::Date& refDate, const Quan
     if (done)
         return d;
     QL_FAIL("lowerDate(" << t << "," << refDate << "," << dc.name() << ") could not be computed.");
+}
+
+QuantLib::Period tenorFromLength(const QuantLib::Real length) {
+    if (std::abs(length - std::round(length)) < 1.0 / 365.25)
+        return std::lround(length) * Years;
+    if (std::abs(length * 12.0 - std::round(length * 12.0)) < 12.0 / 365.25)
+        return std::lround(length * 12.0) * Months;
+    return std::lround(length * 365.25) * Days;
 }
 
 } // namespace QuantExt

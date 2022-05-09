@@ -101,25 +101,34 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
     for (std::tie(v, vend) = boost::vertices(g); v != vend; ++v) {
 
-        // 1 CapFloorVolatility depends on underlying index curve
+        // 1 CapFloorVolatility depends on underlying index curve(s)
 
         if (g[*v].obj == MarketObject::CapFloorVol &&
             curveConfigs_->hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
-            string iborIndex = curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index();
-            bool found = false;
-            for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
-                if (*w != *v && g[*w].obj == MarketObject::IndexCurve && g[*w].name == iborIndex) {
-                    g.add_edge(*v, *w);
-                    TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " " << g[*w]);
-                    found = true;
-                    // there should be only one dependency, in any case it is enough to insert one
-                    break;
+            std::set<string> indices;
+            if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index().empty())
+            indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index());
+            if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex().empty())
+            indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex());
+            if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex().empty())
+            indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex());
+            for (auto const& ind : indices) {
+                bool found = false;
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v && g[*w].obj == MarketObject::IndexCurve && g[*w].name == ind) {
+                        g.add_edge(*v, *w);
+                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
+                                                      << g[*w]);
+                        found = true;
+                        // there should be only one dependency, in any case it is enough to insert one
+                        break;
+                    }
                 }
+                if (!found)
+                    buildErrors[g[*v].mapping] = "did not find required ibor index " + ind + " (required from " +
+                                                 ore::data::to_string(g[*v]) +
+                                                 ") in dependency graph for configuration " + configuration;
             }
-            if (!found)
-                buildErrors[g[*v].mapping] = "did not find required ibor index " + iborIndex + " (required from " +
-                                             ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
-                                             configuration;
         }
 
         // 2 Correlation depends on underlying swap indices (if CMS Spread Correlations are calibrated to prices)
@@ -165,34 +174,39 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
         if (g[*v].obj == MarketObject::SwaptionVol &&
             curveConfigs_->hasSwaptionVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
             auto config = curveConfigs_->swaptionVolCurveConfig(g[*v].curveSpec->curveConfigID());
-            bool found1 = config->shortSwapIndexBase().empty(), found2 = config->swapIndexBase().empty();
-            for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
-                if (*w != *v) {
-                    if (g[*w].name == config->shortSwapIndexBase()) {
-                        g.add_edge(*v, *w);
-                        found1 = true;
-                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
-                                                      << g[*w]);
+            std::set<std::string> indexBases;
+            if (!config->shortSwapIndexBase().empty())
+                indexBases.insert(config->shortSwapIndexBase());
+            if (!config->swapIndexBase().empty())
+                indexBases.insert(config->swapIndexBase());
+            if (!config->proxySourceShortSwapIndexBase().empty())
+                indexBases.insert(config->proxySourceShortSwapIndexBase());
+            if (!config->proxySourceSwapIndexBase().empty())
+                indexBases.insert(config->proxySourceSwapIndexBase());
+            if (!config->proxyTargetShortSwapIndexBase().empty())
+                indexBases.insert(config->proxyTargetShortSwapIndexBase());
+            if (!config->proxyTargetSwapIndexBase().empty())
+                indexBases.insert(config->proxyTargetSwapIndexBase());
+            for (auto const& indexBase : indexBases) {
+                bool found = false;
+                for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
+                    if (*w != *v) {
+                        if (g[*w].name == indexBase) {
+                            g.add_edge(*v, *w);
+                            found = true;
+                            TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
+                                                          << g[*w]);
+                        }
                     }
-                    if (g[*w].name == config->swapIndexBase()) {
-                        g.add_edge(*v, *w);
-                        found2 = true;
-                        TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
-                                                      << g[*w]);
-                    }
+                    // there should be only one dependency, in any case it is enough to insert one
+                    if (found)
+                        break;
                 }
-                // there should be only one dependency, in any case it is enough to insert one
-                if (found1 && found2)
-                    break;
+                if (!found)
+                    buildErrors[g[*v].mapping] = "did not find required swap index " + indexBase + " (required from " +
+                                                 ore::data::to_string(g[*v]) +
+                                                 ") in dependency graph for configuration " + configuration;
             }
-            if (!found1)
-                buildErrors[g[*v].mapping] = "did not find required swap index " + config->shortSwapIndexBase() +
-                                             " (required from " + ore::data::to_string(g[*v]) +
-                                             ") in dependency graph for configuration " + configuration;
-            if (!found2)
-                buildErrors[g[*v].mapping] = "did not find required swap index " + config->swapIndexBase() +
-                                             " (required from " + ore::data::to_string(g[*v]) +
-                                             ") in dependency graph for configuration " + configuration;
         }
 
         // 4 Swap Indices depend on underlying ibor and discount indices
@@ -203,10 +217,24 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
             auto swapCon = boost::dynamic_pointer_cast<data::SwapIndexConvention>(conventions->get(swapIndex));
             QL_REQUIRE(swapCon, "Did not find SwapIndexConvention for " << swapIndex);
             auto con = boost::dynamic_pointer_cast<data::IRSwapConvention>(conventions->get(swapCon->conventions()));
-            QL_REQUIRE(con, "Cannot find IRSwapConventions " << swapCon->conventions());
-            std::string iborIndex = con->indexName();
+            auto conOisComp =
+                boost::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
+            auto conOisAvg =
+                boost::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
+            std::string indexName;
+            if(con)
+                indexName = con->indexName();
+            else if(conOisComp)
+                indexName = conOisComp->indexName();
+            else if(conOisAvg)
+                indexName = conOisAvg->indexName();
+            else {
+                QL_FAIL("DependencyGraph: internal errors, expected IRSwapConvention, OisConvention, "
+                        "AverageOisConvention for '"
+                        << swapCon->conventions() << "' from conventions for swap index '" << swapIndex << "'");
+            }
             std::string discountIndex = g[*v].mapping;
-            if (isGenericIborIndex(iborIndex))
+            if (isGenericIborIndex(indexName))
                 foundIbor = true;
             for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
                 if (*w != *v) {
@@ -217,7 +245,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                             TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
                                                           << g[*w]);
                         }
-                        if (g[*w].name == iborIndex) {
+                        if (g[*w].name == indexName) {
                             g.add_edge(*v, *w);
                             foundIbor = true;
                             TLOG("add edge from vertex #" << index[*v] << " " << g[*v] << " to #" << index[*w] << " "
@@ -230,7 +258,7 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                     break;
             }
             if (!foundIbor)
-                buildErrors[g[*v].mapping] = "did not find required ibor index " + iborIndex + " (required from " +
+                buildErrors[g[*v].mapping] = "did not find required ibor/ois index " + indexName + " (required from " +
                                              ore::data::to_string(g[*v]) + ") in dependency graph for configuration " +
                                              configuration;
             if (!foundDiscount)

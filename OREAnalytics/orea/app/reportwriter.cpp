@@ -255,6 +255,20 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 fixingValue = ptrFloat->index()->fixing(fixingDate);
                                 if (fixingDate > asof)
                                     flowType = "InterestProjected";
+                                // for ON coupons the fixing value is the compounded / averaged rate, not the last
+                                // single ON fixing
+                                if (boost::dynamic_pointer_cast<QuantExt::AverageONIndexedCoupon>(ptrFloat) !=
+                                        nullptr ||
+                                    boost::dynamic_pointer_cast<QuantExt::OvernightIndexedCoupon>(ptrFloat) !=
+                                        nullptr) {
+                                    fixingValue = ptrFloat->rate();
+                                } else if (auto c = boost::dynamic_pointer_cast<
+                                               QuantExt::CappedFlooredAverageONIndexedCoupon>(ptrFloat)) {
+                                    fixingValue = c->underlying()->rate();
+                                } else if (auto c = boost::dynamic_pointer_cast<
+                                               QuantExt::CappedFlooredOvernightIndexedCoupon>(ptrFloat)) {
+                                    fixingValue = c->underlying()->rate();
+                                }
                             } else if (ptrInfl) {
                                 fixingDate = ptrInfl->fixingDate();
                                 fixingValue = ptrInfl->indexFixing();
@@ -299,7 +313,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     c = tmp->underlying();
                                 }
                                 Date fixingDate;
-                                std::string qlIndexName;
+                                std::string qlIndexName; // index used to retrieve vol
                                 bool usesCapVol = false, usesSwaptionVol = false;
                                 Period swaptionTenor;
                                 if (auto tmp = boost::dynamic_pointer_cast<CappedFlooredCoupon>(c)) {
@@ -307,13 +321,14 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     capStrike = tmp->effectiveCap();
                                     fixingDate = tmp->fixingDate();
                                     qlIndexName = tmp->index()->name();
-                                    if (boost::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
+                                    if (auto cms = boost::dynamic_pointer_cast<CmsCoupon>(tmp->underlying())) {
+                                        swaptionTenor = cms->swapIndex()->tenor();
+                                        qlIndexName = cms->swapIndex()->iborIndex()->name();
                                         usesSwaptionVol = true;
-                                        swaptionTenor = tmp->index()->tenor();
-                                    } else if (boost::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
+                                    } else if (auto ibor = boost::dynamic_pointer_cast<IborCoupon>(tmp->underlying())) {
+                                        qlIndexName = ibor->index()->name();
                                         usesCapVol = true;
                                     }
-
                                 } else if (auto tmp =
                                                boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(c)) {
                                     floorStrike = tmp->effectiveFloor();
@@ -335,8 +350,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 if (fixingDate != Date() && fixingDate > market->asofDate()) {
                                     if (floorStrike != Null<Real>()) {
                                         if (usesSwaptionVol) {
-                                            floorVolatility = market->swaptionVol(ccy, configuration)
-                                                                  ->volatility(fixingDate, swaptionTenor, floorStrike);
+                                            floorVolatility =
+                                                market
+                                                    ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, swaptionTenor, floorStrike);
                                         } else if (usesCapVol) {
                                             floorVolatility =
                                                 market
@@ -347,8 +365,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                     }
                                     if (capStrike != Null<Real>()) {
                                         if (usesSwaptionVol) {
-                                            capVolatility = market->swaptionVol(ccy, configuration)
-                                                                ->volatility(fixingDate, swaptionTenor, capStrike);
+                                            capVolatility =
+                                                market
+                                                    ->swaptionVol(IndexNameTranslator::instance().oreName(qlIndexName),
+                                                                  configuration)
+                                                    ->volatility(fixingDate, swaptionTenor, capStrike);
                                         } else if (usesCapVol) {
                                             capVolatility =
                                                 market

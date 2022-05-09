@@ -200,7 +200,7 @@ void CrossAssetModelBuilder::buildModel() const {
 
     for (Size i = 0; i < config_->irConfigs().size(); i++) {
         boost::shared_ptr<IrLgmData> ir = config_->irConfigs()[i];
-        DLOG("IR Parametrization " << i << " ccy " << ir->ccy());
+        DLOG("IR Parametrization " << i << " qualifier " << ir->qualifier());
         boost::shared_ptr<LgmBuilder> builder =
             boost::make_shared<LgmBuilder>(market_, ir, configurationLgmCalibration_, config_->bootstrapTolerance(),
                                            continueOnError_, referenceCalibrationGrid_);
@@ -209,11 +209,16 @@ void CrossAssetModelBuilder::buildModel() const {
         irBuilder.push_back(builder);
         boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization = builder->parametrization();
         swaptionBaskets_[i] = builder->swaptionBasket();
-        currencies.push_back(ir->ccy());
+        QL_REQUIRE(std::find(currencies.begin(), currencies.end(), parametrization->currency().code()) ==
+                       currencies.end(),
+                   "Duplicate IR parameterization for currency "
+                       << parametrization->currency().code()
+                       << " - are there maybe two indices with the same currency in CrossAssetModelData?");
+        currencies.push_back(parametrization->currency().code());
         irParametrizations.push_back(parametrization);
         irDiscountCurves.push_back(builder->discountCurve());
         subBuilders_[CT::IR][i] = builder;
-        processInfo[CT::IR].emplace_back(ir->ccy(), 1);
+        processInfo[CT::IR].emplace_back(parametrization->currency().code(), 1);
     }
 
     QL_REQUIRE(irParametrizations.size() > 0, "missing IR parametrizations");

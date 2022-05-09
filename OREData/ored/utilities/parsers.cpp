@@ -542,6 +542,18 @@ Calendar parseCalendar(const string& s, const string& newName) {
     }
 }
 
+bool isOnePeriod(const string& s) {
+    if (s.empty())
+        return false;
+    char c = std::toupper(s.back());
+    if (!(c == 'D' || c == 'W' || c == 'M' || c == 'Y'))
+        return false;
+    for (auto c = s.cbegin(); c != std::next(s.end(), -1); std::advance(c, 1))
+        if (*c < '0' || *c > '9')
+            return false;
+    return true;
+}
+
 Period parsePeriod(const string& s) { return PeriodParser::parse(s); }
 
 BusinessDayConvention parseBusinessDayConvention(const string& s) {
@@ -985,6 +997,18 @@ Month parseMonth(const string& s) {
     } else {
         QL_FAIL("The string \"" << s << "\" is not recognized as a Month");
     }
+}
+
+PaymentLag parsePaymentLag(const string& s) {   
+    Natural pl = 0;
+    if (!tryParse<Natural>(s, pl, parseInteger)) {
+        Period p;
+        if (tryParse<Period>(s, p, parsePeriod)) {
+            QL_REQUIRE(p.units() == Days, "parsePaymentLag: PaymentLag must be given in Days");
+            pl = p.length();
+        }
+    }
+    return pl;
 }
 
 std::vector<string> parseListOfValues(string s) {

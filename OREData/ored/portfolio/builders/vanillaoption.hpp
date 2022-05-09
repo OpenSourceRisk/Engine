@@ -235,8 +235,8 @@ protected:
         Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
         Size xGrid = parseInteger(engineParameter("XGrid"));
         Size dampingSteps = parseInteger(engineParameter("DampingSteps"));
-        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", "", false, "true"));
-        Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", "", false, "1"));
+        bool monotoneVar = parseBool(engineParameter("EnforceMonotoneVariance", {}, false, "true"));
+        Size tGridMin = parseInteger(engineParameter("TimeGridMinimumSize", {}, false, "1"));
         tGrid = std::max(tGridMin, tGrid);
         
         boost::shared_ptr<QuantLib::GeneralizedBlackScholesProcess> gbsp;

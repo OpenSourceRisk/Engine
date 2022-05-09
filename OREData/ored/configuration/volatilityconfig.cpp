@@ -51,18 +51,18 @@ void VolatilityConfig::toXMLNode(XMLDocument& doc, XMLNode* node) {
         XMLUtils::addChild(doc, node, "Calendar", calendarStr_);
 }
 
-void EquityProxyVolatilityConfig::fromXML(XMLNode* node) {
+void ProxyVolatilityConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ProxySurface");
     VolatilityConfig::fromXMLNode(node);
-    equityVolatilityCurve_ = XMLUtils::getChildValue(node, "EquityVolatilityCurve", true);
+    proxyVolatilityCurve_ = XMLUtils::getChildValue(node, "ProxyVolatilityCurve", true);
     fxVolatilityCurve_ = XMLUtils::getChildValue(node, "FXVolatilityCurve", false);
     correlationCurve_ = XMLUtils::getChildValue(node, "CorrelationCurve", false);
 }
 
-XMLNode* EquityProxyVolatilityConfig::toXML(XMLDocument& doc) {
+XMLNode* ProxyVolatilityConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("ProxySurface");
     VolatilityConfig::toXMLNode(doc, node);
-    XMLUtils::addChild(doc, node, "EquityVolatilityCurve", equityVolatilityCurve_);
+    XMLUtils::addChild(doc, node, "ProxyVolatilityCurve", proxyVolatilityCurve_);
     if (!fxVolatilityCurve_.empty())
         XMLUtils::addChild(doc, node, "FXVolatilityCurve", fxVolatilityCurve_);
     if (!correlationCurve_.empty())
@@ -70,15 +70,15 @@ XMLNode* EquityProxyVolatilityConfig::toXML(XMLDocument& doc) {
     return node;
 }
 
-const std::string& EquityProxyVolatilityConfig::equityVolatilityCurve() const { 
-    return equityVolatilityCurve_; 
+const std::string& ProxyVolatilityConfig::proxyVolatilityCurve() const { 
+    return proxyVolatilityCurve_; 
 }
 
-const std::string& EquityProxyVolatilityConfig::fxVolatilityCurve() const { 
+const std::string& ProxyVolatilityConfig::fxVolatilityCurve() const { 
     return fxVolatilityCurve_; 
 }
 
-const std::string& EquityProxyVolatilityConfig::correlationCurve() const { 
+const std::string& ProxyVolatilityConfig::correlationCurve() const { 
     return correlationCurve_; 
 }
 
@@ -495,6 +495,72 @@ XMLNode* VolatilityApoFutureSurfaceConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+void VolatilityConfigBuilder::loadVolatiltyConfigs(XMLNode* node) {
+    for (XMLNode* n = XMLUtils::getChildNode(node, "Constant"); n; n = XMLUtils::getNextSibling(n, "Constant")) {
+        auto vc = boost::make_shared<ConstantVolatilityConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    for (XMLNode* n = XMLUtils::getChildNode(node, "Curve"); n; n = XMLUtils::getNextSibling(n, "Curve")) {
+        auto vc = boost::make_shared<VolatilityCurveConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    for (XMLNode* n = XMLUtils::getChildNode(node, "DeltaSurface"); n;
+         n = XMLUtils::getNextSibling(n, "DeltaSurface")) {
+        auto vc = boost::make_shared<VolatilityDeltaSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    for (XMLNode* n = XMLUtils::getChildNode(node, "StrikeSurface"); n;
+         n = XMLUtils::getNextSibling(n, "StrikeSurface")) {
+        auto vc = boost::make_shared<VolatilityStrikeSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    for (XMLNode* n = XMLUtils::getChildNode(node, "MoneynessSurface"); n;
+        n = XMLUtils::getNextSibling(n, "MoneynessSurface")) {
+        auto vc = boost::make_shared<VolatilityMoneynessSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    for (XMLNode* n = XMLUtils::getChildNode(node, "ApoFutureSurface"); n;
+        n = XMLUtils::getNextSibling(n, "ApoFutureSurface")) {
+        auto vc = boost::make_shared<VolatilityApoFutureSurfaceConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    for (XMLNode* n = XMLUtils::getChildNode(node, "ProxySurface"); n;
+         n = XMLUtils::getNextSibling(n, "ProxySurface")) {
+        auto vc = boost::make_shared<ProxyVolatilityConfig>();
+        vc->fromXML(n);
+        volatilityConfig_.push_back(vc);
+    }
+
+    QL_REQUIRE(volatilityConfig_.size() > 0,
+               "VolatilityConfigBuilder expects at least one child node of type: "
+               "Constant, Curve, StrikeSurface, DeltaSurface, MoneynessSurface, ApoFutureSurface, ProxySurface.");
+
+    // sort the volatility configs by priority
+    if (volatilityConfig_.size() > 1)
+        std::sort(volatilityConfig_.begin(), volatilityConfig_.end());
+}
+
+void VolatilityConfigBuilder::fromXML(XMLNode* node) {
+    if (XMLNode* n = XMLUtils::getChildNode(node, "VolatilityConfig"))
+        loadVolatiltyConfigs(n);
+    else 
+        loadVolatiltyConfigs(node);
+}
+
+XMLNode* VolatilityConfigBuilder::toXML(XMLDocument& doc) { return NULL; }
 
 } // namespace data
 } // namespace ore

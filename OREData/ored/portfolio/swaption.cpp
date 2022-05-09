@@ -33,6 +33,7 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/indexnametranslator.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/timer/timer.hpp>
@@ -234,7 +235,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
                                        positionType_ == Position::Long ? -1.0 : 1.0, ccy, engineFactory,
                                        swaptionBuilder->configuration(MarketContext::pricing));
 
-    swaption->setPricingEngine(swaptionBuilder->engine(ccy));
+    swaption->setPricingEngine(
+        swaptionBuilder->engine(IndexNameTranslator::instance().oreName(swap->iborIndex()->name())));
 
     if (settlementType_ == Settlement::Physical) {
         instrument_ = boost::make_shared<EuropeanOptionWrapper>(
@@ -275,7 +277,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                                                      exerciseBuilder_->exercise(), settlementType_, settlementMethod_);
 
     // determine strikes for calibration basket (simple approach, a la summit)
+    // also determine the ibor index (if several, chose the first) to get the engine
     std::vector<Real> strikes(exerciseBuilder_->noticeDates().size(), Null<Real>());
+    boost::shared_ptr<IborIndex> index;
     for (Size i = 0; i < exerciseBuilder_->noticeDates().size(); ++i) {
         Real firstFixedRate = Null<Real>();
         Real firstFloatSpread = Null<Real>();
@@ -286,6 +290,16 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
                         firstFixedRate = cpn->rate();
                 } else if (auto cpn = boost::dynamic_pointer_cast<FloatingRateCoupon>(c)) {
                     firstFloatSpread = cpn->spread();
+                    if (index == nullptr) {
+                        if (auto tmp = boost::dynamic_pointer_cast<IborIndex>(cpn->index())) {
+                            DLOG("found ibor / ois index '" << tmp->name() << "'");
+                            index = tmp;
+                        } else if (auto tmp = boost::dynamic_pointer_cast<SwapIndex>(cpn->index())) {
+                            DLOG("found cms index " << tmp->name() << ", use key '" << tmp->iborIndex()->name()
+                                                    << "' to look up vol");
+                            index = tmp->iborIndex();
+                        }
+                    }
                 }
             }
         }
@@ -302,6 +316,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
              << (firstFloatSpread == Null<Real>() ? "NA" : std::to_string(firstFloatSpread)) << ")");
     }
 
+    if (index == nullptr) {
+        DLOG("no ibor, ois, cms index found, use ccy key to look up vol");
+    }
+
     auto builder = engineFactory->builder("BermudanSwaption");
     auto swaptionBuilder = boost::dynamic_pointer_cast<BermudanSwaptionEngineBuilder>(builder);
     QL_REQUIRE(swaptionBuilder, "internal error: could not cast to BermudanSwaptionEngineBuilder");
@@ -311,8 +329,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     QL_REQUIRE(swapBuilder, "internal error: could not cast to SwapEngineBuilder");
 
     cpu_timer timer;
-    auto swaptionEngine =
-        swaptionBuilder->engine(id(), npvCurrency_, exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes);
+    // use ibor / ois index as key, if possible, otherwise the npv currency
+    auto swaptionEngine = swaptionBuilder->engine(
+        id(), index == nullptr ? npvCurrency_ : IndexNameTranslator::instance().oreName(index->name()),
+        exerciseBuilder_->noticeDates(), underlying_->maturity(), strikes);
     timer.stop();
     DLOG("Swaption model calibration time: " << timer.format(default_places, "%w") << " s");
     swaption->setPricingEngine(swaptionEngine);

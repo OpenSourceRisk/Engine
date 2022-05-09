@@ -283,6 +283,7 @@
 #include <qle/quotes/logquote.hpp>
 #include <qle/termstructures/adjusteddefaultcurve.hpp>
 #include <qle/termstructures/aposurface.hpp>
+#include <qle/termstructures/atmadjustedsmilesection.hpp>
 #include <qle/termstructures/averagefuturepricehelper.hpp>
 #include <qle/termstructures/averageoffpeakpowerhelper.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
@@ -365,6 +366,8 @@
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/termstructures/probabilitytraits.hpp>
+#include <qle/termstructures/proxyoptionletvolatility.hpp>
+#include <qle/termstructures/proxyswaptionvolatility.hpp>
 #include <qle/termstructures/spreadedblackvolatilitycurve.hpp>
 #include <qle/termstructures/spreadedblackvolatilitysurfacemoneyness.hpp>
 #include <qle/termstructures/spreadedcorrelationcurve.hpp>

@@ -87,65 +87,78 @@ Date ConventionsBasedFutureExpiry::expiryDate(const Date& contractDate, Natural 
     if (convention_.contractFrequency() == Daily) {
         return nextExpiry(contractDate, forOption);
     } else {
-        return expiry(contractDate.month(), contractDate.year(), monthOffset, forOption);
+        return expiry(contractDate.dayOfMonth(), contractDate.month(), contractDate.year(), monthOffset, forOption);
     }
 }
 
-Date ConventionsBasedFutureExpiry::expiry(Month contractMonth, Year contractYear, QuantLib::Natural monthOffset,
+Date ConventionsBasedFutureExpiry::expiry(Day dayOfMonth, Month contractMonth, Year contractYear, QuantLib::Natural monthOffset,
                                           bool forOption) const {
 
     Date expiry;
-
-    // Apply month offset if non-zero
-    if (monthOffset > 0) {
-        Date newDate = Date(15, contractMonth, contractYear) + monthOffset * Months;
-        contractMonth = newDate.month();
-        contractYear = newDate.year();
-    }
-
-    // Move n months before (+ve) or after (-ve) for the expiry if necessary
-    if (convention_.expiryMonthLag() != 0) {
-        Date newDate = Date(15, contractMonth, contractYear) - convention_.expiryMonthLag() * Months;
-        contractMonth = newDate.month();
-        contractYear = newDate.year();
-    }
-
-    // Calculate the relevant date in the expiry month and year
-    if (convention_.anchorType() == CommodityFutureConvention::AnchorType::DayOfMonth) {
-        Date last = Date::endOfMonth(Date(1, contractMonth, contractYear));
-        if (convention_.dayOfMonth() > static_cast<Natural>(last.dayOfMonth())) {
-            expiry = last;
-        } else {
-            expiry = Date(convention_.dayOfMonth(), contractMonth, contractYear);
-        }
-    } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::NthWeekday) {
-        expiry = Date::nthWeekday(convention_.nth(), convention_.weekday(), contractMonth, contractYear);
-    } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::CalendarDaysBefore) {
-        expiry = Date(1, contractMonth, contractYear) - convention_.calendarDaysBefore() * Days;
-    } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::BusinessDaysAfter) {
-        if (convention_.businessDaysAfter() > 0) {
-            expiry = convention_.expiryCalendar().advance(Date(1, contractMonth, contractYear) - 1 * Days,
-                                                          convention_.businessDaysAfter(), Days);
-        } else {
-            expiry = convention_.expiryCalendar().advance(Date(1, contractMonth, contractYear),
-                                                          convention_.businessDaysAfter(), Days);
-        }
-    } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::LastWeekday) {
-        expiry = QuantExt::DateUtilities::lastWeekday(convention_.weekday(), contractMonth, contractYear);
+    if (convention_.contractFrequency() == Weekly) {
+        QL_REQUIRE(convention_.anchorType() == CommodityFutureConvention::AnchorType::WeeklyDayOfTheWeek,
+                   "Please change anchorType to WeeklyDayOfTheWeek for weekly contract expiries");
+        Date d(dayOfMonth, contractMonth, contractYear);
+        expiry = convention_.expiryCalendar().adjust(d - d.weekday() + convention_.weekday(),
+                                                     convention_.businessDayConvention());
     } else {
-        QL_FAIL("Did not recognise the commodity future convention's anchor type");
-    }
+        // Apply month offset if non-zero
+        if (monthOffset > 0) {
+            Date newDate = Date(15, contractMonth, contractYear) + monthOffset * Months;
+            contractMonth = newDate.month();
+            contractYear = newDate.year();
+        }
 
-    // If expiry date is not a good business day, adjust it before applying the offset.
-    if (convention_.adjustBeforeOffset()) {
-        expiry = convention_.expiryCalendar().adjust(expiry, convention_.businessDayConvention());
-    }
+        // Move n months before (+ve) or after (-ve) for the expiry if necessary
+        if (convention_.expiryMonthLag() != 0) {
+            Date newDate = Date(15, contractMonth, contractYear) - convention_.expiryMonthLag() * Months;
+            contractMonth = newDate.month();
+            contractYear = newDate.year();
+        }
 
-    // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
-    expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
+        // Calculate the relevant date in the expiry month and year
+        if (convention_.anchorType() == CommodityFutureConvention::AnchorType::DayOfMonth) {
+            Date last = Date::endOfMonth(Date(1, contractMonth, contractYear));
+            if (convention_.dayOfMonth() > static_cast<Natural>(last.dayOfMonth())) {
+                expiry = last;
+            } else {
+                expiry = Date(convention_.dayOfMonth(), contractMonth, contractYear);
+            }
+        } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::NthWeekday) {
+            expiry = Date::nthWeekday(convention_.nth(), convention_.weekday(), contractMonth, contractYear);
+        } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::CalendarDaysBefore) {
+            expiry = Date(1, contractMonth, contractYear) - convention_.calendarDaysBefore() * Days;
+        } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::BusinessDaysAfter) {
+            if (convention_.businessDaysAfter() > 0) {
+                expiry = convention_.expiryCalendar().advance(Date(1, contractMonth, contractYear) - 1 * Days,
+                                                              convention_.businessDaysAfter(), Days);
+            } else {
+                expiry = convention_.expiryCalendar().advance(Date(1, contractMonth, contractYear),
+                                                              convention_.businessDaysAfter(), Days);
+            }
+        } else if (convention_.anchorType() == CommodityFutureConvention::AnchorType::LastWeekday) {
+            expiry = QuantExt::DateUtilities::lastWeekday(convention_.weekday(), contractMonth, contractYear);
+        } else {
+            QL_FAIL("Did not recognise the commodity future convention's anchor type");
+        }
+        // If expiry date is not a good business day, adjust it before applying the offset.
+        if (convention_.adjustBeforeOffset()) {
+            expiry = convention_.expiryCalendar().adjust(expiry, convention_.businessDayConvention());
+        }
+
+        // Apply offset adjustments if necessary. A negative integer indicates that we move forward that number of days.
+        expiry = convention_.expiryCalendar().advance(expiry, -convention_.offsetDays(), Days);
+    }
 
     // If we want the option contract expiry, do the extra work here.
-    if (forOption) {
+    if (forOption && convention_.optionContractFrequency() == Weekly) {
+        QL_REQUIRE(convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::WeeklyDayOfTheWeek,
+                   "Please change anchorType to WeeklyDayOfTheWeek for weekly contract expiries");
+        Date d(expiry.dayOfMonth(), expiry.month(), expiry.year());
+        expiry = convention_.expiryCalendar().adjust(d - d.weekday() + convention_.optionWeekday(),
+                                                     convention_.businessDayConvention());
+        expiry = avoidProhibited(expiry, true);
+    } else if (forOption) {
         if (convention_.optionAnchorType() == CommodityFutureConvention::OptionAnchorType::DayOfMonth) {
             auto optionMonth = expiry.month();
             auto optionYear = expiry.year();
@@ -213,11 +226,13 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
     if ((convention_.contractFrequency() == Daily) && (!forOption || convention_.optionContractFrequency() == Daily)) {
         Date expiry = convention_.expiryCalendar().adjust(referenceDate, Following);
         return avoidProhibited(expiry, false);
-    }
+    } 
 
     // Get a contract expiry before today and increment until expiryDate is >= today
+    
     Date guideDate(15, convention_.oneContractMonth(), referenceDate.year() - 1);
-    Date expiryDate = expiry(convention_.oneContractMonth(), referenceDate.year() - 1, 0, forOption);
+    Date expiryDate =
+        expiry(guideDate.dayOfMonth(), convention_.oneContractMonth(), referenceDate.year() - 1, 0, forOption);
     QL_REQUIRE(expiryDate < referenceDate, "Expected the expiry date in the previous year to be before reference");
     while (expiryDate < referenceDate) {
         if (forOption && (convention_.optionContractFrequency() != convention_.contractFrequency())) {
@@ -225,7 +240,7 @@ Date ConventionsBasedFutureExpiry::nextExpiry(const Date& referenceDate, bool fo
         } else {
             guideDate += Period(convention_.contractFrequency());
         }
-        expiryDate = expiry(guideDate.month(), guideDate.year(), 0, forOption);
+        expiryDate = expiry(guideDate.dayOfMonth(), guideDate.month(), guideDate.year(), 0, forOption);
     }
 
     return expiryDate;

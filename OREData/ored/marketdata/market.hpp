@@ -117,10 +117,10 @@ public:
     //! \name Swaptions
     //@{
     virtual Handle<SwaptionVolatilityStructure>
-    swaptionVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual const string shortSwapIndexBase(const string& ccy,
+    swaptionVol(const string& key, const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual const string shortSwapIndexBase(const string& key,
                                             const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual const string swapIndexBase(const string& ccy,
+    virtual const string swapIndexBase(const string& key,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 

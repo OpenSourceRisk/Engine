@@ -656,7 +656,7 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
                  const double foreignAmount, const string& fxIndex,
-                 const std::vector<AmortizationData>& amortizationData, const int paymentLag,
+                 const std::vector<AmortizationData>& amortizationData, const PaymentLag paymentLag,
                  const string& paymentCalendar, const vector<string>& paymentDates,
                  const std::vector<Indexing>& indexing, const bool indexingFromAssetLeg,
                  const string& lastPeriodDayCounter)
@@ -686,7 +686,7 @@ void LegData::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
-    paymentLag_ = XMLUtils::getChildValueAsInt(node, "PaymentLag");
+    paymentLag_ = parsePaymentLag(XMLUtils::getChildValue(node, "PaymentLag"));
     paymentCalendar_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Notionals", "Notional", "startDate",
@@ -776,7 +776,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     if (paymentLag_ != 0)
-        XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+        XMLUtils::addChild(doc, node, "PaymentLag", to_string(paymentLag_));
     if (!paymentCalendar_.empty())
         XMLUtils::addChild(doc, node, "PaymentCalendar", paymentCalendar_);
     if (dayCounter_ != "")
@@ -865,7 +865,7 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
 
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    Natural paymentLag = data.paymentLag();
+    PaymentLag paymentLag = data.paymentLag();
     applyAmortization(notionals, data, schedule, true, rates);
     Leg leg = FixedRateLeg(schedule)
                   .withNotionals(notionals)
@@ -1092,7 +1092,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    Natural paymentLag = data.paymentLag();
+    PaymentLag paymentLag = data.paymentLag();
     Calendar paymentCalendar;
 
     if (data.paymentCalendar().empty())
@@ -1597,7 +1597,8 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     QL_REQUIRE(builder, "No builder found for CmsLeg");
     boost::shared_ptr<CmsCouponPricerBuilder> cmsSwapBuilder =
         boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
-    boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cmsSwapBuilder->engine(swapIndex->currency());
+    boost::shared_ptr<FloatingRateCouponPricer> couponPricer =
+        cmsSwapBuilder->engine(IndexNameTranslator::instance().oreName(swapIndex->iborIndex()->name()));
 
     // Loop over the coupons in the leg and set pricer
     Leg tmpLeg = cmsLeg;
@@ -1694,7 +1695,8 @@ Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swa
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
     QL_REQUIRE(builder, "No CMS builder found for CmsLeg");
     boost::shared_ptr<CmsCouponPricerBuilder> cmsBuilder = boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
-    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(swapIndex->currency()));
+    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(
+        cmsBuilder->engine(IndexNameTranslator::instance().oreName(swapIndex->iborIndex()->name())));
     QL_REQUIRE(cmsPricer, "Expected CMS Pricer");
 
     // Loop over the coupons in the leg and set pricer
@@ -1757,7 +1759,8 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     auto builder1 = engineFactory->builder("CMS");
     QL_REQUIRE(builder1, "No CMS builder found for CmsSpreadLeg");
     auto cmsBuilder = boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder1);
-    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(swapSpreadIndex->currency()));
+    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(
+        IndexNameTranslator::instance().oreName(swapSpreadIndex->swapIndex1()->iborIndex()->name())));
     QL_REQUIRE(cmsPricer, "Expected CMS Pricer");
     auto builder2 = engineFactory->builder("CMSSpread");
     QL_REQUIRE(builder2, "No CMS Spread builder found for CmsSpreadLeg");
@@ -1866,7 +1869,8 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     auto builder1 = engineFactory->builder("CMS");
     QL_REQUIRE(builder1, "No CMS builder found for CmsSpreadLeg");
     auto cmsBuilder = boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder1);
-    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(swapSpreadIndex->currency()));
+    auto cmsPricer = boost::dynamic_pointer_cast<CmsCouponPricer>(cmsBuilder->engine(
+        IndexNameTranslator::instance().oreName(swapSpreadIndex->swapIndex1()->iborIndex()->name())));
     QL_REQUIRE(cmsPricer, "Expected CMS Pricer");
     auto builder2 = engineFactory->builder("CMSSpread");
     QL_REQUIRE(builder2, "No CMS Spread builder found for CmsSpreadLeg");
@@ -1921,7 +1925,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     }
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
-    Natural paymentLag = data.paymentLag();
+    PaymentLag paymentLag = data.paymentLag();
 
     ScheduleBuilder scheduleBuilder;
 

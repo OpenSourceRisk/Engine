@@ -107,6 +107,12 @@ Real CommodityIndex::pastFixing(const Date& fixingDate) const {
     return timeSeries()[fixingDate];
 }
 
+Real CommodityIndex::forecastFixing(const Time& fixingTime) const {
+    if (isFuturesIndex_)
+        return curve_->price(expiryDate_);
+    else
+        return curve_->price(fixingTime);
+}
 Real CommodityIndex::forecastFixing(const Date& fixingDate) const {
     if (isFuturesIndex_)
         return curve_->price(expiryDate_);

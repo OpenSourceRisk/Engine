@@ -26,7 +26,8 @@ GenericIborIndex::GenericIborIndex(const Period& tenor, const Currency& ccy, con
     : IborIndex(ccy.code() + "-GENERIC", tenor, 2, ccy, TARGET(), Following, false, Actual360(), h) {}
 
 Rate GenericIborIndex::pastFixing(const Date& fixingDate) const {
-    return fixing(Settings::instance().evaluationDate(), true);
+    Date fixDate = fixingCalendar().adjust(Settings::instance().evaluationDate(), Following);
+    return fixing(fixDate, true);
 }
 
 boost::shared_ptr<IborIndex> GenericIborIndex::clone(const Handle<YieldTermStructure>& h) const {

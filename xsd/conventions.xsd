@@ -128,6 +128,7 @@
       <xs:element type="xs:string" name="FixedCalendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="FixedPaymentConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="FixedFrequency" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="OnTenor" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="RateCutoff" minOccurs="1" maxOccurs="1"/>
@@ -408,6 +409,7 @@
             <xs:element type="dayOfMonth" name="DayOfMonth"/>
             <xs:element type="xs:nonNegativeInteger" name="CalendarDaysBefore"/>
             <xs:element type="weekdayType" name="LastWeekday"/>
+            <xs:element type="weekdayType" name="WeeklyDayOfTheWeek"/>
             <xs:element type="xs:integer" name="BusinessDaysAfter"/>
           </xs:choice>
         </xs:complexType>
@@ -428,6 +430,7 @@
       <xs:element type="dayOfMonth" name="OptionExpiryDay" minOccurs="0" maxOccurs="1"/>
       <xs:element type="nthWeekdayType" name="OptionNthWeekday" minOccurs="0" maxOccurs="1"/>
       <xs:element type="weekdayType" name="OptionExpiryLastWeekdayOfMonth" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="weekdayType" name="OptionExpiryWeeklyDayOfTheWeek" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="OptionBusinessDayConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="continuationMappingsType" name="FutureContinuationMappings" minOccurs="0" maxOccurs="1"/>
       <xs:element type="continuationMappingsType" name="OptionContinuationMappings" minOccurs="0" maxOccurs="1"/>

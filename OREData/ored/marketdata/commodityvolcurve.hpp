@@ -27,6 +27,7 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -50,7 +51,10 @@ public:
                       const CurveConfigurations& curveConfigs,
                       const std::map<std::string, boost::shared_ptr<YieldCurve>>& yieldCurves = {},
                       const std::map<std::string, boost::shared_ptr<CommodityCurve>>& commodityCurves = {},
-                      const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {});
+                      const std::map<std::string, boost::shared_ptr<CommodityVolCurve>>& commodityVolCurves = {},
+                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves = {},
+                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves = {},
+                      const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
     //@}
 
     //! \name Inspectors
@@ -110,6 +114,15 @@ private:
                          const VolatilityApoFutureSurfaceConfig& vapo,
                          const QuantLib::Handle<QuantLib::BlackVolTermStructure>& baseVts,
                          const QuantLib::Handle<QuantExt::PriceTermStructure>& basePts);
+
+    //! Build a volatility surface as a proxy from another volatility surface
+    void buildVolatility(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec,
+                         const CurveConfigurations& curveConfigs, const ProxyVolatilityConfig& pvc,
+                         const map<string, boost::shared_ptr<CommodityCurve>>& comCurves,
+                         const map<string, boost::shared_ptr<CommodityVolCurve>>& volCurves,
+                         const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
+                         const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                         const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
 
     /*! Assume that the input price curve \p pts is a future price curve giving the price of a sequence of future
         contracts at the contract expiry. Create a copy of this input curve with additional pillar points at

@@ -490,7 +490,8 @@ XMLNode* IRSwapConvention::toXML(XMLDocument& doc) {
 AverageOisConvention::AverageOisConvention(const string& id, const string& spotLag, const string& fixedTenor,
                                            const string& fixedDayCounter, const string& fixedCalendar,
                                            const string& fixedConvention, const string& fixedPaymentConvention,
-                                           const string& index, const string& onTenor, const string& rateCutoff)
+                                           const string& fixedFrequency, const string& index, const string& onTenor,
+                                           const string& rateCutoff)
     : Convention(id, Type::AverageOIS), strSpotLag_(spotLag), strFixedTenor_(fixedTenor),
       strFixedDayCounter_(fixedDayCounter), strFixedCalendar_(fixedCalendar), strFixedConvention_(fixedConvention),
       strFixedPaymentConvention_(fixedPaymentConvention), strIndex_(index), strOnTenor_(onTenor),
@@ -509,6 +510,7 @@ void AverageOisConvention::build() {
     fixedCalendar_ = parseCalendar(strFixedCalendar_);
     fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
     fixedPaymentConvention_ = parseBusinessDayConvention(strFixedPaymentConvention_);
+    fixedFrequency_ = strFixedFrequency_.empty() ? Annual : parseFrequency(strFixedFrequency_);
     onTenor_ = parsePeriod(strOnTenor_);
     rateCutoff_ = lexical_cast<Natural>(strRateCutoff_);
 }
@@ -526,6 +528,7 @@ void AverageOisConvention::fromXML(XMLNode* node) {
     strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", true);
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
     strFixedPaymentConvention_ = XMLUtils::getChildValue(node, "FixedPaymentConvention", true);
+    strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", false);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     strOnTenor_ = XMLUtils::getChildValue(node, "OnTenor", true);
     strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", true);
@@ -543,6 +546,8 @@ XMLNode* AverageOisConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FixedCalendar", strFixedCalendar_);
     XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
     XMLUtils::addChild(doc, node, "FixedPaymentConvention", strFixedPaymentConvention_);
+    if (!strFixedFrequency_.empty())
+        XMLUtils::addChild(doc, node, "FixedFrequency", strFixedFrequency_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "OnTenor", strOnTenor_);
     XMLUtils::addChild(doc, node, "RateCutoff", strRateCutoff_);
@@ -1691,9 +1696,17 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
 
     contractFrequency_ = parseAndValidateFrequency(strContractFrequency_);
     optionContractFrequency_ = parseAndValidateFrequency(strOptionContractFrequency_);
-
+   
     // Variables related to the anchor day in a given month. Not needed if daily.
-    if (contractFrequency_ != Daily || optionContractFrequency_ != Daily) {
+    if (contractFrequency_ == Weekly) {
+        XMLNode* anchorNode = XMLUtils::getChildNode(node, "AnchorDay");
+        if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "WeeklyDayOfTheWeek")) {
+            anchorType_ = AnchorType::WeeklyDayOfTheWeek;
+            strWeekday_ = XMLUtils::getNodeValue(tmp);
+        } else {
+            QL_FAIL("Failed to parse AnchorDay node, the WeeklyDayOfTheWeek node is required for weekly contract expiries.");
+        }
+    } else if (contractFrequency_ != Daily || optionContractFrequency_ != Daily) {
         XMLNode* anchorNode = XMLUtils::getChildNode(node, "AnchorDay");
         QL_REQUIRE(anchorNode, "Expected an AnchorDay node in the FutureExpiry convention");
         if (XMLNode* nthNode = XMLUtils::getChildNode(anchorNode, "NthWeekday")) {
@@ -1710,9 +1723,9 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
             anchorType_ = AnchorType::LastWeekday;
             strWeekday_ = XMLUtils::getNodeValue(tmp);
         } else if (XMLNode* tmp = XMLUtils::getChildNode(anchorNode, "BusinessDaysAfter")) {
-	    anchorType_ = AnchorType::BusinessDaysAfter;
-	    strBusinessDaysAfter_ = XMLUtils::getNodeValue(tmp);
-	} else {
+            anchorType_ = AnchorType::BusinessDaysAfter;
+            strBusinessDaysAfter_ = XMLUtils::getNodeValue(tmp);
+        } else {
             QL_FAIL("Failed to parse AnchorDay node");
         }
     }
@@ -1748,6 +1761,7 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     std::string previouslyFoundOptionExpiryRule = "";
 
     if (XMLNode* n = XMLUtils::getChildNode(node, "OptionExpiryOffset")) {
+        QL_REQUIRE(optionContractFrequency_ != Weekly, "OptionExpiryOffset is not allowed for weekly option expiries");
         optionAnchorType_ = OptionAnchorType::BusinessDaysBefore;
         strOptionExpiryOffset_ = XMLUtils::getNodeValue(n);
         foundOptionExpiryRule = true;
@@ -1757,6 +1771,7 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(node, "OptionExpiryDay")) {
         QL_REQUIRE(!foundOptionExpiryRule, "Expect exactly one option expiry anchor date rule, found "
                                                << previouslyFoundOptionExpiryRule << " and OptionExpiryDay");
+        QL_REQUIRE(optionContractFrequency_ != Weekly, "OptionExpiryDay is not allowed for weekly option expiries");
         optionAnchorType_ = OptionAnchorType::DayOfMonth;
         strOptionExpiryDay_ = XMLUtils::getNodeValue(n);
         foundOptionExpiryRule = true;
@@ -1766,6 +1781,8 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     if (XMLNode* optionNthNode = XMLUtils::getChildNode(node, "OptionNthWeekday")) {
         QL_REQUIRE(!foundOptionExpiryRule, "Expect exactly one option expiry anchor date rule, found "
                                                << previouslyFoundOptionExpiryRule << " and OptionNthWeekday");
+        QL_REQUIRE(optionContractFrequency_ != Weekly,
+                   "OptionNthWeekday is not allowed for weekly option expiries");
         optionAnchorType_ = OptionAnchorType::NthWeekday;
         strOptionNth_ = XMLUtils::getChildValue(optionNthNode, "Nth", true);
         strOptionWeekday_ = XMLUtils::getChildValue(optionNthNode, "Weekday", true);
@@ -1776,16 +1793,36 @@ void CommodityFutureConvention::fromXML(XMLNode* node) {
     if (XMLNode* n = XMLUtils::getChildNode(node, "OptionExpiryLastWeekdayOfMonth")) {
         QL_REQUIRE(!foundOptionExpiryRule, "Expect exactly one option expiry anchor date rule, found "
                                                << previouslyFoundOptionExpiryRule << " and OptionExpiryLastWeekdayOfMonth");
+        QL_REQUIRE(optionContractFrequency_ != Weekly,
+                   "OptionExpiryLastWeekdayOfMonth is not allowed for weekly option expiries");
         optionAnchorType_ = OptionAnchorType::LastWeekday;
         strOptionWeekday_ = XMLUtils::getNodeValue(n);
         foundOptionExpiryRule = true;
         previouslyFoundOptionExpiryRule = "OptionExpiryLastWeekdayOfMonth";
-    } 
+    }
 
-    if (!foundOptionExpiryRule) {
+    if (XMLNode* n = XMLUtils::getChildNode(node, "OptionExpiryWeeklyDayOfTheWeek")) {
+        QL_REQUIRE(!foundOptionExpiryRule, "Expect exactly one option expiry anchor date rule, found "
+                                               << previouslyFoundOptionExpiryRule
+                                               << " and OptionExpiryWeeklyDayOfTheWeek");
+        QL_REQUIRE(optionContractFrequency_ == Weekly,
+                   "OptionExpiryWeeklyDayOfTheWeek only allowed for weekly option expiries");
+        optionAnchorType_ = OptionAnchorType::WeeklyDayOfTheWeek;
+        strOptionWeekday_ = XMLUtils::getNodeValue(n);
+        foundOptionExpiryRule = true;
+        previouslyFoundOptionExpiryRule = "OptionExpiryWeeklyDayOfTheWeek";
+    }
+
+
+    if (!foundOptionExpiryRule && optionContractFrequency_ == Weekly) {
+        optionAnchorType_ = OptionAnchorType::WeeklyDayOfTheWeek;
+        strOptionWeekday_ = strWeekday_;
+    } else if (!foundOptionExpiryRule) {
         optionAnchorType_ = OptionAnchorType::BusinessDaysBefore;
         strOptionExpiryOffset_ = "";
     }
+
+
 
     if (XMLNode* n = XMLUtils::getChildNode(node, "ProhibitedExpiries")) {
         auto datesNode = XMLUtils::getChildNode(n, "Dates");
@@ -1857,9 +1894,11 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
             XMLUtils::addChild(doc, anchorNode, "LastWeekday", strWeekday_);
         } else if (anchorType_ == AnchorType::BusinessDaysAfter) {
             XMLUtils::addChild(doc, anchorNode, "BusinessDaysAfter", strBusinessDaysAfter_);
+        } else if (anchorType_ == AnchorType::WeeklyDayOfTheWeek) {
+            XMLUtils::addChild(doc, anchorNode, "WeeklyDayOfTheWeek", strWeekday_);
         } else {
             XMLUtils::addChild(doc, anchorNode, "CalendarDaysBefore", strCalendarDaysBefore_);
-        }
+        } 
         XMLUtils::appendNode(node, anchorNode);
     }
 
@@ -1892,6 +1931,8 @@ XMLNode* CommodityFutureConvention::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, nthNode, "Weekday", strOptionWeekday_);
     } else if (optionAnchorType_ == OptionAnchorType::LastWeekday) {
         XMLUtils::addChild(doc, node, "OptionExpiryLastWeekdayOfMonth", strOptionWeekday_);
+    } else if (optionAnchorType_ == OptionAnchorType::WeeklyDayOfTheWeek) {
+        XMLUtils::addChild(doc, node, "OptionExpiryWeeklyDayOfTheWeek", strOptionWeekday_);
     }
 
     if (!prohibitedExpiries_.empty()) {
@@ -1962,6 +2003,8 @@ void CommodityFutureConvention::build() {
             weekday_ = parseWeekday(strWeekday_);
         } else if (anchorType_ == AnchorType::BusinessDaysAfter) {
             businessDaysAfter_ =  lexical_cast<Integer>(strBusinessDaysAfter_);
+        } else if (anchorType_ == AnchorType::WeeklyDayOfTheWeek) {
+            weekday_ = parseWeekday(strWeekday_);
         } else {
             nth_ = lexical_cast<Natural>(strNth_);
             weekday_ = parseWeekday(strWeekday_);
@@ -1976,7 +2019,6 @@ void CommodityFutureConvention::build() {
     offsetDays_ = strOffsetDays_.empty() ? 0 : lexical_cast<Integer>(strOffsetDays_);
     bdc_ = strBdc_.empty() ? Preceding : parseBusinessDayConvention(strBdc_);
 
-    
     if (optionAnchorType_ == OptionAnchorType::BusinessDaysBefore) {
         if (strOptionExpiryOffset_.empty())
             optionExpiryOffset_ = 0;
@@ -1989,6 +2031,8 @@ void CommodityFutureConvention::build() {
         optionAnchorType_ = OptionAnchorType::DayOfMonth;
         optionExpiryDay_ = lexical_cast<Natural>(strOptionExpiryDay_);
     } else if (optionAnchorType_ == OptionAnchorType::LastWeekday) {
+        optionWeekday_ = parseWeekday(strOptionWeekday_);
+    } else if (optionAnchorType_ == OptionAnchorType::WeeklyDayOfTheWeek) {
         optionWeekday_ = parseWeekday(strOptionWeekday_);
     } else {
         optionAnchorType_ = OptionAnchorType::BusinessDaysBefore;
@@ -2014,8 +2058,8 @@ void CommodityFutureConvention::build() {
 
 Frequency CommodityFutureConvention::parseAndValidateFrequency(const std::string & strFrequency) {
     auto freq = parseFrequency(strFrequency);
-    QL_REQUIRE(freq == Quarterly || freq == Monthly || freq == Daily,
-               "Contract frequency should be quarterly, monthly or daily but got " << freq);
+    QL_REQUIRE(freq == Annual || freq == Quarterly || freq == Monthly || freq == Weekly || freq == Daily,
+               "Contract frequency should be annual, quarterly, monthly, weekly or daily but got " << freq);
     return freq;
 }
 

@@ -99,6 +99,7 @@
 #include <qle/indexes/ibor/skkbribor.hpp>
 #include <qle/indexes/ibor/sofr.hpp>
 #include <qle/indexes/ibor/sonia.hpp>
+#include <qle/indexes/ibor/sora.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
@@ -297,6 +298,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"EUR-ESTER", boost::make_shared<Ester>()},
         {"GBP-SONIA", boost::make_shared<Sonia>()},
         {"JPY-TONAR", boost::make_shared<Tonar>()},
+        {"SGD-SORA", boost::make_shared<Sora>()},
         {"CHF-TOIS", boost::make_shared<CHFTois>()},
         {"CHF-SARON", boost::make_shared<CHFSaron>()},
         {"USD-FedFunds", boost::make_shared<FedFunds>()},
@@ -487,31 +489,58 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
     const boost::shared_ptr<Conventions>& conventions = InstrumentConventions::instance().conventions();
     boost::shared_ptr<SwapIndexConvention> swapIndexConvention;
     boost::shared_ptr<IRSwapConvention> irSwapConvention;
+    boost::shared_ptr<OisConvention> oisCompConvention;
+    boost::shared_ptr<AverageOisConvention> oisAvgConvention;
     if (conventions && conventions->has(s, Convention::Type::SwapIndex)) {
         swapIndexConvention = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions->get(s));
         QL_REQUIRE(swapIndexConvention, "internal error: could not cast to SwapIndexConvention");
-        QL_REQUIRE(conventions->has(swapIndexConvention->conventions(), Convention::Type::Swap),
-                   "do not have swap conventions for '" << swapIndexConvention->conventions()
-                                                        << "', required from swap index convention '" << s << "'");
+        QL_REQUIRE(conventions->has(swapIndexConvention->conventions(), Convention::Type::Swap) ||
+                       conventions->has(swapIndexConvention->conventions(), Convention::Type::OIS) ||
+                       conventions->has(swapIndexConvention->conventions(), Convention::Type::AverageOIS),
+                   "do not have swap or ois conventions for '"
+                       << swapIndexConvention->conventions() << "', required from swap index convention '" << s << "'");
         irSwapConvention =
             boost::dynamic_pointer_cast<IRSwapConvention>(conventions->get(swapIndexConvention->conventions()));
-        QL_REQUIRE(irSwapConvention, "internal error: could not cast to IRSwapConvention");
+        oisCompConvention =
+            boost::dynamic_pointer_cast<OisConvention>(conventions->get(swapIndexConvention->conventions()));
+        oisAvgConvention =
+            boost::dynamic_pointer_cast<AverageOisConvention>(conventions->get(swapIndexConvention->conventions()));
+        QL_REQUIRE(irSwapConvention || oisCompConvention || oisAvgConvention,
+                   "internal error: could not cast to IRSwapConvention, OisConvention, AverageOisConvention");
     } else {
-	// set default conventions using a generic ibor index
-        irSwapConvention = boost::make_shared<IRSwapConvention>("dummy_swap_conv_" + tokens[0], tokens[0], "Annual", "MF", "A365",
-                                                                tokens[0] + "-GENERIC-3M");
+        // set default conventions using a generic ibor index
+        irSwapConvention = boost::make_shared<IRSwapConvention>("dummy_swap_conv_" + tokens[0], tokens[0], "Annual",
+                                                                "MF", "A365", tokens[0] + "-GENERIC-3M");
         swapIndexConvention = boost::make_shared<SwapIndexConvention>("dummy_swapindex_conv_" + tokens[0],
                                                                       "dummy_swap_conv_" + tokens[0], "");
     }
 
-    Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
-                                  ? irSwapConvention->fixedCalendar()
-                                  : parseCalendar(swapIndexConvention->fixingCalendar());
-
-    return boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy, fixingCalendar,
-                                         Period(irSwapConvention->fixedFrequency()),
-                                         irSwapConvention->fixedConvention(), irSwapConvention->fixedDayCounter(),
-                                         irSwapConvention->index()->clone(f), d);
+    if (irSwapConvention) {
+        Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
+                                      ? irSwapConvention->fixedCalendar()
+                                      : parseCalendar(swapIndexConvention->fixingCalendar());
+        return boost::make_shared<SwapIndex>(familyName, p, irSwapConvention->index()->fixingDays(), ccy,
+                                             fixingCalendar, Period(irSwapConvention->fixedFrequency()),
+                                             irSwapConvention->fixedConvention(), irSwapConvention->fixedDayCounter(),
+                                             irSwapConvention->index()->clone(f), d);
+    } else if (oisCompConvention) {
+        Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
+                                      ? oisCompConvention->index()->fixingCalendar()
+                                      : parseCalendar(swapIndexConvention->fixingCalendar());
+        return boost::make_shared<OvernightIndexedSwapIndex>(
+            familyName, p, oisCompConvention->spotLag(), ccy,
+            boost::dynamic_pointer_cast<OvernightIndex>(oisCompConvention->index()->clone(f)), true,
+            RateAveraging::Compound, Period(oisCompConvention->fixedFrequency()), d);
+    } else if (oisAvgConvention) {
+        Calendar fixingCalendar = swapIndexConvention->fixingCalendar().empty()
+                                      ? oisAvgConvention->index()->fixingCalendar()
+                                      : parseCalendar(swapIndexConvention->fixingCalendar());
+        return boost::make_shared<OvernightIndexedSwapIndex>(
+            familyName, p, oisAvgConvention->spotLag(), ccy,
+            boost::dynamic_pointer_cast<OvernightIndex>(oisAvgConvention->index()->clone(f)), true,
+            RateAveraging::Simple, Period(oisAvgConvention->fixedFrequency()), d);
+    }
+    QL_FAIL("internal error: expected irSwapConvention, oisConvention, averageOisConvention to be not null");
 }
 
 // Zero Inflation Index Parser

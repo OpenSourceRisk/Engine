@@ -149,7 +149,7 @@
     <ClCompile Include="forwardbond.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="equityblackvolsurfaceproxy.cpp">
+    <ClCompile Include="blackvolsurfaceproxy.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="analyticcashsettledeuropeanengine.cpp">

@@ -27,16 +27,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-namespace {
-Real parseCcyReversion(const std::map<string, string>& p, const std::string& ccy) {
-    // either we have a ccy specific reversion or require a ccy independent reversion parameter
-    if (p.find("MeanReversion_" + ccy) != p.end())
-        return parseReal(p.at("MeanReversion_" + ccy));
-    else
-        return parseReal(p.at("MeanReversion"));
-}
-} // namespace
-
 GFunctionFactory::YieldCurveModel ycmFromString(const string& s) {
     if (s == "Standard")
         return GFunctionFactory::Standard;
@@ -50,15 +40,18 @@ GFunctionFactory::YieldCurveModel ycmFromString(const string& s) {
         QL_FAIL("unknown string for YieldCurveModel");
 }
 
-boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder::engineImpl(const Currency& ccy) {
+boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder::engineImpl(const string& key) {
 
-    const string& ccyCode = ccy.code();
-    Real rev = parseCcyReversion(engineParameters_, ccyCode);
+    std::string ccyCode = key;
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(key, index))
+        ccyCode = index->currency().code();
+    Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string ycmstr = engineParameter("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
-    Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
+    Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
 
     boost::shared_ptr<FloatingRateCouponPricer> pricer = boost::make_shared<AnalyticHaganPricer>(vol, ycm, revQuote);
 
@@ -66,10 +59,13 @@ boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder:
     return pricer;
 }
 
-boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder::engineImpl(const Currency& ccy) {
+boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder::engineImpl(const string& key) {
 
-    const string& ccyCode = ccy.code();
-    Real rev = parseCcyReversion(engineParameters_, ccyCode);
+    std::string ccyCode = key;
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(key, index))
+        ccyCode = index->currency().code();
+    Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string ycmstr = engineParameter("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
     Rate llim = parseReal(engineParameter("LowerLimit"));
@@ -77,7 +73,7 @@ boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder
     Real prec = parseReal(engineParameter("Precision"));
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
-    Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
+    Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
 
     boost::shared_ptr<FloatingRateCouponPricer> pricer =
         boost::make_shared<NumericHaganPricer>(vol, ycm, revQuote, llim, ulim, prec);
@@ -86,14 +82,17 @@ boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder
     return pricer;
 }
 
-boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::engineImpl(const Currency& ccy) {
+boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::engineImpl(const string& key) {
 
-    const string& ccyCode = ccy.code();
-    Real rev = parseCcyReversion(engineParameters_, ccyCode);
+    std::string ccyCode = key;
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(key, index))
+        ccyCode = index->currency().code();
+    Real rev = parseReal(engineParameter("MeanReversion", {key, ccyCode}, true));
     string policy = engineParameter("Policy");
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
-    Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
+    Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(key, configuration(MarketContext::pricing));
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
 
     string lowerBoundStr =

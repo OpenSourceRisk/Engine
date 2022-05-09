@@ -565,8 +565,8 @@ public:
     //! Detailed constructor
     AverageOisConvention(const string& id, const string& spotLag, const string& fixedTenor,
                          const string& fixedDayCounter, const string& fixedCalendar, const string& fixedConvention,
-                         const string& fixedPaymentConvention, const string& index, const string& onTenor,
-                         const string& rateCutoff);
+                         const string& fixedPaymentConvention, const string& fixedFrequency, const string& index,
+                         const string& onTenor, const string& rateCutoff);
     //@}
 
     //! \name Inspectors
@@ -577,6 +577,7 @@ public:
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
+    Frequency fixedFrequency() const { return fixedFrequency_; }
     const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const Period& onTenor() const { return onTenor_; }
@@ -596,6 +597,7 @@ private:
     Calendar fixedCalendar_;
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention fixedPaymentConvention_;
+    Frequency fixedFrequency_;
     boost::shared_ptr<OvernightIndex> index_;
     Period onTenor_;
     Natural rateCutoff_;
@@ -607,6 +609,7 @@ private:
     string strFixedCalendar_;
     string strFixedConvention_;
     string strFixedPaymentConvention_;
+    string strFixedFrequency_;
     string strIndex_;
     string strOnTenor_;
     string strRateCutoff_;
@@ -1309,8 +1312,8 @@ class CommodityFutureConvention : public Convention {
 public:
     /*! The anchor day type of commodity future convention
      */
-    enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter };
-    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday };
+    enum class AnchorType { DayOfMonth, NthWeekday, CalendarDaysBefore, LastWeekday, BusinessDaysAfter, WeeklyDayOfTheWeek };
+    enum class OptionAnchorType { DayOfMonth, NthWeekday, BusinessDaysBefore, LastWeekday, WeeklyDayOfTheWeek };
 
     //! Classes to differentiate constructors below
     //@{
@@ -1329,6 +1332,11 @@ public:
         std::string businessDaysAfter_;
     };
 
+    struct WeeklyWeekday {
+        WeeklyWeekday(const std::string& weekday) : weekday_(weekday) {}
+        std::string weekday_;
+    };
+
 
     struct OptionExpiryAnchorDateRule {
         OptionExpiryAnchorDateRule()
@@ -1343,6 +1351,9 @@ public:
             : type_(OptionAnchorType::NthWeekday), daysBefore_(""), expiryDay_(""), nth_(nth), weekday_(weekday) {}
         OptionExpiryAnchorDateRule(const std::string& lastWeekday)
             : type_(OptionAnchorType::LastWeekday), daysBefore_(""), expiryDay_(""), nth_(""), weekday_(lastWeekday) {}
+        OptionExpiryAnchorDateRule(const WeeklyWeekday& weekday)
+            : type_(OptionAnchorType::WeeklyDayOfTheWeek), daysBefore_(""), expiryDay_(""), nth_(""),
+              weekday_(weekday.weekday_) {}
 
         OptionAnchorType type_;
         std::string daysBefore_;

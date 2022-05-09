@@ -678,6 +678,7 @@
     <ClInclude Include="ored\utilities\indexnametranslator.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\types.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">

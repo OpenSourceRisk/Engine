@@ -222,8 +222,10 @@ Schedule makeSchedule(const ScheduleDerived& data, const Schedule& baseSchedule)
 
     string strCalendar = data.calendar();
     Calendar calendar;
-    if (strCalendar.empty())
+    if (strCalendar.empty()) {
         calendar = NullCalendar();
+        WLOG("No calendar provided in Schedule, attempting to use a null calendar.");
+    }
     else
         calendar = parseCalendar(strCalendar);
 
@@ -260,6 +262,8 @@ Schedule makeSchedule(const ScheduleRules& data, const Date& openEndDateReplacem
                "makeSchedule(): If no end date is given, a last date is not allowed either. Please remove the last "
                "date from the schedule.");
     Calendar calendar = parseCalendar(data.calendar());
+    if (calendar == NullCalendar())
+        WLOG("No calendar provided in Schedule, attempting to use a null calendar.");
     Date startDate = parseDate(data.startDate());
     Date endDate = data.endDate().empty() ? openEndDateReplacement : parseDate(data.endDate());
     // Handle trivial case here

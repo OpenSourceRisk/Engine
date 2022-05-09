@@ -27,6 +27,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
+#include <ored/portfolio/types.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
@@ -106,6 +107,9 @@ bool parseBool(const string& s);
   \ingroup utilities
 */
 QuantLib::Calendar parseCalendar(const string& s, const string& newName = "");
+
+//! return true if s represents a period of the form [0-9][D|W|M|Y] (i.e. 1Y6M would return false)
+bool isOnePeriod(const string& s);
 
 //! Convert text to QuantLib::Period
 /*!
@@ -236,6 +240,13 @@ QuantLib::Weekday parseWeekday(const std::string& s);
     \ingroup utilities
 */
 QuantLib::Month parseMonth(const std::string& s);
+
+
+//! Convert text to PaymentLag
+/*!
+\ingroup utilities
+*/
+PaymentLag parsePaymentLag(const string& s);
 
 //! Convert comma separated list of values to vector of values
 /*!
