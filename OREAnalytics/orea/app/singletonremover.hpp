@@ -40,13 +40,14 @@ struct SingletonRemover {
         ore::analytics::ObservationMode::remove();
         QuantLib::Settings::remove();
         QuantLib::IndexManager::remove();
-        QuantLib::ObservableSettings::remove();
         QuantLib::CommoditySettings::remove();
         QuantLib::ExchangeRateManager::remove();
         QuantLib::SeedGenerator::remove();
         QuantLib::detail::Tracing::remove();
         QuantLib::Money::Settings::remove();
         QuantLib::IborCoupon::Settings::remove();
+        // observables hold a reference to ObservableSettings, so we can remove the instance ourselves
+        // QuantLib::ObservableSettings::remove();
 #endif
     }
 };
