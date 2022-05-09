@@ -26,9 +26,13 @@ namespace analytics {
 ClonedScenarioGenerator::ClonedScenarioGenerator(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
                                                  const std::vector<Date>& dates, const Size nSamples) {
     DLOG("Build cloned scenario generator for " << dates.size() << " dates and " << nSamples << " samples.");
-    for (Size i = 0; i < nSamples; ++i)
-        for (Size j = 0; j < dates.size(); ++j)
+    scenarioGenerator->reset();
+    scenarios_.resize(nSamples * dates.size());
+    for (Size i = 0; i < nSamples; ++i) {
+        for (Size j = 0; j < dates.size(); ++j) {
             scenarios_[i * dates.size() + j] = scenarioGenerator->next(dates[j])->clone();
+	}
+    }
 }
 
 boost::shared_ptr<Scenario> ClonedScenarioGenerator::next(const Date& d) {
