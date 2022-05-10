@@ -314,7 +314,7 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    boost::shared_ptr<IborIndex> index() const;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType() const { return overnightIndexFutureNettingType_; }
     DateGenerationRule dateGenerationRule() const { return dateGenerationRule_; }
     //@}
@@ -328,7 +328,6 @@ public:
 
 private:
     string strIndex_;
-    boost::shared_ptr<IborIndex> index_;
     QuantLib::RateAveraging::Type overnightIndexFutureNettingType_;
     DateGenerationRule dateGenerationRule_;
 };
@@ -349,7 +348,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    boost::shared_ptr<IborIndex> index() const;
     const string& indexName() const { return strIndex_; }
     //@}
 
@@ -362,7 +361,6 @@ public:
 
 private:
     string strIndex_;
-    boost::shared_ptr<IborIndex> index_;
 };
 
 //! Container for storing Overnight Index Swap conventions
@@ -386,7 +384,7 @@ public:
     //@{
     Natural spotLag() const { return spotLag_; }
     const string& indexName() const { return strIndex_; }
-    const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
+    boost::shared_ptr<OvernightIndex> index() const;
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     Natural paymentLag() const { return paymentLag_; }
     bool eom() { return eom_; }
@@ -406,7 +404,6 @@ public:
 
 private:
     Natural spotLag_;
-    boost::shared_ptr<OvernightIndex> index_;
     DayCounter fixedDayCounter_;
     Natural paymentLag_;
     bool eom_;
@@ -527,7 +524,7 @@ public:
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const string& indexName() const { return strIndex_; }
-    const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    boost::shared_ptr<IborIndex> index() const;
     // For sub period
     bool hasSubPeriod() const { return hasSubPeriod_; }
     Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
@@ -546,7 +543,6 @@ private:
     Frequency fixedFrequency_;
     BusinessDayConvention fixedConvention_;
     DayCounter fixedDayCounter_;
-    boost::shared_ptr<IborIndex> index_;
     bool hasSubPeriod_;
     Frequency floatFrequency_;
     SubPeriodsCoupon1::Type subPeriodsCouponType_;
@@ -588,7 +584,7 @@ public:
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     Frequency fixedFrequency() const { return fixedFrequency_; }
     const string& indexName() const { return strIndex_; }
-    const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
+    boost::shared_ptr<OvernightIndex> index() const;
     const Period& onTenor() const { return onTenor_; }
     Natural rateCutoff() const { return rateCutoff_; }
     //@}
@@ -607,7 +603,6 @@ private:
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention fixedPaymentConvention_;
     Frequency fixedFrequency_;
-    boost::shared_ptr<OvernightIndex> index_;
     Period onTenor_;
     Natural rateCutoff_;
 
@@ -642,8 +637,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<IborIndex>& longIndex() const { return longIndex_; }
-    const boost::shared_ptr<IborIndex>& shortIndex() const { return shortIndex_; }
+    boost::shared_ptr<IborIndex> longIndex() const;
+    boost::shared_ptr<IborIndex> shortIndex() const;
     const string& longIndexName() const { return strLongIndex_; }
     const string& shortIndexName() const { return strShortIndex_; }
     const Period& shortPayTenor() const { return shortPayTenor_; }
@@ -660,8 +655,6 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<IborIndex> longIndex_;
-    boost::shared_ptr<IborIndex> shortIndex_;
     Period shortPayTenor_;
     bool spreadOnShort_;
     bool includeSpread_;
@@ -700,11 +693,11 @@ public:
     Frequency longFixedFrequency() const { return longFixedFrequency_; }
     BusinessDayConvention longFixedConvention() const { return longFixedConvention_; }
     const DayCounter& longFixedDayCounter() const { return longFixedDayCounter_; }
-    const boost::shared_ptr<IborIndex>& longIndex() const { return longIndex_; }
+    boost::shared_ptr<IborIndex> longIndex() const;
     Frequency shortFixedFrequency() const { return shortFixedFrequency_; }
     BusinessDayConvention shortFixedConvention() const { return shortFixedConvention_; }
     const DayCounter& shortFixedDayCounter() const { return shortFixedDayCounter_; }
-    const boost::shared_ptr<IborIndex>& shortIndex() const { return shortIndex_; }
+    boost::shared_ptr<IborIndex> shortIndex() const;
     bool longMinusShort() const { return longMinusShort_; }
     //@}
 
@@ -720,11 +713,9 @@ private:
     Frequency longFixedFrequency_;
     BusinessDayConvention longFixedConvention_;
     DayCounter longFixedDayCounter_;
-    boost::shared_ptr<IborIndex> longIndex_;
     Frequency shortFixedFrequency_;
     BusinessDayConvention shortFixedConvention_;
     DayCounter shortFixedDayCounter_;
-    boost::shared_ptr<IborIndex> shortIndex_;
     bool longMinusShort_;
 
     // Strings to store the inputs
@@ -756,8 +747,8 @@ public:
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<IborIndex>& liborIndex() const { return liborIndex_; }
-    const boost::shared_ptr<QuantExt::BMAIndexWrapper>& bmaIndex() const { return bmaIndex_; }
+    boost::shared_ptr<IborIndex> liborIndex() const;
+    boost::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex() const;
     const string& liborIndexName() const { return strLiborIndex_; }
     const string& bmaIndexName() const { return strBmaIndex_; }
     //@}
@@ -766,13 +757,10 @@ public:
     //@{
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
-    virtual void build() override;
+    virtual void build() override {}
     //@}
 
 private:
-    boost::shared_ptr<IborIndex> liborIndex_;
-    boost::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex_;
-
     // Strings to store the inputs
     string strLiborIndex_;
     string strBmaIndex_;
@@ -863,8 +851,8 @@ public:
     Natural settlementDays() const { return settlementDays_; }
     const Calendar& settlementCalendar() const { return settlementCalendar_; }
     BusinessDayConvention rollConvention() const { return rollConvention_; }
-    const boost::shared_ptr<IborIndex>& flatIndex() const { return flatIndex_; }
-    const boost::shared_ptr<IborIndex>& spreadIndex() const { return spreadIndex_; }
+    boost::shared_ptr<IborIndex> flatIndex() const;
+    boost::shared_ptr<IborIndex> spreadIndex() const;
     const string& flatIndexName() const { return strFlatIndex_; }
     const string& spreadIndexName() const { return strSpreadIndex_; }
 
@@ -900,8 +888,6 @@ private:
     Natural settlementDays_;
     Calendar settlementCalendar_;
     BusinessDayConvention rollConvention_;
-    boost::shared_ptr<IborIndex> flatIndex_;
-    boost::shared_ptr<IborIndex> spreadIndex_;
     bool eom_;
     bool isResettable_;
     bool flatIndexIsResettable_;
@@ -975,7 +961,7 @@ public:
     QuantLib::Frequency fixedFrequency() const { return fixedFrequency_; }
     QuantLib::BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     const QuantLib::DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
-    const boost::shared_ptr<QuantLib::IborIndex>& index() const { return index_; }
+    boost::shared_ptr<QuantLib::IborIndex> index() const;
     bool eom() const { return eom_; }
     bool isResettable() const { return isResettable_; }
     bool floatIndexIsResettable() const { return floatIndexIsResettable_; }
@@ -1000,7 +986,6 @@ private:
     QuantLib::Frequency fixedFrequency_;
     QuantLib::BusinessDayConvention fixedConvention_;
     QuantLib::DayCounter fixedDayCounter_;
-    boost::shared_ptr<QuantLib::IborIndex> index_;
     bool eom_;
     bool isResettable_;
     bool floatIndexIsResettable_;
@@ -1104,7 +1089,7 @@ public:
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
-    const boost::shared_ptr<ZeroInflationIndex> index() const { return index_; }
+    boost::shared_ptr<ZeroInflationIndex> index() const;
     const string& indexName() const { return strIndex_; }
     bool interpolated() const { return interpolated_; }
     Period observationLag() const { return observationLag_; }
