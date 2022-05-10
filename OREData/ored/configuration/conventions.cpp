@@ -803,8 +803,8 @@ void CrossCcyBasisSwapConvention::build() {
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
     flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
-    flatTenor_ = strFlatTenor_.empty() ? flatIndex_->tenor() : parsePeriod(strFlatTenor_);
-    spreadTenor_ = strSpreadTenor_.empty() ? spreadIndex_->tenor() : parsePeriod(strSpreadTenor_);
+    flatTenor_ = strFlatTenor_.empty() ? flatIndex()->tenor() : parsePeriod(strFlatTenor_);
+    spreadTenor_ = strSpreadTenor_.empty() ? spreadIndex()->tenor() : parsePeriod(strSpreadTenor_);
 
     paymentLag_ = flatPaymentLag_ = 0;
     if (!strPaymentLag_.empty())
@@ -923,8 +923,8 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-boost::shared_ptr<IborIndex> CrossCcyFixFloatSwapConvention::flatIndex() const { return parseIboIndex(strFlatIndex_); }
-boost::shared_ptr<IborIndex> CrossCcyFixFloatSwapConvention::spreadIndex() const {
+boost::shared_ptr<IborIndex> CrossCcyBasisSwapConvention::flatIndex() const { return parseIborIndex(strFlatIndex_); }
+boost::shared_ptr<IborIndex> CrossCcyBasisSwapConvention::spreadIndex() const {
     return parseIborIndex(strSpreadIndex_);
 }
 
@@ -950,7 +950,6 @@ void CrossCcyFixFloatSwapConvention::build() {
     fixedFrequency_ = parseFrequency(strFixedFrequency_);
     fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
     fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
-    index_ = parseIborIndex(strIndex_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
     floatIndexIsResettable_ = strFloatIndexIsResettable_.empty() ? true : parseBool(strFloatIndexIsResettable_);
