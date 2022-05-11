@@ -26,6 +26,7 @@
 #include <ql/patterns/singleton.hpp>
 
 #include <boost/bimap.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
 #include <string>
 

@@ -26,6 +26,7 @@
 #include <functional>
 #include <ql/patterns/singleton.hpp>
 #include <string>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace ore {
 namespace data {
