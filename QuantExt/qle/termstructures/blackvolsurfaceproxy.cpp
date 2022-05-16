@@ -16,15 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
+#include <qle/termstructures/blackvolsurfaceproxy.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(
-    const boost::shared_ptr<BlackVolTermStructure>& proxySurface, const boost::shared_ptr<EquityIndex>& index,
-    const boost::shared_ptr<EquityIndex>& proxyIndex, const boost::shared_ptr<BlackVolTermStructure>& fxSurface,
+BlackVolatilitySurfaceProxy::BlackVolatilitySurfaceProxy(
+    const boost::shared_ptr<BlackVolTermStructure>& proxySurface, const boost::shared_ptr<EqFxIndexBase>& index,
+    const boost::shared_ptr<EqFxIndexBase>& proxyIndex, const boost::shared_ptr<BlackVolTermStructure>& fxSurface,
     const boost::shared_ptr<FxIndex>& fxIndex, const boost::shared_ptr<CorrelationTermStructure>& correlation)
     : BlackVolatilityTermStructure(0, proxySurface->calendar(), proxySurface->businessDayConvention(),
                                    proxySurface->dayCounter()),
@@ -39,7 +39,7 @@ EquityBlackVolatilitySurfaceProxy::EquityBlackVolatilitySurfaceProxy(
     registerWith(proxyIndex);
 }
 
-Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) const {
+Volatility BlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) const {
 
     t = std::max(t, 1E-6);
 
@@ -74,12 +74,12 @@ Volatility EquityBlackVolatilitySurfaceProxy::blackVolImpl(Time t, Real strike) 
     return vol;
 }
 
-Rate EquityBlackVolatilitySurfaceProxy::minStrike() const {
-    return proxySurface_->minStrike() * index_->equitySpot()->value() / proxyIndex_->equitySpot()->value();
+Rate BlackVolatilitySurfaceProxy::minStrike() const {
+    return proxySurface_->minStrike() * index_->forecastFixing(0.0) / proxyIndex_->forecastFixing(0.0);
 }
 
-Rate EquityBlackVolatilitySurfaceProxy::maxStrike() const {
-    return proxySurface_->maxStrike() * index_->equitySpot()->value() / proxyIndex_->equitySpot()->value();
+Rate BlackVolatilitySurfaceProxy::maxStrike() const {
+    return proxySurface_->maxStrike() * index_->forecastFixing(0.0) / proxyIndex_->forecastFixing(0.0);
 }
 
 } // namespace QuantExt

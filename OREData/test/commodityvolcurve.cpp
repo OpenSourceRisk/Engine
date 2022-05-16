@@ -173,7 +173,8 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
     Date asof(5, Feb, 2016);
 
     // Constant volatility config
-    auto cvc = boost::make_shared<ConstantVolatilityConfig>("COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd");
+    vector<boost::shared_ptr<VolatilityConfig>> cvc;
+    cvc.push_back(boost::make_shared<ConstantVolatilityConfig>("COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATM/AtmFwd"));
 
     // Volatility configuration with a single quote
     boost::shared_ptr<CommodityVolatilityConfig> curveConfig =
@@ -222,7 +223,8 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
                           "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATM/AtmFwd"};
 
     // Volatility curve config with linear interpolation and flat extrapolation.
-    auto vcc = boost::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat");
+    vector<boost::shared_ptr<VolatilityConfig>> vcc;
+    vcc.push_back(boost::make_shared<VolatilityCurveConfig>(quotes, "Linear", "Flat"));
 
     // Commodity volatility configuration with time dependent volatilities
     boost::shared_ptr<CommodityVolatilityConfig> curveConfig =
@@ -289,8 +291,10 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
     // extrapolation.
     vector<string> strikes{"1150", "1190"};
     vector<string> expiries{"1Y", "2Y", "5Y"};
-    auto vssc =
-        boost::make_shared<VolatilityStrikeSurfaceConfig>(strikes, expiries, "Linear", "Linear", true, "Flat", "Flat");
+
+    vector<boost::shared_ptr<VolatilityConfig>> vssc;
+    vssc.push_back(
+        boost::make_shared<VolatilityStrikeSurfaceConfig>(strikes, expiries, "Linear", "Linear", true, "Flat", "Flat"));
 
     // Commodity volatility configuration
     boost::shared_ptr<CommodityVolatilityConfig> curveConfig =

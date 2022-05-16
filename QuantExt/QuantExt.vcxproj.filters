@@ -918,7 +918,7 @@
     <ClInclude Include="qle\termstructures\interpolatedcpivolatilitysurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityblackvolsurfaceproxy.hpp">
+    <ClInclude Include="qle\termstructures\blackvolsurfaceproxy.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\instruments\cashsettledeuropeanoption.hpp">
@@ -1231,10 +1231,10 @@
     <ClInclude Include="qle\termstructures\proxyoptionletvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\atmadjustedsmilesection.hpp">
+    <ClInclude Include="qle\termstructures\proxyswaptionvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\proxyswaptionvolatility.hpp">
+    <ClInclude Include="qle\termstructures\atmadjustedsmilesection.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1886,7 +1886,7 @@
     <ClCompile Include="qle\termstructures\averagefuturepricehelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\equityblackvolsurfaceproxy.cpp">
+    <ClCompile Include="qle\termstructures\blackvolsurfaceproxy.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\instruments\cashsettledeuropeanoption.cpp">

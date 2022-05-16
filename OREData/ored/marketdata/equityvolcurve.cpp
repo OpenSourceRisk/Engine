@@ -42,7 +42,7 @@
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacedelta.hpp>
 #include <qle/termstructures/eqcommoptionsurfacestripper.hpp>
-#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
+#include <qle/termstructures/blackvolsurfaceproxy.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
@@ -58,9 +58,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                                const CurveConfigurations& curveConfigs, const Handle<EquityIndex>& eqIndex,
                                const map<string, boost::shared_ptr<EquityCurve>>& requiredEquityCurves,
                                const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
-                               const FXTriangulation& fxSpots,
                                const map<string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
-                               const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves) {
+                               const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
+                               const boost::optional<FXIndexTriangulation>& fxIndices) {
 
     try {
         LOG("EquityVolCurve: start building equity volatility structure with ID " << spec.curveConfigID());
@@ -83,9 +83,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 if (!vc->calendar().empty())
                     calendar_ = vc->calendar();
 
-                if (auto eqvc = boost::dynamic_pointer_cast<EquityProxyVolatilityConfig>(vc)) {
+                if (auto eqvc = boost::dynamic_pointer_cast<ProxyVolatilityConfig>(vc)) {
                     buildVolatility(asof, spec, curveConfigs, *eqvc, requiredEquityCurves, requiredEquityVolCurves,
-                        FXLookupTriangulation(fxSpots), requiredFxVolCurves, requiredCorrelationCurves);
+                        requiredFxVolCurves, requiredCorrelationCurves, fxIndices);
                 } else if (auto qvc = boost::dynamic_pointer_cast<QuoteBasedVolatilityConfig>(vc)) {
                     // if the config is quote based (all except proxy surfaces?), do some checks
                     QL_REQUIRE(qvc->quoteType() == MarketDatum::QuoteType::PRICE ||
@@ -102,6 +102,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                         buildVolatility(asof, config, *vmsc, loader, eqIndex);
                     } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityDeltaSurfaceConfig>(vc)) {
                         buildVolatility(asof, config, *vdsc, loader, eqIndex);
+                    } else if (auto vdsc = boost::dynamic_pointer_cast<VolatilityApoFutureSurfaceConfig>(vc)) {
+                        QL_FAIL("EquityVolCurve: VolatilityApoFutureSurfaceConfig surface not supported for Equities");
                     } else {
                         QL_FAIL("EquityVolCurve: Unexpected VolatilityConfig");
                     }
@@ -1002,18 +1004,18 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
 
 void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVolatilityCurveSpec& spec,
                                      const CurveConfigurations& curveConfigs,
-                                     const EquityProxyVolatilityConfig& epvc,
+                                     const ProxyVolatilityConfig& epvc,
                                      const map<string, boost::shared_ptr<EquityCurve>>& eqCurves,
                                      const map<string, boost::shared_ptr<EquityVolCurve>>& eqVolCurves,
-                                     const FXLookup& fxSpots,
                                      const map<string, boost::shared_ptr<FXVolCurve>>& fxVolCurves,
-                                     const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves) {
+                                     const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
+                                     const boost::optional<FXIndexTriangulation>& fxIndices) {
 
     DLOG("Build Proxy Vol surface");
     // get all the configurations and the curve needed for proxying
     auto config = *curveConfigs.equityVolCurveConfig(spec.curveConfigID());
     
-    auto proxy = epvc.equityVolatilityCurve();
+    auto proxy = epvc.proxyVolatilityCurve();
     auto eqConfig = *curveConfigs.equityCurveConfig(spec.curveConfigID());
     auto proxyConfig = *curveConfigs.equityCurveConfig(proxy);
     auto proxyVolConfig = *curveConfigs.equityVolCurveConfig(proxy);
@@ -1040,7 +1042,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
     boost::shared_ptr<BlackVolTermStructure> fxSurface;
     boost::shared_ptr<FxIndex> fxIndex;
     boost::shared_ptr<QuantExt::CorrelationTermStructure> correlation;
-    if (config.ccy() != proxyVolConfig.ccy()) {
+    if (config.ccy() != proxyVolConfig.ccy() && fxIndices) {
         QL_REQUIRE(!epvc.fxVolatilityCurve().empty(), "EquityVolCurve: FXVolatilityCurve must be provided for Equity vol config " << 
             spec.curveConfigID() << " as proxy currencies if different from equity currency.");
         QL_REQUIRE(!epvc.correlationCurve().empty(), "EquityVolCurve: CorrelationCurve must be provided for Equity vol config " <<
@@ -1064,11 +1066,8 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
             fxSurface->enableExtrapolation();
         }
 
-        FXSpotSpec spotSpec(proxyVolConfig.ccy(), config.ccy());
-        fxIndex = boost::make_shared<FxIndex>("FX/GENERIC", 0, parseCurrency(proxyVolConfig.ccy()), parseCurrency(config.ccy()),
-            parseCalendar(proxyVolConfig.ccy() + "," + config.ccy()), fxSpots.fxPairLookup(spotSpec.name()),
-            proxyCurve->second->equityIndex()->equityForecastCurve(), curve->second->equityIndex()->equityForecastCurve(), false);
-        
+        fxIndex = fxIndices->getIndex(proxyVolConfig.ccy() + config.ccy()).currentLink();
+
         CorrelationCurveSpec corrSpec(epvc.correlationCurve());
         auto corrIt = requiredCorrelationCurves.find(corrSpec.name());
         if (corrIt == requiredCorrelationCurves.end())
@@ -1076,7 +1075,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, const EquityVol
         correlation = corrIt->second->corrTermStructure();
     }
 
-    vol_ = boost::make_shared<EquityBlackVolatilitySurfaceProxy>(proxyVolCurve->second->volTermStructure(), curve->second->equityIndex(),
+    vol_ = boost::make_shared<BlackVolatilitySurfaceProxy>(proxyVolCurve->second->volTermStructure(), curve->second->equityIndex(),
         proxyCurve->second->equityIndex(), fxSurface, fxIndex, correlation);
 }
 

@@ -105,13 +105,13 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
 
         if (g[*v].obj == MarketObject::CapFloorVol &&
             curveConfigs_->hasCapFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())) {
-	    std::set<string> indices;
-	    if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index().empty())
-		indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index());
-	    if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex().empty())
-		indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex());
-	    if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex().empty())
-		indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex());
+            std::set<string> indices;
+            if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index().empty())
+            indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->index());
+            if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex().empty())
+            indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxySourceIndex());
+            if(!curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex().empty())
+            indices.insert(curveConfigs_->capFloorVolCurveConfig(g[*v].curveSpec->curveConfigID())->proxyTargetIndex());
             for (auto const& ind : indices) {
                 bool found = false;
                 for (std::tie(w, wend) = boost::vertices(g); w != wend; ++w) {
@@ -221,18 +221,18 @@ void DependencyGraph::buildDependencyGraph(const std::string& configuration,
                 boost::dynamic_pointer_cast<data::OisConvention>(conventions->get(swapCon->conventions()));
             auto conOisAvg =
                 boost::dynamic_pointer_cast<data::AverageOisConvention>(conventions->get(swapCon->conventions()));
-	    std::string indexName;
-	    if(con)
-		indexName = con->indexName();
-	    else if(conOisComp)
-		indexName = conOisComp->indexName();
-	    else if(conOisAvg)
+            std::string indexName;
+            if(con)
+                indexName = con->indexName();
+            else if(conOisComp)
+                indexName = conOisComp->indexName();
+            else if(conOisAvg)
                 indexName = conOisAvg->indexName();
-                else {
-                    QL_FAIL("DependencyGraph: internal errors, expected IRSwapConvention, OisConvention, "
-                            "AverageOisConvention for '"
-                            << swapCon->conventions() << "' from conventions for swap index '" << swapIndex << "'");
-                }
+            else {
+                QL_FAIL("DependencyGraph: internal errors, expected IRSwapConvention, OisConvention, "
+                        "AverageOisConvention for '"
+                        << swapCon->conventions() << "' from conventions for swap index '" << swapIndex << "'");
+            }
             std::string discountIndex = g[*v].mapping;
             if (isGenericIborIndex(indexName))
                 foundIbor = true;

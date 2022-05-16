@@ -29,18 +29,18 @@
   <!-- Volatility configurations -->
 
   <xs:complexType name="constantVolatilityConfig">
-    <xs:all>	
+    <xs:all>    
       <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
       <xs:element type="xs:string" name="Quote"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
-	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+    <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityCurveConfig">
-    <xs:all>	
+    <xs:all>    
       <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
@@ -50,11 +50,11 @@
       <xs:element type="xs:boolean" name="EnforceMontoneVariance" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
-	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+    <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityStrikeSurfaceConfig">
-    <xs:all>	
+    <xs:all>    
       <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
@@ -67,11 +67,11 @@
       <xs:element type="extrapolationType" name="StrikeExtrapolation"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
-	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+    <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityDeltaSurfaceConfig">
-    <xs:all>		
+    <xs:all>        
       <xs:element type="xs:string" name="QuoteType" minOccurs="0"/>
       <xs:element type="xs:string" name="VolatilityType" minOccurs="0"/>
       <xs:element type="xs:string" name="ExerciseType" minOccurs="0"/>
@@ -89,7 +89,7 @@
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
-	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+    <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="volatilityMoneynessSurfaceConfig">
@@ -108,16 +108,16 @@
       <xs:element type="bool" name="FuturePriceCorrection" minOccurs="0"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
     </xs:all>
-	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+    <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>  
   
   <xs:complexType name="proxySurface">
     <xs:all>
-      <xs:element type="xs:string" name="EquityVolatilityCurve"/>
+      <xs:element type="xs:string" name="ProxyVolatilityCurve"/>
       <xs:element type="xs:string" name="FXVolatilityCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="CorrelationCurve" minOccurs="0" maxOccurs="1"/>
     </xs:all>
-	<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+    <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
   </xs:complexType>
 
   <xs:complexType name="fxSpots">
@@ -172,24 +172,24 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="extendedCurrencyCode" name="Currency"/>	  
+      <xs:element type="extendedCurrencyCode" name="Currency"/>      
       <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
       <xs:element type="xs:string" name="Expiries" minOccurs="0"/>
       <xs:element type="xs:string" name="Strikes" minOccurs="0" />
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="TimeExtrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="extrapolationType" name="StrikeExtrapolation" minOccurs="0" maxOccurs="1"/>
-	  <xs:choice>
-		  <xs:element type="volatilityConfig" name="VolatilityConfig" minOccurs="0" maxOccurs="1"/>
-		  <xs:choice minOccurs="0">
-			<xs:element type="constantVolatilityConfig" name="Constant"/>
-			<xs:element type="volatilityCurveConfig" name="Curve"/>
-			<xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
-			<xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
-			<xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
-			<xs:element type="proxySurface" name="ProxySurface"/>
-		  </xs:choice>
-	  </xs:choice>
+      <xs:choice>
+          <xs:element type="volatilityConfig" name="VolatilityConfig" minOccurs="0" maxOccurs="1"/>
+          <xs:choice minOccurs="0">
+            <xs:element type="constantVolatilityConfig" name="Constant"/>
+            <xs:element type="volatilityCurveConfig" name="Curve"/>
+            <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
+            <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
+            <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
+            <xs:element type="proxySurface" name="ProxySurface"/>
+          </xs:choice>
+      </xs:choice>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
@@ -204,6 +204,7 @@
       <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface" minOccurs="0"/>
       <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface" minOccurs="0"/>
       <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface" minOccurs="0"/>
+      <xs:element type="volatilityApoFutureSurfaceConfig" name="ApoFutureSurface" minOccurs="0"/>
       <xs:element type="proxySurface" name="ProxySurface" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
@@ -219,27 +220,27 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element name="ProxyConfig" minOccurs="0">
-	<xs:complexType>
-	  <xs:all>
-	    <xs:element name="Source">
-	      <xs:complexType>
-		<xs:all>
-		  <xs:element type="xs:string" name="CurveId"/>
-		  <xs:element type="xs:string" name="ShortSwapIndexBase"/>
-		  <xs:element type="xs:string" name="SwapIndexBase"/>
-		</xs:all>
-	      </xs:complexType>
-	    </xs:element>
-	    <xs:element name="Target">
-	      <xs:complexType>
-		<xs:all>
-		  <xs:element type="xs:string" name="ShortSwapIndexBase"/>
-		  <xs:element type="xs:string" name="SwapIndexBase"/>
-		</xs:all>
-	      </xs:complexType>
-	    </xs:element>
-	  </xs:all>
-	</xs:complexType>
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="Source">
+          <xs:complexType>
+        <xs:all>
+          <xs:element type="xs:string" name="CurveId"/>
+          <xs:element type="xs:string" name="ShortSwapIndexBase"/>
+          <xs:element type="xs:string" name="SwapIndexBase"/>
+        </xs:all>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Target">
+          <xs:complexType>
+        <xs:all>
+          <xs:element type="xs:string" name="ShortSwapIndexBase"/>
+          <xs:element type="xs:string" name="SwapIndexBase"/>
+        </xs:all>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
       </xs:element>
       <xs:element type="dimensionType" name="Dimension" minOccurs="0"/>
       <xs:element type="volatilityType" name="VolatilityType" minOccurs="0"/>
@@ -298,18 +299,18 @@
         <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
       </xs:choice>
       <xs:element name="Terms" minOccurs="0">
-	<xs:complexType>
-	  <xs:sequence>
-	    <xs:element name="Term" maxOccurs="unbounded">
-	      <xs:complexType>
-		<xs:all>
-		  <xs:element type="xs:string" name="Label"/>
-		  <xs:element type="xs:string" name="Curve"/>
-		</xs:all>
-	      </xs:complexType>
-	    </xs:element>
-	  </xs:sequence>
-	</xs:complexType>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Term" maxOccurs="unbounded">
+          <xs:complexType>
+        <xs:all>
+          <xs:element type="xs:string" name="Label"/>
+          <xs:element type="xs:string" name="Curve"/>
+        </xs:all>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
       </xs:element>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
@@ -331,27 +332,27 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element name="ProxyConfig" minOccurs="0">
-	<xs:complexType>
-	  <xs:all>
-	    <xs:element name="Source">
-	      <xs:complexType>
-		<xs:all>
-		  <xs:element type="xs:string" name="CurveId"/>
-		  <xs:element type="xs:string" name="Index"/>
-		  <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0"/>
-		</xs:all>
-	      </xs:complexType>
-	    </xs:element>
-	    <xs:element name="Target">
-	      <xs:complexType>
-		<xs:all>
-		  <xs:element type="xs:string" name="Index"/>
-		  <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0"/>
-		</xs:all>
-	      </xs:complexType>
-	    </xs:element>
-	  </xs:all>
-	</xs:complexType>
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="Source">
+          <xs:complexType>
+        <xs:all>
+          <xs:element type="xs:string" name="CurveId"/>
+          <xs:element type="xs:string" name="Index"/>
+          <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0"/>
+        </xs:all>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Target">
+          <xs:complexType>
+        <xs:all>
+          <xs:element type="xs:string" name="Index"/>
+          <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0"/>
+        </xs:all>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
       </xs:element>
       <xs:element type="volatilityType" name="VolatilityType" minOccurs="0"/>
       <xs:element type="extrapolationType" name="Extrapolation" minOccurs="0"/>
@@ -445,50 +446,50 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element name="Configurations" minOccurs="0">
-	<xs:complexType>
-	  <xs:sequence>
-	    <xs:element name="Configuration" minOccurs="0" maxOccurs="unbounded">
-	      <xs:complexType>
-		<xs:all>
-		  <xs:element type="currencyCode" name="Currency"/>
-		  <xs:element type="defaultCurveType" name="Type"/>
-		  <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="dayCounter" name="DayCounter"/>
-		  <xs:element type="xs:string" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
-		  <xs:element name="SourceCurves" minOccurs="0">
-		    <xs:complexType>
-		      <xs:sequence>
-			<xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="unbounded"/>
-		      </xs:sequence>
-		    </xs:complexType>
-		  </xs:element>
-		  <xs:element name="SwitchDates" minOccurs="0">
-		    <xs:complexType>
-		      <xs:sequence>
-			<xs:element type="xs:string" name="SwitchDate" minOccurs="0" maxOccurs="unbounded"/>
-		      </xs:sequence>
-		    </xs:complexType>
-		  </xs:element>
-		  <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="xs:string" name="IndexTerm" minOccurs="0"/>
-		  <xs:element type="bool" name="ImplyDefaultFromMarket" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
-		  <xs:element type="bool" name="AllowNegativeRates" minOccurs="0" maxOccurs="1"/>
-		</xs:all>
-		<xs:attribute type="xs:nonNegativeInteger" name="priority"/>
-	      </xs:complexType>
-	    </xs:element>
-	  </xs:sequence>
-	</xs:complexType>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Configuration" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+        <xs:all>
+          <xs:element type="currencyCode" name="Currency"/>
+          <xs:element type="defaultCurveType" name="Type"/>
+          <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="dayCounter" name="DayCounter"/>
+          <xs:element type="xs:string" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
+          <xs:element name="SourceCurves" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+            <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="SwitchDates" minOccurs="0">
+            <xs:complexType>
+              <xs:sequence>
+            <xs:element type="xs:string" name="SwitchDate" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:decimal" name="RunningSpread" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="xs:string" name="IndexTerm" minOccurs="0"/>
+          <xs:element type="bool" name="ImplyDefaultFromMarket" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="bool" name="AllowNegativeRates" minOccurs="0" maxOccurs="1"/>
+        </xs:all>
+        <xs:attribute type="xs:nonNegativeInteger" name="priority"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
       </xs:element>
       <xs:element type="currencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="defaultCurveType" name="Type" minOccurs="0"/>
@@ -792,12 +793,16 @@
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="currencyCode" name="Currency"/>
       <xs:choice>
-        <xs:element type="constantVolatilityConfig" name="Constant"/>
-        <xs:element type="volatilityCurveConfig" name="Curve"/>
-        <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
-        <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
-        <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
-        <xs:element type="volatilityApoFutureSurfaceConfig" name="ApoFutureSurface"/>
+          <xs:element type="volatilityConfig" name="VolatilityConfig" minOccurs="0" maxOccurs="1"/>
+          <xs:choice minOccurs="0">
+            <xs:element type="constantVolatilityConfig" name="Constant"/>
+            <xs:element type="volatilityCurveConfig" name="Curve"/>
+            <xs:element type="volatilityStrikeSurfaceConfig" name="StrikeSurface"/>
+            <xs:element type="volatilityMoneynessSurfaceConfig" name="MoneynessSurface"/>
+            <xs:element type="volatilityDeltaSurfaceConfig" name="DeltaSurface"/>
+            <xs:element type="volatilityApoFutureSurfaceConfig" name="ApoFutureSurface"/>
+            <xs:element type="proxySurface" name="ProxySurface"/>
+          </xs:choice>
       </xs:choice>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>

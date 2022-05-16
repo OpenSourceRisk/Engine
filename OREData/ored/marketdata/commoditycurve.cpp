@@ -165,6 +165,10 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         // Ask for price now so that errors are thrown during the build, not later.
         commodityPriceCurve_->price(asof + 1 * Days);
 
+        
+        Handle<PriceTermStructure> pts(commodityPriceCurve_);
+        commodityIndex_ = parseCommodityIndex(spec_.curveConfigID(), false, pts);
+
     } catch (std::exception& e) {
         QL_FAIL("commodity curve building failed: " << e.what());
     } catch (...) {

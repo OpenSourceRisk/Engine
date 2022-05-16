@@ -54,9 +54,9 @@ Real getOisAtmLevel(const boost::shared_ptr<OvernightIndex>& on, const Date& fix
     Date today = Settings::instance().evaluationDate();
     Date start = getStartDate(on, fixingDate, rateComputationPeriod);
     Date end = on->fixingCalendar().advance(start, rateComputationPeriod);
-    Date minStart = on->fixingCalendar().advance(today, on->fixingDays() * Days);
-    Date minEnd = std::max(minStart + 1, end);
-    OvernightIndexedCoupon cpn(end, 1.0, minStart, minEnd, on);
+    Date adjStart = std::max(on->fixingCalendar().advance(start, on->fixingDays() * Days), today);
+    Date adjEnd = std::max(adjStart + 1, end);
+    OvernightIndexedCoupon cpn(end, 1.0, adjStart, adjEnd, on);
     cpn.setPricer(boost::make_shared<OvernightIndexedCouponPricer>());
     return cpn.rate();
 }

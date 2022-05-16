@@ -58,7 +58,11 @@ BOOST_AUTO_TEST_CASE(testParseConstantVolFromXml) {
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
     // Check that we have a constant volatility config.
-    auto vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(config.volatilityConfig());
+    boost::shared_ptr<ConstantVolatilityConfig> vc;
+    for (auto v : config.volatilityConfig()) {
+        if (vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(v)) 
+            break;
+    }
     BOOST_CHECK(vc);
     BOOST_CHECK_EQUAL(config.quotes().size(), 1);
     BOOST_CHECK_EQUAL(config.quotes()[0], "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATM/AtmFwd");
@@ -109,7 +113,12 @@ BOOST_AUTO_TEST_CASE(testParseVolCurveFromXml) {
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
     // Check that we have a volatility curve config.
-    auto vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(config.volatilityConfig());
+    boost::shared_ptr<VolatilityCurveConfig> vc;
+    for (auto v : config.volatilityConfig()) {
+        if (vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(v))
+            break;
+    }
+
     BOOST_REQUIRE(vc);
     BOOST_CHECK_EQUAL(vc->interpolation(), "Linear");
     BOOST_CHECK_EQUAL(vc->extrapolation(), "Flat");
@@ -190,7 +199,11 @@ BOOST_AUTO_TEST_CASE(testParseVolSurfaceFromXml) {
     BOOST_CHECK_EQUAL(config.curveID(), "WTI_USD_VOLS");
     BOOST_CHECK_EQUAL(config.currency(), "USD");
     // Check that we have a volatility strike surface config.
-    auto vc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(config.volatilityConfig());
+    boost::shared_ptr<VolatilityStrikeSurfaceConfig> vc;
+    for (auto v : config.volatilityConfig()) {
+        if (vc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(v))
+            break;
+    }
     BOOST_REQUIRE(vc);
     BOOST_CHECK_EQUAL(vc->timeInterpolation(), "Linear");
     BOOST_CHECK_EQUAL(vc->strikeInterpolation(), "Linear");

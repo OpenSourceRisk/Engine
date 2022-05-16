@@ -667,7 +667,7 @@
     <ClCompile Include="durationadjustedcmscoupon.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
-    <ClCompile Include="equityblackvolsurfaceproxy.cpp" />
+    <ClCompile Include="blackvolsurfaceproxy.cpp" />
     <ClCompile Include="equityforwardcurvestripper.cpp" />
     <ClCompile Include="exactbachelierimpliedvolatility.cpp" />
     <ClCompile Include="fillemptymatrix.cpp" />

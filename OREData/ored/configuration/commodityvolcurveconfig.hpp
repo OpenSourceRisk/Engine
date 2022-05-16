@@ -41,7 +41,8 @@ public:
 
     //! Explicit constructor
     CommodityVolatilityConfig(const std::string& curveId, const std::string& curveDescription,
-                              const std::string& currency, const boost::shared_ptr<VolatilityConfig>& volatilityConfig,
+                              const std::string& currency,
+                              const std::vector<boost::shared_ptr<VolatilityConfig>> & volatilityConfig,
                               const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
                               const std::string& futureConventionsId = "", QuantLib::Natural optionExpiryRollDays = 0,
                               const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
@@ -52,7 +53,7 @@ public:
     //! \name Inspectors
     //@{
     const std::string& currency() const;
-    const boost::shared_ptr<VolatilityConfig>& volatilityConfig() const;
+    const std::vector<boost::shared_ptr<VolatilityConfig>>& volatilityConfig() const;
     const std::string& dayCounter() const;
     const std::string& calendar() const;
     const std::string& futureConventionsId() const;
@@ -74,7 +75,7 @@ private:
     void populateRequiredCurveIds();
 
     std::string currency_;
-    boost::shared_ptr<VolatilityConfig> volatilityConfig_;
+    std::vector<boost::shared_ptr<VolatilityConfig>> volatilityConfig_;
     std::string dayCounter_;
     std::string calendar_;
     std::string futureConventionsId_;

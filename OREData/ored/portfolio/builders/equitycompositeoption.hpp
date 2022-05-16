@@ -28,7 +28,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/quotes/compositequote.hpp>
-#include <qle/termstructures/equityblackvolsurfaceproxy.hpp>
+#include <qle/termstructures/blackvolsurfaceproxy.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -97,7 +97,7 @@ protected:
         }
         
         Handle<BlackVolTermStructure> vol(
-            boost::make_shared<QuantExt::EquityBlackVolatilitySurfaceProxy>(*eqVol, *equityIndex, *equityIndex, *fxVol, fxIndex, *correlation));
+            boost::make_shared<QuantExt::BlackVolatilitySurfaceProxy>(*eqVol, *equityIndex, *equityIndex, *fxVol, fxIndex, *correlation));
         
         auto blackScholesProcess = boost::make_shared<QuantLib::GeneralizedBlackScholesProcess>(
             spot, dividendCurve, strikeCcyDiscountCurve, vol);
