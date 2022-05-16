@@ -152,6 +152,8 @@ void Portfolio::removeMatured(const Date& asof) {
 void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Building Portfolio of size " << trades_.size());
     auto trade = trades_.begin();
+    Size initialSize = trades_.size();
+    Size failedTrades = 0;
     while (trade != trades_.end()) {
         try {
             (*trade)->reset();
@@ -169,12 +171,14 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 failed->build(engineFactory);
                 LOG("Added failed trade with id " << failed->id());
                 (*trade) = failed;
+		++failedTrades;
             } else {
                 trade = trades_.erase(trade);
             }
         }
     }
-    LOG("Built Portfolio. Size now " << trades_.size());
+    LOG("Built Portfolio. Initial size = " << initialSize << ", size now " << trades_.size() << ", built "
+                                           << failedTrades << " failed trades.");
 
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
 }
