@@ -169,6 +169,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 failed->setUnderlyingTradeType((*trade)->tradeType());
                 failed->envelope() = (*trade)->envelope();
                 failed->build(engineFactory);
+                failed->resetPricingStats((*trade)->getNumberOfPricings(), (*trade)->getCumulativePricingTime());
                 LOG("Added failed trade with id " << failed->id());
                 (*trade) = failed;
 		++failedTrades;
