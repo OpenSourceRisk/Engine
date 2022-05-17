@@ -6,6 +6,7 @@
   <xs:complexType name="curveconfiguration">
     <xs:all>
       <xs:element type="globalReportConfiguration" name="ReportConfiguration" minOccurs="0" />
+      <xs:element type="smileDynamicsConfiguration" name="SmileDynamics" minOccurs="0" />
       <xs:element type="fxSpots" name="FXSpots" minOccurs="0" />
       <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
       <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
@@ -409,6 +410,20 @@
       <xs:element type="bool" name="QuoteIncludesIndexName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="smileDynamicsConfig">
+    <xs:all>    
+      <xs:element type="xs:string" name="Swaption" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CapFloor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ZeroInflationCapFloor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="YoyInflationCapFloor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Yield" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Equity" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Commodity" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FX" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CDS" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

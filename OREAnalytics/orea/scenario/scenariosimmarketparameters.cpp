@@ -737,6 +737,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (swapVolSimNode)
             setSimulateSwapVols(ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode)));
         swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        swapVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
 
 	auto ccys = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", false);
 	auto keys = XMLUtils::getChildrenValues(nodeChild, "Keys", "Key", false);
@@ -851,6 +852,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             yieldVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
             setYieldVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
             yieldVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+	    yieldVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
         }
     }
 
@@ -970,6 +972,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                                                              << "' and no default strike set has been given");
 
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        capFloorVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
 
         capFloorVolAdjustOptionletPillars_ = false;
         if (XMLNode* n = XMLUtils::getChildNode(nodeChild, "AdjustOptionletPillars")) {
@@ -1035,6 +1038,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                                                                     << "' and no default strike set has been given");
 
         yoyInflationCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        yoyInflationCapFloorVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
     }
 
     DLOG("Loading CPICapFloorVolatilities");
@@ -1091,6 +1095,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                                                                     << "' and no default strike set has been given");
 
         zeroInflationCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        zeroInflationCapFloorVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
     }
 
     DLOG("Loading DefaultCurves Rates");
@@ -1143,6 +1148,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         cdsVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         setCdsVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
         cdsVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        cdsVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
     }
 
     DLOG("Loading FXVolatilities");
@@ -1153,6 +1159,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (fxVolSimNode)
             setSimulateFXVols(ore::data::parseBool(XMLUtils::getNodeValue(fxVolSimNode)));
         fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        fxVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
         setFxVolCcyPairs(XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true));
 
         vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
@@ -1213,6 +1220,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         setSimulateEquityVols(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true));
         equityVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        equityVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
         setEquityVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
        
         vector<XMLNode*> expiryNodes = XMLUtils::getChildrenNodes(nodeChild, "Expiries");
@@ -1371,6 +1379,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         setCommodityVolSimulate(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true));
         commodityVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        commodityVolSmileDynamics_ = XMLUtils::getChildValue(nodeChild, "SmileDynamics", false, "StickyStrike");
 
         vector<string> names;
         XMLNode* namesNode = XMLUtils::getChildNode(nodeChild, "Names");
@@ -1489,6 +1498,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "Simulate", simulateSwapVols());
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "ReactionToTimeDecay", swapVolDecayMode_);
+        XMLUtils::addChild(doc, swaptionVolatilitiesNode, "SmileDynamics", swapVolSmileDynamics_);
         XMLUtils::addChildren(doc, swaptionVolatilitiesNode, "Keys", "Key", swapVolKeys());
         for (auto it = swapVolExpiries_.begin(); it != swapVolExpiries_.end(); it++) {
             XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Expiries", swapVolExpiries_[it->first],
@@ -1515,6 +1525,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* yieldVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "YieldVolatilities");
         XMLUtils::addChild(doc, yieldVolatilitiesNode, "Simulate", simulateYieldVols());
         XMLUtils::addChild(doc, yieldVolatilitiesNode, "ReactionToTimeDecay", yieldVolDecayMode_);
+        XMLUtils::addChild(doc, yieldVolatilitiesNode, "SmileDynamics", yieldVolSmileDynamics_);
         XMLUtils::addChildren(doc, yieldVolatilitiesNode, "Names", "Name", yieldVolNames());
         XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Expiries", yieldVolExpiries_);
         XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Terms", yieldVolTerms_);
@@ -1526,6 +1537,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* capFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CapFloorVolatilities");
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "Simulate", simulateCapFloorVols());
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "ReactionToTimeDecay", capFloorVolDecayMode_);
+        XMLUtils::addChild(doc, capFloorVolatilitiesNode, "SmileDynamics", capFloorVolSmileDynamics_);
         XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Keys", "Key", capFloorVolKeys());
 
         // Write out cap floor expiries node for each key
@@ -1561,6 +1573,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* n = XMLUtils::addChild(doc, marketNode, "CPICapFloorVolatilities");
         XMLUtils::addChild(doc, n, "Simulate", simulateZeroInflationCapFloorVols());
         XMLUtils::addChild(doc, n, "ReactionToTimeDecay", zeroInflationCapFloorVolDecayMode());
+        XMLUtils::addChild(doc, n, "SmileDynamics", zeroInflationCapFloorVolSmileDynamics());
         XMLUtils::addChildren(doc, n, "Names", "Name", zeroInflationCapFloorVolNames());
 
         // Write out cap floor expiries node for each currency
@@ -1587,6 +1600,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* cdsVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CDSVolatilities");
         XMLUtils::addChild(doc, cdsVolatilitiesNode, "Simulate", simulateCdsVols());
         XMLUtils::addChild(doc, cdsVolatilitiesNode, "ReactionToTimeDecay", cdsVolDecayMode_);
+        XMLUtils::addChild(doc, cdsVolatilitiesNode, "SmileDynamics", cdsVolSmileDynamics_);
         XMLUtils::addChildren(doc, cdsVolatilitiesNode, "Names", "Name", cdsVolNames());
         XMLUtils::addGenericChildAsList(doc, cdsVolatilitiesNode, "Expiries", cdsVolExpiries_);
     }
@@ -1597,6 +1611,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* fxVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "FxVolatilities");
         XMLUtils::addChild(doc, fxVolatilitiesNode, "Simulate", simulateFXVols());
         XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
+        XMLUtils::addChild(doc, fxVolatilitiesNode, "SmileDynamics", fxVolSmileDynamics_);
         XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs());
         for (auto it = fxVolExpiries_.begin(); it != fxVolExpiries_.end(); it++) {
             XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_[it->first], "ccyPair",
@@ -1624,6 +1639,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* eqVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "EquityVolatilities");
         XMLUtils::addChild(doc, eqVolatilitiesNode, "Simulate", simulateEquityVols());
         XMLUtils::addChild(doc, eqVolatilitiesNode, "ReactionToTimeDecay", equityVolDecayMode_);
+        XMLUtils::addChild(doc, eqVolatilitiesNode, "SmileDynamics", equityVolSmileDynamics_);
         XMLUtils::addChildren(doc, eqVolatilitiesNode, "Names", "Name", equityVolNames());
         for (auto it = equityVolExpiries_.begin(); it != equityVolExpiries_.end(); it++) {
             XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Expiries", equityVolExpiries_[it->first], "name",
@@ -1698,6 +1714,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* n = XMLUtils::addChild(doc, marketNode, "YYCapFloorVolatilities");
         XMLUtils::addChild(doc, n, "Simulate", simulateYoYInflationCapFloorVols());
         XMLUtils::addChild(doc, n, "ReactionToTimeDecay", yoyInflationCapFloorVolDecayMode());
+        XMLUtils::addChild(doc, n, "SmileDynamics", yoyInflationCapFloorVolSmileDynamics());
         XMLUtils::addChildren(doc, n, "Names", "Name", yoyInflationCapFloorVolNames());
 
         // Write out cap floor expiries node for each currency
@@ -1743,6 +1760,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLNode* commodityVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CommodityVolatilities");
         XMLUtils::addChild(doc, commodityVolatilitiesNode, "Simulate", commodityVolSimulate());
         XMLUtils::addChild(doc, commodityVolatilitiesNode, "ReactionToTimeDecay", commodityVolDecayMode_);
+        XMLUtils::addChild(doc, commodityVolatilitiesNode, "SmileDynamics", commodityVolSmileDynamics_);
         XMLNode* namesNode = XMLUtils::addChild(doc, commodityVolatilitiesNode, "Names");
         for (const auto& name : commodityVolNames()) {
             XMLNode* nameNode = doc.allocNode("Name");

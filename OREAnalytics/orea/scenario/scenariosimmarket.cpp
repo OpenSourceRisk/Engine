@@ -746,7 +746,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DayCounter dc = wrapper->dayCounter();
                 
                             if (useSpreadedTermStructures_) {
-                                bool stickyAbsMoney = false;
+			        bool stickyAbsMoney = parameters->swapVolSmileDynamics() == "StickyStrike" ? false : true;
                                 boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 boost::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
                                 if (stickyAbsMoney) {
@@ -1135,7 +1135,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-                                bool stickyMoney = false;
+			        bool stickyMoney = parameters->cdsVolSmileDynamics() == "StickyStrike" ? false : true;
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
                                 if (stickyMoney) {
@@ -1273,8 +1273,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 Size n = strikes.size();
                                 quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
 
-                                // hardcode these for now
-                                bool stickyStrike = true;
+			        bool stickyStrike = parameters->fxVolSmileDynamics() == "StickyStrike" ? true : false;
+                                // hardcode this for now
                                 bool flatExtrapolation = true;
 
                                 // get vol matrix to feed to surface
@@ -1541,7 +1541,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
                                     // If true, the strikes are fixed, if false they move with the spot handle
                                     // Should probably be false, but some people like true for sensi runs.
-                                    bool stickyStrike = true;
+                                    bool stickyStrike = parameters->equityVolSmileDynamics() == "StickyStrike" ? true : false;
 
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
@@ -1614,7 +1614,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     simDataWritten = true;
                                     // If true, the strikes are fixed, if false they move with the spot handle
                                     // Should probably be false, but some people like true for sensi runs.
-                                    bool stickyStrike = true;
+				    bool stickyStrike = parameters->equityVolSmileDynamics() == "StickyStrike" ? true : false;
                                     bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
@@ -2389,8 +2389,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
                             } else {
                                 DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
-                                bool stickyStrike = true;
-                                bool flatExtrapMoneyness = true;
+				bool stickyStrike = parameters->commodityVolSmileDynamics() == "StickyStrike" ? true : false;
+				bool flatExtrapMoneyness = true;
                                 Handle<Quote> spot(boost::make_shared<SimpleQuote>(priceCurve->price(0)));
                                 if (useSpreadedTermStructures_) {
                                     // get init market curves to populate sticky ts in vol surface ctor

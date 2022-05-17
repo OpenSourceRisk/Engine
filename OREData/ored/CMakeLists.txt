@@ -22,6 +22,7 @@ configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
+configuration/smiledynamicsconfig.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
@@ -200,6 +201,7 @@ configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
+configuration/smiledynamicsconfig.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
