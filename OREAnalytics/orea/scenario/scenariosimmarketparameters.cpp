@@ -139,6 +139,16 @@ void ScenarioSimMarketParameters::setDefaults() {
     interpolation_ = "LogLinear";
     extrapolation_ = "FlatFwd";
     defaultCurveExtrapolation_ = "FlatFwd";
+
+    swapVolSmileDynamics_ = "StickyStrike";
+    yieldVolSmileDynamics_ = "StickyStrike";
+    capFloorVolSmileDynamics_ = "StickyStrike";
+    zeroInflationCapFloorVolSmileDynamics_ = "StickyStrike";
+    yoyInflationCapFloorVolSmileDynamics_ = "StickyStrike";
+    equityVolSmileDynamics_ = "StickyStrike";
+    commodityVolSmileDynamics_ = "StickyStrike";
+    cdsVolSmileDynamics_ = "StickyStrike";
+    fxVolSmileDynamics_ = "StickyStrike";
 }
 
 void ScenarioSimMarketParameters::reset() {

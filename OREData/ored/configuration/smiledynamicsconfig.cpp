@@ -42,8 +42,7 @@ void SmileDynamicsConfig::validate() {
 void SmileDynamicsConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "SmileDynamics");
 
-    swaption_ = XMLUtils::getChildValue(node, "Swaption", false);//, "StickyStrike");
-    LOG("Swaption smile dynamics found: " << swaption_);
+    swaption_ = XMLUtils::getChildValue(node, "Swaption", false, "StickyStrike");
     capFloor_ = XMLUtils::getChildValue(node, "CapFloor", false, "StickyStrike");
     yield_ = XMLUtils::getChildValue(node, "Yield", false, "StickyStrike");
     zeroInflationCapFloor_ = XMLUtils::getChildValue(node, "ZeroInflationCapFloor", false, "StickyStrike");

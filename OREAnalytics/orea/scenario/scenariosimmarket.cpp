@@ -2388,7 +2388,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         quotes[0], false));
                                 }
                             } else {
-                                DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
+			        DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
 				bool stickyStrike = parameters->commodityVolSmileDynamics() == "StickyStrike" ? true : false;
 				bool flatExtrapMoneyness = true;
                                 Handle<Quote> spot(boost::make_shared<SimpleQuote>(priceCurve->price(0)));
