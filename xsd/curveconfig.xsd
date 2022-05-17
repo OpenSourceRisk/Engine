@@ -413,7 +413,7 @@
     </xs:all>
   </xs:complexType>
 
-  <xs:complexType name="smileDynamicsConfig">
+  <xs:complexType name="smileDynamicsConfiguration">
     <xs:all>    
       <xs:element type="xs:string" name="Swaption" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="CapFloor" minOccurs="0" maxOccurs="1"/>
