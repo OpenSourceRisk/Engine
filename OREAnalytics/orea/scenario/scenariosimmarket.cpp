@@ -747,8 +747,21 @@ ScenarioSimMarket::ScenarioSimMarket(
                             VolatilityType volType = convertToNormal ? Normal : wrapper->volatilityType();
                             DayCounter dc = wrapper->dayCounter();
                 
-                            if (useSpreadedTermStructures_) {
-			      bool stickyAbsMoney = smileDynamics.swaption() == "StickyStrike" ? false : true;
+			    if (useSpreadedTermStructures_) {
+			        string smileDynamicsType;
+				boost::shared_ptr<SwaptionVolatilityCurveConfig> config;
+				if (curveConfigs.hasSwaptionVolCurveConfig(name))
+			            config = curveConfigs.swaptionVolCurveConfig(name);
+				if (config && config->smileDynamics() != "") {
+				    smileDynamicsType = config->smileDynamics();
+				    LOG("Using swaption smile dynamics " << smileDynamicsType << " from vol curve config " << name);
+				}
+				else {
+				    smileDynamicsType = smileDynamics.swaption();
+				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
+				    LOG("Using swaption smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
+				}
+				bool stickyAbsMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
                                 boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
                                 boost::shared_ptr<SwapIndex> simSwapIndex, simShortSwapIndex;
                                 if (stickyAbsMoney) {
@@ -1137,7 +1150,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                             writeSimData(simDataTmp, absoluteSimDataTmp);
                             simDataWritten = true;
                             if (useSpreadedTermStructures_) {
-			        bool stickyMoney = smileDynamics.cds() == "StickyStrike" ? false : true;
+			        string smileDynamicsType;
+				boost::shared_ptr<CDSVolatilityCurveConfig> config;
+				if (curveConfigs.hasCdsVolCurveConfig(name))
+			            config = curveConfigs.cdsVolCurveConfig(name);
+				if (config && config->smileDynamics() != "") {
+				    smileDynamicsType = config->smileDynamics();
+				    LOG("Using cds smile dynamics " << smileDynamicsType << " from vol curve config " << name);
+				}
+				else {
+				    smileDynamicsType = smileDynamics.cds();
+				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
+				    LOG("Using cds smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
+				}
+			        bool stickyMoney = smileDynamicsType == "StickyMoneyness" ? true : false;
                                 std::vector<QuantLib::Period> simTerms;
                                 std::vector<Handle<CreditCurve>> simTermCurves;
                                 if (stickyMoney) {
@@ -1275,7 +1301,20 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 Size n = strikes.size();
                                 quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
 
-			        bool stickyStrike = smileDynamics.fx() == "StickyStrike" ? true : false;
+			        string smileDynamicsType;
+				boost::shared_ptr<FXVolatilityCurveConfig> config;
+				if (curveConfigs.hasFxVolCurveConfig(name))
+			            config = curveConfigs.fxVolCurveConfig(name);
+				if (config && config->smileDynamics() != "") {
+				    smileDynamicsType = config->smileDynamics();
+				    LOG("Using fx smile dynamics " << smileDynamicsType << " from vol curve config " << name);
+				}
+				else {
+				    smileDynamicsType = smileDynamics.fx();
+				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
+				    LOG("Using fx smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
+				}
+			        bool stickyStrike = smileDynamicsType == "StickyStrike" ? true : false;
                                 // hardcode this for now
                                 bool flatExtrapolation = true;
 
@@ -1516,7 +1555,24 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 Size n = strikes.size();
                                 quotes.resize(n, vector<Handle<Quote>>(m, Handle<Quote>()));
 
-                                if (parameters->equityUseMoneyness(name)) { // moneyness surface
+				// If true, the strikes are fixed, if false they move with the spot handle
+				// Should probably be false, but some people like true for sensi runs.
+				string smileDynamicsType;
+				boost::shared_ptr<EquityVolatilityCurveConfig> config;
+				if (curveConfigs.hasEquityVolCurveConfig(name))
+				    config = curveConfigs.equityVolCurveConfig(name);
+				if (config && config->smileDynamics() != "") {
+				    smileDynamicsType = config->smileDynamics();
+				    LOG("Using equity smile dynamics " << smileDynamicsType << " from vol curve config " << name);
+				}
+				else {
+				    smileDynamicsType = smileDynamics.equity();
+				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
+				    LOG("Using equity smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
+				}
+				bool stickyStrike = smileDynamicsType == "StickyStrike" ? true : false;
+				
+				if (parameters->equityUseMoneyness(name)) { // moneyness surface
                                     for (Size j = 0; j < m; j++) {
                                         for (Size i = 0; i < n; i++) {
                                             Real mon = strikes[i];
@@ -1541,10 +1597,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     writeSimData(simDataTmp, absoluteSimDataTmp);
                                     simDataWritten = true;
                                     LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << name);
-                                    // If true, the strikes are fixed, if false they move with the spot handle
-                                    // Should probably be false, but some people like true for sensi runs.
-                                    bool stickyStrike = smileDynamics.equity() == "StickyStrike" ? true : false;
-
+                                    
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceMoneynessForward>(
                                             Handle<BlackVolTermStructure>(wrapper), spot, times,
@@ -1614,9 +1667,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     }
                                     writeSimData(simDataTmp, absoluteSimDataTmp);
                                     simDataWritten = true;
-                                    // If true, the strikes are fixed, if false they move with the spot handle
-                                    // Should probably be false, but some people like true for sensi runs.
-				    bool stickyStrike = smileDynamics.equity() == "StickyStrike" ? true : false;
                                     bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
                                     if (useSpreadedTermStructures_) {
                                         eqVolCurve = boost::make_shared<SpreadedBlackVolatilitySurfaceStdDevs>(
@@ -2391,7 +2441,22 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
                             } else {
 			        DLOG("Ssm comm vol for " << name << " uses BlackVarianceSurfaceMoneynessSpot.");
-				bool stickyStrike = smileDynamics.commodity() == "StickyStrike" ? true : false;
+
+			        string smileDynamicsType;
+				boost::shared_ptr<CommodityVolatilityConfig> config;
+				if (curveConfigs.hasCommodityVolatilityConfig(name))
+			            config = curveConfigs.commodityVolatilityConfig(name);
+				if (config && config->smileDynamics() != "") {
+				    smileDynamicsType = config->smileDynamics();
+				    LOG("Using commodity smile dynamics " << smileDynamicsType << " from vol curve config " << name);
+				}
+				else {
+				    smileDynamicsType = smileDynamics.commodity();
+				    string text = !config ? "vol curve config not found" : "vol curve smile dynamics is not set";
+				    LOG("Using commodity smile dynamics " << smileDynamicsType << " from global config for name " << name << ", " << text);
+				}
+				bool stickyStrike = smileDynamicsType == "StickyStrike" ? true : false;
+
 				bool flatExtrapMoneyness = true;
                                 Handle<Quote> spot(boost::make_shared<SimpleQuote>(priceCurve->price(0)));
                                 if (useSpreadedTermStructures_) {
