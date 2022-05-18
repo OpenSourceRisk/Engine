@@ -316,6 +316,7 @@
       <xs:enumeration value="NEAREST"/>
       <xs:enumeration value="NONE"/>
       <xs:enumeration value="NotApplicable"/>
+      <xs:enumeration value=""/>
     </xs:restriction>
   </xs:simpleType>
 
