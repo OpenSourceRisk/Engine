@@ -160,7 +160,7 @@
       <xs:element type="xs:string" name="BaseVolatility1" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BaseVolatility2" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
-      <xs:element type="cs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 
@@ -195,7 +195,7 @@
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="cs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
@@ -259,7 +259,7 @@
       <xs:element type="xs:string" name="SmileSwapTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSpreads" minOccurs="0"/>
       <xs:element type="xs:string" name="QuoteTag" minOccurs="0"/>
-      <xs:element type="cs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
@@ -282,7 +282,7 @@
       <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
       <xs:element type="xs:string" name="OptionTenors"/>
       <xs:element type="xs:string" name="BondTenors"/>
-      <xs:element type="cs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
@@ -322,7 +322,7 @@
       <xs:element type="xs:string" name="StrikeType" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="QuoteName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="positiveDecimal" name="StrikeFactor" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="cs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -414,7 +414,7 @@
       </xs:element>
       <xs:element type="bool" name="QuoteIncludesIndexName" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bootstrapConfigType" name="BootstrapConfig" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="cs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
       <xs:element type="reportConfiguration" name="Report" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
