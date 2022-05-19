@@ -116,16 +116,23 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
     LOG("Finished Parsing XML doc");
 }
 
-void Portfolio::save(const string& fileName) const {
-    LOG("Saving Portfolio to " << fileName);
-
+XMLDocument Portfolio::doc() const {
     XMLDocument doc;
     XMLNode* node = doc.allocNode("Portfolio");
     doc.appendNode(node);
     for (auto t : trades_)
         XMLUtils::appendNode(node, t->toXML(doc));
-    // Write doc out.
-    doc.toFile(fileName);
+    return doc;
+}
+
+void Portfolio::save(const string& fileName) const {
+    LOG("Saving Portfolio to " << fileName);
+    doc().toFile(fileName);
+}
+
+string Portfolio::saveToXMLString() const {
+    LOG("Write Portfolio to xml string.");
+    return doc().toString();
 }
 
 bool Portfolio::remove(const std::string& tradeID) {
