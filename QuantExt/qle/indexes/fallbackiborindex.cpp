@@ -82,7 +82,10 @@ Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing
     if (fixingDate > today) {
         return IborIndex::forecastFixing(fixingDate);
     } else {
-        return onCoupon(fixingDate, true)->rate() + spread_;
+      if (boost::dynamic_pointer_cast<OvernightIndex>(originalIndex_))
+	  return rfrIndex_->fixing(fixingDate) + spread_;
+      else
+	  return onCoupon(fixingDate, true)->rate() + spread_;
     }
 }
 

@@ -48,7 +48,8 @@ public:
                               const std::string& priceCurveId = "", const std::string& yieldCurveId = "",
                               const std::string& quoteSuffix = "",
                               const OneDimSolverConfig& solverConfig = OneDimSolverConfig(),
-                              const boost::optional<bool>& preferOutOfTheMoney = boost::none);
+                              const boost::optional<bool>& preferOutOfTheMoney = boost::none,
+			      const std::string& smileDynamics = "");
 
     //! \name Inspectors
     //@{
@@ -63,6 +64,7 @@ public:
     const std::string& quoteSuffix() const;
     OneDimSolverConfig solverConfig() const;
     const boost::optional<bool>& preferOutOfTheMoney() const;
+    const std::string& smileDynamics() const { return smileDynamics_; }
     //@}
 
     //! \name Serialisation
@@ -85,6 +87,7 @@ private:
     std::string quoteSuffix_;
     OneDimSolverConfig solverConfig_;
     boost::optional<bool> preferOutOfTheMoney_;
+    std::string smileDynamics_;
 
     //! Populate CurveConfig::quotes_ with the required quotes.
     void populateQuotes();

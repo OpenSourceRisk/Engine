@@ -40,11 +40,13 @@ CommodityVolatilityConfig::CommodityVolatilityConfig(const string& curveId, cons
                                                      const std::string& priceCurveId, const std::string& yieldCurveId,
                                                      const std::string& quoteSuffix,
                                                      const OneDimSolverConfig& solverConfig,
-                                                     const boost::optional<bool>& preferOutOfTheMoney)
+                                                     const boost::optional<bool>& preferOutOfTheMoney,
+						     const string& smileDynamics)
     : CurveConfig(curveId, curveDescription), currency_(currency), volatilityConfig_(volatilityConfig),
       dayCounter_(dayCounter), calendar_(calendar), futureConventionsId_(futureConventionsId),
       optionExpiryRollDays_(optionExpiryRollDays), priceCurveId_(priceCurveId), yieldCurveId_(yieldCurveId),
-      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney) {
+      quoteSuffix_(quoteSuffix), solverConfig_(solverConfig), preferOutOfTheMoney_(preferOutOfTheMoney),
+      smileDynamics_(smileDynamics) {
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -148,6 +150,8 @@ void CommodityVolatilityConfig::fromXML(XMLNode* node) {
         preferOutOfTheMoney_ = parseBool(XMLUtils::getNodeValue(n));
     }
 
+    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
+
     populateQuotes();
     populateRequiredCurveIds();
 }
@@ -182,7 +186,8 @@ XMLNode* CommodityVolatilityConfig::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, solverConfig_.toXML(doc));
     if (preferOutOfTheMoney_)
         XMLUtils::addChild(doc, node, "PreferOutOfTheMoney", *preferOutOfTheMoney_);
-
+    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
+	
     return node;
 }
 

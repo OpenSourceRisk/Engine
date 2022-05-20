@@ -92,7 +92,7 @@ public:
     const vector<Period>& yieldVolTerms() const { return yieldVolTerms_; }
     const vector<Period>& yieldVolExpiries() const { return yieldVolExpiries_; }
     vector<string> yieldVolNames() const { return paramsLookup(RiskFactorKey::KeyType::YieldVolatility); }
-    const string& yieldVolDecarayMode() const { return yieldVolDecayMode_; }
+    const string& yieldVolDecayMode() const { return yieldVolDecayMode_; }
 
     bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility); }
     vector<string> capFloorVolKeys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
@@ -247,7 +247,7 @@ public:
     void setSwapVolExpiries(const string& key, const vector<Period>& p);
     void setSwapVolStrikeSpreads(const std::string& key, const std::vector<QuantLib::Rate>& strikes);
     string& swapVolDecayMode() { return swapVolDecayMode_; }
-
+  
     void setSimulateYieldVols(bool simulate);
     vector<Period>& yieldVolTerms() { return yieldVolTerms_; }
     void setYieldVolNames(vector<string> names);
