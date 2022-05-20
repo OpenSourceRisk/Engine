@@ -65,6 +65,7 @@ indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
+indexes/fallbackovernightindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
 indexes/ibor/ameribor.cpp
@@ -348,6 +349,7 @@ indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
 indexes/escpi.hpp
 indexes/fallbackiborindex.hpp
+indexes/fallbackovernightindex.hpp
 indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp

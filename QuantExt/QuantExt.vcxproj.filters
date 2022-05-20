@@ -1150,6 +1150,9 @@
     <ClInclude Include="qle\indexes\fallbackiborindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\fallbackovernightindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -2031,6 +2034,9 @@
       <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\fallbackiborindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\fallbackovernightindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp">

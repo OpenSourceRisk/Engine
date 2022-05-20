@@ -564,6 +564,7 @@
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\escpi.hpp" />
     <ClInclude Include="qle\indexes\fallbackiborindex.hpp" />
+    <ClInclude Include="qle\indexes\fallbackovernightindex.hpp" />
     <ClInclude Include="qle\indexes\frcpi.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
@@ -962,6 +963,7 @@
     <ClCompile Include="qle\indexes\compoequityindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fallbackiborindex.cpp" />
+    <ClCompile Include="qle\indexes\fallbackovernightindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\genericiborindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\ameribor.cpp" />
