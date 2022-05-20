@@ -1707,7 +1707,7 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
                     averageOisConvention->fixedCalendar(), averageOisConvention->fixedConvention(),
                     averageOisConvention->fixedPaymentConvention(), onIndex, averageOisConvention->onTenor(),
                     basisQuote->quote(), averageOisConvention->rateCutoff(),
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
+                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
 
                 instruments.push_back(averageOisHelper);
             }
@@ -1789,7 +1789,7 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
                 basisSwapHelper.reset(
                     new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
                                    boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
-                                   discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
+                                   discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
             } else {
                 // ...or Libor vs Libor?
                 basisSwapHelper.reset(
@@ -2267,7 +2267,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                     basisSwapConvention->fixingDays(), basisSwapConvention->rateCutoff(),
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
                     basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
-                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged()));
+                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true));
             } else { // the quote is for a cross currency basis swap with a resetting notional
                 bool resetsOnFlatLeg = basisSwapConvention->flatIndexIsResettable();
                 // the convention here is to call the resetting leg the "domestic leg",
@@ -2297,7 +2297,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                     basisSwapConvention->fixingDays(), basisSwapConvention->rateCutoff(),
                     basisSwapConvention->isAveraged(), basisSwapConvention->flatIncludeSpread(),
                     basisSwapConvention->flatLookback(), basisSwapConvention->flatFixingDays(),
-                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged()));
+                    basisSwapConvention->flatRateCutoff(), basisSwapConvention->flatIsAveraged(), true));
             }
         }
     }
