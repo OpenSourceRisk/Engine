@@ -803,8 +803,28 @@ void CrossCcyBasisSwapConvention::build() {
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
     flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
-    flatTenor_ = strFlatTenor_.empty() ? flatIndex()->tenor() : parsePeriod(strFlatTenor_);
-    spreadTenor_ = strSpreadTenor_.empty() ? spreadIndex()->tenor() : parsePeriod(strSpreadTenor_);
+
+    // default to index tenor, except for ON indices, where we default to 3M since the index tenor 1D does not make sense for them
+
+    if (strFlatTenor_.empty()) {
+        auto tmp = flatIndex();
+        if (boost::dynamic_pointer_cast<OvernightIndex>(tmp))
+            flatTenor_ = 3 * Months;
+        else
+            flatTenor_ = tmp->tenor();
+    } else {
+        flatTenor_ = parsePeriod(strFlatTenor_);
+    }
+
+    if (strSpreadTenor_.empty()) {
+        auto tmp = spreadIndex();
+        if (boost::dynamic_pointer_cast<OvernightIndex>(tmp))
+            spreadTenor_ = 3 * Months;
+        else
+            spreadTenor_ = tmp->tenor();
+    } else {
+        flatTenor_ = parsePeriod(strSpreadTenor_);
+    }
 
     paymentLag_ = flatPaymentLag_ = 0;
     if (!strPaymentLag_.empty())
