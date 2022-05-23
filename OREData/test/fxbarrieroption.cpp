@@ -29,7 +29,6 @@
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -57,11 +56,11 @@ public:
     }
 
 private:
-    Handle<YieldTermStructure> flatRateYts(Real forward, const DayCounter& dc = ActualActual()) {
+    Handle<YieldTermStructure> flatRateYts(Real forward, const DayCounter& dc = Actual360()) {
         boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, dc));
         return Handle<YieldTermStructure>(yts);
     }
-    Handle<BlackVolTermStructure> flatRateFxv(Volatility vol, const DayCounter& dc = ActualActual()) {
+    Handle<BlackVolTermStructure> flatRateFxv(Volatility vol, const DayCounter& dc = Actual360()) {
         boost::shared_ptr<BlackVolTermStructure> fxv(new BlackConstantVol(0, NullCalendar(), vol, dc));
         return Handle<BlackVolTermStructure>(fxv);
     }
