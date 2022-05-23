@@ -633,6 +633,9 @@
     <ClInclude Include="ored\configuration\reportconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\smiledynamicsconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
     <ClInclude Include="ored\model\marketobserver.hpp">
       <Filter>model</Filter>
     </ClInclude>
@@ -1153,6 +1156,9 @@
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\configuration\reportconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\smiledynamicsconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
     <ClCompile Include="ored\configuration\iborfallbackconfig.cpp">

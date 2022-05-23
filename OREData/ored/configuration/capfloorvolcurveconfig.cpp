@@ -58,14 +58,14 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const BusinessDayConvention& businessDayConvention, const std::string& index,
     const QuantLib::Period& rateComputationPeriod, const string& discountCurve, const string& interpolationMethod,
     const string& interpolateOn, const string& timeInterpolation, const string& strikeInterpolation,
-    const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig)
+    const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig, const string& smileDynamics)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), rateComputationPeriod_(rateComputationPeriod),
       discountCurve_(discountCurve), interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn),
       timeInterpolation_(timeInterpolation), strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors),
-      bootstrapConfig_(bootstrapConfig) {
+      bootstrapConfig_(bootstrapConfig), smileDynamics_(smileDynamics) {
 
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -208,6 +208,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             bootstrapConfig_.fromXML(n);
         }
 
+	smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
+
         // Set type_
         configureType();
 
@@ -269,6 +271,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
         XMLUtils::addChild(doc, node, "QuoteIncludesIndexName", quoteIncludesIndexName_);
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
+	XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     }
 
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
