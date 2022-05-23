@@ -118,7 +118,7 @@ IborFallbackConfig IborFallbackConfig::defaultConfig() {
                                     {"CHF-LIBOR-3M", FallbackData{"CHF-SARON", 0.000031, Date(1, Jan, 2022)}},
                                     {"CHF-LIBOR-6M", FallbackData{"CHF-SARON", 0.000741, Date(1, Jan, 2022)}},
                                     {"CHF-LIBOR-12M", FallbackData{"CHF-SARON", 0.002048, Date(1, Jan, 2022)}},
-                                    // {"EUR-EONIA", FallbackData{"EUR-ESTER", 0.00085, Date(1, Jan, 2022)}},
+                                    {"EUR-EONIA", FallbackData{"EUR-ESTER", 0.00085, Date(1, Jan, 2022)}},
                                     {"EUR-EURIBOR-1W", FallbackData{"EUR-ESTER", 0.000577, Date(1, Jan, 2100)}},
                                     {"EUR-EURIBOR-1M", FallbackData{"EUR-ESTER", 0.000738, Date(1, Jan, 2100)}},
                                     {"EUR-EURIBOR-3M", FallbackData{"EUR-ESTER", 0.001244, Date(1, Jan, 2100)}},

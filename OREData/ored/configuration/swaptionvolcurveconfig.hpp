@@ -51,19 +51,22 @@ public:
                                   // Only required for smile
                                   const vector<string>& smileOptionTenors = vector<string>(),
                                   const vector<string>& smileSwapTenors = vector<string>(),
-                                  const vector<string>& smileSpreads = vector<string>())
+                                  const vector<string>& smileSpreads = vector<string>(),
+				  const std::string& smileDynamics = "")
         : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", curveID, curveDescription, "",
                                             dimension, volatilityType, extrapolate, flatExtrapolation, optionTenors,
                                             swapTenors, dayCounter, calendar, businessDayConvention, shortSwapIndexBase,
-                                            swapIndexBase, smileOptionTenors, smileSwapTenors, smileSpreads) {}
+                                            swapIndexBase, smileOptionTenors, smileSwapTenors, smileSpreads,
+					    smileDynamics) {}
     //! Detailled constructor for proxy config
     SwaptionVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                   const string& proxySourceCurveId, const string& proxySourceShortSwapIndexBase,
                                   const string& proxySourceSwapIndexBase, const string& proxyTargetShortSwapIndexBase,
-                                  const string& proxyTargetSwapIndexBase)
+                                  const string& proxyTargetSwapIndexBase,
+				  const std::string& smileDynamics = "")
         : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "", curveID, curveDescription, "",
                                             proxySourceCurveId, proxySourceShortSwapIndexBase, proxySourceSwapIndexBase,
-                                            proxyTargetShortSwapIndexBase, proxyTargetSwapIndexBase) {}
+                                            proxyTargetShortSwapIndexBase, proxyTargetSwapIndexBase, smileDynamics) {}
 };
 
 } // namespace data

@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(testParseConstantVolFromXml) {
     // Check that we have a constant volatility config.
     boost::shared_ptr<ConstantVolatilityConfig> vc;
     for (auto v : config.volatilityConfig()) {
-        if (vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(v)) 
+        if ((vc = boost::dynamic_pointer_cast<ConstantVolatilityConfig>(v)))
             break;
     }
     BOOST_CHECK(vc);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(testParseVolCurveFromXml) {
     // Check that we have a volatility curve config.
     boost::shared_ptr<VolatilityCurveConfig> vc;
     for (auto v : config.volatilityConfig()) {
-        if (vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(v))
+        if ((vc = boost::dynamic_pointer_cast<VolatilityCurveConfig>(v)))
             break;
     }
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(testParseVolSurfaceFromXml) {
     // Check that we have a volatility strike surface config.
     boost::shared_ptr<VolatilityStrikeSurfaceConfig> vc;
     for (auto v : config.volatilityConfig()) {
-        if (vc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(v))
+        if ((vc = boost::dynamic_pointer_cast<VolatilityStrikeSurfaceConfig>(v)))
             break;
     }
     BOOST_REQUIRE(vc);
