@@ -692,9 +692,6 @@
     <ClCompile Include="yieldcurve.cpp" />
     <ClCompile Include="zerocouponswap.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="fxbarrieroption.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -170,7 +170,4 @@
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="fxbarrieroption.hpp" />
-  </ItemGroup>
 </Project>
