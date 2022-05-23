@@ -89,7 +89,8 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(FxBarrierOptionTests)
 
-// Standard FX Barrier Option test, examples from Haug, The Complete Guide to Option Pricing Formulas, 2007, 2nd ed, p. 154, Table 4-13
+// Standard FX Barrier Option test, examples from Haug, 
+// "The Complete Guide to Option Pricing Formulas", 2007, 2nd ed, p. 154, Table 4-13
 BOOST_AUTO_TEST_CASE(testStandardFxBarrierOptionPrice) {
 
     BOOST_TEST_MESSAGE("Testing Standard FxBarrierOption Price...");
