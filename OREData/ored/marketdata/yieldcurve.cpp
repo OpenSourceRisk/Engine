@@ -204,17 +204,17 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 };
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
-                       const Loader& loader,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
+                       const Loader& loader, const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves,
                        const map<string, boost::shared_ptr<DefaultCurve>>& requiredDefaultCurves,
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, const bool preserveQuoteLinkage,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves)
-    : asofDate_(asof), curveSpec_(curveSpec), loader_(loader),
-      requiredYieldCurves_(requiredYieldCurves), requiredDefaultCurves_(requiredDefaultCurves),
-      fxTriangulation_(fxTriangulation), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
-      preserveQuoteLinkage_(preserveQuoteLinkage), requiredDiscountCurves_(requiredDiscountCurves) {
+                       const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves,
+                       const bool buildCalibrationInfo)
+    : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), requiredYieldCurves_(requiredYieldCurves),
+      requiredDefaultCurves_(requiredDefaultCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData),
+      iborFallbackConfig_(iborFallbackConfig), preserveQuoteLinkage_(preserveQuoteLinkage),
+      requiredDiscountCurves_(requiredDiscountCurves), buildCalibrationInfo_(buildCalibrationInfo) {
 
     try {
 
@@ -282,18 +282,20 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
 
         // populate shared calibration info
 
-        if (calibrationInfo_ == nullptr)
-            calibrationInfo_ = boost::make_shared<YieldCurveCalibrationInfo>();
-        calibrationInfo_->dayCounter = zeroDayCounter_.name();
-        calibrationInfo_->currency = currency_.code();
-        if (calibrationInfo_->pillarDates.empty()) {
-            for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
-                calibrationInfo_->pillarDates.push_back(asofDate_ + p);
-        }
-        for (auto const& d : calibrationInfo_->pillarDates) {
-            calibrationInfo_->zeroRates.push_back(p_->zeroRate(d, zeroDayCounter_, Continuous));
-            calibrationInfo_->discountFactors.push_back(p_->discount(d));
-            calibrationInfo_->times.push_back(p_->timeFromReference(d));
+        if (buildCalibrationInfo_) {
+            if (calibrationInfo_ == nullptr)
+                calibrationInfo_ = boost::make_shared<YieldCurveCalibrationInfo>();
+            calibrationInfo_->dayCounter = zeroDayCounter_.name();
+            calibrationInfo_->currency = currency_.code();
+            if (calibrationInfo_->pillarDates.empty()) {
+                for (auto const& p : YieldCurveCalibrationInfo::defaultPeriods)
+                    calibrationInfo_->pillarDates.push_back(asofDate_ + p);
+            }
+            for (auto const& d : calibrationInfo_->pillarDates) {
+                calibrationInfo_->zeroRates.push_back(p_->zeroRate(d, zeroDayCounter_, Continuous));
+                calibrationInfo_->discountFactors.push_back(p_->discount(d));
+                calibrationInfo_->times.push_back(p_->timeFromReference(d));
+            }
         }
 
     } catch (QuantLib::Error& e) {
@@ -618,9 +620,11 @@ YieldCurve::piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments) {
     }
 
     // set calibration info
-    calibrationInfo_ = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
-    for (Size i = 0; i < instruments.size(); ++i) {
-        calibrationInfo_->pillarDates.push_back(instruments[i]->pillarDate());
+    if (buildCalibrationInfo_) {
+        calibrationInfo_ = boost::make_shared<PiecewiseYieldCurveCalibrationInfo>();
+        for (Size i = 0; i < instruments.size(); ++i) {
+            calibrationInfo_->pillarDates.push_back(instruments[i]->pillarDate());
+        }
     }
 
     return p_;
@@ -1062,8 +1066,10 @@ void YieldCurve::buildFittedBondCurve() {
     // init calibration info for this curve
 
     auto calInfo = boost::make_shared<FittedBondCurveCalibrationInfo>();
-    calInfo->dayCounter = zeroDayCounter_.name();
-    calInfo->currency = currency_.code();
+    if (buildCalibrationInfo_) {
+        calInfo->dayCounter = zeroDayCounter_.name();
+        calInfo->currency = currency_.code();
+    }
 
     // build vector of bond helpers
 
@@ -1291,13 +1297,16 @@ void YieldCurve::buildFittedBondCurve() {
     p_ = tmp;
 
     Array solution = tmp->fitResults().solution();
-    calInfo->modelPrices = modelPrices;
-    calInfo->modelYields = modelYields;
-    calInfo->tolerance = tolerance;
-    calInfo->costValue = minError;
-    calInfo->solution = std::vector<double>(solution.begin(), solution.end());
-    calInfo->iterations = static_cast<int>(tmp->fitResults().numberOfIterations());
-    calibrationInfo_ = calInfo;
+
+    if (buildCalibrationInfo_) {
+        calInfo->modelPrices = modelPrices;
+        calInfo->modelYields = modelYields;
+        calInfo->tolerance = tolerance;
+        calInfo->costValue = minError;
+        calInfo->solution = std::vector<double>(solution.begin(), solution.end());
+        calInfo->iterations = static_cast<int>(tmp->fitResults().numberOfIterations());
+        calibrationInfo_ = calInfo;
+    }
 }
 
 void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
