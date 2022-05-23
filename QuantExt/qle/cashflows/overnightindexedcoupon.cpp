@@ -101,13 +101,14 @@ OvernightIndexedCoupon::OvernightIndexedCoupon(const Date& paymentDate, Real nom
 
     if (telescopicValueDates) {
         // build optimised value dates schedule: back stub
-        // contains at least two dates
+        // contains at least two dates and enough periods to cover rate cutoff
         Date tmp2 = overnightIndex->fixingCalendar().adjust(valueEnd, overnightIndex->businessDayConvention());
-        Date tmp1 = overnightIndex->fixingCalendar().advance(tmp2, -1, Days, Preceding);
-	if(tmp1 > valueDates_.back())
-	    valueDates_.push_back(tmp1);
-	if(tmp2 > valueDates_.back())
-	    valueDates_.push_back(tmp2);
+        Date tmp1 = overnightIndex->fixingCalendar().advance(tmp2, -std::max<Size>(rateCutoff_, 1), Days, Preceding);
+        while (tmp1 <= tmp2) {
+            if (tmp1 > valueDates_.back())
+                valueDates_.push_back(tmp1);
+            tmp1 = overnightIndex->fixingCalendar().advance(tmp1, 1, Days, Following);
+        }
     }
 
     QL_ENSURE(valueDates_.size() >= 2 + rateCutoff_, "degenerate schedule");
