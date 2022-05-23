@@ -137,7 +137,6 @@ BOOST_AUTO_TEST_CASE(testStandardFxBarrierOptionPrice) {
         // ---
     };
 
-    Date asof = Date(01, Feb, 2021);
     Date today = Settings::instance().evaluationDate();
     Envelope env("CP1");
     boost::shared_ptr<EngineFactory> engineFactory;
