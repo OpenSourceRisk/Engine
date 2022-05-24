@@ -104,11 +104,11 @@ public:
         relevantScenarios_.insert(k);
     }
 
-    const std::map<QuantLib::Size, QuantLib::Real>& getTradeNPVs(QuantLib::Size i) const override {
+    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(QuantLib::Size i) const override {
         return tradeNPVs_[i];
     }
 
-    const std::set<QuantLib::Size>& relevantScenarios() const override { return relevantScenarios_; }
+    std::set<QuantLib::Size> relevantScenarios() const override { return relevantScenarios_; }
 
 private:
     friend class boost::serialization::access;

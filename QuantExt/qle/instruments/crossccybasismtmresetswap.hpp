@@ -58,7 +58,8 @@ public:
         boost::optional<Size> foreignRateCutoff = boost::none, boost::optional<bool> foreignIsAveraged = boost::none,
         boost::optional<bool> domesticIncludeSpread = boost::none,
         boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
-        boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none);
+        boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none,
+        const bool telescopicValueDates = false);
     //@}
     //! \name Instrument interface
     //@{
@@ -129,6 +130,7 @@ private:
     boost::optional<QuantLib::Size> domesticFixingDays_;
     boost::optional<Size> domesticRateCutoff_;
     boost::optional<bool> domesticIsAveraged_;
+    bool telescopicValueDates_;
 
     mutable Spread fairForeignSpread_;
     mutable Spread fairDomesticSpread_;

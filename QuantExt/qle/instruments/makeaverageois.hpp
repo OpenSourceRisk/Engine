@@ -79,6 +79,7 @@ public:
     MakeAverageOIS& withONDayCounter(const DayCounter& onDayCounter);
     MakeAverageOIS& withONPaymentAdjustment(BusinessDayConvention onPaymentAdjustment);
     MakeAverageOIS& withONPaymentCalendar(const Calendar& onPaymentCalendar);
+    MakeAverageOIS &withTelescopicValueDates(bool telescopicValueDates);
 
     // Pricing.
     MakeAverageOIS& withONCouponPricer(const boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer);
@@ -124,6 +125,7 @@ private:
     DayCounter onDayCounter_;
     BusinessDayConvention onPaymentAdjustment_;
     Calendar onPaymentCalendar_;
+    bool telescopicValueDates_;
 
     boost::shared_ptr<PricingEngine> engine_;
     boost::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;

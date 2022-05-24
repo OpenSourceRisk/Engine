@@ -37,6 +37,7 @@ engine/sensitivityrecord.cpp
 engine/stresstest.cpp
 engine/valuationcalculator.cpp
 engine/valuationengine.cpp
+scenario/clonedscenariogenerator.cpp
 scenario/clonescenariofactory.cpp
 scenario/crossassetmodelscenariogenerator.cpp
 scenario/lgmscenariogenerator.cpp
@@ -102,6 +103,7 @@ engine/stresstest.hpp
 engine/valuationcalculator.hpp
 engine/valuationengine.hpp
 scenario/aggregationscenariodata.hpp
+scenario/clonedscenariogenerator.hpp
 scenario/clonescenariofactory.hpp
 scenario/crossassetmodelscenariogenerator.hpp
 scenario/lgmscenariogenerator.hpp

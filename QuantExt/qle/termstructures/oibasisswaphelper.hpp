@@ -39,7 +39,8 @@ public:
                const Period& tenor, // swap maturity
                const Handle<Quote>& oisSpread, const boost::shared_ptr<OvernightIndex>& overnightIndex,
                const boost::shared_ptr<IborIndex>& iborIndex,
-               const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>());
+               const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
+               const bool telescopicValueDates = false);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -61,6 +62,7 @@ protected:
     boost::shared_ptr<OvernightIndex> overnightIndex_;
     boost::shared_ptr<IborIndex> iborIndex_;
     Handle<YieldTermStructure> discount_;
+    bool telescopicValueDates_;
 
     boost::shared_ptr<OvernightIndexedBasisSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;

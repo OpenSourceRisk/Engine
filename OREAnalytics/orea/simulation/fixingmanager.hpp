@@ -99,12 +99,12 @@ struct StandardFixingManagerCashflowHandler : public FixingManagerCashflowHandle
 };
 
 //! Cashflow handler factory
-class FixingManagerCashflowHandlerFactory : public QuantLib::Singleton<FixingManagerCashflowHandlerFactory> {
-    friend class QuantLib::Singleton<FixingManagerCashflowHandlerFactory>;
+class FixingManagerCashflowHandlerFactory
+    : public QuantLib::Singleton<FixingManagerCashflowHandlerFactory, std::integral_constant<bool, true>> {
     std::set<boost::shared_ptr<FixingManagerCashflowHandler>> handlers_;
-
+    mutable boost::shared_mutex mutex_;
 public:
-    const std::set<boost::shared_ptr<FixingManagerCashflowHandler>>& handlers() const;
+    std::set<boost::shared_ptr<FixingManagerCashflowHandler>> handlers() const;
     void addHandler(const boost::shared_ptr<FixingManagerCashflowHandler>& handler);
 };
 

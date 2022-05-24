@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     // Market
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_01.xml"));
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
 
     auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_01.xml"));
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     // Market
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_02.xml"));
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
     
     auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_02.xml"));
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     // Market
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE("conventions_03.xml"));
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
     
     auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
     todaysMarketParams->fromFile(TEST_INPUT_FILE("todaysmarket_03.xml"));

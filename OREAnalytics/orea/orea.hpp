@@ -49,6 +49,7 @@
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
+#include <orea/scenario/clonedscenariogenerator.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>

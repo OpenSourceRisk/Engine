@@ -62,9 +62,9 @@ template <class T> boost::shared_ptr<LegAdditionalData> createLegData() { return
 
     \ingroup portfolio
 */
-class LegDataFactory : public QuantLib::Singleton<LegDataFactory> {
+class LegDataFactory : public QuantLib::Singleton<LegDataFactory, std::integral_constant<bool, true>> {
 
-    friend class QuantLib::Singleton<LegDataFactory>;
+    friend class QuantLib::Singleton<LegDataFactory, std::integral_constant<bool, true>>;
 
 public:
     /*! The container type used to store the leg data type key and the function that will be used to build a default
@@ -85,6 +85,7 @@ public:
     void addBuilder(const std::string& legType, std::function<boost::shared_ptr<LegAdditionalData>()> builder);
 
 private:
+    boost::shared_mutex mutex_;
     map_type map_;
 };
 

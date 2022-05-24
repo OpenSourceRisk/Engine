@@ -54,7 +54,8 @@ public:
                    const std::map<std::string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves = {},
                    const std::map<std::string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves = {},
                    const std::map<std::string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves = {},
-                   const boost::optional<FXIndexTriangulation>& fxIndices = boost::none);
+                   const boost::optional<FXIndexTriangulation>& fxIndices = boost::none,
+                   const bool buildCalibrationInfo = true);
     //@}
 
     //! \name Inspectors
