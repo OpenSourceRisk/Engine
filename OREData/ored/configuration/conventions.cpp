@@ -841,7 +841,7 @@ void CrossCcyBasisSwapConvention::build() {
         else
             spreadTenor_ = tmp->tenor();
     } else {
-        flatTenor_ = parsePeriod(strSpreadTenor_);
+        spreadTenor_ = parsePeriod(strSpreadTenor_);
     }
 
     paymentLag_ = flatPaymentLag_ = 0;
