@@ -133,7 +133,9 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
                                                                            << ")");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(
-        market_, simMarketData_, marketConfiguration_, *curveConfigs_, *todaysMarketParams_, continueOnError_,
+        market_, simMarketData_, marketConfiguration_,
+        curveConfigs_ ? *curveConfigs_ : ore::data::CurveConfigurations(),
+        todaysMarketParams_ ? *todaysMarketParams_ : TodaysMarketParameters(), continueOnError_,
         sensitivityData_->useSpreadedTermStructures(), false, false, iborFallbackConfig_);
 
     LOG("Sim market initialised for sensitivity analysis");
