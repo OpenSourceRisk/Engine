@@ -26,7 +26,7 @@ namespace ore {
 namespace data {
 
 YieldVolCurve::YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loader& loader,
-                             const CurveConfigurations& curveConfigs)
+                             const CurveConfigurations& curveConfigs, const bool buildCalibrationInfo)
     : GenericYieldVolCurve(
           asof, loader, curveConfigs, curveConfigs.yieldVolCurveConfig(spec.curveConfigID()), {}, {},
           [](const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term) -> bool {
@@ -47,7 +47,8 @@ YieldVolCurve::YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loa
                   return false;
               term = q->term();
               return true;
-          }),
+          },
+          buildCalibrationInfo),
       spec_(spec) {}
 
 } // namespace data

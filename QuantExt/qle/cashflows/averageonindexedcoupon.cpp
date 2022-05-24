@@ -36,7 +36,8 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
                                                const boost::shared_ptr<OvernightIndex>& overnightIndex, Real gearing,
                                                Spread spread, Natural rateCutoff, const DayCounter& dayCounter,
                                                const Period& lookback, const Size fixingDays,
-                                               const Date& rateComputationStartDate, const Date& rateComputationEndDate)
+                                               const Date& rateComputationStartDate, const Date& rateComputationEndDate,
+                                               const bool telescopicValueDates)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, fixingDays, overnightIndex, gearing, spread, Date(),
                          Date(), dayCounter, false),
       overnightIndex_(overnightIndex), rateCutoff_(rateCutoff), lookback_(lookback),
@@ -51,14 +52,35 @@ AverageONIndexedCoupon::AverageONIndexedCoupon(const Date& paymentDate, Real nom
     }
 
     // Populate the value dates.
+    Date tmpEndDate = valueEnd;
+    if(telescopicValueDates) {
+	// same optimization as in OvernightIndexedCoupon
+        Date evalDate = Settings::instance().evaluationDate();
+        tmpEndDate = overnightIndex->fixingCalendar().advance(std::max(valueStart, evalDate), 7, Days, Following);
+        tmpEndDate = std::min(tmpEndDate, valueEnd);
+    }
+
     Schedule sch = MakeSchedule()
                        .from(valueStart)
-                       .to(valueEnd)
+                       .to(tmpEndDate)
                        .withTenor(1 * Days)
                        .withCalendar(overnightIndex->fixingCalendar())
                        .withConvention(overnightIndex->businessDayConvention())
                        .backwards();
     valueDates_ = sch.dates();
+
+    if (telescopicValueDates) {
+        // build optimised value dates schedule: back stub
+        // contains at least two dates and enough periods to cover rate cutoff
+        Date tmp2 = overnightIndex->fixingCalendar().adjust(valueEnd, overnightIndex->businessDayConvention());
+        Date tmp1 = overnightIndex->fixingCalendar().advance(tmp2, -std::max<Size>(rateCutoff_, 1), Days, Preceding);
+        while (tmp1 <= tmp2) {
+            if (tmp1 > valueDates_.back())
+                valueDates_.push_back(tmp1);
+            tmp1 = overnightIndex->fixingCalendar().advance(tmp1, 1, Days, Following);
+        }
+    }
+
     QL_ENSURE(valueDates_.size() >= 2 + rateCutoff_, "degenerate schedule");
 
     // the first and last value date should be the unadjusted input value dates
@@ -248,8 +270,8 @@ Handle<OptionletVolatilityStructure> CapFlooredAverageONIndexedCouponPricer::cap
 
 AverageONLeg::AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& i)
     : schedule_(schedule), overnightIndex_(i), paymentAdjustment_(Following), paymentLag_(0),
-      paymentCalendar_(schedule.calendar()), rateCutoff_(0), lookback_(0 * Days), fixingDays_(Null<Size>()),
-      includeSpread_(false), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
+      telescopicValueDates_(false), paymentCalendar_(schedule.calendar()), rateCutoff_(0), lookback_(0 * Days),
+      fixingDays_(Null<Size>()), includeSpread_(false), nakedOption_(false), localCapFloor_(false), inArrears_(true) {}
 
 AverageONLeg& AverageONLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -288,6 +310,11 @@ AverageONLeg& AverageONLeg::withSpread(Spread spread) {
 
 AverageONLeg& AverageONLeg::withSpreads(const std::vector<Spread>& spreads) {
     spreads_ = spreads;
+    return *this;
+}
+
+AverageONLeg& AverageONLeg::withTelescopicValueDates(bool telescopicValueDates) {
+    telescopicValueDates_ = telescopicValueDates;
     return *this;
 }
 
@@ -453,7 +480,7 @@ AverageONLeg::operator Leg() const {
             auto cpn = boost::make_shared<AverageONIndexedCoupon>(
                 paymentDate, detail::get(notionals_, i, notionals_.back()), start, end, overnightIndex_,
                 detail::get(gearings_, i, 1.0), detail::get(spreads_, i, 0.0), rateCutoff_, paymentDayCounter_,
-                lookback_, fixingDays_, rateComputationStartDate, rateComputationEndDate);
+                lookback_, fixingDays_, rateComputationStartDate, rateComputationEndDate, telescopicValueDates_);
             if (couponPricer_) {
                 cpn->setPricer(couponPricer_);
             }

@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
         string str(swap_index_data[i].str);
         string index_name(swap_index_data[i].index_name);
         Period tenor(swap_index_data[i].tenor);
-        ore::data::InstrumentConventions::instance().conventions() = convs();
+        ore::data::InstrumentConventions::instance().setConventions(convs());
         boost::shared_ptr<SwapIndex> swap;
         try {
             swap = ore::data::parseSwapIndex(str, h, h);

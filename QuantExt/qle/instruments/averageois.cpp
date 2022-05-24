@@ -29,13 +29,14 @@ AverageOIS::AverageOIS(Type type, Real nominal, const Schedule& fixedLegSchedule
                        const boost::shared_ptr<OvernightIndex>& overnightIndex,
                        BusinessDayConvention onLegPaymentAdjustment, const Calendar& onLegPaymentCalendar,
                        Natural rateCutoff, Spread onLegSpread, Real onLegGearing, const DayCounter& onLegDCB,
-                       const boost::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer)
+                       const boost::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer,
+                       const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(std::vector<Real>(1, nominal)), fixedRates_(std::vector<Rate>(1, fixedRate)),
       fixedDayCounter_(fixedDCB), fixedPaymentAdjustment_(fixedLegPaymentAdjustment),
       fixedPaymentCalendar_(fixedLegPaymentCalendar), overnightIndex_(overnightIndex),
       onPaymentAdjustment_(onLegPaymentAdjustment), onPaymentCalendar_(onLegPaymentCalendar), rateCutoff_(rateCutoff),
       onSpreads_(std::vector<Spread>(1, onLegSpread)), onGearings_(std::vector<Real>(1, onLegGearing)),
-      onDayCounter_(onLegDCB), onCouponPricer_(onLegCouponPricer) {
+      onDayCounter_(onLegDCB), onCouponPricer_(onLegCouponPricer), telescopicValueDates_(telescopicValueDates) {
     initialize(fixedLegSchedule, onLegSchedule);
 }
 
@@ -46,12 +47,14 @@ AverageOIS::AverageOIS(Type type, std::vector<Real> nominals, const Schedule& fi
                        BusinessDayConvention onLegPaymentAdjustment, const Calendar& onLegPaymentCalendar,
                        Natural rateCutoff, std::vector<Spread> onLegSpreads, std::vector<Real> onLegGearings,
                        const DayCounter& onLegDCB,
-                       const boost::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer)
+                       const boost::shared_ptr<AverageONIndexedCouponPricer>& onLegCouponPricer,
+                       const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(nominals), fixedRates_(fixedRates), fixedDayCounter_(fixedDCB),
       fixedPaymentAdjustment_(fixedLegPaymentAdjustment), fixedPaymentCalendar_(fixedLegPaymentCalendar),
       overnightIndex_(overnightIndex), onPaymentAdjustment_(onLegPaymentAdjustment),
       onPaymentCalendar_(onLegPaymentCalendar), rateCutoff_(rateCutoff), onSpreads_(onLegSpreads),
-      onGearings_(onLegGearings), onDayCounter_(onLegDCB), onCouponPricer_(onLegCouponPricer) {
+      onGearings_(onLegGearings), onDayCounter_(onLegDCB), onCouponPricer_(onLegCouponPricer),
+      telescopicValueDates_(telescopicValueDates) {
     initialize(fixedLegSchedule, onLegSchedule);
 }
 
@@ -71,7 +74,8 @@ void AverageOIS::initialize(const Schedule& fixedLegSchedule, const Schedule& on
                                         .withRateCutoff(rateCutoff_)
                                         .withSpreads(onSpreads_)
                                         .withGearings(onGearings_)
-                                        .withPaymentDayCounter(onDayCounter_);
+                                        .withPaymentDayCounter(onDayCounter_)
+                                        .withTelescopicValueDates(telescopicValueDates_);
 
     if (onCouponPricer_) {
         tempAverageONLeg = tempAverageONLeg.withAverageONIndexedCouponPricer(onCouponPricer_);

@@ -98,7 +98,9 @@ public:
         //! If true, preserve link to loader quotes, this might heavily interfere with XVA simulations!
         const bool preserveQuoteLinkage = false,
         //! the ibor fallback config
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig());
+        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+        //! build calibration info?
+        const bool buildCalibrationInfo = true);
 
     boost::shared_ptr<TodaysMarketCalibrationInfo> calibrationInfo() const { return calibrationInfo_; }
 
@@ -118,6 +120,7 @@ private:
     const bool preserveQuoteLinkage_;
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
     const IborFallbackConfig iborFallbackConfig_;
+    const bool buildCalibrationInfo_;
 
     // initialise market
     void initialise(const Date& asof);

@@ -123,7 +123,7 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
 
     // check EUREUR
     if (foreign == domestic) {
-        static Handle<Quote> unity(boost::make_shared<SimpleQuote>(1.0));
+        thread_local static Handle<Quote> unity(boost::make_shared<SimpleQuote>(1.0));
         return unity;
     }
 

@@ -185,8 +185,9 @@ struct BondBuilder {
                          const std::string& securityId) const = 0;
 };
 
-class BondFactory : public QuantLib::Singleton<BondFactory> {
+class BondFactory : public QuantLib::Singleton<BondFactory, std::integral_constant<bool, true>> {
     map<std::string, boost::shared_ptr<BondBuilder>> builders_;
+    mutable boost::shared_mutex mutex_;
 
 public:
     BondBuilder::Result build(const boost::shared_ptr<EngineFactory>& engineFactory,
