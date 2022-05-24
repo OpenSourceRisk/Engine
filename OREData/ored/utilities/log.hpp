@@ -54,6 +54,7 @@
 #include <sstream>
 
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 
 namespace ore {
 namespace data {
