@@ -757,7 +757,7 @@ public:
     //@{
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
-    virtual void build() override {}
+    virtual void build() override;
     //@}
 
 private:
