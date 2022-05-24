@@ -36,6 +36,7 @@
 #include <qle/indexes/commodityindex.hpp>
 
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 
 namespace ore {
 namespace data {
