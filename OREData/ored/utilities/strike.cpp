@@ -20,7 +20,7 @@
 #include <ored/utilities/strike.hpp>
 
 #include <ql/errors.hpp>
-#include <boost/thread/win32/mutex.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/regex.hpp>
 
