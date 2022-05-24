@@ -39,7 +39,8 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
     DayCounter dayCounter,
     bool extrapolate,
     const string& quoteName,
-    const Date& startDate,
+    const Date& startDate, 
+    const Period& indexTerm,
     boost::optional<DateGeneration::Rule> rule,
     bool adjustForLosses)
     : CurveConfig(curveID, curveDescription),
@@ -51,7 +52,8 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID,
       dayCounter_(dayCounter),
       extrapolate_(extrapolate),
       quoteName_(quoteName.empty() ? curveID : quoteName),
-      startDate_(startDate),
+      startDate_(startDate), 
+      indexTerm_(indexTerm),
       rule_(rule),
       adjustForLosses_(adjustForLosses) {}
 
@@ -87,6 +89,9 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     if (auto n = XMLUtils::getChildNode(node, "StartDate"))
         startDate_ = parseDate(XMLUtils::getNodeValue(n));
 
+    string t = XMLUtils::getChildValue(node, "IndexTerm", false);
+    indexTerm_ = t.empty() ? 0 * Days : parsePeriod(t);
+
     if (auto n = XMLUtils::getChildNode(node, "Rule"))
         rule_ = parseDateGenerationRule(XMLUtils::getNodeValue(n));
 
@@ -114,6 +119,10 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     if (rule_)
         XMLUtils::addChild(doc, node, "Rule", to_string(*rule_));
+
+    if (indexTerm_ != 0 * Days) {
+        XMLUtils::addChild(doc, node, "IndexTerm", indexTerm_);
+    }
 
     XMLUtils::addChild(doc, node, "AdjustForLosses", adjustForLosses_);
 

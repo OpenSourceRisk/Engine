@@ -66,6 +66,7 @@ public:
         bool extrapolate,
         const std::string& quoteName = "",
         const QuantLib::Date& startDate = QuantLib::Date(),
+        const QuantLib::Period& indexTerm = 0 * QuantLib::Days,
         boost::optional<QuantLib::DateGeneration::Rule> rule = boost::none,
         bool adjustForLosses = true);
     //@}
@@ -87,6 +88,7 @@ public:
     const bool& extrapolate() const { return extrapolate_; }
     const std::string& quoteName() const { return quoteName_; }
     const QuantLib::Date& startDate() const { return startDate_; }
+    const QuantLib::Period& indexTerm() const { return indexTerm_; }
     const boost::optional<QuantLib::DateGeneration::Rule>& rule() const { return rule_; }
     const bool& adjustForLosses() const { return adjustForLosses_; }
     const vector<string>& quotes() override;
@@ -101,6 +103,7 @@ public:
     BusinessDayConvention& businessDayConvention() { return businessDayConvention_; }
     DayCounter& dayCounter() { return dayCounter_; }
     bool& extrapolate() { return extrapolate_; }
+    QuantLib::Period& indexTerm() { return indexTerm_; }
     //@}
 
 private:
@@ -113,6 +116,7 @@ private:
     bool extrapolate_;
     std::string quoteName_;
     QuantLib::Date startDate_;
+    QuantLib::Period indexTerm_;
     boost::optional<QuantLib::DateGeneration::Rule> rule_;
     bool adjustForLosses_;
 };
