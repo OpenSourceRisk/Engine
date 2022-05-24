@@ -2973,6 +2973,9 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
                 }
             }
         }
+    } else if (configuration != Market::defaultConfiguration) {
+        // try to fall back on default configuration
+        return getYieldCurve(yieldSpecId, todaysMarketParams, Market::defaultConfiguration);
     }
 
     // If yield spec ID still has not been found, return empty Handle

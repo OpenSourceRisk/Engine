@@ -288,9 +288,7 @@ Handle<FxIndex> FXIndexTriangulation::getIndex(const string& pair, bool dontThro
                         auto tmp = Handle<FxIndex>(
                             boost::make_shared<FxIndex>(q1->referenceDate(), q1->familyName(), spotDays,
                                                         q1->sourceCurrency(), it->second->sourceCurrency(), calendar,
-                                                        Handle<Quote>(boost::make_shared<CompositeQuote<Triangulation>>(
-                                                            q1->fxQuote(), it->second->fxQuote(), Triangulation())),
-                                                        q1->sourceCurve(), it->second->sourceCurve()));
+                                                        spotCross, q1->sourceCurve(), it->second->sourceCurve()));
                         map_.push_back(std::make_pair(pair, tmp));
                         return tmp;
                     }
