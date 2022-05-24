@@ -90,7 +90,7 @@ void setConventions() {
         new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(swapConv);
 
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
 }
 
 struct TestData {

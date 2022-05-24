@@ -48,7 +48,7 @@ template <class T, class K> Handle<T> getHandle(const string& spec, const map<st
     return it->second->handle();
 }
 
-}// namespace
+} // namespace
 
 namespace ore {
 namespace data {
@@ -68,8 +68,10 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                        const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                        const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
-    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, fxVols, correlationCurves);
+                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                       const bool buildCalibrationInfo) {
+    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves, fxVols, correlationCurves,
+         buildCalibrationInfo);
 }
 
 // second ctor
@@ -77,8 +79,10 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                        const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots,
                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                        const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
-    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, fxVols, correlationCurves);
+                       const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                       const bool buildCalibrationInfo) {
+    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves, fxVols, correlationCurves,
+         buildCalibrationInfo);
 }
 
 void FXVolCurve::buildSmileDeltaCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
@@ -656,12 +660,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                       const CurveConfigurations& curveConfigs, const FXLookup& fxSpots,
                       const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                       const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves) {
+                      const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+                      const bool buildCalibrationInfo) {
     try {
 
         const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
         boost::shared_ptr<Conventions> conventions = InstrumentConventions::instance().conventions();
-        
+
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::ATMTriangulated ||
                        config->dimension() == FXVolatilityCurveConfig::Dimension::SmileVannaVolga ||
@@ -783,206 +788,213 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
 
         // build calibration info
 
-        DLOG("Building calibration info for fx vol surface");
+        if (buildCalibrationInfo) {
 
-        if (domYts_.empty() || forYts_.empty()) {
-            WLOG("no domestic / foreign yield curves given in fx vol curve config for "
-                 << spec.curveConfigID() << ", skip building calibration info");
-            return;
-        }
+            DLOG("Building calibration info for fx vol surface");
 
-        ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigFxVols(), config->reportConfig());
+            if (domYts_.empty() || forYts_.empty()) {
+                WLOG("no domestic / foreign yield curves given in fx vol curve config for "
+                     << spec.curveConfigID() << ", skip building calibration info");
+                return;
+            }
 
-        bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
-        bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
-        std::vector<Real> moneyness = *rc.moneyness();
-        std::vector<std::string> deltas = *rc.deltas();
-        std::vector<Period> expiries = *rc.expiries();
+            ReportConfig rc = effectiveReportConfig(curveConfigs.reportConfigFxVols(), config->reportConfig());
 
-        calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
+            bool reportOnDeltaGrid = *rc.reportOnDeltaGrid();
+            bool reportOnMoneynessGrid = *rc.reportOnMoneynessGrid();
+            std::vector<Real> moneyness = *rc.moneyness();
+            std::vector<std::string> deltas = *rc.deltas();
+            std::vector<Period> expiries = *rc.expiries();
 
-        calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
-        calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
-        calibrationInfo_->atmType = ore::data::to_string(atmType_);
-        calibrationInfo_->deltaType = ore::data::to_string(deltaType_);
-        calibrationInfo_->longTermAtmType = ore::data::to_string(longTermAtmType_);
-        calibrationInfo_->longTermDeltaType = ore::data::to_string(longTermDeltaType_);
-        calibrationInfo_->switchTenor = ore::data::to_string(switchTenor_);
-        calibrationInfo_->riskReversalInFavorOf = riskReversalInFavorOf_ == Option::Call ? "Call" : "Put";
-        calibrationInfo_->butterflyStyle = butterflyIsBrokerStyle_ ? "Broker" : "Smile";
+            calibrationInfo_ = boost::make_shared<FxEqVolCalibrationInfo>();
 
-        std::vector<Real> times, forwards, domDisc, forDisc;
-        Date settl = spotCalendar_.advance(asof, spotDays_ * Days);
-        for (auto const& p : expiries) {
-            Date d = vol_->optionDateFromTenor(p);
-            Date settlFwd = spotCalendar_.advance(d, spotDays_ * Days);
-            calibrationInfo_->expiryDates.push_back(d);
-            times.push_back(vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
-                                                       : vol_->timeFromReference(d));
-            domDisc.push_back(domYts_->discount(settlFwd) / domYts_->discount(settl));
-            forDisc.push_back(forYts_->discount(settlFwd) / forYts_->discount(settl));
-            forwards.push_back(fxSpot_->value() / domDisc.back() * forDisc.back());
-        }
+            calibrationInfo_->dayCounter = config->dayCounter().empty() ? "na" : config->dayCounter().name();
+            calibrationInfo_->calendar = config->calendar().empty() ? "na" : config->calendar().name();
+            calibrationInfo_->atmType = ore::data::to_string(atmType_);
+            calibrationInfo_->deltaType = ore::data::to_string(deltaType_);
+            calibrationInfo_->longTermAtmType = ore::data::to_string(longTermAtmType_);
+            calibrationInfo_->longTermDeltaType = ore::data::to_string(longTermDeltaType_);
+            calibrationInfo_->switchTenor = ore::data::to_string(switchTenor_);
+            calibrationInfo_->riskReversalInFavorOf = riskReversalInFavorOf_ == Option::Call ? "Call" : "Put";
+            calibrationInfo_->butterflyStyle = butterflyIsBrokerStyle_ ? "Broker" : "Smile";
 
-        calibrationInfo_->times = times;
-        calibrationInfo_->forwards = forwards;
+            std::vector<Real> times, forwards, domDisc, forDisc;
+            Date settl = spotCalendar_.advance(asof, spotDays_ * Days);
+            for (auto const& p : expiries) {
+                Date d = vol_->optionDateFromTenor(p);
+                Date settlFwd = spotCalendar_.advance(d, spotDays_ * Days);
+                calibrationInfo_->expiryDates.push_back(d);
+                times.push_back(vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
+                                                           : vol_->timeFromReference(d));
+                domDisc.push_back(domYts_->discount(settlFwd) / domYts_->discount(settl));
+                forDisc.push_back(forYts_->discount(settlFwd) / forYts_->discount(settl));
+                forwards.push_back(fxSpot_->value() / domDisc.back() * forDisc.back());
+            }
 
-        Date switchExpiry = vol_->calendar().empty() ? asof + switchTenor_ : vol_->optionDateFromTenor(switchTenor_);
-        Real switchTime = vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, switchExpiry)
-                                                     : vol_->timeFromReference(switchExpiry);
-        if (switchTenor_ == 0 * Days)
-            switchTime = QL_MAX_REAL;
+            calibrationInfo_->times = times;
+            calibrationInfo_->forwards = forwards;
 
-        std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
-        std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+            Date switchExpiry =
+                vol_->calendar().empty() ? asof + switchTenor_ : vol_->optionDateFromTenor(switchTenor_);
+            Real switchTime = vol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, switchExpiry)
+                                                         : vol_->timeFromReference(switchExpiry);
+            if (switchTenor_ == 0 * Days)
+                switchTime = QL_MAX_REAL;
 
-        calibrationInfo_->isArbitrageFree = true;
+            std::vector<std::vector<Real>> callPricesDelta(times.size(), std::vector<Real>(deltas.size(), 0.0));
+            std::vector<std::vector<Real>> callPricesMoneyness(times.size(), std::vector<Real>(moneyness.size(), 0.0));
 
-        if (reportOnDeltaGrid) {
-            calibrationInfo_->deltas = deltas;
-            calibrationInfo_->deltaGridStrikes =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
-            calibrationInfo_->deltaGridProb =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
-            calibrationInfo_->deltaGridImpliedVolatility =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
-            calibrationInfo_->deltaGridCallSpreadArbitrage =
-                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
-            calibrationInfo_->deltaGridButterflyArbitrage =
-                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
-            DeltaVolQuote::DeltaType dt;
-            DeltaVolQuote::AtmType at;
-            TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
-            Real maxTime = QL_MAX_REAL;
-            if (!expiries_.empty())
-                maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
-            for (Size i = 0; i < times.size(); ++i) {
-                Real t = times[i];
-                if (t <= switchTime || close_enough(t, switchTime)) {
-                    at = atmType_;
-                    dt = deltaType_;
-                } else {
-                    at = longTermAtmType_;
-                    dt = longTermDeltaType_;
-                }
-                // for times after the last quoted expiry we use artificial conventions to avoid problems with strike
-                // from delta conversions: we keep the pa feature, but use fwd delta always and ATM DNS
-                if (t > maxTime) {
-                    at = DeltaVolQuote::AtmDeltaNeutral;
-                    dt = (deltaType_ == DeltaVolQuote::Spot || deltaType_ == DeltaVolQuote::Fwd) ? DeltaVolQuote::Fwd
-                                                                                                 : DeltaVolQuote::PaFwd;
-                }
-                bool validSlice = true;
-                for (Size j = 0; j < deltas.size(); ++j) {
-                    DeltaString d(deltas[j]);
-                    try {
-                        Real strike;
-                        if (d.isAtm()) {
-                            strike = QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
-                        } else if (d.isCall()) {
-                            strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, fxSpot_->value(),
-                                                                  domDisc[i], forDisc[i], vol_, t);
-                        } else {
-                            strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, fxSpot_->value(),
-                                                                  domDisc[i], forDisc[i], vol_, t);
-                        }
-                        Real stddev = std::sqrt(vol_->blackVariance(t, strike));
-                        callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
-                        calibrationInfo_->deltaGridStrikes[i][j] = strike;
-                        calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
-                    } catch (const std::exception& e) {
-                        validSlice = false;
-                        TLOG("error for time " << t << " delta " << deltas[j] << ": " << e.what());
+            calibrationInfo_->isArbitrageFree = true;
+
+            if (reportOnDeltaGrid) {
+                calibrationInfo_->deltas = deltas;
+                calibrationInfo_->deltaGridStrikes =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+                calibrationInfo_->deltaGridProb =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+                calibrationInfo_->deltaGridImpliedVolatility =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(deltas.size(), 0.0));
+                calibrationInfo_->deltaGridCallSpreadArbitrage =
+                    std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+                calibrationInfo_->deltaGridButterflyArbitrage =
+                    std::vector<std::vector<bool>>(times.size(), std::vector<bool>(deltas.size(), true));
+                DeltaVolQuote::DeltaType dt;
+                DeltaVolQuote::AtmType at;
+                TLOG("Delta surface arbitrage analysis result (no calendar spread arbitrage included):");
+                Real maxTime = QL_MAX_REAL;
+                if (!expiries_.empty())
+                    maxTime = vol_->timeFromReference(vol_->optionDateFromTenor(expiries_.back()));
+                for (Size i = 0; i < times.size(); ++i) {
+                    Real t = times[i];
+                    if (t <= switchTime || close_enough(t, switchTime)) {
+                        at = atmType_;
+                        dt = deltaType_;
+                    } else {
+                        at = longTermAtmType_;
+                        dt = longTermDeltaType_;
                     }
-                }
-                if (validSlice) {
-                    try {
-                        QuantExt::CarrMadanMarginalProbability cm(calibrationInfo_->deltaGridStrikes[i], forwards[i],
-                                                                  callPricesDelta[i]);
-                        calibrationInfo_->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
-                        calibrationInfo_->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
-                        if (!cm.arbitrageFree())
+                    // for times after the last quoted expiry we use artificial conventions to avoid problems with
+                    // strike from delta conversions: we keep the pa feature, but use fwd delta always and ATM DNS
+                    if (t > maxTime) {
+                        at = DeltaVolQuote::AtmDeltaNeutral;
+                        dt = (deltaType_ == DeltaVolQuote::Spot || deltaType_ == DeltaVolQuote::Fwd)
+                                 ? DeltaVolQuote::Fwd
+                                 : DeltaVolQuote::PaFwd;
+                    }
+                    bool validSlice = true;
+                    for (Size j = 0; j < deltas.size(); ++j) {
+                        DeltaString d(deltas[j]);
+                        try {
+                            Real strike;
+                            if (d.isAtm()) {
+                                strike =
+                                    QuantExt::getAtmStrike(dt, at, fxSpot_->value(), domDisc[i], forDisc[i], vol_, t);
+                            } else if (d.isCall()) {
+                                strike = QuantExt::getStrikeFromDelta(Option::Call, d.delta(), dt, fxSpot_->value(),
+                                                                      domDisc[i], forDisc[i], vol_, t);
+                            } else {
+                                strike = QuantExt::getStrikeFromDelta(Option::Put, d.delta(), dt, fxSpot_->value(),
+                                                                      domDisc[i], forDisc[i], vol_, t);
+                            }
+                            Real stddev = std::sqrt(vol_->blackVariance(t, strike));
+                            callPricesDelta[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                            calibrationInfo_->deltaGridStrikes[i][j] = strike;
+                            calibrationInfo_->deltaGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                        } catch (const std::exception& e) {
+                            validSlice = false;
+                            TLOG("error for time " << t << " delta " << deltas[j] << ": " << e.what());
+                        }
+                    }
+                    if (validSlice) {
+                        try {
+                            QuantExt::CarrMadanMarginalProbability cm(calibrationInfo_->deltaGridStrikes[i],
+                                                                      forwards[i], callPricesDelta[i]);
+                            calibrationInfo_->deltaGridCallSpreadArbitrage[i] = cm.callSpreadArbitrage();
+                            calibrationInfo_->deltaGridButterflyArbitrage[i] = cm.butterflyArbitrage();
+                            if (!cm.arbitrageFree())
+                                calibrationInfo_->isArbitrageFree = false;
+                            calibrationInfo_->deltaGridProb[i] = cm.density();
+                            TLOGGERSTREAM(arbitrageAsString(cm));
+                        } catch (const std::exception& e) {
+                            TLOG("error for time " << t << ": " << e.what());
                             calibrationInfo_->isArbitrageFree = false;
-                        calibrationInfo_->deltaGridProb[i] = cm.density();
-                        TLOGGERSTREAM(arbitrageAsString(cm));
-                    } catch (const std::exception& e) {
-                        TLOG("error for time " << t << ": " << e.what());
+                            TLOGGERSTREAM("..(invalid slice)..");
+                        }
+                    } else {
                         calibrationInfo_->isArbitrageFree = false;
                         TLOGGERSTREAM("..(invalid slice)..");
                     }
-                } else {
-                    calibrationInfo_->isArbitrageFree = false;
-                    TLOGGERSTREAM("..(invalid slice)..");
                 }
+                TLOG("Delta surface arbitrage analysis completed.");
             }
-            TLOG("Delta surface arbitrage analysis completed.");
-        }
 
-        if (reportOnMoneynessGrid) {
-            calibrationInfo_->moneyness = moneyness;
-            calibrationInfo_->moneynessGridStrikes =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
-            calibrationInfo_->moneynessGridProb =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
-            calibrationInfo_->moneynessGridImpliedVolatility =
-                std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
-            calibrationInfo_->moneynessGridCallSpreadArbitrage =
-                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
-            calibrationInfo_->moneynessGridButterflyArbitrage =
-                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
-            calibrationInfo_->moneynessGridCalendarArbitrage =
-                std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
-            for (Size i = 0; i < times.size(); ++i) {
-                Real t = times[i];
-                for (Size j = 0; j < moneyness.size(); ++j) {
+            if (reportOnMoneynessGrid) {
+                calibrationInfo_->moneyness = moneyness;
+                calibrationInfo_->moneynessGridStrikes =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+                calibrationInfo_->moneynessGridProb =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+                calibrationInfo_->moneynessGridImpliedVolatility =
+                    std::vector<std::vector<Real>>(times.size(), std::vector<Real>(moneyness.size(), 0.0));
+                calibrationInfo_->moneynessGridCallSpreadArbitrage =
+                    std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+                calibrationInfo_->moneynessGridButterflyArbitrage =
+                    std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+                calibrationInfo_->moneynessGridCalendarArbitrage =
+                    std::vector<std::vector<bool>>(times.size(), std::vector<bool>(moneyness.size(), true));
+                for (Size i = 0; i < times.size(); ++i) {
+                    Real t = times[i];
+                    for (Size j = 0; j < moneyness.size(); ++j) {
+                        try {
+                            Real strike = moneyness[j] * forwards[i];
+                            calibrationInfo_->moneynessGridStrikes[i][j] = strike;
+                            Real stddev = std::sqrt(vol_->blackVariance(t, strike));
+                            callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
+                            calibrationInfo_->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                        } catch (const std::exception& e) {
+                            TLOG("error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
+                        }
+                    }
+                }
+                if (!times.empty() && !moneyness.empty()) {
                     try {
-                        Real strike = moneyness[j] * forwards[i];
-                        calibrationInfo_->moneynessGridStrikes[i][j] = strike;
-                        Real stddev = std::sqrt(vol_->blackVariance(t, strike));
-                        callPricesMoneyness[i][j] = blackFormula(Option::Call, strike, forwards[i], stddev);
-                        calibrationInfo_->moneynessGridImpliedVolatility[i][j] = stddev / std::sqrt(t);
+                        QuantExt::CarrMadanSurface cm(times, moneyness, fxSpot_->value(), forwards,
+                                                      callPricesMoneyness);
+                        for (Size i = 0; i < times.size(); ++i) {
+                            calibrationInfo_->moneynessGridProb[i] = cm.timeSlices()[i].density();
+                        }
+                        calibrationInfo_->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
+                        calibrationInfo_->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
+                        calibrationInfo_->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
+                        if (!cm.arbitrageFree())
+                            calibrationInfo_->isArbitrageFree = false;
+                        TLOG("Moneyness surface Arbitrage analysis result:");
+                        TLOGGERSTREAM(arbitrageAsString(cm));
                     } catch (const std::exception& e) {
-                        TLOG("error for time " << t << " moneyness " << moneyness[j] << ": " << e.what());
-                    }
-                }
-            }
-            if (!times.empty() && !moneyness.empty()) {
-                try {
-                    QuantExt::CarrMadanSurface cm(times, moneyness, fxSpot_->value(), forwards, callPricesMoneyness);
-                    for (Size i = 0; i < times.size(); ++i) {
-                        calibrationInfo_->moneynessGridProb[i] = cm.timeSlices()[i].density();
-                    }
-                    calibrationInfo_->moneynessGridCallSpreadArbitrage = cm.callSpreadArbitrage();
-                    calibrationInfo_->moneynessGridButterflyArbitrage = cm.butterflyArbitrage();
-                    calibrationInfo_->moneynessGridCalendarArbitrage = cm.calendarArbitrage();
-                    if (!cm.arbitrageFree())
+                        TLOG("error: " << e.what());
                         calibrationInfo_->isArbitrageFree = false;
-                    TLOG("Moneyness surface Arbitrage analysis result:");
-                    TLOGGERSTREAM(arbitrageAsString(cm));
-                } catch (const std::exception& e) {
-                    TLOG("error: " << e.what());
-                    calibrationInfo_->isArbitrageFree = false;
+                    }
+                    TLOG("Moneyness surface Arbitrage analysis completed:");
                 }
-                TLOG("Moneyness surface Arbitrage analysis completed:");
             }
-        }
 
-        // the bfrr surface provides info on smiles with error, which we report here
+            // the bfrr surface provides info on smiles with error, which we report here
 
-        if (reportOnDeltaGrid || reportOnMoneynessGrid) {
-            if (auto bfrr = boost::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
-                std::ostringstream os;
-                for (Size i = 0; i < bfrr->dates().size(); ++i) {
-                    if (bfrr->smileHasError()[i]) {
-                        calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +
-                                                             ore::data::to_string(bfrr->dates()[i]) + ": " +
-                                                             bfrr->smileErrorMessage()[i]);
+            if (reportOnDeltaGrid || reportOnMoneynessGrid) {
+                if (auto bfrr = boost::dynamic_pointer_cast<QuantExt::BlackVolatilitySurfaceBFRR>(vol_)) {
+                    std::ostringstream os;
+                    for (Size i = 0; i < bfrr->dates().size(); ++i) {
+                        if (bfrr->smileHasError()[i]) {
+                            calibrationInfo_->messages.push_back("Ignore invalid smile at expiry " +
+                                                                 ore::data::to_string(bfrr->dates()[i]) + ": " +
+                                                                 bfrr->smileErrorMessage()[i]);
+                        }
                     }
                 }
             }
-        }
 
-        DLOG("Building calibration info for fx vol surface completed.");
+            DLOG("Building calibration info for fx vol surface completed.");
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("fx vol curve building failed: " << e.what());

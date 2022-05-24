@@ -2269,6 +2269,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         for (Size i = 0; i < simulationTenors.size(); i++) {
                             Date d = asof_ + simulationTenors[i];
                             Real price = initialCommodityCurve->price(d, allowsExtrapolation);
+			    TLOG("Commodity curve: price at " << io::iso_date(d) << " is " << price);
                             // if we simulate the factors and use spreaded ts, the quote should be zero
                             boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(
                                 param.second.first && useSpreadedTermStructures_ ? 0.0 : price);
@@ -2972,6 +2973,9 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
                 }
             }
         }
+    } else if (configuration != Market::defaultConfiguration) {
+        // try to fall back on default configuration
+        return getYieldCurve(yieldSpecId, todaysMarketParams, Market::defaultConfiguration);
     }
 
     // If yield spec ID still has not been found, return empty Handle

@@ -58,7 +58,7 @@ void BasicUnderlying::fromXML(XMLNode* node) {
 }
 
 XMLNode* BasicUnderlying::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode(nodeName_, name_);
+    XMLNode* node = doc.allocNode(basicUnderlyingNodeName_, name_);
     return node;
 }
 

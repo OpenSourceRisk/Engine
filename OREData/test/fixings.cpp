@@ -136,7 +136,7 @@ public:
         Settings::instance().evaluationDate() = today;
 
         conventions->fromFile(TEST_INPUT_FILE("market/conventions.xml"));
-        InstrumentConventions::instance().conventions() = conventions;
+        InstrumentConventions::instance().setConventions(conventions);
         
         auto todaysMarketParams = boost::make_shared<TodaysMarketParameters>();
         todaysMarketParams->fromFile(TEST_INPUT_FILE("market/todaysmarket.xml"));

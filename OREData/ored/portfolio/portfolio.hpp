@@ -83,6 +83,9 @@ public:
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
 
+    //! Save portfolio to an XML string
+    string saveToXMLString() const;
+
     //! Remove specified trade from the portfolio
     bool remove(const std::string& tradeID);
 
@@ -132,6 +135,8 @@ public:
                       const boost::shared_ptr<ReferenceDataManager>& referenceDataManager = nullptr);
 
 private:
+    // get representation as XMLDocument
+    XMLDocument doc() const;
     bool buildFailedTrades_;
     std::vector<boost::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;

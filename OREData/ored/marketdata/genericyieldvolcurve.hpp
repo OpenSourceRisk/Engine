@@ -58,7 +58,8 @@ public:
             matchAtmQuote,
         const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike)>&
             matchSmileQuote,
-        const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote);
+        const std::function<bool(const boost::shared_ptr<MarketDatum>& md, Period& term)>& matchShiftQuote,
+        const bool buildCalibrationInfo);
     //@}
 
     //! \name Inspectors

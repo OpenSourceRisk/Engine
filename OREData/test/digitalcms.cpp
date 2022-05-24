@@ -75,7 +75,7 @@ public:
         conventions->add(swapIndexEURLongConv1);
         conventions->add(swapIndexEURLongConv2);
 
-        InstrumentConventions::instance().conventions() = conventions;
+        InstrumentConventions::instance().setConventions(conventions);
 
         addSwapIndex("EUR-CMS-2Y", "EUR-EURIBOR-6M", Market::defaultConfiguration);
         addSwapIndex("EUR-CMS-30Y", "EUR-EURIBOR-6M", Market::defaultConfiguration);

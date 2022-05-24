@@ -122,6 +122,8 @@ public:
     */
     const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return shiftSizes_; }
 
+    Size numScenarios() const { return scenarios_.size(); }
+
 private:
     void generateScenarios();
     void generateYieldCurveScenarios(bool up);

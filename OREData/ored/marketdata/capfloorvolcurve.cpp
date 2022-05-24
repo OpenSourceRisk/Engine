@@ -66,7 +66,8 @@ CapFloorVolCurve::CapFloorVolCurve(
     const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
     Handle<YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
     const boost::shared_ptr<IborIndex> targetIndex,
-    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves)
+    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves,
+    const bool buildCalibrationInfo)
     : spec_(spec) {
 
     try {
@@ -98,7 +99,9 @@ CapFloorVolCurve::CapFloorVolCurve(
         }
 
         // Build calibration info
-        buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
+        if (buildCalibrationInfo) {
+            this->buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
+        }
 
     } catch (exception& e) {
         QL_FAIL("cap/floor vol curve building failed :" << e.what());

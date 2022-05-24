@@ -72,8 +72,8 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
 
     // initialise some pointers
     conventions_ = boost::make_shared<Conventions>();
-    InstrumentConventions::instance().conventions() = conventions_;
-    
+    InstrumentConventions::instance().setConventions(conventions_);
+
     marketParameters_ = boost::make_shared<TodaysMarketParameters>();
     curveConfigs_ = boost::make_shared<CurveConfigurations>();
 
@@ -156,7 +156,7 @@ int OREApp::run() {
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
             sensitivityRunner_ = getSensitivityRunner();
-            sensitivityRunner_->runSensitivityAnalysis(market_, *curveConfigs_, *marketParameters_);
+            sensitivityRunner_->runSensitivityAnalysis(market_, curveConfigs_, marketParameters_);
             out_ << "OK" << endl;
         } else {
             LOG("skip sensitivity analysis");

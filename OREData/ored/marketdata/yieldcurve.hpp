@@ -104,7 +104,9 @@ public:
         const bool preserveQuoteLinkage = false,
         //! Map of underlying discount curves if required
         const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves =
-            map<string, boost::shared_ptr<YieldCurve>>());
+            map<string, boost::shared_ptr<YieldCurve>>(),
+        //! build calibration info
+        const bool buildCalibrationInfo = true);
 
     //! \name Inspectors
     //@{
@@ -159,6 +161,7 @@ private:
     IborFallbackConfig iborFallbackConfig_;
     const bool preserveQuoteLinkage_;
     map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
+    bool buildCalibrationInfo_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments);
 

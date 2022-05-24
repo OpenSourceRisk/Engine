@@ -116,16 +116,23 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
     LOG("Finished Parsing XML doc");
 }
 
-void Portfolio::save(const string& fileName) const {
-    LOG("Saving Portfolio to " << fileName);
-
+XMLDocument Portfolio::doc() const {
     XMLDocument doc;
     XMLNode* node = doc.allocNode("Portfolio");
     doc.appendNode(node);
     for (auto t : trades_)
         XMLUtils::appendNode(node, t->toXML(doc));
-    // Write doc out.
-    doc.toFile(fileName);
+    return doc;
+}
+
+void Portfolio::save(const string& fileName) const {
+    LOG("Saving Portfolio to " << fileName);
+    doc().toFile(fileName);
+}
+
+string Portfolio::saveToXMLString() const {
+    LOG("Write Portfolio to xml string.");
+    return doc().toString();
 }
 
 bool Portfolio::remove(const std::string& tradeID) {
@@ -152,6 +159,8 @@ void Portfolio::removeMatured(const Date& asof) {
 void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Building Portfolio of size " << trades_.size());
     auto trade = trades_.begin();
+    Size initialSize = trades_.size();
+    Size failedTrades = 0;
     while (trade != trades_.end()) {
         try {
             (*trade)->reset();
@@ -167,14 +176,17 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 failed->setUnderlyingTradeType((*trade)->tradeType());
                 failed->envelope() = (*trade)->envelope();
                 failed->build(engineFactory);
+                failed->resetPricingStats((*trade)->getNumberOfPricings(), (*trade)->getCumulativePricingTime());
                 LOG("Added failed trade with id " << failed->id());
                 (*trade) = failed;
+		++failedTrades;
             } else {
                 trade = trades_.erase(trade);
             }
         }
     }
-    LOG("Built Portfolio. Size now " << trades_.size());
+    LOG("Built Portfolio. Initial size = " << initialSize << ", size now " << trades_.size() << ", built "
+                                           << failedTrades << " failed trades.");
 
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
 }
