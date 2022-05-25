@@ -876,14 +876,37 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
     calibrationInfo_->volatilityType = ore::data::to_string(capletVol_->volatilityType());
     calibrationInfo_->underlyingTenors = underlyingTenorsReport;
 
-    std::vector<Real> times;
-    std::vector<std::vector<Real>> forwards;
+    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
+
+    Size onSettlementDays = 0;
+    if (isOis) {
+        onSettlementDays = config->onCapSettlementDays();
+    }
+
+    std::vector<Real> times;                 // fixing times of caplets
+    std::vector<std::vector<Real>> forwards; // fair rates of caplets
     for (auto const& p : expiries) {
-        Date d = capletVol_->optionDateFromTenor(p);
-        calibrationInfo_->expiryDates.push_back(d);
-        times.push_back(capletVol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
-                                                         : capletVol_->timeFromReference(d));
-        forwards.push_back(std::vector<Real>(1, index->fixing(index->fixingCalendar().adjust(d))));
+        Date fixingDate;
+        Real forward;
+        if (isOis) {
+            Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, p, boost::dynamic_pointer_cast<OvernightIndex>(index),
+                                           config->rateComputationPeriod(), 0.04)
+                               .withTelescopicValueDates(true)
+                               .withSettlementDays(onSettlementDays);
+            auto lastCoupon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
+            QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
+            fixingDate = std::max(asof, lastCoupon->underlying()->fixingDates().front());
+            forward = lastCoupon->underlying()->rate();
+        } else {
+            CapFloor dummyCap = MakeCapFloor(CapFloor::Cap, p, index, 0.04, 0 * Days);
+            boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
+            fixingDate = lastCoupon->fixingDate();
+            forward = index->fixing(fixingDate);
+        }
+        calibrationInfo_->expiryDates.push_back(fixingDate);
+        times.push_back(capletVol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, fixingDate)
+                                                         : capletVol_->timeFromReference(fixingDate));
+        forwards.push_back(std::vector<Real>(1, forward));
     }
 
     calibrationInfo_->times = times;
