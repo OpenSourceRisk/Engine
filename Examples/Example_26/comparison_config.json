@@ -8,12 +8,14 @@
           "CashflowNo",
           "LegNo"
         ],
+        "optional_cols": [
+          "PresentValue",
+          "DiscountFactor"
+        ],
         "column_settings": [
           {
             "names": [
-              "Amount"
-            ],
-            "optional_names": [
+              "Amount",
               "PresentValue",
               "DiscountFactor"
             ],
