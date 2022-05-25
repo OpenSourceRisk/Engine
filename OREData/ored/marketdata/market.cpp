@@ -21,5 +21,6 @@
 namespace ore {
 namespace data {
 const string Market::defaultConfiguration = "default";
+const string Market::inCcyConfiguration = "inccy";
 }
 } // namespace ore
