@@ -101,10 +101,11 @@ public:
     //! Reset trade, clear all base class data. This does not reset accumulated timings for this trade.
     void reset();
 
-    //! Reset accumulated timings
-    void resetPricingStats() {
-        savedNumberOfPricings_ = 0;
-        savedCumulativePricingTime_ = 0;
+    //! Reset accumulated timings to given values
+    void resetPricingStats(const std::size_t numberOfPricings = 0,
+                           const boost::timer::nanosecond_type cumulativePricingTime = 0) {
+        savedNumberOfPricings_ = numberOfPricings;
+        savedCumulativePricingTime_ = cumulativePricingTime;
         if (instrument_ != nullptr)
             instrument_->resetPricingStats();
     }

@@ -147,7 +147,7 @@ struct TodaysMarketArguments {
 
         string filename = inputDir + "/conventions.xml";
         conventions->fromFile(TEST_INPUT_FILE(filename));
-        InstrumentConventions::instance().conventions() = conventions;
+        InstrumentConventions::instance().setConventions(conventions);
         
         filename = inputDir + "/" + curveConfigFile;
         curveConfigs->fromFile(TEST_INPUT_FILE(filename));
@@ -240,8 +240,8 @@ BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
     // QL >= 1.19 should not throw, no matter if the float convention has the correct calendar
 
     boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
-    InstrumentConventions::instance().conventions() = conventions;
-    
+    InstrumentConventions::instance().setConventions(conventions);
+
     boost::shared_ptr<Convention> convention =
         boost::make_shared<IRSwapConvention>("JPY-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M");
     conventions->add(convention);
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(testQuadraticInterpolation) {
     curveConfigs.yieldCurveConfig("CHF-OIS") = chfYieldConfig;
     
     boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();;
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
     
     boost::shared_ptr<Convention> convention =
         boost::make_shared<ZeroRateConvention>("CHF-ZERO-CONVENTIONS", "A365",

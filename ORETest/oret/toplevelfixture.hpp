@@ -57,8 +57,8 @@ public:
         // Clear and fixings that have been added
         IndexManager::instance().clearHistories();
 	// Clear conventions that have been set
-        ore::data::InstrumentConventions::instance().conventions() = boost::make_shared<ore::data::Conventions>();
-	// Clear contents of the index name translator
+        ore::data::InstrumentConventions::instance().setConventions(boost::make_shared<ore::data::Conventions>());
+        // Clear contents of the index name translator
 	ore::data::IndexNameTranslator::instance().clear();
     }
 

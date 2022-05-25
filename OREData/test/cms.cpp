@@ -70,8 +70,8 @@ public:
             new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
         conventions->add(swapIndexEURLongConv);
 
-        InstrumentConventions::instance().conventions() = conventions;
-        
+        InstrumentConventions::instance().setConventions(conventions);
+
         addSwapIndex("EUR-CMS-30Y", "EUR-EURIBOR-6M", Market::defaultConfiguration);
     }
 

@@ -46,11 +46,11 @@ public:
     OvernightIndexedBasisSwap(Type type, Real nominal, const Schedule& oisSchedule,
                               const boost::shared_ptr<OvernightIndex>& overnightIndex, const Schedule& iborSchedule,
                               const boost::shared_ptr<IborIndex>& iborIndex, Spread oisSpread = 0.0,
-                              Spread iborSpread = 0.0);
+                              Spread iborSpread = 0.0, const bool telescopicValueDates = false);
     OvernightIndexedBasisSwap(Type type, std::vector<Real> nominals, const Schedule& oisSchedule,
                               const boost::shared_ptr<OvernightIndex>& overnightIndex, const Schedule& iborSchedule,
                               const boost::shared_ptr<IborIndex>& iborIndex, Spread oisSpread = 0.0,
-                              Spread iborSpread = 0.0);
+                              Spread iborSpread = 0.0, const bool telescopicValueDates = false);
     //! \name Inspectors
     //@{
     Type type() const { return type_; }
@@ -89,6 +89,7 @@ private:
     Schedule iborSchedule_;
     boost::shared_ptr<IborIndex> iborIndex_;
     Spread oisSpread_, iborSpread_;
+    bool telescopicValueDates_;
 };
 
 // inline

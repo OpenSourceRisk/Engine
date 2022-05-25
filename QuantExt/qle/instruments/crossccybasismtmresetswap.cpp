@@ -38,7 +38,7 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
     boost::optional<Size> foreignFixingDays, boost::optional<Size> foreignRateCutoff,
     boost::optional<bool> foreignIsAveraged, boost::optional<bool> domesticIncludeSpread,
     boost::optional<Period> domesticLookback, boost::optional<Size> domesticFixingDays,
-    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged)
+    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged, const bool telescopicValueDates)
     : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
       foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
       domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
@@ -48,7 +48,8 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
       foreignFixingDays_(foreignFixingDays), foreignRateCutoff_(foreignRateCutoff),
       foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
       domesticLookback_(domesticLookback), domesticFixingDays_(domesticFixingDays),
-      domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged) {
+      domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged),
+      telescopicValueDates_(telescopicValueDates) {
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
     registerWith(fxIndex_);
@@ -66,7 +67,8 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .withPaymentLag(foreignPaymentLag_)
                            .withLookback(foreignLookback_ ? *foreignLookback_ : 0 * Days)
                            .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : 0)
-                           .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0);
+                           .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
         } else {
             legs_[0] = QuantExt::OvernightLeg(foreignSchedule_, on)
                            .withNotionals(foreignNominal_)
@@ -75,7 +77,8 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .includeSpread(foreignIncludeSpread_ ? *foreignIncludeSpread_ : false)
                            .withLookback(foreignLookback_ ? *foreignLookback_ : 0 * Days)
                            .withFixingDays(foreignFixingDays_ ? *foreignFixingDays_ : 0)
-                           .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0);
+                           .withRateCutoff(foreignRateCutoff_ ? *foreignRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
         }
     } else {
         // Ibor leg
@@ -107,7 +110,8 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .withPaymentLag(domesticPaymentLag_)
                            .withLookback(domesticLookback_ ? *domesticLookback_ : 0 * Days)
                            .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : 0)
-                           .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0);
+                           .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
         } else {
             legs_[1] = QuantExt::OvernightLeg(domesticSchedule_, on)
                            .withNotionals(0.0)
@@ -116,7 +120,8 @@ void CrossCcyBasisMtMResetSwap::initialize() {
                            .includeSpread(domesticIncludeSpread_ ? *domesticIncludeSpread_ : false)
                            .withLookback(domesticLookback_ ? *domesticLookback_ : 0 * Days)
                            .withFixingDays(domesticFixingDays_ ? *domesticFixingDays_ : 0)
-                           .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0);
+                           .withRateCutoff(domesticRateCutoff_ ? *domesticRateCutoff_ : 0)
+                           .withTelescopicValueDates(telescopicValueDates_);
         }
     } else {
         // Ibor leg

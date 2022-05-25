@@ -543,8 +543,8 @@ SettlementDays above.
 \item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs, and \emph{False} if not. If not provided, it defaults to \emph{False}.
 \item IsResettable [Optional]: \emph{True} if the swap is mark-to-market resetting, and \emph{False} otherwise. If not provided, it defaults to \emph{False}.
 \item FlatIndexIsResettable [Optional]: \emph{True} if it is the notional on the leg paying the flat index that resets, and \emph{False} otherwise. If not provided, it defaults to \emph{True}.
-\item FlatTenor [Optional]: the flat leg period length (typical value is 3M)
-\item SpreadTenor [Optional]: the spread leg period length (typical value is 3M)
+\item FlatTenor [Optional]: the flat leg period length (typical value is 3M), defaults to index tenor except for ON indices for which it defaults to 3M
+\item SpreadTenor [Optional]: the spread leg period length (typical value is 3M), defaults to index tenor except for ON indices for which it defaults to 3M
 \item SpreadPaymentLag [Optional]: the payment lag for the spread leg, allowable values are 0, 1, 2, ..., defaults to 0 if not given
 \item FlatPaymentLag [Optional]: the payment lag for the flat leg, allowable values are 0, 1, 2, ..., defaults to 0 if nove given
 \item SpreadIncludeSpread [Optional]: Only relevant if spread leg is OIS, allowable values are true, false, defaults to false if not given

@@ -25,6 +25,7 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(const string& instrumentType) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = map_.find(instrumentType);
     if (it == map_.end())
         return nullptr;
@@ -33,6 +34,7 @@ boost::shared_ptr<CalibrationInstrument> CalibrationInstrumentFactory::build(con
 
 void CalibrationInstrumentFactory::addBuilder(const string& instrumentType,
     function<boost::shared_ptr<CalibrationInstrument>()> builder) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     map_[instrumentType] = builder;
 }
 

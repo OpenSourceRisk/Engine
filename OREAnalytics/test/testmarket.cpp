@@ -388,7 +388,7 @@ void TestConfigurationObjects::setConventions() {
     conventions->add(gbpChfConv);
     conventions->add(eurUsdConv);
 
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
 }
 
 boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfigurationObjects::setupSimMarketData2() {
