@@ -54,6 +54,7 @@
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/instruments/makeoiscapfloor.hpp>
 #include <qle/termstructures/blackvariancesurfacestddevs.hpp>
 #include <qle/termstructures/blackvolconstantspread.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
@@ -869,10 +870,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                             // Try to get the ibor index that the cap floor structure relates to
                             // We use this to convert Period to Date below to sample from `wrapper`
                             boost::shared_ptr<IborIndex> iborIndex;
-                            Date spotDate;
                             Calendar iborCalendar;
                             string strIborIndex;
                             Natural settleDays = 0;
+			    bool isOis = false;
+			    Period rateComputationPeriod;
+			    Size onSettlementDays = 0;
 
                             // get the curve config for the index, or if not available for its ccy
                             boost::shared_ptr<CapFloorVolatilityCurveConfig> config;
@@ -887,14 +890,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
                             if (config) {
                                 // From the cap floor config, get the ibor index name
-                                // (we do not support convention based indices there)
                                 settleDays = config->settleDays();
                                 strIborIndex = config->index();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
                                     iborCalendar = iborIndex->fixingCalendar();
-                                    Natural settlementDays = iborIndex->fixingDays();
-                                    spotDate = iborCalendar.adjust(asof_);
-                                    spotDate = iborCalendar.advance(spotDate, settlementDays * Days);
+				    isOis = boost::dynamic_pointer_cast<OvernightIndex>(iborIndex) != nullptr;
+                                    if (isOis) {
+                                        rateComputationPeriod = config->rateComputationPeriod();
+                                        onSettlementDays = config->onCapSettlementDays();
+                                    }
                                 }
                             }
 
@@ -923,13 +927,33 @@ ScenarioSimMarket::ScenarioSimMarket(
                                     // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to
                                     // place the optionlet pillars at the fixing date of the last optionlet in the cap
                                     // with tenor t_i, if capFloorVolAdjustOptionletPillars is true.
-                                    QL_REQUIRE(optionTenors[i] > iborIndex->tenor(),
-                                               "The cap floor tenor must be greater than the ibor index tenor");
-                                    boost::shared_ptr<CapFloor> capFloor =
-                                        MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
-                                    optionDates[i] = capFloor->lastFloatingRateCoupon()->fixingDate();
-                                    DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", "
-                                                                          << io::iso_date(optionDates[i]) << "]");
+				    if(isOis) {
+                                        Leg capFloor =
+                                            MakeOISCapFloor(
+                                                CapFloor::Cap, optionTenors[i],
+                                                boost::dynamic_pointer_cast<QuantLib::OvernightIndex>(iborIndex),
+                                                rateComputationPeriod, 0.0)
+                                                .withTelescopicValueDates(true)
+                                                .withSettlementDays(onSettlementDays);
+                                        auto lastCoupon =
+                                            boost::dynamic_pointer_cast<QuantExt::CappedFlooredOvernightIndexedCoupon>(
+                                                capFloor.back());
+                                        QL_REQUIRE(
+                                            lastCoupon,
+                                            "SSM internal error, could not cast to CappedFlooredOvernightIndexedCoupon "
+                                            "when building optionlet vol for '"
+                                                << strIborIndex << "'");
+                                        optionDates[i] =
+                                            std::max(asof_, lastCoupon->underlying()->fixingDates().front());
+                                    } else {
+					QL_REQUIRE(optionTenors[i] > iborIndex->tenor(),
+						   "The cap floor tenor must be greater than the ibor index tenor");
+					boost::shared_ptr<CapFloor> capFloor =
+					    MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+					optionDates[i] = capFloor->lastFloatingRateCoupon()->fixingDate();
+					DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", "
+					     << io::iso_date(optionDates[i]) << "]");
+				    }
                                 } else {
                                     // Otherwise, just place the optionlet pillars at the configured tenors.
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
@@ -946,11 +970,30 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                                           << name << " to have an ibor index name");
                                     auto iborIndex = *initMarket->iborIndex(strIborIndex, configuration);
                                     if (parameters_->capFloorVolUseCapAtm()) {
+                                        QL_REQUIRE(!isOis, "SSM: capFloorVolUseCapATM not supported for OIS indices ("
+                                                               << strIborIndex << ")");
                                         boost::shared_ptr<CapFloor> cap =
                                             MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
                                         strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
                                     } else {
-                                        strike = iborIndex->fixing(optionDates[i]);
+					if(isOis) {
+                                            Leg capFloor =
+                                                MakeOISCapFloor(CapFloor::Cap, optionTenors[i],
+                                                                boost::dynamic_pointer_cast<OvernightIndex>(iborIndex),
+                                                                rateComputationPeriod, 0.0)
+                                                    .withTelescopicValueDates(true)
+                                                    .withSettlementDays(onSettlementDays);
+                                            auto lastCoupon =
+                                                boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(
+                                                    capFloor.back());
+                                            QL_REQUIRE(lastCoupon, "SSM internal error, could not cast to "
+                                                                   "CappedFlooredOvernightIndexedCoupon "
+                                                                   "when building optionlet vol for '"
+                                                                       << strIborIndex << "'");
+                                            strike = lastCoupon->underlying()->rate();
+                                        } else {
+                                            strike = iborIndex->fixing(optionDates[i]);
+                                        }
                                     }
                                 }
 
