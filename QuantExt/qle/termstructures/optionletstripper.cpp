@@ -30,10 +30,12 @@ namespace QuantExt {
 OptionletStripper::OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTermVolSurface>& termVolSurface,
                                      const ext::shared_ptr<IborIndex>& index,
                                      const Handle<YieldTermStructure>& discount, const VolatilityType type,
-                                     const Real displacement, const Period& rateComputationPeriod)
+                                     const Real displacement, const Period& rateComputationPeriod,
+                                     const Size onCapSettlementDays)
     : termVolSurface_(termVolSurface), index_(index), discount_(discount), nStrikes_(termVolSurface->strikes().size()),
       volatilityType_(type), displacement_(displacement),
-      rateComputationPeriod_(rateComputationPeriod == 0 * Days ? index->tenor() : rateComputationPeriod) {
+      rateComputationPeriod_(rateComputationPeriod == 0 * Days ? index->tenor() : rateComputationPeriod),
+      onCapSettlementDays_(onCapSettlementDays) {
 
     bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index_) != nullptr;
 
@@ -157,10 +159,12 @@ void OptionletStripper::populateDates() const {
         if (isOis) {
             Leg dummyCap =
                 MakeOISCapFloor(CapFloor::Cap, capFloorLengths_[i], boost::dynamic_pointer_cast<OvernightIndex>(index_),
-                                rateComputationPeriod_, 0.04);
+                                rateComputationPeriod_, 0.04)
+                    .withTelescopicValueDates(true)
+                    .withSettlementDays(onCapSettlementDays_);
             auto lastCoupon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
-            optionletDates_[i] = lastCoupon->underlying()->fixingDates().back();
+            optionletDates_[i] = std::max(referenceDate, lastCoupon->underlying()->fixingDates().front());
             optionletPaymentDates_[i] = lastCoupon->underlying()->date();
             optionletAccrualPeriods_[i] = lastCoupon->underlying()->accrualPeriod();
             optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
