@@ -216,6 +216,9 @@
     <ClInclude Include="orea\app\structuredanalyticswarning.hpp">
       <Filter>app</Filter>
     </ClInclude>
+    <ClInclude Include="orea\scenario\clonedscenariogenerator.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -379,6 +382,9 @@
     </ClCompile>
     <ClCompile Include="orea\app\structuredanalyticswarning.cpp">
       <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\clonedscenariogenerator.cpp">
+      <Filter>scenario</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
