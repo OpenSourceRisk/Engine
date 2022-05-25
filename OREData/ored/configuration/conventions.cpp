@@ -820,7 +820,7 @@ void CrossCcyBasisSwapConvention::build() {
     parseIborIndex(strSpreadIndex_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
-    flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
+    flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? false : parseBool(strFlatIndexIsResettable_);
 
     // default to index tenor, except for ON indices, where we default to 3M since the index tenor 1D does not make sense for them
 
