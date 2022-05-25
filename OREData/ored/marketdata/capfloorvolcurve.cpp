@@ -36,6 +36,7 @@
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/instruments/makeoiscapfloor.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -322,7 +323,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
@@ -362,7 +363,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, Linear>>(
@@ -402,7 +403,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<BackwardFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<BackwardFlat, Linear>>(
@@ -442,7 +443,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Linear>>(
@@ -482,7 +483,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, Linear>>(
@@ -530,7 +531,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
@@ -544,7 +545,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
@@ -560,7 +561,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
@@ -574,7 +575,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
