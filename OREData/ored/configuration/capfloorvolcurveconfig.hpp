@@ -57,11 +57,12 @@ public:
         bool extrapolate, bool flatExtrapolation, bool inlcudeAtm, const std::vector<std::string>& tenors,
         const std::vector<std::string>& strikes, const QuantLib::DayCounter& dayCounter, QuantLib::Natural settleDays,
         const QuantLib::Calendar& calendar, const QuantLib::BusinessDayConvention& businessDayConvention,
-        const std::string& index, const QuantLib::Period& rateComputationPeriod, const std::string& discountCurve,
+        const std::string& index, const QuantLib::Period& rateComputationPeriod,
+        const QuantLib::Size onCapSettlementDays, const std::string& discountCurve,
         const std::string& interpolationMethod = "BicubicSpline", const std::string& interpolateOn = "TermVolatilities",
         const std::string& timeInterpolation = "LinearFlat", const std::string& strikeInterpolation = "LinearFlat",
         const std::vector<std::string>& atmTenors = {}, const BootstrapConfig& bootstrapConfig = BootstrapConfig(),
-	const std::string& smileDynamics = "");
+        const std::string& smileDynamics = "");
 
     //! Detailled constructor for proxy config
     CapFloorVolatilityCurveConfig(const std::string& curveID, const std::string& curveDescription,
@@ -92,6 +93,7 @@ public:
     const QuantLib::BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const std::string& index() const { return index_; }
     const QuantLib::Period& rateComputationPeriod() const { return rateComputationPeriod_; }
+    QuantLib::Size onCapSettlementDays() const { return onCapSettlementDays_; }
     const std::string& discountCurve() const { return discountCurve_; }
     QuantExt::CapFloorTermVolSurfaceExact::InterpolationMethod interpolationMethod() const;
     const std::string& interpolateOn() const { return interpolateOn_; }
@@ -131,6 +133,7 @@ private:
     QuantLib::BusinessDayConvention businessDayConvention_;
     std::string index_;
     QuantLib::Period rateComputationPeriod_;
+    QuantLib::Size onCapSettlementDays_;
     std::string discountCurve_;
     std::string interpolationMethod_;
     std::string interpolateOn_;
