@@ -159,56 +159,9 @@
           "Amount",
           "AmountUSD"
         ],
-        "col_types" : {
-          "ProductClass" : "str",
-          "RiskType" : "str",
-          "Qualifier" : "str",
-          "Bucket" : "str",
-          "Label1" : "str",
-          "Label2" : "str"
-        },
-        "drop_rows" : {
-          "cols": [
-            "Amount",
-            "AmountUSD"
-          ],
-          "threshold": 0.0
-        },
-        "column_settings": [
-          {
-            "names": [
-              "Amount",
-              "AmountUSD"
-            ],
-            "abs_tol": 1e-2,
-            "rel_tol": 1e-12
-          },
-          {
-            "names": [],
-            "optional_names": [
-              "collect_regulations",
-              "post_regulations"
-            ],
-            "abs_tol": null,
-            "rel_tol": null
-          }
-        ]
-      },
-      "combined_crif\\.csv": {
-        "keys": [
-          "TradeID",
-          "PortfolioID",
-          "ProductClass",
-          "RiskType",
-          "Qualifier",
-          "Bucket",
-          "Label1",
-          "Label2"
-        ],
-        "use_cols": [
-          "AmountCurrency",
-          "Amount",
-          "AmountUSD"
+        "optional_cols": [
+          "collect_regulations",
+          "post_regulations"
         ],
         "col_types" : {
           "ProductClass" : "str",
@@ -235,8 +188,7 @@
             "rel_tol": 1e-12
           },
           {
-            "names": [],
-            "optional_names": [
+            "names": [
               "collect_regulations",
               "post_regulations"
             ],
@@ -588,12 +540,19 @@
           "marginType": "MarginType",
           "initialMargin": "InitialMargin"
         },
+        "use_cols": [
+          "InitialMargin",
+          "Regulation",
+          "Currency"
+        ],
+        "optional_cols": [
+          "InitialMargin(Report)",
+          "ReportCurrency"
+        ],
         "column_settings": [
           {
             "names": [
-              "InitialMargin"
-            ],
-            "optional_names": [
+              "InitialMargin",
               "InitialMargin(Report)"
             ],
             "abs_tol": 0.1,
@@ -602,9 +561,7 @@
           {
             "names": [
               "Regulation",
-              "Currency"
-            ],
-            "optional_names": [
+              "Currency",
               "ReportCurrency"
             ],
             "abs_tol": null,
@@ -617,6 +574,10 @@
           "Portfolio",
           "Side"
         ],
+        "optional_cols": [
+          "ScheduleIM(Report)",
+          "ReportCurrency"
+        ],
         "column_settings": [
           {
             "names": [
@@ -624,9 +585,7 @@
               "GrossCurrentRC",
               "NetCurrentRC",
               "NetToGrossRatio",
-              "ScheduleIM"
-            ],
-            "optional_names": [
+              "ScheduleIM",
               "ScheduleIM(Report)"
             ],
             "abs_tol": 0.1,
@@ -635,9 +594,7 @@
           {
             "names": [
               "Regulation",
-              "Currency"
-            ],
-            "optional_names": [
+              "Currency",
               "ReportCurrency"
             ],
             "abs_tol": null,
@@ -701,14 +658,18 @@
           "riskClass": "RiskClass",
           "marginType": "MarginType"
         },
+        "optional_cols": [
+          "InitialMarginBefore(Report)",
+          "InitialMarginAfter(Report)",
+          "InitialMarginImpact(Report)",
+          "ReportCurrency"
+        ],
         "column_settings": [
           {
             "names": [
               "InitialMarginBefore",
               "InitialMarginAfter",
-              "InitialMarginImpact"
-            ],
-            "optional_names": [
+              "InitialMarginImpact",
               "InitialMarginBefore(Report)",
               "InitialMarginAfter(Report)",
               "InitialMarginImpact(Report)"
@@ -720,9 +681,7 @@
             "names": [
               "RegulationBefore",
               "RegulationAfter",
-              "Currency"
-            ],
-            "optional_names": [
+              "Currency",
               "ReportCurrency"
             ],
             "abs_tol": null,
@@ -735,17 +694,18 @@
           "Portfolio",
           "Side"
         ],
+        "optional_cols":[
+          "InitialMarginBefore(Report)",
+          "InitialMarginAfter(Report)",
+          "InitialMarginImpact(Report)",
+          "ReportCurrency"
+        ],
         "column_settings": [
           {
             "names": [
               "InitialMarginBefore",
               "InitialMarginAfter",
               "InitialMarginImpact"
-            ],
-            "optional_names": [
-              "InitialMarginBefore(Report)",
-              "InitialMarginAfter(Report)",
-              "InitialMarginImpact(Report)"
             ],
             "abs_tol": 0.1,
             "rel_tol": 1e-12
@@ -754,9 +714,7 @@
             "names": [
               "RegulationBefore",
               "RegulationAfter",
-              "Currency"
-            ],
-            "optional_names": [
+              "Currency",
               "ReportCurrency"
             ],
             "abs_tol": null,
@@ -769,14 +727,18 @@
           "Side",
           "Portfolio"
         ],
+        "optional_cols": [
+          "InitialMarginBefore(Report)",
+          "InitialMarginAfter(Report)",
+          "InitialMarginImpact(Report)",
+          "ReportCurrency"
+        ],
         "column_settings": [
           {
             "names": [
               "InitialMarginBefore",
               "InitialMarginAfter",
-              "InitialMarginImpact"
-            ],
-            "optional_names": [
+              "InitialMarginImpact",
               "InitialMarginBefore(Report)",
               "InitialMarginAfter(Report)",
               "InitialMarginImpact(Report)"
@@ -788,9 +750,7 @@
             "names": [
               "RegulationBefore",
               "RegulationAfter",
-              "Currency"
-            ],
-            "optional_names": [
+              "Currency",
               "ReportCurrency"
             ],
             "abs_tol": null,
@@ -940,16 +900,20 @@
           "CashflowNo",
           "LegNo"
         ],
+        "optional_cols": [
+          "PresentValue",
+          "DiscountFactor",
+          "Coupon",
+          "fixingValue"
+        ],
         "column_settings": [
           {
             "names": [
-              "Amount"
-            ],
-            "optional_names": [
+              "Amount",
               "PresentValue",
               "DiscountFactor",
-			  "Coupon",
-			  "fixingValue"
+      			  "Coupon",
+      			  "fixingValue"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-8
@@ -963,16 +927,20 @@
           "CashflowNo",
           "LegNo"
         ],
+        "optional_cols": [
+          "PresentValue",
+          "DiscountFactor",
+          "Coupon",
+          "fixingValue"
+        ],
         "column_settings": [
           {
             "names": [
-              "Amount"
-            ],
-            "optional_names": [
+              "Amount",
               "PresentValue",
               "DiscountFactor",
-			  "Coupon",
-			  "fixingValue"
+              "Coupon",
+              "fixingValue"
             ],
             "abs_tol": 1e-8,
             "rel_tol": 1e-8
