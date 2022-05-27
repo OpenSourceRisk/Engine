@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file cdscurve.hpp
+/*! \file qle/termstructures/creditcurve.hpp
     \brief wrapper for default curves, adding (index) reference data
 */
 
