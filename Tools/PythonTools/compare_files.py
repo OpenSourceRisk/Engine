@@ -81,7 +81,6 @@ def create_df(file, col_types=None):
             with open(file, 'r') as json_file:
                 flownpv_json = json.load(json_file)
                 if 'cashflowNpv' in flownpv_json:
-
                     logger.debug('Creating DataFrame from flownpv json file %s.', file)
                     flownpv_df = pd.DataFrame(flownpv_json['cashflowNpv'])
                     flownpv_df.rename(columns={"baseCurrency" : "BaseCurrency", "horizon" : "Horizon", "presentValue" : "PresentValue", "tradeId" : "TradeId"}, inplace=True)
@@ -316,6 +315,17 @@ def compare_files_df(name, file_1, file_2, config):
                                str(list(df.columns.values)), idx + 1, str(use_cols))
                 return False
 
+        if 'optional_cols' in config:
+            optional_cols = copy.deepcopy(config['optional_cols'])
+            logger.debug('Optional columns found: %s', str (optional_cols))
+            for col in optional_cols:
+                if col in df_1.columns and col in df_2.columns :
+                    logger.debug('Adding optional column %s to list of columns for comparison', col)
+                    if col in use_cols:
+                        logger.warning('Cannot add optional column %s as it is already in the list of columns for comparison.', col)
+                    else:
+                        use_cols.append(col)
+
         # Use only the requested columns.
         df_1 = df_1[use_cols]
         df_2 = df_2[use_cols]
@@ -330,24 +340,6 @@ def compare_files_df(name, file_1, file_2, config):
         for col_group_config in config['column_settings']:
 
             names = col_group_config['names'].copy()
-
-            # If there are optional names, add them to compare if they are in both dataframes. If in one but not
-            # another, mark the match as false.
-            if 'optional_names' in col_group_config:
-                optional_names = col_group_config['optional_names']
-                for optional_name in optional_names:
-                    if optional_name in df_1.columns and optional_name in df_2.columns:
-                        names.append(optional_name)
-                    elif optional_name not in df_1.columns and optional_name in df_2.columns:
-                        logger.warning('The optional name, %s, is in df_1 but not in df_2.', optional_name)
-                        logger.info('Skipping comparison for this group of names and marking files as different.')
-                        is_match = False
-                        continue
-                    elif optional_name in df_1.columns and optional_name not in df_2.columns:
-                        logger.warning('The optional name, %s, is in df_2 but not in df_1.', optional_name)
-                        logger.info('Skipping comparison for this group of names and marking files as different.')
-                        is_match = False
-                        continue
 
             if not names:
                 logger.debug('No column names provided. Use joint columns from both files except keys')
@@ -370,10 +362,13 @@ def compare_files_df(name, file_1, file_2, config):
                 is_match = False
                 continue
 
-            # Check that all of the names are in each DataFrame
+            # Check that all of the names are in each DataFrame, with the exception of optional columns
+            optional_cols = config['optional_cols'] if 'optional_cols' in config else []
+            required_names = [name for name in names if name not in optional_cols]
+
             all_names = True
             for idx, df in enumerate([df_1, df_2]):
-                if not all([elem in df.columns for elem in names]):
+                if not all([elem in df.columns for elem in required_names]):
                     logger.warning('The column names, %s, in Dataframe %d do not contain all the names, %s.',
                                    str(list(df.columns.values)), idx + 1, str(names))
                     all_names = False
@@ -385,10 +380,21 @@ def compare_files_df(name, file_1, file_2, config):
                 continue
 
             # We will compare this subset of columns using the provided tolerances.
-            col_names = keys + names
+            col_names = keys + required_names
+
+            optional_names = [name for name in names if name in optional_cols]
+            for optional_name in optional_names:
+                if optional_name in df_1.columns and optional_name in df_2.columns:
+                    col_names.append(optional_name)
+
+            # If no (required) use_cols were provided in "names" and all the names were optional_cols
+            # that were not present in both dataframes, then we continue to the next column_settings,
+            # since this means that there are no columns that we can compare on.
+            if len(keys) == len(col_names):
+                continue
 
             # Add to the columns that we have already compared.
-            cols_compared.update(names)
+            cols_compared.update([name for name in col_names if name not in keys])
 
             abs_tol = 0.0
             if 'abs_tol' in col_group_config and col_group_config['abs_tol'] is not None:

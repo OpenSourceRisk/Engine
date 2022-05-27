@@ -1032,11 +1032,11 @@ PaymentLag parsePaymentLag(const string& s) {
     return pl;
 }
 
-std::vector<string> parseListOfValues(string s) {
+std::vector<string> parseListOfValues(string s, const char escape, const char delim, const char quote) {
     boost::trim(s);
     std::vector<string> vec;
-    boost::char_separator<char> sep(",");
-    boost::tokenizer<boost::char_separator<char>> tokens(s, sep);
+    boost::escaped_list_separator<char> sep(escape, delim, quote);
+    boost::tokenizer<boost::escaped_list_separator<char>> tokens(s, sep);
     for (auto r : tokens) {
         boost::trim(r);
         vec.push_back(r);
