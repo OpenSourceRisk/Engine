@@ -402,6 +402,8 @@ indexes/ibor/sgdsor.hpp
 indexes/ibor/skkbribor.hpp
 indexes/ibor/sofr.hpp
 indexes/ibor/sonia.hpp
+indexes/ibor/sora.hpp
+indexes/ibor/termrateindex.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
@@ -410,7 +412,6 @@ indexes/inflationindexwrapper.hpp
 indexes/offpeakpowerindex.hpp
 indexes/region.hpp
 indexes/secpi.hpp
-indexes/termrateindex.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
 instruments/cashflowresults.hpp

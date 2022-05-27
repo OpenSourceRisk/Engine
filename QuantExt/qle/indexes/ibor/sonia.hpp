@@ -23,7 +23,7 @@
 #ifndef quantext_sonia_hpp
 #define quantext_sonia_hpp
 
-#include <qle/indexes/termrateindex.hpp>
+#include <qle/indexes/ibor/termrateindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;

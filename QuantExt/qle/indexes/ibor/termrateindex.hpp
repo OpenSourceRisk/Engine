@@ -33,9 +33,9 @@ public:
     TermRateIndex(const std::string& familyName, const Period& tenor, Natural settlementDays, const Currency& currency,
                   const Calendar& fixingCalendar, BusinessDayConvention convention, bool endOfMonth,
                   const DayCounter& dayCounter, Handle<YieldTermStructure> h = Handle<YieldTermStructure>(),
-                  const boost::shared_ptr<OvernightIndex> rfrIndex)
+                  const boost::shared_ptr<OvernightIndex>& rfrIndex = nullptr)
         : IborIndex(familyName, tenor, settlementDays, currency, fixingCalendar, convention, endOfMonth, dayCounter, h),
-          rfrINdex_(rfrIndex) {}
+          rfrIndex_(rfrIndex) {}
 
     boost::shared_ptr<OvernightIndex> rfrIndex() const { return rfrIndex_; }
 

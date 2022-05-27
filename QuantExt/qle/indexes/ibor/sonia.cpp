@@ -19,6 +19,7 @@
 #include <qle/indexes/ibor/sonia.hpp>
 
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/ibor/sonia.hpp>
 #include <ql/time/calendars/unitedkingdom.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
@@ -26,6 +27,6 @@ namespace QuantExt {
 
 SoniaTerm::SoniaTerm(const Period& tenor, const Handle<YieldTermStructure>& h)
     : TermRateIndex("SONIA-TERM", tenor, 2, GBPCurrency(), UnitedKingdom(UnitedKingdom::Exchange), ModifiedFollowing,
-                    false, Actual360(), h, boost::make_shared<QuantExt::Sonia>(h)) {}
+                    false, Actual360(), h, boost::make_shared<QuantLib::Sonia>(h)) {}
 
 } // namespace QuantExt
