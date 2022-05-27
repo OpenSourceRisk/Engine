@@ -272,6 +272,9 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         if (rateComputationPeriod_ != 0 * Days) {
             XMLUtils::addChild(doc, node, "RateComputationPeriod", rateComputationPeriod_);
         }
+        if (onCapSettlementDays_ != 0) {
+            XMLUtils::addChild(doc, node, "ONCapSettlementDays", (int)onCapSettlementDays_);
+        }
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
         XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);
         XMLUtils::addChild(doc, node, "SettlementDays", static_cast<int>(settleDays_));
