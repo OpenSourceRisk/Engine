@@ -137,11 +137,11 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
                 helpers_[j].push_back(boost::make_shared<OISCapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], rateComputationPeriod_, strikes[j],
                     Handle<Quote>(quotes_[i].back()), boost::dynamic_pointer_cast<OvernightIndex>(index_), discount_,
-                    true, effDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
+                    false, effDate, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
             } else {
                 helpers_[j].push_back(boost::make_shared<CapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], strikes[j], Handle<Quote>(quotes_[i].back()), index_,
-                    discount_, true, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
+                    discount_, false, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
             }
         }
     }

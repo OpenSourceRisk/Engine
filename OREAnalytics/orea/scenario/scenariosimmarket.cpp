@@ -994,7 +994,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         IndexNameTranslator::instance().oreName(iborIndex->name()), configuration);
                                     if (parameters_->capFloorVolUseCapAtm()) {
                                         QL_REQUIRE(!isOis, "SSM: capFloorVolUseCapATM not supported for OIS indices ("
-                                                               << iborIndex->name() << ")");
+                                                               << t0_iborIndex->name() << ")");
                                         boost::shared_ptr<CapFloor> cap =
                                             MakeCapFloor(CapFloor::Cap, optionTenors[i], t0_iborIndex, 0.0, 0 * Days);
                                         strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
@@ -1002,12 +1002,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         if (isOis) {
                                             Leg capFloor =
                                                 MakeOISCapFloor(CapFloor::Cap, optionTenors[i],
-                                                                boost::dynamic_pointer_cast<OvernightIndex>(iborIndex),
+                                                                boost::dynamic_pointer_cast<OvernightIndex>(t0_iborIndex),
                                                                 rateComputationPeriod, 0.0)
                                                     .withTelescopicValueDates(true)
                                                     .withSettlementDays(onSettlementDays);
                                             if (capFloor.empty()) {
-                                                strike = iborIndex->fixing(optionDates[i]);
+                                                strike = t0_iborIndex->fixing(optionDates[i]);
                                             } else {
                                                 auto lastCoupon =
                                                     boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(
@@ -1015,11 +1015,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 QL_REQUIRE(lastCoupon, "SSM internal error, could not cast to "
                                                                        "CappedFlooredOvernightIndexedCoupon "
                                                                        "when building optionlet vol for '"
-                                                                           << name << "', index=" << iborIndex->name());
+                                                                           << name << "', index=" << t0_iborIndex->name());
                                                 strike = lastCoupon->underlying()->rate();
                                             }
                                         } else {
-                                            strike = iborIndex->fixing(optionDates[i]);
+                                            strike = t0_iborIndex->fixing(optionDates[i]);
                                         }
                                     }
                                 }
