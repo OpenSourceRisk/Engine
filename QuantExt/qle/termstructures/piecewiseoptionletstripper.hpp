@@ -141,7 +141,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
             } else {
                 helpers_[j].push_back(boost::make_shared<CapFloorHelper>(
                     CapFloorHelper::Automatic, tenors[i], strikes[j], Handle<Quote>(quotes_[i].back()), index_,
-                    discount_, false, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
+                    discount_, true, Date(), CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_));
             }
         }
     }
