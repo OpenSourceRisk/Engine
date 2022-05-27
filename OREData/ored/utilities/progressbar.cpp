@@ -94,7 +94,7 @@ void ProgressLog::updateProgress(const unsigned long progress, const unsigned lo
     if (messageCounter_ > 0 && progress * numberOfMessages_ < (messageCounter_ * total)) {
         return;
     }
-    LOG(message_ << " " << progress << " out of " << total << " steps ("
+    DLOG(message_ << " " << progress << " out of " << total << " steps ("
                  << static_cast<int>(static_cast<double>(progress) / static_cast<double>(total) * 100.0)
                  << "%) completed");
     messageCounter_++;
