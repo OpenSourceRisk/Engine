@@ -893,12 +893,16 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
                                            config->rateComputationPeriod(), 0.04)
                                .withTelescopicValueDates(true)
                                .withSettlementDays(onSettlementDays);
+            if (dummyCap.empty())
+                continue;
             auto lastCoupon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
-            fixingDate = std::max(asof, lastCoupon->underlying()->fixingDates().front());
+            fixingDate = std::max(asof + 1, lastCoupon->underlying()->fixingDates().front());
             forward = lastCoupon->underlying()->rate();
         } else {
             CapFloor dummyCap = MakeCapFloor(CapFloor::Cap, p, index, 0.04, 0 * Days);
+            if (dummyCap.floatingLeg().empty())
+                continue;
             boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
             fixingDate = lastCoupon->fixingDate();
             forward = index->fixing(fixingDate);
