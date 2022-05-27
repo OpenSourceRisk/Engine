@@ -29,6 +29,6 @@ Sofr::Sofr(const Handle<YieldTermStructure>& h)
 
 SofrTerm::SofrTerm(const Period& tenor, const Handle<YieldTermStructure>& h)
     : IborIndex("SOFR-TERM", tenor, 2, USDCurrency(), UnitedStates(UnitedStates::GovernmentBond), ModifiedFollowing,
-                false, Actual360(), h) {}
+                false, Actual360(), h, boost::make_shared<Sofr>(h)) {}
 
 } // namespace QuantExt
