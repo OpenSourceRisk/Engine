@@ -164,7 +164,7 @@ void OptionletStripper::populateDates() const {
                     .withSettlementDays(onCapSettlementDays_);
             auto lastCoupon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
             QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
-            optionletDates_[i] = std::max(referenceDate, lastCoupon->underlying()->fixingDates().front());
+            optionletDates_[i] = std::max(referenceDate + 1, lastCoupon->underlying()->fixingDates().front());
             optionletPaymentDates_[i] = lastCoupon->underlying()->date();
             optionletAccrualPeriods_[i] = lastCoupon->underlying()->accrualPeriod();
             optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
@@ -173,12 +173,16 @@ void OptionletStripper::populateDates() const {
             CapFloor dummyCap =
                 MakeCapFloor(CapFloor::Cap, capFloorLengths_[i], index_, 0.04, 0 * Days).withPricingEngine(dummyEngine);
             boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
-            optionletDates_[i] = lastCoupon->fixingDate();
+            optionletDates_[i] = std::max(referenceDate + 1, lastCoupon->fixingDate());
             optionletPaymentDates_[i] = lastCoupon->date();
             optionletAccrualPeriods_[i] = lastCoupon->accrualPeriod();
             optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
             atmOptionletRate_[i] = lastCoupon->indexFixing();
         }
+        QL_REQUIRE(i == 0 || optionletDates_[i] > optionletDates_[i - 1],
+                   "OptionletStripper::populateDates(): got non-increasing optionletDates "
+                       << optionletDates_[i - 1] << ", " << optionletDates_[i] << " for tenors "
+                       << capFloorLengths_[i - 1] << ", " << capFloorLengths_[i] << " and index " << index_->name());
     }
 }
 
