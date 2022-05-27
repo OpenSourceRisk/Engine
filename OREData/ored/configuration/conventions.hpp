@@ -146,6 +146,7 @@ public:
     //@}
 
 private:
+  std::string flip(const std::string& id, const std::string& sep = "-") const;
     map<string, boost::shared_ptr<Convention>> data_;
     mutable boost::shared_mutex mutex_;
 };

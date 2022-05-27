@@ -23,6 +23,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -2360,11 +2361,32 @@ void Conventions::clear() {
     data_.clear();
 }
 
+std::string Conventions::flip(const std::string& id, const std::string& sep) const {
+    boost::tokenizer<boost::escaped_list_separator<char>> tokenSplit(id, boost::escaped_list_separator<char>("\\", sep, "\""));
+    std::vector<std::string> tokens(tokenSplit.begin(), tokenSplit.end());
+    if (tokens.size() >= 2 && tokens[0].size() == 3 && tokens[1].size() == 3) {
+      std::string id2 = tokens[1] + sep + tokens[0];
+      for (Size i = 2; i < tokens.size(); ++i)
+	  id2 += sep + tokens[i];
+      return id2; // flipped id
+    }
+    else return id; // original id
+}
+  
 boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = data_.find(id);
-    QL_REQUIRE(it != data_.end(), "Cannot find conventions for id " << id);
-    return it->second;
+    if (it != data_.end())
+        return it->second;
+    else {
+        std::string id2 = flip(id);
+	auto it = data_.find(id2);
+	if ( it != data_.end())
+	    return it->second;
+	else {
+	  QL_FAIL("Cannot find conventions for id " << id);
+	}
+    }
 }
 
 boost::shared_ptr<Convention> Conventions::getFxConvention(const string& ccy1, const string& ccy2) const {
@@ -2402,7 +2424,15 @@ std::set<boost::shared_ptr<Convention>> Conventions::get(const Convention::Type&
 
 bool Conventions::has(const string& id) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    return data_.count(id) == 1;
+    if (data_.find(id) != data_.end())
+        return true;
+    else {
+        std::string id2 = flip(id);
+	if (data_.find(id2) != data_.end())
+	    return true;
+	else
+	    return false;
+    }
 }
 
 bool Conventions::has(const std::string& id, const Convention::Type& type) const {
