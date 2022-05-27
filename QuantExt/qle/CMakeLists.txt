@@ -410,6 +410,7 @@ indexes/inflationindexwrapper.hpp
 indexes/offpeakpowerindex.hpp
 indexes/region.hpp
 indexes/secpi.hpp
+indexes/termrateindex.hpp
 instruments/averageois.hpp
 instruments/brlcdiswap.hpp
 instruments/cashflowresults.hpp
