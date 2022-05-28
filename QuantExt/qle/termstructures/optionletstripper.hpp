@@ -72,7 +72,7 @@ protected:
     OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTermVolSurface>&, const ext::shared_ptr<IborIndex>& index,
                       const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                       const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0,
-                      const Period& rateComputationPeriod = 0 * Days);
+                      const Period& rateComputationPeriod = 0 * Days, const Size onCapSettlementDays = 0);
 
     //! Method to populate the dates, times and accruals that can be overridden in derived classes
     virtual void populateDates() const;
@@ -97,6 +97,7 @@ protected:
     const VolatilityType volatilityType_;
     const Real displacement_;
     const Period rateComputationPeriod_;
+    const Size onCapSettlementDays_;
 };
 
 } // namespace QuantExt
