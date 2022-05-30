@@ -216,9 +216,16 @@ std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
 void CrossAssetModelData::fromXML(XMLNode* root) {
     clear();
 
-    XMLNode* sim = XMLUtils::locateNode(root, "Simulation");
-    XMLNode* modelNode = XMLUtils::getChildNode(sim, "CrossAssetModel");
-    XMLUtils::checkNode(modelNode, "CrossAssetModel");
+    // we can read from the subnode "CrossAssetModel" of the root node "Simulation" or
+    // directly from root = CrossAssetModel. This way fromXML(toXML()) works as expected.
+    XMLNode* modelNode;
+    if (XMLUtils::getNodeName(root) == "CrossAssetModel") {
+        modelNode = root;
+    } else {
+        XMLNode* sim = XMLUtils::locateNode(root, "Simulation");
+        modelNode = XMLUtils::getChildNode(sim, "CrossAssetModel");
+        QL_REQUIRE(modelNode, "Simulation / CrossAssetModel not found, can not read cross asset model data");
+    }
 
     domesticCurrency_ = XMLUtils::getChildValue(modelNode, "DomesticCcy", true); // mandatory
     LOG("CrossAssetModelData: domesticCcy " << domesticCurrency_);

@@ -56,16 +56,18 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     bool flatExtrapolation, bool inlcudeAtm, const vector<string>& tenors, const vector<string>& strikes,
     const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
     const BusinessDayConvention& businessDayConvention, const std::string& index,
-    const QuantLib::Period& rateComputationPeriod, const string& discountCurve, const string& interpolationMethod,
-    const string& interpolateOn, const string& timeInterpolation, const string& strikeInterpolation,
-    const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig, const string& smileDynamics)
+    const QuantLib::Period& rateComputationPeriod, const Size onCapSettlementDays, const string& discountCurve,
+    const string& interpolationMethod, const string& interpolateOn, const string& timeInterpolation,
+    const string& strikeInterpolation, const vector<string>& atmTenors, const BootstrapConfig& bootstrapConfig,
+    const string& smileDynamics)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), rateComputationPeriod_(rateComputationPeriod),
-      discountCurve_(discountCurve), interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn),
-      timeInterpolation_(timeInterpolation), strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors),
-      bootstrapConfig_(bootstrapConfig), smileDynamics_(smileDynamics) {
+      onCapSettlementDays_(onCapSettlementDays), discountCurve_(discountCurve),
+      interpolationMethod_(interpolationMethod), interpolateOn_(interpolateOn), timeInterpolation_(timeInterpolation),
+      strikeInterpolation_(strikeInterpolation), atmTenors_(atmTenors), bootstrapConfig_(bootstrapConfig),
+      smileDynamics_(smileDynamics) {
 
     // Set extrapolation string. "Linear" just means extrapolation allowed and non-flat.
     extrapolation_ = !extrapolate_ ? "None" : (flatExtrapolation_ ? "Flat" : "Linear");
@@ -117,6 +119,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         proxyTargetIndex_ = index_ = XMLUtils::getChildValue(target, "Index", true);
         proxyTargetRateComputationPeriod_ = rateComputationPeriod_ =
             parsePeriod(XMLUtils::getChildValue(target, "RateComputationPeriod", false, "0D"));
+        onCapSettlementDays_ = parseInteger(XMLUtils::getChildValue(target, "ONCapSettlementDays", false, "0"));
 
         populateRequiredCurveIds();
 
@@ -152,6 +155,12 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         rateComputationPeriod_ = 0 * Days;
         if (auto rcpNode = XMLUtils::getChildNode(node, "RateComputationPeriod")) {
             rateComputationPeriod_ = parsePeriod(XMLUtils::getNodeValue(rcpNode));
+        }
+
+	// on cap settlement days, optional and only relevant for OIS indices
+        onCapSettlementDays_ = 0;
+        if (auto onsNode = XMLUtils::getChildNode(node, "ONCapSettlementDays")) {
+            onCapSettlementDays_ = parseInteger(XMLUtils::getNodeValue(onsNode));
         }
 
         // Settlement days (optional)
@@ -262,6 +271,9 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "Index", index_);
         if (rateComputationPeriod_ != 0 * Days) {
             XMLUtils::addChild(doc, node, "RateComputationPeriod", rateComputationPeriod_);
+        }
+        if (onCapSettlementDays_ != 0) {
+            XMLUtils::addChild(doc, node, "ONCapSettlementDays", (int)onCapSettlementDays_);
         }
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
         XMLUtils::addGenericChildAsList(doc, node, "AtmTenors", atmTenors_);

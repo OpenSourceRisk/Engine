@@ -51,7 +51,8 @@ public:
         const CurveConfigurations& curveConfigs, boost::shared_ptr<QuantLib::IborIndex> iborIndex,
         QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
         const boost::shared_ptr<IborIndex> targetIndex,
-        const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves);
+        const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves,
+        const bool buildCalibrationInfo);
 
     //! \name Inspectors
     //@{

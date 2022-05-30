@@ -36,9 +36,9 @@ using namespace ore::data;
 
 namespace {
 
-// Utility function to derive the inflation swap start date and curve observation lag from the as of date and 
-// convention. In general, we take this simply to be (as of date, Period()). However, for AU CPI for 
-// example, this is more complicated and we need to account for this here if the inflation swap conventions provide 
+// Utility function to derive the inflation swap start date and curve observation lag from the as of date and
+// convention. In general, we take this simply to be (as of date, Period()). However, for AU CPI for
+// example, this is more complicated and we need to account for this here if the inflation swap conventions provide
 // us with a publication schedule and tell us to roll on that schedule.
 pair<Date, Period> getStartAndLag(const Date& asof, const InflationSwapConvention& conv) {
 
@@ -56,21 +56,23 @@ pair<Date, Period> getStartAndLag(const Date& asof, const InflationSwapConventio
     Date dateInPeriod = d - Period(conv.index()->frequency());
 
     // Find period between dateInPeriod and asof. This will be the inflation curve's obsLag.
-    QL_REQUIRE(dateInPeriod < asof, "InflationCurve: expected date in inflation period (" <<
-        io::iso_date(dateInPeriod) << ") to be before the as of date (" << io::iso_date(asof) << ").");
+    QL_REQUIRE(dateInPeriod < asof, "InflationCurve: expected date in inflation period ("
+                                        << io::iso_date(dateInPeriod) << ") to be before the as of date ("
+                                        << io::iso_date(asof) << ").");
     Period curveObsLag = (asof - dateInPeriod) * Days;
 
     return make_pair(d, curveObsLag);
 }
 
-}
+} // namespace
 
 namespace ore {
 namespace data {
 
 InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader,
                                const CurveConfigurations& curveConfigs,
-                               map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+                               map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                               const bool buildCalibrationInfo) {
 
     try {
 
@@ -204,8 +206,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 boost::shared_ptr<ZeroInflationTraits::helper> instrument =
                     boost::make_shared<ZeroCouponInflationSwapHelper>(quotes[i], conv->observationLag(), maturity,
                                                                       conv->fixCalendar(), conv->fixConvention(),
-                                                                      conv->dayCounter(), index, nominalTs,
-                                                                      swapStart);
+                                                                      conv->dayCounter(), index, nominalTs, swapStart);
                 // The instrument gets registered to update on change of evaluation date. This triggers a
                 // rebootstrapping of the curve. In order to avoid this during simulation we unregister from the
                 // evaluationDate.
@@ -213,8 +214,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 instruments.push_back(instrument);
             }
             curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-                asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), 
-                baseRate, instruments, config->tolerance()));
+                asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), baseRate, instruments,
+                config->tolerance()));
             // force bootstrap so that errors are thrown during the build, not later
             boost::static_pointer_cast<PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
@@ -274,7 +275,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 pillarDates.push_back(instrument->pillarDate());
             }
             // base zero rate: if given, take it, otherwise set it to first quote
-            Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : instruments.front()->quote()->value();
+            Real baseRate =
+                config->baseRate() != Null<Real>() ? config->baseRate() : instruments.front()->quote()->value();
             curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), curveObsLag, config->frequency(), interpolatedIndex_,
                 baseRate, instruments, config->tolerance()));
@@ -289,58 +291,62 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
         // set calibration info
 
-        if (pillarDates.empty()) {
-            // default: fill pillar dates with monthly schedule up to last term given in the curve config (but max 60y)
-            Date maturity = swapStart + terms.back();
-            for (Size i = 1; i < 60 * 12; ++i) {
-                Date current = inflationPeriod(curve_->baseDate() + i * Months, curve_->frequency()).first;
-                if (current + curve_->observationLag() <= maturity)
-                    pillarDates.push_back(current);
-                else
-                    break;
-            }
-        }
+        if (buildCalibrationInfo) {
 
-        if (config->type() == InflationCurveConfig::Type::YY) {
-            auto yoyCurve = boost::dynamic_pointer_cast<YoYInflationCurve>(curve_);
-            QL_REQUIRE(yoyCurve, "internal error: expected YoYInflationCurve (inflation curve builder)");
-            auto calInfo = boost::make_shared<YoYInflationCurveCalibrationInfo>();
-            calInfo->dayCounter = config->dayCounter().name();
-            calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
-            calInfo->baseDate = curve_->baseDate();
-            for (Size i = 0; i < pillarDates.size(); ++i) {
-                calInfo->pillarDates.push_back(pillarDates[i]);
-                calInfo->yoyRates.push_back(yoyCurve->yoyRate(pillarDates[i], 0 * Days));
-                calInfo->times.push_back(yoyCurve->timeFromReference(pillarDates[i]));
+            if (pillarDates.empty()) {
+                // default: fill pillar dates with monthly schedule up to last term given in the curve config (but max
+                // 60y)
+                Date maturity = swapStart + terms.back();
+                for (Size i = 1; i < 60 * 12; ++i) {
+                    Date current = inflationPeriod(curve_->baseDate() + i * Months, curve_->frequency()).first;
+                    if (current + curve_->observationLag() <= maturity)
+                        pillarDates.push_back(current);
+                    else
+                        break;
+                }
             }
-            calibrationInfo_ = calInfo;
-        }
 
-        if (config->type() == InflationCurveConfig::Type::ZC) {
-            auto zcCurve = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_);
-            QL_REQUIRE(zcCurve, "internal error: expected ZeroInflationCurve (inflation curve builder)");
-            auto zcIndex = conv->index()->clone(Handle<ZeroInflationTermStructure>(zcCurve));
-            auto calInfo = boost::make_shared<ZeroInflationCurveCalibrationInfo>();
-            calInfo->dayCounter = config->dayCounter().name();
-            calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
-            calInfo->baseDate = curve_->baseDate();
-            auto lim = inflationPeriod(curve_->baseDate(), curve_->frequency());
-            try {
-                calInfo->baseCpi = conv->index()->fixing(lim.first);
-            } catch (...) {
+            if (config->type() == InflationCurveConfig::Type::YY) {
+                auto yoyCurve = boost::dynamic_pointer_cast<YoYInflationCurve>(curve_);
+                QL_REQUIRE(yoyCurve, "internal error: expected YoYInflationCurve (inflation curve builder)");
+                auto calInfo = boost::make_shared<YoYInflationCurveCalibrationInfo>();
+                calInfo->dayCounter = config->dayCounter().name();
+                calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
+                calInfo->baseDate = curve_->baseDate();
+                for (Size i = 0; i < pillarDates.size(); ++i) {
+                    calInfo->pillarDates.push_back(pillarDates[i]);
+                    calInfo->yoyRates.push_back(yoyCurve->yoyRate(pillarDates[i], 0 * Days));
+                    calInfo->times.push_back(yoyCurve->timeFromReference(pillarDates[i]));
+                }
+                calibrationInfo_ = calInfo;
             }
-            for (Size i = 0; i < pillarDates.size(); ++i) {
-                calInfo->pillarDates.push_back(pillarDates[i]);
-                calInfo->zeroRates.push_back(zcCurve->zeroRate(pillarDates[i], 0 * Days));
-                calInfo->times.push_back(zcCurve->timeFromReference(pillarDates[i]));
-                Real cpi = 0.0;
+
+            if (config->type() == InflationCurveConfig::Type::ZC) {
+                auto zcCurve = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_);
+                QL_REQUIRE(zcCurve, "internal error: expected ZeroInflationCurve (inflation curve builder)");
+                auto zcIndex = conv->index()->clone(Handle<ZeroInflationTermStructure>(zcCurve));
+                auto calInfo = boost::make_shared<ZeroInflationCurveCalibrationInfo>();
+                calInfo->dayCounter = config->dayCounter().name();
+                calInfo->calendar = config->calendar().empty() ? "null" : config->calendar().name();
+                calInfo->baseDate = curve_->baseDate();
+                auto lim = inflationPeriod(curve_->baseDate(), curve_->frequency());
                 try {
-                    cpi = zcIndex->fixing(pillarDates[i]);
+                    calInfo->baseCpi = conv->index()->fixing(lim.first);
                 } catch (...) {
                 }
-                calInfo->forwardCpis.push_back(cpi);
+                for (Size i = 0; i < pillarDates.size(); ++i) {
+                    calInfo->pillarDates.push_back(pillarDates[i]);
+                    calInfo->zeroRates.push_back(zcCurve->zeroRate(pillarDates[i], 0 * Days));
+                    calInfo->times.push_back(zcCurve->timeFromReference(pillarDates[i]));
+                    Real cpi = 0.0;
+                    try {
+                        cpi = zcIndex->fixing(pillarDates[i]);
+                    } catch (...) {
+                    }
+                    calInfo->forwardCpis.push_back(cpi);
+                }
+                calibrationInfo_ = calInfo;
             }
-            calibrationInfo_ = calInfo;
         }
 
     } catch (std::exception& e) {
@@ -361,17 +367,19 @@ QuantLib::Date getInflationSwapStart(const Date& asof, const InflationSwapConven
 
     // Get schedule and check not empty
     const Schedule& ps = conv.publicationSchedule();
-    QL_REQUIRE(!ps.empty(), "InflationCurve: roll on publication is true for " << conv.id() <<
-        " but the publication schedule is empty.");
+    QL_REQUIRE(!ps.empty(), "InflationCurve: roll on publication is true for "
+                                << conv.id() << " but the publication schedule is empty.");
 
     // Check the schedule dates cover the as of date.
     const vector<Date>& ds = ps.dates();
-    QL_REQUIRE(ds.front() < asof, "InflationCurve: first date in the publication schedule (" <<
-        io::iso_date(ds.front()) << ") should be before the as of date (" << io::iso_date(asof) << ").");
-    QL_REQUIRE(asof < ds.back(), "InflationCurve: last date in the publication schedule (" <<
-        io::iso_date(ds.back()) << ") should be after the as of date (" << io::iso_date(asof) << ").");
+    QL_REQUIRE(ds.front() < asof, "InflationCurve: first date in the publication schedule ("
+                                      << io::iso_date(ds.front()) << ") should be before the as of date ("
+                                      << io::iso_date(asof) << ").");
+    QL_REQUIRE(asof < ds.back(), "InflationCurve: last date in the publication schedule ("
+                                     << io::iso_date(ds.back()) << ") should be after the as of date ("
+                                     << io::iso_date(asof) << ").");
 
-    // Find d such that d_- < asof <= d. If necessary, move to the next publication schedule date. We 
+    // Find d such that d_- < asof <= d. If necessary, move to the next publication schedule date. We
     // know that there is another date because asof < ds.back() is checked above.
     auto it = lower_bound(ds.begin(), ds.end(), asof);
     Date d = *it;

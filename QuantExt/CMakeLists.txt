@@ -12,7 +12,7 @@ get_library_name("QuantExt" QLE_LIB_NAME)
 get_library_name("QuantLib" QL_LIB_NAME)
 configure_msvc_runtime()
 
-find_package (Boost REQUIRED COMPONENTS unit_test_framework date_time system timer OPTIONAL_COMPONENTS chrono)
+find_package (Boost REQUIRED COMPONENTS unit_test_framework date_time thread system timer OPTIONAL_COMPONENTS chrono)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})

@@ -20,13 +20,17 @@
 #include <ored/utilities/strike.hpp>
 
 #include <ql/errors.hpp>
-
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
 #include <boost/regex.hpp>
 
 namespace ore {
 namespace data {
 
 Strike parseStrike(const std::string& s) {
+    static boost::mutex mutex_;
+    boost::lock_guard<boost::mutex> lock(mutex_);
+
     boost::regex m1("^(ATM|atm)");
     boost::regex m1b("^(ATMF|atmf)");
     boost::regex m2("^(ATM|atm)(\\+|\\-)([0-9]+[.]?[0-9]*)");

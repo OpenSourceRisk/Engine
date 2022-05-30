@@ -231,7 +231,8 @@ boost::shared_ptr<QuantLib::Index> parseGenericIndex(const string& s) {
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
     try {
         index = parseIborIndex(s, Handle<YieldTermStructure>());
-    } catch (...) {
+    } catch (const std::exception& e) {
+	DLOG("tryParseIborIndex(" << s << ") failed: " << e.what());
         return false;
     }
     return true;

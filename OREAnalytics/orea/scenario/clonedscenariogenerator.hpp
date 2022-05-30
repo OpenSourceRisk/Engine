@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,26 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/legdatafactory.hpp>
+/*! \file scenario/scenariogenerator.hpp
+    \brief Scenario generator base classes
+    \ingroup scenario
+*/
 
-using std::function;
-using std::string;
+#pragma once
+
+#include <orea/scenario/scenariogenerator.hpp>
 
 namespace ore {
-namespace data {
+namespace analytics {
 
-boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    auto it = map_.find(legType);
-    if (it == map_.end())
-        return nullptr;
-    return it->second();
-}
+class ClonedScenarioGenerator : public ScenarioGenerator {
+public:
+    ClonedScenarioGenerator(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+                            const std::vector<Date>& dates, const Size nSamples);
+    boost::shared_ptr<Scenario> next(const Date& d) override;
+    virtual void reset() override;
 
-void LegDataFactory::addBuilder(const string& legType, function<boost::shared_ptr<LegAdditionalData>()> builder) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    map_[legType] = builder;
-}
+private:
+    std::vector<boost::shared_ptr<Scenario>> scenarios_;
+    Size i_ = 0;
+};
 
-} // namespace data
+} // namespace analytics
 } // namespace ore

@@ -36,6 +36,7 @@
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/proxyoptionletvolatility.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <qle/instruments/makeoiscapfloor.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -66,7 +67,8 @@ CapFloorVolCurve::CapFloorVolCurve(
     const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
     Handle<YieldTermStructure> discountCurve, const boost::shared_ptr<IborIndex> sourceIndex,
     const boost::shared_ptr<IborIndex> targetIndex,
-    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves)
+    const std::map<std::string, boost::shared_ptr<ore::data::CapFloorVolCurve>>& requiredCapFloorVolCurves,
+    const bool buildCalibrationInfo)
     : spec_(spec) {
 
     try {
@@ -98,7 +100,9 @@ CapFloorVolCurve::CapFloorVolCurve(
         }
 
         // Build calibration info
-        buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
+        if (buildCalibrationInfo) {
+            this->buildCalibrationInfo(asof, curveConfigs, config, iborIndex);
+        }
 
     } catch (exception& e) {
         QL_FAIL("cap/floor vol curve building failed :" << e.what());
@@ -319,7 +323,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
@@ -359,7 +363,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, Linear>>(
@@ -399,7 +403,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<BackwardFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<BackwardFlat, Linear>>(
@@ -439,7 +443,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Linear>>(
@@ -479,7 +483,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                 QuantExt::IterativeBootstrap<
                     PiecewiseOptionletStripper<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                     accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                config.rateComputationPeriod());
+                config.rateComputationPeriod(), config.onCapSettlementDays());
             if (config.strikeInterpolation() == "Linear") {
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, Linear>>(
@@ -527,7 +531,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<CubicFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
@@ -541,7 +545,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<Cubic, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
@@ -557,7 +561,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<LinearFlat, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
@@ -571,7 +575,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     QuantExt::IterativeBootstrap<
                         PiecewiseOptionletStripper<Linear, QuantExt::IterativeBootstrap>::optionlet_curve>(
                         accuracy, globalAccuracy, dontThrow, maxAttempts, maxFactor, minFactor, dontThrowSteps),
-                    config.rateComputationPeriod());
+                    config.rateComputationPeriod(), config.onCapSettlementDays());
                 if (includeAtm) {
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
@@ -872,14 +876,41 @@ void CapFloorVolCurve::buildCalibrationInfo(const Date& asof, const CurveConfigu
     calibrationInfo_->volatilityType = ore::data::to_string(capletVol_->volatilityType());
     calibrationInfo_->underlyingTenors = underlyingTenorsReport;
 
-    std::vector<Real> times;
-    std::vector<std::vector<Real>> forwards;
+    bool isOis = boost::dynamic_pointer_cast<OvernightIndex>(index) != nullptr;
+
+    Size onSettlementDays = 0;
+    if (isOis) {
+        onSettlementDays = config->onCapSettlementDays();
+    }
+
+    std::vector<Real> times;                 // fixing times of caplets
+    std::vector<std::vector<Real>> forwards; // fair rates of caplets
     for (auto const& p : expiries) {
-        Date d = capletVol_->optionDateFromTenor(p);
-        calibrationInfo_->expiryDates.push_back(d);
-        times.push_back(capletVol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, d)
-                                                         : capletVol_->timeFromReference(d));
-        forwards.push_back(std::vector<Real>(1, index->fixing(index->fixingCalendar().adjust(d))));
+        Date fixingDate;
+        Real forward;
+        if (isOis) {
+            Leg dummyCap = MakeOISCapFloor(CapFloor::Cap, p, boost::dynamic_pointer_cast<OvernightIndex>(index),
+                                           config->rateComputationPeriod(), 0.04)
+                               .withTelescopicValueDates(true)
+                               .withSettlementDays(onSettlementDays);
+            if (dummyCap.empty())
+                continue;
+            auto lastCoupon = boost::dynamic_pointer_cast<CappedFlooredOvernightIndexedCoupon>(dummyCap.back());
+            QL_REQUIRE(lastCoupon, "OptionletStripper::populateDates(): expected CappedFlooredOvernightIndexedCoupon");
+            fixingDate = std::max(asof + 1, lastCoupon->underlying()->fixingDates().front());
+            forward = lastCoupon->underlying()->rate();
+        } else {
+            CapFloor dummyCap = MakeCapFloor(CapFloor::Cap, p, index, 0.04, 0 * Days);
+            if (dummyCap.floatingLeg().empty())
+                continue;
+            boost::shared_ptr<FloatingRateCoupon> lastCoupon = dummyCap.lastFloatingRateCoupon();
+            fixingDate = lastCoupon->fixingDate();
+            forward = index->fixing(fixingDate);
+        }
+        calibrationInfo_->expiryDates.push_back(fixingDate);
+        times.push_back(capletVol_->dayCounter().empty() ? Actual365Fixed().yearFraction(asof, fixingDate)
+                                                         : capletVol_->timeFromReference(fixingDate));
+        forwards.push_back(std::vector<Real>(1, forward));
     }
 
     calibrationInfo_->times = times;

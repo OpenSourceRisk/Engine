@@ -68,7 +68,8 @@ public:
         boost::optional<Size> foreignRateCutoff = boost::none, boost::optional<bool> foreignIsAveraged = boost::none,
         boost::optional<bool> domesticIncludeSpread = boost::none,
         boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
-        boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none);
+        boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none,
+        const bool telescopicValueDates = false);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const override;
@@ -124,6 +125,8 @@ protected:
     RelinkableHandle<YieldTermStructure> domesticDiscountRLH_;
     RelinkableHandle<YieldTermStructure> foreignCcyFxFwdRateCurveRLH_;
     RelinkableHandle<YieldTermStructure> domesticCcyFxFwdRateCurveRLH_;
+
+    bool telescopicValueDates_;
 };
 } // namespace QuantExt
 

@@ -43,7 +43,7 @@ public:
     YieldVolCurve() {}
     //! Detailed constructor
     YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loader& loader,
-                  const CurveConfigurations& curveConfigs);
+                  const CurveConfigurations& curveConfigs, const bool buildCalibrationInfo);
     //@}
 
     //! \name Inspectors

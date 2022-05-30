@@ -24,22 +24,28 @@ namespace ore {
 namespace data {
 
 std::string IndexNameTranslator::oreName(const std::string& qlName) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto n = data_.left.find(qlName);
     QL_REQUIRE(n != data_.left.end(), "IndexNameTranslator: qlName '" << qlName << "' not found.");
     return n->second;
 }
 
 std::string IndexNameTranslator::qlName(const std::string& oreName) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto n = data_.right.find(oreName);
     QL_REQUIRE(n != data_.right.end(), "IndexNameTranslator: oreName '" << oreName << "' not found.");
     return n->second;
 }
 
 void IndexNameTranslator::add(const std::string& qlName, const std::string& oreName) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     data_.insert(boost::bimap<std::string, std::string>::value_type(qlName, oreName));
 }
 
-void IndexNameTranslator::clear() { data_.clear(); }
+void IndexNameTranslator::clear() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    data_.clear();
+}
 
 } // namespace data
 } // namespace ore

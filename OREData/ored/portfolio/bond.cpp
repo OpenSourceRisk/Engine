@@ -263,6 +263,7 @@ Bond::underlyingIndices(const boost::shared_ptr<ReferenceDataManager>& reference
 BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& engineFactory,
                                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                                        const std::string& securityId) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     for (auto const& b : builders_) {
         if (referenceData->hasData(b.first, securityId)) {
             return b.second->build(engineFactory, referenceData, securityId);
@@ -276,6 +277,7 @@ BondBuilder::Result BondFactory::build(const boost::shared_ptr<EngineFactory>& e
 }
 
 void BondFactory::addBuilder(const std::string& referenceDataType, const boost::shared_ptr<BondBuilder>& builder) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     builders_[referenceDataType] = builder;
 }
 

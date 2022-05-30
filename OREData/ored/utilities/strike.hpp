@@ -24,7 +24,6 @@
 #pragma once
 
 #include <ql/types.hpp>
-
 #include <string>
 
 namespace ore {

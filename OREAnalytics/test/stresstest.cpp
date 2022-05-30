@@ -100,8 +100,8 @@ boost::shared_ptr<data::Conventions> stressConv() {
     conventions->add(boost::make_shared<data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
     conventions->add(boost::make_shared<data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
 
-    InstrumentConventions::instance().conventions() = conventions;
-    
+    InstrumentConventions::instance().setConventions(conventions);
+
     return conventions;
 }
 

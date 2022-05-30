@@ -56,7 +56,8 @@ public:
         boost::optional<Size> payFixingDays = boost::none, boost::optional<Size> payRateCutoff = boost::none,
         boost::optional<bool> payIsAveraged = boost::none, boost::optional<bool> recIncludeSpread = boost::none,
         boost::optional<Period> recLookback = boost::none, boost::optional<Size> recFixingDays = boost::none,
-        boost::optional<Size> recRateCutoff = boost::none, boost::optional<bool> recIsAveraged = boost::none);
+        boost::optional<Size> recRateCutoff = boost::none, boost::optional<bool> recIsAveraged = boost::none,
+        const bool telescopicValueDates = false);
     //@}
     //! \name Instrument interface
     //@{
@@ -130,6 +131,7 @@ private:
     boost::optional<QuantLib::Size> recFixingDays_;
     boost::optional<Size> recRateCutoff_;
     boost::optional<bool> recIsAveraged_;
+    bool telescopicValueDates_;
 
     mutable Spread fairPaySpread_;
     mutable Spread fairRecSpread_;

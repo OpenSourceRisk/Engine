@@ -47,8 +47,7 @@ public:
         boost::shared_ptr<ore::data::Conventions> conventions = boost::make_shared<Conventions>();
         conventions->add(boost::make_shared<ore::data::FXConvention>("EUR-USD-FX", "0", "EUR", "USD", "10000",
                                                                      "USD,EUR", "true"));
-        InstrumentConventions::instance().conventions() = conventions;
-
+        InstrumentConventions::instance().setConventions(conventions);
 
         // build vectors with dates and discount factors
         vector<Date> datesEUR = {asof_,
