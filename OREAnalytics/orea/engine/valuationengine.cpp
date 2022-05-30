@@ -240,7 +240,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         fixingTime += timer.elapsed().wall * 1e-9;
     }
 
-    if (1 < outputCube->samples()) {
+    if (dryRun) {
         LOG("Doing a dry run - fill remaining cube with random values.");
         for (Size sample = 1; sample < outputCube->samples(); ++sample) {
             for (Size i = 0; i < dates.size(); ++i) {
