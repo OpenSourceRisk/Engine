@@ -821,7 +821,7 @@ void CrossCcyBasisSwapConvention::build() {
     parseIborIndex(strSpreadIndex_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
-    flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? false : parseBool(strFlatIndexIsResettable_);
+    flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
 
     // default to index tenor, except for ON indices, where we default to 3M since the index tenor 1D does not make sense for them
 
@@ -888,7 +888,7 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strSpreadIndex_ = XMLUtils::getChildValue(node, "SpreadIndex", true);
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
-    strFlatIndexIsResettable_ = XMLUtils::getChildValue(node, "FlatIndexIsResettable", false);
+    strFlatIndexIsResettable_ = XMLUtils::getChildValue(node, "FlatIndexIsResettable", false, "true");
     strFlatTenor_ = XMLUtils::getChildValue(node, "FlatTenor", false);
     strSpreadTenor_ = XMLUtils::getChildValue(node, "SpreadTenor", false);
 
@@ -2361,7 +2361,7 @@ void Conventions::clear() {
     data_.clear();
 }
 
-std::string Conventions::flip(const std::string& id, const std::string& sep) const {
+std::string flip(const std::string& id, const std::string& sep) {
     boost::tokenizer<boost::escaped_list_separator<char>> tokenSplit(id, boost::escaped_list_separator<char>("\\", sep, "\""));
     std::vector<std::string> tokens(tokenSplit.begin(), tokenSplit.end());
     if (tokens.size() >= 2 && tokens[0].size() == 3 && tokens[1].size() == 3) {
@@ -2381,8 +2381,9 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     else {
         std::string id2 = flip(id);
 	auto it = data_.find(id2);
-	if ( it != data_.end())
+	if (it != data_.end() && boost::dynamic_pointer_cast<CrossCcyBasisSwapConvention>(it->second)) {
 	    return it->second;
+	}
 	else {
 	  QL_FAIL("Cannot find conventions for id " << id);
 	}

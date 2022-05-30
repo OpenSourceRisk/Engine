@@ -146,7 +146,6 @@ public:
     //@}
 
 private:
-  std::string flip(const std::string& id, const std::string& sep = "-") const;
     map<string, boost::shared_ptr<Convention>> data_;
     mutable boost::shared_mutex mutex_;
 };
@@ -1754,6 +1753,12 @@ private:
     QuantLib::Period availabilityLag_;
     QuantLib::Currency currency_;
 };
+
+/*! 
+  Flips the first two tokens in a string like CCY1-CCY2-TEXT,
+  only used in the context of CrossCcyBasisSwap convention IDs 
+*/
+std::string flip(const std::string& id, const std::string& sep = "-");
 
 } // namespace data
 } // namespace ore
