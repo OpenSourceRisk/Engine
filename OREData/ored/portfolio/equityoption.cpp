@@ -160,14 +160,6 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                                       << " for trade " << id() << ".");
         VanillaOptionTrade::build(engineFactory);
     }
-    
-
-    // LOG the volatility if the trade expiry date is in the future.
-    if (expiryDate_ > Settings::instance().evaluationDate()) {
-        DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
-                                << " and strike " << strike_ << " is "
-                                << market->equityVol(assetName_)->blackVol(expiryDate_, strike_));
-    }
 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = localStrike_;

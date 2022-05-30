@@ -26,6 +26,8 @@
 #include <functional>
 #include <ql/patterns/singleton.hpp>
 #include <string>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 
 namespace ore {
 namespace data {
@@ -47,9 +49,9 @@ public:
     virtual boost::shared_ptr<ReferenceDatum> build() const override { return boost::make_shared<T>(); }
 };
 
-class ReferenceDatumFactory : public QuantLib::Singleton<ReferenceDatumFactory> {
+class ReferenceDatumFactory : public QuantLib::Singleton<ReferenceDatumFactory, std::integral_constant<bool, true>> {
 
-    friend class QuantLib::Singleton<ReferenceDatumFactory>;
+    friend class QuantLib::Singleton<ReferenceDatumFactory, std::integral_constant<bool, true>>;
 
 public:
     typedef std::map<std::string, std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()>> map_type;
@@ -60,6 +62,7 @@ public:
                     std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder);
 
 private:
+    boost::shared_mutex mutex_;
     map_type map_;
 };
 

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,26 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/legdatafactory.hpp>
+/*! \file ored/marketdata/clonedloader.hpp
+    \brief loader providing cloned data from another loader
+    \ingroup marketdata
+*/
 
-using std::function;
-using std::string;
+#include <ored/marketdata/inmemoryloader.hpp>
+
+#pragma once
 
 namespace ore {
 namespace data {
 
-boost::shared_ptr<LegAdditionalData> LegDataFactory::build(const string& legType) {
-    boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    auto it = map_.find(legType);
-    if (it == map_.end())
-        return nullptr;
-    return it->second();
-}
+class ClonedLoader : public ore::data::InMemoryLoader {
 
-void LegDataFactory::addBuilder(const string& legType, function<boost::shared_ptr<LegAdditionalData>()> builder) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    map_[legType] = builder;
-}
+public:
+    ClonedLoader(const QuantLib::Date& loaderDate, const boost::shared_ptr<Loader>& inLoader);
+
+    const QuantLib::Date& getLoaderDate() const { return loaderDate_; };
+
+protected:
+    QuantLib::Date loaderDate_;
+};
 
 } // namespace data
 } // namespace ore

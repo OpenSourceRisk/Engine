@@ -68,18 +68,17 @@ public:
     /*! Return a map for the trade ID at index \p tradeIdx where the map key is the index of the
         risk factor shift and the map value is the NPV under that shift
     */
-    // Returning a const reference to the map makes the derived class have it as a member
-    virtual const std::map<QuantLib::Size, QuantLib::Real>& getTradeNPVs(Size tradeIdx) const = 0;
+    virtual std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(Size tradeIdx) const = 0;
 
     /*! Return a map for the \p tradeId where the map key is the index of the
         risk factor shift and the map value is the NPV under that shift
     */
-    const std::map<QuantLib::Size, QuantLib::Real>& getTradeNPVs(const std::string& tradeId) const {
+    std::map<QuantLib::Size, QuantLib::Real> getTradeNPVs(const std::string& tradeId) const {
         return getTradeNPVs(index(tradeId));
     }
 
     /*! Return the set of scenario indices with non-zero result */
-    virtual const std::set<QuantLib::Size>& relevantScenarios() const = 0;
+    virtual std::set<QuantLib::Size> relevantScenarios() const = 0;
 };
 
 } // namespace analytics

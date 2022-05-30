@@ -23,7 +23,7 @@
 #ifndef quantext_sofr_hpp
 #define quantext_sofr_hpp
 
-#include <ql/indexes/iborindex.hpp>
+#include <qle/indexes/ibor/termrateindex.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -35,7 +35,7 @@ public:
 };
 
 //! %Sofr term index, see https://www.cmegroup.com/market-data/cme-group-benchmark-administration/term-sofr.html#
-class SofrTerm : public IborIndex {
+class SofrTerm : public TermRateIndex {
 public:
     SofrTerm(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 };

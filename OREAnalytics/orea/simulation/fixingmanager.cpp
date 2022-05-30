@@ -309,11 +309,13 @@ bool StandardFixingManagerCashflowHandler::processCashflow(const boost::shared_p
     return true;
 }
 
-const std::set<boost::shared_ptr<FixingManagerCashflowHandler>>& FixingManagerCashflowHandlerFactory::handlers() const {
+std::set<boost::shared_ptr<FixingManagerCashflowHandler>> FixingManagerCashflowHandlerFactory::handlers() const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     return handlers_;
 }
 
 void FixingManagerCashflowHandlerFactory::addHandler(const boost::shared_ptr<FixingManagerCashflowHandler>& handler) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     handlers_.insert(handler);
 }
 

@@ -71,8 +71,6 @@ private:
     const ore::data::FXTriangulation& fxSpots_;
 };
 
-
-
 //! Wrapper class for building FX volatility structures
 /*!
   \ingroup curves
@@ -88,13 +86,15 @@ public:
                const std::map<string, boost::shared_ptr<FXSpot>>& fxSpots,
                const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-               const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves);
+               const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+               const bool buildCalibrationInfo);
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                const ore::data::FXTriangulation& fxSpots,
                const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
                const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-               const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves);
+               const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+               const bool buildCalibrationInfo);
     //@}
 
     //! \name Inspectors
@@ -127,7 +127,8 @@ private:
     void init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
               const FXLookup& fxSpots, const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
               const std::map<string, boost::shared_ptr<FXVolCurve>>& fxVols,
-              const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves);
+              const map<string, boost::shared_ptr<CorrelationCurve>>& correlationCurves,
+              const bool buildCalibrationInfo);
 
     void buildATMTriangulated(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                               boost::shared_ptr<FXVolatilityCurveConfig> config, const FXLookup& fxSpots,

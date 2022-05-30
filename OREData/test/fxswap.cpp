@@ -53,7 +53,7 @@ public:
 
         conventions->add(usdChfConv);
         conventions->add(usdGbpConv);
-        InstrumentConventions::instance().conventions() = conventions;
+        InstrumentConventions::instance().setConventions(conventions);
 
         // build discount
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);

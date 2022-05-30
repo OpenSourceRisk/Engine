@@ -42,7 +42,7 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
     boost::optional<bool> includeSpread, boost::optional<Period> lookback, boost::optional<Size> fixingDays,
     boost::optional<Size> rateCutoff, boost::optional<bool> isAveraged, boost::optional<bool> flatIncludeSpread,
     boost::optional<Period> flatLookback, boost::optional<Size> flatFixingDays, boost::optional<Size> flatRateCutoff,
-    boost::optional<bool> flatIsAveraged)
+    boost::optional<bool> flatIsAveraged, const bool telescopicValueDates)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
@@ -54,7 +54,8 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(
       spotFXSettleCalendarVec_(spotFXSettleCalendarVec), paymentLag_(paymentLag), flatPaymentLag_(flatPaymentLag),
       includeSpread_(includeSpread), lookback_(lookback), fixingDays_(fixingDays), rateCutoff_(rateCutoff),
       isAveraged_(isAveraged), flatIncludeSpread_(flatIncludeSpread), flatLookback_(flatLookback),
-      flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff), flatIsAveraged_(flatIsAveraged) {
+      flatFixingDays_(flatFixingDays), flatRateCutoff_(flatRateCutoff), flatIsAveraged_(flatIsAveraged),
+      telescopicValueDates_(telescopicValueDates) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();
@@ -155,7 +156,7 @@ void CrossCcyBasisSwapHelper::initializeDates() {
         spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0, spreadGearing_, flatLegNominal,
         flatLegCurrency_, flatLegSchedule, flatIndex_, spreadOnFlatLeg_, flatGearing_, paymentLag_, flatPaymentLag_,
         includeSpread_, lookback_, fixingDays_, rateCutoff_, isAveraged_, flatIncludeSpread_, flatLookback_,
-        flatFixingDays_, flatRateCutoff_, flatIsAveraged_);
+        flatFixingDays_, flatRateCutoff_, flatIsAveraged_, telescopicValueDates_);
 
     boost::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {

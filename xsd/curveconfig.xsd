@@ -354,6 +354,7 @@
         <xs:all>
           <xs:element type="xs:string" name="Index"/>
           <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0"/>
+          <xs:element type="xs:integer" name="ONCapSettlementDays" minOccurs="0"/>
         </xs:all>
           </xs:complexType>
         </xs:element>
@@ -380,6 +381,7 @@
       <xs:element type="indexNameType" name="IborIndex" minOccurs="0" maxOccurs="1"/> <!-- deprecated -->
       <xs:element type="indexNameType" name="Index" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="RateComputationPeriod" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="ONCapSettlementDays" minOccurs="0"/>
       <xs:element type="xs:string" name="DiscountCurve" minOccurs="0"/>
       <xs:element type="xs:string" name="AtmTenors" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:nonNegativeInteger" name="SettlementDays" minOccurs="0" maxOccurs="1"/>

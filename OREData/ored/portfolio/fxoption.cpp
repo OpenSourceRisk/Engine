@@ -56,14 +56,6 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Build the trade using the shared functionality in the base class.
     VanillaOptionTrade::build(engineFactory);
-
-    // LOG the volatility if the trade expiry date is in the future.
-    if (expiryDate_ > Settings::instance().evaluationDate()) {
-        const string& ccyPairCode = assetName_ + currency_;
-        DLOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with expiry " << expiryDate_
-                                << " and strike " << std::setprecision(6) << strike_ << " is "
-                                << market->fxVol(ccyPairCode)->blackVol(expiryDate_, strike_));
-    }
     
     additionalData_["boughtCurrency"] = assetName_; 
     additionalData_["boughtAmount"] = quantity_;

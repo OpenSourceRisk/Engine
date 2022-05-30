@@ -272,7 +272,8 @@ template <class T> std::vector<T> parseVectorOfValues(std::vector<std::string> s
     return vec;
 }
 
-std::vector<string> parseListOfValues(string s);
+std::vector<string> parseListOfValues(string s, const char escape = '\\', const char delim = ',',
+                                      const char quote = '\"');
 
 enum class AmortizationType {
     None,

@@ -28,7 +28,8 @@ namespace data {
 SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, const Loader& loader,
                                    const CurveConfigurations& curveConfigs,
                                    const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices,
-                                   const map<string, boost::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves)
+                                   const map<string, boost::shared_ptr<GenericYieldVolCurve>>& requiredVolCurves,
+                                   const bool buildCalibrationInfo)
     : GenericYieldVolCurve(
           asof, loader, curveConfigs, curveConfigs.swaptionVolCurveConfig(spec.curveConfigID()), requiredSwapIndices,
           requiredVolCurves,
@@ -55,7 +56,8 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                   return false;
               term = q->term();
               return true;
-          }),
+          },
+          buildCalibrationInfo),
       spec_(spec) {}
 
 } // namespace data
