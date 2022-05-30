@@ -27,6 +27,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <unordered_map>
 
 namespace ore {
 namespace data {
@@ -56,6 +57,7 @@ std::set<MarketObject> getMarketObjectTypes();
 class MarketConfiguration {
 public:
     MarketConfiguration();
+    MarketConfiguration(map<MarketObject, string> marketObjectIds);
     string operator()(const MarketObject o) const;
     void setId(const MarketObject o, const string& id);
     void add(const MarketConfiguration& o);
@@ -81,7 +83,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const map<string, MarketConfiguration>& configurations() const;
+    const std::unordered_map<string, MarketConfiguration>& configurations() const;
     bool hasConfiguration(const string& configuration) const;
     bool hasMarketObject(const MarketObject& o) const;
 
@@ -132,7 +134,7 @@ private:
 
        A configuration label "default" is always added, which maps all market objects to the market default
        configuration "default". The entries for the configuration label "default" can be overwritten though. */
-    map<string, MarketConfiguration> configurations_;
+    std::unordered_map<string, MarketConfiguration> configurations_;
 
     /* For each market object type, maps the intermediate configuration id to a list of assignments, e.g.
 
@@ -151,7 +153,7 @@ private:
 
 // inline
 
-inline const map<string, MarketConfiguration>& TodaysMarketParameters::configurations() const {
+inline const std::unordered_map<string, MarketConfiguration>& TodaysMarketParameters::configurations() const {
     return configurations_;
 }
 

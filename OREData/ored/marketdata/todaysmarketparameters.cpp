@@ -97,6 +97,14 @@ MarketConfiguration::MarketConfiguration() {
     }
 }
 
+MarketConfiguration::MarketConfiguration(map<MarketObject, string> marketObjectIds) {
+    if (marketObjectIds.size() == 0)
+        MarketConfiguration();
+    
+    for (const auto& moi : marketObjectIds)
+        setId(moi.first, moi.second);
+}
+
 string MarketConfiguration::operator()(const MarketObject o) const {
     QL_REQUIRE(marketObjectIds_.find(o) != marketObjectIds_.end(),
                "MarketConfiguration: did not find MarketObject " << o << " (this is unexpected)");
