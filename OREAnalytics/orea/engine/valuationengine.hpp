@@ -84,7 +84,9 @@ public:
         //! Output cube for storing counterparty-level survival probabilities
         boost::shared_ptr<analytics::NPVCube> outputCptyCube = nullptr,
         //! Calculators for filling counterparty-level results
-        std::vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators = {});
+        std::vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators = {},
+        //! Limit samples to one and fill the rest of the cube with random values
+        bool dryRun = false);
 
 private:
     void recalibrateModels();

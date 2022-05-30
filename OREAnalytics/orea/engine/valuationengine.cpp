@@ -66,9 +66,9 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                 vector<boost::shared_ptr<ValuationCalculator>> calculators, bool mporStickyDate,
                                 boost::shared_ptr<analytics::NPVCube> outputCubeNettingSet,
                                 boost::shared_ptr<analytics::NPVCube> outputCptyCube,
-                                vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators) {
+                                vector<boost::shared_ptr<CounterpartyCalculator>> cptyCalculators, bool dryRun) {
 
-    LOG("Build cube with mporStickyDate=" << mporStickyDate);
+    LOG("Build cube with mporStickyDate=" << mporStickyDate << ", dryRun=" << std::boolalpha << dryRun);
 
     QL_REQUIRE(portfolio->size() > 0, "ValuationEngine: Error portfolio is empty");
 
@@ -154,7 +154,8 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
     // We call Cube::samples() each time her to allow for dynamic stopping times
     // e.g. MC convergence tests
-    for (Size sample = 0; sample < outputCube->samples(); ++sample) {
+    for (Size sample = 0; sample < (dryRun ? std::min<Size>(1, outputCube->samples()) : outputCube->samples());
+         ++sample) {
         updateProgress(sample, outputCube->samples());
 
         for (auto& trade : trades)
@@ -237,6 +238,22 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         timer.start();
         simMarket_->fixingManager()->reset();
         fixingTime += timer.elapsed().wall * 1e-9;
+    }
+
+    if (1 < outputCube->samples()) {
+        LOG("Doing a dry run - fill remaining cube with random values.");
+        for (Size sample = 1; sample < outputCube->samples(); ++sample) {
+            for (Size i = 0; i < dates.size(); ++i) {
+                for (Size j = 0; j < trades.size(); ++j) {
+                    for (Size d = 0; d < outputCube->depth(); ++d) {
+                        // add some noise, but only for the first few samples, so that e.g.
+                        // a sensi run is not polluted with too many sensis for each trade
+                        Real noise = sample < 10 ? static_cast<Real>(i + j + d + sample) : 0.0;
+                        outputCube->set(outputCube->getT0(j, d) + noise, j, i, sample, d);
+                    }
+                }
+            }
+        }
     }
 
     simMarket_->reset();
