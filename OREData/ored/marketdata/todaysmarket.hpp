@@ -77,8 +77,7 @@ class CorrelationCurve;
 
   \ingroup marketdata
  */
-class TodaysMarket : public MarketImpl, 
-                     public boost::enable_shared_from_this<TodaysMarket> {
+class TodaysMarket : public MarketImpl {
 public:
     //! Constructor taking pointers and allowing for a lazy build of the market objects
     TodaysMarket( //! Valuation date

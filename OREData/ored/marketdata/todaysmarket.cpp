@@ -53,8 +53,7 @@
 
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/map.hpp>
-#include <boost/range/adaptor/reversed.hpp>	
-#include <boost/make_unique.hpp>	
+#include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
 using namespace QuantLib;
