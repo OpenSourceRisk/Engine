@@ -821,6 +821,7 @@
     <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />
+    <ClInclude Include="qle\termstructures\overnightfallbackcurve.hpp" />
     <ClInclude Include="qle\termstructures\piecewiseatmoptionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\piecewiseoptionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp" />
@@ -1139,6 +1140,7 @@
     <ClCompile Include="qle\termstructures\optionletstripper.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper1.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp" />
+    <ClCompile Include="qle\termstructures\overnightfallbackcurve.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp" />
     <ClCompile Include="qle\termstructures\proxyoptionletvolatility.cpp" />

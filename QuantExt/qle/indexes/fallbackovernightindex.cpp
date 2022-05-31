@@ -23,7 +23,7 @@
 
 #include <qle/indexes/fallbackovernightindex.hpp>
 
-#include <qle/termstructures/iborfallbackcurve.hpp>
+#include <qle/termstructures/overnightfallbackcurve.hpp>
 
 namespace QuantExt {
 
@@ -35,7 +35,7 @@ FallbackOvernightIndex::FallbackOvernightIndex(const boost::shared_ptr<Overnight
                                     : boost::dynamic_pointer_cast<OvernightIndex>(
                                           rfrIndex->clone(originalIndex->forwardingTermStructure())),
                         spread, switchDate,
-                        useRfrCurve ? Handle<YieldTermStructure>(boost::make_shared<IborFallbackCurve>(
+                        useRfrCurve ? Handle<YieldTermStructure>(boost::make_shared<OvernightFallbackCurve>(
                                           originalIndex, rfrIndex, spread, switchDate))
                                     : originalIndex->forwardingTermStructure()) {}
 
