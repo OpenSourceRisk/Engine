@@ -44,7 +44,7 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     boost::optional<Size> foreignFixingDays, boost::optional<Size> foreignRateCutoff,
     boost::optional<bool> foreignIsAveraged, boost::optional<bool> domesticIncludeSpread,
     boost::optional<Period> domesticLookback, boost::optional<Size> domesticFixingDays,
-    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged)
+    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged, const bool telescopicValueDates)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex),
@@ -58,7 +58,8 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
       foreignFixingDays_(foreignFixingDays), foreignRateCutoff_(foreignRateCutoff),
       foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
       domesticLookback_(domesticLookback), domesticFixingDays_(domesticFixingDays),
-      domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged) {
+      domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged),
+      telescopicValueDates_(telescopicValueDates) {
 
     foreignCurrency_ = foreignCcyIndex_->currency();
     domesticCurrency_ = domesticCcyIndex_->currency();
@@ -149,7 +150,8 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
         foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0, domesticCurrency_,
         domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx, true, foreignPaymentLag_, domesticPaymentLag_,
         foreignIncludeSpread_, foreignLookback_, foreignFixingDays_, foreignRateCutoff_, foreignIsAveraged_,
-        domesticIncludeSpread_, domesticLookback_, domesticFixingDays_, domesticRateCutoff_, domesticIsAveraged_);
+        domesticIncludeSpread_, domesticLookback_, domesticFixingDays_, domesticRateCutoff_, domesticIsAveraged_,
+        telescopicValueDates_);
 
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
         domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_);

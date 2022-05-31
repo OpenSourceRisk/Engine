@@ -66,6 +66,7 @@
     <ClInclude Include="ored\marketdata\basecorrelationcurve.hpp" />
     <ClInclude Include="ored\marketdata\capfloorvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\cdsvolcurve.hpp" />
+    <ClInclude Include="ored\marketdata\clonedloader.hpp" />
     <ClInclude Include="ored\marketdata\commoditycurve.hpp" />
     <ClInclude Include="ored\marketdata\commodityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\compositeloader.hpp" />
@@ -283,6 +284,7 @@
     <ClCompile Include="ored\marketdata\basecorrelationcurve.cpp" />
     <ClCompile Include="ored\marketdata\capfloorvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\cdsvolcurve.cpp" />
+    <ClCompile Include="ored\marketdata\clonedloader.cpp" />
     <ClCompile Include="ored\marketdata\commoditycurve.cpp" />
     <ClCompile Include="ored\marketdata\commodityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\correlationcurve.cpp" />

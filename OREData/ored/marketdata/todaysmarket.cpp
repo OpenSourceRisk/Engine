@@ -70,15 +70,15 @@ namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const boost::shared_ptr<TodaysMarketParameters>& params,
                            const boost::shared_ptr<Loader>& loader,
-                           const boost::shared_ptr<CurveConfigurations>& curveConfigs,
-                           const bool continueOnError,
+                           const boost::shared_ptr<CurveConfigurations>& curveConfigs, const bool continueOnError,
                            const bool loadFixings, const bool lazyBuild,
                            const boost::shared_ptr<ReferenceDataManager>& referenceData,
-                           const bool preserveQuoteLinkage, const IborFallbackConfig& iborFallbackConfig)
-    : MarketImpl(), params_(params), loader_(loader), curveConfigs_(curveConfigs),
-      continueOnError_(continueOnError), loadFixings_(loadFixings), lazyBuild_(lazyBuild),
-      preserveQuoteLinkage_(preserveQuoteLinkage), referenceData_(referenceData),
-      iborFallbackConfig_(iborFallbackConfig) {
+                           const bool preserveQuoteLinkage, const IborFallbackConfig& iborFallbackConfig,
+                           const bool buildCalibrationInfo)
+    : MarketImpl(), params_(params), loader_(loader), curveConfigs_(curveConfigs), continueOnError_(continueOnError),
+      loadFixings_(loadFixings), lazyBuild_(lazyBuild), preserveQuoteLinkage_(preserveQuoteLinkage),
+      referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
+      buildCalibrationInfo_(buildCalibrationInfo) {
     QL_REQUIRE(params_, "TodaysMarket: TodaysMarketParameters are null");
     QL_REQUIRE(loader_, "TodaysMarket: Loader is null");
     QL_REQUIRE(curveConfigs_, "TodaysMarket: CurveConfigurations are null");
@@ -243,10 +243,10 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredYieldCurves_.find(ycspec->name());
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
-                boost::shared_ptr<YieldCurve> yieldCurve =
-                    boost::make_shared<YieldCurve>(asof_, *ycspec, *curveConfigs_, *loader_,
-                                                   requiredYieldCurves_, requiredDefaultCurves_, fxT_, referenceData_,
-                                                   iborFallbackConfig_, preserveQuoteLinkage_, requiredDiscountCurves_);
+                boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
+                    asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, fxT_,
+                    referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, requiredDiscountCurves_,
+                    buildCalibrationInfo_);
                 calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");
@@ -341,7 +341,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building FXVolatility for asof " << asof_);
                 boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
                     asof_, *fxvolspec, *loader_, *curveConfigs_, fxT_, requiredYieldCurves_, requiredFxVolCurves_,
-                    requiredCorrelationCurves_);
+                    requiredCorrelationCurves_, buildCalibrationInfo_);
                 calibrationInfo_->fxVolCalibrationInfo[fxvolspec->name()] = fxVolCurve->calibrationInfo();
                 itr = requiredFxVolCurves_.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
             }
@@ -364,7 +364,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Building Swaption Volatility (" << node.name << ") for asof " << asof_);
                 boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve = boost::make_shared<SwaptionVolCurve>(
                     asof_, *swvolspec, *loader_, *curveConfigs_, requiredSwapIndices_[configuration],
-                    requiredGenericYieldVolCurves_);
+                    requiredGenericYieldVolCurves_, buildCalibrationInfo_);
                 calibrationInfo_->irVolCalibrationInfo[swvolspec->name()] = swaptionVolCurve->calibrationInfo();
                 itr = requiredGenericYieldVolCurves_.insert(make_pair(swvolspec->name(), swaptionVolCurve)).first;
             }
@@ -391,8 +391,8 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredGenericYieldVolCurves_.find(ydvolspec->name());
             if (itr == requiredGenericYieldVolCurves_.end()) {
                 DLOG("Building Yield Volatility for asof " << asof_);
-                boost::shared_ptr<YieldVolCurve> yieldVolCurve =
-                    boost::make_shared<YieldVolCurve>(asof_, *ydvolspec, *loader_, *curveConfigs_);
+                boost::shared_ptr<YieldVolCurve> yieldVolCurve = boost::make_shared<YieldVolCurve>(
+                    asof_, *ydvolspec, *loader_, *curveConfigs_, buildCalibrationInfo_);
                 calibrationInfo_->irVolCalibrationInfo[ydvolspec->name()] = yieldVolCurve->calibrationInfo();
                 itr = requiredGenericYieldVolCurves_.insert(make_pair(ydvolspec->name(), yieldVolCurve)).first;
             }
@@ -440,7 +440,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // Now create cap/floor vol curve
                 boost::shared_ptr<CapFloorVolCurve> capFloorVolCurve = boost::make_shared<CapFloorVolCurve>(
                     asof_, *cfVolSpec, *loader_, *curveConfigs_, iborIndex.currentLink(), discountCurve, sourceIndex,
-                    targetIndex, requiredCapFloorVolCurves_);
+                    targetIndex, requiredCapFloorVolCurves_, buildCalibrationInfo_);
                 calibrationInfo_->irVolCalibrationInfo[cfVolSpec->name()] = capFloorVolCurve->calibrationInfo();
                 itr = requiredCapFloorVolCurves_.insert(make_pair(cfVolSpec->name(), capFloorVolCurve)).first;
             }
@@ -524,7 +524,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredInflationCurves_.end()) {
                 DLOG("Building InflationCurve " << inflationspec->name() << " for asof " << asof_);
                 boost::shared_ptr<InflationCurve> inflationCurve = boost::make_shared<InflationCurve>(
-                    asof_, *inflationspec, *loader_, *curveConfigs_, requiredYieldCurves_);
+                    asof_, *inflationspec, *loader_, *curveConfigs_, requiredYieldCurves_, buildCalibrationInfo_);
                 itr = requiredInflationCurves_.insert(make_pair(inflationspec->name(), inflationCurve)).first;
                 calibrationInfo_->inflationCurveCalibrationInfo[inflationspec->name()] =
                     inflationCurve->calibrationInfo();
@@ -598,7 +598,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredEquityCurves_.end()) {
                 DLOG("Building EquityCurve for asof " << asof_);
                 boost::shared_ptr<EquityCurve> equityCurve = boost::make_shared<EquityCurve>(
-                    asof_, *equityspec, *loader_, *curveConfigs_, requiredYieldCurves_);
+                    asof_, *equityspec, *loader_, *curveConfigs_, requiredYieldCurves_, buildCalibrationInfo_);
                 itr = requiredEquityCurves_.insert(make_pair(equityspec->name(), equityCurve)).first;
                 calibrationInfo_->dividendCurveCalibrationInfo[equityspec->name()] = equityCurve->calibrationInfo();
             }
@@ -633,9 +633,10 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 // In addition we should maybe specify the eqIndex name in the vol curve config explicitly
                 // instead of assuming that it has the same curve id as the vol curve to be build?
                 Handle<EquityIndex> eqIndex = MarketImpl::equityCurve(eqvolspec->curveConfigID(), configuration);
-                boost::shared_ptr<EquityVolCurve> eqVolCurve =
-                    boost::make_shared<EquityVolCurve>(asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex,
-                        requiredEquityCurves_, requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, fxIndexTri);
+                boost::shared_ptr<EquityVolCurve> eqVolCurve = boost::make_shared<EquityVolCurve>(
+                    asof_, *eqvolspec, *loader_, *curveConfigs_, eqIndex, requiredEquityCurves_,
+                    requiredEquityVolCurves_, requiredFxVolCurves_, requiredCorrelationCurves_, fxIndexTri,
+                    buildCalibrationInfo_);
                 itr = requiredEquityVolCurves_.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
                 calibrationInfo_->eqVolCalibrationInfo[eqvolspec->name()] = eqVolCurve->calibrationInfo();
             }

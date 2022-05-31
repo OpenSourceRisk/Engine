@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2022 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,19 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/portfolio/types.hpp
-    \brief payment lag
-    \ingroup portfolio
+/*! \file scenario/scenariogenerator.hpp
+    \brief Scenario generator base classes
+    \ingroup scenario
 */
 
 #pragma once
 
-#include <ql/types.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 
 namespace ore {
-namespace data {
+namespace analytics {
 
-typedef QuantLib::Natural PaymentLag;
+class ClonedScenarioGenerator : public ScenarioGenerator {
+public:
+    ClonedScenarioGenerator(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+                            const std::vector<Date>& dates, const Size nSamples);
+    boost::shared_ptr<Scenario> next(const Date& d) override;
+    virtual void reset() override;
 
-} // namespace data
+private:
+    std::vector<boost::shared_ptr<Scenario>> scenarios_;
+    Size i_ = 0;
+};
+
+} // namespace analytics
 } // namespace ore

@@ -682,6 +682,9 @@
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\types.hpp" />
+    <ClInclude Include="ored\marketdata\clonedloader.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -1196,6 +1199,9 @@
     </ClCompile>
     <ClCompile Include="ored\utilities\indexnametranslator.cpp">
       <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\clonedloader.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

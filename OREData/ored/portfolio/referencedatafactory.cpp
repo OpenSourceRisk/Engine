@@ -24,6 +24,7 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& refDatumType) {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
     auto it = map_.find(refDatumType);
     if (it == map_.end())
         return nullptr;
@@ -32,6 +33,7 @@ boost::shared_ptr<ReferenceDatum> ReferenceDatumFactory::build(const string& ref
 
 void ReferenceDatumFactory::addBuilder(const string& refDatumType,
                                        std::function<boost::shared_ptr<AbstractReferenceDatumBuilder>()> builder) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     map_[refDatumType] = builder;
 }
 

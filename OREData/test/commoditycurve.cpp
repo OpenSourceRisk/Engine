@@ -85,7 +85,7 @@ boost::shared_ptr<CommodityCurve> createCurve(const string& inputDir,
     boost::shared_ptr<Conventions> conventions = boost::make_shared<Conventions>();
     string filename = inputDir + "/conventions.xml";
     conventions->fromFile(TEST_INPUT_FILE(filename));
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
 
     CurveConfigurations curveConfigs;
     filename = inputDir + "/" + curveConfigFile;
@@ -107,7 +107,7 @@ boost::shared_ptr<TodaysMarket> createTodaysMarket(const Date& asof, const strin
 
     auto conventions = boost::make_shared<Conventions>();
     conventions->fromFile(TEST_INPUT_FILE(string(inputDir + "/conventions.xml")));
-    InstrumentConventions::instance().conventions() = conventions;
+    InstrumentConventions::instance().setConventions(conventions);
 
     auto curveConfigs = boost::make_shared<CurveConfigurations>();
     curveConfigs->fromFile(TEST_INPUT_FILE(string(inputDir + "/curveconfig.xml")));

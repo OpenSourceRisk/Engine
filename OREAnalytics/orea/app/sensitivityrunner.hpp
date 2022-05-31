@@ -64,10 +64,9 @@ public:
 
     virtual ~SensitivityRunner(){};
 
-    virtual void runSensitivityAnalysis(
-        boost::shared_ptr<ore::data::Market> market, 
-        const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-        const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters());
+    virtual void runSensitivityAnalysis(boost::shared_ptr<ore::data::Market> market,
+                                        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs,
+                                        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams);
 
     //! Initialize input parameters to the sensitivities analysis
     virtual void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,

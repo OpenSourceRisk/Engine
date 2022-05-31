@@ -52,7 +52,7 @@ public:
                            Spread spread = 0.0, Natural rateCutoff = 0, const DayCounter& dayCounter = DayCounter(),
                            const Period& lookback = 0 * Days, const Size fixingDays = Null<Size>(),
                            const Date& rateComputationStartDate = Null<Date>(),
-                           const Date& rateComputationEndDate = Null<Date>());
+                           const Date& rateComputationEndDate = Null<Date>(), const bool telescopicValueDates = false);
     //! \name Inspectors
     //@{
     //! fixing dates for the rates to be averaged
@@ -174,6 +174,7 @@ public:
     AverageONLeg& withGearings(const std::vector<Real>& gearings);
     AverageONLeg& withSpread(Spread spread);
     AverageONLeg& withSpreads(const std::vector<Spread>& spreads);
+    AverageONLeg& withTelescopicValueDates(bool telescopicValueDates);
     AverageONLeg& withRateCutoff(Natural rateCutoff);
     AverageONLeg& withPaymentCalendar(const Calendar& calendar);
     AverageONLeg& withPaymentLag(Natural lag);
@@ -203,6 +204,7 @@ private:
     Natural paymentLag_;
     std::vector<Real> gearings_;
     std::vector<Spread> spreads_;
+    bool telescopicValueDates_;
     Calendar paymentCalendar_;
     Natural rateCutoff_;
     Period lookback_;

@@ -57,7 +57,7 @@ struct TodaysMarketArguments {
 
         string filename = inputDir + "/" + conventionsFile;
         conventions->fromFile(TEST_INPUT_FILE(filename));
-        InstrumentConventions::instance().conventions() = conventions;
+        InstrumentConventions::instance().setConventions(conventions);
         
         filename = inputDir + "/curveconfig.xml";
         curveConfigs->fromFile(TEST_INPUT_FILE(filename));

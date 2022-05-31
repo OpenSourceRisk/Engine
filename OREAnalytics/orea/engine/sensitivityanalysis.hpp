@@ -62,25 +62,24 @@ class ValuationCalculator;
 class SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor
-    SensitivityAnalysis(
-        const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
-        const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
-        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, 
-        const bool recalibrateModels,
-        const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-        const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-        const bool nonShiftedBaseCurrencyConversion = false,
-        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
-        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
-        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
-        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-        const bool continueOnError = false, bool xccyDiscounting = false, bool analyticFxSensis = false);
+    SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
+                        const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+                        const boost::shared_ptr<ore::data::EngineData>& engineData,
+                        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const bool recalibrateModels,
+                        const boost::shared_ptr<ore::data::CurveConfigurations>& curveConfigs = nullptr,
+                        const boost::shared_ptr<ore::data::TodaysMarketParameters>& todaysMarketParams = nullptr,
+                        const bool nonShiftedBaseCurrencyConversion = false,
+                        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
+                        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
+                        const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
+                        const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
+                        const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false);
 
     virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
-    void generateSensitivities(boost::shared_ptr<NPVSensiCube> cube = boost::shared_ptr<NPVSensiCube>());
+    virtual void generateSensitivities(boost::shared_ptr<NPVSensiCube> cube = boost::shared_ptr<NPVSensiCube>());
 
     //! The ASOF date for the sensitivity analysis
     virtual const QuantLib::Date asof() const { return asof_; }
@@ -141,9 +140,9 @@ protected:
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     bool recalibrateModels_;
     //! Optional curve configurations. Used in building the scenario sim market.
-    ore::data::CurveConfigurations curveConfigs_;
+    boost::shared_ptr<ore::data::CurveConfigurations> curveConfigs_;
     //! Optional todays market parameters. Used in building the scenario sim market.
-    ore::data::TodaysMarketParameters todaysMarketParams_;
+    boost::shared_ptr<ore::data::TodaysMarketParameters> todaysMarketParams_;
     bool overrideTenors_;
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
@@ -158,10 +157,11 @@ protected:
     boost::shared_ptr<EngineData> engineData_;
     //! the portfolio (provided as input)
     boost::shared_ptr<Portfolio> portfolio_;
-    //! use separate discount curves for xccy curves
-    bool xccyDiscounting_;
     //! Extract analytic FX sensitivities on trades where possible.
     bool analyticFxSensis_;
+    //! do dry run
+    bool dryRun_;
+
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders

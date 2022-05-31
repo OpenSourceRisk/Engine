@@ -29,10 +29,10 @@ OvernightIndexedBasisSwap::OvernightIndexedBasisSwap(Type type, Real nominal, co
                                                      const boost::shared_ptr<OvernightIndex>& overnightIndex,
                                                      const Schedule& iborSchedule,
                                                      const boost::shared_ptr<IborIndex>& iborIndex, Spread oisSpread,
-                                                     Spread iborSpread)
+                                                     Spread iborSpread, const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(std::vector<Real>(1, nominal)), oisSchedule_(oisSchedule),
       overnightIndex_(overnightIndex), iborSchedule_(iborSchedule), iborIndex_(iborIndex), oisSpread_(oisSpread),
-      iborSpread_(iborSpread) {
+      iborSpread_(iborSpread), telescopicValueDates_(telescopicValueDates) {
 
     initialize();
 }
@@ -41,9 +41,11 @@ OvernightIndexedBasisSwap::OvernightIndexedBasisSwap(Type type, std::vector<Real
                                                      const boost::shared_ptr<OvernightIndex>& overnightIndex,
                                                      const Schedule& iborSchedule,
                                                      const boost::shared_ptr<QuantLib::IborIndex>& iborIndex,
-                                                     Spread oisSpread, Spread iborSpread)
+                                                     Spread oisSpread, Spread iborSpread,
+                                                     const bool telescopicValueDates)
     : Swap(2), type_(type), nominals_(nominals), oisSchedule_(oisSchedule), overnightIndex_(overnightIndex),
-      iborSchedule_(iborSchedule), iborIndex_(iborIndex), oisSpread_(oisSpread), iborSpread_(iborSpread) {
+      iborSchedule_(iborSchedule), iborIndex_(iborIndex), oisSpread_(oisSpread), iborSpread_(iborSpread),
+      telescopicValueDates_(telescopicValueDates) {
 
     initialize();
 }
@@ -51,7 +53,10 @@ OvernightIndexedBasisSwap::OvernightIndexedBasisSwap(Type type, std::vector<Real
 void OvernightIndexedBasisSwap::initialize() {
     legs_[0] = IborLeg(iborSchedule_, iborIndex_).withNotionals(nominals_).withSpreads(iborSpread_);
 
-    legs_[1] = OvernightLeg(oisSchedule_, overnightIndex_).withNotionals(nominals_).withSpreads(oisSpread_);
+    legs_[1] = OvernightLeg(oisSchedule_, overnightIndex_)
+                   .withNotionals(nominals_)
+                   .withSpreads(oisSpread_)
+                   .withTelescopicValueDates(telescopicValueDates_);
 
     for (Size j = 0; j < 2; ++j) {
         for (Leg::iterator i = legs_[j].begin(); i != legs_[j].end(); ++i)

@@ -42,9 +42,9 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
-    void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, 
-                                               const CurveConfigurations& curveConfigs,
-                                               const TodaysMarketParameters& todaysMarketParams) {
+void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
+                                               const boost::shared_ptr<CurveConfigurations>& curveConfigs,
+                                               const boost::shared_ptr<TodaysMarketParameters>& todaysMarketParams) {
 
     MEM_LOG;
     LOG("Running sensitivity analysis");
@@ -66,9 +66,9 @@ namespace analytics {
     }
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, 
-        recalibrateModels, curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_,
-        referenceData_, iborFallbackConfig_, continueOnError_, false, analyticFxSensis);
+        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData_, recalibrateModels,
+        curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_, referenceData_,
+        iborFallbackConfig_, continueOnError_, analyticFxSensis);
     sensiAnalysis->generateSensitivities();
 
     simMarket_ = sensiAnalysis->simMarket();

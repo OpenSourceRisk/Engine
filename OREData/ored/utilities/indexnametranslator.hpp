@@ -26,6 +26,8 @@
 #include <ql/patterns/singleton.hpp>
 
 #include <boost/bimap.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 
 #include <string>
 
@@ -38,7 +40,7 @@ namespace data {
     TODO we might use this class to get rid of the "qlToOREIndexNames" maps in the leg builders, for this we need to
     cover all index types in the translator first.
 */
-class IndexNameTranslator : public QuantLib::Singleton<IndexNameTranslator> {
+class IndexNameTranslator : public QuantLib::Singleton<IndexNameTranslator, std::integral_constant<bool, true>> {
 public:
     //! throws if qlName is not known
     std::string oreName(const std::string& qlName) const;
@@ -54,6 +56,7 @@ public:
 
 private:
     boost::bimap<std::string, std::string> data_;
+    mutable boost::shared_mutex mutex_;
 };
 
 } // namespace data

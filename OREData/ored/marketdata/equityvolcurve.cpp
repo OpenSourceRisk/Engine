@@ -60,7 +60,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                                const map<string, boost::shared_ptr<EquityVolCurve>>& requiredEquityVolCurves,
                                const map<string, boost::shared_ptr<FXVolCurve>>& requiredFxVolCurves,
                                const map<string, boost::shared_ptr<CorrelationCurve>>& requiredCorrelationCurves,
-                               const boost::optional<FXIndexTriangulation>& fxIndices) {
+                               const boost::optional<FXIndexTriangulation>& fxIndices,
+                               const bool buildCalibrationInfo) {
 
     try {
         LOG("EquityVolCurve: start building equity volatility structure with ID " << spec.curveConfigID());
@@ -125,7 +126,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
             QL_FAIL("EquityVolCurve: Failed to build equity volatility structure from " << config.volatilityConfig().size() << " volatility configs provided.");
         LOG("EquityVolCurve: finished building equity volatility structure with ID " << spec.curveConfigID());
 
-        buildCalibrationInfo(asof, curveConfigs, config, eqIndex);
+        if (buildCalibrationInfo) {
+            this->buildCalibrationInfo(asof, curveConfigs, config, eqIndex);
+        }
 
     } catch (exception& e) {
         QL_FAIL("Equity volatility curve building failed : " << e.what());

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2022 Quaternion Risk Management Ltd
+ Copyright (C) 2020 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,19 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/portfolio/types.hpp
-    \brief payment lag
-    \ingroup portfolio
+/*! \file ored/marketdata/clonedloader.hpp
+    \brief loader providing cloned data from another loader
+    \ingroup marketdata
 */
 
-#pragma once
+#include <ored/marketdata/inmemoryloader.hpp>
 
-#include <ql/types.hpp>
+#pragma once
 
 namespace ore {
 namespace data {
 
-typedef QuantLib::Natural PaymentLag;
+class ClonedLoader : public ore::data::InMemoryLoader {
+
+public:
+    ClonedLoader(const QuantLib::Date& loaderDate, const boost::shared_ptr<Loader>& inLoader);
+
+    const QuantLib::Date& getLoaderDate() const { return loaderDate_; };
+
+protected:
+    QuantLib::Date loaderDate_;
+};
 
 } // namespace data
 } // namespace ore

@@ -404,6 +404,8 @@ indexes/ibor/sgdsor.hpp
 indexes/ibor/skkbribor.hpp
 indexes/ibor/sofr.hpp
 indexes/ibor/sonia.hpp
+indexes/ibor/sora.hpp
+indexes/ibor/termrateindex.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
