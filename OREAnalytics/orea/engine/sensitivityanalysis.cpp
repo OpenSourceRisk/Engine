@@ -64,14 +64,14 @@ SensitivityAnalysis::SensitivityAnalysis(
     std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
     std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
     const boost::shared_ptr<ReferenceDataManager>& referenceData, const IborFallbackConfig& iborFallbackConfig,
-    const bool continueOnError, bool analyticFxSensis)
+    const bool continueOnError, bool analyticFxSensis, bool dryRun)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market ? market->asofDate() : Date()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), recalibrateModels_(recalibrateModels),
       curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), extraEngineBuilders_(extraEngineBuilders),
       extraLegBuilders_(extraLegBuilders), referenceData_(referenceData), iborFallbackConfig_(iborFallbackConfig),
       continueOnError_(continueOnError), engineData_(engineData), portfolio_(portfolio),
-      analyticFxSensis_(analyticFxSensis), initialized_(false), computed_(false) {}
+      analyticFxSensis_(analyticFxSensis), dryRun_(dryRun), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -119,7 +119,7 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
     for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
-    engine.buildCube(portfolio_, cube, calculators);
+    engine.buildCube(portfolio_, cube, calculators, true, nullptr, nullptr, {}, dryRun_);
 
     addAnalyticFxSensitivities();
 
