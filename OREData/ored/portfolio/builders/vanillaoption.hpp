@@ -227,9 +227,8 @@ protected:
         // We follow the way FdBlackScholesBarrierEngine determines maturity for time grid generation
         Handle<YieldTermStructure> riskFreeRate =
             market_->discountCurve(ccy.code(), configuration(ore::data::MarketContext::pricing));
-        Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(), expiryDate);
-        QL_REQUIRE(expiry > 0.0, "FdBlackScholesVanillaEngine expects a positive time to expiry but got "
-                                     << expiry << " for an expiry date " << io::iso_date(expiryDate) << ".");
+        Time expiry = riskFreeRate->dayCounter().yearFraction(riskFreeRate->referenceDate(),
+                                                              std::max(riskFreeRate->referenceDate(), expiryDate));
 
         FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
         Size tGrid = (Size)(parseInteger(engineParameter("TimeGridPerYear")) * expiry);
