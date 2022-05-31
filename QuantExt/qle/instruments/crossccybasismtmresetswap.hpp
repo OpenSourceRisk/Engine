@@ -59,7 +59,8 @@ public:
         boost::optional<bool> domesticIncludeSpread = boost::none,
         boost::optional<Period> domesticLookback = boost::none, boost::optional<Size> domesticFixingDays = boost::none,
         boost::optional<Size> domesticRateCutoff = boost::none, boost::optional<bool> domesticIsAveraged = boost::none,
-        const bool telescopicValueDates = false);
+        const bool telescopicValueDates = false,
+	bool fairSpreadLegIsForeign = true);
     //@}
     //! \name Instrument interface
     //@{
@@ -91,6 +92,12 @@ public:
         calculate();
         QL_REQUIRE(fairDomesticSpread_ != Null<Real>(), "Fair domestic spread is not available");
         return fairDomesticSpread_;
+    }
+    Spread fairSpread() const {
+        if (fairSpreadLegIsForeign_)
+	    return fairForeignSpread();
+	else
+	    return fairDomesticSpread();
     }
     //@}
 
@@ -131,6 +138,7 @@ private:
     boost::optional<Size> domesticRateCutoff_;
     boost::optional<bool> domesticIsAveraged_;
     bool telescopicValueDates_;
+    bool fairSpreadLegIsForeign_;
 
     mutable Spread fairForeignSpread_;
     mutable Spread fairDomesticSpread_;
