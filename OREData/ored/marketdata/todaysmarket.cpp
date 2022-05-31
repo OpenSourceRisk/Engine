@@ -53,7 +53,8 @@
 
 #include <boost/graph/topological_sort.hpp>
 #include <boost/range/adaptor/map.hpp>
-#include <boost/range/adaptor/reversed.hpp>
+#include <boost/range/adaptor/reversed.hpp>	
+#include <boost/make_unique.hpp>	
 
 using namespace std;
 using namespace QuantLib;
@@ -243,9 +244,9 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             if (itr == requiredYieldCurves_.end()) {
                 DLOG("Building YieldCurve for asof " << asof_);
                 boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                    asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, fxT_,
-                    referenceData_, iborFallbackConfig_, preserveQuoteLinkage_, requiredDiscountCurves_,
-                    buildCalibrationInfo_);
+                    asof_, *ycspec, *curveConfigs_, *loader_, requiredYieldCurves_, requiredDefaultCurves_, fxT_, 
+                    referenceData_, iborFallbackConfig_, preserveQuoteLinkage_,
+                    buildCalibrationInfo_, this);
                 calibrationInfo_->yieldCurveCalibrationInfo[ycspec->name()] = yieldCurve->calibrationInfo();
                 itr = requiredYieldCurves_.insert(make_pair(ycspec->name(), yieldCurve)).first;
                 DLOG("Added YieldCurve \"" << ycspec->name() << "\" to requiredYieldCurves map");

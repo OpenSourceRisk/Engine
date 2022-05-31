@@ -36,6 +36,7 @@
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include <map>
 
@@ -76,7 +77,8 @@ class CorrelationCurve;
 
   \ingroup marketdata
  */
-class TodaysMarket : public MarketImpl {
+class TodaysMarket : public MarketImpl, 
+                     public boost::enable_shared_from_this<TodaysMarket> {
 public:
     //! Constructor taking pointers and allowing for a lazy build of the market objects
     TodaysMarket( //! Valuation date

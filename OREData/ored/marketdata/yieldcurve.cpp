@@ -209,12 +209,11 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, const bool preserveQuoteLinkage,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves,
-                       const bool buildCalibrationInfo)
+                       const bool buildCalibrationInfo, const Market* market)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), requiredYieldCurves_(requiredYieldCurves),
       requiredDefaultCurves_(requiredDefaultCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), preserveQuoteLinkage_(preserveQuoteLinkage),
-      requiredDiscountCurves_(requiredDiscountCurves), buildCalibrationInfo_(buildCalibrationInfo) {
+      buildCalibrationInfo_(buildCalibrationInfo), market_(market) {
 
     try {
 
@@ -2005,15 +2004,10 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
         }
     } else {
         // fall back on the foreign discount curve if no index given
-        auto it = requiredDiscountCurves_.find(knownCurrency.code());
-        if (it != requiredDiscountCurves_.end()) {
-            knownDiscountCurve = it->second;
-        } else {
-            QL_FAIL("The foreign discount curve, " << knownCurrency.code()
-                << ", required in the building "
-                "of the curve, "
-                << curveSpec_.name() << ", was not found.");
-        }
+        // look up the inccy discount curve - falls back to defualt if no inccy
+        DLOG("YieldCurve::addFXForwards No discount curve provided for building curve " << 
+            curveSpec_.name() << ", looking up the inccy curve in the market.")
+        auto dc = market_->discountCurve(knownCurrency.code(), Market::inCcyConfiguration);
     }
 
 
@@ -2171,15 +2165,10 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         }
     } else {
         // fall back on the foreign discount curve if no index given
-        auto it = requiredDiscountCurves_.find(foreignCcy.code());
-        if (it != requiredDiscountCurves_.end()) {
-            foreignDiscountCurve = it->second;
-        } else {
-            QL_FAIL("The foreign discount curve, " << foreignCcy.code()
-                << ", required in the building "
-                "of the curve, "
-                << curveSpec_.name() << ", was not found.");
-        }
+        // look up the inccy discount curve - falls back to defualt if no inccy
+        DLOG("YieldCurve::addCrossCcyBasisSwaps No discount curve provided for building curve "
+             << curveSpec_.name() << ", looking up the inccy curve in the market.")
+        auto dc = market_->discountCurve(foreignCcy.code(), Market::inCcyConfiguration);
     }
 
     /* Need to retrieve the foreign projection curve in the other currency. If its ID is empty,
@@ -2353,15 +2342,10 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
         }
     } else {
         // fall back on the foreign discount curve if no index given
-        auto it = requiredDiscountCurves_.find(floatLegCcy.code());
-        if (it != requiredDiscountCurves_.end()) {
-            floatLegDisc = it->second->handle();
-        } else {
-            QL_FAIL("The foreign discount curve, " << floatLegCcy.code()
-                << ", required in the building "
-                "of the curve, "
-                << curveSpec_.name() << ", was not found.");
-        }
+        // look up the inccy discount curve - falls back to defualt if no inccy
+        DLOG("YieldCurve::addCrossCcyFixFloatSwaps No discount curve provided for building curve "
+             << curveSpec_.name() << ", looking up the inccy curve in the market.")
+        auto dc = market_->discountCurve(floatLegCcy.code(), Market::inCcyConfiguration);
     }
 
     // Retrieve the projection curve on the float leg. If empty, use discount curve.
