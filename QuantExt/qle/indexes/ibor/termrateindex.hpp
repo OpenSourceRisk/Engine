@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/indexes/termrateindex.hpp
+/*! \file qle/indexes/ibor/termrateindex.hpp
     \brief ibor index class to represent term rates like SOFR-1M, 3M, 6M, 12M
     \ingroup indexes
 */
