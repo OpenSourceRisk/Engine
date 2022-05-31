@@ -304,7 +304,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
-    LOG("AsOf " << QuantLib::io::iso_date(asof_));
+    DLOG("AsOf " << QuantLib::io::iso_date(asof_));
 
     // check ssm parameters
     QL_REQUIRE(parameters_->interpolation() == "LogLinear" || parameters_->interpolation() == "LinearZero",
@@ -333,7 +333,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         // constructing fxSpots_
-                        LOG("adding " << name << " FX rates");
+                        DLOG("adding " << name << " FX rates");
                         boost::shared_ptr<SimpleQuote> q(
                             new SimpleQuote(initMarket->fxSpot(name, configuration)->value()));
                         Handle<Quote> qh(q);
@@ -366,11 +366,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << " yield curve..");
+                        DLOG("building " << name << " yield curve..");
                         vector<Period> tenors = parameters->yieldCurveTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors, simDataWritten,
                                       param.second.first, useSpreadedTermStructures_);
-                        LOG("building " << name << " yield curve done");
+                        DLOG("building " << name << " yield curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }
@@ -397,7 +397,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : indices) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << " index curve");
+                        DLOG("building " << name << " index curve");
                         std::vector<string> indexTokens;
                         split(indexTokens, name, boost::is_any_of("-"));
                         Handle<IborIndex> index;
@@ -483,7 +483,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         iborIndices_.insert(
                             make_pair(make_pair(Market::defaultConfiguration, name), Handle<IborIndex>(i)));
-                        LOG("building " << name << " index curve done");
+                        DLOG("building " << name << " index curve done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }
@@ -496,7 +496,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                     bool simDataWritten = false;
                     try {
                         // building equity spots
-                        LOG("adding " << name << " equity spot...");
+                        DLOG("adding " << name << " equity spot...");
                         Real spotVal = initMarket->equitySpot(name, configuration)->value();
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spotVal));
                         Handle<Quote> qh(q);
@@ -506,7 +506,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                            std::forward_as_tuple(q));
                         writeSimData(simDataTmp, absoluteSimDataTmp);
                         simDataWritten = true;
-                        LOG("adding " << name << " equity spot done");
+                        DLOG("adding " << name << " equity spot done");
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }
@@ -517,11 +517,11 @@ ScenarioSimMarket::ScenarioSimMarket(
                 for (const auto& name : param.second.second) {
                     bool simDataWritten = false;
                     try {
-                        LOG("building " << name << " equity dividend yield curve..");
+                        DLOG("building " << name << " equity dividend yield curve..");
                         vector<Period> tenors = parameters->equityDividendTenors(name);
                         addYieldCurve(initMarket, configuration, param.first, name, tenors, simDataWritten,
                                       param.second.first, useSpreadedTermStructures_);
-                        LOG("building " << name << " equity dividend yield curve done");
+                        DLOG("building " << name << " equity dividend yield curve done");
 
                         // Equity spots and Yield/Index curves added first so we can now build equity index
                         // First get Forecast Curve
@@ -612,7 +612,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         string shortSwapIndexBase = "", swapIndexBase = "";
                         bool isCube, isAtm, simulateAtmOnly;
                         if (param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
-                            LOG("building " << name << " swaption volatility curve...");
+                            DLOG("building " << name << " swaption volatility curve...");
                             wrapper.linkTo(*initMarket->swaptionVol(name, configuration));
                             shortSwapIndexBase = initMarket->shortSwapIndexBase(name, configuration);
                             swapIndexBase = initMarket->swapIndexBase(name, configuration);
@@ -622,7 +622,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             strikeSpreads = parameters->swapVolStrikeSpreads(name);
                             simulateAtmOnly = parameters->simulateSwapVolATMOnly();
                         } else {
-                            LOG("building " << name << " yield volatility curve...");
+                            DLOG("building " << name << " yield volatility curve...");
                             wrapper.linkTo(*initMarket->yieldVol(name, configuration));
                             isCube = false;
                             optionTenors = parameters->yieldVolExpiries();
@@ -630,7 +630,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             strikeSpreads = {0.0};
                             simulateAtmOnly = true;
                         }
-                        LOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
+                        DLOG("Initial market " << name << " yield volatility type = " << wrapper->volatilityType());
 
                         // Check if underlying market surface is atm or smile
                         isAtm = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr ||
@@ -820,7 +820,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         } else {
                             string decayModeString = parameters->swapVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-                            LOG("Dynamic (" << wrapper->volatilityType() << ") yield vols (" << decayModeString
+                            DLOG("Dynamic (" << wrapper->volatilityType() << ") yield vols (" << decayModeString
                                             << ") for qualifier " << name);
                             if (isCube)
                                 WLOG("Only ATM slice is considered from init market's cube");
@@ -832,7 +832,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         svp->enableExtrapolation(); // FIXME
 
-                        LOG("Simulaton market " << name << " yield volatility type = " << svp->volatilityType());
+                        DLOG("Simulaton market " << name << " yield volatility type = " << svp->volatilityType());
 
                         if (param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             swaptionCurves_.insert(pair<pair<string, string>, Handle<SwaptionVolatilityStructure>>(
