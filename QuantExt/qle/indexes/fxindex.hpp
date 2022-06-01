@@ -83,9 +83,7 @@ public:
         this class uses the exchange rate manager to retrieve spot values
         fxSpot is the fx rate settled at today + fixingDays
 
-        if inverseIndex is true, the returned fixing and fxQuote values are flipped, but all inspectors
-        - sourceCurremcy(), targetCurrency()
-        - sourceCurve(), targetCurve()
+        warning: if inverseIndex is true
         - forecastFixing()
         - pastFixing()
         will still return results in terms of the original pair.
