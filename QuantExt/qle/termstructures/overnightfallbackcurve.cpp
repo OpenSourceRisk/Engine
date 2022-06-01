@@ -63,7 +63,11 @@ Real OvernightFallbackCurve::discountImpl(QuantLib::Time t) const {
     if (today < switchDate_) {
         return originalIndex_->forwardingTermStructure()->discount(t);
     }
-    return rfrIndex_->forwardingTermStructure()->discount(t) * std::exp(-spread_ * t);
+    Date endDate = today + originalIndex_->tenor();
+    Real couponTime = rfrIndex_->dayCounter().yearFraction(today, endDate);
+    Real curveTime = timeFromReference(endDate);
+    Real s = std::log(1.0 + couponTime * spread_) / curveTime;
+    return rfrIndex_->forwardingTermStructure()->discount(t) * std::exp(-s * t);
 }
 
 } // namespace QuantExt
