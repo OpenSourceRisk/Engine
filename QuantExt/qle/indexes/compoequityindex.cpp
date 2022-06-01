@@ -25,20 +25,16 @@
 namespace QuantExt {
 
 CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source,
-                                   const boost::shared_ptr<FxIndex>& fxIndex)
+                                   const boost::shared_ptr<FxIndex>& fxIndex, const Date& dividendCutoffDate)
     : EquityIndex(source->familyName() + "_compo_" + fxIndex->targetCurrency().code(),
                   JointCalendar(source->fixingCalendar(), fxIndex->fixingCalendar()), fxIndex->targetCurrency(),
                   Handle<Quote>(boost::make_shared<CompositeQuote<std::function<Real(Real, Real)>>>(
                       source->equitySpot(), fxIndex->fxQuote(),
-                      fxIndex->inverseIndex() ? std::function<Real(Real, Real)>([](Real x, Real y) { return x / y; })
-                                              : std::function<Real(Real, Real)>([](Real x, Real y) { return x * y; }))),
-                  fxIndex->inverseIndex()
-                      ? Handle<YieldTermStructure>(boost::make_shared<DiscountRatioModifiedCurve>(
-                            source->equityForecastCurve(), fxIndex->sourceCurve(), fxIndex->targetCurve()))
-                      : Handle<YieldTermStructure>(boost::make_shared<DiscountRatioModifiedCurve>(
-                            source->equityForecastCurve(), fxIndex->targetCurve(), fxIndex->sourceCurve())),
+                      std::function<Real(Real, Real)>([](Real x, Real y) { return x * y; }))),
+                  Handle<YieldTermStructure>(boost::make_shared<DiscountRatioModifiedCurve>(
+                      source->equityForecastCurve(), fxIndex->targetCurve(), fxIndex->sourceCurve())),
                   source->equityDividendCurve()),
-      source_(source), fxIndex_(fxIndex) {
+      source_(source), fxIndex_(fxIndex), dividendCutoffDate_(dividendCutoffDate) {
     LazyObject::registerWith(source_);
     LazyObject::registerWith(fxIndex_);
 }
@@ -46,15 +42,20 @@ CompoEquityIndex::CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source,
 boost::shared_ptr<EquityIndex> CompoEquityIndex::source() const { return source_; }
 
 void CompoEquityIndex::addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite) {
-    source_->addDividend(fixingDate, fixing / fxIndex_->fixing(fixingDate), forceOverwrite);
-    LazyObject::update();
+    if (dividendCutoffDate_ == Date() || fixingDate >= dividendCutoffDate_) {
+        source_->addDividend(fixingDate, fixing / fxIndex_->fixing(fixingDate), forceOverwrite);
+        LazyObject::update();
+    }
 }
 
 void CompoEquityIndex::performCalculations() const {
     dividendFixings_ = TimeSeries<Real>();
     auto const& ts = source_->dividendFixings();
     for (auto const& d : ts) {
-        dividendFixings_[d.first] = d.second * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.first, Preceding));
+        if (dividendCutoffDate_ == Date() || d.first >= dividendCutoffDate_) {
+            dividendFixings_[d.first] =
+                d.second * fxIndex_->fixing(fxIndex_->fixingCalendar().adjust(d.first, Preceding));
+        }
     }
 }
 
