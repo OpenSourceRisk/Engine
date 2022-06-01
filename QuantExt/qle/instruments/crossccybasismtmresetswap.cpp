@@ -38,7 +38,8 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
     boost::optional<Size> foreignFixingDays, boost::optional<Size> foreignRateCutoff,
     boost::optional<bool> foreignIsAveraged, boost::optional<bool> domesticIncludeSpread,
     boost::optional<Period> domesticLookback, boost::optional<Size> domesticFixingDays,
-    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged, const bool telescopicValueDates)
+    boost::optional<Size> domesticRateCutoff, boost::optional<bool> domesticIsAveraged, const bool telescopicValueDates,
+						     const bool fairSpreadLegIsForeign)
     : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
       foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
       domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
@@ -49,7 +50,7 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
       foreignIsAveraged_(foreignIsAveraged), domesticIncludeSpread_(domesticIncludeSpread),
       domesticLookback_(domesticLookback), domesticFixingDays_(domesticFixingDays),
       domesticRateCutoff_(domesticRateCutoff), domesticIsAveraged_(domesticIsAveraged),
-      telescopicValueDates_(telescopicValueDates) {
+      telescopicValueDates_(telescopicValueDates), fairSpreadLegIsForeign_(fairSpreadLegIsForeign) {
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
     registerWith(fxIndex_);

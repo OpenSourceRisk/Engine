@@ -30,7 +30,6 @@ TAB_SIZE               = 4
 ALIASES                = "warning=\xrefitem caveats \"Warning\" \"Caveats\" " \
                          "bug=\xrefitem bug \"Bug\" \"Known Bugs\" " \
                          "deprecated=\xrefitem deprecated \"Deprecated\" \"Deprecated Features\" "
-TCL_SUBST              =
 OPTIMIZE_OUTPUT_FOR_C  = NO
 OPTIMIZE_OUTPUT_JAVA   = NO
 OPTIMIZE_FOR_FORTRAN   = NO
@@ -141,7 +140,6 @@ VERBATIM_HEADERS       = NO
 # Configuration options related to the alphabetical class index
 #---------------------------------------------------------------------------
 ALPHABETICAL_INDEX     = YES
-COLS_IN_ALPHA_INDEX    = 2
 IGNORE_PREFIX          =
 #---------------------------------------------------------------------------
 # Configuration options related to the HTML output
@@ -209,7 +207,7 @@ LATEX_OUTPUT           = latex
 LATEX_CMD_NAME         = latex
 MAKEINDEX_CMD_NAME     = makeindex
 COMPACT_LATEX          = NO
-PAPER_TYPE             = a4wide
+PAPER_TYPE             = a4
 EXTRA_PACKAGES         =
 LATEX_HEADER           =
 LATEX_FOOTER           =
@@ -282,12 +280,10 @@ GENERATE_TAGFILE       = ored.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO
 EXTERNAL_PAGES         = NO
-PERL_PATH              = /usr/bin/perl
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool
 #---------------------------------------------------------------------------
 CLASS_DIAGRAMS         = YES
-MSCGEN_PATH            =
 DIA_PATH               =
 HIDE_UNDOC_RELATIONS   = NO
 HAVE_DOT               = YES
@@ -315,7 +311,7 @@ MSCFILE_DIRS           =
 DIAFILE_DIRS           =
 PLANTUML_JAR_PATH      =
 PLANTUML_INCLUDE_PATH  =
-DOT_GRAPH_MAX_NODES    = 20
+DOT_GRAPH_MAX_NODES    = 80
 MAX_DOT_GRAPH_DEPTH    = 2
 DOT_TRANSPARENT        = NO
 DOT_MULTI_TARGETS      = NO

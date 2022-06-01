@@ -188,36 +188,29 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     // Generally we need to set the pricing engine here even if the option is expired at build time, since the valuation date
     // might change after build, and we get errors for the edge case valuation date = expiry date for Europen options.
-    // We keep the previous behaviour for expired American style options for now, because of engine builders that rely on the
-    // expiry date being in the future e.g. AmericanOptionFDEngineBuilder.
     string configuration = Market::defaultConfiguration;
-    bool skipEngine = (vanilla->isExpired() && exerciseType == QuantLib::Exercise::American);
-    if (skipEngine) {
-       DLOG("No engine attached for option on trade " << id() << " with expiry date " << io::iso_date(expiryDate_)
-                                                       << " because it is expired and american style.");
-    } else {
-        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
-        QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
+    QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
 
-        if (sameCcy) {
-            boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
+    if (sameCcy) {
+        boost::shared_ptr<VanillaOptionEngineBuilder> vanillaOptionBuilder =
                 boost::dynamic_pointer_cast<VanillaOptionEngineBuilder>(builder);
-            QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
+	QL_REQUIRE(vanillaOptionBuilder != nullptr, "No engine builder found for trade type " << tradeTypeBuilder);
 
-            vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
+	vanilla->setPricingEngine(vanillaOptionBuilder->engine(assetName_, ccy, expiryDate_));
 
-            configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
-        } else {
-            boost::shared_ptr<QuantoVanillaOptionEngineBuilder> quantoVanillaOptionBuilder =
+	configuration = vanillaOptionBuilder->configuration(MarketContext::pricing);
+    } else {
+        boost::shared_ptr<QuantoVanillaOptionEngineBuilder> quantoVanillaOptionBuilder =
                 boost::dynamic_pointer_cast<QuantoVanillaOptionEngineBuilder>(builder);
-            QL_REQUIRE(quantoVanillaOptionBuilder != nullptr, "No (Quanto) engine builder found for trade type "
+	QL_REQUIRE(quantoVanillaOptionBuilder != nullptr, "No (Quanto) engine builder found for trade type "
                                                                 << tradeTypeBuilder);
 
-            vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, ccy, expiryDate_));
+	vanilla->setPricingEngine(quantoVanillaOptionBuilder->engine(assetName_, underlyingCurrency, ccy, expiryDate_));
 
-            configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
-        }
+	configuration = quantoVanillaOptionBuilder->configuration(MarketContext::pricing);
     }
+
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = quantity_ * bsInd;
