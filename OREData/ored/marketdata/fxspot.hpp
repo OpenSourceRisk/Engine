@@ -42,7 +42,7 @@ class FXSpot {
 public:
     //! Constructor
     FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation, 
-        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves);
+        const Market* market);
 
     //! Inspector
     Handle<QuantExt::FxIndex> handle() const { return index_; }

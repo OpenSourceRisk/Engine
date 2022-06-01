@@ -137,6 +137,18 @@ void TodaysMarket::initialise(const Date& asof) {
 
     if (!lazyBuild_) {
 
+        // We need to build all discount curves first, since some curve builds ask for discount
+        // curves from specific configurations
+        for (const auto& configuration : params_->configurations()) {
+            auto config = configuration.second(MarketObject::DiscountCurve);
+            map<string, string> discountCurves;
+            if (params_->hasMarketObject(MarketObject::DiscountCurve)) {
+                discountCurves = params_->mapping(MarketObject::DiscountCurve, config);
+            }
+            for (const auto& dc : discountCurves)
+                require(MarketObject::DiscountCurve, dc.first, config, true);
+        }
+
         for (const auto& configuration : params_->configurations()) {
 
             LOG("Build objects in TodaysMarket configuration " << configuration.first);
@@ -259,8 +271,6 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                 DLOG("Adding DiscountCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
                                              << configuration);
                 yieldCurves_[make_tuple(configuration, YieldCurveType::Discount, node.name)] = itr->second->handle();
-                // Also add to requiredDiscountCurves
-                requiredDiscountCurves_.insert(make_pair(node.name, itr->second));
 
             } else if (node.obj == MarketObject::YieldCurve) {
                 DLOG("Adding YieldCurve(" << node.name << ") with spec " << *ycspec << " to configuration "
@@ -313,7 +323,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
             auto itr = requiredFxSpots_.find(fxspec->name());
             if (itr == requiredFxSpots_.end()) {
                 DLOG("Building FXSpot for asof " << asof_);
-                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_, requiredDiscountCurves_);
+                boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof_, *fxspec, fxT_, this);
                 itr = requiredFxSpots_.insert(make_pair(fxspec->name(), fxSpot)).first;
                 fxT_.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()->fxQuote(true));
             }
@@ -608,6 +618,7 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
 
         // Equity Vol
         case CurveSpec::CurveType::EquityVolatility: {
+
             boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
                 boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
 
@@ -764,11 +775,11 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
     node.built = true;
 } // TodaysMarket::buildNode()
 
-void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration) const {
+void TodaysMarket::require(const MarketObject o, const string& name, const string& configuration, const bool forceBuild) const {
 
     // if the market is not lazily built, do nothing
 
-    if (!lazyBuild_)
+    if (!lazyBuild_ && !forceBuild)
         return;
 
     // search the node (o, name) in the dependency graph

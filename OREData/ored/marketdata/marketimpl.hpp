@@ -195,7 +195,8 @@ protected:
         as a fallback.
 
         Notice that correlation curves are required with '&' as a delimiter between the indexes. */
-    virtual void require(const MarketObject o, const string& name, const string& configuration) const {}
+    virtual void require(const MarketObject o, const string& name, const string& configuration,
+                         const bool forceBuild = false) const {}
     
     Date asof_;
     // maps (configuration, key) => term structure
