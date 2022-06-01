@@ -91,15 +91,10 @@ std::set<MarketObject> getMarketObjectTypes() {
     return result;
 }
 
-MarketConfiguration::MarketConfiguration() {
+MarketConfiguration::MarketConfiguration(map<MarketObject, string> marketObjectIds) {
     for (Size i = 0; i < marketObjectData.size(); ++i) {
         marketObjectIds_[marketObjectData[i].obj] = Market::defaultConfiguration;
     }
-}
-
-MarketConfiguration::MarketConfiguration(map<MarketObject, string> marketObjectIds) {
-    if (marketObjectIds.size() == 0)
-        MarketConfiguration();
     
     for (const auto& moi : marketObjectIds)
         setId(moi.first, moi.second);

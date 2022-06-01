@@ -56,8 +56,7 @@ std::set<MarketObject> getMarketObjectTypes();
 
 class MarketConfiguration {
 public:
-    MarketConfiguration();
-    MarketConfiguration(map<MarketObject, string> marketObjectIds);
+    MarketConfiguration(map<MarketObject, string> marketObjectIds = {});
     string operator()(const MarketObject o) const;
     void setId(const MarketObject o, const string& id);
     void add(const MarketConfiguration& o);
