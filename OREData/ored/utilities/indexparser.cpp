@@ -31,6 +31,7 @@
 #include <ored/utilities/indexnametranslator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/marketdata.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -206,13 +207,17 @@ void checkOneToOne(const map<string, boost::shared_ptr<OvernightIndex>>& onIndic
 
 boost::shared_ptr<FxIndex> parseFxIndex(const string& s, const Handle<Quote>& fxSpot,
                                         const Handle<YieldTermStructure>& sourceYts,
-                                        const Handle<YieldTermStructure>& targetYts) {
+                                        const Handle<YieldTermStructure>& targetYts, const bool useConventions) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 4, "four tokens required in " << s << ": FX-TAG-CCY1-CCY2");
     QL_REQUIRE(tokens[0] == "FX", "expected first token to be FX");
-    return boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], 0, parseCurrency(tokens[2]),
-                                       parseCurrency(tokens[3]), NullCalendar(), fxSpot, sourceYts, targetYts);
+    Natural fixingDays = 0;
+    Calendar fixingCalendar = NullCalendar();
+    if (useConventions)
+        getFxIndexConventions(s, fixingDays, fixingCalendar);
+    return boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], fixingDays, parseCurrency(tokens[2]),
+                                       parseCurrency(tokens[3]), fixingCalendar, fxSpot, sourceYts, targetYts);
 }
 
 boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
