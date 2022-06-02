@@ -40,9 +40,20 @@ FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTrian
 
     Handle<YieldTermStructure> sorTS, tarTS;
     // get the discount curves for the source and target currencies
-    if (spotDays > 0) { // if spot days are zero we can build a curve without the discount curve
+    // if spot days are zero we can build a curve without the discount curve
+    try {
         sorTS = market->discountCurve(spec.unitCcy(), Market::defaultConfiguration);
+    } catch (...) {
+        if (spotDays > 0)
+            QL_REQUIRE(sorTS.currentLink(),
+                       "Discount Curve - " << spec.unitCcy() << " - not found during Fx Spot build");
+    }
+
+    try {
         tarTS = market->discountCurve(spec.ccy(), Market::defaultConfiguration);
+    } catch (...) {
+        if (spotDays > 0)
+            QL_REQUIRE(tarTS.currentLink(), "Discount Curve - " << spec.ccy() << " - not found during Fx Spot build");
     }
 
     index_ = Handle<QuantExt::FxIndex>(
