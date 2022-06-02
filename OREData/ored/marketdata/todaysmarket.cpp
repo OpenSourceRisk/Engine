@@ -47,6 +47,7 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -289,9 +290,14 @@ void TodaysMarket::buildNode(const std::string& configuration, Node& node) const
                                "Found rfr index '"
                                    << fallbackData.rfrIndex << "' as falback for ibor index '" << node.name
                                    << "', but this is not an overnight index. Are the fallback rules correct here?");
-                    tmpIndex = boost::make_shared<QuantExt::FallbackIborIndex>(
-                        tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
-                        iborFallbackConfig_.useRfrCurveInTodaysMarket());
+		    if (auto original = boost::dynamic_pointer_cast<OvernightIndex>(tmpIndex))
+		        tmpIndex = boost::make_shared<QuantExt::FallbackOvernightIndex>(
+			    original, oi, fallbackData.spread, fallbackData.switchDate,
+			    iborFallbackConfig_.useRfrCurveInTodaysMarket());
+		    else 
+		        tmpIndex = boost::make_shared<QuantExt::FallbackIborIndex>(
+                            tmpIndex, oi, fallbackData.spread, fallbackData.switchDate,
+			    iborFallbackConfig_.useRfrCurveInTodaysMarket());
                     TLOG("built ibor fall back index for '" << node.name << "' in configuration " << configuration
                                                             << " using rfr index '" << fallbackData.rfrIndex
                                                             << "', spread " << fallbackData.spread

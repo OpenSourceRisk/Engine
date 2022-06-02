@@ -53,6 +53,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/instruments/makeoiscapfloor.hpp>
@@ -473,9 +474,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                                            << fallbackData.rfrIndex
                                            << "' to overnight index when building the ibor fallback index '" << name
                                            << "'");
-                            i = boost::make_shared<QuantExt::FallbackIborIndex>(
-                                i, rfrInd, fallbackData.spread, fallbackData.switchDate,
-                                iborFallbackConfig_.useRfrCurveInSimulationMarket());
+			    if (auto original = boost::dynamic_pointer_cast<OvernightIndex>(i))
+			        i = boost::make_shared<QuantExt::FallbackOvernightIndex>(
+				    original, rfrInd, fallbackData.spread, fallbackData.switchDate,
+				    iborFallbackConfig_.useRfrCurveInSimulationMarket());
+                            else
+			        i = boost::make_shared<QuantExt::FallbackIborIndex>(
+                                    i, rfrInd, fallbackData.spread, fallbackData.switchDate,
+				    iborFallbackConfig_.useRfrCurveInSimulationMarket());
                             DLOG("built ibor fall back index '"
                                  << name << "' with rfr index '" << fallbackData.rfrIndex << "', spread "
                                  << fallbackData.spread << ", use rfr curve in scen sim market: " << std::boolalpha

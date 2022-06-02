@@ -33,8 +33,11 @@ using namespace QuantLib;
 
 class CompoEquityIndex : public EquityIndex, public LazyObject {
 public:
-    /*! fxIndex source ccy must be the equity ccy, fxIndex target ccy is the new equity ccy */
-    CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source, const boost::shared_ptr<FxIndex>& fxIndex);
+    /*! - fxIndex source ccy must be the equity ccy, fxIndex target ccy is the new equity ccy
+        - dividends before the divCutoffDate are ignored, this is useful since there have to be
+          fixings for the fx index on all dividend dates which might not be available */
+    CompoEquityIndex(const boost::shared_ptr<EquityIndex>& source, const boost::shared_ptr<FxIndex>& fxIndex,
+                     const Date& dividendCutoffDate = Date());
 
     boost::shared_ptr<EquityIndex> source() const;
 
@@ -49,6 +52,7 @@ private:
 
     boost::shared_ptr<EquityIndex> source_;
     boost::shared_ptr<FxIndex> fxIndex_;
+    Date dividendCutoffDate_;
 
     mutable TimeSeries<Real> dividendFixings_;
 };
