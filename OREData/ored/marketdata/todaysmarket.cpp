@@ -140,13 +140,12 @@ void TodaysMarket::initialise(const Date& asof) {
         // We need to build all discount curves first, since some curve builds ask for discount
         // curves from specific configurations
         for (const auto& configuration : params_->configurations()) {
-            auto config = configuration.second(MarketObject::DiscountCurve);
             map<string, string> discountCurves;
             if (params_->hasMarketObject(MarketObject::DiscountCurve)) {
-                discountCurves = params_->mapping(MarketObject::DiscountCurve, config);
+                discountCurves = params_->mapping(MarketObject::DiscountCurve, configuration.first);
             }
             for (const auto& dc : discountCurves)
-                require(MarketObject::DiscountCurve, dc.first, config, true);
+                require(MarketObject::DiscountCurve, dc.first, configuration.first, true);
         }
 
         for (const auto& configuration : params_->configurations()) {
