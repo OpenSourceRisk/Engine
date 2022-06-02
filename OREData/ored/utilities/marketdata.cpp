@@ -182,6 +182,11 @@ void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& f
         }
     } catch (...) {
         fixingDays = 2;
+	// default calendar for pseudo currencies is USD
+	if(isPseudoCurrency(ccy1))
+	    ccy1 = "USD";
+	if(isPseudoCurrency(ccy2))
+            ccy2 = "USD";
         fixingCalendar = parseCalendar(ccy1 + "," + ccy2);
     }
 }
