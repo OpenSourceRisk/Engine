@@ -91,10 +91,13 @@ std::set<MarketObject> getMarketObjectTypes() {
     return result;
 }
 
-MarketConfiguration::MarketConfiguration() {
+MarketConfiguration::MarketConfiguration(map<MarketObject, string> marketObjectIds) {
     for (Size i = 0; i < marketObjectData.size(); ++i) {
         marketObjectIds_[marketObjectData[i].obj] = Market::defaultConfiguration;
     }
+    
+    for (const auto& moi : marketObjectIds)
+        setId(moi.first, moi.second);
 }
 
 string MarketConfiguration::operator()(const MarketObject o) const {
@@ -115,7 +118,13 @@ void MarketConfiguration::add(const MarketConfiguration& o) {
 }
 
 void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
-    configurations_[id].add(configuration);
+    if (hasConfiguration(id)) {
+        auto it =
+            find_if(configurations_.begin(), configurations_.end(),
+                    [&id](const pair<string, MarketConfiguration>& s) { return s.first == id; });
+        it->second.add(configuration);
+    } else 
+        configurations_.push_back(make_pair(id, configuration));
 }
 
 void TodaysMarketParameters::clear() {

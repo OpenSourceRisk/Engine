@@ -36,6 +36,7 @@
 #include <boost/graph/directed_graph.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include <map>
 
@@ -106,7 +107,8 @@ public:
 
 private:
     // MarketImpl interface
-    void require(const MarketObject o, const string& name, const string& configuration) const override;
+    void require(const MarketObject o, const string& name, const string& configuration,
+                 const bool forceBuild = false) const override;
 
     // input parameters
 
@@ -147,7 +149,6 @@ private:
 
     // cached market objects, the key of the maps is the curve spec name, except for swap indices, see below
     mutable map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
-    mutable map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
     mutable map<string, boost::shared_ptr<FXSpot>> requiredFxSpots_;
     mutable map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves_;
     mutable map<string, boost::shared_ptr<GenericYieldVolCurve>> requiredGenericYieldVolCurves_;

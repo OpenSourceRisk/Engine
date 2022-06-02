@@ -211,6 +211,9 @@ public:
     //! Default configuration label
     static const string defaultConfiguration;
 
+    //! InCcy configuration label
+    static const string inCcyConfiguration;
+
     //! \name BondSpreads
     //@{
     virtual Handle<Quote> securitySpread(const string& securityID,
