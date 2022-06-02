@@ -197,7 +197,7 @@ void IborFallbackConfig::updateSwitchDate(QuantLib::Date targetSwitchDate, const
 
 void IborFallbackConfig::logSwitchDates() {
     for (auto f : fallbacks_) {
-        LOG("IBOR index " << f.first << " has fallback switch date " << to_string(f.second.switchDate));
+        DLOG("IBOR index " << f.first << " has fallback switch date " << to_string(f.second.switchDate));
     }
 }
 

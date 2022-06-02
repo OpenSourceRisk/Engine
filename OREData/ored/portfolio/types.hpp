@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/portfolio/paymentlag.hpp
+/*! \file ored/portfolio/types.hpp
     \brief payment lag
     \ingroup portfolio
 */

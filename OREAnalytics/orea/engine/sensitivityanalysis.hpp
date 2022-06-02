@@ -74,7 +74,7 @@ public:
                         std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
                         const boost::shared_ptr<ReferenceDataManager>& referenceData = nullptr,
                         const IborFallbackConfig& iborFallbackConfig = IborFallbackConfig::defaultConfig(),
-                        const bool continueOnError = false, bool analyticFxSensis = false);
+                        const bool continueOnError = false, bool analyticFxSensis = false, bool dryRun = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -159,6 +159,9 @@ protected:
     boost::shared_ptr<Portfolio> portfolio_;
     //! Extract analytic FX sensitivities on trades where possible.
     bool analyticFxSensis_;
+    //! do dry run
+    bool dryRun_;
+
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders
