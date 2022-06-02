@@ -765,7 +765,7 @@
   <xs:complexType name="capFloorData">
     <xs:sequence>
       <xs:element type="longShort" name="LongShort"/>
-      <xs:element type="legData_capfloor" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="legData_capfloor" name="LegData"/>
       <xs:element name="Caps" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
