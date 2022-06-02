@@ -106,7 +106,7 @@ bool parseBool(const string& s);
   comma-delimited.
   \ingroup utilities
 */
-QuantLib::Calendar parseCalendar(const string& s, const string& newName = "");
+QuantLib::Calendar parseCalendar(const string& s);
 
 //! return true if s represents a period of the form [0-9][D|W|M|Y] (i.e. 1Y6M would return false)
 bool isOnePeriod(const string& s);

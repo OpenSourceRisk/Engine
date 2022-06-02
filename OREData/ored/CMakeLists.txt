@@ -20,9 +20,9 @@ configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/onedimsolverconfig.cpp
 configuration/reportconfig.cpp
+configuration/smiledynamicsconfig.cpp
 configuration/volatilityconfig.cpp
 configuration/yieldcurveconfig.cpp
-configuration/smiledynamicsconfig.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
@@ -154,6 +154,7 @@ portfolio/underlying.cpp
 portfolio/vanillaoption.cpp
 report/csvreport.cpp
 utilities/calendaradjustmentconfig.cpp
+utilities/calendarparser.cpp
 utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
@@ -198,11 +199,11 @@ configuration/inflationcurveconfig.hpp
 configuration/onedimsolverconfig.hpp
 configuration/reportconfig.hpp
 configuration/securityconfig.hpp
+configuration/smiledynamicsconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/volatilityconfig.hpp
 configuration/yieldcurveconfig.hpp
 configuration/yieldvolcurveconfig.hpp
-configuration/smiledynamicsconfig.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
@@ -372,6 +373,7 @@ report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
 utilities/calendaradjustmentconfig.hpp
+utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
