@@ -182,6 +182,11 @@ void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& f
         }
     } catch (...) {
         fixingDays = 2;
+	// default calendar for pseudo currencies is USD
+	if(isPseudoCurrency(ccy1))
+	    ccy1 = "USD";
+	if(isPseudoCurrency(ccy2))
+            ccy2 = "USD";
         fixingCalendar = parseCalendar(ccy1 + "," + ccy2);
     }
 }
@@ -209,6 +214,18 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
 
     auto p = splitCurveIdWithTenor(creditCurveId);
     return market->defaultCurve(p.first, config);
+}
+
+bool isPseudoCurrency(const string& code) { return isPreciousMetal(code) || isCryptoCurrency(code); }
+
+bool isPreciousMetal(const string& code) {
+    static set<string> s = {"XAU", "XAG", "XPT", "XPD"};
+    return s.find(code) != s.end();
+}
+
+bool isCryptoCurrency(const string& code) {
+    static set<string> s = {"XBT", "BTC", "ETH", "ETC", "BCH", "XRP", "LTC"};
+    return s.find(code) != s.end();
 }
 
 } // namespace data

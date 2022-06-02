@@ -25,8 +25,6 @@
 
 #include <map>
 #include <ored/utilities/xmlutils.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
 #include <set>
 
 using ore::data::XMLNode;

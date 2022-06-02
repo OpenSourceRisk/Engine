@@ -102,11 +102,9 @@ public:
         const IborFallbackConfig& iborfallbackConfig = IborFallbackConfig::defaultConfig(),
         //! if true keep qloader quotes linked to yield ts, otherwise detach them
         const bool preserveQuoteLinkage = false,
-        //! Map of underlying discount curves if required
-        const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves =
-            map<string, boost::shared_ptr<YieldCurve>>(),
         //! build calibration info
-        const bool buildCalibrationInfo = true);
+        const bool buildCalibrationInfo = true,
+        const Market* market = nullptr);
 
     //! \name Inspectors
     //@{
@@ -160,8 +158,8 @@ private:
     const boost::shared_ptr<ReferenceDataManager> referenceData_;
     IborFallbackConfig iborFallbackConfig_;
     const bool preserveQuoteLinkage_;
-    map<string, boost::shared_ptr<YieldCurve>> requiredDiscountCurves_;
     bool buildCalibrationInfo_;
+    const Market* market_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(vector<boost::shared_ptr<RateHelper>> instruments);
 

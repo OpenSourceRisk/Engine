@@ -1150,7 +1150,13 @@
     <ClInclude Include="qle\indexes\fallbackiborindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\fallbackovernightindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\iborfallbackcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\overnightfallbackcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.hpp">
@@ -2033,7 +2039,13 @@
     <ClCompile Include="qle\indexes\fallbackiborindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
+    <ClCompile Include="qle\indexes\fallbackovernightindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\iborfallbackcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\overnightfallbackcurve.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\crossccyfixfloatmtmresetswaphelper.cpp">

@@ -2028,10 +2028,7 @@ vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<d
     Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     bool underflow = data.underflow();
     Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
-    double fraction = data.value(); // first difference to "FixedAmount"
-    QL_REQUIRE(fraction >= 0.0 && fraction <= 1.0,
-               "amortization fraction " << fraction << " out of range"); // second difference to "FixedAmount"
-    double amort = fraction * nominals.front();                          // third difference to "FixedAmount"
+    double amort = data.value() * nominals.front();
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
         if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&
@@ -2057,7 +2054,8 @@ vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<
     Date endDate = data.endDate().empty() ? Date::maxDate() : parseDate(data.endDate());
     Period amortPeriod = data.frequency().empty() ? 0 * Days : parsePeriod(data.frequency());
     double fraction = data.value();
-    QL_REQUIRE(fraction >= 0.0 && fraction <= 1.0, "amortization fraction " << fraction << " out of range");
+    QL_REQUIRE(fraction < 1.0 || close_enough(fraction, 1.0),
+               "amortization fraction " << fraction << " expected to be <= 1");
     Date lastAmortDate = Date::minDate();
     for (Size i = 0; i < schedule.size() - 1; i++) {
         if (i > 0 && (lastAmortDate == Date::minDate() || schedule[i] > lastAmortDate + amortPeriod - 4 * Days) &&

@@ -209,12 +209,11 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
                        const FXTriangulation& fxTriangulation,
                        const boost::shared_ptr<ReferenceDataManager>& referenceData,
                        const IborFallbackConfig& iborFallbackConfig, const bool preserveQuoteLinkage,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredDiscountCurves,
-                       const bool buildCalibrationInfo)
+                       const bool buildCalibrationInfo, const Market* market)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), requiredYieldCurves_(requiredYieldCurves),
       requiredDefaultCurves_(requiredDefaultCurves), fxTriangulation_(fxTriangulation), referenceData_(referenceData),
       iborFallbackConfig_(iborFallbackConfig), preserveQuoteLinkage_(preserveQuoteLinkage),
-      requiredDiscountCurves_(requiredDiscountCurves), buildCalibrationInfo_(buildCalibrationInfo) {
+      buildCalibrationInfo_(buildCalibrationInfo), market_(market) {
 
     try {
 
@@ -1990,13 +1989,13 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
 
     // LOG("YieldCurve::addFXForwards(), retrieve known discount curve");
     string knownDiscountID = fxForwardSegment->foreignDiscountCurveID();
-    boost::shared_ptr<YieldCurve> knownDiscountCurve;
+    Handle<YieldTermStructure> knownDiscountCurve;
 
     if (!knownDiscountID.empty()) {
         knownDiscountID = yieldCurveKey(knownCurrency, knownDiscountID, asofDate_);
         auto it = requiredYieldCurves_.find(knownDiscountID);
         if (it != requiredYieldCurves_.end()) {
-            knownDiscountCurve = it->second;
+            knownDiscountCurve = it->second->handle();
         } else {
             QL_FAIL("The foreign discount curve, " << knownDiscountID
                 << ", required in the building "
@@ -2005,15 +2004,10 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
         }
     } else {
         // fall back on the foreign discount curve if no index given
-        auto it = requiredDiscountCurves_.find(knownCurrency.code());
-        if (it != requiredDiscountCurves_.end()) {
-            knownDiscountCurve = it->second;
-        } else {
-            QL_FAIL("The foreign discount curve, " << knownCurrency.code()
-                << ", required in the building "
-                "of the curve, "
-                << curveSpec_.name() << ", was not found.");
-        }
+        // look up the inccy discount curve - falls back to defualt if no inccy
+        DLOG("YieldCurve::addFXForwards No discount curve provided for building curve " << 
+            curveSpec_.name() << ", looking up the inccy curve in the market.")
+        knownDiscountCurve = market_->discountCurve(knownCurrency.code(), Market::inCcyConfiguration);
     }
 
 
@@ -2117,7 +2111,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
             boost::shared_ptr<RateHelper> fxForwardHelper(new FxSwapRateHelper(
                 qlFXForwardQuote, spotFx, fxForwardTenor, fxStartTenor.length(), fxConvention->advanceCalendar(), 
                 fxConvention->convention(), fxConvention->endOfMonth(), isFxBaseCurrencyCollateralCurrency,
-                knownDiscountCurve->handle()));
+                knownDiscountCurve));
 
             instruments.push_back(fxForwardHelper);
         }
@@ -2157,12 +2151,12 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
     /* Need to retrieve the discount curve in the other (foreign) currency. */
     string foreignDiscountID = basisSwapSegment->foreignDiscountCurveID();
     Currency foreignCcy = fxSpotSourceCcy == currency_ ? fxSpotTargetCcy : fxSpotSourceCcy;
-    boost::shared_ptr<YieldCurve> foreignDiscountCurve;
+    Handle<YieldTermStructure> foreignDiscountCurve;
     if (!foreignDiscountID.empty()) {
         foreignDiscountID = yieldCurveKey(foreignCcy, foreignDiscountID, asofDate_);
         auto it = requiredYieldCurves_.find(foreignDiscountID);
         if (it != requiredYieldCurves_.end()) {
-            foreignDiscountCurve = it->second;
+            foreignDiscountCurve = it->second->handle();
         } else {
             QL_FAIL("The foreign discount curve, " << foreignDiscountID
                 << ", required in the building "
@@ -2171,15 +2165,10 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         }
     } else {
         // fall back on the foreign discount curve if no index given
-        auto it = requiredDiscountCurves_.find(foreignCcy.code());
-        if (it != requiredDiscountCurves_.end()) {
-            foreignDiscountCurve = it->second;
-        } else {
-            QL_FAIL("The foreign discount curve, " << foreignCcy.code()
-                << ", required in the building "
-                "of the curve, "
-                << curveSpec_.name() << ", was not found.");
-        }
+        // look up the inccy discount curve - falls back to defualt if no inccy
+        DLOG("YieldCurve::addCrossCcyBasisSwaps No discount curve provided for building curve "
+             << curveSpec_.name() << ", looking up the inccy curve in the market.")
+        foreignDiscountCurve = market_->discountCurve(foreignCcy.code(), Market::inCcyConfiguration);
     }
 
     /* Need to retrieve the foreign projection curve in the other currency. If its ID is empty,
@@ -2188,7 +2177,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
     boost::shared_ptr<IborIndex> foreignIndex =
         onFlatSide ? basisSwapConvention->spreadIndex() : basisSwapConvention->flatIndex();
     if (foreignProjectionCurveID.empty()) {
-        foreignIndex = foreignIndex->clone(foreignDiscountCurve->handle());
+        foreignIndex = foreignIndex->clone(foreignDiscountCurve);
     } else {
         foreignProjectionCurveID = yieldCurveKey(foreignCcy, foreignProjectionCurveID, asofDate_);
         boost::shared_ptr<YieldCurve> foreignProjectionCurve;
@@ -2234,11 +2223,11 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         if (discountCurve_) {
             flatDiscountCurve.linkTo(*discountCurve_->handle());
         }
-        spreadDiscountCurve.linkTo(*foreignDiscountCurve->handle());
+        spreadDiscountCurve.linkTo(*foreignDiscountCurve);
         flatIndex = domesticIndex;
         spreadIndex = foreignIndex;
     } else {
-        flatDiscountCurve.linkTo(*foreignDiscountCurve->handle());
+        flatDiscountCurve.linkTo(*foreignDiscountCurve);
         if (discountCurve_) {
             spreadDiscountCurve.linkTo(*discountCurve_->handle());
         }
@@ -2353,15 +2342,10 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
         }
     } else {
         // fall back on the foreign discount curve if no index given
-        auto it = requiredDiscountCurves_.find(floatLegCcy.code());
-        if (it != requiredDiscountCurves_.end()) {
-            floatLegDisc = it->second->handle();
-        } else {
-            QL_FAIL("The foreign discount curve, " << floatLegCcy.code()
-                << ", required in the building "
-                "of the curve, "
-                << curveSpec_.name() << ", was not found.");
-        }
+        // look up the inccy discount curve - falls back to defualt if no inccy
+        DLOG("YieldCurve::addCrossCcyFixFloatSwaps No discount curve provided for building curve "
+             << curveSpec_.name() << ", looking up the inccy curve in the market.")
+        floatLegDisc = market_->discountCurve(floatLegCcy.code(), Market::inCcyConfiguration);
     }
 
     // Retrieve the projection curve on the float leg. If empty, use discount curve.

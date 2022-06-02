@@ -65,6 +65,7 @@ indexes/commodityindex.cpp
 indexes/compoequityindex.cpp
 indexes/equityindex.cpp
 indexes/fallbackiborindex.cpp
+indexes/fallbackovernightindex.cpp
 indexes/fxindex.cpp
 indexes/genericiborindex.cpp
 indexes/ibor/ameribor.cpp
@@ -240,6 +241,7 @@ termstructures/oisratehelper.cpp
 termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
+termstructures/overnightfallbackcurve.cpp
 termstructures/pricetermstructure.cpp
 termstructures/pricetermstructureadapter.cpp
 termstructures/proxyoptionletvolatility.cpp
@@ -348,6 +350,7 @@ indexes/eqfxindexbase.hpp
 indexes/equityindex.hpp
 indexes/escpi.hpp
 indexes/fallbackiborindex.hpp
+indexes/fallbackovernightindex.hpp
 indexes/frcpi.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
@@ -629,6 +632,7 @@ termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
+termstructures/overnightfallbackcurve.hpp
 termstructures/piecewiseatmoptionletcurve.hpp
 termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
