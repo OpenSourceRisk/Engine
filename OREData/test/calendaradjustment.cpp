@@ -147,10 +147,6 @@ BOOST_AUTO_TEST_CASE(testInvalidCalendarAdjustment) {
     // we check that new calendars can't be declared using another new calendar as a base
     CalendarAdjustmentConfig calendarAdjustments_1;
     BOOST_CHECK_THROW(calendarAdjustments_1.fromFile(TEST_INPUT_FILE("invalid_calendaradjustments_1.xml")), QuantLib::Error);
-    
-    // we check that new calendars can't be declared using a joint calendar as a base 
-    CalendarAdjustmentConfig calendarAdjustments_2;
-    BOOST_CHECK_THROW(calendarAdjustments_2.fromFile(TEST_INPUT_FILE("invalid_calendaradjustments_2.xml")), QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
