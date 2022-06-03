@@ -30,6 +30,7 @@
 #include <qle/currencies/metals.hpp>
 
 #include <ql/currencies/all.hpp>
+#include <ql/errors.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -43,21 +44,18 @@ CurrencyParser::CurrencyParser() { reset(); }
 
 QuantLib::Currency CurrencyParser::parseCurrency(const std::string& name) const {
     boost::shared_lock<boost::shared_mutex> lock(mutex_);
-    auto it = m.find(s);
-    if (it != m.end()) {
+    auto it = currencies_.find(name);
+    if (it != currencies_.end()) {
         return it->second;
     }
-    QL_FAIL(!currency.empty(), "Currency \"" << s << "\" not recognized");
+    QL_FAIL("Currency \"" << name << "\" not recognized");
 }
 
-QuantLib::Currency CurrencyParser::addCurrency(std::string& newName, const QuantLib::Currency& currency) {
+void CurrencyParser::addCurrency(const std::string& newName, const QuantLib::Currency& currency) {
     boost::unique_lock<boost::shared_mutex> lock(mutex_);
     auto it = currencies_.find(newName);
-    if (it == currncies_.end()) {
+    if (it == currencies_.end()) {
         currencies_[newName] = currency;
-        return std::move(tmp);
-    } else {
-        return it->second;
     }
 }
 

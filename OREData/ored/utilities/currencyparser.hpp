@@ -24,6 +24,7 @@
 
 #include <ql/patterns/singleton.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/currency.hpp>
 
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -34,8 +35,8 @@ namespace data {
 class CurrencyParser : public QuantLib::Singleton<CurrencyParser, std::integral_constant<bool, true>> {
 public:
     CurrencyParser();
-    QuantLib::Calendar parseCurrency(const std::string& name) const;
-    QuantLib::Calendar addCurrency(const std::string& newName);
+    QuantLib::Currency parseCurrency(const std::string& name) const;
+    void addCurrency(const std::string& newName, const QuantLib::Currency& currency);
     void reset();
 
 private:

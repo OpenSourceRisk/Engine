@@ -24,8 +24,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <map>
-#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/calendarparser.hpp>
+#include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>

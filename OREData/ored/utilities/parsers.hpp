@@ -358,7 +358,7 @@ template <class T> bool tryParse(const std::string& str, T& obj, std::function<T
 inline bool tryParseCurrency(const std::string& str, Currency& obj) {
     DLOG("tryParse: attempting to parse currency from " << str);
     try {
-      obj = parseCurrency(str, Currency());
+        obj = parseCurrency(str);
     } catch (...) {
         TLOG("String " << str << " could not be parsed");
         return false;
