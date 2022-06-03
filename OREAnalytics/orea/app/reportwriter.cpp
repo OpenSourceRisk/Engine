@@ -30,6 +30,8 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
+#include <qle/cashflows/commodityindexedcashflow.hpp>
+#include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <ql/errors.hpp>
 #include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
@@ -199,6 +201,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             std::string ccy = trades[k]->legCurrencies()[i];
                             boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                                 boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                            boost::shared_ptr<QuantExt::CommodityIndexedCashFlow> ptrCommCf =
+                                boost::dynamic_pointer_cast<QuantExt::CommodityIndexedCashFlow>(ptrFlow);
                             Real coupon;
                             Real accrual;
                             Real notional;
@@ -214,6 +218,13 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                                 if (payer)
                                     accruedAmount *= -1.0;
                                 flowType = "Interest";
+                            } else if (ptrCommCf) {
+                                coupon = Null<Real>();
+                                accrual = Null<Real>();
+                                notional = ptrCommCf->quantity(); // this is measured in units, e.g. barrels for oil
+                                accrualStartDate = accrualEndDate = Null<Date>();
+                                accruedAmount = Null<Real>();
+                                flowType = "Notional (units)";
                             } else {
                                 coupon = Null<Real>();
                                 accrual = Null<Real>();
@@ -283,6 +294,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                             } else if (ptrEqCp) {
                                 fixingDate = ptrEqCp->fixingEndDate();
                                 fixingValue = ptrEqCp->equityCurve()->fixing(fixingDate);
+                            } else if (ptrCommCf) {
+                                fixingDate = ptrCommCf->date();
+                                fixingValue = ptrCommCf->index()->fixing(ptrCommCf->pricingDate());
                             } else {
                                 fixingDate = Null<Date>();
                                 fixingValue = Null<Real>();
