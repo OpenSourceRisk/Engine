@@ -104,8 +104,9 @@ QuantLib::Calendar CalendarParser::addCalendar(const std::string baseName, std::
 }
 
 void CalendarParser::reset() {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
     resetAddedAndRemovedHolidays();
+
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
 
     // When adding to the static map, keep in mind that the calendar name on the LHS might be used to add or remove
     // holidays in calendaradjustmentconfig.xml. The calendar on the RHS of the mapping will then be adjusted, so this
