@@ -79,6 +79,7 @@
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/escpi.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
+#include <qle/indexes/fallbackovernightindex.hpp>
 #include <qle/indexes/frcpi.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
@@ -360,6 +361,7 @@
 #include <qle/termstructures/optionletstripper2.hpp>
 #include <qle/termstructures/optionletstripperwithatm.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
+#include <qle/termstructures/overnightfallbackcurve.hpp>
 #include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>

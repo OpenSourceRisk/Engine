@@ -27,6 +27,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <unordered_map>
 
 namespace ore {
 namespace data {
@@ -55,7 +56,7 @@ std::set<MarketObject> getMarketObjectTypes();
 
 class MarketConfiguration {
 public:
-    MarketConfiguration();
+    MarketConfiguration(map<MarketObject, string> marketObjectIds = {});
     string operator()(const MarketObject o) const;
     void setId(const MarketObject o, const string& id);
     void add(const MarketConfiguration& o);
@@ -81,7 +82,7 @@ public:
 
     //! \name Inspectors
     //@{
-    const map<string, MarketConfiguration>& configurations() const;
+    const vector<pair<string, MarketConfiguration>>& configurations() const;
     bool hasConfiguration(const string& configuration) const;
     bool hasMarketObject(const MarketObject& o) const;
 
@@ -132,7 +133,7 @@ private:
 
        A configuration label "default" is always added, which maps all market objects to the market default
        configuration "default". The entries for the configuration label "default" can be overwritten though. */
-    map<string, MarketConfiguration> configurations_;
+    vector<pair<string, MarketConfiguration>> configurations_;
 
     /* For each market object type, maps the intermediate configuration id to a list of assignments, e.g.
 
@@ -151,12 +152,13 @@ private:
 
 // inline
 
-inline const map<string, MarketConfiguration>& TodaysMarketParameters::configurations() const {
+inline const vector<pair<string, MarketConfiguration>>& TodaysMarketParameters::configurations() const {
     return configurations_;
 }
 
 inline bool TodaysMarketParameters::hasConfiguration(const string& configuration) const {
-    auto it = configurations_.find(configuration);
+    auto it = find_if(configurations_.begin(), configurations_.end(),
+                      [&configuration](const pair<string, MarketConfiguration>& s) { return s.first == configuration; });
     return it != configurations_.end();
 }
 
@@ -167,7 +169,9 @@ inline bool TodaysMarketParameters::hasMarketObject(const MarketObject& o) const
 
 inline string TodaysMarketParameters::marketObjectId(const MarketObject o, const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
-    return configurations_.at(configuration)(o);
+    auto it = find_if(configurations_.begin(), configurations_.end(),
+                      [&configuration](const pair<string, MarketConfiguration>& s) { return s.first == configuration; });
+    return it->second(o);
 }
 
 } // namespace data

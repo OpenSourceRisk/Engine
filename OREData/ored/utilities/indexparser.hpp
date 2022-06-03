@@ -52,7 +52,8 @@ using std::string;
 boost::shared_ptr<QuantExt::FxIndex>
 parseFxIndex(const string& s, const Handle<Quote>& fxSpot = Handle<Quote>(),
              const Handle<YieldTermStructure>& sourceYts = Handle<YieldTermStructure>(),
-             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>());
+             const Handle<YieldTermStructure>& targetYts = Handle<YieldTermStructure>(),
+             const bool useConventions = false);
 
 //! Convert std::string to QuantLib::IborIndex
 /*!
