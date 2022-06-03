@@ -133,7 +133,7 @@ QuantLib::DayCounter parseDayCounter(const string& s);
 /*!
   \ingroup utilities
  */
-QuantLib::Currency parseCurrency(const string& s, const Currency& currency = QuantLib::Currency());
+QuantLib::Currency parseCurrency(const string& s);
 
 //! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
 /*!
