@@ -30,6 +30,8 @@
 #include <qle/utilities/savedobservablesettings.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
+#include <ored/utilities/calendarparser.hpp>
+#include <ored/utilities/currencyparser.hpp>
 
 using QuantExt::SavedObservableSettings;
 using QuantLib::IndexManager;
@@ -60,6 +62,10 @@ public:
         ore::data::InstrumentConventions::instance().setConventions(boost::make_shared<ore::data::Conventions>());
         // Clear contents of the index name translator
 	ore::data::IndexNameTranslator::instance().clear();
+	// Clear custom calendars and modified holidays
+	ore::data::CalendarParser::instance().reset();
+	// Clear custom currencies
+	ore::data::CurrencyParser::instance().reset();
     }
 
     bool updatesEnabled() { return savedObservableSettings.updatesEnabled(); }
