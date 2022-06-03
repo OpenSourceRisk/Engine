@@ -106,7 +106,7 @@ bool parseBool(const string& s);
   comma-delimited.
   \ingroup utilities
 */
-QuantLib::Calendar parseCalendar(const string& s, const string& newName = "");
+QuantLib::Calendar parseCalendar(const string& s);
 
 //! return true if s represents a period of the form [0-9][D|W|M|Y] (i.e. 1Y6M would return false)
 bool isOnePeriod(const string& s);
@@ -133,7 +133,7 @@ QuantLib::DayCounter parseDayCounter(const string& s);
 /*!
   \ingroup utilities
  */
-QuantLib::Currency parseCurrency(const string& s, const Currency& currency = QuantLib::Currency());
+QuantLib::Currency parseCurrency(const string& s);
 
 //! Convert text to QuantLib::Currency for minor currencies e.g GBp -> GBPCurrency()
 /*!
@@ -358,7 +358,7 @@ template <class T> bool tryParse(const std::string& str, T& obj, std::function<T
 inline bool tryParseCurrency(const std::string& str, Currency& obj) {
     DLOG("tryParse: attempting to parse currency from " << str);
     try {
-      obj = parseCurrency(str, Currency());
+        obj = parseCurrency(str);
     } catch (...) {
         TLOG("String " << str << " could not be parsed");
         return false;

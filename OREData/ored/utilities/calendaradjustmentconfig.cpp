@@ -17,6 +17,7 @@
 */
 
 #include <ored/utilities/calendaradjustmentconfig.hpp>
+#include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/time/calendar.hpp>
@@ -135,7 +136,7 @@ void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
         string baseCalendar = XMLUtils::getChildValue(calnode, "BaseCalendar", false);
         if (baseCalendar == "")
             continue;
-        Calendar cal = parseCalendar(baseCalendar, calname);
+        Calendar cal = CalendarParser::instance().addCalendar(baseCalendar, calname);
 
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditionalHolidays", "Date");
         for (auto holiday : holidayDates) {

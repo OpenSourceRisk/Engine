@@ -17,11 +17,13 @@
 */
 
 #include <ored/utilities/currencyconfig.hpp>
+#include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/currency.hpp>
 #include <qle/currencies/configurablecurrency.hpp>
 #include <string>
+
 namespace ore {
 namespace data {
 
@@ -45,44 +47,17 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             // the digit where we switch form roundng down to rounding up, typically 5 and used across all
             // Integer digit = parseInteger(XMLUtils::getChildValue(node, "Digit", false));
             string format = XMLUtils::getChildValue(node, "Format", false);
-            Rounding rounding;
-            switch (roundingType) {
-            case Rounding::Type::Up: {
-                rounding = UpRounding(precision);
-                break;
-            }
-            case Rounding::Type::Down: {
-                rounding = DownRounding(precision);
-                break;
-            }
-            case Rounding::Type::Closest: {
-                rounding = ClosestRounding(precision);
-                break;
-            }
-            case Rounding::Type::Floor: {
-                rounding = FloorTruncation(precision);
-                break;
-            }
-            case Rounding::Type::Ceiling: {
-                rounding = CeilingTruncation(precision);
-                break;
-            }
-            default: {
-                ALOG("Rounding type not recognized, falling back on 'Closest'");
-                rounding = ClosestRounding(precision);
-            }
-            }
+            Rounding rounding(precision, roundingType);
 
-            QuantExt::ConfigurableCurrency c(name, isoCode, numericCode, symbol, fractionSymbol, fractionsPerUnit, rounding,
-                                             format);
+            QuantExt::ConfigurableCurrency c(name, isoCode, numericCode, symbol, fractionSymbol, fractionsPerUnit,
+                                             rounding, format);
             currencies_.push_back(c);
 
             DLOG("loading configuration for currency code " << isoCode);
 
-            // this pushes any additional currency into the parser's static map
-            parseCurrency(c.code(), c);
+            CurrencyParser::instance().addCurrency(c.code(), c);
 
-        } catch(std::exception&) {
+        } catch (std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);
         }
     }

@@ -201,11 +201,13 @@
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/report.hpp>
 #include <ored/utilities/calendaradjustmentconfig.hpp>
+#include <ored/utilities/calendarparser.hpp>
 #include <ored/utilities/conventionsbasedfutureexpiry.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/currencyconfig.hpp>
+#include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/dategrid.hpp>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/indexnametranslator.hpp>
