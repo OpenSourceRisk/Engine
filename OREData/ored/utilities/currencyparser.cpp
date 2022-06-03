@@ -1,0 +1,163 @@
+/*
+ Copyright (C) 2022 Quaternion Risk Management Ltd
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file ored/utilities/calendarparser.hpp
+    \brief calendar parser singleton class
+    \ingroup utilities
+*/
+
+#include <ored/utilities/currencyparser.hpp>
+
+#include <qle/currencies/africa.hpp>
+#include <qle/currencies/america.hpp>
+#include <qle/currencies/asia.hpp>
+#include <qle/currencies/currencycomparator.hpp>
+#include <qle/currencies/europe.hpp>
+#include <qle/currencies/metals.hpp>
+
+#include <ql/currencies/all.hpp>
+
+#include <boost/algorithm/string.hpp>
+
+namespace ore {
+namespace data {
+
+using namespace QuantLib;
+using namespace QuantExt;
+
+CurrencyParser::CurrencyParser() { reset(); }
+
+QuantLib::Currency CurrencyParser::parseCurrency(const std::string& name) const {
+    boost::shared_lock<boost::shared_mutex> lock(mutex_);
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    }
+    QL_FAIL(!currency.empty(), "Currency \"" << s << "\" not recognized");
+}
+
+QuantLib::Currency CurrencyParser::addCurrency(std::string& newName, const QuantLib::Currency& currency) {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+    auto it = currencies_.find(newName);
+    if (it == currncies_.end()) {
+        currencies_[newName] = currency;
+        return std::move(tmp);
+    } else {
+        return it->second;
+    }
+}
+
+void CurrencyParser::reset() {
+    boost::unique_lock<boost::shared_mutex> lock(mutex_);
+
+    currencies_ = {{"AED", AEDCurrency()},
+                   {"AOA", AOACurrency()},
+                   {"ARS", ARSCurrency()},
+                   {"ATS", ATSCurrency()},
+                   {"AUD", AUDCurrency()},
+                   {"BEF", BEFCurrency()},
+                   {"BGN", BGNCurrency()},
+                   {"BHD", BHDCurrency()},
+                   {"BRL", BRLCurrency()},
+                   {"CAD", CADCurrency()},
+                   {"CHF", CHFCurrency()},
+                   {"CLF", CLFCurrency()},
+                   {"CLP", CLPCurrency()},
+                   {"CNH", CNHCurrency()},
+                   {"CNY", CNYCurrency()},
+                   {"COP", COPCurrency()},
+                   {"COU", COUCurrency()},
+                   {"CZK", CZKCurrency()},
+                   {"DEM", DEMCurrency()},
+                   {"DKK", DKKCurrency()},
+                   {"EGP", EGPCurrency()},
+                   {"ESP", ESPCurrency()},
+                   {"ETB", ETBCurrency()},
+                   {"EUR", EURCurrency()},
+                   {"FIM", FIMCurrency()},
+                   {"FRF", FRFCurrency()},
+                   {"GBP", GBPCurrency()},
+                   {"GEL", GELCurrency()},
+                   {"GHS", GHSCurrency()},
+                   {"GRD", GRDCurrency()},
+                   {"HKD", HKDCurrency()},
+                   {"HRK", HRKCurrency()},
+                   {"HUF", HUFCurrency()},
+                   {"IDR", IDRCurrency()},
+                   {"IEP", IEPCurrency()},
+                   {"ILS", ILSCurrency()},
+                   {"INR", INRCurrency()},
+                   {"ISK", ISKCurrency()},
+                   {"ITL", ITLCurrency()},
+                   {"JOD", JODCurrency()},
+                   {"JPY", JPYCurrency()},
+                   {"KES", KESCurrency()},
+                   {"KRW", KRWCurrency()},
+                   {"KWD", KWDCurrency()},
+                   {"KZT", KZTCurrency()},
+                   {"LKR", LKRCurrency()},
+                   {"LUF", LUFCurrency()},
+                   {"MAD", MADCurrency()},
+                   {"MUR", MURCurrency()},
+                   {"MXN", MXNCurrency()},
+                   {"MXV", MXVCurrency()},
+                   {"MYR", MYRCurrency()},
+                   {"NGN", NGNCurrency()},
+                   {"NLG", NLGCurrency()},
+                   {"NOK", NOKCurrency()},
+                   {"NZD", NZDCurrency()},
+                   {"OMR", OMRCurrency()},
+                   {"PEN", PENCurrency()},
+                   {"PHP", PHPCurrency()},
+                   {"PKR", PKRCurrency()},
+                   {"PLN", PLNCurrency()},
+                   {"PTE", PTECurrency()},
+                   {"QAR", QARCurrency()},
+                   {"RON", RONCurrency()},
+                   {"RSD", RSDCurrency()},
+                   {"RUB", RUBCurrency()},
+                   {"SAR", SARCurrency()},
+                   {"SEK", SEKCurrency()},
+                   {"SGD", SGDCurrency()},
+                   {"THB", THBCurrency()},
+                   {"TND", TNDCurrency()},
+                   {"TRY", TRYCurrency()},
+                   {"TWD", TWDCurrency()},
+                   {"UAH", UAHCurrency()},
+                   {"UGX", UGXCurrency()},
+                   {"USD", USDCurrency()},
+                   {"UYU", UYUCurrency()},
+                   {"VND", VNDCurrency()},
+                   {"XAG", XAGCurrency()},
+                   {"XAU", XAUCurrency()},
+                   {"XOF", XOFCurrency()},
+                   {"XPD", XPDCurrency()},
+                   {"XPT", XPTCurrency()},
+                   {"ZAR", ZARCurrency()},
+                   {"ZMW", ZMWCurrency()},
+                   // crypto
+                   {"XBT", BTCCurrency()},
+                   {"BTC", BTCCurrency()},
+                   {"ETH", ETHCurrency()},
+                   {"ETC", ETCCurrency()},
+                   {"BCH", BCHCurrency()},
+                   {"XRP", XRPCurrency()},
+                   {"LTC", LTCCurrency()}};
+}
+
+} // namespace data
+} // namespace ore

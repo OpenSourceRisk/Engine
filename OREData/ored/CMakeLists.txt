@@ -160,6 +160,7 @@ utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
 utilities/currencyconfig.cpp
+utilities/currencyparser.cpp
 utilities/dategrid.cpp
 utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
@@ -379,6 +380,7 @@ utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp
 utilities/currencyconfig.hpp
+utilities/currencyparser.hpp
 utilities/dategrid.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
