@@ -84,7 +84,7 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
 
     LOG("Reset and Build Portfolio");
     portfolio->reset();
-    portfolio->build(factory);
+    portfolio->build(factory, "stress analysis");
 
     LOG("Build the cube object to store sensitivities");
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(

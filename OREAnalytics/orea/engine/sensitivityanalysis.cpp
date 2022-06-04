@@ -171,7 +171,7 @@ SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuil
 
 void SensitivityAnalysis::resetPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     portfolio_->reset();
-    portfolio_->build(factory);
+    portfolio_->build(factory, "sensi analysis");
 }
 
 void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const {

@@ -156,8 +156,8 @@ void Portfolio::removeMatured(const Date& asof) {
     }
 }
 
-void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    LOG("Building Portfolio of size " << trades_.size());
+void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory, const std::string& context) {
+    LOG("Building Portfolio of size " << trades_.size() << " for context = '" << context << "'");
     auto trade = trades_.begin();
     Size initialSize = trades_.size();
     Size failedTrades = 0;
@@ -169,7 +169,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             TLOGGERSTREAM((*trade)->requiredFixings());
             ++trade;
         } catch (std::exception& e) {
-            ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
+            ALOG(StructuredTradeErrorMessage(*trade, "Error building trade for context '" + context + "'", e.what()));
             if (buildFailedTrades_) {
                 boost::shared_ptr<FailedTrade> failed = boost::make_shared<FailedTrade>();
                 failed->id() = (*trade)->id();
@@ -186,9 +186,9 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
     LOG("Built Portfolio. Initial size = " << initialSize << ", size now " << trades_.size() << ", built "
-                                           << failedTrades << " failed trades.");
+                                           << failedTrades << " failed trades, context is " + context);
 
-    QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
+    QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades, context is '" + context + "'");
 }
 
 Date Portfolio::maturity() const {
