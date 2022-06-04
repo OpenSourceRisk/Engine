@@ -92,8 +92,8 @@ public:
     //! Remove matured trades from portfolio for a given date, each removal is logged with an Alert
     void removeMatured(const QuantLib::Date& asof);
 
-    //! Call build on all trades in the portfolio
-    void build(const boost::shared_ptr<EngineFactory>&);
+    //! Call build on all trades in the portfolio, the context is included in error messages
+    void build(const boost::shared_ptr<EngineFactory>&, const std::string& context = "unspecified");
 
     //! Calculates the maturity of the portfolio
     QuantLib::Date maturity() const;
