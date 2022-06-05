@@ -533,7 +533,7 @@ boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<Engi
     MEM_LOG;
     LOG("Building portfolio");
     boost::shared_ptr<Portfolio> portfolio = loadPortfolio(buildFailedTrades);
-    portfolio->build(factory);
+    portfolio->build(factory, "oreapp");
     LOG("Portfolio built");
     MEM_LOG;
     return portfolio;
@@ -995,7 +995,7 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
 
         LOG("Build portfolio linked to sim market");
         Size n = portfolio->size();
-        portfolio->build(simFactory);
+        portfolio->build(simFactory, "oreapp/sim");
         simPortfolio_ = portfolio;
         if (simPortfolio_->size() != n) {
             ALOG("There were errors during the sim portfolio building - check the sim market setup? Could build "
