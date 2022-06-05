@@ -97,12 +97,14 @@ public:
         }
 
         auto numColumns = columns();
-        auto numRows = data_[0].size();
+        if (numColumns > 0) {
+            auto numRows = data_[0].size();
 
-        for (Size i = 0; i < numRows; i++) {
-            cReport.next();
-            for (Size j = 0; j < numColumns; j++) {
-                cReport.add(data_[j][i]);
+            for (Size i = 0; i < numRows; i++) {
+                cReport.next();
+                for (Size j = 0; j < numColumns; j++) {
+                    cReport.add(data_[j][i]);
+                }
             }
         }
 
