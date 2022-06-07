@@ -232,11 +232,13 @@
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
     <ClInclude Include="ored\utilities\calendaradjustmentconfig.hpp" />
+    <ClInclude Include="ored\utilities\calendarparser.hpp" />
     <ClInclude Include="ored\utilities\conventionsbasedfutureexpiry.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
     <ClInclude Include="ored\utilities\currencyconfig.hpp" />
+    <ClInclude Include="ored\utilities\currencyparser.hpp" />
     <ClInclude Include="ored\utilities\dategrid.hpp" />
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexnametranslator.hpp" />
@@ -412,11 +414,13 @@
     <ClCompile Include="ored\portfolio\optionasiandata.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
+    <ClCompile Include="ored\utilities\calendarparser.cpp" />
     <ClCompile Include="ored\utilities\conventionsbasedfutureexpiry.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />
     <ClCompile Include="ored\utilities\currencyconfig.cpp" />
+    <ClCompile Include="ored\utilities\currencyparser.cpp" />
     <ClCompile Include="ored\utilities\dategrid.cpp" />
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexnametranslator.cpp" />
