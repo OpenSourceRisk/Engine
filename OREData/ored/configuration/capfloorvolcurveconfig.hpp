@@ -120,20 +120,20 @@ public:
     std::string toString(VolatilityType type) const;
 
 private:
-    VolatilityType volatilityType_;
-    bool extrapolate_;
-    bool flatExtrapolation_;
-    bool includeAtm_;
+    VolatilityType volatilityType_ = VolatilityType::Normal;
+    bool extrapolate_ = true;
+    bool flatExtrapolation_ = true;
+    bool includeAtm_ = false;
     std::vector<std::string> tenors_;
     std::vector<std::string> strikes_;
     bool optionalQuotes_ = false;
     QuantLib::DayCounter dayCounter_;
-    QuantLib::Natural settleDays_;
+    QuantLib::Natural settleDays_ = 0;
     QuantLib::Calendar calendar_;
-    QuantLib::BusinessDayConvention businessDayConvention_;
+    QuantLib::BusinessDayConvention businessDayConvention_ = Following;
     std::string index_;
     QuantLib::Period rateComputationPeriod_;
-    QuantLib::Size onCapSettlementDays_;
+    QuantLib::Size onCapSettlementDays_ = 0;
     std::string discountCurve_;
     std::string interpolationMethod_;
     std::string interpolateOn_;
@@ -143,7 +143,7 @@ private:
     std::vector<std::string> atmTenors_;
     BootstrapConfig bootstrapConfig_;
     std::string smileDynamics_;
-    Type type_;
+    Type type_ = Type::Surface;
     std::string extrapolation_;
     //
     std::string proxySourceCurveId_;
