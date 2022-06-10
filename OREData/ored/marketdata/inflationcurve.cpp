@@ -163,7 +163,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                        << " factors.");
                         boost::shared_ptr<SeasonalityQuote> sq =
                             boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
-                        QL_REQUIRE(sq->type() == "MULT",
+			QL_REQUIRE(sq, "Could not cast to SeasonalityQuote, internal error.");
+			QL_REQUIRE(sq->type() == "MULT",
                                    "Market quote (" << sq->name() << ") not of multiplicative type.");
                         Size seasBaseDateMonth = ((Size)config->seasonalityBaseDate().month());
                         int findex = sq->applyMonth() - seasBaseDateMonth;
