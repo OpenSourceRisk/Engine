@@ -363,6 +363,11 @@ void FixingDateGetter::visit(CPICashFlow& c) {
     auto zeroInflationIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
     QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
 
+    requiredFixings_.addZeroInflationFixingDate(c.baseDate(), oreIndexName(c.index()->name()),
+                                                zeroInflationIndex->interpolated(), zeroInflationIndex->frequency(),
+                                                zeroInflationIndex->availabilityLag(), c.interpolation(), c.frequency(),
+                                                c.date());
+
     requiredFixings_.addZeroInflationFixingDate(c.fixingDate(), oreIndexName(c.index()->name()),
                                                 zeroInflationIndex->interpolated(), zeroInflationIndex->frequency(),
                                                 zeroInflationIndex->availabilityLag(), c.interpolation(), c.frequency(),
@@ -370,6 +375,11 @@ void FixingDateGetter::visit(CPICashFlow& c) {
 }
 
 void FixingDateGetter::visit(CPICoupon& c) {
+    requiredFixings_.addZeroInflationFixingDate(
+        c.baseDate(), oreIndexName(c.cpiIndex()->name()), c.cpiIndex()->interpolated(), c.cpiIndex()->frequency(),
+        c.cpiIndex()->availabilityLag(), c.observationInterpolation(), c.cpiIndex()->frequency(), c.date());
+
+
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDate(), oreIndexName(c.cpiIndex()->name()), c.cpiIndex()->interpolated(), c.cpiIndex()->frequency(),
         c.cpiIndex()->availabilityLag(), c.observationInterpolation(), c.cpiIndex()->frequency(), c.date());

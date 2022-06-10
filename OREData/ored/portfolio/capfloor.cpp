@@ -254,8 +254,41 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
 
         Real baseCPI = cpiData->baseCPI();
-        Period observationLag = parsePeriod(cpiData->observationLag());
-        CPI::InterpolationType interpolation = parseObservationInterpolation(cpiData->interpolation());
+
+        std::string conventionName = cpiData->index() + "_INFLATIONSWAP";
+        bool foundCpiSwapConvention = false;
+        boost::shared_ptr<InflationSwapConvention> cpiSwapConvention;
+
+        auto convention =
+            InstrumentConventions::instance().conventions()->get(conventionName, Convention::Type::InflationSwap);
+
+        if (convention.first) {
+            foundCpiSwapConvention = true;
+            cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(convention.second);
+        }
+
+        Period observationLag;
+        if (cpiData->observationLag().empty()) {
+            QL_REQUIRE(foundCpiSwapConvention,
+                       "observationLag is not specified in legData and couldn't find convention for "
+                           << conventionName << ". Please add field to trade xml or add convention");
+            DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
+            observationLag = cpiSwapConvention->observationLag();
+        } else {
+            observationLag = parsePeriod(cpiData->observationLag());
+        }
+
+        CPI::InterpolationType interpolationMethod;
+        if (cpiData->interpolation().empty()) {
+            QL_REQUIRE(foundCpiSwapConvention,
+                       "observationLag is not specified in legData and couldn't find convention for "
+                           << conventionName << ". Please add field to trade xml or add convention");
+            DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
+            interpolationMethod = cpiSwapConvention->interpolated() ? CPI::Linear : CPI::Flat;
+        } else {
+            interpolationMethod = parseObservationInterpolation(cpiData->interpolation());
+        }
+
         Calendar cal = zeroIndex->fixingCalendar();
         BusinessDayConvention conv = Unadjusted; // not used in the CPI CapFloor engine
 
@@ -307,8 +340,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
             if (capFloorType == QuantLib::CapFloor::Cap || capFloorType == QuantLib::CapFloor::Collar) {
                 boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv,
-                                                    cal, conv, caps_[i], zeroIndex, observationLag, interpolation);
+                    boost::make_shared<CPICapFloor>(Option::Call, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, caps_[i], zeroIndex,
+                    observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
@@ -318,8 +351,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 // for collars we want a long cap, short floor
                 Real sign = capFloorType == QuantLib::CapFloor::Floor ? 1.0 : -1.0;
                 boost::shared_ptr<CPICapFloor> capfloor =
-                    boost::make_shared<CPICapFloor>(Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv,
-                                                    cal, conv, floors_[i], zeroIndex, observationLag, interpolation);
+                    boost::make_shared<CPICapFloor>(Option::Put, nominal, startDate, baseCPI, paymentDate, cal, conv, cal, conv, floors_[i], zeroIndex,
+                    observationLag, interpolationMethod);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex));
                 boost::dynamic_pointer_cast<QuantLib::CompositeInstrument>(qlInstrument)->add(capfloor, sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());

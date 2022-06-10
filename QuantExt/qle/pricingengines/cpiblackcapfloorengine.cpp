@@ -63,6 +63,10 @@ void CPIBlackCapFloorEngine::calculate() const {
     Date baseDate = arguments_.infIndex->zeroInflationTermStructure()->baseDate();
     Real baseFixing = indexFixing(baseDate, baseDate);
 
+    Real baseCPI = arguments_.baseCPI == Null<Real>()
+                       ? indexFixing(arguments_.startDate - arguments_.observationLag, arguments_.startDate)
+                       : arguments_.baseCPI;
+
     Date effectiveStart = arguments_.startDate - arguments_.observationLag;
     if (arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
         arguments_.observationInterpolation == QuantLib::CPI::Flat) {
@@ -75,7 +79,7 @@ void CPIBlackCapFloorEngine::calculate() const {
     Real timeFromBase =
         arguments_.infIndex->zeroInflationTermStructure()->dayCounter().yearFraction(baseDate, effectiveMaturity);
     Real K = pow(1.0 + arguments_.strike, timeFromStart);
-    Real F = indexFixing(effectiveMaturity, maturity) / arguments_.baseCPI;
+    Real F = indexFixing(effectiveMaturity, maturity) / baseCPI;
 
     // if time from base <= 0 the fixing is already known and stdDev is zero, return the intrinsic value
     Real stdDev = 0.0;
@@ -84,7 +88,7 @@ void CPIBlackCapFloorEngine::calculate() const {
         // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t),
         // solve for strikeRate(t):
         Real strikeZeroRate =
-            pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) -
+            pow(baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) -
             1.0;
         stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate));
     }
@@ -99,7 +103,7 @@ void CPIBlackCapFloorEngine::calculate() const {
     // 	      << "timeFromStart = " << timeFromStart << std::endl
     // 	      << "timeFromBase  = " << timeFromBase << std::endl
     // 	      << "baseFixing    = " << baseFixing << std::endl
-    // 	      << "baseCPI       = " << arguments_.baseCPI << std::endl
+    // 	      << "baseCPI       = " << baseCPI << std::endl
     // 	      << "K             = " << K << std::endl
     // 	      << "F             = " << F << std::endl
     // 	      << "stdDev        = " << stdDev << std::endl
