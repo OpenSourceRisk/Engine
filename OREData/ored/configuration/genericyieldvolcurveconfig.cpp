@@ -250,8 +250,9 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         // optional quote tag to include
         quoteTag_ = XMLUtils::getChildValue(node, "QuoteTag", false);
 
-	smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
     }
+
+    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
 
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
         reportConfig_.fromXML(tmp);
@@ -321,10 +322,9 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
         if (!quoteTag_.empty()) {
             XMLUtils::addChild(doc, node, "QuoteTag", quoteTag_);
         }
-
-	XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     }
 
+    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
 
     return node;
