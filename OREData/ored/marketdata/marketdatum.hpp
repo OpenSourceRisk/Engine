@@ -1374,6 +1374,11 @@ public:
                      const string& month)
         : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::SEASONALITY), index_(index), type_(type),
           month_(month) {}
+    //! Make a copy of the market datum
+    boost::shared_ptr<MarketDatum> clone() override {
+        return boost::make_shared<SeasonalityQuote>(quote_->value(), asofDate_, name_, index(), type(), month());
+    }
+
     string index() { return index_; }
     string type() { return type_; }
     string month() { return month_; }
