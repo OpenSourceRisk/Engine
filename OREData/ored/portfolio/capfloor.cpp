@@ -255,23 +255,19 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         Real baseCPI = cpiData->baseCPI();
 
-        std::string conventionName = cpiData->index() + "_INFLATIONSWAP";
-        bool foundCpiSwapConvention = false;
-        boost::shared_ptr<InflationSwapConvention> cpiSwapConvention;
+        boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
-        auto convention =
-            InstrumentConventions::instance().conventions()->get(conventionName, Convention::Type::InflationSwap);
+        auto inflationConventions =
+            InstrumentConventions::instance().conventions()->get(underlyingIndex + "_INFLATIONSWAP", Convention::Type::InflationSwap);
 
-        if (convention.first) {
-            foundCpiSwapConvention = true;
-            cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(convention.second);
-        }
+        if (inflationConventions.first)
+            cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
 
         Period observationLag;
         if (cpiData->observationLag().empty()) {
-            QL_REQUIRE(foundCpiSwapConvention,
-                       "observationLag is not specified in legData and couldn't find convention for "
-                           << conventionName << ". Please add field to trade xml or add convention");
+            QL_REQUIRE(cpiSwapConvention, "observationLag is not specified in legData and couldn't find convention for "
+                                              << underlyingIndex
+                                              << ". Please add field to trade xml or add convention");
             DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
             observationLag = cpiSwapConvention->observationLag();
         } else {
@@ -280,9 +276,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         CPI::InterpolationType interpolationMethod;
         if (cpiData->interpolation().empty()) {
-            QL_REQUIRE(foundCpiSwapConvention,
-                       "observationLag is not specified in legData and couldn't find convention for "
-                           << conventionName << ". Please add field to trade xml or add convention");
+            QL_REQUIRE(cpiSwapConvention, "observationLag is not specified in legData and couldn't find convention for "
+                                              << underlyingIndex
+                                              << ". Please add field to trade xml or add convention");
             DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
             interpolationMethod = cpiSwapConvention->interpolated() ? CPI::Linear : CPI::Flat;
         } else {

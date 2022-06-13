@@ -1313,23 +1313,17 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         paymentCalendar = parseCalendar(data.paymentCalendar());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     
-    bool foundCpiSwapConvention = false;
-    boost::shared_ptr<InflationSwapConvention> cpiSwapConvention;
+    boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
-    auto inflationConventions = InstrumentConventions::instance().conventions()->get(Convention::Type::InflationSwap);
+    auto inflationConventions = InstrumentConventions::instance().conventions()->get(
+        cpiLegData->index() + "_INFLATIONSWAP", Convention::Type::InflationSwap);
 
-    for (const auto& conv : inflationConventions) {
-        auto infConv = boost::dynamic_pointer_cast<InflationSwapConvention>(conv);
-        if (infConv->indexName() ==cpiLegData->index()) {
-            foundCpiSwapConvention = true;
-            cpiSwapConvention = infConv;
-            break;
-        }
-    }
+    if (inflationConventions.first)
+        cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
 
     Period observationLag;
     if (cpiLegData->observationLag().empty()) {
-        QL_REQUIRE(foundCpiSwapConvention,
+        QL_REQUIRE(cpiSwapConvention,
                    "observationLag is not specified in legData and couldn't find convention for "
                        << cpiLegData->index() << ". Please add field to trade xml or add convention");
         DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
@@ -1340,7 +1334,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     
     CPI::InterpolationType interpolationMethod;
     if (cpiLegData->interpolation().empty()) {
-        QL_REQUIRE(foundCpiSwapConvention,
+        QL_REQUIRE(cpiSwapConvention,
                    "observationLag is not specified in legData and couldn't find convention for "
                        << cpiLegData->index() << ". Please add field to trade xml or add convention");
         DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
@@ -1470,23 +1464,17 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Calendar paymentCalendar;
 
-    bool foundCpiSwapConvention = false;
-    boost::shared_ptr<InflationSwapConvention> cpiSwapConvention;
+    boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
 
-    auto inflationConventions = InstrumentConventions::instance().conventions()->get(Convention::Type::InflationSwap);
+    auto inflationConventions = InstrumentConventions::instance().conventions()->get(
+        yoyLegData->index() + "_INFLATIONSWAP", Convention::Type::InflationSwap);
 
-    for (const auto& conv : inflationConventions) {
-        auto infConv = boost::dynamic_pointer_cast<InflationSwapConvention>(conv);
-        if (infConv->indexName() == yoyLegData->index()) {
-            foundCpiSwapConvention = true;
-            cpiSwapConvention = infConv;
-            break;
-        }
-    }
+    if (inflationConventions.first)
+        cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
 
     Period observationLag;
     if (yoyLegData->observationLag().empty()) {
-        QL_REQUIRE(foundCpiSwapConvention,
+        QL_REQUIRE(cpiSwapConvention,
                    "observationLag is not specified in legData and couldn't find convention for "
                        << yoyLegData->index() << ". Please add field to trade xml or add convention");
         DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
