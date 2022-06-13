@@ -21,7 +21,7 @@ Allowable values:  See \lstinline!Inflation CPI Index! in Table \ref{tab:cpiinde
  
  Allowable values: Each rate element can take any  real number. The rate is
   expressed in decimal form, e.g. 0.05 is a rate of 5\%.
-\item BaseCPI: The base CPI value $I_0$ used to determine the lifting factor for the fixed coupons.
+\item BaseCPI [Optional]: The base CPI value $I_0$ used to determine the lifting factor for the fixed coupons. If omitted it will take the observed CPI fixing on startDate - observationLag.
 
 Allowable values:  Any positive real number.
 
@@ -31,11 +31,12 @@ Allowable values:  Any positive real number.
   
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}. 
 
-\item ObservationLag: The observation lag to be applied. It's the amount of time from the fixing at the start or end of the period, moving backward in time, to the inflation index observation date (the inflation fixing). 
+\item ObservationLag [Optional]: The observation lag to be applied. It's the amount of time from the fixing at the start or end of the period, moving backward in time, to the inflation index observation date (the inflation fixing). Fallback to the index observation lag as specified in the inflation swap conventions of the underlying index, if not specified. 
 
 Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in a positive number of  \emph{M}, months. Note that negative values are allowed, but mean that the inflation is observed forward in time from the period start/end date, which is unusual.  
 
-\item Interpolation: The type of interpolation that is applied to inflation fixings. \emph{Linear} interpolation means that the inflation fixing for a given date is interpolated linearly between the surrounding - usually monthly - actual fixings, whereas with  \emph{Flat} interpolation the inflation fixings are constant for each day at the value of the previous/latest actual fixing (flat forward interpolation).  
+\item Interpolation [Optional]: The type of interpolation that is applied to inflation fixings. \emph{Linear} interpolation means that the inflation fixing for a given date is interpolated linearly between the surrounding - usually monthly - actual fixings, whereas with  \emph{Flat} interpoltion the inflation fixings are constant for each day at the value of the previous/latest actual fixing (flat forward interpolation).  
+Fallback to the Interpolation as specified in the inflation swap conventions of the underlying index, if not specified. 
 %\emph{AsIndex} means that the underlying inflation index interpolation is applied. Note that if an inflation index have fixing interpolation switched off,  \emph{AsIndex}  is equivalent to \emph{Flat} interpolation.
 
 Allowable values:  \emph{Linear, Flat} 
