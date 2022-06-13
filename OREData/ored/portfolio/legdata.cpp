@@ -227,15 +227,15 @@ void CPILegData::fromXML(XMLNode* node) {
     index_ = XMLUtils::getChildValue(node, "Index", true);
     startDate_ = XMLUtils::getChildValue(node, "StartDate", false);
     indices_.insert(index_);
-    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
-    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", false, QuantLib::Null<QuantLib::Real>());
+    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", false, "");
     // for backwards compatibility only
     if (auto c = XMLUtils::getChildNode(node, "Interpolated")) {
         QL_REQUIRE(XMLUtils::getChildNode(node, "Interpolation") == nullptr,
                    "can not have both Interpolated and Interpolation node in CPILegData");
         interpolation_ = parseBool(XMLUtils::getNodeValue(c)) ? "Linear" : "Flat";
     } else {
-        interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
+        interpolation_ = XMLUtils::getChildValue(node, "Interpolation", false, "");
     }
     XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotional");
     if (subNomNode)
@@ -280,10 +280,16 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
-    XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
+    if (baseCPI_ != Null<Real>()) {
+        XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
+    }
     XMLUtils::addChild(doc, node, "StartDate", startDate_);
-    XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
-    XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
+    if (!observationLag_.empty()) {
+        XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
+    }
+    if (!interpolation_.empty()) {
+       XMLUtils::addChild(doc, node, "Interpolation", interpolation_);
+    }
     XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     XMLUtils::addChild(doc, node, "SubtractInflationNotionalAllCoupons", subtractInflationNominalCoupons_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
@@ -303,7 +309,7 @@ void YoYLegData::fromXML(XMLNode* node) {
     index_ = XMLUtils::getChildValue(node, "Index", true);
     indices_.insert(index_);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays", true);
-    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", false, "");
     gearings_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Gearings", "Gearing", "startDate", gearingDates_,
                                                                 &parseReal);
     spreads_ = XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Spreads", "Spread", "startDate", spreadDates_,
@@ -328,7 +334,9 @@ void YoYLegData::fromXML(XMLNode* node) {
 XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", index_);
-    XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
+    if (!observationLag_.empty()) {
+        XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
+    }
     XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
                                                 gearingDates_);
@@ -1304,8 +1312,37 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     else
         paymentCalendar = parseCalendar(data.paymentCalendar());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    Period observationLag = parsePeriod(cpiLegData->observationLag());
-    CPI::InterpolationType interpolationMethod = parseObservationInterpolation(cpiLegData->interpolation());
+    
+    boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
+
+    auto inflationConventions = InstrumentConventions::instance().conventions()->get(
+        cpiLegData->index() + "_INFLATIONSWAP", Convention::Type::InflationSwap);
+
+    if (inflationConventions.first)
+        cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
+
+    Period observationLag;
+    if (cpiLegData->observationLag().empty()) {
+        QL_REQUIRE(cpiSwapConvention,
+                   "observationLag is not specified in legData and couldn't find convention for "
+                       << cpiLegData->index() << ". Please add field to trade xml or add convention");
+        DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
+        observationLag = cpiSwapConvention->observationLag();
+    } else {
+        observationLag = parsePeriod(cpiLegData->observationLag());
+    }
+    
+    CPI::InterpolationType interpolationMethod;
+    if (cpiLegData->interpolation().empty()) {
+        QL_REQUIRE(cpiSwapConvention,
+                   "observationLag is not specified in legData and couldn't find convention for "
+                       << cpiLegData->index() << ". Please add field to trade xml or add convention");
+        DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
+        interpolationMethod = cpiSwapConvention->interpolated() ? CPI::Linear : CPI::Flat;
+    } else {
+        interpolationMethod = parseObservationInterpolation(cpiLegData->interpolation());
+    }
+
     vector<double> rates = buildScheduledVector(cpiLegData->rates(), cpiLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     bool couponCap = cpiLegData->caps().size() > 0;
@@ -1425,8 +1462,26 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
     Schedule schedule = makeSchedule(data.schedule(), openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    Period observationLag = parsePeriod(yoyLegData->observationLag());
     Calendar paymentCalendar;
+
+    boost::shared_ptr<InflationSwapConvention> cpiSwapConvention = nullptr;
+
+    auto inflationConventions = InstrumentConventions::instance().conventions()->get(
+        yoyLegData->index() + "_INFLATIONSWAP", Convention::Type::InflationSwap);
+
+    if (inflationConventions.first)
+        cpiSwapConvention = boost::dynamic_pointer_cast<InflationSwapConvention>(inflationConventions.second);
+
+    Period observationLag;
+    if (yoyLegData->observationLag().empty()) {
+        QL_REQUIRE(cpiSwapConvention,
+                   "observationLag is not specified in legData and couldn't find convention for "
+                       << yoyLegData->index() << ". Please add field to trade xml or add convention");
+        DLOG("Build CPI Leg and use observation lag from standard inflationswap convention");
+        observationLag = cpiSwapConvention->observationLag();
+    } else {
+        observationLag = parsePeriod(yoyLegData->observationLag());
+    }
 
     if (data.paymentCalendar().empty())
         paymentCalendar = schedule.calendar();

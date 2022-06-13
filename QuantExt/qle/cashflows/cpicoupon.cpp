@@ -71,7 +71,7 @@ void CappedFlooredCPICoupon::setCommon(Rate cap, Rate floor) {
 
 CappedFlooredCPICoupon::CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>& underlying, Date startDate, Rate cap,
                                                Rate floor)
-    : CPICoupon(underlying->baseCPI(), underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
+    : CPICoupon(underlying->baseCPI(), underlying->baseDate(), underlying->date(), underlying->nominal(), underlying->accrualStartDate(),
                 underlying->accrualEndDate(), underlying->fixingDays(), underlying->cpiIndex(),
                 underlying->observationLag(), underlying->observationInterpolation(), underlying->dayCounter(),
                 underlying->fixedRate(), underlying->spread(), underlying->referencePeriodStart(),
@@ -226,8 +226,8 @@ CPILeg::CPILeg(const Schedule& schedule, const ext::shared_ptr<ZeroInflationInde
     : schedule_(schedule), index_(index), rateCurve_(rateCurve), baseCPI_(baseCPI), observationLag_(observationLag),
       paymentDayCounter_(Thirty360(Thirty360::BondBasis)), paymentAdjustment_(ModifiedFollowing), paymentCalendar_(schedule.calendar()),
       fixingDays_(std::vector<Natural>(1, 0)), observationInterpolation_(CPI::AsIndex), subtractInflationNominal_(true),
-      spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()),
-      subtractInflationNominalAllCoupons_(false), startDate_(schedule_.dates().front()) {
+      spreads_(std::vector<Real>(1, 0)), finalFlowCap_(Null<Real>()), finalFlowFloor_(Null<Real>()), subtractInflationNominalAllCoupons_(false),
+      startDate_(schedule_.dates().front()) {
     QL_REQUIRE(schedule_.dates().size() > 0, "empty schedule passed to CPILeg");
 }
 
@@ -331,6 +331,11 @@ CPILeg& CPILeg::withStartDate(const Date& startDate) {
     return *this;
 }
 
+CPILeg& CPILeg::withObservationLag(const Period& observationLag) {
+    observationLag_ = observationLag_;
+    return *this;
+}
+
 CPILeg& CPILeg::withExCouponPeriod(const Period& period, const Calendar& cal, BusinessDayConvention convention,
                                    bool endOfMonth) {
     exCouponPeriod_ = period;
@@ -351,6 +356,7 @@ CPILeg::operator Leg() const {
     Size n = schedule_.size() - 1;
     Leg leg;
     leg.reserve(n + 1); // +1 for notional, we always have some sort ...
+    Date baseDate = baseDate_ == Date() ? startDate_ - observationLag_ : baseDate_;
     if (n > 0) {
         QL_REQUIRE(!fixedRates_.empty() || !spreads_.empty(), "no fixedRates or spreads given");
 
@@ -385,6 +391,7 @@ CPILeg::operator Leg() const {
 
                 coup = ext::make_shared<CPICoupon>(
                     baseCPI_, // all have same base for ratio
+                    baseDate,
                     paymentDate, detail::get(notionals_, i, 0.0), start, end, detail::get(fixingDays_, i, 0.0), index_,
                     observationLag_, observationInterpolation_, paymentDayCounter_, detail::get(fixedRates_, i, 0.0),
                     detail::get(spreads_, i, 0.0), refStart, refEnd, exCouponDate, subtractInflationNominalAllCoupons_);
@@ -410,7 +417,7 @@ CPILeg::operator Leg() const {
     Date fixingDate = paymentDate - observationLag_;
 
     ext::shared_ptr<CPICashFlow> xnl = ext::make_shared<CPICashFlow>(
-        detail::get(notionals_, n, 0.0), index_, startDate_ - observationLag_, baseCPI_, fixingDate, paymentDate,
+        detail::get(notionals_, n, 0.0), index_, baseDate, baseCPI_, fixingDate, paymentDate,
         subtractInflationNominal_, observationInterpolation_, index_->frequency());
 
     if (finalFlowCap_ == Null<Real>() && finalFlowFloor_ == Null<Real>()) {
