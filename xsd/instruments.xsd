@@ -657,6 +657,7 @@
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
       <xs:enumeration value="ForwardRateAgreement"/>
+      <xs:enumeration value="FxAverageForward"/>
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
       <xs:enumeration value="FxSwap"/>
