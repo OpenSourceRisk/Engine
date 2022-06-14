@@ -332,7 +332,7 @@ CPILeg& CPILeg::withStartDate(const Date& startDate) {
 }
 
 CPILeg& CPILeg::withObservationLag(const Period& observationLag) {
-    observationLag_ = observationLag_;
+    observationLag_ = observationLag;
     return *this;
 }
 
