@@ -122,6 +122,7 @@ portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxasianoption.cpp
+portfolio/fxaverageforward.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
@@ -334,6 +335,7 @@ portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxasianoption.hpp
+portfolio/fxaverageforward.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp

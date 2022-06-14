@@ -38,9 +38,11 @@ using namespace QuantLib;
 //! Base class for FX Linked cashflows
 class FXLinked {
 public:
+    FXLinked(const std::vector<Date>& fixingDates, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex);
     FXLinked(const Date& fixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex);
     virtual ~FXLinked() {}
-    Date fxFixingDate() const { return fxFixingDate_; }
+    Date fxFixingDate() const { return fxFixingDates_.back(); }
+    const std::vector<Date>& fxFixingDates() const { return fxFixingDates_; }
     Real foreignAmount() const { return foreignAmount_; }
     const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
     Real fxRate() const;
@@ -48,7 +50,7 @@ public:
     virtual boost::shared_ptr<FXLinked> clone(boost::shared_ptr<FxIndex> fxIndex) = 0;
 
 private:
-    Date fxFixingDate_;
+    std::vector<Date> fxFixingDates_;
     Real foreignAmount_;
     boost::shared_ptr<FxIndex> fxIndex_;
 };
@@ -79,7 +81,9 @@ private:
  */
 class FXLinkedCashFlow : public CashFlow, public FXLinked, public Observer {
 public:
-    FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
+    FXLinkedCashFlow(const Date& cashFlowDate, const std::vector<Date>& fixingDates, Real foreignAmount,
+                     boost::shared_ptr<FxIndex> fxIndex);
+    FXLinkedCashFlow(const Date& cashFlowDate, Date fixingDate, Real foreignAmount,
                      boost::shared_ptr<FxIndex> fxIndex);
 
     //! \name CashFlow interface

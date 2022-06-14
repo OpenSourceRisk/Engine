@@ -42,7 +42,7 @@ public:
                              underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
                              underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
                              underlying->referencePeriodEnd(), underlying->dayCounter(), underlying->isInArrears()),
-          FXLinked(fxFixingDate, foreignAmount, fxIndex), underlying_(underlying) {
+          FXLinked(std::vector<Date>(1,fxFixingDate), foreignAmount, fxIndex), underlying_(underlying) {
         registerWith(FXLinked::fxIndex());
         registerWith(underlying_);
     }
@@ -101,7 +101,7 @@ inline void FloatingRateFXLinkedNotionalCoupon::accept(AcyclicVisitor& v) {
 }
 
 inline boost::shared_ptr<FXLinked> FloatingRateFXLinkedNotionalCoupon::clone(boost::shared_ptr<FxIndex> fxIndex) {
-    return boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fxFixingDate(), foreignAmount(), fxIndex,
+    return boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fxFixingDates().front(), foreignAmount(), fxIndex,
                                                                   underlying());
 }
 

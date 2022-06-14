@@ -180,6 +180,9 @@
     <ClInclude Include="ored\portfolio\envelope.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\fxaverageforward.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\fxforward.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -835,6 +838,9 @@
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\envelope.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\fxaverageforward.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\fxforward.cpp">
