@@ -22,6 +22,7 @@
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
+      <xs:element type="commodityDigitalOptionData" name="CommodityDigitalOptionData"/>
     </xs:choice>
   </xs:group>
 
@@ -666,6 +667,7 @@
       <xs:enumeration value="EquitySwap"/>
       <xs:enumeration value="CommodityForward"/>
       <xs:enumeration value="CommodityOption"/>
+      <xs:enumeration value="CommodityDigitalOption"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
@@ -832,6 +834,18 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="bool" name="IsFuturePrice" minOccurs="0"/>
+      <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="commodityDigitalOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="Payoff"/>
       <xs:element type="bool" name="IsFuturePrice" minOccurs="0"/>
       <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
     </xs:all>
