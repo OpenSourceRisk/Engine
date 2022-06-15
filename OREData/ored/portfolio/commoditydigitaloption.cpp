@@ -16,9 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/commoditydigitaloption.hpp>
-#include <ored/portfolio/commodityoption.hpp>
-
 #include <boost/make_shared.hpp>
 
 #include <ql/errors.hpp> 
@@ -27,6 +24,8 @@
 #include <ql/instruments/vanillaoption.hpp>
 #include <qle/indexes/commodityindex.hpp>
 
+#include <ored/portfolio/commoditydigitaloption.hpp>
+#include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
