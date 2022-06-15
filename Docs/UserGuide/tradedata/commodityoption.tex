@@ -52,3 +52,11 @@ Allowable values: This should be a valid date as outlined in Table \ref{tab:allo
 %A Precious Metal Option should be represented as a Commodity Option as above.
 Note that a Precious Metal Option should be represented as an FX
 Option using the appropriate commodity ``currency'' (XAU, XAG, XPT, XPD).
+
+\subsubsection{Commodity Digital Option}
+\label{ss:input_commodity_digital_option}
+
+A commodity digital option is represented with trade type  \emph{CommodityDigitalOption} and a \lstinline!CommodityDigitalOptionData! node.
+The latter differs from the \lstinline!CommodityOptionData! node in section \ref{ss:input_commodity_option} by replacing tag \emph{Quantity}
+with tag \emph{Payoff} which is the cash amount paid when the underlying price exceeds the strike at expiry.
+The digital option is priced in ORE as a spread of vanilla Commodity options.

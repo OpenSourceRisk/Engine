@@ -414,6 +414,9 @@
     <ClInclude Include="ored\portfolio\commodityoption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\commoditydigitaloption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\legbuilders.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -985,6 +988,9 @@
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\commodityoption.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commoditydigitaloption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\legbuilders.cpp">
