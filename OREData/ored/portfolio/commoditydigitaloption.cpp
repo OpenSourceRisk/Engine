@@ -54,7 +54,6 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     // Checks
     QL_REQUIRE(payoff_ > 0, "Commodity digital option requires a positive quatity");
     QL_REQUIRE(strike_ > 0, "Commodity digital option requires a positive strike");
-    //QL_REQUIRE(optionData_.callPut() == "Call", "OptionType Call expected in CommodityDigitalOption " << id());
     QL_REQUIRE(optionData_.exerciseDates().size() == 1, "Invalid number of excercise dates");
 
     expiryDate_ = parseDate(optionData_.exerciseDates().front());
@@ -93,20 +92,30 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     }
 
     // Build digital as call or put spread 
-    Real strikeSpread = strike_ * 0.05; // FIXME, what is a usual spread here?
+    Real strikeSpread = strike_ * 0.01; // FIXME, what is a usual spread here, and where should we put it?
     Real strike1 = strike_ - strikeSpread/2;
     Real strike2 = strike_ + strikeSpread/2;
-    CommodityOption call1(envelope(), optionData_, name_, currency_, strike1, 1.0, isFuturePrice_, futureExpiryDate_);
-    CommodityOption call2(envelope(), optionData_, name_, currency_, strike2, 1.0, isFuturePrice_, futureExpiryDate_);
-    call1.build(engineFactory);
-    call2.build(engineFactory);
-    boost::shared_ptr<Instrument> inst1 = call1.instrument()->qlInstrument();
-    boost::shared_ptr<Instrument> inst2 = call2.instrument()->qlInstrument();
+    CommodityOption opt1(envelope(), optionData_, name_, currency_, strike1, 1.0, isFuturePrice_, futureExpiryDate_);
+    CommodityOption opt2(envelope(), optionData_, name_, currency_, strike2, 1.0, isFuturePrice_, futureExpiryDate_);
+    opt1.build(engineFactory);
+    opt2.build(engineFactory);
+    boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();
+    boost::shared_ptr<Instrument> inst2 = opt2.instrument()->qlInstrument();
 
     boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
-    composite->add(inst1);
-    composite->subtract(inst2);
-        
+    // add and subtract such that the long call spread and long put spread have positive values
+    if (optionData_.callPut() == "Call") {
+        composite->add(inst1);
+        composite->subtract(inst2);
+    }
+    else if (optionData_.callPut() == "Put") {
+        composite->add(inst2);
+        composite->subtract(inst1);
+    }
+    else {
+        QL_FAIL("OptionType Call or Put required in CommodityDigitalOption " << id());
+    }
+
     Position::Type positionType = parsePositionType(optionData_.longShort());
     Real bsIndicator = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real multiplier = payoff_ * bsIndicator / strikeSpread;
@@ -134,6 +143,7 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
 
     additionalData_["payoff"] = payoff_;
     additionalData_["strike"] = strike_;
+    additionalData_["optionType"] = optionData_.callPut();
     additionalData_["strikeCurrency"] = currency_;    
 }
 
