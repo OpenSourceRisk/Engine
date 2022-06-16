@@ -120,9 +120,7 @@ The meanings and allowable values of the various elements in the \lstinline!FXAv
 \item ReferenceNotional: The amount to be converted into settlement currency at the average FX rate \\ Allowable values:  Any positive real number.
 \item ReferenceCurrency: The currency of the reference notional above.  \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
 \item SettlementNotional: The fixed amount to be paid or received depending on the fixed payer flag above \\ Allowable values:  Any positive real number.
-\item ReferenceCurrency: The currency of the settlement notional above. \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
-\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Average Forwards can be represented by \emph{Cash} settlement. \\
-Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Cash} if left blank or omitted.
+\item SettlementCurrency: The currency of the settlement notional above. \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
 \item FXIndex: The FX reference index for determining the FX fixing for averaging.  \\
 Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
 \end{itemize}

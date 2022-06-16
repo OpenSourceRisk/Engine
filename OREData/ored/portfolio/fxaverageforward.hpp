@@ -35,16 +35,16 @@
      //! Default constructor
      FxAverageForward() : Trade("FxAverageForward") {}
      //! Constructor
-     FxAverageForward(Envelope& env, ScheduleData observationDates, const string& paymentDate,
+     FxAverageForward(const Envelope& env, const ScheduleData& observationDates, const string& paymentDate,
 		      bool fixedPayer,
 		      const std::string& referenceCurrency, double referenceNotional,
 		      const std::string settlementCurrency, double settlementNotional,
-		      const std::string& fxIndex, const std::string& settlement)
+		      const std::string& fxIndex)
        : Trade("FxAverageForward", env),
 	 observationDates_(observationDates), paymentDate_(paymentDate), fixedPayer_(fixedPayer),
 	 referenceCurrency_(referenceCurrency), referenceNotional_(referenceNotional),
 	 settlementCurrency_(settlementCurrency), settlementNotional_(settlementNotional),
-	 fxIndex_(fxIndex), settlement_(settlement) {}
+	 fxIndex_(fxIndex) {}
 
      //! Build QuantLib/QuantExt instrument, link pricing engine
      void build(const boost::shared_ptr<EngineFactory>&) override;
@@ -59,7 +59,6 @@
      const string& settlementCurrency() const { return settlementCurrency_; }
      double settlementNotional() const { return settlementNotional_; }
      const std::string& fxIndex() const { return fxIndex_; }
-     const std::string& settlement() const { return settlement_; }
      //@}
 
      //! \name Serialisation
@@ -78,7 +77,6 @@
      double settlementNotional_;
      //! Needed for past fixings
      std::string fxIndex_;
-     std::string settlement_;
  };
 
  } // namespace data

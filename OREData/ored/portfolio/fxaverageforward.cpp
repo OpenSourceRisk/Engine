@@ -32,7 +32,7 @@ namespace data {
 
 void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("FxAverageForward::build() called");
-    QL_REQUIRE(!settlementCurrency_.empty(), "settlement currency must be blank");
+    QL_REQUIRE(!settlementCurrency_.empty(), "settlement currency must not be blank");
     QL_REQUIRE(!referenceCurrency_.empty(), "reference currency must not be blank");
     QL_REQUIRE(!fxIndex_.empty(), "fx index must not be blank");
     Currency refCcy = parseCurrency(referenceCurrency_);
@@ -46,9 +46,8 @@ void FxAverageForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<QuantExt::FxIndex> fxIndex = buildFxIndex(fxIndex_, payCcy.code(), refCcy.code(), engineFactory->market(),
 								engineFactory->configuration(MarketContext::pricing));
     for (const auto& date : observationSchedule.dates()) {
-        Date fixingDate = fxIndex->fixingCalendar().adjust(date);
-	if (fixingDate < Settings::instance().evaluationDate())
-	    requiredFixings_.addFixingDate(fixingDate, fxIndex_, payDate);
+	if (date <= Settings::instance().evaluationDate())
+	    requiredFixings_.addFixingDate(date, fxIndex_, payDate);
     }
 
     // Set up Legs
