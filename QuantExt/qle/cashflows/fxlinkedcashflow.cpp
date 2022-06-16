@@ -21,34 +21,42 @@
 
 namespace QuantExt {
 
-FXLinked::FXLinked(const std::vector<Date>& fxFixingDates, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
+FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
+    : fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
+
+AverageFXLinked::AverageFXLinked(const std::vector<Date>& fxFixingDates, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
     : fxFixingDates_(fxFixingDates), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
 
-FXLinked::FXLinked(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex)
-    : fxFixingDates_(std::vector<Date>(1, fxFixingDate)), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
-
 Real FXLinked::fxRate() const {
+    return fxIndex_->fixing(fxFixingDate_);
+}
+
+Real AverageFXLinked::fxRate() const {
     Real fx = 0;
     for (auto d: fxFixingDates_)
         fx += fxIndex_->fixing(d);
     fx /= fxFixingDates_.size();
     return fx;
 }
-  
-FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const std::vector<Date>& fxFixingDates, Real foreignAmount,
-                                   boost::shared_ptr<FxIndex> fxIndex)
-    : FXLinked(fxFixingDates, foreignAmount, fxIndex), cashFlowDate_(cashFlowDate) {
-    registerWith(FXLinked::fxIndex());
-}
 
-FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, Date fxFixingDate, Real foreignAmount,
+FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
                                    boost::shared_ptr<FxIndex> fxIndex)
     : FXLinked(fxFixingDate, foreignAmount, fxIndex), cashFlowDate_(cashFlowDate) {
     registerWith(FXLinked::fxIndex());
 }
 
+AverageFXLinkedCashFlow::AverageFXLinkedCashFlow(const Date& cashFlowDate, const std::vector<Date>& fxFixingDates, Real foreignAmount,
+						 boost::shared_ptr<FxIndex> fxIndex)
+    : AverageFXLinked(fxFixingDates, foreignAmount, fxIndex), cashFlowDate_(cashFlowDate) {
+    registerWith(AverageFXLinked::fxIndex());
+}
+
 boost::shared_ptr<FXLinked> FXLinkedCashFlow::clone(boost::shared_ptr<FxIndex> fxIndex) {
-    return boost::make_shared<FXLinkedCashFlow>(date(), fxFixingDates(), foreignAmount(), fxIndex);
+    return boost::make_shared<FXLinkedCashFlow>(date(), fxFixingDate(), foreignAmount(), fxIndex);
+}
+
+boost::shared_ptr<AverageFXLinked> AverageFXLinkedCashFlow::clone(boost::shared_ptr<FxIndex> fxIndex) {
+    return boost::make_shared<AverageFXLinkedCashFlow>(date(), fxFixingDates(), foreignAmount(), fxIndex);
 }
 
 } // namespace QuantExt
