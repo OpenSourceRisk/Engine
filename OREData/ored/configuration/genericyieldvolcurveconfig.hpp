@@ -155,9 +155,9 @@ private:
     const bool allowSmile_, requireSwapIndexBases_;
     //
     string qualifier_;
-    Dimension dimension_;
-    VolatilityType volatilityType_;
-    bool extrapolate_, flatExtrapolation_;
+    Dimension dimension_ = Dimension::Smile;
+    VolatilityType volatilityType_ = VolatilityType::Normal;
+    bool extrapolate_ = true, flatExtrapolation_ = true;
     vector<string> optionTenors_, underlyingTenors_;
     DayCounter dayCounter_;
     Calendar calendar_;

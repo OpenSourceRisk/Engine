@@ -11,7 +11,7 @@ Allowable values:  Any string (provided it is the ID of an inflation index in th
 \item FixingDays: The number of fixing days.
 
 Allowable values: An integer followed by \emph{D},
-\item ObservationLag: The observation lag to be applied.
+\item ObservationLag [Optional]: The observation lag to be applied. Fallback to the index observation lag as specified in the inflation swap conventions of the underlying index, if not specified. 
 
 Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
 %\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.

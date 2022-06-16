@@ -217,8 +217,6 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
             bootstrapConfig_.fromXML(n);
         }
 
-	smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
-
         // Set type_
         configureType();
 
@@ -231,6 +229,8 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         // Populate required curve ids
         populateRequiredCurveIds();
     }
+
+    smileDynamics_ = XMLUtils::getChildValue(node, "SmileDynamics", false, "");
 
     // Optional report config
     if (auto tmp = XMLUtils::getChildNode(node, "Report")) {
@@ -283,9 +283,9 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "StrikeInterpolation", strikeInterpolation_);
         XMLUtils::addChild(doc, node, "QuoteIncludesIndexName", quoteIncludesIndexName_);
         XMLUtils::appendNode(node, bootstrapConfig_.toXML(doc));
-	XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     }
 
+    XMLUtils::addChild(doc, node, "SmileDynamics", smileDynamics_);
     XMLUtils::appendNode(node, reportConfig_.toXML(doc));
     return node;
 }

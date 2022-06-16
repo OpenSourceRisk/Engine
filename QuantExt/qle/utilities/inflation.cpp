@@ -76,8 +76,12 @@ Real inflationLinkedBondQuoteFactor(const boost::shared_ptr<QuantLib::Bond>& bon
                 todaysCPI = indexStart + (settlementDate - currentInflationPeriod.first) *
                                              (indexEnd - indexStart) /
                                              (Real)(currentInflationPeriod.second - currentInflationPeriod.first);
-            }                        
-            inflFactor = todaysCPI / inflCpn->baseCPI();
+            }
+            QuantLib::Rate baseCPI = inflCpn->baseCPI();
+            if (baseCPI == QuantLib::Null<QuantLib::Rate>()) {
+                baseCPI = inflCpn->indexObservation(inflCpn->baseDate());
+            }
+            inflFactor = todaysCPI / baseCPI;
             break;
         }
     }
