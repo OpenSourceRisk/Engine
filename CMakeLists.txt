@@ -12,5 +12,6 @@ add_subdirectory("QuantLib")
 add_subdirectory("QuantExt")
 add_subdirectory("OREData")
 add_subdirectory("OREAnalytics")
+add_subdirectory("App")
 # add examples testsuite
 add_test(NAME examples WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Examples COMMAND nosetests run_examples_testsuite.py)
