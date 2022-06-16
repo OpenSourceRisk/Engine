@@ -83,9 +83,6 @@ get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORE
 get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest" ABSOLUTE)
 get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
 
-option(OREPLUS_LICENSE "Enable ORE+ Licensing" OFF)
-
-
 # convenience function that adds a link directory dir, but only if it exists
 function(add_link_directory_if_exists dir)
   if(EXISTS "${dir}")
@@ -98,8 +95,7 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
     # modified version of quantlib.cmake / get_quantlib_library_name
 
     # message(STATUS "${LIB_NAME} Library name tokens:")
-
-    # MSVC: Give built library different names following code in 'ql/autolink.hpp'
+   # MSVC: Give built library different names following code in 'ql/autolink.hpp'
     if(MSVC)
 
         # - platform

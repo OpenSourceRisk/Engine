@@ -9,7 +9,7 @@ include("../cmake/writeTestSuiteMain.cmake")
 include("../cmake/commonSettings.cmake")
 
 get_library_name("QuantExt" QLE_LIB_NAME)
-get_library_name("QuantLib" QL_LIB_NAME)
+set(QL_LIB_NAME ql_library)
 configure_msvc_runtime()
 
 find_package (Boost REQUIRED COMPONENTS unit_test_framework date_time thread system timer OPTIONAL_COMPONENTS chrono)
