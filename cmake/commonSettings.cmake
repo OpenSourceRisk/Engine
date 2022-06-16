@@ -95,8 +95,7 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
     # modified version of quantlib.cmake / get_quantlib_library_name
 
     # message(STATUS "${LIB_NAME} Library name tokens:")
-
-    # MSVC: Give built library different names following code in 'ql/autolink.hpp'
+   # MSVC: Give built library different names following code in 'ql/autolink.hpp'
     if(MSVC)
 
         # - platform
