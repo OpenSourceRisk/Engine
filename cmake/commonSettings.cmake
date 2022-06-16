@@ -83,9 +83,6 @@ get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORE
 get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest" ABSOLUTE)
 get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
 
-option(OREPLUS_LICENSE "Enable ORE+ Licensing" OFF)
-
-
 # convenience function that adds a link directory dir, but only if it exists
 function(add_link_directory_if_exists dir)
   if(EXISTS "${dir}")
