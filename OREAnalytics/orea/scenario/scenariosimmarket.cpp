@@ -2109,9 +2109,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                         }
                         if (wrapper->allowsExtrapolation())
                             hCpiVol->enableExtrapolation();
-                            cpiInflationCapFloorVolatilitySurfaces_.emplace(
-                                std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, name),
-                                std::forward_as_tuple(hCpiVol));
+                        cpiInflationCapFloorVolatilitySurfaces_.emplace(
+                            std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, name),
+                            std::forward_as_tuple(hCpiVol));
 
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
