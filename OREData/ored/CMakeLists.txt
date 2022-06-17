@@ -104,6 +104,7 @@ portfolio/capfloor.cpp
 portfolio/commodityasianoption.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
+portfolio/commoditydigitaloption.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
@@ -316,6 +317,7 @@ portfolio/capfloor.hpp
 portfolio/commodityasianoption.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
+portfolio/commoditydigitaloption.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp
