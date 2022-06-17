@@ -95,7 +95,7 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
     # modified version of quantlib.cmake / get_quantlib_library_name
 
     # message(STATUS "${LIB_NAME} Library name tokens:")
-   # MSVC: Give built library different names following code in 'ql/autolink.hpp'
+    # MSVC: Give built library different names following code in 'ql/autolink.hpp'
     if(MSVC)
 
         # - platform
@@ -121,6 +121,7 @@ macro(get_library_name LIB_NAME OUTPUT_NAME)
     else()
         set(${OUTPUT_NAME} ${LIB_NAME})
     endif()
+
     message(STATUS "${LIB_NAME} library name: ${${OUTPUT_NAME}}[${CMAKE_DEBUG_POSTFIX}]")
 endmacro(get_library_name)
 
@@ -169,4 +170,12 @@ macro(configure_msvc_runtime)
 
     endif()
 
+endmacro()
+
+macro(set_ql_library_name)
+  if(USE_GLOBAL_ORE_BUILD)
+    set(QL_LIB_NAME ql_library)
+  else()
+    get_library_name("QuantLib" QL_LIB_NAME)
+  endif()
 endmacro()
