@@ -95,6 +95,7 @@ public:
     void setExerciseDates(const std::vector<std::string>& exerciseDates) { exerciseDates_ = exerciseDates; }
     void setAutomaticExercise(bool automaticExercise) { automaticExercise_ = automaticExercise; }
     void setPaymentData(const OptionPaymentData& paymentData) { paymentData_ = paymentData; }
+    void setCallPut(const string& callPut) { callPut_ = callPut; }
     //@}
 
     //! \name Serialisation
