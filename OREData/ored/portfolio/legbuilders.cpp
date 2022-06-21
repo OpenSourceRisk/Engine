@@ -185,6 +185,21 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     return result;
 }
 
+Leg CMBLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                            RequiredFixings& requiredFixings, const string& configuration,
+                            const QuantLib::Date& openEndDateReplacement) const {
+    auto cmbData = boost::dynamic_pointer_cast<CMBLegData>(data.concreteLegData());
+    QL_REQUIRE(cmbData, "Wrong LegType, expected CMB");
+    // string swapIndexName = cmsData->swapIndex();
+    // auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
+    Leg result = makeCMBLeg(data, engineFactory, true, openEndDateReplacement);
+    // std::map<std::string, std::string> qlToOREIndexNames;
+    // applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+    // qlToOREIndexNames[index->name()] = swapIndexName;
+    // addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    return result;
+}
+
 Leg DigitalCMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                                    RequiredFixings& requiredFixings, const string& configuration,
                                    const QuantLib::Date& openEndDateReplacement) const {

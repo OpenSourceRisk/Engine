@@ -13,7 +13,8 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
                                    std::string& issueDate, std::string& creditCurveId, std::string& creditGroup,
                                    std::string& referenceCurveId, std::string& incomeCurveId,
                                    std::string& volatilityCurveId, std::vector<LegData>& coupons,
-                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData) {
+                                   const std::string& name, const boost::shared_ptr<BondReferenceDatum>& bondRefData,
+				   const std::string& startDate, const std::string& endDate) {
     DLOG("populating data bond from reference data");
     QL_REQUIRE(bondRefData, "populateFromBondReferenceData(): empty bond reference datum given");
     if (issuerId.empty()) {
@@ -56,6 +57,29 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
         coupons = bondRefData->bondData().legData;
         TLOG("overwrite coupons with " << coupons.size() << " LegData nodes");
     }
+    if (startDate != "") {
+        if (coupons.size() == 1 && coupons.front().schedule().rules().size() == 1 && coupons.front().schedule().dates().size() == 0) {
+	    string oldStart = coupons.front().schedule().rules().front().startDate();
+	    coupons.front().schedule().modifyRules().front().modifyStartDate() = startDate;
+	    string newStart = coupons.front().schedule().rules().front().startDate();
+	    DLOG("Modified start date " << oldStart << " -> " << newStart); 
+	}
+	else {
+	    ALOG("modifified start date cannot be applied to multiple legs/schedules"); 
+	}
+    }
+    if (endDate != "") {
+        if (coupons.size() == 1 && coupons.front().schedule().rules().size() == 1 && coupons.front().schedule().dates().size() == 0) {
+	    string oldEnd = coupons.front().schedule().rules().front().endDate();
+	    coupons.front().schedule().modifyRules().front().modifyEndDate() = endDate;
+	    string newEnd = coupons.front().schedule().rules().front().endDate();
+	    DLOG("Modified end date " << oldEnd << " -> " << newEnd); 
+	}
+	else {
+	    ALOG("modifified end date cannot be applied to multiple legs/schedules"); 
+	}
+    }
+      
     DLOG("populating bond data from reference data done.");
 }
 

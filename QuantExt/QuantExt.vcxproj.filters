@@ -93,6 +93,9 @@
     <ClInclude Include="qle\cashflows\couponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\cmbcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -1306,6 +1309,9 @@
     </ClCompile>
     <ClCompile Include="qle\currencies\asia.cpp">
       <Filter>currencies</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\cmbcoupon.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp">
       <Filter>cashflows</Filter>

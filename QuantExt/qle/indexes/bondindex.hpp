@@ -25,11 +25,14 @@
 
 #include <ql/handle.hpp>
 #include <ql/index.hpp>
+#include <ql/indexes/interestrateindex.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/couponpricer.hpp>
 
 namespace QuantExt {
 
@@ -171,4 +174,64 @@ private:
     mutable std::string name_;
 };
 
+//! Constant Maturity Bond Index
+/*! 
+  The purpose of this object is converting generic bond prices into yields 
+  and to use the yields as fixings in the context of floating rate coupons
+  \ingroup indexes 
+*/
+class ConstantMaturityBondIndex : public InterestRateIndex {
+public:
+    ConstantMaturityBondIndex(// index interface
+			      const std::string& familyName,
+			      const Period& tenor,
+			      Natural settlementDays,
+			      Currency currency,
+			      Calendar fixingCalendar,
+			      DayCounter dayCounter,
+			      // maturity data calculation
+			      BusinessDayConvention convention,
+			      bool endOfMonth,
+			      // underlying
+			      ext::shared_ptr<Bond> bond,
+			      // price to yield conversion
+			      Compounding compounding,
+			      Frequency frequency,
+			      Real accuracy = 1.0e-8,
+			      Size maxEvaluations = 100,
+			      Real guess = 0.05,
+			      QuantLib::Bond::Price::Type priceType = QuantLib::Bond::Price::Clean)
+      : InterestRateIndex(familyName, tenor, settlementDays, currency, fixingCalendar, dayCounter),
+	convention_(convention), endOfMonth_(endOfMonth),
+	bond_(bond), compounding_(compounding), frequency_(frequency),
+	accuracy_(accuracy), maxEvaluations_(maxEvaluations), guess_(guess), priceType_(priceType) {
+        registerWith(bond_);
+	std::ostringstream o;
+	o << familyName_ << "-" << tenor_;
+	name_ = o.str();
+    }
+
+    //! \name InterestRateIndex interface
+    //@{
+    Date maturityDate(const Date& valueDate) const override;
+    //@}
+  
+    //! \name Fixing calculations
+    //@{
+    Rate forecastFixing(const Date& fixingDate) const override;
+    //@}
+
+private:
+    BusinessDayConvention convention_;
+    bool endOfMonth_;
+    ext::shared_ptr<Bond> bond_;
+    Compounding compounding_;
+    Frequency frequency_;
+    Real accuracy_;
+    Size maxEvaluations_;
+    Real guess_;
+    Bond::Price::Type priceType_;
+};
+
+  
 } // namespace QuantExt
