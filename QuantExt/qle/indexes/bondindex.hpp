@@ -204,7 +204,8 @@ public:
       : InterestRateIndex(familyName, tenor, settlementDays, currency, fixingCalendar, dayCounter),
 	convention_(convention), endOfMonth_(endOfMonth),
 	bond_(bond), compounding_(compounding), frequency_(frequency),
-	accuracy_(accuracy), maxEvaluations_(maxEvaluations), guess_(guess), priceType_(priceType) {
+	accuracy_(accuracy), maxEvaluations_(maxEvaluations), guess_(guess), priceType_(priceType),
+	bondStartDate_(bond->startDate()) {
         registerWith(bond_);
 	std::ostringstream o;
 	o << familyName_ << "-" << tenor_;
@@ -231,6 +232,7 @@ private:
     Size maxEvaluations_;
     Real guess_;
     Bond::Price::Type priceType_;
+    Date bondStartDate_;
 };
 
   

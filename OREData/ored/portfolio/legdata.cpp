@@ -408,6 +408,7 @@ XMLNode* CMBLegData::toXML(XMLDocument& doc) {
                                                 gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
+    XMLUtils::addChild(doc, node, "CreditRisk", hasCreditRisk_);
     return node;
 }
 
@@ -435,6 +436,11 @@ void CMBLegData::fromXML(XMLNode* node) {
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
+
+    if (XMLUtils::getChildNode(node, "CreditRisk"))
+        hasCreditRisk_ = XMLUtils::getChildValueAsBool(node, "CreditRisk", false);
+    else
+        hasCreditRisk_ = true;
 }
 
 XMLNode* DigitalCMSLegData::toXML(XMLDocument& doc) {
@@ -1719,12 +1725,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
 Leg makeCMBLeg(const LegData& data, 
                const boost::shared_ptr<EngineFactory>& engineFactory,
 	       const bool attachPricer,
-               const QuantLib::Date& openEndDateReplacement,
-	       Compounding compounding,
-	       QuantLib::Bond::Price::Type priceType,
-	       Real accuracy,
-	       Size maxEvaluations,
-	       Real guess) {
+               const QuantLib::Date& openEndDateReplacement) {
     boost::shared_ptr<CMBLegData> cmbData = boost::dynamic_pointer_cast<CMBLegData>(data.concreteLegData());
     QL_REQUIRE(cmbData, "Wrong LegType, expected CMB, got " << data.legType());
 
@@ -1743,13 +1744,35 @@ Leg makeCMBLeg(const LegData& data,
 
     Schedule schedule = makeSchedule(data.schedule());
     Calendar calendar = schedule.calendar();
+    int fixingDays = cmbData->fixingDays();
     BusinessDayConvention convention = schedule.businessDayConvention();
+    bool creditRisk = cmbData->hasCreditRisk();
 
-    // Now get the generic bond reference data, set notional to 1
-    BondData bondData(bondId, 1.0); 
+    // Get the generic bond reference data, notional 1, credit risk as specified in the leg data 
+    BondData bondData(bondId, 1.0, creditRisk);
     bondData.populateFromBondReferenceData(engineFactory->referenceData());
     DLOG("Bond data for security id " << bondId << " loaded");
-    QL_REQUIRE(bondData.coupons().size() == 1, "multiple reference bond legs not covered by the CMB leg");
+    QL_REQUIRE(bondData.coupons().size() == 1,
+	       "multiple reference bond legs not covered by the CMB leg");
+    QL_REQUIRE(bondData.coupons().front().schedule().rules().size() == 1,
+	       "multiple bond schedule rules not covered by the CMB leg");
+    QL_REQUIRE(bondData.coupons().front().schedule().dates().size() == 0,
+	       "dates based bond schedules not covered by the CMB leg");
+
+    // Get bond yield conventions
+    auto ret = InstrumentConventions::instance().conventions()->get(bondId, Convention::Type::BondYield);
+    boost::shared_ptr<BondYieldConvention> conv;
+    if (ret.first)
+        conv = boost::dynamic_pointer_cast<BondYieldConvention>(ret.second);
+    else {
+	conv = boost::make_shared<BondYieldConvention>();
+        ALOG("BondYield conventions not found for security " << bondId << ", falling back on defaults:"
+	     << " compounding=" << conv->compoundingName()
+	     << ", priceType=" << conv->priceTypeName()
+	     << ", accuracy=" << conv->accuracy() 
+	     << ", maxEvaluations=" << conv->maxEvaluations() 
+	     << ", guess=" << conv->guess());
+    } 
 
     Schedule bondSchedule = makeSchedule(bondData.coupons().front().schedule());
     DayCounter bondDayCounter = parseDayCounter(bondData.coupons().front().dayCounter());
@@ -1758,17 +1781,20 @@ Leg makeCMBLeg(const LegData& data,
     Size bondSettlementDays = parseInteger(bondData.settlementDays());
     BusinessDayConvention bondConvention = bondSchedule.businessDayConvention();
     bool bondEndOfMonth = bondSchedule.endOfMonth();
-    Frequency frequency = bondSchedule.tenor().frequency();
+    Frequency bondFrequency = bondSchedule.tenor().frequency();
     
     DayCounter dayCounter = parseDayCounter(data.dayCounter());
 
     // Create a ConstantMaturityBondIndex for each schedule start date
     DLOG("Create Constant Maturity Bond Indices for each period");
     std::vector<boost::shared_ptr<QuantExt::ConstantMaturityBondIndex>> bondIndices;
-    for (Size i = 0; i < schedule.dates().size() - 1; ++i)  {
-        // construct bond with start date = schedule date and maturity = start date + term
-        std::string startDate = to_string(schedule[i]);
-	std::string endDate = to_string(schedule[i] + underlyingPeriod);
+    for (Size i = 0; i < schedule.dates().size() - 1; ++i) {
+        // Construct bond with start date = accrual start date and maturity = accrual start date + term
+        // or start = accrual end if in arrears. Adjusted for fixing lag, ignoring bond settlement lags for now.
+        Date refDate = cmbData->isInArrears() ? schedule[i+1] : schedule[i];
+	Date start = calendar.advance(refDate, -fixingDays, Days, Preceding); 
+	std::string startDate = to_string(start);
+	std::string endDate = to_string(start + underlyingPeriod);
 	bondData.populateFromBondReferenceData(engineFactory->referenceData(), startDate, endDate);
 	Bond bondTrade(Envelope(), bondData);
 	bondTrade.build(engineFactory);
@@ -1779,8 +1805,8 @@ Leg makeCMBLeg(const LegData& data,
 		bondSettlementDays, bondCurrency, bondCalendar, bondDayCounter, bondConvention, bondEndOfMonth,
 		// underlying forward starting bond
 		bond,
-		// yield calculation parameters
-		compounding, frequency, accuracy, maxEvaluations, guess, priceType);
+		// yield calculation parameters from conventions, except frequency which is from bond reference data
+		conv->compounding(), bondFrequency, conv->accuracy(), conv->maxEvaluations(), conv->guess(), conv->priceType());
 	bondIndices.push_back(bondIndex);
     }
     

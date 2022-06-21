@@ -201,6 +201,8 @@ Date ConstantMaturityBondIndex::maturityDate(const Date& valueDate) const {
 }
 
 Rate ConstantMaturityBondIndex::forecastFixing(const Date& fixingDate) const {
+    QL_REQUIRE(fixingDate == bondStartDate_, "bond yield fixing only available at bond start date, "
+	       << io::iso_date(fixingDate) << " != " << io::iso_date(bondStartDate_));
     return bond_->yield(dayCounter_, compounding_, frequency_, accuracy_, maxEvaluations_, guess_, priceType_);
 }
 

@@ -2204,6 +2204,65 @@ XMLNode* FxOptionConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+BondYieldConvention::BondYieldConvention()
+  : compounding_(Compounded), compoundingName_("Compounded"),
+    frequency_(Annual), frequencyName_("Annual"),
+    priceType_(QuantLib::Bond::Price::Type::Clean), priceTypeName_("Clean"),
+    accuracy_(1.0e-8), maxEvaluations_(100), guess_(0.05) {}
+
+BondYieldConvention::BondYieldConvention(
+    const string& id,
+    const string& compoundingName,
+    const string& frequencyName,
+    const string& priceTypeName,
+    Real accuracy,
+    Size maxEvaluations,
+    Real guess)
+    : Convention(id, Type::BondYield),
+      compoundingName_(compoundingName),
+      frequencyName_(frequencyName),
+      priceTypeName_(priceTypeName),
+      accuracy_(accuracy),
+      maxEvaluations_(maxEvaluations),
+      guess_(guess) {
+    build();
+}
+
+void BondYieldConvention::build() {
+    compounding_ = parseCompounding(compoundingName_);
+    frequency_ = parseFrequency(frequencyName_);
+    priceType_ = parseBondPriceType(priceTypeName_);
+}
+
+void BondYieldConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "BondYield");
+    type_ = Type::BondYield;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    compoundingName_ = XMLUtils::getChildValue(node, "Compounding", true);
+    frequencyName_ = XMLUtils::getChildValue(node, "Frequency", false, "Annual");
+    priceTypeName_ = XMLUtils::getChildValue(node, "PriceType", false, "Clean");
+    accuracy_ = XMLUtils::getChildValueAsDouble(node, "Accuracy", false, 1.0e-8);
+    maxEvaluations_ = XMLUtils::getChildValueAsInt(node, "MaxEvaluations", false, 100);
+    guess_ = XMLUtils::getChildValueAsDouble(node, "Guess", false, 0.05);
+   
+    build();
+}
+
+XMLNode* BondYieldConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("BondYield");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "PriceType", priceTypeName_);
+    XMLUtils::addChild(doc, node, "Compounding", compoundingName_);
+    XMLUtils::addChild(doc, node, "Accuracy", accuracy_);
+    XMLUtils::addChild(doc, node, "MaxEvaluations", Integer(maxEvaluations_));
+    XMLUtils::addChild(doc, node, "Guess", guess_);
+
+    return node;
+}
+
 ZeroInflationIndexConvention::ZeroInflationIndexConvention()
     : revised_(false), frequency_(Monthly) {}
 
@@ -2325,6 +2384,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention = boost::make_shared<OvernightIndexConvention>();
         } else if (childName == "ZeroInflationIndex") {
             convention = boost::make_shared<ZeroInflationIndexConvention>();
+        } else if (childName == "BondYield") {
+	    convention = boost::make_shared<BondYieldConvention>();
         } else {
             // No need to QL_FAIL here, just go to the next one
             WLOG("Convention name, " << childName << ", not recognized.");

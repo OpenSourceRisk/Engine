@@ -697,12 +697,12 @@ public:
     //! Default constructor
     CMBLegData() : LegAdditionalData("CMB"), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
-    CMBLegData(const string& genericBond, Size fixingDays, bool isInArrears, const vector<double>& spreads,
+    CMBLegData(const string& genericBond, bool hasCreditRisk, Size fixingDays, bool isInArrears, const vector<double>& spreads,
                const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
                const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
-        : LegAdditionalData("CMB"), genericBond_(genericBond), fixingDays_(fixingDays), isInArrears_(isInArrears),
+        : LegAdditionalData("CMB"), genericBond_(genericBond), hasCreditRisk_(hasCreditRisk), fixingDays_(fixingDays), isInArrears_(isInArrears),
           spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors),
           floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
         //indices_.insert(swapIndex_);
@@ -711,6 +711,7 @@ public:
     //! \name Inspectors
     //@{
     const string& genericBond() const { return genericBond_; }
+    bool hasCreditRisk() const { return hasCreditRisk_; }
     Size fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
     const vector<double>& spreads() const { return spreads_; }
@@ -740,6 +741,7 @@ public:
     //@}
 private:
     string genericBond_;
+    bool hasCreditRisk_;
     Size fixingDays_;
     bool isInArrears_;
     vector<double> spreads_;
@@ -982,18 +984,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMBLeg(const LegData& data, 
                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
-               const QuantLib::Date& openEndDateReplacement = Null<Date>(),
-	       // FIXME: Can we always assume Compounded here, (1+y/n)^t ?
-	       // Seems appropriate, but check concrete term sheets. We may need to expose it to the leg data.
-	       Compounding compounding = Compounded,
-	       // FIXME: If the generic bonds starts on schedule dates, clean and dirty choices do not differ,
-	       // but what if we change the logic and tailor the index underlying to the reference bond schedule?
-	       // We may need to expose it to the leg data
-	       QuantLib::Bond::Price::Type priceType = QuantLib::Bond::Price::Type::Clean,
-	       // FIXME: Where to store these technical parameters?
-	       Real accuracy = 1.0e-8,
-	       Size maxEvaluations = 100,
-	       Real guess = 0.05);
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
                       const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
                       const QuantLib::Date& openEndDateReplacement = Null<Date>());
