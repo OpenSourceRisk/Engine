@@ -399,7 +399,7 @@ void CMSLegData::fromXML(XMLNode* node) {
 
 XMLNode* CMBLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    XMLUtils::addChild(doc, node, "Bond", genericBond_);
+    XMLUtils::addChild(doc, node, "Index", genericBond_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
