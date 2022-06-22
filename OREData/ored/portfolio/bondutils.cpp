@@ -4,6 +4,7 @@
 */
 
 #include <ored/portfolio/bondutils.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 
 namespace ore {
@@ -57,26 +58,28 @@ void populateFromBondReferenceData(std::string& issuerId, std::string& settlemen
         coupons = bondRefData->bondData().legData;
         TLOG("overwrite coupons with " << coupons.size() << " LegData nodes");
     }
-    if (startDate != "") {
+    if (!startDate.empty()) {
         if (coupons.size() == 1 && coupons.front().schedule().rules().size() == 1 && coupons.front().schedule().dates().size() == 0) {
 	    string oldStart = coupons.front().schedule().rules().front().startDate();
 	    coupons.front().schedule().modifyRules().front().modifyStartDate() = startDate;
 	    string newStart = coupons.front().schedule().rules().front().startDate();
-	    DLOG("Modified start date " << oldStart << " -> " << newStart); 
+	    DLOG("Modified start date " << oldStart << " -> " << newStart);
 	}
 	else {
-	    ALOG("modifified start date cannot be applied to multiple legs/schedules"); 
+	  ALOG(StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
+					   "modifified start date cannot be applied to multiple legs/schedules"));
 	}
     }
-    if (endDate != "") {
+    if (!endDate.empty()) {
         if (coupons.size() == 1 && coupons.front().schedule().rules().size() == 1 && coupons.front().schedule().dates().size() == 0) {
 	    string oldEnd = coupons.front().schedule().rules().front().endDate();
 	    coupons.front().schedule().modifyRules().front().modifyEndDate() = endDate;
 	    string newEnd = coupons.front().schedule().rules().front().endDate();
-	    DLOG("Modified end date " << oldEnd << " -> " << newEnd); 
+	    DLOG("Modified end date " << oldEnd << " -> " << newEnd);
 	}
 	else {
-	    ALOG("modifified end date cannot be applied to multiple legs/schedules"); 
+	  ALOG(StructuredTradeErrorMessage(bondRefData->bondData().issuerId, "Bond-linked", "update reference data",
+					   "modifified end date cannot be applied to multiple legs/schedules"));
 	}
     }
       
