@@ -577,7 +577,7 @@
     <xs:all>
       <xs:element type="xs:boolean" name="Payer"/>
       <xs:element type="legType" name="LegType"/>
-      <xs:element type="extendedCurrencyCode" name="Currency"/>
+      <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
