@@ -140,6 +140,12 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
  */
 boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
 
+//! Convert std::string to QuantExt::ConstantMaturityBondIndex
+/*!
+ \ingroup utilities
+ */
+boost::shared_ptr<QuantExt::ConstantMaturityBondIndex> parseConstantMaturityBondIndex(const string& s);
+
 /*! Convert std::string to QuantExt::ComodityIndex
 
     This function can be used to parse commodity spot \e indices or commodity future \e indices:

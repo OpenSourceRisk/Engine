@@ -31,6 +31,7 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/simpledaycounter.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/couponpricer.hpp>
 
@@ -185,18 +186,18 @@ public:
     ConstantMaturityBondIndex(// index interface
 			      const std::string& familyName,
 			      const Period& tenor,
-			      Natural settlementDays,
-			      Currency currency,
-			      Calendar fixingCalendar,
-			      DayCounter dayCounter,
+			      Natural settlementDays = 0,
+			      Currency currency = Currency(),
+			      Calendar fixingCalendar = NullCalendar(),
+			      DayCounter dayCounter = SimpleDayCounter(),
 			      // maturity data calculation
-			      BusinessDayConvention convention,
-			      bool endOfMonth,
+			      BusinessDayConvention convention = Following,
+			      bool endOfMonth = false,
 			      // underlying
-			      ext::shared_ptr<Bond> bond,
+			      ext::shared_ptr<Bond> bond = nullptr,
 			      // price to yield conversion
-			      Compounding compounding,
-			      Frequency frequency,
+			      Compounding compounding = Compounded,
+			      Frequency frequency = Annual,
 			      Real accuracy = 1.0e-8,
 			      Size maxEvaluations = 100,
 			      Real guess = 0.05,
@@ -204,12 +205,14 @@ public:
       : InterestRateIndex(familyName, tenor, settlementDays, currency, fixingCalendar, dayCounter),
 	convention_(convention), endOfMonth_(endOfMonth),
 	bond_(bond), compounding_(compounding), frequency_(frequency),
-	accuracy_(accuracy), maxEvaluations_(maxEvaluations), guess_(guess), priceType_(priceType),
-	bondStartDate_(bond->startDate()) {
-        registerWith(bond_);
-	std::ostringstream o;
+	accuracy_(accuracy), maxEvaluations_(maxEvaluations), guess_(guess), priceType_(priceType) {
+        std::ostringstream o;
 	o << familyName_ << "-" << tenor_;
 	name_ = o.str();
+        if (bond_) {
+	    registerWith(bond_);
+	    bondStartDate_ = bond->startDate();
+	}
     }
 
     //! \name InterestRateIndex interface
@@ -220,6 +223,13 @@ public:
     //! \name Fixing calculations
     //@{
     Rate forecastFixing(const Date& fixingDate) const override;
+    //@}
+
+    //! \name Inspectors
+    //@{
+    BusinessDayConvention convention() const { return convention_; }
+    bool endOfMonth() const { return endOfMonth_; }
+    const ext::shared_ptr<Bond>& bond() const { return bond_; }
     //@}
 
 private:
@@ -233,6 +243,8 @@ private:
     Real guess_;
     Bond::Price::Type priceType_;
     Date bondStartDate_;
+    std::string securityId_;
+    std::string creditCurveId_;
 };
 
   

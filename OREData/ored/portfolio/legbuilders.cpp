@@ -190,13 +190,13 @@ Leg CMBLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
                             const QuantLib::Date& openEndDateReplacement) const {
     auto cmbData = boost::dynamic_pointer_cast<CMBLegData>(data.concreteLegData());
     QL_REQUIRE(cmbData, "Wrong LegType, expected CMB");
-    // string swapIndexName = cmsData->swapIndex();
-    // auto index = *engineFactory->market()->swapIndex(swapIndexName, configuration);
+    string indexName = cmbData->genericBond();
+    auto index = parseConstantMaturityBondIndex(indexName);
     Leg result = makeCMBLeg(data, engineFactory, true, openEndDateReplacement);
-    // std::map<std::string, std::string> qlToOREIndexNames;
-    // applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
-    // qlToOREIndexNames[index->name()] = swapIndexName;
-    // addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
+    std::map<std::string, std::string> qlToOREIndexNames;
+    applyIndexing(result, data, engineFactory, qlToOREIndexNames, requiredFixings, openEndDateReplacement);
+    qlToOREIndexNames[index->name()] = indexName;
+    addToRequiredFixings(result, boost::make_shared<FixingDateGetter>(requiredFixings, qlToOREIndexNames));
     return result;
 }
 

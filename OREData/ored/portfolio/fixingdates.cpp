@@ -28,6 +28,7 @@
 #include <qle/cashflows/nonstandardyoyinflationcoupon.hpp>
 #include <qle/cashflows/overnightindexedcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/indexes/commodityindex.hpp>
 #include <qle/indexes/fallbackiborindex.hpp>
 #include <qle/indexes/offpeakpowerindex.hpp>
@@ -460,6 +461,10 @@ void FixingDateGetter::visit(QuantExt::NonStandardYoYInflationCoupon& c) {
     requiredFixings_.addZeroInflationFixingDate(
         c.fixingDateDenumerator(), oreIndexName(c.cpiIndex()->name()), c.cpiIndex()->interpolated(),
         c.cpiIndex()->frequency(), c.cpiIndex()->availabilityLag(), CPI::AsIndex, c.cpiIndex()->frequency(), c.date());
+}
+
+void FixingDateGetter::visit(CmbCoupon& c) {
+    requiredFixings_.addFixingDate(c.fixingDate(), oreIndexName(c.bondIndex()->name()), c.date());
 }
 
 void addToRequiredFixings(const QuantLib::Leg& leg, const boost::shared_ptr<FixingDateGetter>& fixingDateGetter) {

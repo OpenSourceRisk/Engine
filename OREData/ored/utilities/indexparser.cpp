@@ -670,6 +670,31 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& name) {
 
 }
 
+boost::shared_ptr<ConstantMaturityBondIndex> parseConstantMaturityBondIndex(const string& name) {
+    // Expected bondId structure with at least three tokens, separated by "-", of the form CMB-FAMILY-TERM, for example:
+    // CMB-US-CMT-5Y, CMB-US-TIPS-10Y, CMB-UK-GILT-5Y, CMB-DE-BUND-10Y
+    // with two tokens in the middle to define the family 
+    std::vector<string> tokens;
+    split(tokens, name, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() >= 3, "Generic Bond ID with at least two tokens separated by - expected, found " << name);
+
+    // Make sure the prefix is correct
+    std::string prefix = tokens[0];
+    QL_REQUIRE(prefix == "CMB", "A constant maturity bond yield index string must start with 'CMB' but got " << prefix);
+
+    std::string securityFamily = tokens[1];
+    for (Size i = 2; i < tokens.size() - 1; ++i)
+        securityFamily = securityFamily + "-" + tokens[i];
+    Period underlyingPeriod = parsePeriod(tokens.back());
+    boost::shared_ptr<ConstantMaturityBondIndex> i;
+    try {
+        i = boost::make_shared<ConstantMaturityBondIndex>(prefix + "-" + securityFamily, underlyingPeriod); 
+    } catch(std::exception& e) {
+        ALOG("error creating CMB index: " << e.what());
+    }
+    return i;
+}
+
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, bool hasPrefix,
                                                                 const Handle<PriceTermStructure>& ts, const Calendar& cal) {
 
@@ -799,6 +824,12 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
         try {
             ret_idx = parseBondIndex(s);
         } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseConstantMaturityBondIndex(s);
+	} catch (...) {
         }
     }
     if (!ret_idx) {
