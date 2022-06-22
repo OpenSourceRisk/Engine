@@ -133,8 +133,7 @@ protected:
             getBlackScholesProcess(assetName, ccy, assetClassUnderlying);
         Handle<YieldTermStructure> domesticTS = gbsp->riskFreeRate();
         Handle<YieldTermStructure> foreignTS = gbsp->dividendYield();
-        const string& ccyPairCode = assetName + ccy.code();
-        Handle<Quote> spotFX = market_->fxSpot(ccyPairCode);
+        Handle<Quote> spotFX = gbsp->stateVariable();
 
         Time ttm = gbsp->blackVolatility()->timeFromReference(expiryDate);
         Handle<DeltaVolQuote> atmVol(
@@ -231,7 +230,7 @@ protected:
         Handle<YieldTermStructure> domesticTS = gbsp->riskFreeRate();
         Handle<YieldTermStructure> foreignTS = gbsp->dividendYield();
         const string& ccyPairCode = assetName + ccy.code();
-        Handle<Quote> spotFX = market_->fxSpot(ccyPairCode);
+        Handle<Quote> spotFX = gbsp->stateVariable();
 
         Time ttm = gbsp->blackVolatility()->timeFromReference(expiryDate);
         Handle<DeltaVolQuote> atmVol(
