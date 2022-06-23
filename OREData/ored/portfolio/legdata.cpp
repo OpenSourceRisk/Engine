@@ -83,6 +83,9 @@ bool lessThan(const string& s1, const string& s2) { return s1 < s2; }
 LegDataRegister<CashflowData> CashflowData::reg_("Cashflow");
 
 void CashflowData::fromXML(XMLNode* node) {
+    // allow for empty Cashflow legs without any payments
+    if(node == nullptr)
+	return;
     XMLUtils::checkNode(node, legNodeName());
     amounts_ =
         XMLUtils::getChildrenValuesWithAttributes<Real>(node, "Cashflow", "Amount", "date", dates_, &parseReal, false);
@@ -691,7 +694,7 @@ void LegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "LegData");
     string legType = XMLUtils::getChildValue(node, "LegType", true);
     isPayer_ = XMLUtils::getChildValueAsBool(node, "Payer");
-    currency_ = XMLUtils::getChildValue(node, "Currency", true);
+    currency_ = XMLUtils::getChildValue(node, "Currency", false);
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
     paymentLag_ = parsePaymentLag(XMLUtils::getChildValue(node, "PaymentLag"));
