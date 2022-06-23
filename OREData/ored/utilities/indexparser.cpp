@@ -671,7 +671,8 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& name) {
 }
 
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, bool hasPrefix,
-                                                                const Handle<PriceTermStructure>& ts, const Calendar& cal) {
+                                                                const Handle<PriceTermStructure>& ts,
+                                                                const Calendar& cal, const bool enforceFutureIndex) {
 
     // Whether we check for "COMM-" prefix depends on hasPrefix.
     string commName = name;
@@ -743,7 +744,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     }
 
     // Create and return the required future index
-    if (expiry != Date() || convention) {
+    if (expiry != Date() || (convention && enforceFutureIndex)) {
 
         // If expiry is empty, just use any valid expiry.
         if (expiry == Date()) {
