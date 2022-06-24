@@ -190,8 +190,9 @@ Real CreditVolCurve::atmStrike(const Date& expiry, const Real underlyingLength) 
     // compute (interpolated) ATM strike
 
     Real atmStrike;
-    Real fep1, fep2, fairSpread1, fairSpread2, rpv01_1, rpv01_2, adjFairSpread1, adjFairSpread2, discToExercise,
-        forwardPrice1, forwardPrice2, adjForwardPrice1, adjForwardPrice2;
+    Real fep1, fep2, fairSpread1, fairSpread2, rpv01_1, rpv01_2, adjFairSpread1 = 0.0, adjFairSpread2 = 0.0,
+                                                                 discToExercise = 1.0, forwardPrice1, forwardPrice2,
+                                                                 adjForwardPrice1 = 1.0, adjForwardPrice2 = 1.0;
 
     fep1 = (1.0 - termCurves_[termIndex_m]->recovery()->value()) *
            termCurves_[termIndex_m]->curve()->defaultProbability(effExp);

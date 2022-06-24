@@ -671,7 +671,8 @@ boost::shared_ptr<BondIndex> parseBondIndex(const string& name) {
 }
 
 boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& name, bool hasPrefix,
-                                                                const Handle<PriceTermStructure>& ts, const Calendar& cal) {
+                                                                const Handle<PriceTermStructure>& ts,
+                                                                const Calendar& cal, const bool enforceFutureIndex) {
 
     // Whether we check for "COMM-" prefix depends on hasPrefix.
     string commName = name;
@@ -743,7 +744,7 @@ boost::shared_ptr<QuantExt::CommodityIndex> parseCommodityIndex(const string& na
     }
 
     // Create and return the required future index
-    if (expiry != Date() || convention) {
+    if (expiry != Date() || (convention && enforceFutureIndex)) {
 
         // If expiry is empty, just use any valid expiry.
         if (expiry == Date()) {
@@ -864,7 +865,7 @@ string internalIndexName(const string& indexName) {
     // Check if we have an overnight index
     // This covers cases like USD-FedFunds-1D and returns USD-FedFunds
     // (no need to check convention based overnight indices, they are always of the form CCY-INDEX)
-    if (isOvernightIndex(tmpName) && parsePeriod(tokens[2]) == 1 * Days) {
+    if (parsePeriod(tokens[2]) == 1 * Days && isOvernightIndex(tmpName)) {
         return tmpName;
     }
 

@@ -23,6 +23,7 @@
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="creditDefaultSwapOptionData" name="CreditDefaultSwapOptionData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
+      <xs:element type="commodityDigitalOptionData" name="CommodityDigitalOptionData"/>
     </xs:choice>
   </xs:group>
 
@@ -577,7 +578,7 @@
     <xs:all>
       <xs:element type="xs:boolean" name="Payer"/>
       <xs:element type="legType" name="LegType"/>
-      <xs:element type="extendedCurrencyCode" name="Currency"/>
+      <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
       <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="0"/>
       <xs:element type="paymentLag" name="PaymentLag" minOccurs="0"/>
       <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0"/>
@@ -624,7 +625,7 @@
         </xs:complexType>
       </xs:element>
       <xs:element type="dayCounter" name="LastPeriodDayCounter" minOccurs="0"/>
-      <xs:element ref="legDataType"/>
+      <xs:element ref="legDataType" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
@@ -668,6 +669,7 @@
       <xs:enumeration value="EquitySwap"/>
       <xs:enumeration value="CommodityForward"/>
       <xs:enumeration value="CommodityOption"/>
+      <xs:enumeration value="CommodityDigitalOption"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="ForwardBond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
@@ -848,6 +850,18 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="bool" name="IsFuturePrice" minOccurs="0"/>
+      <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="commodityDigitalOptionData">
+    <xs:all>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="Payoff"/>
       <xs:element type="bool" name="IsFuturePrice" minOccurs="0"/>
       <xs:element type="date" name="FutureExpiryDate" minOccurs="0"/>
     </xs:all>

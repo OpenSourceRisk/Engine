@@ -8,6 +8,8 @@ include(CTest)
 
 include("cmake/commonSettings.cmake")
 
+set(USE_GLOBAL_ORE_BUILD ON)
+
 add_subdirectory("QuantLib")
 add_subdirectory("QuantExt")
 add_subdirectory("OREData")

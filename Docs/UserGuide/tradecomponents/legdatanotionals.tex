@@ -163,13 +163,13 @@ Allowable values:  Any positive real number.
 
 Allowable values:  A string on the form FX-SOURCE-CCY1-CCY2.
 
-\item FixingDays: The FX fixing lag in business days
+%\item FixingDays: The FX fixing lag in business days
 
-Allowable values:  A non-negative integer.
+%Allowable values:  A non-negative integer.
 
-\item FixingCalendar[Optional]: The calendar associated with the FX Index. 
+%\item FixingCalendar[Optional]: The calendar associated with the FX Index. 
 
-Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the null calendar if left blank or omitted.
+%Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the union of the calendars required by the FXIndex if left blank or omitted.
 
 
 
@@ -183,8 +183,6 @@ Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the null ca
                       <ForeignCurrency> EUR </ForeignCurrency>
                       <ForeignAmount> 60000000 </ForeignAmount>
                       <FXIndex> FX-ECB-USD-EUR </FXIndex>
-                      <FixingDays> 2 </FixingDays>
-                      <FixingCalendar>TARGET</FixingCalendar>
                     </FXReset>
                 </Notionals>
 \end{minted}

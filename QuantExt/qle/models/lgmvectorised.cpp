@@ -18,10 +18,12 @@
 
 #include <qle/models/lgmvectorised.hpp>
 
+#include <ql/instruments/overnightindexedswap.hpp>
 #include <ql/instruments/vanillaswap.hpp>
 
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 
@@ -82,31 +84,69 @@ RandomVariable LgmVectorised::fixing(const boost::shared_ptr<InterestRateIndex>&
     } else if (auto swap = boost::dynamic_pointer_cast<SwapIndex>(index)) {
         auto swapDiscountCurve =
             swap->exogenousDiscount() ? swap->discountingTermStructure() : swap->forwardingTermStructure();
-        auto underlying = swap->underlyingSwap(fixingDate);
-        RandomVariable numerator(x.size(), 0.0), denominator(x.size(), 0.0);
-        for (auto const& c : underlying->floatingLeg()) {
-            auto cpn = boost::dynamic_pointer_cast<IborCoupon>(c);
-            QL_REQUIRE(cpn, "LgmVectorised::fixing(): excepted ibor coupon");
-            Date fixingValueDate =
-                swap->iborIndex()->fixingCalendar().advance(cpn->fixingDate(), swap->iborIndex()->fixingDays(), Days);
-            Date fixingEndDate = cpn->fixingEndDate();
-            Time T1 = p_->termStructure()->timeFromReference(fixingValueDate);
-            Time T2 = p_->termStructure()->timeFromReference(fixingEndDate); // accounts for QL_INDEXED_COUPON
-            Time T3 = p_->termStructure()->timeFromReference(cpn->date());
-            RandomVariable disc1 = reducedDiscountBond(t, T1, x, swap->forwardingTermStructure());
-            RandomVariable disc2 = reducedDiscountBond(t, T2, x, swap->forwardingTermStructure());
-            Real adjFactor = cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate(),
-                                                            cpn->referencePeriodStart(), cpn->referencePeriodEnd()) /
-                             swap->iborIndex()->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
-            RandomVariable tmp = disc1 / disc2 - RandomVariable(x.size(), 1.0);
-            if (!QuantLib::close_enough(adjFactor, 1.0)) {
-                tmp *= RandomVariable(x.size(), adjFactor);
-            }
-            numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
+        Leg floatingLeg, fixedLeg;
+        if (auto ois = boost::dynamic_pointer_cast<OvernightIndexedSwapIndex>(index)) {
+            auto underlying = ois->underlyingSwap(fixingDate);
+            floatingLeg = underlying->overnightLeg();
+            fixedLeg = underlying->fixedLeg();
+        } else {
+            auto underlying = swap->underlyingSwap(fixingDate);
+            floatingLeg = underlying->floatingLeg();
+            fixedLeg = underlying->fixedLeg();
         }
-        for (auto const& c : underlying->fixedLeg()) {
+        RandomVariable numerator(x.size(), 0.0), denominator(x.size(), 0.0);
+        for (auto const& c : floatingLeg) {
+            if (auto cpn = boost::dynamic_pointer_cast<IborCoupon>(c)) {
+                Date fixingValueDate = swap->iborIndex()->fixingCalendar().advance(
+                    cpn->fixingDate(), swap->iborIndex()->fixingDays(), Days);
+                Date fixingEndDate = cpn->fixingEndDate();
+                Time T1 = p_->termStructure()->timeFromReference(fixingValueDate);
+                Time T2 = p_->termStructure()->timeFromReference(fixingEndDate); // accounts for QL_INDEXED_COUPON
+                Time T3 = p_->termStructure()->timeFromReference(cpn->date());
+                RandomVariable disc1 = reducedDiscountBond(t, T1, x, swap->forwardingTermStructure());
+                RandomVariable disc2 = reducedDiscountBond(t, T2, x, swap->forwardingTermStructure());
+                Real adjFactor =
+                    cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate(),
+                                                   cpn->referencePeriodStart(), cpn->referencePeriodEnd()) /
+                    swap->iborIndex()->dayCounter().yearFraction(fixingValueDate, fixingEndDate);
+                RandomVariable tmp = disc1 / disc2 - RandomVariable(x.size(), 1.0);
+                if (!QuantLib::close_enough(adjFactor, 1.0)) {
+                    tmp *= RandomVariable(x.size(), adjFactor);
+                }
+                numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
+            } else if (auto cpn = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(c)) {
+                Date start = cpn->valueDates().front();
+                Date end = cpn->valueDates().back();
+                Time T1 = p_->termStructure()->timeFromReference(start);
+                Time T2 = p_->termStructure()->timeFromReference(end);
+                Time T3 = p_->termStructure()->timeFromReference(cpn->date());
+                RandomVariable disc1 = reducedDiscountBond(t, T1, x, swap->forwardingTermStructure());
+                RandomVariable disc2 = reducedDiscountBond(t, T2, x, swap->forwardingTermStructure());
+                Real adjFactor =
+                    cpn->dayCounter().yearFraction(cpn->accrualStartDate(), cpn->accrualEndDate(),
+                                                   cpn->referencePeriodStart(), cpn->referencePeriodEnd()) /
+                    swap->iborIndex()->dayCounter().yearFraction(start, end);
+                RandomVariable tmp;
+                if (cpn->averagingMethod() == RateAveraging::Compound) {
+                    tmp = disc1 / disc2 - RandomVariable(x.size(), 1.0);
+                } else if (cpn->averagingMethod() == RateAveraging::Simple) {
+                    tmp = QuantExt::log(disc1 / disc2);
+                } else {
+                    QL_FAIL("LgmVectorised::fixing(): RateAveraging '"
+                            << static_cast<int>(cpn->averagingMethod())
+                            << "' not handled - internal error, contact dev.");
+                }
+                if (!QuantLib::close_enough(adjFactor, 1.0)) {
+                    tmp *= RandomVariable(x.size(), adjFactor);
+                }
+                numerator += tmp * reducedDiscountBond(t, T3, x, swapDiscountCurve);
+            } else {
+                QL_FAIL("LgmVectorised::fixing(): excepted ibor coupon");
+            }
+        }
+        for (auto const& c : fixedLeg) {
             auto cpn = boost::dynamic_pointer_cast<FixedRateCoupon>(c);
-            QL_REQUIRE(cpn, "LgmVectorised::fixing(): excepted ibor coupon");
+            QL_REQUIRE(cpn, "LgmVectorised::fixing(): excepted fixed coupon");
             Date d = cpn->date();
             Time T = p_->termStructure()->timeFromReference(d);
             denominator +=
