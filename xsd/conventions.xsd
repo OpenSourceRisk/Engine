@@ -27,6 +27,7 @@
       <xs:element type="commodityFutureType" name="CommodityFuture"/>
       <xs:element type="fxOption" name="FxOption"/>
       <xs:element type="zeroInflationIndexType" name="ZeroInflationIndex"/>
+      <xs:element type="bondYield" name="BondYield"/>
     </xs:choice>
   </xs:complexType>
 
@@ -464,6 +465,18 @@
       <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="AvailabilityLag" minOccurs="1" maxOccurs="1"/>
       <xs:element type="currencyCode" name="Currency" minOccurs="1" maxOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="bondYield">
+    <xs:all>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Compounding" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="Frequency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PriceType" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:float" name="Accuracy" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="MaxEvaluations" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:float" name="Guess" minOccurs="0" maxOccurs="1"/>
     </xs:all>
   </xs:complexType>
 

@@ -2254,8 +2254,9 @@ XMLNode* BondYieldConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("BondYield");
     XMLUtils::addChild(doc, node, "Id", id_);
-    XMLUtils::addChild(doc, node, "PriceType", priceTypeName_);
     XMLUtils::addChild(doc, node, "Compounding", compoundingName_);
+    XMLUtils::addChild(doc, node, "Frequency", frequencyName_);
+    XMLUtils::addChild(doc, node, "PriceType", priceTypeName_);
     XMLUtils::addChild(doc, node, "Accuracy", accuracy_);
     XMLUtils::addChild(doc, node, "MaxEvaluations", Integer(maxEvaluations_));
     XMLUtils::addChild(doc, node, "Guess", guess_);

@@ -701,6 +701,7 @@
       <xs:enumeration value="CPI"/>
       <xs:enumeration value="YY"/>
       <xs:enumeration value="CMS"/>
+      <xs:enumeration value="CMB"/>
       <xs:enumeration value="DigitalCMS"/>
       <xs:enumeration value="CMSSpread"/>
       <xs:enumeration value="DigitalCMSSpread"/>
