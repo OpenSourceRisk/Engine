@@ -17,7 +17,6 @@
 */
 
 #include <ored/portfolio/trade.hpp>
-#include <ored/utilities/currencycheck.hpp>
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 

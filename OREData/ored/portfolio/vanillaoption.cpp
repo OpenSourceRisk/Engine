@@ -12,7 +12,6 @@
 #include <ored/portfolio/builders/quantovanillaoption.hpp>
 #include <ored/portfolio/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/utilities/currencycheck.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/instruments/quantovanillaoption.hpp>
 #include <qle/instruments/vanillaforwardoption.hpp>

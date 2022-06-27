@@ -36,6 +36,8 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
     for (auto node : XMLUtils::getChildrenNodes(baseNode, "Currency")) {
         string name = XMLUtils::getChildValue(node, "Name", false);
         string isoCode = XMLUtils::getChildValue(node, "ISOCode", false);
+	auto tmp = parseListOfValues(XMLUtils::getChildValue(node, "MinorUnitCodes", false));
+        std::set<std::string> minorUnitCodes(tmp.begin(), tmp.end());
         try {
             DLOG("Loading external currency configuration for " << isoCode);
             Integer numericCode = parseInteger(XMLUtils::getChildValue(node, "NumericCode", false));
@@ -50,12 +52,14 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             Rounding rounding(precision, roundingType);
 
             QuantExt::ConfigurableCurrency c(name, isoCode, numericCode, symbol, fractionSymbol, fractionsPerUnit,
-                                             rounding, format);
+                                             rounding, format, minorUnitCodes);
             currencies_.push_back(c);
 
             DLOG("loading configuration for currency code " << isoCode);
 
             CurrencyParser::instance().addCurrency(c.code(), c);
+            for (auto const& m : c.minorUnitCodes())
+                CurrencyParser::instance().addMinorCurrency(m, c);
 
         } catch (std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);
@@ -69,6 +73,9 @@ XMLNode* CurrencyConfig::toXML(XMLDocument& doc) {
         XMLNode* ccyNode = XMLUtils::addChild(doc, node, "Currency");
         XMLUtils::addChild(doc, ccyNode, "Name", ccy.name());
         XMLUtils::addChild(doc, ccyNode, "ISOCode", ccy.code());
+        XMLUtils::addGenericChildAsList(
+            doc, ccyNode, "MinorUnitCodes",
+            std::vector<std::string>(ccy.minorUnitCodes().begin(), ccy.minorUnitCodes().end()));
         XMLUtils::addChild(doc, ccyNode, "NumericCode", to_string(ccy.numericCode()));
         XMLUtils::addChild(doc, ccyNode, "Symbol", ccy.symbol());
         XMLUtils::addChild(doc, ccyNode, "FractionSymbol", ccy.fractionSymbol());

@@ -22,7 +22,6 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
-#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>

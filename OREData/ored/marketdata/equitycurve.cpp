@@ -28,7 +28,6 @@
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <qle/termstructures/optionpricesurface.hpp>
 
-#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/wildcard.hpp>
 
