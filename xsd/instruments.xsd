@@ -362,7 +362,22 @@
       </xs:choice>
     </xs:complexType>
   </xs:element>
-    <xs:element name="DigitalCMSLegData" substitutionGroup="legDataType">
+  <xs:element name="CMBLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element type="xs:string" name="Index"/>
+        <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="FixingDays"/>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="CreditRisk" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DigitalCMSLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element name="CMSLegData">
@@ -686,6 +701,7 @@
       <xs:enumeration value="CPI"/>
       <xs:enumeration value="YY"/>
       <xs:enumeration value="CMS"/>
+      <xs:enumeration value="CMB"/>
       <xs:enumeration value="DigitalCMS"/>
       <xs:enumeration value="CMSSpread"/>
       <xs:enumeration value="DigitalCMSSpread"/>

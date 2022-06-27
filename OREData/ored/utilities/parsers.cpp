@@ -365,6 +365,20 @@ Compounding parseCompounding(const string& s) {
     }
 }
 
+QuantLib::Bond::Price::Type parseBondPriceType(const string& s) {
+    static map<string, QuantLib::Bond::Price::Type> m = {
+        {"Clean", QuantLib::Bond::Price::Type::Clean},
+        {"Dirty", QuantLib::Bond::Price::Type::Dirty}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("BondPriceType \"" << s << "\" not recognized");
+    }
+}
+
 Position::Type parsePositionType(const std::string& s) {
     static map<string, Position::Type> m = {
         {"Long", Position::Long},

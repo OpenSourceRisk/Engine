@@ -30,6 +30,7 @@
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <ql/instruments/overnightindexfuture.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/option.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <qle/indexes/bmaindexwrapper.hpp>
@@ -78,7 +79,8 @@ public:
         CMSSpreadOption,
         CommodityForward,
         CommodityFuture,
-        FxOption
+        FxOption,
+	BondYield
     };
 
     //! Default destructor
@@ -1753,6 +1755,49 @@ private:
     QuantLib::Frequency frequency_;
     QuantLib::Period availabilityLag_;
     QuantLib::Currency currency_;
+};
+
+/*! Container for storing bond yield calculation conventions
+   \ingroup marketdata
+*/
+class BondYieldConvention : public Convention {
+public:
+    //! Constructor.
+    BondYieldConvention();
+
+    //! Detailed constructor.
+    BondYieldConvention(const std::string& id,
+			const std::string& compoundingName,
+			const std::string& frequencyName,
+			const std::string& priceTypeName,
+			Real accuracy,
+			Size maxEvaluations,
+			Real guess);
+
+    std::string compoundingName() const { return compoundingName_; }
+    Compounding compounding() const { return compounding_; }
+    std::string frequencyName() const { return frequencyName_; }
+    Frequency frequency() const { return frequency_; }
+    QuantLib::Bond::Price::Type priceType() const { return priceType_; }
+    std::string priceTypeName() const { return priceTypeName_; }
+    QuantLib::Real accuracy() const { return accuracy_; }
+    QuantLib::Size maxEvaluations() const { return maxEvaluations_; }
+    QuantLib::Real guess() const { return guess_; }
+
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
+    void build() override;
+
+private:
+    Compounding compounding_;
+    std::string compoundingName_;
+    Frequency frequency_;
+    std::string frequencyName_;
+    QuantLib::Bond::Price::Type priceType_;
+    std::string priceTypeName_;
+    QuantLib::Real accuracy_;
+    QuantLib::Size maxEvaluations_;
+    QuantLib::Real guess_;
 };
 
 /*! 

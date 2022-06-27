@@ -148,16 +148,18 @@ void BondData::initialise() {
     }
 }
 
-void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum) {
+void BondData::populateFromBondReferenceData(const boost::shared_ptr<BondReferenceDatum>& referenceDatum,
+					       const std::string& startDate, const std::string& endDate) {
     DLOG("Got BondReferenceDatum for name " << securityId_ << " overwrite empty elements in trade");
     ore::data::populateFromBondReferenceData(issuerId_, settlementDays_, calendar_, issueDate_, creditCurveId_,
                                              creditGroup_, referenceCurveId_, incomeCurveId_, volatilityCurveId_,
-                                             coupons_, securityId_, referenceDatum);
+                                             coupons_, securityId_, referenceDatum, startDate, endDate);
     initialise();
     checkData();
 }
 
-void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData) {
+void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDataManager>& referenceData,
+					     const std::string& startDate, const std::string& endDate) {
     QL_REQUIRE(!securityId_.empty(), "BondData::populateFromBondReferenceData(): no security id given");
     if (!referenceData || !referenceData->hasData(BondReferenceDatum::TYPE, securityId_)) {
         DLOG("could not get BondReferenceDatum for name " << securityId_ << " leave data in trade unchanged");
@@ -167,7 +169,7 @@ void BondData::populateFromBondReferenceData(const boost::shared_ptr<ReferenceDa
         auto bondRefData = boost::dynamic_pointer_cast<BondReferenceDatum>(
             referenceData->getData(BondReferenceDatum::TYPE, securityId_));
         QL_REQUIRE(bondRefData, "could not cast to BondReferenceDatum, this is unexpected");
-        populateFromBondReferenceData(bondRefData);
+        populateFromBondReferenceData(bondRefData, startDate, endDate);
     }
 }
 

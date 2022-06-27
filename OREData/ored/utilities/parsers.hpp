@@ -36,6 +36,7 @@
 #include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/instruments/overnightindexfuture.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
@@ -200,6 +201,12 @@ QuantLib::Exercise::Type parseExerciseType(const string& s);
 \ingroup utilities
 */
 QuantLib::Option::Type parseOptionType(const string& s);
+
+//! Convert text to QuantLib::Bond::Price::Type
+/*!
+\ingroup utilities
+*/
+QuantLib::Bond::Price::Type parseBondPriceType(const string& s);
 
 //! Convert text to QuantLib::Period or QuantLib::Date
 /*!
