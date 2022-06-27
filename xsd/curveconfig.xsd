@@ -845,6 +845,7 @@
       <xs:element type="commVolQuoteSuffix" name="QuoteSuffix" minOccurs="0" maxOccurs="1"/>
       <xs:element type="oneDimSolverConfigType" name="OneDimSolverConfig" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="PreferOutOfTheMoney" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SmileDynamics" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

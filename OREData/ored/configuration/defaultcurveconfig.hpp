@@ -169,7 +169,7 @@ public:
                        const Config& config)
         : DefaultCurveConfig(curveID, curveDescription, currency, {{0, config}}) {}
     //! default ctor
-    DefaultCurveConfig() : DefaultCurveConfig("", "", "", Config()) {}
+    DefaultCurveConfig() {}
 
     //! \name Serialisation
     //@{

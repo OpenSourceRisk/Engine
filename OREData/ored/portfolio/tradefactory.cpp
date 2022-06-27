@@ -22,6 +22,7 @@
 #include <ored/portfolio/commodityasianoption.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
+#include <ored/portfolio/commoditydigitaloption.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapoption.hpp>
 #include <ored/portfolio/equityasianoption.hpp>
@@ -65,6 +66,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CreditDefaultSwapOption", boost::make_shared<TradeBuilder<CreditDefaultSwapOption>>());
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
+    addBuilder("CommodityDigitalOption", boost::make_shared<TradeBuilder<CommodityDigitalOption>>());
     addBuilder("CommodityAsianOption", boost::make_shared<TradeBuilder<CommodityAsianOption>>());
     addBuilder("EquityFutureOption", boost::make_shared<TradeBuilder<EquityFutureOption>>());
     addBuilder("Failed", boost::make_shared<TradeBuilder<FailedTrade>>());

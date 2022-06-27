@@ -168,6 +168,7 @@
     <ClInclude Include="ored\portfolio\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\commodityforward.hpp" />
     <ClInclude Include="ored\portfolio\commodityoption.hpp" />
+    <ClInclude Include="ored\portfolio\commoditydigitaloption.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswapdata.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswapoption.hpp" />
@@ -362,6 +363,7 @@
     <ClCompile Include="ored\portfolio\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\commodityforward.cpp" />
     <ClCompile Include="ored\portfolio\commodityoption.cpp" />
+    <ClCompile Include="ored\portfolio\commoditydigitaloption.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswap.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswapoption.cpp" />
