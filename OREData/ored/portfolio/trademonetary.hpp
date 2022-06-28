@@ -53,7 +53,7 @@ public:
     std::string currency() const;
 
 protected:
-    QuantLib::Real value_;
+    QuantLib::Real value_ = QuantLib::Null<Real>();
     std::string currency_;
 };
 
