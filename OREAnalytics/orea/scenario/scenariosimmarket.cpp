@@ -1968,50 +1968,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         writeSimData(simDataTmp, absoluteSimDataTmp);
                         simDataWritten = true;
-
-                        // Get the configured nominal term structure from this scenario sim market if possible
-                        // 1) Look for zero inflation curve configuration ID in zero inflation curves of todays market
-                        string zeroInflationConfigId;
-                        if (todaysMarketParams.hasConfiguration(configuration) &&
-                            todaysMarketParams.hasMarketObject(MarketObject::ZeroInflationCurve)) {
-                            auto m = todaysMarketParams.mapping(MarketObject::ZeroInflationCurve, configuration);
-                            auto it = m.find(name);
-                            if (it != m.end()) {
-                                string zeroInflationSpecId = it->second;
-                                TLOG("Got spec ID " << zeroInflationSpecId << " for zero inflation index " << name);
-                                auto zeroInflationSpec = parseCurveSpec(zeroInflationSpecId);
-                                QL_REQUIRE(zeroInflationSpec->baseType() == CurveSpec::CurveType::Inflation,
-                                           "Expected the curve "
-                                               << "spec type for " << zeroInflationSpecId << " to be 'Inflation'");
-                                zeroInflationConfigId = zeroInflationSpec->curveConfigID();
-                            }
-                        }
-
-                        // 2) Get the nominal term structure ID from the zero inflation curve configuration
-                        string nominalTsId;
-                        if (!zeroInflationConfigId.empty() &&
-                            curveConfigs.hasInflationCurveConfig(zeroInflationConfigId)) {
-                            auto zeroInflationConfig = curveConfigs.inflationCurveConfig(zeroInflationConfigId);
-                            nominalTsId = zeroInflationConfig->nominalTermStructure();
-                            TLOG("Got nominal term structure ID '" << nominalTsId << "' from config with ID '"
-                                                                   << zeroInflationConfigId << "'");
-                        }
-
-                        // 3) Get the nominal term structure from this scenario simulation market
-                        Handle<YieldTermStructure> nominalTs =
-                            getYieldCurve(nominalTsId, todaysMarketParams, Market::defaultConfiguration);
-                        TLOG("Nominal term structure '" << nominalTsId << "' from sim market is "
-                                                        << (nominalTs.empty() ? "empty" : "not empty"));
-
-                        // If nominal term structure is empty, fall back on this scenario simulation market's discount
-                        // curve
-                        if (nominalTs.empty()) {
-                            string ccy = inflationIndex->currency().code();
-                            TLOG("Falling back on the discount curve for currency '"
-                                 << ccy << "', the currency of inflation index '" << name << "'");
-                            nominalTs = discountCurve(ccy);
-                        }
-
+                                                
                         // FIXME: Settlement days set to zero - needed for floating term structure implementation
                         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
                         if (useSpreadedTermStructures_) {
@@ -2165,50 +2122,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         writeSimData(simDataTmp, absoluteSimDataTmp);
                         simDataWritten = true;
-
-                        // Get the configured nominal term structure from this scenario sim market if possible
-                        // 1) Look for yoy inflation curve configuration ID in yoy inflation curves of todays market
-                        string yoyInflationConfigId;
-                        if (todaysMarketParams.hasConfiguration(configuration) &&
-                            todaysMarketParams.hasMarketObject(MarketObject::YoYInflationCurve)) {
-                            auto m = todaysMarketParams.mapping(MarketObject::YoYInflationCurve, configuration);
-                            auto it = m.find(name);
-                            if (it != m.end()) {
-                                string yoyInflationSpecId = it->second;
-                                TLOG("Got spec ID " << yoyInflationSpecId << " for yoy inflation index " << name);
-                                auto yoyInflationSpec = parseCurveSpec(yoyInflationSpecId);
-                                QL_REQUIRE(yoyInflationSpec->baseType() == CurveSpec::CurveType::Inflation,
-                                           "Expected the curve "
-                                               << "spec type for " << yoyInflationSpecId << " to be 'Inflation'");
-                                yoyInflationConfigId = yoyInflationSpec->curveConfigID();
-                            }
-                        }
-
-                        // 2) Get the nominal term structure ID from the yoy inflation curve configuration
-                        string nominalTsId;
-                        if (!yoyInflationConfigId.empty() &&
-                            curveConfigs.hasInflationCurveConfig(yoyInflationConfigId)) {
-                            auto yoyInflationConfig = curveConfigs.inflationCurveConfig(yoyInflationConfigId);
-                            nominalTsId = yoyInflationConfig->nominalTermStructure();
-                            TLOG("Got nominal term structure ID '" << nominalTsId << "' from config with ID '"
-                                                                   << yoyInflationConfigId << "'");
-                        }
-
-                        // 3) Get the nominal term structure from this scenario simulation market
-                        Handle<YieldTermStructure> nominalTs =
-                            getYieldCurve(nominalTsId, todaysMarketParams, Market::defaultConfiguration);
-                        TLOG("Nominal term structure '" << nominalTsId << "' from sim market is "
-                                                        << (nominalTs.empty() ? "empty" : "not empty"));
-
-                        // If nominal term structure is empty, fall back on this scenario simulation market's discount
-                        // curve
-                        if (nominalTs.empty()) {
-                            string ccy = yoyInflationIndex->currency().code();
-                            TLOG("Falling back on the discount curve for currency '"
-                                 << ccy << "', the currency of inflation index '" << name << "'");
-                            nominalTs = discountCurve(ccy);
-                        }
-
+                                                
                         boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
                         // Note this is *not* a floating term structure, it is only suitable for sensi runs
                         // TODO: floating
