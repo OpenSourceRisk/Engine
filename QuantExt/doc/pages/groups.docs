@@ -1,0 +1,69 @@
+
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \defgroup currencies Currencies and FX rates
+    Grouping of all currency related classes, functions and files
+*/
+
+/*! \defgroup indexes Indexes
+    Grouping of all index related classes, functions and files
+*/
+
+/*! \defgroup engines Pricing engines
+    Grouping of all engine related classes, functions and files
+*/
+
+/*! \defgroup cashflows Cashflows
+    Grouping of all cashflow related classes, functions and files
+*/
+
+/*! \defgroup instruments Financial instruments
+    Grouping of all instrument related classes, functions and files
+*/
+
+/*! \defgroup termstructures Term Structures
+    Grouping of all term structure related classes, functions and files
+*/
+
+/*! \defgroup methods Methods
+    Grouping of all method related classes, functions and files
+    */
+
+/*! \defgroup processes Stochastic processes
+    Grouping of all process related classes, functions and files
+*/
+
+/*! \defgroup quotes Quotes
+    Grouping of all quotes related classes, functions and files
+*/
+
+/*! \defgroup math Math tools
+    Grouping of all math related classes, functions and files
+*/
+
+/*! \defgroup models Models
+    Grouping of all model related classes, functions and files
+    @{
+*/
+
+/*! \defgroup crossassetmodel Cross Asset Model
+    Grouping of all cross asset models
+*/
+
+/*! @} */

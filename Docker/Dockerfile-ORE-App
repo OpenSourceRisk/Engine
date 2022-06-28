@@ -1,0 +1,27 @@
+ARG ore_version=latest
+ARG test_tag=latest
+
+FROM env_ore:${ore_version} as env_ore
+FROM env_ore_test:${test_tag}
+
+COPY Examples /ore/Examples
+COPY Tools /ore/Tools
+COPY xsd /ore/xsd
+COPY OREData/test /ore/OREData/test
+COPY OREAnalytics/test /ore/OREAnalytics/test
+
+RUN mkdir /ore/App
+
+COPY --from=env_ore /usr/local/bin /ore/App
+
+RUN true
+
+COPY --from=env_ore /usr/local/lib /usr/local/lib
+
+RUN cd /ore \
+  && find -regex ".*\.\(sh\|txt\|in\|ac\|am\)" -exec dos2unix {} ';'
+
+WORKDIR /ore
+ENV LD_LIBRARY_PATH=/usr/local/lib:./
+
+CMD bash

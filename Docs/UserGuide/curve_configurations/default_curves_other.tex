@@ -1,0 +1,132 @@
+\subsubsection{Benchmark Default Curve}\label{ss:benchmark_default_curve}
+
+Default curves can be set up as a difference curve of two yield curves as shown in listing
+\ref{lst:defaultcurve_benchmark}. A typical use case is to back out a default curve from an all-in discounting curve
+fitted to a series of liquid bond prices (the ``source curve'') and a benchmark curve representing a benchmark funding
+level. The default curve can then be used in models consuming a benchmark curve and a default curve.
+
+If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
+and source curve respectively the resulting default term structures has survival probabilities
+
+\begin{equation}
+S(t) = \left( P_S(0,t) / P_B(0,t) \right) ^ { 1/(1-R) }
+\end{equation}
+
+on the given pillar times. Her, $R$ is the specified recovery rate. If the recovery rate is zero, which is the usual
+case, the formula simplifies to
+
+\begin{equation}
+  S(0,t) = P_S(0,t) / P_B(0,t)
+\end{equation}
+
+The interpolation is backward flat in the hazard rate. The meaning of each node is as follows:
+
+\begin{itemize}
+\item CurveId: The curve id.
+\item CurveDescription: The curve description.
+\item Currency: The currency of the curve.
+\item Type: Must be set to Benchmark.
+\item DayCounter: The day counter used to convert dates to times.
+\item RecoveryRate [optional]: The recovery rate for the resulting default curve. Defaults to zero. The recovery rate
+  can be a market quote as usual or also a fixed numeric value for this curve type.
+\item BenchmarkCurve: The benchmark yield curve, typically this is the standard Ibor curve in the currence
+  (e.g. EUR-EURIBOR-6M, USD-Libor-3M, ...)
+\item SourceCurve: The all-in discounting curve.
+\item Pillars: The pillars on which to match the source curve
+\item SpotLag: The pillar dates are derived using the spot lag and the tenors as specified in the Pillars node using the
+  specified calendar.
+\item Calendar: The calendar used to derive the pillar dates.
+\item Extrapolation [Optional]: If set to true, the curve is extrapoalted beyond the last pillar. Defaults to true.
+\item AllowNegativeRates [Optional]: If set to true, the check for non-negative instantaneous hazard rate in the result
+  curve is disabled, i.e. the relation $P_S(0,t) \leq P_B(0,t)$ is not enforced. This flag should be enabled with care,
+  i.e.  a model consuming the resulting default curve must be able to handle negative hazard rates appropriately. On the
+  other hand in some situations it is natural that the source curve rates are below the benchmark rates. Defaults to
+  false.
+\end{itemize}
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <DefaultCurve>
+      <CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
+      <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>Benchmark</Type>
+      <DayCounter>A365</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE//SNR/USD</RecoveryRate>
+      <BenchmarkCurve>Yield/EUR/EUR6M</BenchmarkCurve>
+      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve>
+      <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars>
+      <SpotLag>0</SpotLag>
+      <Calendar>TARGET</Calendar>
+      <Extrapolation>true</Extrapolation>
+      <AllowNegativeRates>false</AllowNegativeRates>
+    </DefaultCurve>
+  </DefaultCurves>
+\end{minted}
+\caption{Benchmark default curve}
+\label{lst:defaultcurve_benchmark}
+\end{longlisting}
+
+\subsubsection{Multi-Section Default Curve}\label{ss:multisection_default_curve}
+
+Default curves can be build by stitching together instantaneous hazard rates from multiple source curves for multiple
+date ranges as shown in listing \ref{lst:defaultcurve_multisection}.
+
+The hazard rate of the resulting curve is taken from the $i$th input curve ($i=0,1,2,\ldots$) for dates before the $i$th
+switch date and (if $i>0$) on or after the $i-1$th switch date. The day counter of all input curves should be equal to
+the day counter of the result curve. The interpolation is hardcoded as backward flat in the hazard rate.
+
+If not given, the recovery rate $R$ is assumed to be zero. The result default curve's survival probabiltiies are
+computed as
+
+\begin{equation}
+  S(t) = \left[ \left(\frac{P_{S,n}(t)}{P_{S,n}(t_{n})}\right)^{(1-R_n)} \Pi_{i=0}^{n-1} \left(\frac{P_{S,i}(t_{i+1})}{P_{S,i}(t_{i})}\right)^{(1-R_i)} \right] ^ { \frac{1}{1-R} }
+\end{equation}
+
+where $P_{S,i}$ is the survival probability of the $i$th source curve, $R_i$ is the associated recovery rate for the
+$i$th source curve, $n$ is chosen such that $P_{S,n}$ is the relevant source curve for time $t$ according to the given
+switch dates and curve $i$ is relevant for times in $[t_i,t_{i+1}]$.
+
+The meaning of each node is as follows:
+
+\begin{itemize}
+\item CurveId: The curve id.
+\item CurveDescription: The curve description.
+\item Currency: The currency of the curve.
+\item Type: Must be set to MutliSection.
+\item SourceCurves: The list of input default curves.
+\item SwitchDates: The list of dates where we switch from one input curve to the next. The number of switch dates must
+  be one less than the number of source curves.
+\item DayCounter: The day counter used to convert dates to times.
+\item RecoveryRate [optional]: The recovery rate for the resulting default curve. Defaults to zero. The recovery rate
+  can be a market quote as usual or also a fixed numeric value for this curve type.
+\item Extrapolation [Optional]: If set to true, the curve is extrapoalted beyond the last pillar. Defaults to true.
+\end{itemize}
+
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\small]{xml}
+<DefaultCurve>
+   <CurveId>MyMultiSectionDefaultCurve</CurveId>
+   <CurveDescription>Default curve with multiple sections</CurveDescription>
+   <Currency>USD</Currency>
+   <Type>MultiSection</Type>
+   <SourceCurves>
+     <SourceCurve>Default/USD/Generic_AA_Curve</SourceCurve>
+     <SourceCurve>Default/USD/Generic_B_Curve</SourceCurve>
+     <SourceCurve>Default/USD/Generic_C_Curve</SourceCurve>
+   </SourceCurves>
+   <SwitchDates>
+     <SwitchDate>2020-10-01</SwitchDate>
+     <SwitchDate>2021-12-01</SwitchDate>
+   <SwitchDates>
+   <Extrapolation>true</Extrapolation>
+   <DayCounter>A365</DayCounter>
+   <RecoveryRate>RECOVERY_RATE/RATE/NAME/SR/USD</RecoveryRate>
+</DefaultCurve>
+\end{minted}
+\caption{Multi-Section default curve}
+\label{lst:defaultcurve_multisection}
+\end{longlisting}

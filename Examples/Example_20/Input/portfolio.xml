@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <!-- Single Name CDS -->
+  <Trade id="CDS">
+    <TradeType>CreditDefaultSwap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CreditDefaultSwapData>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>BANK</CreditCurveId>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <PaysAtDefaultTime>Y</PaysAtDefaultTime>
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee><!-- expressed as a rate, to be multiplied by notional amount -->
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>10000000.000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate><!-- running premium, in addition to the upfront fee -->
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>CDS2015</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </CreditDefaultSwapData>
+  </Trade>
+</Portfolio>

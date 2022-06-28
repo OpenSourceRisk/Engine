@@ -1,0 +1,28 @@
+<Conventions>
+  <Deposit>
+    <Id>USD-ON-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>USD-FedFunds</Index>
+  </Deposit>
+  <OIS>
+    <Id>USD-OIS</Id>
+    <SpotLag>2</SpotLag>
+    <Index>USD-FedFunds</Index>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <PaymentLag>2</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+  <FX>
+    <Id>USD-ARS-FX</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>ARS</TargetCurrency>
+    <PointsFactor>1</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+  </FX>
+</Conventions>

@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+CDS,CreditDefaultSwap,2026-03-20,10.118070,805.422071,USD,711.291842,EUR,10000000.00,USD,8831293.16,CPTY_B,CPTY_B

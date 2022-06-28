@@ -1,0 +1,19 @@
+<CurveConfiguration>
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>PM:XAUUSD</CurveId>
+      <CurveDescription>Gold USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <SpotQuote>COMMODITY/PRICE/PM:XAUUSD/USD</SpotQuote>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/SN</Quote>
+        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/1M</Quote>
+        <Quote>COMMODITY_FWD/PRICE/PM:XAUUSD/USD/2M</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>LinearFlat</InterpolationMethod>
+      <Conventions>PM:XAUUSD</Conventions>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+</CurveConfiguration>

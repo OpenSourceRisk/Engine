@@ -1,0 +1,27 @@
+\subsubsection{CPI Swap}
+
+A CPI swap is set up as a swap, with one leg of type {\tt CPI}. Listing \ref{lst:cpiswap} shows an example. The
+CPI leg contains an additional {\tt CPILegData} block. See \ref{ss:cpilegdata} for details on the CPI leg specification.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        ...
+      </LegData>
+      <LegData>
+        <LegType>CPI</LegType>
+        <Payer>false</Payer>
+        ...
+        <CPILegData>
+        ...
+        </CPILegData>
+      </LegData>
+    </SwapData>
+\end{minted}
+\caption{CPI Swap Data}
+\label{lst:cpiswap}
+\end{listing}

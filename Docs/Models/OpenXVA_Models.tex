@@ -1,0 +1,340 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{supertabular}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{minted}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usemintedstyle{manni}
+\definecolor{mintedBg}{rgb}{0.98,0.98,0.70}
+
+\begin{document}
+
+\title{OpenXVA / QuantExt - Models}
+\date{\today}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{center}
+\begin{supertabular}{|l|l|l|p{7cm}|}
+\hline
+Version & Date & Author & Comment \\
+\hline
+0.1 & 8 January 2016 & Peter Caspers & initial version\\
+\hline
+\end{supertabular}
+\end{center}
+
+\vspace{3cm}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+
+%-------------------------------------------------------------------------------
+\section*{Introduction}
+
+This document describes models and associated classes in QuantExt.
+
+\section{Parametrizations}
+
+\subsection{Overview}
+
+A parametrization summarizes the parameters of a model and defines an interface to retrieve them. It is a generalization of QL's \verb+Parameter+ which is also used to link parametrizations to \verb+CalibratedModel+. The base class is \verb+Parametrization+ from which model specific parametrizations derive,
+
+\begin{enumerate}
+\item \verb+IrLgm1fParametrization+ for an IR LGM 1F model
+\item \verb+FxBsParametrization+ for an FX Black Scholes model
+\item \verb+EquityBsParametrization+ for an Equity Black Scholes model (draft)
+\item \verb+InflationJYParametrization+ for an Inflation JY model (draft)
+\item \verb+CreditHwParametrization+ for an Credit Hull White model (draft)
+\item \verb+ComGab2fParametrization+ for an Gabillon 2F commodity model (todo)
+\end{enumerate}
+
+Each of these classes provides an interface to model parameters and derived quantities needed in later calculations. For example, the \verb+IrLgm1fParametrization+ interface looks as follows
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    IrLgm1fParametrization(const Currency &currency,
+                           const Handle<YieldTermStructure> &termStructure);
+    /*! zeta must satisfy zeta(0) = 0, zeta'(t) >= 0 */
+    virtual Real zeta(const Time t) const = 0;
+    /*! H must be such that H' does not change its sign */
+    virtual Real H(const Time t) const = 0;
+    virtual Real alpha(const Time t) const;
+    virtual Real kappa(const Time t) const;
+    virtual Real Hprime(const Time t) const;
+    virtual Real Hprime2(const Time t) const;
+    virtual Real hullWhiteSigma(const Time t) const;
+    const Handle<YieldTermStructure> termStructure() const;
+\end{minted}
+\normalsize
+\medskip
+
+As a minimum requirement, a concrete parametrization must implement \verb+zeta+ and \verb+H+ to specify the model. The other methods provide quantities that are essential in later model calculations (except \verb+hullWhiteSigma+). They are implemented using simple numerical differentiation schemes in \verb+IrLgm1fParametrization+, but should be (and are) overriden if a more efficient implementation is possible. One example for a concrete implementation is \verb+IrLgm1fPiecewiseConstantParametrization+ with constructor
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    IrLgm1fPiecewiseConstantParametrization(
+        const Currency &currency,
+        const Handle<YieldTermStructure> &termStructure,
+        const Array &alphaTimes, const Array &alpha, const Array &kappaTimes,
+        const Array &kappa, const Real shift = 0.0, const Real scaling = 1.0);
+\end{minted}
+\normalsize
+\medskip
+
+allowing for piecewise constant $\alpha(\cdot)$ and $\kappa(\cdot)$ functions (possibly with different step grids) from which $H$ and $\zeta$ derive as
+
+\begin{equation}
+\zeta(t) = \int_0^t \alpha^2(s) ds
+\end{equation}
+
+and
+
+\begin{equation}
+H(t) = \int_0^t e^{-\int_0^s \kappa(u) du} ds
+\end{equation}
+
+The implementation is done such that all quantities are computed in closed form and with complexity $O(1)$ after a precomputation step that is triggered by calling the \verb+update+ method.
+
+Another example is given by \verb+IrLgm1fHullWhitePiecewiseConstantAdaptor+ that allows for specification of piecewise Hull White parameters $\sigma$ and $\kappa$ and transforms this into the equivalent LGM variance
+
+\begin{equation}
+\zeta(t) = \int_0^t e^{2\int_0^s \kappa(u) du} \sigma^2(s) ds
+\end{equation}
+
+so that the LGM model can be used to produce identical prices as a Hull White model with piecewise volatility and reversion. It will still operate in the LGM measure by default, but by setting the shift parameter in the parametrization from its default value $0$ to to $-H(T)$ the measure can be effectively changed to the $T$-forward measure, thus identical to the \verb+GSR+ model in QL.
+
+As before the Hull White Adaptor is implemented using closed form formulas and a precomputation that allows for $O(1)$ complexity for parameter retrieval.
+
+The full list of available parametrizations is as follows
+
+\begin{enumerate}
+\item \verb+Irlgm1fConstantParametrization+ for an LGM 1F model with constant $\kappa$ and $\alpha$
+\item \verb+IrLgm1fPiecewiseConstantParametrization+ for an LGM 1F model with piecewise constant $\kappa$ and $\alpha$ functions, possibly with different jump times
+\item \verb+IrLgm1fPiecewiseConstantHullWhiteAdaptor+ for an LGM 1F model which emulates piecewise constant Hull White parameters $\kappa$ and $\sigma$ which are translated into LGM parameters $\kappa$ and $\alpha$ (the latter no longer piecewise constant then)
+\item \verb+FxBsPiecewiseConstantParametrization+ for a Black Scholes model wit piecewise constant volatility
+\item ... (rest is TODO) ...
+\end{enumerate}
+
+\subsection{Unconstrained Optimization}
+
+If parameters are constrained (e.g. by positivity) this can be specified by QL's \verb+Contraint+ and this constrain will be ensured during model calibration. However this is done by simply rejecting non-admissable points in an otherwise unconstrained optimizer (usually Levenberg Marquardt or Simplex).
+
+A better way of doing the optimization under constraints with unconstrained optimizers is to perform the optimization in transformed variables with unconstrained domaain. For example, positivity can be ensured by optimizing $x\in(-\infty,\infty)$, but interpreting $x^2\in(0,\infty)$ as the actual parameter value.
+
+Other than in \verb+Parameter+ this is natively supported in parametrizations, which are equipped with \verb+direct+ and \verb+inverse+ methods that transform raw values (on which the optimization is done) into actual parameter values (with the direct method) and vice versa (with the inverse method).
+
+\subsection{Observability (tbd)}
+
+Currently parametrizations are neither observers nor observables. The \verb+update+ method must be called to update the precomputation if parameter values change like during a model calibration. This is ensured in the \verb+generateArguments+ method of the calibrated model though (see below).
+
+\subsection{Outlook / todo}
+
+Other parametrizations that should be added in the future are
+
+\begin{enumerate}
+\item CIR++ for credit
+\item BK for credit
+\item 2F models...
+\item ...
+\end{enumerate}
+
+\section{Cross Asset Model}
+
+The \verb+XAssetModel+ combines a set of single parametrizations to provide a cross asset model for an arbitrary set of currencies and asset classes. It can for example represent a single currency LGM 1f model, a cross currency LGM model for $n$ currencies or a global IR-FX-INF-CRD-COM model. It is constructed by
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
+                    &parametrizations,
+                const Matrix &correlation, SalvagingAlgorithm::Type salvaging =
+                                               SalvagingAlgorithm::Spectral);
+\end{minted}
+\normalsize
+\medskip
+
+The matrix correlates the brownian motions implied by the parametrization vector (tbd, should we allow for a time dependent correlation ?).
+
+\subsection{State variable process}
+
+The xasset model provides two flavours of the state process,
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    /*! returns the state process with a given discretization */
+    const boost::shared_ptr<StochasticProcess>
+    stateProcess(XAssetStateProcess::discretization disc =
+                     XAssetStateProcess::exact) const;
+\end{minted}
+\normalsize
+\medskip
+
+by setting \verb+disc+ to one of the values \verb+exact+ or \verb+euler+. The first version implements analytical moments allowing for arbitrary large steps in a monte carlo simulation, while the second version uses an Euler scheme to discretize the process (which requires small enough time steps to meet a given accuracy).
+
+If parametrizations are part of the model that do not fit into the multivariate gaussian notion, analytical moments may not be provided or only for a subset of the model. The Euler discretization will always work on the other hand, no matter what kind of marginal processes are combined.
+
+\subsection{Calibration}
+
+The xasset model is calibrated by using one of the calibration methods provided. Currently the following methods are available
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    /*! calibrate irlgm1f volatilities to a sequence of ir options with
+        expiry times equal to step times in the parametrization */
+    void calibrateIrLgm1fVolatilitiesIterative(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
+
+    /*! calibrate irlgm1f reversion to a sequence of ir options with
+        maturities equal to step times in the parametrization */
+    void calibrateIrLgm1fReversionsIterative(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        /* ... */);
+
+    /*! calibrate irlgm1f parameters for one ccy globally to a set
+        of ir options */
+    void calibrateIrLgm1fGlobal(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        /* ... */);
+
+    /*! calibrate fx volatilities to a sequence of fx options with
+            expiry times equal to step times in the parametrization */
+    void calibrateFxBsVolatilitiesIterative(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        /* ... */);
+\end{minted}
+\normalsize
+\medskip
+
+and allow
+
+\begin{enumerate}
+\item the calibration of the single LGM models to (in-currency) interest rate options
+\item the calibration of the fx processes to fx options
+\end{enumerate}
+
+The calibration methods have two tasks. First they select the appropriate subset of model parameters that are actually calibrated (by the standard functionality in QL's \verb+CalibratedModel+).
+
+Secondly they may set up a more complicated calibration procedure calling single calibrations more than once. For example the iterative procedures calibrate each volatility (reversion) parameter of a LGM model separately to one corresponding option with the same expiry (or maturity) as the step date of the parameter. This may be more stable or faster than a global calibration to a whole set of options.
+
+Another use case for this are calibration procedures for inflation components where (possibly) a convergence loop has to be implemented.
+
+Apart from this, the implementation of the calibration procedures is very short and easy, since only a boolean vector indicating the fixed and free optimization variables has to be set up before calling the standard calibration routine in QL.
+
+\subsection{LGM 1f model}
+
+Although a LGM 1f model can be constructed using the xasset model class, for convenience there is also a \verb+LGM+ class with two constructors
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    Lgm(const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
+    Lgm(const boost::shared_ptr<XAssetModel> &model, const Size ccy);
+\end{minted}
+\normalsize
+\medskip
+
+taking either a single parametrization or an xasset model from which a certain LGM model for a single currency is extracted as a marginal model.
+
+Although the LGM model class reuses the xasset model and has no own intelligence in general, a real difference of the class concerns the state process that is returned. This is an instance of \verb+IrLgm1fStateProcess+ instead of \verb+XAssetStateProcess+. While the latter allows for both analytical moments and Euler discretization, the former always uses (yet very easily and therefore efficiently computed) analytical moments. Also the xasset model's state process produces some overhead even in the case of a single dimension, so that the irlgm1f state process is expected to be more efficient. Finally the irlgm1f state process does not provide any caching of computed moments, while the xasset state process does for efficiency reasons.
+
+The LGM class comes with calibration procedures corresponding to the ones of xasset model which actually just pass the request through to the underlying xasset model.
+
+\subsection{Gaussian1d model adaptor}
+
+\verb+Gaussian1dXAssetAdaptor+ implements an adaptor to QL's \verb+Gaussian1dModel+ interface and takes either an \verb+LGM+ model instance or an \verb+XAssetModel+ instance and a currency index defining the marginal LGM model to extract.
+
+This way one can use the variety of pricing engines provided in QL for gaussian 1d models, which is useful for testing and to reuse more exotic engines like the basket generating engine for non-standard swaptions.
+
+\subsection{Observability (tbd)}
+
+... todo ...
+
+\section{Pricing Engines}
+
+\subsection{AnalyticLgmSwaptionEngine}
+
+This engine uses a Jamshidian decomposition to price european swaptions. It can be used for the LGM model calibration. It is constructed by one of these constructors
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    /*! Lgm model based constructor */
+    AnalyticLgmSwaptionEngine(
+        const boost::shared_ptr<Lgm> &model,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>(),
+        const FloatSpreadMapping floatSpreadMapping = proRata);
+
+    /*! XAsset model based constructor */
+    AnalyticLgmSwaptionEngine(
+        const boost::shared_ptr<XAssetModel> &model, const Size ccy,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>(),
+        const FloatSpreadMapping floatSpreadMapping = proRata);
+
+    /*! parametrization based constructor */
+    AnalyticLgmSwaptionEngine(
+        const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>(),
+        const FloatSpreadMapping floatSpreadMapping = proRata);
+\end{minted}
+\normalsize
+\medskip
+
+The third constructor does not even provide a model but only the parametrization. This constructor was included because the implemented pricing procedure (following Hagan's paper \textit{Evaluating and hedging exotic swap instruments via LGM}) relies on direct formulas in the model parameters rather than more abstract expressions like conditional zero bond prices that would be provided by a model class. (Of course it would always be possible to construct a LGM model internally in the engine on basis of the parametrization, but this is actually not done.)
+
+\subsection{AnalyticCcLgmFxOptionEngine}
+
+This engine prices fx options in a 3d LGM / Black Scholes model (possibly seen as a subset of a xasset model with more than two currencies). It is constructed by specifying
+
+\medskip
+\scriptsize
+\begin{minted}[bgcolor=mintedBg]{c++}
+    AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<XAssetModel> &model,
+                                const Size foreignCurrency);
+\end{minted}
+\normalsize
+\medskip
+
+the xasset model and a foreign currency index defining the currency pair dom-for, where the domestic currency is the domestic currency of the xasset model (which in turn is given by the first ir parametrization). For calibration an \verb+FxOptionHelper+ is provided in \verb+qle/models/fxoptionhelper.hpp+.
+
+\subsection{Observability (tbd)}
+
+... todo ...
+
+\section{Appendix: Internal building blocks}
+
+The macro \verb+QL_PIECEWISE_FUNCTION+ defined in \verb+qle/math/piecewisefunction.hpp+ is an efficient implementation of piecewise constant functions relying on the STL algorithm \verb+upper_bound+. Though very simple it seems worthwhile to encapsulate this functionality that is used in many contexts in the library at one place.
+
+For piecewise well behaved functions with known intervals of smoothness, numerical integration can be substantially improved by integrating over those subintervals. This is easily implemented by using the wrapper integrator \verb+PiecewiseIntegral+ defined in \verb+qle/math/piecewiseintegral.hpp+. Model parametrizations are usually piecewise smooth, so that piecewise integration is well suited for integrals involving model parameters. This is used extensively in the computation of analytic moments in the xasset model.
+
+
+
+\end{document}

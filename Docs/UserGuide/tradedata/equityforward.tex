@@ -1,0 +1,43 @@
+\subsubsection{Equity Forward}
+
+The \lstinline!EquityForwardData!  node is the trade data container for the \emph{EquityForward} trade type.  Vanilla equity 
+forwards are supported. The structure of an example \lstinline!EquityForwardData! node for an equity forward is shown in 
+Listing \ref{lst:eqfwd_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityForwardData>
+  <LongShort>Long</LongShort>
+  <Maturity>2018-06-30</Maturity>
+  <Name>RIC:.SPX</Name>
+  <Currency>USD</Currency>
+  <Strike>2147.56</Strike>
+  <StrikeCurrency>USD</StrikeCurrency>
+  <Quantity>17000</Quantity>
+</EquityForwardData>
+\end{minted}
+\caption{Equity Forward data}
+\label{lst:eqfwd_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!EquityForwardData!  node follow below.
+
+\begin{itemize}
+	\item LongShort: Defines whether the underlying equity will be bought (long) or sold (short). \\
+	Allowable values:  \emph{Long}, \emph{Short}.
+	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying equity will be bought/sold. \\
+	Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+	\item Name: The identifier of the underlying equity or equity index. 
+	
+	Allowable values:  See \lstinline!Name! for equity trades in Table \ref{tab:equity_credit_data}. \\
+	\item Underlying:  This node may be used as an alternative to the \lstinline!Name! node to specify the underlying equity. This in turn defines the equity curve used for pricing. The \lstinline!Underlying! node is described in further detail in Section \ref{ss:underlying}. \\
+	\item Currency: The  currency of the equity forward. \\
+	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.
+	\item Strike: The agreed buy/sell price of the equity forward. \\
+	Allowable values:  Any positive real number.	
+	\item StrikeCurrency: [Optional] The currency of the strike value. Defaults to \lstinline!Currency! field \\
+	Allowable values:  See Fiat Currencies and Minor Currencies in Table \ref{tab:currency}.	
+	\item Quantity: The number of units of the underlying equity to be bought/sold. \\
+	Allowable values:  Any positive real number.
+\end{itemize}

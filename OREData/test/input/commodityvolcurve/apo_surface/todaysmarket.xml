@@ -1,0 +1,15 @@
+<TodaysMarket>
+  <YieldCurves id="default"/>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+  </DiscountingCurves>
+  <IndexForwardingCurves/>
+  <CommodityCurves id="default">
+    <CommodityCurve name="NYMEX:CL">Commodity/USD/NYMEX:CL</CommodityCurve>
+    <CommodityCurve name="NYMEX:FF">Commodity/USD/NYMEX:FF</CommodityCurve>
+  </CommodityCurves>
+  <CommodityVolatilities id="default">
+    <CommodityVolatility name="NYMEX:CL">CommodityVolatility/USD/NYMEX:CL</CommodityVolatility>
+    <CommodityVolatility name="NYMEX:FF">CommodityVolatility/USD/NYMEX:FF</CommodityVolatility>
+  </CommodityVolatilities>
+</TodaysMarket>

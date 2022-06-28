@@ -1,0 +1,50 @@
+\subsubsection{Forward Rate Agreement}
+
+A forward rate agreement (trade type \emph{ForwardRateAgreement} is set up using a \\
+{\tt ForwardRateAgreementData} block as shown in listing \ref{lst:ForwardRateAgreementdata}. The forward rate agreement specific elements
+are:
+
+\begin{itemize}
+\item StartDate: A FRA expires/settles on the startDate. \\
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item Currency: The currency of the FRA notional. \\
+
+Allowable values:  See Table \ref{tab:currency} \lstinline!Currency!.	
+\item Index: The name of the interest rate index the FRA is benchmarked against.
+
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TENOR. CCY, INDEX and TENOR must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TENOR must be an integer followed by D, W,
+  M or Y, except for Overnight indices which do not require a TENOR. See Table \ref{tab:indices}.
+    
+\item LongShort: Specifies whether the FRA position is long (one receives the agreed rate) or short (one pays the agreed rate).
+
+Allowable values: \emph{Long}, \emph{Short}.
+\item Strike: The agreed forward interest rate.
+
+Allowable values: Any  real number. The strike rate is
+  expressed in decimal form, e.g. 0.05 is a rate of 5\%.
+\item Notional: No accretion or amortisation, just a constant notional. \\
+Allowable values:  Any positive real number.
+\end{itemize}
+
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <ForwardRateAgreementData>
+        <StartDate>20161028</StartDate>
+        <EndDate>20351028</EndDate>
+        <Currency>EUR</Currency>
+        <Index>EUR-EURIBOR-6M</Index>
+        <LongShort>Long</LongShort>
+        <Strike>0.001</Strike>
+        <Notional>1000000000</Notional>
+    </ForwardRateAgreementData>
+\end{minted}
+\caption{Forward Rate Agreement Data}
+\label{lst:ForwardRateAgreementdata}
+\end{listing}
