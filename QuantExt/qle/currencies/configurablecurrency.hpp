@@ -35,14 +35,10 @@ using namespace QuantLib;
  */
 class ConfigurableCurrency : public Currency {
 public:
-    ConfigurableCurrency(const std::string& name,
-             const std::string& code,
-             Integer numericCode,
-             const std::string& symbol,
-             const std::string& fractionSymbol,
-             Integer fractionsPerUnit,
-             const Rounding& rounding,
-             const std::string& formatString);
+    ConfigurableCurrency(const std::string& name, const std::string& code, Integer numericCode,
+                         const std::string& symbol, const std::string& fractionSymbol, Integer fractionsPerUnit,
+                         const Rounding& rounding, const std::string& formatString,
+                         const std::set<std::string>& minorUnitCodes);
 };
 
 } // namespace QuantExt

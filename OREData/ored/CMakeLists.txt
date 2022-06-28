@@ -160,7 +160,6 @@ utilities/calendarparser.cpp
 utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
-utilities/currencycheck.cpp
 utilities/currencyconfig.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
@@ -382,7 +381,6 @@ utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
-utilities/currencycheck.hpp
 utilities/currencyconfig.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp

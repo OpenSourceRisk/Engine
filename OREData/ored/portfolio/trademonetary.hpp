@@ -24,7 +24,6 @@
 #include <ql/types.hpp>
 
 #include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/currencycheck.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>

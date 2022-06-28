@@ -23,7 +23,6 @@
 #include <ql/option.hpp>
 #include <ql/types.hpp>
 
-#include <ored/utilities/currencycheck.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/trademonetary.hpp>
 

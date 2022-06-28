@@ -27,7 +27,6 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/referencedata.hpp>
-#include <ored/utilities/currencycheck.hpp>
 #include <ql/errors.hpp>
 #include <qle/instruments/equityforward.hpp>
 

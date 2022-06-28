@@ -279,26 +279,20 @@ DayCounter parseDayCounter(const string& s) {
 
 Currency parseCurrency(const string& s) { return CurrencyParser::instance().parseCurrency(s); }
 
-Currency parseMinorCurrency(const string& s) {
-    static map<string, Currency> m = {{"GBp", GBPCurrency()}, {"GBX", GBPCurrency()}, {"ILa", ILSCurrency()},
-                                      {"ILX", ILSCurrency()}, {"ZAc", ZARCurrency()}, {"ZAC", ZARCurrency()},
-                                      {"ZAX", ZARCurrency()}};
+Currency parseMinorCurrency(const string& s) { return CurrencyParser::instance().parseMinorCurrency(s); }
 
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Currency \"" << s << "\" not recognized");
-    }
-}
+Currency parseCurrencyWithMinors(const string& s) { return CurrencyParser::instance().parseCurrencyWithMinors(s); }
 
-Currency parseCurrencyWithMinors(const string& s) {
-    try {
-        return parseCurrency(s);
-    } catch (...) {
-        // try to parse as a minor currency if fails
-        return parseMinorCurrency(s);
-    }
+bool checkCurrency(const string& code) { return CurrencyParser::instance().isValidCurrency(code); }
+
+bool isPseudoCurrency(const string& code) { return CurrencyParser::instance().isPseudoCurrency(code); }
+
+bool isPreciousMetal(const string& code) { return CurrencyParser::instance().isPreciousMetal(code); }
+
+bool isCryptoCurrency(const string& code) { return CurrencyParser::instance().isCryptoCurrency(code); }
+
+QuantLib::Real convertMinorToMajorCurrency(const std::string& s, QuantLib::Real value) {
+    return CurrencyParser::instance().convertMinorToMajorCurrency(s, value);
 }
 
 DateGeneration::Rule parseDateGenerationRule(const string& s) {
