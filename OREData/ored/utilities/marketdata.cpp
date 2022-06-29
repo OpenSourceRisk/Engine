@@ -17,6 +17,7 @@
 */
 
 #include <ored/configuration/conventions.hpp>
+#include <ored/utilities/currencyparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/marketdata.hpp>
@@ -214,18 +215,6 @@ QuantLib::Handle<QuantExt::CreditCurve> indexCdsDefaultCurve(const boost::shared
 
     auto p = splitCurveIdWithTenor(creditCurveId);
     return market->defaultCurve(p.first, config);
-}
-
-bool isPseudoCurrency(const string& code) { return isPreciousMetal(code) || isCryptoCurrency(code); }
-
-bool isPreciousMetal(const string& code) {
-    static set<string> s = {"XAU", "XAG", "XPT", "XPD"};
-    return s.find(code) != s.end();
-}
-
-bool isCryptoCurrency(const string& code) {
-    static set<string> s = {"XBT", "BTC", "ETH", "ETC", "BCH", "XRP", "LTC"};
-    return s.find(code) != s.end();
 }
 
 } // namespace data

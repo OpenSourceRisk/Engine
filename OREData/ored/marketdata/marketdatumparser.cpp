@@ -26,7 +26,6 @@
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/currencycheck.hpp>
 
 using namespace std;
 using QuantLib::Currency;

@@ -10,6 +10,7 @@
       <xs:element type="swaptionData" name="SwaptionData"/>
       <xs:element type="forwardRateAgreementData" name="ForwardRateAgreementData"/>
       <xs:element type="fxForwardData" name="FxForwardData"/>
+      <xs:element type="fxAverageForwardData" name="FxAverageForwardData"/>
       <xs:element type="fxOptionData" name="FxOptionData"/>
       <xs:element type="fxSwapData" name="FxSwapData"/>
       <xs:element type="capFloorData" name="CapFloorData"/>
@@ -361,7 +362,22 @@
       </xs:choice>
     </xs:complexType>
   </xs:element>
-    <xs:element name="DigitalCMSLegData" substitutionGroup="legDataType">
+  <xs:element name="CMBLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element type="xs:string" name="Index"/>
+        <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="FixingDays"/>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="CreditRisk" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DigitalCMSLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element name="CMSLegData">
@@ -657,6 +673,7 @@
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
       <xs:enumeration value="ForwardRateAgreement"/>
+      <xs:enumeration value="FxAverageForward"/>
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
       <xs:enumeration value="FxSwap"/>
@@ -684,6 +701,7 @@
       <xs:enumeration value="CPI"/>
       <xs:enumeration value="YY"/>
       <xs:enumeration value="CMS"/>
+      <xs:enumeration value="CMB"/>
       <xs:enumeration value="DigitalCMS"/>
       <xs:enumeration value="CMSSpread"/>
       <xs:enumeration value="DigitalCMSSpread"/>
@@ -719,6 +737,20 @@
       <xs:element type="xs:float" name="SoldAmount"/>
       <xs:element type="settlementType" name="Settlement" maxOccurs="1" minOccurs="0"/>
       <xs:element type="fxForwardSettlementData" name="SettlementData" maxOccurs="1" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="fxAverageForwardData">
+    <xs:all>
+      <xs:element type="date" name="PaymentDate"/>
+      <xs:element type="scheduleData" name="ObservationDates"/>
+      <xs:element type="bool" name="FixedPayer"/>
+      <xs:element type="xs:float" name="ReferenceNotional"/>
+      <xs:element type="currencyCode" name="ReferenceCurrency"/>
+      <xs:element type="xs:float" name="SettlementNotional"/>
+      <xs:element type="currencyCode" name="SettlementCurrency"/>
+      <xs:element type="settlementType" name="Settlement" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="xs:string" name="FXIndex"/>
     </xs:all>
   </xs:complexType>
 

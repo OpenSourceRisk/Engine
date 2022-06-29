@@ -123,6 +123,7 @@ portfolio/fixingdates.cpp
 portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxasianoption.cpp
+portfolio/fxaverageforward.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
 portfolio/fxswap.cpp
@@ -159,7 +160,6 @@ utilities/calendarparser.cpp
 utilities/conventionsbasedfutureexpiry.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
-utilities/currencycheck.cpp
 utilities/currencyconfig.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
@@ -336,6 +336,7 @@ portfolio/fixingdates.hpp
 portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxasianoption.hpp
+portfolio/fxaverageforward.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
 portfolio/fxswap.hpp
@@ -380,7 +381,6 @@ utilities/calendarparser.hpp
 utilities/conventionsbasedfutureexpiry.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
-utilities/currencycheck.hpp
 utilities/currencyconfig.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp

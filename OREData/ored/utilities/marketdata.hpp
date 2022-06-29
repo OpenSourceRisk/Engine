@@ -95,14 +95,5 @@ Handle<YieldTermStructure> xccyYieldCurve(const boost::shared_ptr<Market>& marke
 
 void getFxIndexConventions(const string& index, Natural& fixingDays, Calendar& fixingCalendar);
 
-/*! check for pseudo currency = precious metal or crypto currency */
-bool isPseudoCurrency(const string& code);
-
-/*! check for precious metal */
-bool isPreciousMetal(const string& code);
-
-/* check for crypto currency */
-bool isCryptoCurrency(const string& code);
-
 } // namespace data
 } // namespace ore

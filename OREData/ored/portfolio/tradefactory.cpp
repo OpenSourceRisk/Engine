@@ -33,6 +33,7 @@
 #include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/fxaverageforward.hpp>
 #include <ored/portfolio/fxasianoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
@@ -50,6 +51,7 @@ namespace data {
 TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
     addBuilder("Swap", boost::make_shared<TradeBuilder<Swap>>());
     addBuilder("Swaption", boost::make_shared<TradeBuilder<Swaption>>());
+    addBuilder("FxAverageForward", boost::make_shared<TradeBuilder<FxAverageForward>>());
     addBuilder("FxForward", boost::make_shared<TradeBuilder<FxForward>>());
     addBuilder("ForwardRateAgreement", boost::make_shared<TradeBuilder<ForwardRateAgreement>>());
     addBuilder("FxSwap", boost::make_shared<TradeBuilder<FxSwap>>());

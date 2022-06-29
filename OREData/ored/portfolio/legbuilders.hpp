@@ -87,6 +87,14 @@ public:
                  const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
 };
 
+class CMBLegBuilder : public LegBuilder {
+public:
+    CMBLegBuilder() : LegBuilder("CMB") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 RequiredFixings& requiredFixings, const string& configuration,
+                 const QuantLib::Date& openEndDateReplacement = Null<Date>()) const override;
+};
+
 class DigitalCMSLegBuilder : public LegBuilder {
 public:
     DigitalCMSLegBuilder() : LegBuilder("DigitalCMS") {}

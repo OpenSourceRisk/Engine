@@ -36,6 +36,7 @@
 #include <ql/instruments/averagetype.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/instruments/capfloor.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/instruments/inflationcapfloor.hpp>
 #include <ql/instruments/overnightindexfuture.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
@@ -147,6 +148,36 @@ QuantLib::Currency parseMinorCurrency(const string& s);
  */
 QuantLib::Currency parseCurrencyWithMinors(const string& s);
 
+//! check for vaid currency code, including minors and pseudo currencies
+/*!
+  \ingroup utilities
+ */
+bool checkCurrency(const string& code);
+
+//! check for pseudo currency = precious metal or crypto currency */
+/*!
+  \ingroup utilities
+ */
+bool isPseudoCurrency(const string& code);
+
+//! check for precious metal */
+/*!
+  \ingroup utilities
+ */
+bool isPreciousMetal(const string& code);
+
+//! check for crypto currency */
+/*!
+  \ingroup utilities
+ */
+bool isCryptoCurrency(const string& code);
+
+//! Convert a value from a minor ccy to major
+/*! .i.e 100 GBp to 1 GBP
+    \ingroup utilities
+*/
+QuantLib::Real convertMinorToMajorCurrency(const std::string& s, QuantLib::Real value);
+
 //! Convert text to QuantLib::DateGeneration::Rule
 /*!
   \ingroup utilities
@@ -200,6 +231,12 @@ QuantLib::Exercise::Type parseExerciseType(const string& s);
 \ingroup utilities
 */
 QuantLib::Option::Type parseOptionType(const string& s);
+
+//! Convert text to QuantLib::Bond::Price::Type
+/*!
+\ingroup utilities
+*/
+QuantLib::Bond::Price::Type parseBondPriceType(const string& s);
 
 //! Convert text to QuantLib::Period or QuantLib::Date
 /*!

@@ -24,7 +24,6 @@
 #include <ql/types.hpp>
 
 #include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/currencycheck.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/serialization/base_object.hpp>
@@ -53,7 +52,7 @@ public:
     std::string currency() const;
 
 protected:
-    QuantLib::Real value_;
+    QuantLib::Real value_ = QuantLib::Null<Real>();
     std::string currency_;
 };
 

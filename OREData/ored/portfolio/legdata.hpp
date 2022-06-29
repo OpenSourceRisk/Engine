@@ -688,6 +688,75 @@ private:
     static LegDataRegister<DigitalCMSSpreadLegData> reg_;
 };
 
+//! Serializable Constant Maturity Bond Yield Leg Data
+/*!
+\ingroup tradedata
+*/
+class CMBLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    CMBLegData() : LegAdditionalData("CMB"), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
+    //! Constructor
+    CMBLegData(const string& genericBond, bool hasCreditRisk, Size fixingDays, bool isInArrears, const vector<double>& spreads,
+               const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
+               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
+               const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
+               const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
+        : LegAdditionalData("CMB"), genericBond_(genericBond), hasCreditRisk_(hasCreditRisk), fixingDays_(fixingDays), isInArrears_(isInArrears),
+          spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors),
+          floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
+        //indices_.insert(swapIndex_);
+    }
+
+    //! \name Inspectors
+    //@{
+    const string& genericBond() const { return genericBond_; }
+    bool hasCreditRisk() const { return hasCreditRisk_; }
+    Size fixingDays() const { return fixingDays_; }
+    bool isInArrears() const { return isInArrears_; }
+    const vector<double>& spreads() const { return spreads_; }
+    const vector<string>& spreadDates() const { return spreadDates_; }
+    const vector<double>& caps() const { return caps_; }
+    const vector<string>& capDates() const { return capDates_; }
+    const vector<double>& floors() const { return floors_; }
+    const vector<string>& floorDates() const { return floorDates_; }
+    const vector<double>& gearings() const { return gearings_; }
+    const vector<string>& gearingDates() const { return gearingDates_; }
+    bool nakedOption() const { return nakedOption_; }
+    //@}
+
+    //! \name Modifiers
+    //@{
+    vector<double>& caps() { return caps_; }
+    vector<string>& capDates() { return capDates_; }
+    vector<double>& floors() { return floors_; }
+    vector<string>& floorDates() { return floorDates_; }
+    bool& nakedOption() { return nakedOption_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
+    //@}
+private:
+    string genericBond_;
+    bool hasCreditRisk_;
+    Size fixingDays_;
+    bool isInArrears_;
+    vector<double> spreads_;
+    vector<string> spreadDates_;
+    vector<double> caps_;
+    vector<string> capDates_;
+    vector<double> floors_;
+    vector<string> floorDates_;
+    vector<double> gearings_;
+    vector<string> gearingDates_;
+    bool nakedOption_;
+
+    static LegDataRegister<CMBLegData> reg_;
+};
+
 //! Serializable Fixed Leg Data
 /*!
 \ingroup tradedata
@@ -911,6 +980,9 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<InflationIndex>& ind
                const boost::shared_ptr<EngineFactory>& engineFactory,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
+               const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
+               const QuantLib::Date& openEndDateReplacement = Null<Date>());
+Leg makeCMBLeg(const LegData& data, 
                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true,
                const QuantLib::Date& openEndDateReplacement = Null<Date>());
 Leg makeDigitalCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,

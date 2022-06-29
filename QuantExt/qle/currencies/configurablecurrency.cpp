@@ -23,16 +23,13 @@ using namespace QuantLib;
 namespace QuantExt {
 using namespace QuantLib;
   
-// Tunisian dinar
-ConfigurableCurrency::ConfigurableCurrency(const std::string& name,
-             const std::string& code,
-             Integer numericCode,
-             const std::string& symbol,
-             const std::string& fractionSymbol,
-             Integer fractionsPerUnit,
-             const Rounding& rounding,
-             const std::string& formatString) {
-    data_ = boost::make_shared<Currency::Data>(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit, rounding, formatString);
+ConfigurableCurrency::ConfigurableCurrency(const std::string& name, const std::string& code, Integer numericCode,
+                                           const std::string& symbol, const std::string& fractionSymbol,
+                                           Integer fractionsPerUnit, const Rounding& rounding,
+                                           const std::string& formatString,
+                                           const std::set<std::string>& minorUnitCodes) {
+    data_ = boost::make_shared<Currency::Data>(name, code, numericCode, symbol, fractionSymbol, fractionsPerUnit,
+                                               rounding, formatString, Currency(), minorUnitCodes);
 }
 
 } // namespace QuantExt

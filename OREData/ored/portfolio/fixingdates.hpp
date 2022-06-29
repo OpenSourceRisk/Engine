@@ -56,9 +56,11 @@ class CappedFlooredOvernightIndexedCoupon;
 class EquityCoupon;
 class FloatingRateFXLinkedNotionalCoupon;
 class FXLinkedCashFlow;
+class AverageFXLinkedCashFlow;
 class SubPeriodsCoupon1;
 class IndexedCoupon;
 class NonStandardYoYInflationCoupon;
+class CmbCoupon;
 } // namespace QuantExt
 
 namespace ore {
@@ -172,9 +174,11 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
                          public QuantLib::Visitor<QuantExt::EquityCoupon>,
                          public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
                          public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
+                         public QuantLib::Visitor<QuantExt::AverageFXLinkedCashFlow>,
                          public QuantLib::Visitor<QuantExt::SubPeriodsCoupon1>,
                          public QuantLib::Visitor<QuantExt::IndexedCoupon>,
-                         public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon> {
+                         public QuantLib::Visitor<QuantExt::NonStandardYoYInflationCoupon>,
+                         public QuantLib::Visitor<QuantExt::CmbCoupon> {
 
 public:
     //! Constructor
@@ -207,8 +211,10 @@ public:
     void visit(QuantExt::EquityCoupon& c) override;
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c) override;
     void visit(QuantExt::FXLinkedCashFlow& c) override;
+    void visit(QuantExt::AverageFXLinkedCashFlow& c) override;
     void visit(QuantExt::SubPeriodsCoupon1& c) override;
     void visit(QuantExt::IndexedCoupon& c) override;
+    void visit(QuantExt::CmbCoupon& c) override;
     //@}
 
 protected:

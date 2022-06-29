@@ -31,6 +31,7 @@
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/blackovernightindexedcouponpricer.hpp>
 #include <qle/cashflows/brlcdicouponpricer.hpp>
+#include <qle/cashflows/cmbcoupon.hpp>
 #include <qle/cashflows/commoditycashflow.hpp>
 #include <qle/cashflows/commodityindexedaveragecashflow.hpp>
 #include <qle/cashflows/commodityindexedcashflow.hpp>
