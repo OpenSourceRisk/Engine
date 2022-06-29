@@ -238,7 +238,6 @@
     <ClInclude Include="ored\utilities\conventionsbasedfutureexpiry.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
-    <ClInclude Include="ored\utilities\currencycheck.hpp" />
     <ClInclude Include="ored\utilities\currencyconfig.hpp" />
     <ClInclude Include="ored\utilities\currencyparser.hpp" />
     <ClInclude Include="ored\utilities\dategrid.hpp" />
@@ -422,7 +421,6 @@
     <ClCompile Include="ored\utilities\conventionsbasedfutureexpiry.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
-    <ClCompile Include="ored\utilities\currencycheck.cpp" />
     <ClCompile Include="ored\utilities\currencyconfig.cpp" />
     <ClCompile Include="ored\utilities\currencyparser.cpp" />
     <ClCompile Include="ored\utilities\dategrid.cpp" />
