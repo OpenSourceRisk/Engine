@@ -3,6 +3,3 @@
 	url = git@gitlab.acadiasoft.net:qs/quantlib.git
 	branch = v1.8.x.beta
 	ignore = dirty
-[submodule "OREPlus/openssl"]
-	path = OREPlus/openssl
-	url = https://github.com/openssl/openssl.git
