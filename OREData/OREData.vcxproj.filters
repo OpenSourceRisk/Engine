@@ -132,9 +132,6 @@
     <ClInclude Include="ored\utilities\correlationmatrix.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ored\utilities\currencycheck.hpp">
-      <Filter>utilities</Filter>
-    </ClInclude>
     <ClInclude Include="ored\utilities\currencyconfig.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
@@ -793,9 +790,6 @@
       <Filter>model</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\correlationmatrix.cpp">
-      <Filter>utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\utilities\currencycheck.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\utilities\currencyconfig.cpp">
