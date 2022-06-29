@@ -102,9 +102,9 @@ portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
 portfolio/commodityasianoption.cpp
+portfolio/commoditydigitaloption.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
-portfolio/commoditydigitaloption.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/creditdefaultswapoption.cpp
@@ -315,9 +315,9 @@ portfolio/builders/vanillaoption.hpp
 portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
 portfolio/commodityasianoption.hpp
+portfolio/commoditydigitaloption.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
-portfolio/commoditydigitaloption.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/creditdefaultswapoption.hpp
