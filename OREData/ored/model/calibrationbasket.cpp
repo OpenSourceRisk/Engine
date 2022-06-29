@@ -36,7 +36,9 @@ CalibrationBasket::CalibrationBasket() {}
 
 CalibrationBasket::CalibrationBasket(const vector<boost::shared_ptr<CalibrationInstrument>>& instruments)
     : instruments_(instruments) {
-    
+
+0    QL_REQUIRE(!instruments.empty(), "no instruments given!");
+
     // Check that all instruments in the basket, if any, are the same type.
     for (const auto& instrument : instruments_) {
         string instType = instrument->instrumentType();
