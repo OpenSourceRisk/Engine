@@ -34,7 +34,6 @@
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
 #include <qle/instruments/cashflowresults.hpp>
-#include <qle/time/yearcounter.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <regex>

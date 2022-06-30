@@ -39,7 +39,7 @@ public:
 
 private:
     mutable boost::shared_mutex mutex_;
-    std::map<std::string, QuantLib::DayCounters> dayCounters_;
+    std::map<std::string, QuantLib::DayCounter> dayCounters_;
 };
 
 } // namespace data
