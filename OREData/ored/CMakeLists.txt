@@ -163,6 +163,7 @@ utilities/csvfilereader.cpp
 utilities/currencyconfig.cpp
 utilities/currencyparser.cpp
 utilities/dategrid.cpp
+utilities/daycounterparser.cpp
 utilities/flowanalysis.cpp
 utilities/indexnametranslator.cpp
 utilities/indexparser.cpp
@@ -384,6 +385,7 @@ utilities/csvfilereader.hpp
 utilities/currencyconfig.hpp
 utilities/currencyparser.hpp
 utilities/dategrid.hpp
+utilities/daycounterparser.hpp
 utilities/flowanalysis.hpp
 utilities/indexnametranslator.hpp
 utilities/indexparser.hpp
