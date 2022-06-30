@@ -196,7 +196,7 @@ void CurrencyParser::reset() {
                          {"BCH", BCHCurrency()}, {"XRP", XRPCurrency()}, {"LTC", LTCCurrency()}};
 
     for (auto const& c : currencies_) {
-        addMinorCurrencyCode(c);
+        addMinorCurrencyCodes(c);
     }
 }
 
