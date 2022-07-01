@@ -41,7 +41,6 @@ public:
     QuantLib::Currency parseCurrencyWithMinors(const std::string& name) const;
 
     void addCurrency(const std::string& newName, const QuantLib::Currency& currency);
-    void addMinorCurrency(const std::string& newName, const QuantLib::Currency& currency);
 
     bool isValidCurrency(const std::string& name) const;
     bool isMinorCurrency(const std::string& name) const;
@@ -59,6 +58,8 @@ public:
     void reset();
 
 private:
+    void addMinorCurrencyCodes(const QuantLib::Currency& currency);
+
     mutable boost::shared_mutex mutex_;
     std::map<std::string, QuantLib::Currency> currencies_;
     std::map<std::string, QuantLib::Currency> minorCurrencies_;
