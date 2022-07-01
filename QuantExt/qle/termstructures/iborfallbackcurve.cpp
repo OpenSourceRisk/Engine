@@ -66,7 +66,7 @@ Real IborFallbackCurve::discountImpl(QuantLib::Time t) const {
     // approximately take into account 2d lookback and coupon period ignoring holidays
     Real dt = timeFromReference(today + 2 * Days);
     Date endDate = today + originalIndex_->tenor();
-    Real couponTime = rfrIndex_->dayCounter().yearFraction(today, endDate);
+    Real couponTime = originalIndex_->dayCounter().yearFraction(today, endDate);
     Real curveTime = timeFromReference(endDate);
     Real tm = std::max(t - dt, 0.0);
     Real s = std::log(1.0 + couponTime * spread_) / curveTime;
