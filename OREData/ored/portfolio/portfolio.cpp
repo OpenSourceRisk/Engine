@@ -88,7 +88,8 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                 failedToLoad = true;
             }
         } else {
-            ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML"));
+            ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML",
+                                             "TradeFactory did not build trade type '" + tradeType + "'"));
             failedToLoad = true;
         }
 
