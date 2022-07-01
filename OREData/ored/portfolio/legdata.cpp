@@ -1160,7 +1160,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     else
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
