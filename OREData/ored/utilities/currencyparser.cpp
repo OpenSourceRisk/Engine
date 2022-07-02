@@ -152,14 +152,13 @@ void CurrencyParser::addCurrency(const std::string& newName, const QuantLib::Cur
     auto it = currencies_.find(newName);
     if (it == currencies_.end()) {
         currencies_[newName] = currency;
+        addMinorCurrencyCodes(currency);
     }
 }
 
-void CurrencyParser::addMinorCurrency(const std::string& newName, const QuantLib::Currency& currency) {
-    boost::unique_lock<boost::shared_mutex> lock(mutex_);
-    auto it = minorCurrencies_.find(newName);
-    if (it == minorCurrencies_.end()) {
-        minorCurrencies_[newName] = currency;
+void CurrencyParser::addMinorCurrencyCodes(const QuantLib::Currency& currency) {
+    for (auto const& c : currency.minorUnitCodes()) {
+        minorCurrencies_[c] = currency;
     }
 }
 
@@ -195,6 +194,10 @@ void CurrencyParser::reset() {
 
     cryptoCurrencies_ = {{"XBT", BTCCurrency()}, {"BTC", BTCCurrency()}, {"ETH", ETHCurrency()}, {"ETC", ETCCurrency()},
                          {"BCH", BCHCurrency()}, {"XRP", XRPCurrency()}, {"LTC", LTCCurrency()}};
+
+    for (auto const& c : currencies_) {
+        addMinorCurrencyCodes(c.second);
+    }
 }
 
 } // namespace data

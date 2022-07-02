@@ -58,8 +58,6 @@ void CurrencyConfig::fromXML(XMLNode* baseNode) {
             DLOG("loading configuration for currency code " << isoCode);
 
             CurrencyParser::instance().addCurrency(c.code(), c);
-            for (auto const& m : c.minorUnitCodes())
-                CurrencyParser::instance().addMinorCurrency(m, c);
 
         } catch (std::exception&) {
             ALOG("error loading currency config for name " << name << " iso code " << isoCode);
