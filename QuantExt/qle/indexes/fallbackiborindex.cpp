@@ -70,8 +70,8 @@ boost::shared_ptr<OvernightIndexedCoupon> FallbackIborIndex::onCoupon(const Date
     Date valueDate = originalIndex_->valueDate(iborFixingDate);
     Date maturityDate = originalIndex_->maturityDate(valueDate);
     return boost::make_shared<OvernightIndexedCoupon>(maturityDate, 1.0, valueDate, maturityDate, rfrIndex_, 1.0, 0.0,
-                                                      Date(), Date(), originalIndex_->dayCounter(),
-                                                      telescopicValueDates, false, 2 * Days, 0, Null<Size>());
+                                                      Date(), Date(), DayCounter(), telescopicValueDates, false,
+                                                      2 * Days, 0, Null<Size>());
 }
 
 Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
@@ -82,7 +82,10 @@ Real FallbackIborIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing
     if (fixingDate > today) {
         return IborIndex::forecastFixing(fixingDate);
     } else {
-	return onCoupon(fixingDate, true)->rate() + spread_;
+      if (boost::dynamic_pointer_cast<OvernightIndex>(originalIndex_))
+	  return rfrIndex_->fixing(fixingDate) + spread_;
+      else
+	  return onCoupon(fixingDate, true)->rate() + spread_;
     }
 }
 
