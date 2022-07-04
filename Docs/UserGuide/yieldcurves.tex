@@ -353,11 +353,11 @@ The \lstinline!BootstrapConfig! has the following interpretation for a fitted bo
   where 0.01 = 1 bp. Once this accuracy is reached in a calibration trial, the fit is accepted, no further calibration
   trials re run. In general, this parameter should be set to a higher than the default value for fitted bond curves.
 \item GlobalAccuracy [Optional]: the acceptable accuracy. If the Accuracy is not reached in any calibration trial, but
-  the GloablAccuracy is met, the best fit among the calibration trials is selected as a result of the calibration. If
+  the GlobalAccuracy is met, the best fit among the calibration trials is selected as a result of the calibration. If
   not given, the best calibration trial is compared to the Accuracy parameter instead.
 \item DontThrow [Optional, defaults to false]: If true, the best calibration is always accepted as a result, i.e. no
   error is thrown even if the GlobalAccuracy is breached.
-\item MaxAttempts [Optional, defaults to 5]: The maximum number of calibration trials. Each calibration trial is run with a random calibratio
+\item MaxAttempts [Optional, defaults to 5]: The maximum number of calibration trials. Each calibration trial is run with a random calibration
   seed. Random calibration seeds are currently only supported for the NelsonSiegel interpolation method.
 \end{itemize}
 
