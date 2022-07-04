@@ -28,20 +28,13 @@
 namespace ore {
 namespace analytics {
 
-class StructuredAnalyticsWarningMessage : public ore::data::StructuredErrorMessage {
+class StructuredAnalyticsWarningMessage : public ore::data::StructuredMessage {
 public:
     StructuredAnalyticsWarningMessage(const std::string& analyticType, const std::string& warningType,
-                                      const std::string& warningWhat);
-
-    const std::string& analyticType() const;
-    const std::string& warningType() const;
-    const std::string& warningWhat() const;
-
-protected:
-    std::string json() const override;
-
-private:
-    std::string analyticType_, warningType_, warningWhat_;
+                                      const std::string& warningWhat)
+        : StructuredMessage(
+              "Warning", "Analytics", warningWhat,
+              std::map<std::string, std::string>({{"warningType", warningType}, {"analyticType", analyticType}})) {}
 };
 
 } // namespace analytics
