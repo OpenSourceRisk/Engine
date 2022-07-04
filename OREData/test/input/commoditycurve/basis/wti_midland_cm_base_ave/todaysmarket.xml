@@ -1,9 +1,0 @@
-<TodaysMarket>
-  <YieldCurves/>
-  <DiscountingCurves/>
-  <IndexForwardingCurves/>
-  <CommodityCurves id="default">
-    <CommodityCurve name="NYMEX:CSX">Commodity/USD/NYMEX:CSX</CommodityCurve>
-    <CommodityCurve name="NYMEX:FF">Commodity/USD/NYMEX:FF</CommodityCurve>
-  </CommodityCurves>
-</TodaysMarket>

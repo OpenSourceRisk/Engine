@@ -1,8 +1,0 @@
-<TodaysMarket>
-  <DiscountingCurves id="default">
-    <DiscountingCurve currency="GBP">Yield/GBP/GBP-SONIA</DiscountingCurve>
-  </DiscountingCurves>
-  <IndexForwardingCurves id="default">
-    <Index name="GBP-LIBOR-6M">Yield/GBP/GBP-LIBOR-6M</Index>
-  </IndexForwardingCurves>
-</TodaysMarket>
