@@ -532,9 +532,11 @@
       <xs:enumeration value="Linear"/>
       <xs:enumeration value="LogLinear"/>
       <xs:enumeration value="Cubic"/>
+      <xs:enumeration value="Hermite"/>
       <xs:enumeration value="LinearFlat"/>
       <xs:enumeration value="LogLinearFlat"/>
       <xs:enumeration value="CubicFlat"/>
+      <xs:enumeration value="HermiteFlat"/>
       <xs:enumeration value="BackwardFlat"/>
     </xs:restriction>
   </xs:simpleType>
