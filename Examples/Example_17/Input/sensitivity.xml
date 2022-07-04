@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<SensitivityAnalysis>
+  <!-- Discount curve shifts -->
+  <DiscountCurves>
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+  </DiscountCurves>
+  <!-- Index curve shifts -->
+  <IndexCurves/>
+  <!-- Yield curve shifts -->
+  <YieldCurves/>
+  <!-- FX spot shifts -->
+  <FxSpots/>
+  <!-- FX ATM vol shifts -->
+  <FxVolatilities/>
+  <!-- Swaption ATM vol shifts -->
+  <SwaptionVolatilities/>
+  <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
+  <CapFloorVolatilities/>
+  <CDSVolatilities/>
+  <!-- Credit Curve shifts -->
+  <CreditCurves/>
+  <!-- Equity spot shifts -->
+  <EquitySpots/>
+  <!-- Equity ATM vol shifts -->
+  <EquityVolatilities/>
+  <ZeroInflationIndexCurves>
+    <ZeroInflationIndexCurve index="EUHICPXT">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </ZeroInflationIndexCurve>
+  </ZeroInflationIndexCurves>
+  <YYInflationIndexCurves>
+    <YYInflationIndexCurve index="EUHICPXT">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YYInflationIndexCurve>
+  </YYInflationIndexCurves>
+  <CPICapFloorVolatilities>
+    <CPICapFloorVolatility index="EUHICPXT">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
+    </CPICapFloorVolatility>
+  </CPICapFloorVolatilities>
+  <YYCapFloorVolatilities>
+    <YYCapFloorVolatility index="EUHICPXT">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.001</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
+    </YYCapFloorVolatility>
+  </YYCapFloorVolatilities>
+  <BaseCorrelations/>
+  <!-- Cross Gamma filter: Pairs of factor sub-strings -->
+  <CrossGammaFilter/>
+</SensitivityAnalysis>

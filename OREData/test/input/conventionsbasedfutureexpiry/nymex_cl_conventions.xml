@@ -1,0 +1,15 @@
+<Conventions>
+  <CommodityFuture>
+    <Id>nymex_cl</Id>
+    <AnchorDay>
+      <DayOfMonth>25</DayOfMonth>
+    </AnchorDay>
+    <ContractFrequency>Monthly</ContractFrequency>
+    <Calendar>CME</Calendar>
+    <ExpiryMonthLag>1</ExpiryMonthLag>
+    <OffsetDays>3</OffsetDays>
+    <BusinessDayConvention>Preceding</BusinessDayConvention>
+    <IsAveraging>false</IsAveraging>
+    <OptionExpiryOffset>3</OptionExpiryOffset>
+  </CommodityFuture>
+</Conventions>

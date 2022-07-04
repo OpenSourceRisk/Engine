@@ -1,0 +1,9 @@
+<TodaysMarket>
+  <YieldCurves/>
+  <DiscountingCurves/>
+  <IndexForwardingCurves/>
+  <CommodityCurves id="default">
+    <CommodityCurve name="NYMEX:CL">Commodity/USD/NYMEX:CL</CommodityCurve>
+    <CommodityCurve name="NYMEX:WTT">Commodity/USD/NYMEX:WTT</CommodityCurve>
+  </CommodityCurves>
+</TodaysMarket>

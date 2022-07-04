@@ -1,0 +1,50 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element type="pricingengines" name="PricingEngines"/>
+
+  <xs:complexType name="pricingengines">
+    <xs:sequence>
+      <xs:element type="product" name="Product" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="globalParameters" name="GlobalParameters" minOccurs="0"/>
+      <!-- FIXME: poor name -->
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="product">
+    <xs:all>
+      <xs:element type="xs:string" name="Model"/>
+      <xs:element name="ModelParameters">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="parameter" name="Parameter" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:string" name="Engine"/>
+      <xs:element name="EngineParameters">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="parameter" name="Parameter" maxOccurs="unbounded" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute type="xs:string" name="type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="globalParameters">
+    <xs:sequence>
+      <xs:element type="parameter" name="Parameter" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="parameter">
+    <!-- parameter with attribute -->
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="name" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

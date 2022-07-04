@@ -1,0 +1,186 @@
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+namespace QuantExt {
+
+/*! CrossAssetAnalytics 
+     
+    This namesace provides a number of functions which compute analytical moments
+    (expectations and covariances) of cross asset model factors.
+    These are used in the exact propagation of cross asset model paths (i.e. without 
+    time discretisation error).
+
+    Reference:
+    Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
+    Analysis, Palgrave Macmillan, 2015
+
+    See also the documentation in class CrossAssetModel.
+
+	Section 16.1 in the reference above lists the analytical expectations and covariances 
+    implemented in this namespace. 
+    In the following we consider time intervals \f$(s,t)\f$. We aim at computing conditional 
+    expectations of factors at time \f$t\f$ given their state at time \f$s\f$, likewise covariances of 
+    factor moves \f$\Delta z\f$ and \f$\Delta x\f$ over time interval \f$(s,t)\f$. 
+
+    Starting with the interest rate processes 
+    \f{eqnarray*}{
+    dz_i &=& \epsilon_i\,\gamma_i\,dt + \alpha^z_i\,dW^z_i, \qquad \epsilon_i = \left\{ \begin{array}{ll} 0 & i = 0  \\ 1 & i > 0 \end{array}\right.
+    \f}
+    we get the factor move by integration
+    \f{eqnarray*}{
+    \Delta z_i &=& -\int_s^t H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_s^t H^z_0\,\alpha^z_0\,\alpha^z_i\,du\\
+    && - \epsilon_i  \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha^z_i\,du + \int_s^t \alpha^z_i\,dW^z_i. \\
+    \f}
+    Thus, conditional expectation and covariances are
+    \f{eqnarray*}{
+    \mathbb{E}[\Delta z_i] &=& -\int_s^t H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_s^t H^z_0\,\alpha^z_0\,\alpha^z_i\,du
+    - \epsilon_i  \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha^z_i\,du \\
+    \mathrm{Cov}[\Delta z_a, \Delta z_b] &=& \rho^{zz}_{ab} \int_s^t \alpha^z_a\,\alpha^z_b\,du
+    \f}
+
+    Proceeding similarly with the foreign exchange rate processes
+    \f[
+    dx_i / x_i = \mu^x_i \, dt +\sigma_i^x\,dW^x_i,
+    \f]
+    we get the following log-moves by integration
+
+    \f{eqnarray*}{
+    \Delta \ln x_i &=& \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) - \frac12 \int_s^t (\sigma^x_i)^2\,du + \rho^{zx}_{0i}\int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i \,du\nonumber\\
+    &&+\int_s^t \zeta^z_0\,H^z_0\, (H^z_0)^{\prime}\,du-\int_s^t \zeta^z_i\,H^z_i\, (H^z_i)^{\prime}\,du\nonumber\\
+    &&+ \int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,dW^z_0+ \left(H^z_0(t)-H^z_0(s)\right) z_0(s) \nonumber\\
+    &&- \int_s^t \left(H^z_i(t)-H^z_i\right)\alpha_i^z\,dW^z_i  -\left(H^z_i(t)-H^z_i(s)\right)z_i(s) \nonumber\\
+    &&- \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i\,du + \int_s^t\sigma^x_i dW^x_i \nonumber
+    \f}
+
+    Integration by parts yields
+
+	\f{eqnarray*}{
+    && \int_s^t \zeta^z_0\,H^z_0\, (H^z_0)^{\prime}\,du-\int_s^t \zeta^z_i\,H^z_i\, (H^z_i)^{\prime}\,du\\
+    && = \frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\nonumber\\
+    &&\qquad {}- \frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)
+    \f}
+
+    so that the expectation is
+    \f{eqnarray}{
+    \mathbb{E}[\Delta \ln x_i] &=& \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) - \frac12 \int_s^t (\sigma^x_i)^2\,du + \rho^{zx}_{0i} \int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i\,du\nonumber\\
+    &&+\frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\nonumber\\
+    &&-\frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)\nonumber\\
+    &&+ \left(H^z_0(t)-H^z_0(s)\right) z_0(s) -\left(H^z_i(t)-H^z_i(s)\right)z_i(s)\nonumber\\
+    &&  - \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i \,du, \label{eq:meanX} 
+    \f}
+
+    and IR-FX and FX-FX covariances are
+      
+    \f{eqnarray}{
+    \mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] &=&  \int_s^t \left(H^z_0(t)-H^z_0\right)^2 (\alpha_0^z)^2\,du \nonumber\\
+    &&- \rho^{zz}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
+    &&+ \rho^{zx}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \sigma^x_b\,du \nonumber\\
+    && -\rho^{zz}_{0a} \int_s^t \left(H^z_a(t)-H^z_a\right) \alpha_a^z\left(H^z_0(t)-H^z_0\right) \alpha_0^z\,du \nonumber\\
+    &&+ \rho^{zz}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
+    &&- \rho^{zx}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \sigma^x_b,du\nonumber\\
+    &&+ \rho^{zx}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,\sigma^x_a\,du \nonumber\\
+    &&- \rho^{zx}_{ba}\int_s^t \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,\sigma^x_a\, du \nonumber\\
+    &&+ \rho^{xx}_{ab}\int_s^t\sigma^x_a\,\sigma^x_b \,du \label{eq:covXX}\\
+    &&\nonumber\\
+    \mathrm{Cov} [\Delta z_a, \Delta \ln x_b]) &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+    &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+    &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du. \label{eq:covZX}
+    \f}
+
+    Based on these expectations of factor moves and log-moves, respectively, we can work out the 
+    conditonal expectations of the factor levels at time \f$t\f$. These expectations have state-dependent
+    parts (levels at time \f$s\f$) and state-independent parts which we separate in the implementation, 
+    see functions ending with "_1" and "_2", respectively.
+    Moreover, the implementation splits up the integrals further in order to separate simple and more 
+    complex integrations and to allow for tailored efficient numerical integration schemes. 
+
+    In the following we rearrange the expectations and covariances above such that the expressions 
+    correspond 1:1 to their implementations below.
+
+    \todo Rearrange integrals to achieve 1:1 correspondence with code
+*/
+namespace CrossAssetAnalytics{}
+
+/*! Cross asset model
+
+    Reference:
+
+    Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
+    Analysis, Palgrave Macmillan, 2015
+
+    The model is operated under the domestic LGM measure. There are two ways of
+    calibrating the model:
+
+    - provide an already calibrated parametrization for a component
+      extracted from some external model
+    - do the calibration within the CrossAssetModel using one
+      of the calibration procedures
+
+    The inter-parametrization correlation matrix specified here can not be
+    calibrated currently, but is a fixed, external input.
+
+    The model does not own a reference date, the times given in the
+    parametrizations are absolute and insensitive to shifts in the global
+    evaluation date. The termstructures are required to be consistent with
+    these times, i.e. should all have the same reference date and day counter.
+    The model does not observe anything, so its update() method must be
+    explicitly called to notify observers of changes in the constituting
+    parametrizations, update these parametrizations and flushing the cache
+    of the state process. The model ensures these updates during
+    calibration though.
+
+    The cross asset model for \f$n\f$ currencies is specified by the following SDE
+
+    \f{eqnarray*}{
+    dz_0(t) &=& \alpha^z_0(t)\,dW^z_0(t) \\
+    dz_i(t) &=& \gamma_i(t)\,dt + \alpha^z_i(t)\,dW^z_i(t), \qquad i = 1,\dots, n-1 \\
+    dx_i(t) / x_i(t) &=& \mu^x_i(t)\, dt +\sigma_i^x(t)\,dW^x_i(t), \qquad i=1, \dots, n-1 \\
+    dW^a_i\,dW^b_j &=& \rho^{ab}_{ij}\,dt, \qquad a, b \in \{z, x\} 
+    \f}
+    Factors \f$z_i\f$ drive the LGM interest rate processes (index \f$i=0\f$ denotes the domestic currency),
+    and factors \f$x_i\f$ the foreign exchange rate processes. 
+
+    The no-arbitrage drift terms are 
+    \f{eqnarray*}
+    \gamma_i &=& -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\, \rho^{zx}_{ii}\\
+    \mu^x_i &=& r_0-r_i +H^z_0\,\alpha^z_0\,\sigma^x_i\,\rho^{zx}_{0i}
+    \f}
+    where we have dropped time-dependencies to lighten notation.  
+
+    The short rate \f$r_i(t)\f$ in currency \f$i\f$ is connected with the instantaneous forward curve \f$f_i(0,t)\f$ 
+    and model parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ via
+    \f{eqnarray*}{
+    r_i(t) &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t), \quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\ 
+    \f}
+
+    Parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ (or alternatively \f$\zeta_i(t)\f$) are LGM model parameters 
+    which determine, together with the stochastic factor \f$z_i(t)\f$, the evolution of numeraire and 
+    zero bond prices in the LGM model:
+    \f{eqnarray*}{
+    N(t) &=& \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\} \\
+    P(t,T,z_t) &=& \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}. 
+    \f}
+
+*/
+namespace CrossAssetModelTypes{}
+
+/*!
+*/
+namespace tag{}
+
+}

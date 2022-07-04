@@ -1,0 +1,9 @@
+<TodaysMarket>
+  <YieldCurves/>
+  <DiscountingCurves/>
+  <IndexForwardingCurves/>
+  <CommodityCurves id="default">
+    <CommodityCurve name="NYMEX:NG">Commodity/USD/NYMEX:NG</CommodityCurve>
+    <CommodityCurve name="ICE:HXS">Commodity/USD/ICE:HXS</CommodityCurve>
+  </CommodityCurves>
+</TodaysMarket>

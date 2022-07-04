@@ -1,0 +1,2 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+Swap_50y_2,Swap,2066-03-01,50.066015,1145.089797,EUR,1145.089797,EUR,10000000.00,EUR,10000000.00,CPTY_A,CPTY_A

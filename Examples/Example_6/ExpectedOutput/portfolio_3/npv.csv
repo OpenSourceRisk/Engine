@@ -1,0 +1,3 @@
+#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency,Notional,NotionalCurrency,Notional(Base),NettingSet,CounterParty
+cap_02,CapFloor,2031-10-20,15.704372,235311.901954,GBP,289815.111442,EUR,3000000.00,GBP,3694863.40,CPTY_B,CPTY_B
+cap_03,CapFloor,2031-10-20,15.704372,-91240.134108,GBP,-112373.277403,EUR,3000000.00,GBP,3694863.40,CPTY_B,CPTY_B
