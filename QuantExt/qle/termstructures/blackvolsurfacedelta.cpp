@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -42,6 +43,8 @@ InterpolatedSmileSection::InterpolatedSmileSection(Real spot, Real rd, Real rf, 
         interpolator_ = Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                               CubicInterpolation::FirstDerivative)
                             .interpolate(strikes_.begin(), strikes_.end(), vols_.begin());
+    else if (method == InterpolationMethod::CubicSpline)
+        interpolator_ = CubicNaturalSpline(strikes_.begin(), strikes_.end(), vols_.begin());
     else {
         QL_FAIL("Invalid method " << (int)method);
     }

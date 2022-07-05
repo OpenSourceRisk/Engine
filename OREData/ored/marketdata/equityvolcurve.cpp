@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -981,6 +982,8 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         im = InterpolatedSmileSection::InterpolationMethod::NaturalCubic;
     } else if (vdsc.strikeInterpolation() == "FinancialCubic") {
         im = InterpolatedSmileSection::InterpolationMethod::FinancialCubic;
+    } else if (vdsc.strikeInterpolation() == "CubicSpline") {
+        im = InterpolatedSmileSection::InterpolationMethod::CubicSpline;
     } else {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
         DLOG("EquityVolCurve: BlackVolatilitySurfaceDelta does not support strike interpolation '" << vdsc.strikeInterpolation()
