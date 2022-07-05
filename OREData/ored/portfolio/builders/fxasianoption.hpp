@@ -33,7 +33,7 @@
  class FxEuropeanAsianOptionMCDAAPEngineBuilder : public EuropeanAsianOptionMCDAAPEngineBuilder {
  public:
      FxEuropeanAsianOptionMCDAAPEngineBuilder()
-         : EuropeanAsianOptionMCDAAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX,
+         : EuropeanAsianOptionMCDAAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionArithmeticPrice"}, AssetClass::FX,
                                                   expiryDate_) {}
  };
 
@@ -45,7 +45,7 @@
  class FxEuropeanAsianOptionMCDAASEngineBuilder : public EuropeanAsianOptionMCDAASEngineBuilder {
  public:
      FxEuropeanAsianOptionMCDAASEngineBuilder()
-         : EuropeanAsianOptionMCDAASEngineBuilder("BlackScholesMerton", {"FxAsianOptionArithmeticStrike"},
+         : EuropeanAsianOptionMCDAASEngineBuilder("GarmanKohlhagen", {"FxAsianOptionArithmeticStrike"},
                                                   AssetClass::FX, expiryDate_) {}
  };
 
@@ -57,7 +57,7 @@
  class FxEuropeanAsianOptionMCDGAPEngineBuilder : public EuropeanAsianOptionMCDGAPEngineBuilder {
  public:
      FxEuropeanAsianOptionMCDGAPEngineBuilder()
-         : EuropeanAsianOptionMCDGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"}, AssetClass::FX,
+         : EuropeanAsianOptionMCDGAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricPrice"}, AssetClass::FX,
                                                   expiryDate_) {}
  };
 
@@ -68,7 +68,7 @@
  class FxEuropeanAsianOptionADGAPEngineBuilder : public EuropeanAsianOptionADGAPEngineBuilder {
  public:
      FxEuropeanAsianOptionADGAPEngineBuilder()
-         : EuropeanAsianOptionADGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
+         : EuropeanAsianOptionADGAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
      }
  };
 
@@ -79,7 +79,7 @@
  class FxEuropeanAsianOptionADGASEngineBuilder : public EuropeanAsianOptionADGASEngineBuilder {
  public:
      FxEuropeanAsianOptionADGASEngineBuilder()
-         : EuropeanAsianOptionADGASEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricStrike"},
+         : EuropeanAsianOptionADGASEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricStrike"},
                                                  AssetClass::FX) {}
  };
 
@@ -90,7 +90,7 @@
  class FxEuropeanAsianOptionACGAPEngineBuilder : public EuropeanAsianOptionACGAPEngineBuilder {
  public:
      FxEuropeanAsianOptionACGAPEngineBuilder()
-         : EuropeanAsianOptionACGAPEngineBuilder("BlackScholesMerton", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
+         : EuropeanAsianOptionACGAPEngineBuilder("GarmanKohlhagen", {"FxAsianOptionGeometricPrice"}, AssetClass::FX) {
      }
  };
 
