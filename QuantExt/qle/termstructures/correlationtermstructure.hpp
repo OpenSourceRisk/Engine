@@ -83,7 +83,7 @@ private:
     Handle<CorrelationTermStructure> c_;
 };
 
-//! Wrapper class that extracts a value at a given time from the term strucuture
+//! Wrapper class that extracts a value at a given time from the term structure
 class CorrelationValue : public Observer, public Quote {
 public:
     CorrelationValue(const Handle<CorrelationTermStructure>& correlation, const Time t,

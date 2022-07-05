@@ -79,7 +79,7 @@ ApoFutureSurface::ApoFutureSurface(const Date& referenceDate, const vector<Real>
         apoTimes.push_back(timeFromReference(apoDates_.back()));
     }
 
-    // Spot quote based on the price curve and adatped yield term structure
+    // Spot quote based on the price curve and adapted yield term structure
     Handle<Quote> spot(boost::make_shared<DerivedPriceQuote>(pts));
     Handle<YieldTermStructure> pyts =
         Handle<YieldTermStructure>(boost::make_shared<PriceTermStructureAdapter>(*pts, *yts));

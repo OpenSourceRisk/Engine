@@ -30,7 +30,7 @@
 
  void CommodityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
      // Checks
-     QL_REQUIRE(quantity_ > 0, "Commodity Asian option requires a positive quatity");
+     QL_REQUIRE(quantity_ > 0, "Commodity Asian option requires a positive quantity");
      QL_REQUIRE(strike_ >= 0, "Commodity Asian option requires a strike >= 0");
 
      // Get the price curve for the commodity.

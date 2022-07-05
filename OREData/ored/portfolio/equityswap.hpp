@@ -36,7 +36,7 @@ using std::string;
 */
 class EquitySwap : public Swap {
 public:
-    //! Deault constructor
+    //! Default constructor
     EquitySwap() : Swap("EquitySwap") {}
 
     //! Constructor with vector of LegData

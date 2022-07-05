@@ -32,7 +32,7 @@ Deposit::Deposit(const Real nominal, const Rate rate, const Period& tenor, const
                  const DayCounter& dayCounter, const Date& tradeDate, const bool isLong, const Period forwardStart) {
 
     leg_.resize(3);
-    index_ = boost::make_shared<IborIndex>("despoit-helper-index", tenor, fixingDays, Currency(), calendar, convention,
+    index_ = boost::make_shared<IborIndex>("deposit-helper-index", tenor, fixingDays, Currency(), calendar, convention,
                                            endOfMonth, dayCounter);
     // move to next good day
     Date referenceDate = calendar.adjust(tradeDate);
@@ -72,7 +72,7 @@ void Deposit::fetchResults(const PricingEngine::results* r) const {
 
 void Deposit::arguments::validate() const {
     QL_REQUIRE(leg.size() == 3,
-               "deposit arugments: unexpected number of cash flows (" << leg.size() << "), should be 3");
+               "deposit arguments: unexpected number of cash flows (" << leg.size() << "), should be 3");
 }
 
 void Deposit::results::reset() {

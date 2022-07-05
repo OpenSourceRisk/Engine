@@ -824,7 +824,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                     vector<Rate> strikes;
                     string strStrike = XMLUtils::getNodeValue(spreadNode);
                     if (strStrike == "ATM" || strStrike == "0" || strStrike == "0.0") {
-                        // Add a '0' to the srike spreads
+                        // Add a '0' to the strike spreads
                         strikes = {0.0};
                     } else {
                         strikes = parseListOfValues<Rate>(strStrike, &parseReal);
@@ -1252,7 +1252,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             for (XMLNode* child = XMLUtils::getChildNode(eqSurfaceNode, "StandardDeviations"); child;
                 child = XMLUtils::getNextSibling(child, "StandardDeviations")) {
                 string label = XMLUtils::getAttribute(child, "name"); // will be "" if no attr
-                // We cannot have both moneyness and standard deviations for any label (inclding the default of ""
+                // We cannot have both moneyness and standard deviations for any label (including the default of ""
                 // Throw error if this occurs
                 if (equityMoneyness_.find(label) != equityMoneyness_.end()){
                     QL_FAIL("Equity Volatility simulation parameters - both moneyness and standard deviations provided for label " << label);

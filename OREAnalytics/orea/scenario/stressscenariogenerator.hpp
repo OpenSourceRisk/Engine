@@ -62,7 +62,7 @@ using namespace data;
 
   Note:
   - For yield curves, the class applies shifts in the Zero rate domain only.
-  - Likewise, Cap/Floor volatilitiy stress tests are applied in the optionlet domain.
+  - Likewise, Cap/Floor volatility stress tests are applied in the optionlet domain.
 
   \ingroup scenario
  */

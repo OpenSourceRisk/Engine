@@ -169,7 +169,7 @@ public:
     Real discountBondOption(const Size ccy, Option::Type type, const Real K, const Time t, const Time S, const Time T,
                             Handle<YieldTermStructure> discountCurve = Handle<YieldTermStructure>()) const;
 
-    /*! FXBS components, ccy=0 referes to the first foreign currency,
+    /*! FXBS components, ccy=0 refers to the first foreign currency,
         so it corresponds to ccy+1 if you want to get the corresponding
         irmgl1f component */
     const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;

@@ -27,7 +27,7 @@
 
  void EquityAsianOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
      // Checks
-     QL_REQUIRE(quantity_ > 0, "Equity Asian option requires a positive quatity");
+     QL_REQUIRE(quantity_ > 0, "Equity Asian option requires a positive quantity");
      QL_REQUIRE(strike_ > 0, "Equity Asian option requires a positive strike");
 
      // Set the assetName_ as it may have changed after lookup

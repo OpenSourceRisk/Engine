@@ -80,7 +80,7 @@ private:
  *
  * FXLinkedCashFlow checks the FX fixing date against the eval date
  *
- * For furure fixings (date > eval) this class calcualates the FX Fwd
+ * For future fixings (date > eval) this class calculates the FX Fwd
  * rate (using the provided FX Spot rate and FOR and DOM yield curves)
  *
  * For todays fixing (date = eval) this class converts the foreign

@@ -395,7 +395,7 @@ void checkShiftTenors(const std::vector<Period>& effective, const std::vector<Pe
                          ") and configured shift tenors (" + std::to_string(config.size()) + ") for " + curveLabel;
         ALOG(message);
         for (auto const& p : effective)
-            ALOG("effetive tenor: " << p);
+            ALOG("effective tenor: " << p);
         for (auto const& p : config)
             ALOG("config   tenor: " << p);
         if(!continueOnError)
@@ -723,7 +723,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
                                                      ? simMarketData_->equityDividendTenors(name)
                                                      : data.shiftTenors;
-        checkShiftTenors(shiftTenors, data.shiftTenors, "Divident Yield " + name, continueOnError_);
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Dividend Yield " + name, continueOnError_);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);

@@ -93,7 +93,7 @@ void EquityForwardCurveStripper::performCalculations() const {
     vector<vector<Real> > allStrikes = callSurface_->strikes();
     forwards_.resize(callSurface_->expiries().size());
 
-    // at each option expiry time we calulate a forward
+    // at each option expiry time we calculate a forward
     for (Size i = 0; i < expiries().size(); i++) {
         Date expiry = expiries()[i];
         // get the relevant strikes at this expiry
@@ -143,7 +143,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                 // for American options we first get the implied vol from the American premiums
                 // we use these to construct the European prices in order to apply put call parity
 
-                // get date and daycounter from the prics surface
+                // get date and daycounter from the prices surface
                 Date asof = callSurface_->referenceDate();
                 DayCounter dc = callSurface_->dayCounter();
                 Calendar cal = callSurface_->calendar();
@@ -215,7 +215,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                     }
                 }
                 // throw away any strikes where the vol is zero for either put or call
-                // must have at least one new strike otherwise continue with currenct price surfaces
+                // must have at least one new strike otherwise continue with current price surfaces
                 if (newStrikes.size() > 0) {
                     // build call/put price surfaces with the new European prices
                     callSurface = boost::make_shared<OptionPriceSurface>(asof, dates, newStrikes, callPremiums, dc);

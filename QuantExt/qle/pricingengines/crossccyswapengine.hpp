@@ -34,7 +34,7 @@ namespace QuantExt {
 //! Cross currency swap engine
 
 /*! This class implements an engine for pricing swaps comprising legs that
-    invovlve two currencies. The npv is expressed in ccy1. The given currencies
+    involve two currencies. The npv is expressed in ccy1. The given currencies
     ccy1 and ccy2 are matched to the correct swap legs. The evaluation date is the
     reference date of either discounting curve (which must be equal).
 

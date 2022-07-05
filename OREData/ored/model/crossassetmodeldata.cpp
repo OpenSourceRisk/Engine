@@ -194,7 +194,7 @@ void CrossAssetModelData::validate() {
     QL_REQUIRE(fxConfigs_.size() == irConfigs_.size() - 1, "inconsistent number of FX data provided");
     for (Size i = 0; i < fxConfigs_.size(); ++i)
         QL_REQUIRE(fxConfigs_[i]->foreignCcy() == irConfigs_[i + 1]->ccy(),
-                   "currency mismatch betwee IR and FX config vectors");
+                   "currency mismatch between IR and FX config vectors");
 
     if (measure_ == "BA") {
         // ensure that the domestic LGM has shift = 0 and scaling = 1
