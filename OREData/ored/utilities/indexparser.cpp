@@ -380,7 +380,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"CNY-REPOFIX", boost::make_shared<IborIndexParserWithPeriod<CNYRepoFix>>()},
         {"USD-SOFR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SofrTerm>>()},
-        {"GPB-SONIA", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SoniaTerm>>()}};
+        {"GBP-SONIA", boost::make_shared<IborIndexParserWithPeriod<QuantExt::SoniaTerm>>()}};
 
     // Check (once) that we have a one-to-one mapping
     static bool checked = false;
