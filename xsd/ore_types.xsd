@@ -472,9 +472,14 @@
       <xs:enumeration value="NaturalCubic"/>
       <xs:enumeration value="FinancialCubic"/>
       <xs:enumeration value="Cubic"/>
+      <xs:enumeration value="Hermite"/>
+      <xs:enumeration value="Quadratic"/>
+      <xs:enumeration value="LogQuadratic"/>
+      <xs:enumeration value="CubicSpline"/>
       <xs:enumeration value="LinearFlat"/>
       <xs:enumeration value="LogLinearFlat"/>
       <xs:enumeration value="CubicFlat"/>
+      <xs:enumeration value="HermiteFlat"/>
       <xs:enumeration value="ConvexMonotone"/>
       <xs:enumeration value="ExponentialSplines"/>
       <xs:enumeration value="NelsonSiegel"/>
