@@ -276,13 +276,14 @@ void ValueAdjustmentCalculator::build() {
     if (baseCurrency_ != "")
         oisCurve = market_->discountCurve(baseCurrency_, configuration_);
 
+    string origDvaName = dvaName_;
     // Trade XVA
     for (Size i = 0; i < portfolio_->trades().size(); ++i) {
         string tid = portfolio_->trades()[i]->id();
         LOG("Update XVA for trade " << tid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
         string cid; 
         if (flipViewXVA_) {
-            cid = dvaName_;
+            cid = origDvaName;
             dvaName_ = portfolio_->trades()[i]->envelope().counterparty();
             fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
             fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
@@ -361,7 +362,7 @@ void ValueAdjustmentCalculator::build() {
         LOG("Update XVA for netting set " << nid << (flipViewXVA_ ? ", inverted (flipViewXVA = Y)" : ", regular (flipViewXVA = N)"));
         string cid;
         if (flipViewXVA_) {
-            cid = dvaName_;
+            cid = origDvaName;
             dvaName_ = pair.second;
             fvaBorrowingCurve_ = dvaName_ + flipViewBorrowingCurvePostfix_;
             fvaLendingCurve_ = dvaName_ + flipViewLendingCurvePostfix_;
