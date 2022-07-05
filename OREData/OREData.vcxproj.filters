@@ -1182,9 +1182,6 @@
     <ClCompile Include="ored\portfolio\builders\capflooredaverageonindexedcouponleg.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\asianoption.cpp">
-      <Filter>portfolio</Filter>
-    </ClCompile>
     <ClCompile Include="ored\portfolio\commodityasianoption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
@@ -1220,6 +1217,9 @@
     </ClCompile>
     <ClCompile Include="ored\utilities\currencyparser.cpp">
       <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\asianoption.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

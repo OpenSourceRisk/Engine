@@ -168,9 +168,6 @@ This is used if the \lstinline!QuoteType! is \lstinline!Premium!. It provides th
 \item \lstinline!PreferOutOfTheMoney! [Optional]:
 A node accepting a boolean value. If set to \lstinline!true!, quotes for out of the money options are preferred where a call and a put quote are found for the same expiry strike pair. If set to \lstinline!false!, quotes for in the money options are preferred where a call and a put quote are found for the same expiry strike pair. If omitted, \lstinline!true! is assumed.
 
-\item \lstinline!PreferOutOfTheMoney! [Optional]:
-A node accepting a boolean value. If set to \lstinline!true!, quotes for out of the money options are preferred where a call and a put quote are found for the same expiry strike pair. If set to \lstinline!false!, quotes for in the money options are preferred where a call and a put quote are found for the same expiry strike pair. If omitted, \lstinline!true! is assumed.
-
 \item \lstinline!QuoteSuffix! [Optional]:
 The allowable values are \lstinline!C! and \lstinline!P! indicating \lstinline!Call! and \lstinline!Put! respectively. If given, they are used in the construction of the commodity option quote strings as explained below. They are useful in cases where the market data contains both call and put volatility quotes for the same expiry strike pair and you want to use only the calls (set \lstinline!QuoteSuffix! to \lstinline!C!) or the puts (set \lstinline!QuoteSuffix! to \lstinline!P!).
 
