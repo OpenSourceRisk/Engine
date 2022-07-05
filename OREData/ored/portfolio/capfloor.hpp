@@ -58,9 +58,8 @@ public:
     //@{
     bool hasCashflows() const override { return true; }
     //@}
-    const std::map<std::string, boost::any>& additionalData() const override;
 
-    const std::map<std::string,boost::any>& additionalData() const override;
+    const std::map<std::string, boost::any>& additionalData() const override;
 
 private:
     string longShort_;
