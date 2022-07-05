@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -27,6 +28,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/cpicapfloor.hpp>
@@ -468,6 +470,108 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     additionalData_["startDate"] = to_string(startDate);
+}
+
+const std::map<std::string, boost::any>& CapFloor::additionalData() const {
+    // use the build time as of date to determine current notionals
+    Date asof = Settings::instance().evaluationDate();
+
+    additionalData_["legType"] = legData_.legType();
+    additionalData_["notionalCurrency"] = legData_.currency();
+
+    vector<Real> amounts;
+    vector<Date> paymentDates;
+    vector<Real> currentNotionals;
+    vector<Rate> rates;
+    vector<Date> fixingDates;
+    vector<Rate> indexFixings;
+    vector<Spread> spreads;
+    vector<Rate> caps;
+    vector<Rate> effectiveCaps;
+    vector<Volatility> capletVols;
+    vector<Real> capletPrices;
+    vector<Rate> floors;
+    vector<Rate> effectiveFloors;
+    vector<Volatility> floorletVols;
+    vector<Real> floorletPrices;
+
+    for (const auto& flow : legs_[0]) {
+        // pick flow with earliest future payment date on this leg
+        if (flow->date() > asof) {
+            amounts.push_back(flow->amount());
+            paymentDates.push_back(flow->date());
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(flow);
+            if (coupon) {
+                currentNotionals.push_back(coupon->nominal());
+                rates.push_back(coupon->rate());
+                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(flow);
+                if (frc) {
+                    fixingDates.push_back(frc->fixingDate());
+                    indexFixings.push_back(frc->indexFixing());
+                    spreads.push_back(frc->spread());
+
+                    // The below code adds cap/floor levels, vols, and prices
+                    // for capped/floored Ibor coupons
+
+                    boost::shared_ptr<StrippedCappedFlooredCoupon> strippedCfc =
+                        boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(flow);
+                    if (!strippedCfc)
+                        continue;
+
+                    boost::shared_ptr<CappedFlooredCoupon> cfc = strippedCfc->underlying();
+                    boost::shared_ptr<IborCouponPricer> pricer =
+                        boost::dynamic_pointer_cast<IborCouponPricer>(cfc->pricer());
+                    if (pricer && (cfc->fixingDate() > asof)) {
+                        // We write the vols if an Ibor coupon pricer is found and the fixing date is in the future
+                        if (cfc->isCapped()) {
+                            caps.push_back(cfc->cap());
+                            const Rate effectiveCap = cfc->effectiveCap();
+                            effectiveCaps.push_back(effectiveCap);
+                            capletVols.push_back(
+                                pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveCap));
+                            capletPrices.push_back(pricer->capletPrice(effectiveCap) * coupon->nominal());
+                        }
+                        if (cfc->isFloored()) {
+                            floors.push_back(cfc->floor());
+                            const Rate effectiveFloor = cfc->effectiveFloor();
+                            effectiveFloors.push_back(effectiveFloor);
+                            floorletVols.push_back(
+                                pricer->capletVolatility()->volatility(cfc->fixingDate(), effectiveFloor));
+                            floorletPrices.push_back(pricer->floorletPrice(effectiveFloor) * coupon->nominal());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    additionalData_["amounts"] = amounts;
+    additionalData_["paymentDates"] = paymentDates;
+    additionalData_["currentNotionals"] = currentNotionals;
+    additionalData_["rates"] = rates;
+    additionalData_["fixingDates"] = fixingDates;
+    additionalData_["indexFixings"] = indexFixings;
+    additionalData_["spreads"] = spreads;
+    if (caps.size() > 0) {
+        additionalData_["caps"] = caps;
+        additionalData_["effectiveCaps"] = effectiveCaps;
+        additionalData_["capletVols"] = capletVols;
+        additionalData_["capletPrices"] = capletPrices;
+    }
+    if (floors.size() > 0) {
+        additionalData_["floors"] = floors;
+        additionalData_["effectiveFloors"] = effectiveFloors;
+        additionalData_["floorletVols"] = floorletVols;
+        additionalData_["floorletPrices"] = floorletPrices;
+    }
+
+    if (legs_[0].size() > 0) {
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs_[0][0]);
+        if (coupon)
+            additionalData_["originalNotional"] = coupon->nominal();
+    }
+
+    return additionalData_;
 }
 
 void CapFloor::fromXML(XMLNode* node) {
