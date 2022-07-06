@@ -92,11 +92,11 @@ using namespace data;
 class PostProcess {
 public:
     //! Constructor
-    PostProcess( //! Trade portfolio to identidy e.g. netting set, maturity, break dates for each trade
+    PostProcess( //! Trade portfolio to identify e.g. netting set, maturity, break dates for each trade
         const boost::shared_ptr<Portfolio>& portfolio,
         //! Netting set manager to access CSA details for each netting set
         const boost::shared_ptr<NettingSetManager>& nettingSetManager,
-        //! Market data object to access e.g. discounting and funcing curves
+        //! Market data object to access e.g. discounting and funding curves
         const boost::shared_ptr<Market>& market,
         //! Market configuration to use
         const std::string& configuration,
@@ -110,7 +110,7 @@ public:
         const string& baseCurrency,
         //! Method to be used for Exposure/XVA allocation down to trade level
         const string& allocationMethod,
-        //! Cutoff parameter for the marginal allocation method below which we switch to equal disctribution
+        //! Cutoff parameter for the marginal allocation method below which we switch to equal distribution
         Real cvaMarginalAllocationLimit,
         //! Quantile for Potential Future Exposure output
         Real quantile = 0.95,
@@ -128,7 +128,7 @@ public:
         const boost::shared_ptr<CubeInterpretation>& cubeInterpretation = boost::shared_ptr<CubeInterpretation>(),
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
-	    //! CVA spread sensitvitiy grid
+	    //! CVA spread sensitivity grid
 	    vector<Period> cvaSpreadSensiGrid = { 6*Months, 1*Years, 3*Years, 5*Years, 10*Years },
 	    //! CVA spread sensitivity shift size
 	    Real cvaSpreadSensiShiftSize = 0.0001,
@@ -213,11 +213,11 @@ public:
     //! Return trade ENE, allocated down from the netting set level
     const vector<Real>& allocatedTradeENE(const string& tradeId);
   
-    //! Return Netting Set CVA Hazard Rate Sensitvity vector
+    //! Return Netting Set CVA Hazard Rate Sensitivity vector
     vector<Real> netCvaHazardRateSensitivity(const string& nettingSetId);
-    //! Return Netting Set CVA Spread Sensitvity vector
+    //! Return Netting Set CVA Spread Sensitivity vector
     vector<Real> netCvaSpreadSensitivity(const string& nettingSetId);
-    //! Return Netting Set CVA Spread Sensitvity vector
+    //! Return Netting Set CVA Spread Sensitivity vector
     const std::map<std::string, std::vector<QuantLib::Real>>& netCvaSpreadSensitivity() const { return netCvaSpreadSensi_; }
 
     //! Return trade (stand-alone) CVA
@@ -254,11 +254,11 @@ public:
     Real nettingSetFCA(const string& nettingSetId);
     //! Return netting set KVA-CCR
     Real nettingSetOurKVACCR(const string& nettingSetId);
-    //! Return netting set KVA-CCR from counterparty persepctive
+    //! Return netting set KVA-CCR from counterparty perspective
     Real nettingSetTheirKVACCR(const string& nettingSetId);
     //! Return netting set KVA-CVA
     Real nettingSetOurKVACVA(const string& nettingSetId);
-    //! Return netting set KVA-CVA from counterparty persepctive
+    //! Return netting set KVA-CVA from counterparty perspective
     Real nettingSetTheirKVACVA(const string& nettingSetId);
     //! Return netting set FBA excluding own survival probability
     Real nettingSetFBA_exOwnSP(const string& nettingSetId);

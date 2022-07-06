@@ -62,7 +62,7 @@ void BlackVarianceSurfaceMoneyness::performCalculations() const {
 
 void BlackVarianceSurfaceMoneyness::init() {
 
-    QL_REQUIRE(times_.size() == quotes_.front().size(), "mismatch between times vector and vol matrix colums");
+    QL_REQUIRE(times_.size() == quotes_.front().size(), "mismatch between times vector and vol matrix columns");
     QL_REQUIRE(moneyness_.size() == quotes_.size(), "mismatch between moneyness vector and vol matrix rows");
 
     QL_REQUIRE(times_[0] > 0, "The first time must be greater than 0.0.");

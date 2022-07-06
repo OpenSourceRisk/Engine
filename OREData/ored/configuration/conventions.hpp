@@ -142,7 +142,7 @@ public:
         with the same id */
     void add(const boost::shared_ptr<Convention>& convention);
 
-    //! \name Serilaisation
+    //! \name Serialisation
     //@{0
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;

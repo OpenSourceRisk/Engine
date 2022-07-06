@@ -300,11 +300,11 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
                                         const vector<Time>& dataX, const vector<Time>& dataY,
                                         const vector<vector<Real>>& data, vector<vector<Real>>& shiftedData,
                                         bool initialise) {
-    QL_REQUIRE(shiftX.size() >= 1 && shiftY.size() >= 1, "shift vector size >= 1 reqired");
+    QL_REQUIRE(shiftX.size() >= 1 && shiftY.size() >= 1, "shift vector size >= 1 required");
     QL_REQUIRE(i < shiftX.size(), "index i out of range");
     QL_REQUIRE(j < shiftY.size(), "index j out of range");
 
-    // initalise the shifted data
+    // initialise the shifted data
     if (initialise) {
         for (Size k = 0; k < dataX.size(); ++k) {
             for (Size l = 0; l < dataY.size(); ++l)

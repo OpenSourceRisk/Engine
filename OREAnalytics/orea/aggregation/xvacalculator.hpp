@@ -41,7 +41,7 @@ using namespace std;
 
 //! XVA Calculator base class
 /*!
-  Derived classes implement a constructor with the relavant additional input data
+  Derived classes implement a constructor with the relevant additional input data
   and a build function that performs the XVA calculations for all netting sets and
   along all paths.
 */
@@ -88,7 +88,7 @@ public:
 
     virtual ~ValueAdjustmentCalculator() {}
 
-    //! Compute cva along all paths and fill result structurues
+    //! Compute cva along all paths and fill result structures
     virtual void build();
 
     virtual const vector<Date>& dates() { return tradeExposureCube_->dates(); };

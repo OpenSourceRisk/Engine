@@ -17,7 +17,7 @@
 */
 
 /*! \file blackvariancecurve3.hpp
-    \brief Black volatility curve modelled as variance curve
+    \brief Black volatility curve modeled as variance curve
     \ingroup termstructures
 */
 
@@ -32,7 +32,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Black volatility curve modelled as variance curve
+//! Black volatility curve modeled as variance curve
 /*! This class calculates time-dependent Black volatilities using
     as input a vector of (ATM) Black volatilities observed in the
     market.

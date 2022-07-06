@@ -96,7 +96,7 @@ private:
 
     References:
 
-    Brigo, Mercurio: Interst Rate Models - Theory and Practice,
+    Brigo, Mercurio: Interest Rate Models - Theory and Practice,
     2nd Edition, Springer, 2006, chapter 13.6.2
 
     http://ssrn.com/abstract=2686998

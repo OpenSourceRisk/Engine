@@ -142,7 +142,7 @@ private:
 */
 class Bond : public Trade {
 public:
-    //! Default Contructor
+    //! Default Constructor
     explicit Bond() : Trade("Bond") {}
 
     //! Constructor taking an envelope and bond data

@@ -45,7 +45,7 @@ using std::vector;
 
 enum class AggregationScenarioDataType { IndexFixing, FXSpot, Numeraire, Generic };
 
-//! Container for storing simulated marekt data
+//! Container for storing simulated market data
 /*! The indexes for dates and samples are (by convention) the
     same as in the npv cube
 

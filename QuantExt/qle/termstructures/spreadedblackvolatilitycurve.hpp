@@ -31,7 +31,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-//! Spreaedd Black volatility curve modelled as variance curve
+//! Spreaded Black volatility curve modeled as variance curve
 class SpreadedBlackVolatilityCurve : public LazyObject, public BlackVolatilityTermStructure {
 public:
     /*! - times should be consistent with reference ts day counter

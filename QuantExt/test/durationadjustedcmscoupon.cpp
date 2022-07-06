@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(testHistoricalValues) {
     Real fixingValue = 0.01;
     index->addFixing(fixingDate, fixingValue);
 
-    // we do not need a vol surface or an annuity mapping builder, since the coupon amount is determistic
+    // we do not need a vol surface or an annuity mapping builder, since the coupon amount is deterministic
     auto pricer =
         boost::make_shared<DurationAdjustedCmsCouponTsrPricer>(Handle<SwaptionVolatilityStructure>(), nullptr);
 

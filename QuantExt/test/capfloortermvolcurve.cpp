@@ -156,7 +156,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCapFloorTermVolCurveInterpolation,
     BOOST_TEST_MESSAGE("  Floating reference date: " << boolalpha << isMoving);
     BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
 
-    // Create the CapFloorTermVolatilityStructure using the appropriate interpolation and refernce date/settlement days
+    // Create the CapFloorTermVolatilityStructure using the appropriate interpolation and reference date/settlement days
     boost::shared_ptr<CapFloorTermVolatilityStructure> cftvs;
     switch (interpolationType.which()) {
     case 0:

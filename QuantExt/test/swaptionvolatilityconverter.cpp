@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(testCube) {
     SwaptionVolatilityConverter converter(vars.referenceDate, cube, swapIndex, shortSwapIndex, Normal);
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
 
-    // Price swaptions in the lognormal and normal cube and comare their premiums
+    // Price swaptions in the lognormal and normal cube and compare their premiums
     for (Size i = 0; i < vars.atmVols.optionTenors.size(); ++i) {
         for (Size j = 0; j < vars.atmVols.swapTenors.size(); ++j) {
             for (Size k = 0; k < vars.atmVols.strikeSpreads.size(); ++k) {

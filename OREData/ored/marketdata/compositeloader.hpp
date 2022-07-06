@@ -28,7 +28,7 @@ public:
         if (!a_)
             return b_->loadQuotes(d);
         data_.clear();
-        // loadQuotes() might throw if no quotes are avaiable in one loader, which is not an error here
+        // loadQuotes() might throw if no quotes are available in one loader, which is not an error here
         try {
             data_.insert(data_.end(), a_->loadQuotes(d).begin(), a_->loadQuotes(d).end());
         } catch (...) {

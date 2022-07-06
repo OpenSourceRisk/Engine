@@ -50,7 +50,7 @@
 
  BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionFromXml) {
 
-     BOOST_TEST_MESSAGE("Testing contruction of OptionAsianData from XML...");
+     BOOST_TEST_MESSAGE("Testing construction of OptionAsianData from XML...");
 
      // XML input
      string xml;
@@ -70,7 +70,7 @@
 
  BOOST_AUTO_TEST_CASE(testOptionAsianDataConstructionToXml) {
 
-     BOOST_TEST_MESSAGE("Testing contruction of OptionAsianData to/from XML...");
+     BOOST_TEST_MESSAGE("Testing construction of OptionAsianData to/from XML...");
 
      // Construct explicitly
      OptionAsianData inoad(OptionAsianData::AsianType::Strike, Average::Type::Geometric);

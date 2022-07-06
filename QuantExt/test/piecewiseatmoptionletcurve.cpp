@@ -443,7 +443,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
 
         // Cap floor set up is different depending on whether we are testing the moving term structure or not.
         // Empty startDate, i.e. moving, means that cap floor will be relative to the global evaluation date.
-        // If not moving, we keep the instrment's original start date.
+        // If not moving, we keep the instrument's original start date.
         Date startDate;
         if (!isMoving) {
             startDate = iborIndex->fixingCalendar().adjust(referenceDate);

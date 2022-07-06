@@ -132,7 +132,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
         }
     }
 
-    // get notiice period, calendar, bdc
+    // get notice period, calendar, bdc
 
     Period noticePeriod = optionData.noticePeriod().empty() ? 0 * Days : parsePeriod(optionData.noticePeriod());
     Calendar noticeCal =
@@ -147,7 +147,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
         sortedExerciseDates.push_back(parseDate(d));
     std::sort(sortedExerciseDates.begin(), sortedExerciseDates.end());
 
-    // build vector of alive exercise dates and corresponding notive dates
+    // build vector of alive exercise dates and corresponding native dates
 
     std::vector<bool> isExerciseDateAlive(sortedExerciseDates.size(), false);
 
@@ -180,7 +180,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
         exercise_ = boost::make_shared<BermudanExercise>(noticeDates_);
 
 
-    // build feee and rebated exercise instance, if any fees are present
+    // build fee and rebated exercise instance, if any fees are present
 
     if (!optionData.exerciseFees().empty()) {
 
@@ -234,7 +234,7 @@ ExerciseBuilder::ExerciseBuilder(const OptionData& optionData, const std::vector
                 else {
                     Real feeNotional = notionals.begin()->second;
                     DLOG("Convert percentage rebate "
-                         << rebates[i] << " to absolute reabte " << rebates[i] * feeNotional << " using nominal "
+                         << rebates[i] << " to absolute rebate " << rebates[i] * feeNotional << " using nominal "
                          << feeNotional << " for exercise date " << QuantLib::io::iso_date(exerciseDates_[i]));
                     rebates[i] *= feeNotional; // multiply percentage fee by relevant notional
                 }
