@@ -72,7 +72,7 @@ void AnalyticJyYoYCapFloorEngine::calculate() const {
     auto yts = model_->irlgm1f(irIdx)->termStructure();
 
     // For each YoY optionlet, there are four scenarios:
-    // 1. The YoY optionlet payment has already occured (depends on some settings) => skip it.
+    // 1. The YoY optionlet payment has already occurred (depends on some settings) => skip it.
     // 2. The underlying YoY rate is known but has not been paid. Deterministic discounted value.
     // 3. The denominator in the underlying YoY rate is known but the numerator is not known. We have a CPI 
     //    optionlet.

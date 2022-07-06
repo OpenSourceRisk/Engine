@@ -33,7 +33,7 @@ protected:
         average price if any of the <em>Pricing Dates</em> are on or before the valuation date.
 
         The return value contains the accrued average price and the number of <em>Pricing Dates</em> that were on or
-        before the valution date. If there has been no accrual, the return value is (0.0, 0).
+        before the valuation date. If there has been no accrual, the return value is (0.0, 0).
     */
     std::pair<QuantLib::Real, QuantLib::Size> calculateAccrued() const;
 

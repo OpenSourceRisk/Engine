@@ -51,7 +51,7 @@ public:
     //! Constructor
     EqBsBuilder( //! Market object
         const boost::shared_ptr<ore::data::Market>& market,
-        //! EQ model parameters/dscription
+        //! EQ model parameters/description
         const boost::shared_ptr<EqBsData>& data,
         //! base currency for calibration
         const QuantLib::Currency& baseCcy,

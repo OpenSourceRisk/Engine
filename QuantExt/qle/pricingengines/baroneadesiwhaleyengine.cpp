@@ -167,7 +167,7 @@ void BaroneAdesiWhaleyApproximationEngine::calculate() const {
 
     Real tolerance = 1e-6;
     Real Sk = 0.0;
-    // try to deteremine the critical price for the american option
+    // try to determine the critical price for the american option
     // in some case, for example r < 0, q < 0 it is never optimal to exercise early
     // and we cannot solve for critical price, the newton raphson solver diverges
     // with Si turning negative

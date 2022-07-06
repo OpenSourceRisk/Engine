@@ -65,7 +65,7 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
 void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader) {
     if (fp_) {
         const Date d = s->asof();
-        // take a copy of the keys here to ensure the order is preseved
+        // take a copy of the keys here to ensure the order is preserved
         keys_ = s->keys();
         std::sort(keys_.begin(), keys_.end());
         if (writeHeader) {

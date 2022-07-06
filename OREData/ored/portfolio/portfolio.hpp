@@ -48,7 +48,7 @@ public:
     //! Add a trade to the portfolio
     void add(const boost::shared_ptr<Trade>& trade, const bool checkForDuplicateIds = true);
 
-    //! Check if a trade id is already in the porfolio
+    //! Check if a trade id is already in the portfolio
     bool has(const string& id);
 
     /*! Get a Trade with the given \p id from the portfolio

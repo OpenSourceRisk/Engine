@@ -39,7 +39,7 @@ class CSVFileReport : public Report {
 public:
     /*! Create a report with the given filename, will throw if it cannot open the file.
         \param filename         name of the csv file that is created
-        \param sep              seperator character for the csv file. It defaults to a comma.
+        \param sep              separator character for the csv file. It defaults to a comma.
         \param commentCharacter if \c true, the first row starts with the \c # character.
         \param quoteChar        character to use to quote strings. If not provided, strings are not quoted.
         \param nullString       string used to represent \c QuantLib::Null values or infinite values. If not provided,

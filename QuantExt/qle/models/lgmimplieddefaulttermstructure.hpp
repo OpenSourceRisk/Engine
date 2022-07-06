@@ -36,7 +36,7 @@ using namespace QuantLib;
     termstructure at construction, but you can vary this
     as well as the state.
     The purely time based variant is mainly there for
-    perfomance reasons, note that it does not provide the
+    performance reasons, note that it does not provide the
     full term structure interface and does not send
     notifications on reference time updates.
 

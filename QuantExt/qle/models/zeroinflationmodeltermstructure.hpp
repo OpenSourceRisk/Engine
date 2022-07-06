@@ -32,7 +32,7 @@ namespace QuantExt {
 /*! Base class for cross asset model implied zero inflation term structures.
     
     The termstructure has the reference date of the model's term structure at construction, but you can vary this as 
-    well as the state. This purely time based variant is mainly here for perfomance reasons. Note that it does not 
+    well as the state. This purely time based variant is mainly here for performance reasons. Note that it does not 
     provide the full term structure interface and does not send notifications on reference time updates.
     
     \ingroup models

@@ -207,7 +207,7 @@ int OREApp::run() {
 	    //    LOG("without cptyCube");
 	    // }
 
-            // // Use pre-generared scenarios
+            // // Use pre-generated scenarios
             // if (!scenarioData_)
             //     loadScenarioData();
 
@@ -257,7 +257,7 @@ int OREApp::run() {
                            "cube x dimension (" << cube_->numIds() << ") does not match portfolio size ("
                                                 << portfolio_->size() << ")");
 
-                // Use pre-generared scenarios
+                // Use pre-generated scenarios
                 if (!scenarioData_)
                     loadScenarioData();
 
@@ -1097,7 +1097,7 @@ void OREApp::loadScenarioData() {
 
 void OREApp::loadCube() {
 
-    // loade usual NPV cube on trade level
+    // load usual NPV cube on trade level
 
     string cubeFile = outputPath_ + "/" + params_->get("xva", "cubeFile");
     bool hyperCube = false;

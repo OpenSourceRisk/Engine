@@ -237,7 +237,7 @@ const Real& ValueAdjustmentCalculator::nettingSetFba_exAllSp(const std::string& 
     if (nettingSetFba_exAllSp_.find(nettingSet) != nettingSetFba_exAllSp_.end())
         return nettingSetFba_exAllSp_[nettingSet];
     else
-        QL_FAIL("netting set " << nettingSet << " not found in expected FBA ex all spresults");
+        QL_FAIL("netting set " << nettingSet << " not found in expected FBA ex all sp results");
 }
 
 const Real& ValueAdjustmentCalculator::nettingSetFca(const std::string& nettingSet) {

@@ -72,7 +72,7 @@ NettedExposureCalculator::NettedExposureCalculator(
 
     nettedCube_= boost::make_shared<SinglePrecisionInMemoryCube>(
             market_->asofDate(), nettingSetIds, cube->dates(),
-            cube->samples()); // Exposure afer collateral
+            cube->samples()); // Exposure after collateral
     if (multiPath) {
         exposureCube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(
             market_->asofDate(), nettingSetIds, cube->dates(),
@@ -105,7 +105,7 @@ void NettedExposureCalculator::build() {
 	if (counterpartyMap_.find(nettingSetId) == counterpartyMap_.end())
 	    counterpartyMap_[nettingSetId] = trade->envelope().counterparty();
 	else {
-	    QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique withint the netting set");
+	    QL_REQUIRE(counterpartyMap_[nettingSetId] == cp, "counterparty name is not unique within the netting set");
 	}
         Real npv;
         if (flipViewXVA_) {
@@ -164,7 +164,7 @@ void NettedExposureCalculator::build() {
                            "scenario data does not provide index values for " << csaIndexName);
             }
             QL_REQUIRE(netting->csaDetails(), "active CSA for netting set " << nettingSetId
-                    << ", but CSA detailsd not initialised");
+                    << ", but CSA details not initialised");
             applyInitialMargin = netting->csaDetails()->applyInitialMargin() && applyInitialMargin_;
             initialMarginType = netting->csaDetails()->initialMarginType();
             LOG("ApplyInitialMargin=" << applyInitialMargin << " for netting set " << nettingSetId 
@@ -266,7 +266,7 @@ void NettedExposureCalculator::build() {
                     Real collateralSpread = (balance >= 0.0 ? netting->csaDetails()->collatSpreadRcv() : netting->csaDetails()->collatSpreadPay());
                     Real numeraire = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
                     Real colvaDelta = -balance * collateralSpread * dcf / numeraire / cube_->samples();
-                    // inutuitive floorDelta including collateralSpread would be:
+                    // intuitive floorDelta including collateralSpread would be:
                     // -balance * (max(indexValue - collateralSpread,0) - (indexValue - collateralSpread)) * dcf /
                     // samples
                     Real floorDelta = -balance * std::max(-(indexValue - collateralSpread), 0.0) * dcf / numeraire / cube_->samples();

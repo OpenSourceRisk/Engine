@@ -292,7 +292,7 @@ void CreditDefaultSwapOption::buildNoDefault(const boost::shared_ptr<EngineFacto
 
 void CreditDefaultSwapOption::buildDefaulted(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
-    DLOG("CreditDefaultSwapOption: building CDS option trade " << id() << " given default occured.");
+    DLOG("CreditDefaultSwapOption: building CDS option trade " << id() << " given default occurred.");
 
     // We add a simple payment for CDS options where the reference entity has already defaulted.
     // If it is a knock-out CDS option, we add a dummy payment of 0.0 with date today instead of throwing.
@@ -340,7 +340,7 @@ Date CreditDefaultSwapOption::addPremium(const boost::shared_ptr<EngineFactory>&
     vector<boost::shared_ptr<Instrument>>& additionalInstruments,
     vector<Real>& additionalMultipliers) {
         // The premium amount is always provided as a non-negative amount. Assign the correct sign here i.e.
-        // pay the premium if long the option and recieve the premium if short the option.
+        // pay the premium if long the option and receive the premium if short the option.
         Position::Type positionType = parsePositionType(option_.longShort());
         Real indicatorLongShort = positionType == Position::Long ? 1.0 : -1.0;
         return addPremiums(additionalInstruments, additionalMultipliers, 1.0, option_.premiumData(), indicatorLongShort,

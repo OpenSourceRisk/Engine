@@ -17,7 +17,7 @@
 */
 
 /*! \file durationadjustedcms.hpp
-    \brief coupon pricer builder for duration adjuted cms coupons
+    \brief coupon pricer builder for duration adjusted cms coupons
     \ingroup builders
 */
 

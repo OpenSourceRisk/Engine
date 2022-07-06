@@ -268,7 +268,7 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     vector<string> specs;
     for (Size i = 0; i < marketObjectData.size(); ++i) {
         MarketObject mo = marketObjectData[i].obj;
-        // swap indices have to be exlcuded here...
+        // swap indices have to be excluded here...
         if (mo != MarketObject::SwapIndexCurve && marketObjects_.find(mo) != marketObjects_.end()) {
             curveSpecs(marketObjects_.at(mo), marketObjectId(mo, configuration), specs);
         }
@@ -279,7 +279,7 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
 void TodaysMarketParameters::addMarketObject(const MarketObject o, const string& id,
                                              const map<string, string>& assignments) {
 
-    // check that we do not have an inconcsistent mapping within one market object
+    // check that we do not have an inconsistent mapping within one market object
     auto mo = marketObjects_.find(o);
     if (mo != marketObjects_.end()) {
         auto mp = mo->second.find(id);
@@ -309,7 +309,7 @@ void TodaysMarketParameters::addMarketObject(const MarketObject o, const string&
                                "TodaysMarketParameters, overlap between YieldCurve and IndexCurve names, try to add "
                                "mapping for market object type "
                                    << o << ", id " << id << ": " << a->first << " " << a->second << ", but have "
-                                   << m.first << " " << m.second << " already in other market object's mappnig");
+                                   << m.first << " " << m.second << " already in other market object's mapping");
                 }
             }
         }
