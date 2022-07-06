@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/builders/creditdefaultswap.hpp
-\brief Builder that returns an engine to price a credit default swap
+/*! \file portfolio/builders/creditdefaultswapoption.hpp
+\brief Builder that returns an engine to price a credit default swap option
 \ingroup builders
 */
 

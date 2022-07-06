@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -40,7 +41,7 @@ using namespace QuantLib;
 class InterpolatedSmileSection : public FxSmileSection {
 public:
     //! Supported interpolation methods
-    enum class InterpolationMethod { Linear, NaturalCubic, FinancialCubic };
+    enum class InterpolationMethod { Linear, NaturalCubic, FinancialCubic, CubicSpline };
 
     //! ctor
     InterpolatedSmileSection(Real spot, Real rd, Real rf, Time t, const std::vector<Real>& strikes,
