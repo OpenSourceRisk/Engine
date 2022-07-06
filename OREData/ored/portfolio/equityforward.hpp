@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/equityoption.hpp
-\brief Equity Option data model and serialization
+/*! \file portfolio/equityforward.hpp
+\brief Equity Forward data model and serialization
 \ingroup tradedata
 */
 

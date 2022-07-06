@@ -30,7 +30,7 @@ namespace ore {
 namespace data {
 using std::string;
 
-//! Serializable Equity Forward contract
+//! Serializable Equity Swap contract
 /*!
 \ingroup tradedata
 */

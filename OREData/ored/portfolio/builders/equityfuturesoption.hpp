@@ -28,7 +28,7 @@
 namespace ore {
 namespace data {
 
-/*! Engine builder for European commodity options
+/*! Engine builder for European equity futures options
     \ingroup builders
  */
 class EquityFutureEuropeanOptionEngineBuilder : public EuropeanForwardOptionEngineBuilder {

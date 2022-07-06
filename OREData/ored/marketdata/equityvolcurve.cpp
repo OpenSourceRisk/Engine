@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2022 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -193,7 +194,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
     if (wildcard) {
         DLOG("Have single quote with pattern " << (*wildcard).pattern());
 
-        // Loop over quotes and process commodity option quotes matching pattern on asof
+        // Loop over quotes and process equity option quotes matching pattern on asof
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
 
             // Go to next quote if the market data point's date does not equal our asof
@@ -229,7 +230,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, const EquityVolatilityCur
 
         Size excludedAlreadyExpired = 0;
 
-        // Loop over quotes and process commodity option quotes that are explicitly specified in the config
+        // Loop over quotes and process equity option quotes that are explicitly specified in the config
         for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
             // Go to next quote if the market data point's date does not equal our asof
             if (md->asofDate() != asof)
@@ -612,7 +613,7 @@ void EquityVolCurve::buildVolatility(const Date& asof, EquityVolatilityCurveConf
         if (md->asofDate() != asof)
             continue;
 
-        // Go to next quote if not a commodity option quote.
+        // Go to next quote if not a equity option quote.
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         if (!q)
             continue;
@@ -845,7 +846,7 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         if (md->asofDate() != asof)
             continue;
 
-        // Go to next quote if not a commodity option quote.
+        // Go to next quote if not a equity option quote.
         auto q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
         if (!q)
             continue;
@@ -981,6 +982,8 @@ void EquityVolCurve::buildVolatility(const QuantLib::Date& asof, EquityVolatilit
         im = InterpolatedSmileSection::InterpolationMethod::NaturalCubic;
     } else if (vdsc.strikeInterpolation() == "FinancialCubic") {
         im = InterpolatedSmileSection::InterpolationMethod::FinancialCubic;
+    } else if (vdsc.strikeInterpolation() == "CubicSpline") {
+        im = InterpolatedSmileSection::InterpolationMethod::CubicSpline;
     } else {
         im = InterpolatedSmileSection::InterpolationMethod::Linear;
         DLOG("EquityVolCurve: BlackVolatilitySurfaceDelta does not support strike interpolation '" << vdsc.strikeInterpolation()
