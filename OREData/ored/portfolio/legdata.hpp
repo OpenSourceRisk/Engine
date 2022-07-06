@@ -184,7 +184,7 @@ public:
     //! Default constructor
     FloatingLegData()
         : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), lookback_(0 * Days), rateCutoff_(Null<Size>()),
-          isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false) {}
+          isAveraged_(false), hasSubPeriods_(false), includeSpread_(false), nakedOption_(false), telescopicValueDates_(false) {}
     //! Constructor
     FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -195,13 +195,14 @@ public:
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false,
                     QuantLib::Period lookback = 0 * Days, const Size rateCutoff = Null<Size>(),
                     bool localCapFloor = false, const boost::optional<Period>& lastRecentPeriod = boost::none,
-                    const std::string& lastRecentPeriodCalendar = std::string())
+                    const std::string& lastRecentPeriodCalendar = std::string(),
+                    bool telescopicValueDates = false)
         : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays),
           lookback_(lookback), rateCutoff_(rateCutoff), isInArrears_(isInArrears), isAveraged_(isAveraged),
           hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads), spreadDates_(spreadDates),
           caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates), gearings_(gearings),
           gearingDates_(gearingDates), nakedOption_(nakedOption), localCapFloor_(localCapFloor),
-          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar) {
+          lastRecentPeriod_(lastRecentPeriod), lastRecentPeriodCalendar_(lastRecentPeriodCalendar), telescopicValueDates_(telescopicValueDates) {
         indices_.insert(index_);
     }
 
@@ -227,6 +228,7 @@ public:
     bool localCapFloor() const { return localCapFloor_; }
     const boost::optional<Period>& lastRecentPeriod() const { return lastRecentPeriod_; }
     const std::string& lastRecentPeriodCalendar() const { return lastRecentPeriodCalendar_; }
+    bool telescopicValueDates() const { return telescopicValueDates_; }
     //@}
 
     //! \name Modifiers
@@ -237,6 +239,7 @@ public:
     vector<string>& floorDates() { return floorDates_; }
     bool& nakedOption() { return nakedOption_; }
     bool& localCapFloor() { return localCapFloor_; }
+    bool& telescopicValueDates() { return telescopicValueDates_; }
     //@}
 
     //! \name Serialisation
@@ -265,7 +268,7 @@ private:
     bool localCapFloor_;
     boost::optional<Period> lastRecentPeriod_;
     std::string lastRecentPeriodCalendar_;
-
+    bool telescopicValueDates_;
     static LegDataRegister<FloatingLegData> reg_;
 };
 

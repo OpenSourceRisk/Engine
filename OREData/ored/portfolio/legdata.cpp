@@ -1160,7 +1160,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     else
         paymentCalendar = parseCalendar(data.paymentCalendar());
 
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
     vector<double> spreads =
         buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
     vector<double> gearings =
@@ -1209,7 +1209,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                 .includeSpreadInCapFloors(floatData->includeSpread())
                 .withLocalCapFloor(floatData->localCapFloor())
                 .withAverageONIndexedCouponPricer(couponPricer)
-                .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer);
+                .withCapFlooredAverageONIndexedCouponPricer(cfCouponPricer)
+                .withTelescopicValueDates(floatData->telescopicValueDates());
         return leg;
 
     } else {
@@ -1235,7 +1236,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                       .withFloors(buildScheduledVectorNormalised<Real>(floatData->floors(), floatData->capDates(),
                                                                        schedule, Null<Real>()))
                       .withNakedOption(floatData->nakedOption())
-                      .withLocalCapFloor(floatData->localCapFloor());
+                      .withLocalCapFloor(floatData->localCapFloor())
+                      .withTelescopicValueDates(floatData->telescopicValueDates());
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
