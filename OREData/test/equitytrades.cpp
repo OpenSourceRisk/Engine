@@ -118,10 +118,10 @@ BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
                               PremiumData{1.0, "EUR", expiry});
     Envelope env("CP1");
     TradeStrike tradeStrike(95.0, "EUR");
-    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
-    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
-    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
-    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
+    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
+    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
+    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
     ore::data::EquityForward eqFwd(env, "Long", EquityUnderlying("zzzCorp"), "EUR", 1.0, exp_str, 95.0);
 
     Real expectedNPV_Put = -2.4648;           // negative for sold option
@@ -190,10 +190,10 @@ BOOST_AUTO_TEST_CASE(testEquityFutureOptionPrices) {
     EquityFutureOption eqFwdPutPremium(env, putDataPremium, "EUR", 1.0, underlying, 95.0, expiry);
 
     TradeStrike tradeStrike(95.0, "EUR");
-    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
-    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
-    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
-    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 95.0, 1.0, tradeStrike);
+    EquityOption eqCall(env, callData, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
+    EquityOption eqCallPremium(env, callDataPremium, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
+    EquityOption eqPut(env, putData, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
+    EquityOption eqPutPremium(env, putDataPremium, EquityUnderlying("zzzCorp"), "EUR", 1.0, tradeStrike);
     
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

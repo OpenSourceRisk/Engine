@@ -21,13 +21,18 @@
 
 #include <ored/portfolio/trademonetary.hpp>
 #include <ql/interestrate.hpp>
-#include <boost/serialization/variant.hpp>
-#include <boost/optional.hpp>
 
 namespace ore {
 namespace data {
 
-class StrikeYield {
+class StrikeBase {
+public:
+    StrikeBase() {}    
+    virtual QuantLib::Real strikeValue() const = 0;
+    virtual XMLNode* toXML(XMLDocument& doc) = 0;
+};
+
+class StrikeYield : public StrikeBase {
 public:
     StrikeYield() {}
     StrikeYield(const QuantLib::Rate& yield,
@@ -35,42 +40,46 @@ public:
         : yield_(yield), compounding_(compounding) {}
 
     void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc); 
+    XMLNode* toXML(XMLDocument& doc) override; 
 
     const QuantLib::Rate& yield() const { return yield_; }
     const QuantLib::Compounding& compounding() const { return compounding_; }
+
+    QuantLib::Real strikeValue() const override { return yield_; }
 
 private:
     QuantLib::Rate yield_;
     QuantLib::Compounding compounding_ = QuantLib::Compounding::SimpleThenCompounded;
 };
 
-class StrikePrice : public TradeMonetary {
+class StrikePrice : public StrikeBase, public TradeMonetary {
 public:
     StrikePrice() {}
     StrikePrice(QuantLib::Real value, const std::string& currency = std::string()) : TradeMonetary(value, currency) {}
 
     void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    XMLNode* toXML(XMLDocument& doc) override;
+
+    QuantLib::Real strikeValue() const override { return value_; }
 };
 
 class TradeStrike {
 public:
     TradeStrike(){};
 
-    TradeStrike(QuantLib::Real value, const std::string& currency) : strike_(StrikePrice(value, currency)){};
-    TradeStrike(const StrikePrice& strike) : strike_(strike){};
-    TradeStrike(const StrikeYield& yield) : strike_(yield){};
+    TradeStrike(QuantLib::Real value, const std::string& currency = string()) : 
+        strike_(boost::make_shared<StrikePrice>(value, currency)) {};
+    TradeStrike(const boost::shared_ptr<StrikeBase>& strike) : strike_(strike) {};
 
     const bool isStrikePrice() const;
-    QuantLib::Real value();
-    const boost::variant<StrikePrice, StrikeYield> strike() const { return *strike_; }
+    QuantLib::Real value() const;
+    boost::shared_ptr<StrikeBase> strike() const { return strike_; }
 
     void fromXML(XMLNode* node, const bool allowYieldStrike = false);
     XMLNode* toXML(XMLDocument& doc);
 
 private:
-    boost::optional<boost::variant<StrikePrice, StrikeYield>> strike_;
+    boost::shared_ptr<StrikeBase> strike_;
     bool onlyStrike_ = false;
     bool noStrikePriceNode_ = false;
 };

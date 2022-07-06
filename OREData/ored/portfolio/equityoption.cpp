@@ -50,15 +50,15 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         market->equityCurve(assetName_, engineFactory->configuration(MarketContext::pricing))->currency().code();
     QL_REQUIRE(!underlyingCurrency_.empty(), "No equity currency in equityCurve for equity " << assetName_ << ".");
         
-    StrikePrice strike = boost::get<StrikePrice>(tradeStrike_.strike());
+    auto strike = boost::dynamic_pointer_cast<StrikePrice>(strike_.strike());
     // Set the strike currency - if we have a minor currency, convert the strike
     if (!strikeCurrency_.empty())
-        strike.setCurrency(strikeCurrency_);
-    else if (strike.currency().empty()) {
+        strike->setCurrency(strikeCurrency_);
+    else if (strike->currency().empty()) {
         // If payoff currency and underlying currency are equivalent (and payoff currency could be a minor currency)
         if (ccy == parseCurrency(underlyingCurrency_)) {
             TLOG("Setting strike currency to payoff currency " << ccy << " for trade " << id() << ".");
-            strike.setCurrency(ccy.code());
+            strike->setCurrency(ccy.code());
         } else {
             // If quanto payoff, then strike currency must be populated to avoid confusion over what the
             // currency of the strike payoff is: can be either underlying currency or payoff currency
@@ -68,11 +68,11 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     // Quanto payoff condition, i.e. currency_ != underlyingCurrency_, will be checked in VanillaOptionTrade::build()
     // Build the trade using the shared functionality in the base class.
-    if (strike.currency() != underlyingCurrency_) {
+    if (strike->currency() != underlyingCurrency_) {
    
         // We have a composite EQ Trade
         Option::Type type = parseOptionType(option_.callPut());
-        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
+        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
         QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
         QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
         expiryDate_ = parseDate(option_.exerciseDates().front());
@@ -128,7 +128,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         auto compositeBuilder = boost::dynamic_pointer_cast<EquityEuropeanCompositeEngineBuilder>(builder);
         vanilla->setPricingEngine(compositeBuilder->engine(assetName_, parseCurrency(underlyingCurrency_), 
-            parseCurrency(strike.currency()), expiryDate_));
+            parseCurrency(strike->currency()), expiryDate_));
 
         string configuration = Market::defaultConfiguration;
         Position::Type positionType = parsePositionType(option_.longShort());
@@ -147,7 +147,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
         // Notional - we really need todays spot to get the correct notional.
         // But rather than having it move around we use strike * quantity
-        notional_ = strike_ * quantity_;
+        notional_ = strike_.value() * quantity_;
         notionalCurrency_ = ccy.code();
 
     } else {
@@ -155,8 +155,8 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     }
 
     additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike.value();
-    additionalData_["strikeCurrency"] = strike.currency();
+    additionalData_["strike"] = strike_.value();
+    additionalData_["strikeCurrency"] = strike->currency();
 }
 
 void EquityOption::fromXML(XMLNode* node) {
@@ -169,7 +169,7 @@ void EquityOption::fromXML(XMLNode* node) {
         tmp = XMLUtils::getChildNode(eqNode, "Name");
     equityUnderlying_.fromXML(tmp);
     currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
-    tradeStrike_.fromXML(eqNode);
+    strike_.fromXML(eqNode);
     
     strikeCurrency_ = XMLUtils::getChildValue(eqNode, "StrikeCurrency", false);
     if (!strikeCurrency_.empty())
@@ -186,7 +186,7 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(eqNode, equityUnderlying_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
 
-    XMLUtils::appendNode(eqNode, tradeStrike_.toXML(doc));
+    XMLUtils::appendNode(eqNode, strike_.toXML(doc));
     if (!strikeCurrency_.empty())
         XMLUtils::addChild(doc, eqNode, "StrikeCurrency", strikeCurrency_);
 

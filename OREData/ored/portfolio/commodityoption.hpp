@@ -39,7 +39,7 @@ public:
 
     //! Detailed constructor
     CommodityOption(const Envelope& env, const OptionData& optionData, const std::string& commodityName,
-                    const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity,
+                    const std::string& currency, QuantLib::Real quantity, TradeStrike strike,
                     const boost::optional<bool>& isFuturePrice = boost::none,
                     const QuantLib::Date& futureExpiryDate = QuantLib::Date());
 

@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
     BOOST_CHECK_EQUAL(option->id(), "CommodityOption_Gold");
     BOOST_CHECK_EQUAL(option->asset(), "GOLD_USD");
     BOOST_CHECK_EQUAL(option->currency(), "USD");
-    BOOST_CHECK_CLOSE(option->strike(), 1340, testTolerance);
+    BOOST_CHECK_CLOSE(option->strike().value(), 1340, testTolerance);
     BOOST_CHECK_CLOSE(option->quantity(), 100, testTolerance);
     BOOST_CHECK_EQUAL(option->option().longShort(), "Long");
     BOOST_CHECK_EQUAL(option->option().callPut(), "Call");

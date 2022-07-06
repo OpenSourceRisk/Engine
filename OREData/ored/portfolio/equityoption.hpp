@@ -40,10 +40,10 @@ public:
     //! Default constructor
     EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
     //! Constructor
-    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, QuantLib::Real strike,
-        QuantLib::Real quantity, TradeStrike tradeStrike, string strikeCurrency = "")
-        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity, tradeStrike),
-          equityUnderlying_(equityUnderlying), strikeCurrency_(strikeCurrency) {
+    EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency,
+        QuantLib::Real quantity, TradeStrike tradeStrike)
+        : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, quantity, tradeStrike),
+          equityUnderlying_(equityUnderlying) {
         tradeType_ = "EquityOption";
     }
 

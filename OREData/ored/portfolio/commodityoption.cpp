@@ -41,9 +41,9 @@ namespace data {
 CommodityOption::CommodityOption() : VanillaOptionTrade(AssetClass::COM) { tradeType_ = "CommodityOption"; }
 
 CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionData, const string& commodityName,
-                                 const string& currency, Real strike, Real quantity,
+                                 const string& currency, Real quantity, TradeStrike strike,
                                  const boost::optional<bool>& isFuturePrice, const Date& futureExpiryDate)
-    : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, strike, quantity, TradeStrike()),
+    : VanillaOptionTrade(env, AssetClass::COM, optionData, commodityName, currency, quantity, strike),
       isFuturePrice_(isFuturePrice), futureExpiryDate_(futureExpiryDate) {
     tradeType_ = "CommodityOption";
 }
@@ -52,8 +52,11 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
 
     // Checks
     QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
-    QL_REQUIRE((strike_ > 0) || close_enough(strike_,0.0), "Commodity option requires a non-negative strike");
-    if( close_enough(strike_, 0.0) ) strike_ = 0.0;
+    QL_REQUIRE((strike_.value() > 0) || close_enough(strike_.value(),0.0), "Commodity option requires a non-negative strike");
+    if (close_enough(strike_.value(), 0.0)) {
+        auto strike = boost::dynamic_pointer_cast<StrikePrice>(strike_.strike());
+            strike->setValue(0.0);
+    }
 
     // Populate the index_ in case the option is automatic exercise.
     // Intentionally use null calendar because we will ask for index value on the expiry date without adjustment.
@@ -94,12 +97,12 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     // LOG the volatility if the trade expiry date is in the future.
     if (expiryDate_ > Settings::instance().evaluationDate()) {
         DLOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with expiry " << expiryDate_
-                                << " and strike " << strike_ << " is "
-                                << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_));
+                                << " and strike " << strike_.value() << " is "
+                                << market->commodityVolatility(assetName_)->blackVol(expiryDate_, strike_.value()));
     }
 
     additionalData_["quantity"] = quantity_;
-    additionalData_["strike"] = strike_;
+    additionalData_["strike"] = strike_.value();
     additionalData_["strikeCurrency"] = currency_;    
 }
 
@@ -119,7 +122,7 @@ void CommodityOption::fromXML(XMLNode* node) {
 
     assetName_ = XMLUtils::getChildValue(commodityNode, "Name", true);
     currency_ = XMLUtils::getChildValue(commodityNode, "Currency", true);
-    strike_ = XMLUtils::getChildValueAsDouble(commodityNode, "Strike", true);
+    strike_.fromXML(commodityNode);
     quantity_ = XMLUtils::getChildValueAsDouble(commodityNode, "Quantity", true);
 
     isFuturePrice_ = boost::none;
@@ -142,7 +145,7 @@ XMLNode* CommodityOption::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, eqNode, "Name", assetName_);
     XMLUtils::addChild(doc, eqNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eqNode, "Strike", strike_);
+    XMLUtils::appendNode(eqNode, strike_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "Quantity", quantity_);
 
     if (isFuturePrice_)

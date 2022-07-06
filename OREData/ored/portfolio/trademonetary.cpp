@@ -37,7 +37,7 @@ std::string TradeMonetary::currency() const {
     if (!currency_.empty())
         return parseCurrencyWithMinors(currency_).code();
     else
-        QL_FAIL("No currency provided in TradeMonetary class");
+        return currency_;
 }
 
 QuantLib::Real TradeMonetary::value() const { 

@@ -217,7 +217,7 @@ boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string p
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
     // trade
     boost::shared_ptr<Trade> trade(
-        new ore::data::EquityOption(env, option, EquityUnderlying(equityName), currency, strike, quantity, tradeStrike));
+        new ore::data::EquityOption(env, option, EquityUnderlying(equityName), currency, quantity, tradeStrike));
     trade->id() = id;
 
     return trade;

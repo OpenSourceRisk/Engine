@@ -18,10 +18,10 @@ namespace ore {
 namespace data {
 
 EquityFutureOption::EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity,
-                                       const boost::shared_ptr<ore::data::Underlying>& underlying, Real strike,
+                                       const boost::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike,
                                        QuantLib::Date forwardDate, const boost::shared_ptr<QuantLib::Index>& index,
                                        const std::string& indexName)
-    : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, strike, quantity, TradeStrike(), index, indexName,
+    : VanillaOptionTrade(env, AssetClass::EQ, option, underlying->name(), currency, quantity, strike, index, indexName,
                          forwardDate),
       underlying_(underlying) {
     tradeType_ = "EquityFutureOption";
@@ -59,7 +59,7 @@ void EquityFutureOption::fromXML(XMLNode* node) {
     underlyingBuilder.fromXML(tmp);
     underlying_ = underlyingBuilder.underlying();
 
-    strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
+    strike_.fromXML(eqNode);
 
     forwardDate_ = parseDate(XMLUtils::getChildValue(eqNode, "FutureExpiryDate", true));
 }
@@ -75,7 +75,7 @@ XMLNode* EquityFutureOption::toXML(XMLDocument& doc) {
 
     XMLUtils::appendNode(eqNode, underlying_->toXML(doc));
 
-    XMLUtils::addChild(doc, eqNode, "Strike", strike_);
+    XMLUtils::appendNode(eqNode, strike_.toXML(doc));
     XMLUtils::addChild(doc, eqNode, "FutureExpiryDate", to_string(forwardDate_));
 
     return node;

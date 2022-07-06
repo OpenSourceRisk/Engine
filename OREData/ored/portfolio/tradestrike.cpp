@@ -23,24 +23,6 @@
 namespace ore {
 namespace data {
 
-namespace {
-
-struct StrikeToXML : public boost::static_visitor<XMLNode*> {
-public:
-    explicit StrikeToXML(XMLDocument& doc) : doc_(doc) {}
-    XMLNode* operator()(StrikePrice& s) { return s.toXML(doc_); }
-    XMLNode* operator()(StrikeYield& s) { return s.toXML(doc_); }
-    XMLDocument& doc_;
-};
-
-struct StrikeValue : public boost::static_visitor<QuantLib::Real> {
-public:
-    QuantLib::Real operator()(const StrikePrice& s) const { return s.value(); }
-    QuantLib::Real operator()(const StrikeYield& s) const { return s.yield(); }
-};
-
-} // namespace
-
 void StrikeYield::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "StrikeYield");
     yield_ = XMLUtils::getChildValueAsDouble(node, "Yield", true);
@@ -72,7 +54,7 @@ void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
             QL_REQUIRE(allowYieldStrike, "StrikeYield not supported for this trade type.");
             StrikeYield strikeYield;
             strikeYield.fromXML(yieldNode);
-            strike_ = strikeYield;
+            strike_ = boost::make_shared<StrikeYield>(strikeYield);
         } else {
             StrikePrice strikePrice;
             if (XMLNode* priceNode = XMLUtils::getChildNode(dataNode, "StrikePrice"))
@@ -83,11 +65,11 @@ void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
                 
                 strikePrice.fromXML(dataNode);
             }
-            strike_ = strikePrice;
+            strike_ = boost::make_shared<StrikePrice>(strikePrice);
         }
     } else {
         // if just a strike is present
-        strike_ = StrikePrice(parseReal(XMLUtils::getChildValue(node, "Strike", true)));
+        strike_ = boost::make_shared<StrikePrice>(parseReal(XMLUtils::getChildValue(node, "Strike", true)));
         onlyStrike_ = true;
     }
 }
@@ -100,11 +82,10 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
         node = doc.allocNode("StrikeData");
         if (noStrikePriceNode_) {
             // maintain backward compatibility, must be a StrikePrice to get here
-            StrikePrice sp = boost::get<StrikePrice>(*strike_);
-            sp.toXMLNode(doc, node);
+            auto sp = boost::dynamic_pointer_cast<StrikePrice>(strike_);
+            sp->toXMLNode(doc, node);
         } else {
-            StrikeToXML toXml(doc);
-            XMLUtils::appendNode(node, boost::apply_visitor(toXml, *strike_));
+            strike_->toXML(doc);
         }
     }
     return node;
@@ -112,11 +93,11 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
 
 const bool TradeStrike::isStrikePrice() const {
     QL_REQUIRE(strike_, "no bond price or yield given");
-    return (*strike_).which() == 0;
+    return (boost::dynamic_pointer_cast<StrikePrice>(strike_) ? true : false);
 }
 
-QuantLib::Real TradeStrike::value() { 
-    return boost::apply_visitor(StrikeValue(), *strike_);
+QuantLib::Real TradeStrike::value() const { 
+    return strike_->strikeValue(); 
 }
 
 } // namespace data
