@@ -38,13 +38,12 @@ using std::string;
 class EquityOption : public VanillaOptionTrade {
 public:
     //! Default constructor
-    EquityOption() : VanillaOptionTrade(AssetClass::EQ), localStrike_(0.0) { tradeType_ = "EquityOption"; }
+    EquityOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityOption"; }
     //! Constructor
     EquityOption(Envelope& env, OptionData option, EquityUnderlying equityUnderlying, string currency, QuantLib::Real strike,
         QuantLib::Real quantity, TradeStrike tradeStrike, string strikeCurrency = "")
         : VanillaOptionTrade(env, AssetClass::EQ, option, equityUnderlying.name(), currency, strike, quantity, tradeStrike),
-          equityUnderlying_(equityUnderlying), localCurrency_(currency), localStrike_(strike), 
-          strikeCurrency_(strikeCurrency) {
+          equityUnderlying_(equityUnderlying), strikeCurrency_(strikeCurrency) {
         tradeType_ = "EquityOption";
     }
 
@@ -69,8 +68,6 @@ public:
 
 protected:
     EquityUnderlying equityUnderlying_;
-    string localCurrency_;
-    QuantLib::Real localStrike_;
     string strikeCurrency_;
 };
 } // namespace data

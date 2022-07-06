@@ -1,6 +1,5 @@
 /*
  Copyright (C) 2021 Quaternion Risk Management Ltd
- Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -18,24 +17,16 @@
 */
 
 #include <ored/portfolio/tradebarrier.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/to_string.hpp>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/export.hpp>
 
 namespace ore {
 namespace data {
 
 
-void TradeBarrier::fromXML(XMLNode* node) { TradeMonetary::fromXML(node); }
+void TradeBarrier::fromXML(XMLNode* node) { TradeMonetary::fromXMLNode(node); }
 
 XMLNode* TradeBarrier::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("LevelData");
-    XMLUtils::addChild(doc, node, "Value", value_);
-    XMLUtils::addChild(doc, node, "Currency", currency_);
+    TradeMonetary::toXMLNode(doc, node);
     return node;
 }
 
