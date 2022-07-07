@@ -1,6 +1,9 @@
 1) Portfolio
 
    Vanilla Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851% (ATM), pay 6m Euribor
+   Vanilla Swap, EUR, 10k notional, 10Y maturity, rec. fixed 0.99851% (ATM), pay 6m Euribor
+
+   There are two cases: Normal and reversed normal (pay/rec switched). The analysis with flipViewXVA set to Y (run with normal) should be exactly the result of reversed normal.
 
 2) Market
 
