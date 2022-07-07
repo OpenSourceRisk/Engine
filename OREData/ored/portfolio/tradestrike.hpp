@@ -27,7 +27,8 @@ namespace data {
 
 class StrikeBase {
 public:
-    StrikeBase() {}    
+    StrikeBase() {}
+    virtual ~StrikeBase() {}
     virtual QuantLib::Real strikeValue() const = 0;
     virtual XMLNode* toXML(XMLDocument& doc) = 0;
 };
