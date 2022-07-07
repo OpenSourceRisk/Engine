@@ -61,9 +61,9 @@ void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
                 strikePrice.fromXML(priceNode);
             else {
                 // in order to remain backward compatible we also allow to be set up
-                // without the StrikePrice node
-                
+                // without the StrikePrice node                
                 strikePrice.fromXML(dataNode);
+                noStrikePriceNode_ = true;                
             }
             strike_ = boost::make_shared<StrikePrice>(strikePrice);
         }

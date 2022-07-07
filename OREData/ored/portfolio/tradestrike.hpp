@@ -61,7 +61,7 @@ public:
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc) override;
 
-    QuantLib::Real strikeValue() const override { return value_; }
+    QuantLib::Real strikeValue() const override { return value(); }
 };
 
 class TradeStrike {
