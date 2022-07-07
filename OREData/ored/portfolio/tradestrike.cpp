@@ -69,7 +69,8 @@ void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
         }
     } else {
         // if just a strike is present
-        strike_ = boost::make_shared<StrikePrice>(XMLUtils::getChildValueAsDouble(node, "Strike", true));
+        double s = XMLUtils::getChildValueAsDouble(node, "Strike", true);
+        strike_ = boost::make_shared<StrikePrice>(s);
         onlyStrike_ = true;
     }
 }
@@ -78,7 +79,7 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     XMLNode* node;
     if (onlyStrike_) {
         auto sp = boost::dynamic_pointer_cast<StrikePrice>(strike_);
-        node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp->unadjustedValue()));
+        node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp->valueString()));
     }
     else {
         node = doc.allocNode("StrikeData");

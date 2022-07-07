@@ -25,11 +25,12 @@ namespace data {
 
 void TradeMonetary::fromXMLNode(XMLNode* node) { 
 	currency_ = XMLUtils::getChildValue(node, "Currency", false);
-    value_ = XMLUtils::getChildValueAsDouble(node, "Value", true);
+    valueString_ = XMLUtils::getChildValue(node, "Value", true);
+    value_ = parseReal(valueString_);
 }
 
 void TradeMonetary::toXMLNode(XMLDocument& doc, XMLNode* node) {
-    XMLUtils::addChild(doc, node, "Value", value_);
+    XMLUtils::addChild(doc, node, "Value", valueString_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 }
 

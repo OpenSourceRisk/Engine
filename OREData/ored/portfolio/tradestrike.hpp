@@ -56,7 +56,7 @@ private:
 class StrikePrice : public StrikeBase, public TradeMonetary {
 public:
     StrikePrice() {}
-    StrikePrice(QuantLib::Real value, const std::string& currency = std::string()) : TradeMonetary(value, currency) {}
+    StrikePrice(const QuantLib::Real& value, const std::string& currency = std::string()) : TradeMonetary(value, currency) {}
 
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc) override;
