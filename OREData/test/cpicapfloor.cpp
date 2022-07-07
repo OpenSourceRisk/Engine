@@ -27,6 +27,7 @@
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
+#include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/csvfilereader.hpp>
@@ -92,7 +93,7 @@ public:
 
 // Portfolios, designed such that trade NPVs should add up to zero
 // The first two cases consist of three trades:
-// 1) CPI Swap receiving a single zero coupon fixed flow and paying a single indexed redemption flow (resp. CPI cpupons
+// 1) CPI Swap receiving a single zero coupon fixed flow and paying a single indexed redemption flow (resp. CPI coupons
 //    plus indexed redemption)
 // 2) CPI Swap as above with capped indexed flow and flipped legs: pay zero coupon fixed, receive
 //    capped indexed redemption (resp. capped CPI coupons plus capped indexed redemption), i.e. short embedded cap(s)
@@ -132,8 +133,11 @@ BOOST_DATA_TEST_CASE_F(F, testCapConsistency, bdata::make(testCases), testCase) 
         BOOST_TEST_MESSAGE("trade " << p.trades()[i]->id() << " npv " << p.trades()[i]->instrument()->NPV());
         sum += p.trades()[i]->instrument()->NPV();
         minimumNPV = std::min(minimumNPV, fabs(p.trades()[i]->instrument()->NPV()));
+        auto cf = boost::dynamic_pointer_cast<ore::data::CapFloor>(p.trades()[i]);
+        if (cf)
+            BOOST_CHECK_NO_THROW(cf->additionalData());
     }
-    BOOST_TEST_MESSAGE("mininim absolute NPV = " << minimumNPV);
+    BOOST_TEST_MESSAGE("minimum absolute NPV = " << minimumNPV);
     Real tolerance = 1.0e-8 * minimumNPV;
     BOOST_TEST_MESSAGE("tolerance = " << tolerance);
     BOOST_TEST_MESSAGE("NPV sum = " << sum);

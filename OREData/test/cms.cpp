@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     boost::shared_ptr<ore::data::CapFloor> floor = vars.makeFloor(floorLow);
     floor->build(engineFactory);
     Real floorNpv = floor->instrument()->NPV();
-    BOOST_TEST_MESSAGE("CMS Floor (Flooe of -100%) NPV is " << floorNpv);
+    BOOST_TEST_MESSAGE("CMS Floor (Floor of -100%) NPV is " << floorNpv);
     BOOST_CHECK_SMALL(floorNpv, 0.01);
 
     BOOST_TEST_MESSAGE("Checking CMS Cap + CMS Floor = Swap...");

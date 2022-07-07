@@ -46,7 +46,7 @@ public:
     */
     SensitivityAggregator(const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& categories);
 
-    /*! Constructor that uses fuctions to define the aggregation categories.
+    /*! Constructor that uses functions to define the aggregation categories.
 
         The \p categories map has a string key that defines the name of the category. The map value
         is a function that when given a trade ID, returns a bool indicating if the trade ID is in the
@@ -82,7 +82,7 @@ private:
 
     //! Initialise the container of aggregated records
     void init();
-    //! Add a sensitivty record to the set of aggregated \p records
+    //! Add a sensitivity record to the set of aggregated \p records
     void add(SensitivityRecord& sr, std::set<SensitivityRecord>& records);
     //! Determine if the \p tradeId is in the given \p category
     bool inCategory(const std::string& tradeId, const std::string& category) const;

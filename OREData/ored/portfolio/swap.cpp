@@ -81,7 +81,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, requiredFixings_, configuration);
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
         
-        // add notional leg, if appicable
+        // add notional leg, if applicable
         auto leg = buildNotionalLeg(legData_[i], legs_[i], requiredFixings_, engineFactory->market(), configuration);
         if (!leg.empty()) {
             legs_.push_back(leg);
@@ -105,7 +105,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         ALOG("no suitable leg found to set notional, set to null and notionalCurrency to empty string");
         notional_ = Null<Real>();
         notionalCurrency_ = "";
-        // parse for currrency in case first leg is Equity, we only want the major currency for NPV
+        // parse for currency in case first leg is Equity, we only want the major currency for NPV
         npvCurrency_ = parseCurrencyWithMinors(legData_.front().currency()).code();
     } else {
         if (legData_[notionalTakenFromLeg_].schedule().hasData()) {
@@ -127,7 +127,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         } else {
             notional_ = legData_[notionalTakenFromLeg_].notionals().at(0);
         }
-        // parse for currrency in case leg is Equity, we only want the major currency for NPV and Notional
+        // parse for currency in case leg is Equity, we only want the major currency for NPV and Notional
         notionalCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
         npvCurrency_ = parseCurrencyWithMinors(legData_[notionalTakenFromLeg_].currency()).code();
         DLOG("Notional is " << notional_ << " " << notionalCurrency_);
@@ -277,7 +277,7 @@ QuantLib::Real Swap::notional() const {
             }
         }
         // else return the face value
-        WLOG("swap does not provide coupon notionals, useing face value");
+        WLOG("swap does not provide coupon notionals, using face value");
         return notional_;
     }
 }

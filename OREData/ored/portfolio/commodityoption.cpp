@@ -51,7 +51,7 @@ CommodityOption::CommodityOption(const Envelope& env, const OptionData& optionDa
 void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Checks
-    QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
+    QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quantity");
     QL_REQUIRE((strike_ > 0) || close_enough(strike_,0.0), "Commodity option requires a non-negative strike");
     if( close_enough(strike_, 0.0) ) strike_ = 0.0;
 

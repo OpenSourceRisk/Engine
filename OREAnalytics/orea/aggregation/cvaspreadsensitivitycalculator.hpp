@@ -45,7 +45,7 @@ using namespace std;
 
 //! CVA Spread Sensitivity Calculator
 /*!
-  Compute hazard rate and CDS spread sensivities for a given exposure profile 
+  Compute hazard rate and CDS spread sensitivities for a given exposure profile 
   on an externally provided sensitivity grid.
 */
 class CVASpreadSensitivityCalculator {
@@ -96,7 +96,7 @@ private:
     Real survivalProbability(Time t, bool shift, Size index);
     // CVA calculation with and without shifted hazard rates
     Real cva(bool shift = false, Size index = 0);
-    //! Fair CDS Sprewad calculation with and without shifted hazard rates
+    //! Fair CDS Spread calculation with and without shifted hazard rates
     Real fairCdsSpread(Size term, bool shift = false, Size index = 0);
 		     
     string key_;

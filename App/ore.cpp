@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
         OREApp ore(params);
         return ore.run();
     } catch (const exception& e) {
-        cout << endl << "an error occured: " << e.what() << endl;
+        cout << endl << "an error occurred: " << e.what() << endl;
         return -1;
     }
 }

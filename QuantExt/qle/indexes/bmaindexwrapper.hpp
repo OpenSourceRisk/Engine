@@ -17,7 +17,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 /*! \file bmaindexwrapper.hpp
-\brief wrapper class for bmaindex, for the purpose of providing ibroindex inheritance.
+\brief wrapper class for bmaindex, for the purpose of providing iborindex inheritance.
 \ingroup indexes
 */
 

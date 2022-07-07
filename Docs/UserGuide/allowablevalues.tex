@@ -276,7 +276,7 @@ Note: Currency codes must also match available currencies in the {\tt simulation
 CCY-INDEX                &
                            \textit{\begin{tabular}[c]{@{}l@{}}
 EUR-EONIA\\ EUR-ESTER, EUR-ESTR, EUR-STR 
-\\ EUR-EURIBOR\\ EUR-LIBOR\\ EUR-CMS\\
+\\ EUR-EURIBOR, EUR-EURIBOR365\\ EUR-LIBOR\\ EUR-CMS\\
 USD-FedFunds\\ USD-SOFR \\ USD-Prime\\ USD-LIBOR\\ USD-SIFMA\\ USD-CMS\\
 GBP-SONIA\\ GBP-LIBOR\\ GBP-CMS \\ GBP-BoEBase \\ 
 JPY-LIBOR\\ JPY-TIBOR \\ JPY-EYTIBOR \\ JPY-TONAR \\ JPY-CMS \\
@@ -368,7 +368,7 @@ The \lstinline!FX-! part of the string stays constant for all currency pairs. \l
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!CreditCurveId!   for credit trades - single name and index & \begin{tabular}[l]{@{}l@{}} Any string (provided it is the ID of a single name or index \\ reference entity in the market 
-conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: \\  \emph{RED:2I65BRHH6}  (CDX N.A. High Yield, Series 13, Version 1) \\ \emph{RED:008CA0\textbar{}SNRFOR\textbar{}USD\textbar{}MR14}  (Agilent Tech Senior USD)
+configuration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: \\  \emph{RED:2I65BRHH6}  (CDX N.A. High Yield, Series 13, Version 1) \\ \emph{RED:008CA0\textbar{}SNRFOR\textbar{}USD\textbar{}MR14}  (Agilent Tech Senior USD)
 \end{tabular}  \\ \hline
   \end{tabular}
   \caption{Allowable values for credit \lstinline!CreditCurveId!}
@@ -383,7 +383,7 @@ conguration). \\ Typically a RED-code with the \emph{RED:} prefix \\  Examples: 
     \bfseries{Trade Data} & \bfseries{Allowable Values} \\
     \hline
     \lstinline!Name!   for equity trades & \begin{tabular}[l]{@{}l@{}}  Any string (provided it is the ID of an equity in the market \\
-conguration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  
+configuration). \\ Typically a RIC-code with the \emph{RIC:} prefix \\  Examples: \\  \emph{RIC:.SPX}  (S\&P 500 Index) \\ \emph{RIC:EEM.N}  (iShares MSCI Emerging Markets ETF)    \\  
 \end{tabular}  \\ \hline
   \end{tabular}
   \caption{Allowable values for equity  \lstinline!Name!.}

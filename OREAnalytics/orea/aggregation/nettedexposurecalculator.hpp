@@ -68,7 +68,7 @@ public:
     virtual ~NettedExposureCalculator() {}
     const boost::shared_ptr<NPVCube>& exposureCube() { return exposureCube_; }
     const boost::shared_ptr<NPVCube>& nettedCube() { return nettedCube_; }
-    //! Compute exposures along all paths and fill result structurues
+    //! Compute exposures along all paths and fill result structures
     virtual void build();
 
     enum ExposureIndex {

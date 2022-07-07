@@ -766,7 +766,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 spotCalendar_ = fxConv->advanceCalendar();
             }
         } else {
-            WLOG("no fx option conventions given in fxvol curve condig for " << spec.curveConfigID()
+            WLOG("no fx option conventions given in fxvol curve config for " << spec.curveConfigID()
                                                                              << ", assuming defaults");
         }
 

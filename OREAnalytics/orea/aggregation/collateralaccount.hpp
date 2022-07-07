@@ -55,12 +55,12 @@ public:
     //! Default constructor
     CollateralAccount() {}
     //! Constructor assuming initial collateral account balance is zero
-    CollateralAccount( //! CSA details including threshold, minimum transfer amount, margining freuency etc
+    CollateralAccount( //! CSA details including threshold, minimum transfer amount, margining frequency etc
         const boost::shared_ptr<NettingSetDefinition>& csaDef,
         //! Today's date
         const Date& date_t0);
     //! Constructor taking an initial collateral account balance
-    CollateralAccount( //! CSA details including threshold, minimum transfer amount, margining freuency etc
+    CollateralAccount( //! CSA details including threshold, minimum transfer amount, margining frequency etc
         const boost::shared_ptr<NettingSetDefinition>& csaDef,
         //! Initial collateral account balance
         const Real& balance_t0,

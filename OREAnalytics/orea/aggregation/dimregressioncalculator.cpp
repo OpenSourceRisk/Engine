@@ -237,7 +237,7 @@ void RegressionDynamicInitialMarginCalculator::build() {
                     //    and to avoid a second regression for the conditional mean
                     // 2) In particular the linear regression function can yield negative variance values in
                     //    extreme scenarios where an exact analytical or delta VaR calculation would yield a
-                    //    variance aproaching zero. We correct this here by taking the positive part.
+                    //    variance approaching zero. We correct this here by taking the positive part.
                     Real std = sqrt(std::max(e, 0.0));
                     Real scalingFactor = horizonScaling * confidenceLevel * nettingSetDimScaling;
                     // Real dim = std * scalingFactor / num1;

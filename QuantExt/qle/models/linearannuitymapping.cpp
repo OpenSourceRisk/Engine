@@ -17,7 +17,7 @@
 */
 
 /*! \file lienarannuitymapping.hpp
-    \brief lienar annuity mapping function f(S) = a*S+b
+    \brief linear annuity mapping function f(S) = a*S+b
 */
 
 #include <qle/models/linearannuitymapping.hpp>
@@ -55,7 +55,7 @@ boost::shared_ptr<AnnuityMapping> LinearAnnuityMappingBuilder::build(const Date&
                                                                      const VanillaSwap& underlying,
                                                                      const Handle<YieldTermStructure>& discountCurve) {
 
-    // no need for an acutal mapping, since the coupon amount is deterministic, i.e. model-independent
+    // no need for an actual mapping, since the coupon amount is deterministic, i.e. model-independent
 
     if (optionDate <= valuationDate)
         return boost::make_shared<LinearAnnuityMapping>(0.0, 0.0);

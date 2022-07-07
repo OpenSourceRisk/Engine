@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/builders/equityoption.hpp
-    \brief Engine builder for equity options
+/*! \file portfolio/builders/quantoequityoption.hpp
+    \brief Engine builder for quanto equity options
     \ingroup builders
 */
 

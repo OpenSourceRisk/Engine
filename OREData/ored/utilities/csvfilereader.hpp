@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/utilities/csvfilereader.hpp
-    \brief utility class to acess CSV files
+    \brief utility class to access CSV files
     \ingroup utilities
 */
 
@@ -41,7 +41,7 @@ public:
                   const std::string& delimiters = ",;\t", const std::string& escapeCharacters = "\\",
                   const std::string& quoteCharacters = "\"", const char eolMarker = '\n');
 
-    /*! Returns the fields, if a hedaer line is present, otherwise throws */
+    /*! Returns the fields, if a header line is present, otherwise throws */
     const std::vector<std::string>& fields() const;
     /*! Return true if a field is present */
     const bool hasField(const std::string& field) const;

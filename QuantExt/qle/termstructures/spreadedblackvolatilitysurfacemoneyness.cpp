@@ -65,7 +65,7 @@ SpreadedBlackVolatilitySurfaceMoneyness::SpreadedBlackVolatilitySurfaceMoneyness
     QL_REQUIRE(moneyness_.size() == volSpreads_.size(), "mismatch between moneyness vector and vol matrix rows");
 
     for (auto const& v : volSpreads_) {
-        QL_REQUIRE(times_.size() == v.size(), "mismatch between times vector and vol matrix colums");
+        QL_REQUIRE(times_.size() == v.size(), "mismatch between times vector and vol matrix columns");
     }
 
     for (Size j = 1; j < times_.size(); ++j) {
