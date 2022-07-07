@@ -69,7 +69,7 @@ void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
         }
     } else {
         // if just a strike is present
-        strike_ = boost::make_shared<StrikePrice>(parseReal(XMLUtils::getChildValue(node, "Strike", true)));
+        strike_ = boost::make_shared<StrikePrice>(XMLUtils::getChildValueAsDouble(node, "Strike", true));
         onlyStrike_ = true;
     }
 }
