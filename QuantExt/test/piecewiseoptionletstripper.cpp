@@ -456,7 +456,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     }
 
     // Price all of the input surface instruments using the cap floor term volatilities and again with the optionlet
-    // volatilites and check that the NPVs match
+    // volatilities and check that the NPVs match
     Handle<YieldTermStructure> discount = testYieldCurves.discountEonia;
     boost::shared_ptr<CapFloor> capFloor;
 

@@ -105,10 +105,10 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     samples_ = XMLUtils::getChildValueAsInt(node, "Samples", true);
     LOG("ScenarioGeneratorData samples = " << samples_);
 
-    // overwrite samples with enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES
+    // overwrite samples with environment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES
     if (auto c = getenv("OVERWRITE_SCENARIOGENERATOR_SAMPLES")) {
         samples_ = std::stol(c);
-        LOG("Overwrite samples with " << samples_ << " from enviroment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
+        LOG("Overwrite samples with " << samples_ << " from environment variable OVERWRITE_SCENARIOGENERATOR_SAMPLES");
     }
 
     if (auto n = XMLUtils::getChildNode(node, "Ordering"))

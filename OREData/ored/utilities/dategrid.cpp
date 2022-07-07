@@ -81,7 +81,7 @@ DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, c
             if (tokens.size() == 2)
                 gridTenor = data::parsePeriod(tokens[1]);
             if (gridTenor == Period(1, Days)) {
-                // we have a daily grid. Period and Calendar are not consistant with
+                // we have a daily grid. Period and Calendar are not consistent with
                 // working & actual days, so we set the tenor grid
                 Date today = Settings::instance().evaluationDate();
                 Date d = today;

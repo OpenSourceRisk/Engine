@@ -504,7 +504,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         } catch (std::exception& e) {
             ALOG("Exception writing cashflow report : " << e.what());
         } catch (...) {
-            ALOG("Exception writing cashflow report : Unkown Exception");
+            ALOG("Exception writing cashflow report : Unknown Exception");
         }
     }
     report.end();

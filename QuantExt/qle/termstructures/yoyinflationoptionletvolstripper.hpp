@@ -32,7 +32,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-/*! Helper class to strip yoy inlfation optionlet (i.e. caplet/floorlet) volatilities
+/*! Helper class to strip yoy inflation optionlet (i.e. caplet/floorlet) volatilities
     from the (cap/floor) term volatilities of a CapFloorTermVolSurface.
 \ingroup termstructures
 */

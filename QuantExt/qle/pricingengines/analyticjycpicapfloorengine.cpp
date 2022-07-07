@@ -38,7 +38,7 @@ AnalyticJyCpiCapFloorEngine::AnalyticJyCpiCapFloorEngine(
 
 void AnalyticJyCpiCapFloorEngine::calculate() const {
 
-    // If the pay date has occured, nothing to do.
+    // If the pay date has occurred, nothing to do.
     SimpleCashFlow cf(0.0, arguments_.payDate);
     if (cf.hasOccurred()) {
         results_.value = 0.0;

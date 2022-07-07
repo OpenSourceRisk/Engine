@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStripping) {
     boost::shared_ptr<BachelierCapFloorEngine> engine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStripping) {
     boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStripping) {
     boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStripping) {
     boost::shared_ptr<BachelierCapFloorEngine> engine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStripping) {
     boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
@@ -366,14 +366,14 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
     boost::shared_ptr<BachelierCapFloorEngine> engine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
     boost::shared_ptr<BachelierCapFloorEngine> flatEngine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, quote, vars.dayCounter);
 
-    // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // Non-ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
             cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
         }
     }
 
-    // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     Volatility dummyVol = 0.10;
     boost::shared_ptr<BlackCapFloorEngine> tempEngine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, dummyVol);
@@ -459,14 +459,14 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
     boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
     boost::shared_ptr<BlackCapFloorEngine> flatEngine = boost::make_shared<BlackCapFloorEngine>(
         vars.yieldCurves.discountEonia, quote, vars.dayCounter, vars.vols.shift_2);
 
-    // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // Non-ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
             cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
         }
     }
 
-    // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
         cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
@@ -545,14 +545,14 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
     boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
     boost::shared_ptr<BachelierCapFloorEngine> flatEngine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, quote, vars.dayCounter);
 
-    // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // Non-ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
             cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
         }
     }
 
-    // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
         cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
@@ -631,14 +631,14 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
     boost::shared_ptr<BachelierCapFloorEngine> engine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
     boost::shared_ptr<BlackCapFloorEngine> flatEngine = boost::make_shared<BlackCapFloorEngine>(
         vars.yieldCurves.discountEonia, quote, vars.dayCounter, vars.vols.shift_1);
 
-    // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // Non-ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
             cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
         }
     }
 
-    // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.slnAtmVols_1[i]));
         // Null strike => cap is set up with ATM strike
@@ -718,14 +718,14 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
     boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
     boost::shared_ptr<BlackCapFloorEngine> flatEngine = boost::make_shared<BlackCapFloorEngine>(
         vars.yieldCurves.discountEonia, quote, vars.dayCounter, vars.vols.shift_1);
 
-    // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // Non-ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
             cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
@@ -749,7 +749,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
         }
     }
 
-    // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
+    // ATM pillar points: check flat cap/floor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.slnAtmVols_1[i]));
         // Null strike => cap is set up with ATM strike
@@ -851,7 +851,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalWithPositiveForwards) {
     boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
-    // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
+    // Price a cap at each pillar point with flat cap/floor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));

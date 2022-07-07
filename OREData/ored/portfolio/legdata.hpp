@@ -1080,7 +1080,7 @@ vector<T> buildScheduledVector(const vector<T>& values, const vector<string>& da
     // The first node must not have a date.
     // If the second one has a date, all the rest must have, and we process
     // If the second one does not have a date, none of them must have one
-    // and we return the vector uneffected.
+    // and we return the vector unaffected.
     QL_REQUIRE(dates[0] == "", "Invalid date " << dates[0] << " for first node");
     if (dates[1] == "") {
         // They must all be empty and then we return values

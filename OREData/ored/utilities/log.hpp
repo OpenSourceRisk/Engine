@@ -63,13 +63,13 @@ using std::string;
 //! The Base Custom Log Handler class
 /*!
   This base log handler class can be used to define your own custom handler and then registered with the Log class.
-  Once registered it will recieve all log messages as soon as they occur via it's log() method
+  Once registered it will receive all log messages as soon as they occur via it's log() method
   \ingroup utilities
   \see Log
  */
 class Logger {
 public:
-    //! Desctructor
+    //! Destructor
     virtual ~Logger() {}
 
     //! The Log call back function
@@ -111,7 +111,7 @@ public:
       If alertOnly is set to true, it will only write alerts.
      */
     StderrLogger(bool alertOnly = false) : Logger(name), alertOnly_(alertOnly) {}
-    //! Desctructor
+    //! Destructor
     virtual ~StderrLogger() {}
     //! The log callback that writes to stderr
     virtual void log(unsigned l, const string& s) override {
@@ -141,7 +141,7 @@ public:
       \param filename the log filename
      */
     FileLogger(const string& filename);
-    //! Desctructor
+    //! Destructor
     virtual ~FileLogger();
     //! The log callback
     virtual void log(unsigned, const string&) override;
@@ -171,7 +171,7 @@ public:
     static const string name;
     //! Constructor
     BufferLogger(unsigned minLevel = ORE_DATA) : Logger(name), minLevel_(minLevel) {}
-    //! Desctructor
+    //! Destructor
     virtual ~BufferLogger() {}
     //! The log callback
     virtual void log(unsigned, const string&) override;
@@ -181,9 +181,9 @@ public:
       \return True if this BufferLogger has any new log messages
      */
     bool hasNext();
-    //! Retreive new messages
+    //! Retrieve new messages
     /*!
-      Retreive the next new message from the buffer, this will throw if the buffer is empty.
+      Retrieve the next new message from the buffer, this will throw if the buffer is empty.
       Messages are returned in a FIFO order. Messages are deleted from the buffer once returned.
       \return The next message
      */
@@ -196,9 +196,9 @@ private:
 
 //! Global static Log class
 /*!
-  The Global Log class gets registered with individual loggers and recieves application log messages.
-  Once a message is recieved, it is imediatly dispatched to each of the registered loggers, the order in which
-  the loggers are called is not guarenteed.
+  The Global Log class gets registered with individual loggers and receives application log messages.
+  Once a message is received, it is immediately dispatched to each of the registered loggers, the order in which
+  the loggers are called is not guaranteed.
 
   Logging is done by the calling thread and the LOG call blocks until all the loggers have returned.
 
@@ -215,7 +215,7 @@ private:
       Log::instance().removeAllLoggers();
       Log::instance().registerLogger(boost::shared_ptr<Logger>(new BufferLogger));
   </pre>
-  and then to retreive log messages from the buffer and print them to stdout the user must call:
+  and then to retrieve log messages from the buffer and print them to stdout the user must call:
   <pre>
       std::cout << "Begin Log Messages:" << std::endl;
 
@@ -256,7 +256,7 @@ public:
     void removeLogger(const string& name);
     //! Remove all loggers
     /*!
-      Removes all loggers. If called, all subsiquent log messages will be ignored.
+      Removes all loggers. If called, all subsequent log messages will be ignored.
      */
     void removeAllLoggers();
 
@@ -357,18 +357,18 @@ private:
         }                                                                                                              \
     }
 
-//! LoggerStream class that is a std::ostream replacment that will log each line
+//! LoggerStream class that is a std::ostream replacement that will log each line
 /*! LoggerStream is a simple wrapper around a string stream, it has an explicit
     cast std::ostream& method so it can be used in place of any std::ostream, this
     can be used with QuantExt methods that take a std::ostream& for logging purposes.
 
-    Once the stream falls out of focus, it's desstructor will take the buffered log
+    Once the stream falls out of focus, it's destructor will take the buffered log
     messages and pass them the main ore::data::Log::instance().
 
     Note the following
     - The timestamps for each log message will correspond to when the LoggerStream
-      desstructor has been called, this may not correspond to the actual time the event
-      occured.
+      destructor has been called, this may not correspond to the actual time the event
+      occurred.
     - The filename and linenumber in the ore::data::Log() have to be explicitly passed to
       the LoggerStream, as such the log messages will not correspond to any references
       in QuantExt (or any other library).
@@ -439,7 +439,7 @@ protected:
     // errorType
     virtual std::string json() const = 0;
 
-    // utility function to delimate string for json, handles \" and \\ and control characters
+    // utility function to delimit string for json, handles \" and \\ and control characters
     std::string jsonify(const std::string& s) const;
 };
 

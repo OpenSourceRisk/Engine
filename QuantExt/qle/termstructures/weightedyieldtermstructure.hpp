@@ -60,7 +60,7 @@ inline Date WeightedYieldTermStructure::maxDate() const { return std::min(yts1_-
 
 inline const Date& WeightedYieldTermStructure::referenceDate() const {
     QL_REQUIRE(yts1_->referenceDate() == yts2_->referenceDate(),
-               "WeightedYieldTermStructure::referenceDate(): inconsitent reference dates in sources ("
+               "WeightedYieldTermStructure::referenceDate(): inconsistent reference dates in sources ("
                    << yts1_->referenceDate() << " vs. " << yts2_->referenceDate());
     return yts1_->referenceDate();
 }

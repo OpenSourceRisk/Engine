@@ -19,7 +19,7 @@
 */
 
 /*! \file qle/cashflows/nonstandardyoyinflationcoupon.hpp
-    \brief capped floored coupon which gerneralize the yoy inflation coupon
+    \brief capped floored coupon which generalize the yoy inflation coupon
     it pays:
          N * (alpha * I_t/I_s + beta)
          N * (alpha * (I_t/I_s - 1) + beta)

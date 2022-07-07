@@ -202,10 +202,10 @@ BOOST_AUTO_TEST_CASE(testMartingaleProperty) {
     Real expectedSP = dts->survivalProbability(T);
     Real expectedCondSP = dts->survivalProbability(T2);
     if (std::abs(mean(numeraire) - expectedSP) > tol2)
-        BOOST_FAIL("Martingale test failed for SP(t) (Brigo-Alfonsi discr.), excpected "
+        BOOST_FAIL("Martingale test failed for SP(t) (Brigo-Alfonsi discr.), expected "
                    << expectedSP << ", got " << mean(numeraire) << ", tolerance " << tol2);
     if (std::abs(mean(sp) - expectedCondSP) > tol2)
-        BOOST_FAIL("Martingale test failed for  SP(t,T) (Brigo-Alfonsi discr.), excpected "
+        BOOST_FAIL("Martingale test failed for  SP(t,T) (Brigo-Alfonsi discr.), expected "
                    << expectedCondSP << ", got " << mean(sp) << ", tolerance " << tol2);
 
 } // testIrTSMartingaleProperty

@@ -75,11 +75,11 @@ private:
     QuantLib::Handle<QuantExt::PriceTermStructure> pts_;
     QuantLib::Handle<QuantLib::YieldTermStructure> yts_;
 
-    //! Build a volatility structure from a single constant volatlity quote
+    //! Build a volatility structure from a single constant volatility quote
     void buildVolatility(const QuantLib::Date& asof, const CommodityVolatilityConfig& vc,
                          const ConstantVolatilityConfig& cvc, const Loader& loader);
 
-    //! Build a volatility curve from a 1-D curve of volatlity quotes
+    //! Build a volatility curve from a 1-D curve of volatility quotes
     void buildVolatility(const QuantLib::Date& asof, const CommodityVolatilityConfig& vc,
                          const VolatilityCurveConfig& vcc, const Loader& loader);
 

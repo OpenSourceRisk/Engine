@@ -170,7 +170,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
         // Index1, Index2, Currency, Conventions, SwaptionVolatility, DiscountCurve are relevant for calibration which
         // is only supported for
-        // CMSSpread type corrrelation
+        // CMSSpread type correlation
         if (correlationType_ == CorrelationType::CMSSpread && quoteType_ == MarketDatum::QuoteType::PRICE) {
             currency_ = XMLUtils::getChildValue(node, "Currency", true);
             conventions_ = XMLUtils::getChildValue(node, "Conventions");

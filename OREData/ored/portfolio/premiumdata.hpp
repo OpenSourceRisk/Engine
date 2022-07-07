@@ -30,7 +30,7 @@
 namespace ore {
 namespace data {
 
-//! Serializable obejct holding premium data
+//! Serializable object holding premium data
 /*!
   \ingroup tradedata
 */

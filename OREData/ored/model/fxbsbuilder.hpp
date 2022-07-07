@@ -42,7 +42,7 @@ using namespace QuantLib;
 /*!
   This class is a utility to turn an FX model component's description
   into an FX model parametrization which can be used to ultimately
-  instanciate a CrossAssetModel.
+  instantiate a CrossAssetModel.
 
   \ingroup models
  */
@@ -51,7 +51,7 @@ public:
     //! Constructor
     FxBsBuilder( //! Market object
         const boost::shared_ptr<ore::data::Market>& market,
-        //! FX model parameters/dscription
+        //! FX model parameters/description
         const boost::shared_ptr<FxBsData>& data,
         //! Market configuration to use
         const std::string& configuration = Market::defaultConfiguration,

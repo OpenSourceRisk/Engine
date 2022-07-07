@@ -36,7 +36,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     Option::Type type = parseOptionType(option_.callPut());
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
     QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
+    QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     expiryDate_ = parseDate(option_.exerciseDates().front());
     // Set the maturity date equal to the expiry date. It may get updated below if option is cash settled with
     // payment after expiry.
@@ -186,7 +186,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     LOG("tradeTypeBuilder set to " << tradeTypeBuilder << " for trade " << id());
 
     // Generally we need to set the pricing engine here even if the option is expired at build time, since the valuation date
-    // might change after build, and we get errors for the edge case valuation date = expiry date for Europen options.
+    // might change after build, and we get errors for the edge case valuation date = expiry date for European options.
     string configuration = Market::defaultConfiguration;
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeTypeBuilder);
     QL_REQUIRE(builder, "No builder found for " << tradeTypeBuilder);
