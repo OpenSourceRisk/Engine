@@ -94,7 +94,6 @@ public:
     vector<string> eligCollatCcys() const { return eligCollatCcys_; }
     /*! Apply (dynamic) initial margin in addition to variation margin */
     bool applyInitialMargin() { return applyInitialMargin_; }
-    //@}
     /*! Direction of (dynamic) initial margin */
     Type initialMarginType() { return initialMarginType_; }
     //@}
@@ -102,6 +101,9 @@ public:
     bool calculateIMAmount() { return calculateIMAmount_; }
     /*! Calculate VM from NPV (currently used only for SA-CCR) */
     bool calculateVMAmount() { return calculateVMAmount_; }
+     
+    /*! invert all relevant aspects of the CSA */
+    void invertCSA();
 
     void validate();
 

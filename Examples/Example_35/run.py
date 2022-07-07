@@ -17,7 +17,7 @@ oreex.save_output_to_subdir(
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
 )
 
-oreex.print_headline("Run ORE to produce flipped xva from CPTY_As view")
+oreex.print_headline("Run ORE to produce flipped xva from CPTY_A's view")
 oreex.run("Input/ore_FlipView.xml")
 oreex.get_times("Output/log.txt")
 oreex.save_output_to_subdir(

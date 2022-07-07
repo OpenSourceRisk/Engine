@@ -61,8 +61,14 @@ NettedExposureCalculator::NettedExposureCalculator(
       allocatedEneIndex_(allocatedEneIndex), flipViewXVA_(flipViewXVA) {
 
     vector<string> nettingSetIds;
-    for(auto nettingSet : nettingSetDefaultValue)
+    for (auto nettingSet : nettingSetDefaultValue) {
         nettingSetIds.push_back(nettingSet.first);
+        if (flipViewXVA_) {
+            if (nettingSetManager_->get(nettingSet.first)->activeCsaFlag()) {
+                nettingSetManager_->get(nettingSet.first)->csaDetails()->invertCSA();
+            }
+        }
+    }
 
     nettedCube_= boost::make_shared<SinglePrecisionInMemoryCube>(
             market_->asofDate(), nettingSetIds, cube->dates(),
@@ -382,8 +388,12 @@ NettedExposureCalculator::collateralPaths(
     // Don't use Settings::instance().evaluationDate() here, this has moved to simulation end date.
     Date today = market_->asofDate();
     string csaIndexName = netting->csaDetails()->index();
+    // avoid thrown errors of the index fixing here on holidays of the index, instead take the preceding date then.
+    if (!market_->iborIndex(csaIndexName, configuration_)->isValidFixingDate(today)) {
+        today = market_->iborIndex(csaIndexName, configuration_)->fixingCalendar().adjust(today, Preceding);
+    }
     Real csaRateToday = market_->iborIndex(csaIndexName, configuration_)->fixing(today);
-    LOG("CSA compounding rate for index " << csaIndexName << " = " << csaRateToday);
+    LOG("CSA compounding rate for index " << csaIndexName << " = " << setprecision(8) << csaRateToday << " as of " << today);
 
     // Copy scenario data to keep the collateral exposure helper unchanged
     vector<vector<Real>> csaScenFxRates(cube_->dates().size(), vector<Real>(cube_->samples(), 0.0));
