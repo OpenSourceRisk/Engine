@@ -85,7 +85,7 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
             auto sp = boost::dynamic_pointer_cast<StrikePrice>(strike_);
             sp->toXMLNode(doc, node);
         } else {
-            strike_->toXML(doc);
+            XMLUtils::appendNode(node, strike_->toXML(doc));            
         }
     }
     return node;

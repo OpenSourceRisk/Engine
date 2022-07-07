@@ -225,12 +225,12 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-    npvCurrency_ = currency_;
+    npvCurrency_ = ccy.code();
 
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
-    notional_ = strike_.value() * quantity_;
-    notionalCurrency_ = currency_;
+    notional_ = strike->strikeValue() * quantity_;
+    notionalCurrency_ = strike->currency();
 }
 
 void VanillaOptionTrade::fromXML(XMLNode* node) { Trade::fromXML(node); }
