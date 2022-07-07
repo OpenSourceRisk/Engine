@@ -138,7 +138,7 @@ void YoYInflationOptionletVolStripper::performCalculations() {
     boost::shared_ptr<InterpolatedYoYOptionletStripper<Linear>> yoyStripper =
         boost::make_shared<InterpolatedYoYOptionletStripper<Linear>>();
 
-    // Create an empty volatlity surface to pass to the engine
+    // Create an empty volatility surface to pass to the engine
     boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs =
         boost::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
             boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.0, settDays, cal, bdc, dc, obsLag, frequency,

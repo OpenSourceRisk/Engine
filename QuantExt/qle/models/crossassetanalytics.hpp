@@ -56,7 +56,7 @@ namespace CrossAssetAnalytics {
 */
 Real ir_expectation_1(const CrossAssetModel* model, const Size i, const Time t0, const Real dt);
 
-/*! IR state expecation
+/*! IR state expectation
   This function evaluates the state-dependent part of the expectation
 
   \f{eqnarray}{
@@ -117,7 +117,7 @@ std::pair<QuantLib::Real, QuantLib::Real> inf_jy_expectation_2(const CrossAssetM
   \rho^{zx}_{ii}.
   \f]
   The very last last integral above is therefore broken up into six terms which we do not list
-  here, but which show up in this function's imlementation.
+  here, but which show up in this function's implementation.
 
   This function covers the latter state-independent part of the FX expectation.
 */

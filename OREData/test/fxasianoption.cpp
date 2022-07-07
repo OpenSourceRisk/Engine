@@ -138,7 +138,7 @@
          market = boost::make_shared<TestMarket>(a.spot, expiry, a.domesticRate, a.foreignRate, a.volatility);
          boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
          std::string productName = "FxAsianOptionArithmeticPrice";
-         engineData->model(productName) = "BlackScholesMerton";
+         engineData->model(productName) = "GarmanKohlhagen";
          engineData->engine(productName) = "MCDiscreteArithmeticAPEngine";
          engineData->engineParameters(productName) = {{"ProcessType", "Discrete"},    {"BrownianBridge", "True"},
                                                       {"AntitheticVariate", "False"}, {"ControlVariate", "True"},

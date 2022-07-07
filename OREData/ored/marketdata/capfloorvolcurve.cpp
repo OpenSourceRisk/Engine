@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -680,11 +681,13 @@ CapFloorVolCurve::capSurface(const Date& asof, CapFloorVolatilityCurveConfig& co
     if (optionalQuotes) {
         QL_REQUIRE(quoteCounter > 0, "No Quotes provided for CapFloor surface " << config.curveID());
         if (config.interpolationMethod() == CapFloorTermVolSurfaceExact::Bilinear) {
-            return boost::make_shared<QuantExt::CapFloorTermVolSurfaceSparse<Linear, Linear>>(config.settleDays(), config.calendar(),
-                config.businessDayConvention(), config.dayCounter(), qtTenors, qtStrikes, qtData, false, false);
+            return boost::make_shared<QuantExt::CapFloorTermVolSurfaceSparse<Linear, Linear>>(
+                config.settleDays(), config.calendar(), config.businessDayConvention(), config.dayCounter(), qtTenors,
+                qtStrikes, qtData, true, true);
         } else if (config.interpolationMethod() == CapFloorTermVolSurfaceExact::BicubicSpline) {
-            return boost::make_shared<QuantExt::CapFloorTermVolSurfaceSparse<Cubic, Cubic>>(config.settleDays(), config.calendar(), 
-                config.businessDayConvention(), config.dayCounter(), qtTenors, qtStrikes, qtData, false, false);
+            return boost::make_shared<QuantExt::CapFloorTermVolSurfaceSparse<Cubic, Cubic>>(
+                config.settleDays(), config.calendar(), config.businessDayConvention(), config.dayCounter(), qtTenors,
+                qtStrikes, qtData, true, true);
         } else {
             QL_FAIL("Invalid Interpolation method for capfloor surface " << config.curveID() << ", must be either "
                 << CapFloorTermVolSurfaceExact::Bilinear << " or " << CapFloorTermVolSurfaceExact::BicubicSpline << ".");

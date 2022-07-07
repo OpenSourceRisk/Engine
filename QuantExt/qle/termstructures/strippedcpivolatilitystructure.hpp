@@ -231,7 +231,7 @@ bool StrippedCPIVolatilitySurface<Interpolator2D>::chooseFloor(QuantLib::Real st
         // 4) Gap, maxFloorStrike < minCapStrike and strike in the gap: Depends on atmRate which surface we
         // extrapolate
     } else if (strike > priceSurface_->floorStrikes().back() && strike < priceSurface_->capStrikes().front()) {
-        // there is a gap between flor end and caps begin, decise again depending on strike level
+        // there is a gap between floor end and caps begin, decide again depending on strike level
         if (strike < atmRate)
             return true;
         else

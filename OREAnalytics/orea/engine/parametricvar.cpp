@@ -65,7 +65,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
         LOG("No portfolio filter will be applied.");
     }
 
-    // read sensitivities and preaggregate them per prtfolio
+    // read sensitivities and preaggregate them per portfolio
     LOG("Preaggregate sensitivities per portfolio");
     std::set<RiskFactorKey> sensiKeysTmp;
     std::set<std::string> portfoliosTmp;
@@ -196,7 +196,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
         for (Size j = 0; j < (breakdown_ ? RiskFilter::numberOfRiskClasses() : 1); ++j) {
             for (Size k = 0; k < (breakdown_ ? RiskFilter::numberOfRiskTypes() : 1); ++k) {
                 // TODO should we rather project on the set of indices with non-zero sensis
-                // instead of copying the initial sensis and setting the non-releveant entries
+                // instead of copying the initial sensis and setting the non-relevant entries
                 // to zero?
                 Array deltaFiltered(delta);
                 Matrix gammaFiltered(gamma);

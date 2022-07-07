@@ -84,7 +84,8 @@ static struct test_daycounter_data daycounter_data[] = {
     {"Actual/365 (No Leap)", Actual365Fixed(Actual365Fixed::NoLeap)},
     {"Act/365 (NL)", Actual365Fixed(Actual365Fixed::NoLeap)},
     {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
-    {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)}};
+    {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)},
+    {"Actual/364", Actual364()}};
 
 struct test_freq_data {
     const char* str;

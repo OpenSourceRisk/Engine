@@ -45,7 +45,7 @@ using namespace std;
 
 //! Dynamic Initial Margin Calculator base class
 /*!
-  Derived classes implement a constructor with the relavant additional input data
+  Derived classes implement a constructor with the relevant additional input data
   and a build function that performs the DIM calculations for all netting sets and
   along all paths.
 */
@@ -75,7 +75,7 @@ public:
     //! t0 IM by netting set, as provided as an arguments
     map<string, Real> currentIM() { return currentIM_; }
 
-    //! Compute dynamic initial margin along all paths and fill result structurues
+    //! Compute dynamic initial margin along all paths and fill result structures
     virtual void build() = 0;
 
     //! DIM evolution report

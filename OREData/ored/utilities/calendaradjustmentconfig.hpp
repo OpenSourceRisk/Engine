@@ -68,7 +68,7 @@ public:
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
 
-    //! addd all holidays and business days from c to this instance
+    //! add all holidays and business days from c to this instance
     void append(const CalendarAdjustmentConfig& c);
 
 private:

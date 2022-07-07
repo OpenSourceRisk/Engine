@@ -33,7 +33,7 @@ bool LogQuote::isValid() const { return q_->isValid(); }
 
 void LogQuote::update() {
     Real v = q_->value();
-    QL_REQUIRE(v > 0.0, "Invalid quote, cannot take log of non-postive number");
+    QL_REQUIRE(v > 0.0, "Invalid quote, cannot take log of non-positive number");
     logValue_ = std::log(v);
 }
 } // namespace QuantExt

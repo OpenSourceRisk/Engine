@@ -48,7 +48,7 @@ class FXVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
     /*! For ATM we will only load ATM quotes, for Smile we load ATM, RR, BF or Deltas
-     *  SmileInterpolation - currently suports which of the 2 Vanna Volga approximations,
+     *  SmileInterpolation - currently supports which of the 2 Vanna Volga approximations,
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
      */

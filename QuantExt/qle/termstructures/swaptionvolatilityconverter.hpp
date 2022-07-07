@@ -67,7 +67,7 @@ private:
 //! Class that converts a supplied SwaptionVolatilityStructure to one of another type with possibly different shifts
 /*! \ingroup termstructures
 
-    \warning the converted <tt>SwaptionVolatilityStructure</tt> object has a fixed reference date eqaul to
+    \warning the converted <tt>SwaptionVolatilityStructure</tt> object has a fixed reference date equal to
              <tt>asof</tt> and fixed market data regardless of the type of reference date and market data of the
              original <tt>SwaptionVolatilityStructure</tt> that is passed in
 */

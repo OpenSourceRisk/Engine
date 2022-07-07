@@ -17,7 +17,7 @@
 */
 
 /*! \file engine/sensitivityanalysis.hpp
-    \brief Perfrom sensitivity analysis for a given portfolio
+    \brief Perform sensitivity analysis for a given portfolio
     \ingroup simulation
 */
 
@@ -107,7 +107,7 @@ public:
     //! the portfolio of trades
     boost::shared_ptr<Portfolio> portfolio() const { return portfolio_; }
 
-    //! a wrapper for the sensivity results cube
+    //! a wrapper for the sensitivity results cube
     boost::shared_ptr<SensitivityCube> sensiCube() const { return sensiCube_; }
 
 protected:

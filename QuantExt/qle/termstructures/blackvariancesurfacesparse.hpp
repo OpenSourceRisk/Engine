@@ -17,7 +17,7 @@
 */
 
 /*! \file blackvariancesurfacesparse.hpp
- \brief Black volatility surface modelled as variance surface
+ \brief Black volatility surface modeled as variance surface
  */
 
 #ifndef quantext_black_variance_surface_sparse_hpp

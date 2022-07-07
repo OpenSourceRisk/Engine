@@ -92,6 +92,7 @@ void CPIBachelierCapFloorEngine::calculate() const {
         Period obsLag = Period(0, Days); // Should be zero here if we use the lag difference to adjust maturity above
         stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate, obsLag));
     }
+
     results_.value = bachelierBlackFormula(arguments_.type, K, F, stdDev, d);
 }
 

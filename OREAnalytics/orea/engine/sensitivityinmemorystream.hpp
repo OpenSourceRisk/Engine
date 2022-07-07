@@ -43,7 +43,7 @@ public:
     /*! Add a record to the in-memory collection.
 
         \warning this causes reset() to be called. In other words, after any call
-                 to add, a call to next() will start at the beginnning again.
+                 to add, a call to next() will start at the beginning again.
     */
     void add(const SensitivityRecord& sr);
 
