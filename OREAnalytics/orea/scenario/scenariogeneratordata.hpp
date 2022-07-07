@@ -85,7 +85,7 @@ public:
     Size samples() const { return samples_; }
     SobolBrownianGenerator::Ordering ordering() const { return ordering_; }
     SobolRsg::DirectionIntegers directionIntegers() const { return directionIntegers_; }
-    boost::shared_ptr<ore::analytics::DateGrid> closeOutDateGrid() const { return closeOutDateGrid_; }
+    boost::shared_ptr<DateGrid> closeOutDateGrid() const { return closeOutDateGrid_; }
     bool withCloseOutLag() const { return withCloseOutLag_; }
     bool withMporStickyDate() const { return withMporStickyDate_; }
     Period closeOutLag() const { return closeOutLag_; }
@@ -112,7 +112,7 @@ private:
     Size samples_;
     SobolBrownianGenerator::Ordering ordering_;
     SobolRsg::DirectionIntegers directionIntegers_;
-    boost::shared_ptr<ore::analytics::DateGrid> closeOutDateGrid_;
+    boost::shared_ptr<DateGrid> closeOutDateGrid_;
     bool withCloseOutLag_;
     bool withMporStickyDate_;
     Period closeOutLag_;
