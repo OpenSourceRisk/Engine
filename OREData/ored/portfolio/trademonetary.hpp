@@ -37,6 +37,7 @@ public:
 
     bool empty() const { return value_ == QuantLib::Null<QuantLib::Real>(); };
     QuantLib::Real value() const;
+    const QuantLib::Real& unadjustedValue() const { return value_; }
     std::string currency() const;
     void setCurrency(const std::string& currency) { currency_ = currency; }
     void setValue(const QuantLib::Real& value) { value_ = value; }

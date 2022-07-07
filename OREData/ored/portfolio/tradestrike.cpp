@@ -76,8 +76,10 @@ void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
 
 XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     XMLNode* node;
-    if (onlyStrike_)
-        node = doc.allocNode("Strike", boost::lexical_cast<std::string>(value()));
+    if (onlyStrike_) {
+        auto sp = boost::dynamic_pointer_cast<StrikePrice>(strike_);
+        node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp->unadjustedValue()));
+    }
     else {
         node = doc.allocNode("StrikeData");
         if (noStrikePriceNode_) {
