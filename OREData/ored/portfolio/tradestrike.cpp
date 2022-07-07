@@ -46,7 +46,7 @@ XMLNode* StrikePrice::toXML(XMLDocument& doc) {
     return node;
 }
 
-void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
+void TradeStrike::fromXML(XMLNode* node, const bool isRequired, const bool allowYieldStrike) {
     XMLNode* dataNode = XMLUtils::getChildNode(node, "StrikeData");
     if (dataNode) {
         // first look for StrikeYield node
@@ -69,9 +69,11 @@ void TradeStrike::fromXML(XMLNode* node, const bool allowYieldStrike) {
         }
     } else {
         // if just a strike is present
-        double s = XMLUtils::getChildValueAsDouble(node, "Strike", true);
-        strike_ = boost::make_shared<StrikePrice>(s);
-        onlyStrike_ = true;
+        string s = XMLUtils::getChildValue(node, "Strike", isRequired);
+        if (!s.empty()) {
+            strike_ = boost::make_shared<StrikePrice>(s);
+            onlyStrike_ = true;
+        }
     }
 }
 
@@ -80,8 +82,7 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     if (onlyStrike_) {
         auto sp = boost::dynamic_pointer_cast<StrikePrice>(strike_);
         node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp->valueString()));
-    }
-    else {
+    } else if (strike_) {
         node = doc.allocNode("StrikeData");
         if (noStrikePriceNode_) {
             // maintain backward compatibility, must be a StrikePrice to get here

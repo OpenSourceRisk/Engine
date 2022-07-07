@@ -36,6 +36,10 @@ public:
         : value_(value), currency_(currency) {
         valueString_ = to_string(value);
     };
+    TradeMonetary(const std::string& valueString) : valueString_(valueString) { 
+        value_ = parseReal(valueString_);
+    };
+
     void fromXMLNode(XMLNode* node);
     void toXMLNode(XMLDocument& doc, XMLNode* node);
 

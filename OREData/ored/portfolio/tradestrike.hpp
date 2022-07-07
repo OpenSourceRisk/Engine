@@ -57,6 +57,7 @@ class StrikePrice : public StrikeBase, public TradeMonetary {
 public:
     StrikePrice() {}
     StrikePrice(const QuantLib::Real& value, const std::string& currency = std::string()) : TradeMonetary(value, currency) {}
+    StrikePrice(const std::string& valueString) : TradeMonetary(valueString) {}
 
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc) override;
@@ -76,7 +77,7 @@ public:
     QuantLib::Real value() const;
     boost::shared_ptr<StrikeBase> strike() const { return strike_; }
 
-    void fromXML(XMLNode* node, const bool allowYieldStrike = false);
+    void fromXML(XMLNode* node, const bool isRequired = true, const bool allowYieldStrike = false);
     XMLNode* toXML(XMLDocument& doc);
 
 private:
