@@ -117,7 +117,7 @@ void processException(bool continueOnError, const std::exception& e, const std::
     if (continueOnError) {
         std::string exceptionMessage = e.what();
         /* We do not log a structured curve error message, if the exception message indicates that the problem
-           already occured in the init market. In this case we have already logged a structured error there. */
+           already occurred in the inti market. In this case we have already logged a structured error there. */
         if (boost::starts_with(exceptionMessage, "did not find object ")) {
             ALOG("CurveID: " << curve << ": " << message << ": " << exceptionMessage);
         } else {
@@ -838,7 +838,7 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                         svp->enableExtrapolation(); // FIXME
 
-                        DLOG("Simulaton market " << name << " yield volatility type = " << svp->volatilityType());
+                        DLOG("Simulation market " << name << " yield volatility type = " << svp->volatilityType());
 
                         if (param.first == RiskFactorKey::KeyType::SwaptionVolatility) {
                             swaptionCurves_.insert(pair<pair<string, string>, Handle<SwaptionVolatilityStructure>>(
@@ -1087,7 +1087,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                                 std::forward_as_tuple(Market::defaultConfiguration, name),
                                                 std::forward_as_tuple(hCapletVol));
 
-                        LOG("Simulaton market cap/floor volatility type = " << hCapletVol->volatilityType());
+                        LOG("Simulation market cap/floor volatility type = " << hCapletVol->volatilityType());
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);
                     }
@@ -1559,9 +1559,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             LOG("Deterministic FX Vols with decay mode " << decayModeString << " for " << name);
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            // currently only curves (i.e. strike indepdendent) FX volatility structures are
+                            // currently only curves (i.e. strike independent) FX volatility structures are
                             // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
-                            // strike stickyness, since then no yield term structures and no fx spot are required
+                            // strike stickiness, since then no yield term structures and no fx spot are required
                             // that define the ATM level - to be revisited when FX surfaces are supported
                             fvh = Handle<BlackVolTermStructure>(
                                 boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
@@ -1813,9 +1813,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << name);
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-                            // currently only curves (i.e. strike indepdendent) EQ volatility structures are
+                            // currently only curves (i.e. strike independent) EQ volatility structures are
                             // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
-                            // strike stickyness, since then no yield term structures and no EQ spot are required
+                            // strike stickiness, since then no yield term structures and no EQ spot are required
                             // that define the ATM level - to be revisited when EQ surfaces are supported
                             evh = Handle<BlackVolTermStructure>(
                                 boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
@@ -2217,7 +2217,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                         yoyCapFloorVolSurfaces_.emplace(std::piecewise_construct,
                                                         std::forward_as_tuple(Market::defaultConfiguration, name),
                                                         std::forward_as_tuple(hYoYCapletVol));
-                        LOG("Simulaton market yoy inflation cap/floor volatility type = "
+                        LOG("Simulation market yoy inflation cap/floor volatility type = "
                             << hYoYCapletVol->volatilityType());
                     } catch (const std::exception& e) {
                         processException(continueOnError, e, name, param.first, simDataWritten);

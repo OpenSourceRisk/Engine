@@ -241,7 +241,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 Date maturity = swapStart + terms[i];
                 Real effectiveQuote = quotes[i]->value();
                 if (derive_yoy_from_zc) {
-                    // contruct a yoy swap just as it is done in the yoy inflation helper
+                    // construct a yoy swap just as it is done in the yoy inflation helper
                     Schedule schedule = MakeSchedule()
                                             .from(swapStart)
                                             .to(maturity)
@@ -388,7 +388,7 @@ QuantLib::Date getInflationSwapStart(const Date& asof, const InflationSwapConven
         d = *next(it);
     }
 
-    // Move d back availibility lag and the 15th of that month is the helper's start date.
+    // Move d back availability lag and the 15th of that month is the helper's start date.
     // Note: the 15th of the month is specific to AU CPI. We may need to generalise later.
     d -= conv.index()->availabilityLag();
 

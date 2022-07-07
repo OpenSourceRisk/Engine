@@ -35,7 +35,7 @@ namespace data {
 */
 class Swap : public Trade {
 public:
-    //! Deault constructor
+    //! Default constructor
     Swap(const string swapType = "Swap") : Trade(swapType) {}
 
     //! Constructor with vector of LegData

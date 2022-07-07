@@ -5,7 +5,7 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">255</Parameter>
+    <Parameter name="logMask">31</Parameter>
     <Parameter name="marketDataFile">market_20160205.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
@@ -52,7 +52,7 @@
       <Parameter name="flipViewBorrowingCurvePostfix">_BORROW</Parameter>
       <Parameter name="flipViewLendingCurvePostfix">_LEND</Parameter>
       <Parameter name="active">Y</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="csaFile">nettingReversed.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>

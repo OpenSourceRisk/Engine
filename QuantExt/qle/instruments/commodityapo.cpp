@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Manaement Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 */
 

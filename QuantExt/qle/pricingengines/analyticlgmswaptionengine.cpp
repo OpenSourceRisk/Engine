@@ -66,7 +66,7 @@ void AnalyticLgmSwaptionEngine::enableCache(const bool lgm_H_constant, const boo
 
 void AnalyticLgmSwaptionEngine::clearCache() {
     S_.clear();             // indicates that H / alpha independent variables are not yet computed
-    Hj_.clear();            // indicates that H dependent variables not not yet computed
+    Hj_.clear();            // indicates that H dependent variables not yet computed
     zetaex_ = Null<Real>(); // indicates that alpha dependent variables are not yet computed
 }
 

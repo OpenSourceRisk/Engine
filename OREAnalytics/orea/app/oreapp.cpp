@@ -207,7 +207,7 @@ int OREApp::run() {
 	    //    LOG("without cptyCube");
 	    // }
 
-            // // Use pre-generared scenarios
+            // // Use pre-generated scenarios
             // if (!scenarioData_)
             //     loadScenarioData();
 
@@ -257,7 +257,7 @@ int OREApp::run() {
                            "cube x dimension (" << cube_->numIds() << ") does not match portfolio size ("
                                                 << portfolio_->size() << ")");
 
-                // Use pre-generared scenarios
+                // Use pre-generated scenarios
                 if (!scenarioData_)
                     loadScenarioData();
 
@@ -313,7 +313,6 @@ boost::shared_ptr<XvaRunner> OREApp::getXvaRunner() {
 
     map<string, bool> analytics;
     analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
-    analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
     analytics["cva"] = parseBool(params_->get("xva", "cva"));
     analytics["dva"] = parseBool(params_->get("xva", "dva"));
     analytics["fva"] = parseBool(params_->get("xva", "fva"));
@@ -1098,7 +1097,7 @@ void OREApp::loadScenarioData() {
 
 void OREApp::loadCube() {
 
-    // loade usual NPV cube on trade level
+    // load usual NPV cube on trade level
 
     string cubeFile = outputPath_ + "/" + params_->get("xva", "cubeFile");
     bool hyperCube = false;
@@ -1158,7 +1157,6 @@ void OREApp::runPostProcessor() {
     boost::shared_ptr<NettingSetManager> netting = initNettingSetManager();
     map<string, bool> analytics;
     analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
-    analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
     analytics["cva"] = parseBool(params_->get("xva", "cva"));
     analytics["dva"] = parseBool(params_->get("xva", "dva"));
     analytics["fva"] = parseBool(params_->get("xva", "fva"));
@@ -1288,38 +1286,40 @@ void OREApp::writeXVAReports() {
     MEM_LOG;
     LOG("Writing XVA reports");
 
-    bool exposureByTrade = true;
-    if (params_->has("xva", "exposureProfilesByTrade"))
-        exposureByTrade = parseBool(params_->get("xva", "exposureProfilesByTrade"));
-    if (exposureByTrade) {
-        for (auto t : postProcess_->tradeIds()) {
-            ostringstream o;
-            o << outputPath_ << "/exposure_trade_" << t << ".csv";
-            string tradeExposureFile = o.str();
-            CSVFileReport tradeExposureReport(tradeExposureFile);
-            getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
+    if (params_->has("xva", "exposureProfilesByTrade")) {
+        if (parseBool(params_->get("xva", "exposureProfilesByTrade"))) {
+            for (auto t : postProcess_->tradeIds()) {
+                ostringstream o;
+                o << outputPath_ << "/exposure_trade_" << t << ".csv";
+                string tradeExposureFile = o.str();
+                CSVFileReport tradeExposureReport(tradeExposureFile);
+                getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
+            }
         }
     }
-    for (auto n : postProcess_->nettingSetIds()) {
-        ostringstream o1;
-        o1 << outputPath_ << "/exposure_nettingset_" << n << ".csv";
-        string nettingSetExposureFile = o1.str();
-        CSVFileReport nettingSetExposureReport(nettingSetExposureFile);
-        getReportWriter()->writeNettingSetExposures(nettingSetExposureReport, postProcess_, n);
+    if (params_->has("xva", "exposureProfiles")) {
+        if (parseBool(params_->get("xva", "exposureProfiles"))) {
+            for (auto n : postProcess_->nettingSetIds()) {
+                ostringstream o1;
+                o1 << outputPath_ << "/exposure_nettingset_" << n << ".csv";
+                string nettingSetExposureFile = o1.str();
+                CSVFileReport nettingSetExposureReport(nettingSetExposureFile);
+                getReportWriter()->writeNettingSetExposures(nettingSetExposureReport, postProcess_, n);
 
-        ostringstream o2;
-        o2 << outputPath_ << "/colva_nettingset_" << n << ".csv";
-        string nettingSetColvaFile = o2.str();
-        CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
-        getReportWriter()->writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
+                ostringstream o2;
+                o2 << outputPath_ << "/colva_nettingset_" << n << ".csv";
+                string nettingSetColvaFile = o2.str();
+                CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
+                getReportWriter()->writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
 
-	ostringstream o3;
-        o3 << outputPath_ << "/cva_sensitivity_nettingset_" << n << ".csv";
-        string nettingSetCvaSensiFile = o3.str();
-        CSVFileReport nettingSetCvaSensitivityReport(nettingSetCvaSensiFile);
-        getReportWriter()->writeNettingSetCvaSensitivities(nettingSetCvaSensitivityReport, postProcess_, n);
+                ostringstream o3;
+                o3 << outputPath_ << "/cva_sensitivity_nettingset_" << n << ".csv";
+                string nettingSetCvaSensiFile = o3.str();
+                CSVFileReport nettingSetCvaSensitivityReport(nettingSetCvaSensiFile);
+                getReportWriter()->writeNettingSetCvaSensitivities(nettingSetCvaSensitivityReport, postProcess_, n);
+            }   
+        }
     }
-
     string XvaFile = outputPath_ + "/xva.csv";
     CSVFileReport xvaReport(XvaFile);
     getReportWriter()->writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);

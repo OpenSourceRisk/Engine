@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testExpiryPeriod) {
 
 BOOST_AUTO_TEST_CASE(testContinuationExpiry) {
 
-    BOOST_TEST_MESSAGE("Testing future continutation expiry...");
+    BOOST_TEST_MESSAGE("Testing future continuation expiry...");
 
     Natural inputIndex = 2;
 

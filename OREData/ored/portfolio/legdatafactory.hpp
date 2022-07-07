@@ -41,7 +41,7 @@ class LegAdditionalData;
 /*! Function that is used to build instances of LegAdditionalData
 
     The template parameter is simply a particular instance of a \c LegAdditionalData class that is default
-    constructable. The function returns the default constructed LegAdditionalData object. A simple example is the
+    constructible. The function returns the default constructed LegAdditionalData object. A simple example is the
     function to build an instance of \c FixedLegData would be called via \c createLegData<FixedLegData>().
 
     \ingroup portfolio

@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/pricingengines/discountingforwardbondengine.hpp
-    \brief Engine to value a Forwadr Bond contract
+    \brief Engine to value a Forward Bond contract
 
     \ingroup engines
 */

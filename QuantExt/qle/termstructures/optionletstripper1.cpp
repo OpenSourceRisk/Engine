@@ -102,7 +102,7 @@ void OptionletStripper1::performCalculations() const {
         // to switch
         CapFloor::Type capFloorType = strikes[j] < switchStrike_ ? CapFloor::Floor : CapFloor::Cap;
 
-        // we do this with the above to keep the variables capFloors_ etc consistant, but really its the
+        // we do this with the above to keep the variables capFloors_ etc consistent, but really its the
         // optionletStdDevs_ below that we want.
         Real previousCapFloorPrice = 0.0;
         for (Size i = 0; i < nOptionletTenors_; ++i) {

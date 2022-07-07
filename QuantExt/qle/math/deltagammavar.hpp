@@ -54,7 +54,7 @@ Real deltaVar(const Matrix& omega, const Array& delta, const Real p,
 //! function that computes a delta-gamma normal VaR
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
  * w.r.t. a given confidence level. The gamma matrix is taken into account when computing the variance of the PL
- * distirbution, but the PL distribution is still assumed to be normal. */
+ * distribution, but the PL distribution is still assumed to be normal. */
 Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p,
                          const CovarianceSalvage& sal = NoCovarianceSalvage());
 

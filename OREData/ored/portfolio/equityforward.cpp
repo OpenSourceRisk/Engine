@@ -52,7 +52,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
         Currency strikeCcy = parseCurrencyWithMinors(strikeCurrency_);
         strike = convertMinorToMajorCurrency(strikeCurrency_, strike_);
         // ensure strike currency matches equity currency
-        QL_REQUIRE(strikeCcy == equityCcy, "Stike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
+        QL_REQUIRE(strikeCcy == equityCcy, "Strike currency " << ccy << " does not match equity currency " << equityCcy << " for trade " << id());
     } else {        
         WLOG("No Strike Currency provide for trade " << id() << ", assuming trade currency " << ccy);
         strike = convertMinorToMajorCurrency(currency_, strike_);
