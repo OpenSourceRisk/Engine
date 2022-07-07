@@ -106,7 +106,7 @@ ZeroInflationCurveObserverMoving<Interpolator>::ZeroInflationCurveObserverMoving
     QL_REQUIRE(this->quotes_.size() == this->times_.size(),
                "quotes/times count mismatch: " << this->quotes_.size() << " vs " << this->times_.size());
 
-    // initalise data vector, values are copied from quotes in performCalculations()
+    // initialise data vector, values are copied from quotes in performCalculations()
     this->data_.resize(this->times_.size());
     for (Size i = 0; i < this->times_.size(); i++)
         this->data_[0] = 0.0;

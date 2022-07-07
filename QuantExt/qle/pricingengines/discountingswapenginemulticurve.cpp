@@ -185,7 +185,7 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
 
         for (Size j = 0; j < leg.size(); j++) {
 
-            /* Exclude cashflows that have occured taking into account the
+            /* Exclude cashflows that have occurred taking into account the
             settlement date and includeSettlementDateFlows flag */
             if (leg[j]->hasOccurred(settlementDate, includeRefDateFlows)) {
                 continue;

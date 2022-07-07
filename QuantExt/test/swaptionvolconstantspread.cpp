@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(testAtmNormalVolShiftPropagation) {
             Real shiftedAtmVol = vars2.atmNormalVolMatrix->volatility(expiry, term, 0.0);
             BOOST_CHECK_SMALL(shiftedAtmVol - atmVol - shift, tolerance);
 
-            // check that shift propagates to all strikes for thsi expiry/term
+            // check that shift propagates to all strikes for this expiry/term
             for (Real strike = 0.01; strike <= 0.08; strike += 0.005) {
                 Real otmVol = vars1.normalVolCubeConstantSpread->volatility(expiry, term, strike);
                 Real shiftedOtmVol = vars2.normalVolCubeConstantSpread->volatility(expiry, term, strike);
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(testAtmLogNormalVolShiftPropagation) {
             Real shiftedAtmVol = vars2.atmLogNormalVolMatrix->volatility(expiry, term, 0.0);
             BOOST_CHECK_SMALL(shiftedAtmVol - atmVol - shift, tolerance);
 
-            // check that shift propagates to all strikes for thsi expiry/term
+            // check that shift propagates to all strikes for this expiry/term
             for (Real strike = 0.01; strike <= 0.08; strike += 0.005) {
                 Real otmVol = vars1.normalVolCubeConstantSpread->volatility(expiry, term, strike);
                 Real shiftedOtmVol = vars2.normalVolCubeConstantSpread->volatility(expiry, term, strike);

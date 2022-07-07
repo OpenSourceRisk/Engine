@@ -17,7 +17,7 @@
 */
 
 /*! \file tonar.hpp
-    \brief Toyko Overnight Average Rate (TONAR)
+    \brief Tokyo Overnight Average Rate (TONAR)
     \ingroup indexes
 */
 
@@ -33,7 +33,7 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! %JPY %TONAR rate
-/*! Toyko Overnight Average Rate published by BOJ.
+/*! Tokyo Overnight Average Rate published by BOJ.
 
     See <http://www.boj.or.jp/en/statistics/market/short/mutan/>.
 

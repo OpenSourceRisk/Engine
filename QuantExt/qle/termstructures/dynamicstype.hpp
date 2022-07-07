@@ -32,7 +32,7 @@ namespace QuantExt {
     @{
 */
 
-//! Stickyness
+//! Stickiness
 enum Stickyness { StickyStrike, StickyLogMoneyness, StickyAbsoluteMoneyness };
 
 //! Reaction to Time Decay
@@ -52,7 +52,7 @@ inline std::ostream& operator<<(std::ostream& out, const Stickyness& t) {
     case StickyAbsoluteMoneyness:
         return out << "StickyAbsoluteMoneyness";
     default:
-        return out << "Unknown stickyness type (" << t << ")";
+        return out << "Unknown stickiness type (" << t << ")";
     }
 }
 

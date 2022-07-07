@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(regression) {
         boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, simMarket, scenarioFactory);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    // build porfolio
+    // build portfolio
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
     engineData->engine("Swap") = "DiscountingSwapEngine";

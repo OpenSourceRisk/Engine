@@ -401,7 +401,7 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     auto simMarket = boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
-    // Build Porfolio
+    // Build Portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";
@@ -430,11 +430,11 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
     Size dates = dg->dates().size();
     Size numNPVs = dates * samples * portfolioSize;
     BOOST_TEST_MESSAGE("Cube size = " << numNPVs << " elements");
-    BOOST_TEST_MESSAGE("Cube elements theortical storage " << numNPVs * sizeof(Real) / (1024 * 1024) << " MB");
+    BOOST_TEST_MESSAGE("Cube elements theoretical storage " << numNPVs * sizeof(Real) / (1024 * 1024) << " MB");
     Real pricingTimeMicroSeconds = elapsed * 1000000 / numNPVs;
     BOOST_TEST_MESSAGE("Avg Pricing time = " << pricingTimeMicroSeconds << " microseconds");
 
-    // Count the number of times we have an empty line, ie. swap exipired.
+    // Count the number of times we have an empty line, ie. swap expired.
     // cube is trades/dates/samples
     Size count = 0;
     for (Size i = 0; i < portfolioSize; ++i) {
@@ -450,7 +450,7 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
 
     // BOOST_TEST_MESSAGE(os::getSystemDetails());
 
-    // Compute portfolo EPE and ENE
+    // Compute portfolio EPE and ENE
     vector<Real> eeVec, eneVec;
     for (Size i = 0; i < dates; ++i) {
         Real epe = 0.0, ene = 0.0;

@@ -42,7 +42,7 @@ using std::vector;
 
 //! Currency configuration
 /*!
-  Allows reading a ist of currency specifications from XML rather than hard coding each in QuantExt/QuantLib
+  Allows reading a list of currency specifications from XML rather than hard coding each in QuantExt/QuantLib
 */
 class CurrencyConfig : public XMLSerializable {
 public:

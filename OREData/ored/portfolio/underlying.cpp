@@ -86,7 +86,7 @@ void EquityUnderlying::fromXML(XMLNode* node) {
         Underlying::fromXML(node);
         QL_REQUIRE(type_ == "Equity", "Underlying must be of type 'Equity'.");
         identifierType_ = XMLUtils::getChildValue(node, "IdentifierType", false);
-        // if no identfier is provided, we just use name
+        // if no identifier is provided, we just use name
         if (!identifierType_.empty()) {
             currency_ = XMLUtils::getChildValue(node, "Currency", false);
             exchange_ = XMLUtils::getChildValue(node, "Exchange", false);

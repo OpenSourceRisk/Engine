@@ -583,7 +583,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     // build scenario sim market
     conv();
 
-    // build porfolio
+    // build portfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
     data->engine("Swap") = "DiscountingSwapEngine";

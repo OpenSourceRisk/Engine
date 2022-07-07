@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(testLegDataNotionals) {
     BOOST_CHECK_EQUAL(notionalsOut.size(), 1UL);
     BOOST_CHECK_EQUAL(notionalsOut[0], 123);
 
-    // Now check long value with no "dates" is uneffected
+    // Now check long value with no "dates" is unaffected
     notionals = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     notionalsOut = buildScheduledVector(notionals, {}, s);
     BOOST_CHECK_EQUAL(notionalsOut.size(), 10UL);

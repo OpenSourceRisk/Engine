@@ -17,7 +17,7 @@
 */
 
 /*! \file orea/engine/filteredsensitivitystream.hpp
-    \brief Class that wraps a sensitivity stream and filters out neglible records
+    \brief Class that wraps a sensitivity stream and filters out negligible records
  */
 
 #pragma once
@@ -31,7 +31,7 @@
 namespace ore {
 namespace analytics {
 
-//! Class that wraps a sensitivity stream and filters out neglible records
+//! Class that wraps a sensitivity stream and filters out negligible records
 class FilteredSensitivityStream : public SensitivityStream {
 public:
     /*! Constructor providing the thresholds. If the absolute value of the delta is

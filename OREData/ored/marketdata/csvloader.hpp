@@ -32,7 +32,7 @@ namespace data {
 //! Utility class for loading market quotes and fixings from a file
 /*!
   Data is loaded with the call to the constructor.
-  Inspectors can be called to then retrive quotes and fixings.
+  Inspectors can be called to then retrieve quotes and fixings.
 
   \ingroup marketdata
  */

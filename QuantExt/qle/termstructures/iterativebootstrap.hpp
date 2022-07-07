@@ -274,7 +274,7 @@ template <class Curve> void IterativeBootstrap<Curve>::calculate() const {
             // extend interpolation if needed
             if (!validData) {
                 try { // extend interpolation a point at a time
-                      // including the pillar to be boostrapped
+                      // including the pillar to be bootstrapped
                     ts_->interpolation_ =
                         ts_->interpolator_.interpolate(times.begin(), times.begin() + i + 1, data.begin());
                 } catch (...) {

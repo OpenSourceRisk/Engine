@@ -31,7 +31,7 @@ namespace QuantExt {
 using namespace QuantLib;
 
 //! Generic Ibor Index
-/*! This Ibor Index allows you to wrap any arbitary currency in a generic index.
+/*! This Ibor Index allows you to wrap any arbitrary currency in a generic index.
 
     We assume 2 settlement days, Target Calendar, ACT/360.
 

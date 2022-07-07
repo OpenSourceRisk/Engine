@@ -41,7 +41,7 @@ struct CcyTestData {
 };
 
 static CcyTestData currencyData[] = {
-    // African cuurencies
+    // African currencies
     { TNDCurrency(), "Tunisian dinar", "TND", 788 },
     { EGPCurrency(), "Egyptian pound", "EGP", 818 },
     { MADCurrency(), "Moroccan dirham", "MAD", 504 },

@@ -251,7 +251,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
                    (config->type() == InflationCapFloorVolatilityCurveConfig::Type::YY),
                "Inflation cap floor pricevolatility surfaces must be of type 'ZC' or 'YY'");
 
-    // Required by QuantLib price surface constructores but apparently not used
+    // Required by QuantLib price surface constructors but apparently not used
     Real startRate = 0.0;
 
     std::vector<Period> terms = parseVectorOfValues<Period>(config->tenors(), &parsePeriod);
@@ -481,7 +481,7 @@ void InflationCapFloorVolCurve::buildFromPrices(Date asof, InflationCapFloorVola
         boost::shared_ptr<InterpolatedYoYOptionletStripper<QuantLib::Linear>> yoyStripper =
             boost::make_shared<InterpolatedYoYOptionletStripper<QuantLib::Linear>>();
 
-        // Create an empty volatlity surface to pass to the engine
+        // Create an empty volatility surface to pass to the engine
         boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs =
             boost::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
                 boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(

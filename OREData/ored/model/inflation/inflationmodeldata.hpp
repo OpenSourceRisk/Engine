@@ -42,10 +42,10 @@ public:
         \param calibrationType    the type of model calibration.
         \param calibrationBaskets the calibration baskets for the model.
         \param currency           the currency of the inflation model.
-        \param index              the name of the inflation index being modelled.
+        \param index              the name of the inflation index being modeled.
         \param ignoreDuplicateCalibrationExpiryTimes if true, a calibration instrument
                with an expiry time equal to that of a previously added instrument
-               is skipped. If false, an error is thrown if such an isntrument is found.
+               is skipped. If false, an error is thrown if such an instrument is found.
                Notice that two instruments with different option expiry dates can
                still have the same expiry time due to the way dates are converted
                to times for inflation instruments.

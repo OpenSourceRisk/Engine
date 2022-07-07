@@ -45,7 +45,7 @@ struct IndexComparator {
   T0 < t < T then the QuantLib pricing engines will look to the IndexManager for a fixing at t.
 
   When moving between dates and simulation paths then the Fixings can change and should be populated in a path
-  consistant manager
+  consistent manner
 
   The FixingManager controls this updating and reset of the QuantLib::IndexManager for the required set of fixings
 

@@ -37,7 +37,7 @@ using namespace QuantLib;
 
     See <http://www.banxico.org.mx/indexEn.html>.
 
-    \remark Using Mexico calendar, should be Meixco City.
+    \remark Using Mexico calendar, should be Mexico City.
 
     \warning Check roll convention and EOM.
 

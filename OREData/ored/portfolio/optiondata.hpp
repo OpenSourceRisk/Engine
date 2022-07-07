@@ -35,7 +35,7 @@
 namespace ore {
 namespace data {
 
-//! Serializable obejct holding option data
+//! Serializable object holding option data
 /*!
   \ingroup tradedata
 */

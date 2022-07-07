@@ -115,14 +115,14 @@ void QuoteBasedVolatilityConfig::fromBaseNode(XMLNode* node) {
         } else if (volType == "Normal") {
             quoteType_ = MarketDatum::QuoteType::RATE_NVOL;
         } else {
-            QL_FAIL("Volatiltiy type " << volType << " is not supported;");
+            QL_FAIL("Volatility type " << volType << " is not supported;");
         }
     } else if (qType == "Premium") {
         quoteType_ = MarketDatum::QuoteType::PRICE;
         // If we have premiums the exercise type is required
         exerciseType_ = parseExerciseType(XMLUtils::getChildValue(node, "ExerciseType", true));
     } else {
-        QL_FAIL("Invalid quote type for volitility curve , quote type must be ImpliedVolatility or Premium");
+        QL_FAIL("Invalid quote type for volatility curve , quote type must be ImpliedVolatility or Premium");
     }
 }
 
