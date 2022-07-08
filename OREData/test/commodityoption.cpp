@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(testCommodityOptionBuildExceptions) {
 
     // Negative strike throws
     OptionData optionData("Long", "Call", "European", td.payOffAtExpiry, td.expiry);
-    TradeStrike ts(-td.strike.value());
+    TradeStrike ts(TradeStrike::Type::Price, -td.strike.value());
     option = boost::make_shared<CommodityOption>(td.envelope, optionData, td.commodityName, td.currency, td.quantity, ts);
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 

@@ -414,7 +414,7 @@ boost::shared_ptr<Trade> buildCommodityOption(const string& id, const string& lo
     Envelope env("CP");
     OptionData option(longShort, putCall, "European", false, expiryDate, "Cash", "",
                       premiumDate.empty() ? PremiumData() : PremiumData(premium, premiumCcy, parseDate(premiumDate)));
-    TradeStrike trStrike(strike);
+    TradeStrike trStrike(TradeStrike::Type::Price, strike);
     boost::shared_ptr<Trade> trade =
         boost::make_shared<ore::data::CommodityOption>(env, option, commodityName, currency, quantity, trStrike);
     trade->id() = id;
