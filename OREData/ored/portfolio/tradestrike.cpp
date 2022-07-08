@@ -82,7 +82,7 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     if (onlyStrike_) {
         auto sp = boost::dynamic_pointer_cast<StrikePrice>(strike_);
         node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp->valueString()));
-    } else if (strike_) {
+    } else {
         node = doc.allocNode("StrikeData");
         if (noStrikePriceNode_) {
             // maintain backward compatibility, must be a StrikePrice to get here

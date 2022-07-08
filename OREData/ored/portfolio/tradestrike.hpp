@@ -75,7 +75,7 @@ public:
 
     const bool isStrikePrice() const;
     QuantLib::Real value() const;
-    boost::shared_ptr<StrikeBase> strike() const { return strike_; }
+    const boost::shared_ptr<StrikeBase>& strike() const { return strike_; }
 
     void fromXML(XMLNode* node, const bool isRequired = true, const bool allowYieldStrike = false);
     XMLNode* toXML(XMLDocument& doc);
