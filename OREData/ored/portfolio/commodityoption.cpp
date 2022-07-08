@@ -54,8 +54,7 @@ void CommodityOption::build(const boost::shared_ptr<EngineFactory>& engineFactor
     QL_REQUIRE(quantity_ > 0, "Commodity option requires a positive quatity");
     QL_REQUIRE((strike_.value() > 0) || close_enough(strike_.value(),0.0), "Commodity option requires a non-negative strike");
     if (close_enough(strike_.value(), 0.0)) {
-        auto strike = boost::dynamic_pointer_cast<StrikePrice>(strike_.strike());
-            strike->setValue(0.0);
+        strike_.setValue(0.0);
     }
 
     // Populate the index_ in case the option is automatic exercise.

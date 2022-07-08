@@ -32,9 +32,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : parseCurrencyWithMinors(underlyingCurrency_);
     bool sameCcy = underlyingCurrency == ccy;
     
-    auto strike = boost::dynamic_pointer_cast<StrikePrice>(strike_.strike());
-    if (strike->currency().empty())
-        strike->setCurrency(ccy.code());
+    if (strike_.currency().empty())
+        strike_.setCurrency(ccy.code());
 
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
@@ -229,8 +228,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
-    notional_ = strike->strikeValue() * quantity_;
-    notionalCurrency_ = strike->currency();
+    notional_ = strike_.value() * quantity_;
+    notionalCurrency_ = strike_.currency();
 }
 
 void VanillaOptionTrade::fromXML(XMLNode* node) { Trade::fromXML(node); }
