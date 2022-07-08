@@ -87,23 +87,22 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     XMLNode* node;
     if (onlyStrike_) {
         // can only happen for a StrikePrice
-        auto sp = boost::get<TradeMonetary&>(strike_);
+        auto sp = strikePrice();
         node = doc.allocNode("Strike", boost::lexical_cast<std::string>(sp.valueString()));
     } else {
         node = doc.allocNode("StrikeData");
         if (noStrikePriceNode_) {
             // maintain backward compatibility, must be a Strike Type Price to get here
-            auto sp = boost::get<TradeMonetary&>(strike_);
-            sp.toXMLNode(doc, node);
+            strikePrice().toXMLNode(doc, node);
         } else {
             XMLNode* subNode;
             if (type_ == Type::Yield) {
-                auto yld = boost::get<StrikeYield>(strike_);
+                auto yld = strikeYield();
                 subNode = doc.allocNode("StrikeYield");
                 XMLUtils::addChild(doc, subNode, "Yield", yld.yield);
                 XMLUtils::addChild(doc, subNode, "Compounding", yld.compounding);
             } else {
-                auto sp = boost::get<TradeMonetary>(strike_);
+                auto sp = strikePrice();
                 subNode = doc.allocNode("StrikePrice");
                 sp.toXMLNode(doc, subNode);
             }
@@ -117,31 +116,36 @@ QuantLib::Real TradeStrike::value() const {
     return boost::apply_visitor(StrikeValue(), strike_); 
 }
 
-std::string TradeStrike::currency() const {
+std::string TradeStrike::currency() {
     QL_REQUIRE(type_ == Type::Price, "TradeStrike currency only valid when Strike type is Price");
-    auto sp = boost::get<TradeMonetary>(strike_);
-    return sp.currency();
+    return strikePrice().currency();
 }
 
-const QuantLib::Compounding& TradeStrike::compounding() const {
+const QuantLib::Compounding& TradeStrike::compounding() {
     QL_REQUIRE(type_ == Type::Yield, "TradeStrike currency only valid when Strike type is Yield");
-    return boost::get<StrikeYield>(strike_).compounding;
+    return strikeYield().compounding;
 }
 
 void TradeStrike::setValue(const QuantLib::Real& value) {
     if (type_ == Type::Price) {
-        TradeMonetary& sp = boost::get<TradeMonetary>(strike_);
-        sp.setValue(value);
+        strikePrice().setValue(value);
     } else {
-        StrikeYield& yld = boost::get<StrikeYield>(strike_);
-        yld.yield = value;    
+        strikeYield().yield = value;    
     }
 }
 
 void TradeStrike::setCurrency(const std::string& currency) {
     QL_REQUIRE(type_ == Type::Price, "TradeStrike currency only valid when Strike type is Price");
-    TradeMonetary& sp = boost::get<TradeMonetary>(strike_);
-    sp.setCurrency(currency);
+    strikePrice().setCurrency(currency);
+}
+
+bool TradeStrike::empty() {
+    try {          
+        value();
+        return true;
+    } catch (...) {
+        return false;
+    }
 }
 
 } // namespace data

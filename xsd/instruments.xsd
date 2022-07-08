@@ -1075,8 +1075,8 @@
         <xs:element type="strikePriceData" name="StrikePrice"/>
         <xs:element type="strikeYieldData" name="StrikeYield"/>
 	    <xs:sequence>
-          <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
           <xs:element type="xs:float" name="Value"/>
+          <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
 	    </xs:sequence>
 	  </xs:choice>
 	</xs:complexType>
