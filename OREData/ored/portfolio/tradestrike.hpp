@@ -49,7 +49,7 @@ public:
 
     QuantLib::Real value() const;
     Type type() const { return type_; };
-    const std::string& currency() const;
+    std::string currency() const;
     const QuantLib::Compounding& compounding() const;
 
     void setValue(const QuantLib::Real& value);

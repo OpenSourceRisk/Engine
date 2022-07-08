@@ -54,9 +54,9 @@ void TradeStrike::fromXML(XMLNode* node, const bool isRequired, const bool allow
         if (XMLNode* yieldNode = XMLUtils::getChildNode(dataNode, "StrikeYield")) {
             QL_REQUIRE(allowYieldStrike, "StrikeYield not supported for this trade type.");
             StrikeYield strikeYield;
-            strikeYield.yield = XMLUtils::getChildValueAsDouble(node, "Yield", true);
+            strikeYield.yield = XMLUtils::getChildValueAsDouble(yieldNode, "Yield", true);
             strikeYield.compounding =
-                parseCompounding(XMLUtils::getChildValue(node, "Compounding", false, "SimpleThenCompounded"));
+                parseCompounding(XMLUtils::getChildValue(yieldNode, "Compounding", false, "SimpleThenCompounded"));
             strike_ = strikeYield;
             type_ = Type::Yield;
         } else {
@@ -117,7 +117,7 @@ QuantLib::Real TradeStrike::value() const {
     return boost::apply_visitor(StrikeValue(), strike_); 
 }
 
-const std::string& TradeStrike::currency() const {
+std::string TradeStrike::currency() const {
     QL_REQUIRE(type_ == Type::Price, "TradeStrike currency only valid when Strike type is Price");
     auto sp = boost::get<TradeMonetary>(strike_);
     return sp.currency();
@@ -125,23 +125,23 @@ const std::string& TradeStrike::currency() const {
 
 const QuantLib::Compounding& TradeStrike::compounding() const {
     QL_REQUIRE(type_ == Type::Yield, "TradeStrike currency only valid when Strike type is Yield");
-    auto yld = boost::get<StrikeYield&>(strike_);
+    StrikeYield yld = boost::get<StrikeYield>(strike_);
     return yld.compounding;
 }
 
 void TradeStrike::setValue(const QuantLib::Real& value) {
     if (type_ == Type::Price) {
-        auto sp = boost::get<TradeMonetary&>(strike_);
+        TradeMonetary sp = boost::get<TradeMonetary>(strike_);
         sp.setValue(value);
     } else {
-        auto yld = boost::get<StrikeYield&>(strike_);
+        StrikeYield yld = boost::get<StrikeYield>(strike_);
         yld.yield = value;    
     }
 }
 
 void TradeStrike::setCurrency(const std::string& currency) {
     QL_REQUIRE(type_ == Type::Price, "TradeStrike currency only valid when Strike type is Price");
-    auto sp = boost::get<TradeMonetary&>(strike_);
+    TradeMonetary sp = boost::get<TradeMonetary>(strike_);
     sp.setCurrency(currency);
 }
 
