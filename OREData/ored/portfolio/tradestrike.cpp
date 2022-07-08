@@ -92,7 +92,7 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
     } else {
         node = doc.allocNode("StrikeData");
         if (noStrikePriceNode_) {
-            // maintain backward compatibility, must be a StrikePrice to get here
+            // maintain backward compatibility, must be a Strike Type Price to get here
             auto sp = boost::get<TradeMonetary&>(strike_);
             sp.toXMLNode(doc, node);
         } else {
