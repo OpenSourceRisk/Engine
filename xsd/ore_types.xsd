@@ -31,7 +31,7 @@
   <xs:simpleType name="paymentLag">
     <!-- paymentLag can be either integer or a period 1D, 5M, 10w, 20Y etc -->
     <xs:restriction base="xs:string">
-      <xs:pattern value="(\d|(\d*(d|D|m|M|y|Y)))?"/>
+      <xs:pattern value="(\d*|(\d*(d|D|m|M|y|Y)))?"/>
     </xs:restriction>
   </xs:simpleType>
 
