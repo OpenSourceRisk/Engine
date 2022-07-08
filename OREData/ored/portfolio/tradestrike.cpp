@@ -142,9 +142,9 @@ void TradeStrike::setCurrency(const std::string& currency) {
 bool TradeStrike::empty() {
     try {          
         value();
-        return true;
-    } catch (...) {
         return false;
+    } catch (...) {
+        return true;
     }
 }
 
