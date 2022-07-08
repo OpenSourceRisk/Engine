@@ -130,7 +130,7 @@ const QuantLib::Compounding& TradeStrike::compounding() const {
 
 void TradeStrike::setValue(const QuantLib::Real& value) {
     if (type_ == Type::Price) {
-        TradeMonetary sp = boost::get<TradeMonetary>(strike_);
+        TradeMonetary& sp = boost::get<TradeMonetary>(strike_);
         sp.setValue(value);
     } else {
         StrikeYield& yld = boost::get<StrikeYield>(strike_);
@@ -140,7 +140,7 @@ void TradeStrike::setValue(const QuantLib::Real& value) {
 
 void TradeStrike::setCurrency(const std::string& currency) {
     QL_REQUIRE(type_ == Type::Price, "TradeStrike currency only valid when Strike type is Price");
-    TradeMonetary sp = boost::get<TradeMonetary>(strike_);
+    TradeMonetary& sp = boost::get<TradeMonetary>(strike_);
     sp.setCurrency(currency);
 }
 
