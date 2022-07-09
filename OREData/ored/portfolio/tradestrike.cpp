@@ -139,10 +139,9 @@ void TradeStrike::setCurrency(const std::string& currency) {
     strikePrice().setCurrency(currency);
 }
 
-bool TradeStrike::empty() {
-    try {          
-        value();
-        return false;
+const bool TradeStrike::empty() {
+    try {      
+        return value() == Null<Real>();
     } catch (...) {
         return true;
     }

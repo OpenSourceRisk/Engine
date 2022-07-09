@@ -62,7 +62,7 @@ public:
     void fromXML(XMLNode* node, const bool isRequired = true, const bool allowYieldStrike = false);
     XMLNode* toXML(XMLDocument& doc);
 
-    bool empty();
+    const bool empty();
 
 private:
     boost::variant<StrikeYield, StrikePrice> strike_;
