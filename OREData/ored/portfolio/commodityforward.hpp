@@ -40,8 +40,8 @@ public:
 
     //! Detailed constructor with explicit future expiry date.
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
-        const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
-        QuantLib::Real strike);
+                     const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+                     QuantLib::Real strike);
 
     //! Detailed constructor with explicit future expiry date.
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
@@ -52,11 +52,11 @@ public:
 
     //! Detailed constructor with explicit future expiry offset and calendar.
     CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
-        const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
-        QuantLib::Real strike, const QuantLib::Period& futureExpiryOffset,
-        const QuantLib::Calendar& offsetCalendar,
-        const boost::optional<bool>& physicallySettled = true,
-        const Date& paymentDate = Date());
+                     const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+                     QuantLib::Real strike, const QuantLib::Period& futureExpiryOffset,
+                     const QuantLib::Calendar& offsetCalendar,
+                     const boost::optional<bool>& physicallySettled = true,
+                     const Date& paymentDate = Date());
     //@}
 
     //! \name Inspectors
@@ -116,6 +116,12 @@ private:
 
     boost::optional<bool> physicallySettled_;
     QuantLib::Date paymentDate_;
+
+    //! NDF currency, index and fixing date
+    QuantLib::Date fixingDate_;
+    std::string fxIndex_;
+    std::string payCcy_;
+
 };
 } // namespace data
 } // namespace ore
