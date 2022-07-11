@@ -18,20 +18,8 @@
 
 #pragma once
 
-#include <ql/experimental/fx/deltavolquote.hpp>
-#include <ql/money.hpp>
-#include <ql/option.hpp>
-#include <ql/types.hpp>
-
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/trademonetary.hpp>
-
-#include <boost/optional.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/serialization/version.hpp>
-#include <boost/shared_ptr.hpp>
 
 using ore::data::XMLNode;
 using ore::data::XMLSerializable;
@@ -45,8 +33,8 @@ public:
     TradeBarrier() {};
 
     TradeBarrier(QuantLib::Real value, std::string currency) : TradeMonetary(value, currency) {};
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    void fromXML(XMLNode* node);
+    XMLNode* toXML(XMLDocument& doc);
 };
 
 } // namespace data

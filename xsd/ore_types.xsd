@@ -285,7 +285,7 @@
 				<xs:enumeration value="ZAX" />
 			</xs:restriction>
 		</xs:simpleType>
-        </xs:union>
+     </xs:union>
   </xs:simpleType>
   
   <xs:simpleType name="currencyPair">
