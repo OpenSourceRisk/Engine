@@ -18,19 +18,8 @@
 
 #pragma once
 
-#include <ql/experimental/fx/deltavolquote.hpp>
-#include <ql/money.hpp>
-#include <ql/option.hpp>
-#include <ql/types.hpp>
-
 #include <ored/utilities/xmlutils.hpp>
-
-#include <boost/optional.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/version.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using ore::data::XMLNode;
 using ore::data::XMLSerializable;
@@ -38,21 +27,33 @@ using ore::data::XMLSerializable;
 namespace ore {
 namespace data {
 
-class TradeMonetary : public XMLSerializable {
+class TradeMonetary {
 
 public:
     TradeMonetary() {};
 
-    TradeMonetary(QuantLib::Real value, std::string currency = std::string()) : value_(value), currency_(currency) {};
-    virtual void fromXML(XMLNode* node) override;
-    virtual XMLNode* toXML(XMLDocument& doc) override;
+    TradeMonetary(const QuantLib::Real& value, std::string currency = std::string())
+        : value_(value), currency_(currency) {
+        valueString_ = to_string(value);
+    };
+    TradeMonetary(const std::string& valueString) : valueString_(valueString) { 
+        value_ = parseReal(valueString_);
+    };
+
+    void fromXMLNode(XMLNode* node);
+    void toXMLNode(XMLDocument& doc, XMLNode* node);
 
     bool empty() const { return value_ == QuantLib::Null<QuantLib::Real>(); };
     QuantLib::Real value() const;
+    const string& valueString() const { return valueString_; }
     std::string currency() const;
+    void setCurrency(const std::string& currency) { currency_ = currency; }
+    void setValue(const QuantLib::Real& value) { value_ = value; }
 
 protected:
-    QuantLib::Real value_ = QuantLib::Null<Real>();
+    QuantLib::Real value_ = QuantLib::Null<QuantLib::Real>();
+    //! store a string version of the value, this ensures toXML values matches fromXML input
+    std::string valueString_;
     std::string currency_;
 };
 
