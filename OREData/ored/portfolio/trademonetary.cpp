@@ -1,6 +1,5 @@
 /*
  Copyright (C) 2021 Quaternion Risk Management Ltd
- Copyright (C) 2021 Skandinaviska Enskilda Banken AB (publ)
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -19,37 +18,35 @@
 
 #include <ored/portfolio/trademonetary.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/to_string.hpp>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/export.hpp>
 
 namespace ore {
 namespace data {
 
 
-void TradeMonetary::fromXML(XMLNode* node) { 
+void TradeMonetary::fromXMLNode(XMLNode* node) { 
 	currency_ = XMLUtils::getChildValue(node, "Currency", false);
-    value_ = XMLUtils::getChildValueAsDouble(node, "Value", true);
+    valueString_ = XMLUtils::getChildValue(node, "Value", true);
+    value_ = parseReal(valueString_);
 }
 
-XMLNode* TradeMonetary::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("Data"); //Need to fix this
-    XMLUtils::addChild(doc, node, "Value", value_);
+void TradeMonetary::toXMLNode(XMLDocument& doc, XMLNode* node) {
+    XMLUtils::addChild(doc, node, "Value", valueString_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    return node;
 }
 
 std::string TradeMonetary::currency() const { 
     if (!currency_.empty())
         return parseCurrencyWithMinors(currency_).code();
     else
-        QL_FAIL("No currency provided in TradeMonetary class");
+        return currency_;
 }
 
-QuantLib::Real TradeMonetary::value() const { return convertMinorToMajorCurrency(currency_, value_); }
+QuantLib::Real TradeMonetary::value() const { 
+    if (currency_.empty())
+        return value_;
+    else
+        return convertMinorToMajorCurrency(currency_, value_); 
+}
 
 } // namespace data
 } // namespace ore

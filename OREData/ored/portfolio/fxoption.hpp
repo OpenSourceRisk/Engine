@@ -40,8 +40,8 @@ public:
     //! Constructor
     FxOption(Envelope& env, OptionData option, string boughtCurrency, double boughtAmount, string soldCurrency,
              double soldAmount, const std::string& fxIndex = "")
-        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, soldAmount / boughtAmount,
-                             boughtAmount, TradeStrike()),
+        : VanillaOptionTrade(env, AssetClass::FX, option, boughtCurrency, soldCurrency, boughtAmount,
+                             TradeStrike(soldAmount / boughtAmount, soldCurrency)),
           fxIndex_(fxIndex) {
         tradeType_ = "FxOption";
     }
@@ -54,7 +54,7 @@ public:
     const string& boughtCurrency() const { return assetName_; }
     double boughtAmount() const { return quantity_; }
     const string& soldCurrency() const { return currency_; }
-    double soldAmount() const { return strike_ * quantity_; }
+    double soldAmount() const { return strike_.value() * quantity_; }
     const std::string& fxIndex() const { return fxIndex_; }
     //@}
 
