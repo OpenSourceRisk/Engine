@@ -29,7 +29,7 @@ public:
     EquityFutureOption() : VanillaOptionTrade(AssetClass::EQ) { tradeType_ = "EquityFutureOption"; }
     //! Constructor
     EquityFutureOption(Envelope& env, OptionData option, const string& currency, Real quantity, 
-        const boost::shared_ptr<ore::data::Underlying>& underlying, Real strike, QuantLib::Date forwardDate,
+        const boost::shared_ptr<ore::data::Underlying>& underlying, TradeStrike strike, QuantLib::Date forwardDate,
         const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "");
 
     //! Build QuantLib/QuantExt instrument, link pricing engine

@@ -60,7 +60,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     additionalData_["boughtCurrency"] = assetName_; 
     additionalData_["boughtAmount"] = quantity_;
     additionalData_["soldCurrency"] = currency_;
-    additionalData_["soldAmount"] = quantity_ * strike_;
+    additionalData_["soldAmount"] = quantity_ * strike_.value();
 }
 
 void FxOption::fromXML(XMLNode* node) {
@@ -72,7 +72,7 @@ void FxOption::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
     double boughtAmount = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
     double soldAmount = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
-    strike_ = soldAmount / boughtAmount;
+    strike_ = TradeStrike(soldAmount / boughtAmount, currency_);
     quantity_ = boughtAmount;
     fxIndex_ = XMLUtils::getChildValue(fxNode, "FXIndex", false);
     QL_REQUIRE(boughtAmount > 0.0, "positive BoughtAmount required");

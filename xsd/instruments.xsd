@@ -57,14 +57,21 @@
       <xs:element type="xs:string" minOccurs="0" name="LegalEntityId"/>
     </xs:all>
   </xs:complexType>
-
-  <xs:complexType name="strikeData">
+  
+  <xs:complexType name="strikePriceData">
     <xs:all>
-      <xs:element type="xs:string" name="Currency"/>
-      <xs:element type="xs:string" name="Value"/>
+      <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
+      <xs:element type="xs:float" name="Value"/>
     </xs:all>
   </xs:complexType>
-
+  
+  <xs:complexType name="strikeYieldData">
+    <xs:all>
+      <xs:element type="compounding" name="Compounding" minOccurs="0"/>
+      <xs:element type="xs:float" name="Yield"/>
+    </xs:all>
+  </xs:complexType>
+  
   <xs:complexType name="levelData">
     <xs:all>
       <xs:element type="xs:string" name="Currency"/>
@@ -1071,9 +1078,20 @@
 
   <xs:element name="strikeGroup" abstract="true"/>
   <xs:element type="xs:string" name="Strike" substitutionGroup="strikeGroup"/>
-  <xs:element type="strikeData" name="StrikeData" substitutionGroup="strikeGroup"/>
+  <xs:element name="StrikeData" substitutionGroup="strikeGroup">
+    <xs:complexType>
+	  <xs:choice>
+        <xs:element type="strikePriceData" name="StrikePrice"/>
+        <xs:element type="strikeYieldData" name="StrikeYield"/>
+	    <xs:sequence>
+          <xs:element type="xs:float" name="Value"/>
+          <xs:element type="extendedCurrencyCode" name="Currency" minOccurs="0"/>
+	    </xs:sequence>
+	  </xs:choice>
+	</xs:complexType>
+  </xs:element>
 
   <xs:element name="levelGroup" abstract="true"/>
-  <xs:element type="xs:string" name="Level" substitutionGroup="levelGroup"/>
+  <xs:element type="xs:float" name="Level" substitutionGroup="levelGroup"/>
   <xs:element type="levelData" name="LevelData" substitutionGroup="levelGroup"/>
 </xs:schema>
