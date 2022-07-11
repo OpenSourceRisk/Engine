@@ -31,10 +31,13 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     // If non-empty, then check if the currencies are different for a Quanto payoff
     Currency underlyingCurrency = underlyingCurrency_.empty() ? ccy : parseCurrencyWithMinors(underlyingCurrency_);
     bool sameCcy = underlyingCurrency == ccy;
+    
+    if (strike_.currency().empty())
+        strike_.setCurrency(ccy.code());
 
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
-    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_.value()));
     QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of exercise dates");
     expiryDate_ = parseDate(option_.exerciseDates().front());
@@ -122,7 +125,7 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             // Build the instrument
             LOG("Build CashSettledEuropeanOption for trade " << id());
             vanilla = boost::make_shared<CashSettledEuropeanOption>(
-                type, strike_, expiryDate_, paymentDate, option_.isAutomaticExercise(), index_, exercised, exercisePrice);
+                type, strike_.value(), expiryDate_, paymentDate, option_.isAutomaticExercise(), index_, exercised, exercisePrice);
 
             // Allow for a separate pricing engine that takes care of payment on a date after expiry. Do this by
             // appending 'EuropeanCS' to the trade type.
@@ -221,12 +224,12 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
-    npvCurrency_ = currency_;
+    npvCurrency_ = ccy.code();
 
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
-    notional_ = strike_ * quantity_;
-    notionalCurrency_ = currency_;
+    notional_ = strike_.value() * quantity_;
+    notionalCurrency_ = strike_.currency();
 }
 
 void VanillaOptionTrade::fromXML(XMLNode* node) { Trade::fromXML(node); }
