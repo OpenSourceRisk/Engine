@@ -100,7 +100,7 @@ XMLNode* TradeStrike::toXML(XMLDocument& doc) {
                 auto yld = strikeYield();
                 subNode = doc.allocNode("StrikeYield");
                 XMLUtils::addChild(doc, subNode, "Yield", yld.yield);
-                XMLUtils::addChild(doc, subNode, "Compounding", yld.compounding);
+                XMLUtils::addChild(doc, subNode, "Compounding", to_string(yld.compounding));
             } else {
                 auto sp = strikePrice();
                 subNode = doc.allocNode("StrikePrice");
