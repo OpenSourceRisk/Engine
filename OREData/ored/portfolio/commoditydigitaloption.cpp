@@ -94,8 +94,9 @@ void CommodityDigitalOption::build(const boost::shared_ptr<EngineFactory>& engin
     Real strikeSpread = strike_ * 0.01; // FIXME, what is a usual spread here, and where should we put it?
     Real strike1 = strike_ - strikeSpread/2;
     Real strike2 = strike_ + strikeSpread/2;
-    CommodityOption opt1(envelope(), optionData_, name_, currency_, strike1, 1.0, isFuturePrice_, futureExpiryDate_);
-    CommodityOption opt2(envelope(), optionData_, name_, currency_, strike2, 1.0, isFuturePrice_, futureExpiryDate_);
+    CommodityOption opt1(envelope(), optionData_, name_, currency_, 1.0, TradeStrike(strike1, currency_), isFuturePrice_, futureExpiryDate_);
+    CommodityOption opt2(envelope(), optionData_, name_, currency_, 1.0, TradeStrike(strike2, currency_),
+                         isFuturePrice_, futureExpiryDate_);
     opt1.build(engineFactory);
     opt2.build(engineFactory);
     boost::shared_ptr<Instrument> inst1 = opt1.instrument()->qlInstrument();

@@ -46,7 +46,7 @@ public:
     const OptionData& option() const { return option_; }
     const string& asset() const { return assetName_; }
     const string& currency() const { return currency_; }
-    double strike() const { return strike_; }
+    TradeStrike strike() const { return strike_; }
     double quantity() const { return quantity_; }
     const QuantLib::Date forwardDate() const { return forwardDate_; }
     //@}
@@ -58,13 +58,13 @@ public:
     //@}
 protected:
     VanillaOptionTrade(AssetClass assetClassUnderlying)
-        : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
+        : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), quantity_(0) {}
     VanillaOptionTrade(const Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
-                       string currency, double strike, double quantity, TradeStrike tradeStrike,
+                       string currency, double quantity, TradeStrike strike,
                        const boost::shared_ptr<QuantLib::Index>& index = nullptr, const std::string& indexName = "",
                        QuantLib::Date forwardDate = QuantLib::Date())
         : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying), option_(option),
-          assetName_(assetName), currency_(currency), strike_(strike), quantity_(quantity), tradeStrike_(tradeStrike), index_(index),
+          assetName_(assetName), currency_(currency), quantity_(quantity), strike_(strike), index_(index),
           indexName_(indexName), forwardDate_(forwardDate) {}
 
     AssetClass assetClassUnderlying_;
@@ -72,9 +72,8 @@ protected:
     string assetName_;
     string currency_;
     string underlyingCurrency_ = "";
-    double strike_;
     double quantity_;
-    TradeStrike tradeStrike_;
+    TradeStrike strike_;
 
     //! An index is needed if the option is to be automatically exercised on expiry.
     boost::shared_ptr<QuantLib::Index> index_;
