@@ -84,11 +84,11 @@ boost::shared_ptr<SmileSection> ProxyOptionletVolatility::smileSectionImpl(const
     // compute the base and target forward rate levels
 
     Real baseAtmLevel = isOis(baseIndex_) ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(baseIndex_),
-                                                           fixingDate, baseRateComputationPeriod_)
+                                           baseIndex_->fixingCalendar().adjust(fixingDate), baseRateComputationPeriod_)
                                           : baseIndex_->fixing(baseIndex_->fixingCalendar().adjust(fixingDate));
     Real targetAtmLevel = isOis(targetIndex_)
-                              ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(targetIndex_), fixingDate,
-                                               targetRateComputationPeriod_)
+            ? getOisAtmLevel(boost::dynamic_pointer_cast<OvernightIndex>(targetIndex_),
+                             targetIndex_->fixingCalendar().adjust(fixingDate), targetRateComputationPeriod_)
                               : targetIndex_->fixing(targetIndex_->fixingCalendar().adjust(fixingDate));
 
     // build the atm-adjusted smile section and return it
