@@ -83,7 +83,7 @@ The meanings and allowable values of the elements in a {\tt <Rules>} based secti
   %   false}
 \item \lstinline!Rules!: a sub-node that determines whether the schedule is set by specifying rules that
 generate the schedule. If existing, the following entries are required: \lstinline!StartDate!, \lstinline!EndDate!, \lstinline!Tenor!, \lstinline!Calendar!, 
-\lstinline!Convention!, and \lstinline!Rule!. If not existing, a \lstinline!Dates! or \lstinline!Derived!
+\lstinline!Convention!, and \lstinline!Rule!. \lstinline!EndDateConvention! is optional. If not existing, a \lstinline!Dates! or \lstinline!Derived!
 sub-node is required.
 \item \lstinline!StartDate!:  The schedule start date.  
 
@@ -93,6 +93,11 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   schedule are only supported by specific trade types (e.g. Bond).
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item \lstinline!EndDateConvention! [Optional]: Allows for Murex end date convention, which reports the first day after schedule
+  as EndDate.
+
+Allowable values: Murex.
 
 \item \lstinline!Tenor!: The tenor used to generate schedule dates. 
 
