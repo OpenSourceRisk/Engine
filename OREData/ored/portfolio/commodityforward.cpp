@@ -131,11 +131,8 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         boost::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
-    if(fixingDate_==Date()) {
-        commodityForward->setPricingEngine(commodityForwardEngineBuilder->engine(currency));
-    }else{
-        commodityForward->setPricingEngine(commodityForwardEngineBuilder->engine(payCcy));
-    }
+    commodityForward->setPricingEngine(commodityForwardEngineBuilder->engine(currency)); // the engine accounts for NDF if settlement data are present
+
     // set up other Trade details
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);
     (fixingDate_==Date())?npvCurrency_ = currency_:npvCurrency_ = payCcy_;
