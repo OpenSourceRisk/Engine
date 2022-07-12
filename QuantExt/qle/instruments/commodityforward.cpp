@@ -25,24 +25,34 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CommodityForward::CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const Currency& currency,
-    Position::Type position, Real quantity, const Date& maturityDate, Real strike, bool physicallySettled,
-    const Date& paymentDate)
+CommodityForward::CommodityForward(const boost::shared_ptr<CommodityIndex>& index, const QuantLib::Currency& currency,
+                                   QuantLib::Position::Type position, QuantLib::Real quantity,
+                                   const QuantLib::Date& maturityDate, QuantLib::Real strike, bool physicallySettled,
+                                   const Date& paymentDate, const QuantLib::Currency& payCcy, const Date& fixingDate,
+                                   const boost::shared_ptr<QuantExt::FxIndex>& fxIndex)
     : index_(index), currency_(currency), position_(position), quantity_(quantity), maturityDate_(maturityDate),
-      strike_(strike), physicallySettled_(physicallySettled), paymentDate_(paymentDate) {
+      strike_(strike), physicallySettled_(physicallySettled), paymentDate_(paymentDate), payCcy_(payCcy),
+      fxIndex_(fxIndex), fixingDate_(fixingDate) {
 
     QL_REQUIRE(quantity_ > 0, "Commodity forward quantity should be positive: " << quantity);
     QL_REQUIRE(strike_ > 0, "Commodity forward strike should be positive: " << strike);
 
     if (physicallySettled_) {
         QL_REQUIRE(paymentDate_ == Date(), "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
-            ") should not be provided for physically settled commodity forwards.");
+                                                                              ") should not be provided for physically settled commodity forwards.");
     }
 
     if (!physicallySettled_ && paymentDate_ != Date()) {
         QL_REQUIRE(paymentDate_ >= maturityDate_, "CommodityForward: payment date (" << io::iso_date(paymentDate_) <<
-            ") for a cash settled commodity forward should be on or after the maturity date (" <<
-            io::iso_date(maturityDate_) << ").");
+                                                                                     ") for a cash settled commodity forward should be on or after the maturity date (" <<
+                                                                                     io::iso_date(maturityDate_) << ").");
+    }
+
+    if (!physicallySettled_ && fixingDate_ != Date()) {
+        QL_REQUIRE(paymentDate_ >= fixingDate_,
+                   "CommodityNonDeliverableForward: payment date ("
+                       << io::iso_date(paymentDate_) << ") for a commodity NDF should be on or after the fixing date ("
+                       << io::iso_date(fixingDate_) << ").");
     }
 
     registerWith(index_);
@@ -57,8 +67,8 @@ bool CommodityForward::isExpired() const {
 }
 
 void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
-    CommodityForward::arguments* arguments = dynamic_cast<CommodityForward::arguments*>(args);
-    QL_REQUIRE(arguments != 0, "wrong argument type in CommodityForward");
+    auto* arguments = dynamic_cast<CommodityForward::arguments*>(args);
+    QL_REQUIRE(arguments != nullptr, "wrong argument type in CommodityForward");
 
     arguments->index = index_;
     arguments->currency = currency_;
@@ -68,6 +78,9 @@ void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
     arguments->strike = strike_;
     arguments->physicallySettled = physicallySettled_;
     arguments->paymentDate = paymentDate_;
+    arguments->payCcy = payCcy_;
+    arguments->fixingDate = fixingDate_;
+    arguments->fxIndex = fxIndex_;
 }
 
 void CommodityForward::arguments::validate() const {
