@@ -19,6 +19,7 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <set>
 
 using namespace QuantLib;
@@ -30,6 +31,10 @@ void ScheduleRules::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Rules");
     startDate_ = XMLUtils::getChildValue(node, "StartDate");
     endDate_ = XMLUtils::getChildValue(node, "EndDate", false);
+    endDateConvention_ = XMLUtils::getChildValue(node, "EndDateConvention", false);
+    if (endDateConvention_ == "Murex" && !endDate_.empty()){ // fix end date for Murex convention. Eventually more can be introduced here.
+        endDate_ = to_string(parseDate(endDate_) - 1);
+    }
     tenor_ = XMLUtils::getChildValue(node, "Tenor");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
