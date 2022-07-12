@@ -135,7 +135,7 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // set up other Trade details
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);
-    (fixingDate_==Date())?npvCurrency_ = currency_:npvCurrency_ = payCcy_;
+    npvCurrency_ = fixingDate_==Date() ? currency_ : payCcy_;
 
     // notional_ = strike_ * quantity_;
     notional_ = Null<Real>(); // is handled by override of notional()
