@@ -916,6 +916,15 @@
       <xs:element type="xs:string" name="FutureExpiryOffsetCalendar" minOccurs="0"/>
       <xs:element type="bool" name="PhysicallySettled" minOccurs="0"/>
       <xs:element type="date" name="PaymentDate" minOccurs="0"/>
+      <xs:element type="commForwardSettlementData" name="SettlementData" maxOccurs="1" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="commForwardSettlementData">
+    <xs:all>
+      <xs:element type="currencyCode" name="PayCurrency" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="xs:string" name="FXIndex" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="date" name="FixingDate" maxOccurs="1" minOccurs="1"/>
     </xs:all>
   </xs:complexType>
   
