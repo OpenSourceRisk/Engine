@@ -88,7 +88,7 @@ private:
     string endOfMonth_;
     string firstDate_;
     string lastDate_;
-    string endDateConvention_;
+    bool endDateIncluded_;
 };
 
 //! Serializable object holding schedule Dates data
