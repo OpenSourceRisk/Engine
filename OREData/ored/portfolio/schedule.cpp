@@ -31,9 +31,11 @@ void ScheduleRules::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Rules");
     startDate_ = XMLUtils::getChildValue(node, "StartDate");
     endDate_ = XMLUtils::getChildValue(node, "EndDate", false);
-    endDateIncluded_ = XMLUtils::getChildValueAsBool(node, "EndDateIncluded", false);
-    if (!endDateIncluded_ && !endDate_.empty()){
-        endDate_ = to_string(parseDate(endDate_) - 1);
+    adjustEndDateToPreviousMonthEnd_ = XMLUtils::getChildValueAsBool(node, "AdjustEndDateToPreviousMonthEnd", false, false);
+    if (adjustEndDateToPreviousMonthEnd_ && !endDate_.empty()){
+        auto ed = parseDate(endDate_);
+        while(!Date::isEndOfMonth(ed))ed--;
+        endDate_ = to_string(ed);
     }
     tenor_ = XMLUtils::getChildValue(node, "Tenor");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
