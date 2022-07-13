@@ -10,7 +10,6 @@ get_library_name("OREAnalytics" OREA_LIB_NAME)
 get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantExt" QLE_LIB_NAME)
 set_ql_library_name()
-configure_msvc_runtime()
 
 find_package (Boost REQUIRED COMPONENTS regex date_time serialization filesystem timer OPTIONAL_COMPONENTS chrono)
 
