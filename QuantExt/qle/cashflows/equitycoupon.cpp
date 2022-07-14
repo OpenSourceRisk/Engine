@@ -268,24 +268,36 @@ EquityLeg::operator Leg() const {
             quantity = quantity_;
             QL_REQUIRE(notionals_.empty(), "EquityLeg: notional and quantity are given at the same time");
         } else {
-            // QL_REQUIRE(initialPrice_ != Null<Real>(),
-            //            "EquityLeg: can not compute quantity, since no initialPrice is given");
-            QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
+	    QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
                        "EquityLeg: can not compute quantity from nominal when fx conversion is required");
+	    QL_REQUIRE(initialPrice_ != Null<Real>() || valuationSchedule_.size() > 0,
+		       "EquityLeg: can not compute quantity, since no initialPrice is given");
+	    Real initialPrice = initialPrice_;
+	    if (initialPrice == Null<Real>()) {
+	        Calendar cal = equityCurve_->fixingCalendar();
+		Date initialDate = valuationSchedule_.dates().front();
+	        initialPrice = equityCurve_->fixing(cal.adjust(initialDate), false, false);
+	    }
             QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
-            quantity = (initialPrice_ != Null<Real>() || initialPrice_ == 0) ? notionals_.front() : notionals_.front() / initialPrice_;
+            quantity = (initialPrice == 0) ? notionals_.front() : notionals_.front() / initialPrice;
         }
     } else {
         if (!notionals_.empty()) {
             QL_REQUIRE(quantity_ == Null<Real>(), "EquityLeg: notional and quantity are given at the same time");
             // notional is determined below in the loop over the periods
         } else {
-            // QL_REQUIRE(initialPrice_ != Null<Real>(),
-            //            "EquityLeg: can not compute notional, since no intialPrice is given");
+            QL_REQUIRE(initialPrice_ != Null<Real>() || valuationSchedule_.size() > 0,
+                       "EquityLeg: can not compute notional, since no intialPrice is given");
+	    Real initialPrice = initialPrice_;
+	    if (initialPrice == Null<Real>()) {
+	        Calendar cal = equityCurve_->fixingCalendar();
+		Date initialDate = valuationSchedule_.dates().front();
+	        initialPrice = equityCurve_->fixing(cal.adjust(initialDate), false, false);
+	    }
             QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
                        "EquityLeg: can not compute notional from quantity when fx conversion is required");
             QL_REQUIRE(quantity_ != Null<Real>(), "EquityLeg: can not compute notional, since no quantity is given");
-            notional = (initialPrice_ != Null<Real>() || initialPrice_ == 0) ? quantity_ : quantity_ * initialPrice_;
+            notional = (initialPrice == 0) ? quantity_ : quantity_ * initialPrice;
         }
     }
 
