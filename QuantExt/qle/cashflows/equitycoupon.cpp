@@ -270,12 +270,12 @@ EquityLeg::operator Leg() const {
         } else {
 	    QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
                        "EquityLeg: can not compute quantity from nominal when fx conversion is required");
-	    QL_REQUIRE(initialPrice_ != Null<Real>() || valuationSchedule_.size() > 0,
+	    QL_REQUIRE(initialPrice_ != Null<Real>() || valuationSchedule_.size() > 0 || schedule_.size() > 0,
 		       "EquityLeg: can not compute quantity, since no initialPrice is given");
 	    Real initialPrice = initialPrice_;
 	    if (initialPrice == Null<Real>()) {
 	        Calendar cal = equityCurve_->fixingCalendar();
-		Date initialDate = valuationSchedule_.dates().front();
+		Date initialDate = valuationSchedule_.size() > 0 ? valuationSchedule_.dates().front() : schedule_.dates().front();
 	        initialPrice = equityCurve_->fixing(cal.adjust(initialDate), false, false);
 	    }
             QL_REQUIRE(!notionals_.empty(), "EquityLeg: can not compute qunantity, since no notional is given");
@@ -286,12 +286,12 @@ EquityLeg::operator Leg() const {
             QL_REQUIRE(quantity_ == Null<Real>(), "EquityLeg: notional and quantity are given at the same time");
             // notional is determined below in the loop over the periods
         } else {
-            QL_REQUIRE(initialPrice_ != Null<Real>() || valuationSchedule_.size() > 0,
+            QL_REQUIRE(initialPrice_ != Null<Real>() || valuationSchedule_.size() > 0 || schedule_.size() > 0,
                        "EquityLeg: can not compute notional, since no intialPrice is given");
 	    Real initialPrice = initialPrice_;
 	    if (initialPrice == Null<Real>()) {
 	        Calendar cal = equityCurve_->fixingCalendar();
-		Date initialDate = valuationSchedule_.dates().front();
+		Date initialDate = valuationSchedule_.size() > 0 ? valuationSchedule_.dates().front() : schedule_.dates().front();
 	        initialPrice = equityCurve_->fixing(cal.adjust(initialDate), false, false);
 	    }
             QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
