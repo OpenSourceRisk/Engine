@@ -39,24 +39,6 @@ The meanings and allowable values of the elements in the \lstinline!CommodityOpt
 
 \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the commodity option type allows for \emph{European} or \emph{American} option style. If the option style is \emph{American}, \emph{PayOffAtExpiry} needs to be \emph{false} as payoff at expiry is not currently supported.
 
-%The \lstinline!CommodityOptionData! node contains an \lstinline!OptionData! node described in \ref{ss:option_data}. The relevant fields in the \lstinline!OptionData! node for a CommodityOption are:
-
-%\begin{itemize}
-%\item \lstinline!LongShort!: The allowable values are \emph{Long} or \emph{Short}.
-
-%\item \lstinline!OptionType!: The allowable values are \emph{Call} or \emph{Put}.
-
-%\item  \lstinline!Style!: The exercise style of the CommodityOption. The allowable values are \emph{European} or \emph{American}.
-
-%\item  \lstinline!PayOffAtExpiry!:  This must be set to \emph{false} as payoff at expiry is not currently supported.
-
-%\item An \lstinline!ExerciseDates! node where exactly one \lstinline!ExerciseDate! date element must be given for. Allowable values: See Date in Table \ref{tab:allow_stand_data}.
-
-%\item \lstinline!Premiums! [Optional]: Option premium node with amounts paid by the option buyer to the option seller.
-%Allowable values:  See section \ref{ss:premiums}
-
-%\end{itemize}
-
 \item Name: The name of the underlying commodity. \\
 Allowable values: See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}.
 \item Currency: The currency of the commodity option. \\
