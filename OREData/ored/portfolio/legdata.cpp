@@ -622,7 +622,7 @@ void EquityLegData::fromXML(XMLNode* node) {
     if (XMLUtils::getChildNode(node, "NotionalReset"))
         notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
     else
-        notionalReset_ = false;
+        notionalReset_ = true;
 
     XMLNode* fxt = XMLUtils::getChildNode(node, "FXTerms");
     if (fxt) {
