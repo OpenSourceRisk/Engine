@@ -12,21 +12,14 @@ a \lstinline!CommodityOptionData! node for a commodity option is shown in Listin
 \begin{minted}[fontsize=\footnotesize]{xml}
 <CommodityOptionData>
   <OptionData>
-   <LongShort>Short</LongShort>
-   <OptionType>Put</OptionType>
-   <Style>European</Style>
-   <Settlement>Cash</Settlement>
-   <PayOffAtExpiry>false</PayOffAtExpiry>
-    <ExerciseDates>
-      <ExerciseDate>2029-04-28</ExerciseDate>
-     </ExerciseDates>
+    ...
   </OptionData>
-  <Name>NYMEX:CL</Name>
-  <Currency>USD</Currency>
-  <Strike>100</Strike>
-  <Quantity>500000</Quantity>
-  <IsFuturePrice>true<IsFuturePrice>
-  <FutureExpiryDate>2029-04-28<FutureExpiryDate>
+  <Name>...</Name>
+  <Currency>...</Currency>
+  <Strike>...</Strike>
+  <Quantity>...</Quantity>
+  <IsFuturePrice>...<IsFuturePrice>
+  <FutureExpiryDate>...<FutureExpiryDate>
 </CommodityOptionData>
 \end{minted}
 \caption{Commodity Option data}
@@ -38,7 +31,6 @@ The meanings and allowable values of the elements in the \lstinline!CommodityOpt
 \begin{itemize}
 
 \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the commodity option type allows for \emph{European} or \emph{American} option style. If the option style is \emph{American}, \emph{PayOffAtExpiry} needs to be \emph{false} as payoff at expiry is not currently supported.
-
 \item Name: The name of the underlying commodity. \\
 Allowable values: See \lstinline!Name! for commodity trades in Table \ref{tab:commodity_data}.
 \item Currency: The currency of the commodity option. \\
