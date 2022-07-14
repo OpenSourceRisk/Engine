@@ -30,6 +30,8 @@
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
+#include <ql/math/comparison.hpp>
+
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -152,7 +154,7 @@ DynamicBlackVolTermStructure<mode>::DynamicBlackVolTermStructure(const Handle<Bl
                            8.0, 9.0,  10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0, 60.0 };
             forwardCurveSampleGrid_ = std::vector<Real>(tmp, tmp + sizeof(tmp) / sizeof(tmp[0]));
         }
-        QL_REQUIRE(close_enough(forwardCurveSampleGrid_[0], 0.0),
+        QL_REQUIRE(QuantLib::close_enough(forwardCurveSampleGrid_[0], 0.0),
                    "forward curve sample grid must start at 0 (" << forwardCurveSampleGrid_[0]);
         initialForwards_.resize(forwardCurveSampleGrid_.size());
         for (Size i = 1; i < forwardCurveSampleGrid_.size(); ++i) {
