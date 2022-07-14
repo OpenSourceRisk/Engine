@@ -294,7 +294,7 @@ EquityLeg::operator Leg() const {
 		Date initialDate = valuationSchedule_.size() > 0 ? valuationSchedule_.dates().front() : schedule_.dates().front();
 	        initialPrice = equityCurve_->fixing(cal.adjust(initialDate), false, false);
 	    }
-            QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
+	    QL_REQUIRE(fxIndex_ == nullptr || initialPriceIsInTargetCcy_,
                        "EquityLeg: can not compute notional from quantity when fx conversion is required");
             QL_REQUIRE(quantity_ != Null<Real>(), "EquityLeg: can not compute notional, since no quantity is given");
             notional = (initialPrice == 0) ? quantity_ : quantity_ * initialPrice;
