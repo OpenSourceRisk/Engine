@@ -46,6 +46,7 @@ BOOST_AUTO_TEST_CASE(testDomesicPayment) {
     Settings::instance().evaluationDate() = refDate;
     Date paymentDate = refDate + 10 * Years;
     Payment payment(100.0, EURCurrency(), paymentDate);
+    BOOST_CHECK_EQUAL(payment.cashFlow()->amount(), 100.0);
     Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, TARGET(), 0.03, ActualActual(ActualActual::ISDA)));
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<PaymentDiscountingEngine>(yts);
     payment.setPricingEngine(engine);
