@@ -88,6 +88,7 @@ private:
     string endOfMonth_;
     string firstDate_;
     string lastDate_;
+    bool adjustEndDateToPreviousMonthEnd_{false};
 };
 
 //! Serializable object holding schedule Dates data
