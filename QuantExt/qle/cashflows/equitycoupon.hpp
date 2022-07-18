@@ -58,7 +58,8 @@ public:
                  Real initialPrice = Null<Real>(), Real quantity = Null<Real>(), const Date& fixingStartDate = Date(),
                  const Date& fixingEndDate = Date(), const Date& refPeriodStart = Date(),
                  const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date(),
-                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false);
+                 const boost::shared_ptr<FxIndex>& fxIndex = nullptr, const bool initialPriceIsInTargetCcy = false,
+		 Real legInitialNotional = Null<Real>(), const Date& legFixingDate = Date());
 
     //! \name CashFlow interface
     //@{
@@ -97,7 +98,7 @@ public:
     //! initial price is in target ccy (if applicable, i.e. if fxIndex != null, otherwise ignored)
     bool initialPriceIsInTargetCcy() const;
     //! Number of equity shares held
-    Real quantity() const { return quantity_; }
+    Real quantity() const;
     //! FX conversion rate (or 1.0 if not applicable)
     Real fxRate() const;
     //! This function is called for other coupon types
@@ -105,6 +106,10 @@ public:
         QL_FAIL("Equity Coupons have 2 fixings, not 1.");
         return Date();
     }
+    //! Initial notional of the equity leg, to compute quantity if not provided in the resetting case
+    Real legInitialNotional() const { return legInitialNotional_; }
+    //! Fixing date of the first equity coupon, to compute quantity if not provided in the resetting case
+    Date legFixingDate() const { return legFixingDate_; }
     //@}
 
     //! \name Observer interface
@@ -129,11 +134,13 @@ protected:
     bool notionalReset_;
     Real initialPrice_;
     bool initialPriceIsInTargetCcy_;
-    Real quantity_;
+    mutable Real quantity_;
     Date fixingStartDate_;
     Date fixingEndDate_;
     Natural paymentLag_;
     boost::shared_ptr<FxIndex> fxIndex_;
+    Real legInitialNotional_;
+    Date legFixingDate_;
 };
 
 // inline definitions
