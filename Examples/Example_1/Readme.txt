@@ -30,4 +30,3 @@
 
    b) In this Example_1 directory launch Calc on sheet run.ods with
       ./launchCalc.sh
-         
