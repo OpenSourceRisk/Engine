@@ -26,6 +26,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/utilities/marketdata.hpp>
 
 using QuantExt::CommodityIndex;
 using QuantExt::PriceTermStructure;
@@ -40,7 +41,8 @@ CommodityForward::CommodityForward() : Trade("CommodityForward"), quantity_(0.0)
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
                                    const string& currency, Real quantity, const string& maturityDate, Real strike)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
-      quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
+      quantity_(quantity), maturityDate_(maturityDate), strike_(strike),
+      fixingDate_(Date()), fxIndex_(""), payCcy_(currency){}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
                                    const string& currency, Real quantity, const string& maturityDate, Real strike,
@@ -48,7 +50,8 @@ CommodityForward::CommodityForward(const Envelope& envelope, const string& posit
                                    const Date& paymentDate)
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
       quantity_(quantity), maturityDate_(maturityDate), strike_(strike), isFuturePrice_(true),
-      futureExpiryDate_(futureExpiryDate), physicallySettled_(physicallySettled), paymentDate_(paymentDate) {}
+      futureExpiryDate_(futureExpiryDate), physicallySettled_(physicallySettled), paymentDate_(paymentDate),
+      fixingDate_(Date()), fxIndex_(""), payCcy_(currency) {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
                                    const string& currency, Real quantity, const string& maturityDate, Real strike,
@@ -58,13 +61,14 @@ CommodityForward::CommodityForward(const Envelope& envelope, const string& posit
     : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
       quantity_(quantity), maturityDate_(maturityDate), strike_(strike), isFuturePrice_(true),
       futureExpiryOffset_(futureExpiryOffset), offsetCalendar_(offsetCalendar), physicallySettled_(physicallySettled),
-      paymentDate_(paymentDate) {}
+      paymentDate_(paymentDate),
+      fixingDate_(Date()), fxIndex_(""), payCcy_(currency){}
 
 void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Create the underlying commodity index for the forward
     const boost::shared_ptr<Market>& market = engineFactory->market();
-    
+    boost::shared_ptr<QuantExt::FxIndex> fxIndex = nullptr;
     auto index = *market->commodityIndex(commodityName_, engineFactory->configuration(MarketContext::pricing));
     maturity_ = parseDate(maturityDate_);
     bool isFutureAccordingToConventions = InstrumentConventions::instance().conventions()->has(commodityName_, Convention::Type::CommodityFuture);
@@ -110,19 +114,28 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);
     Position::Type position = parsePositionType(position_);
+    auto payCcy = Currency();
+    if(!fxIndex_.empty()){
+        payCcy = parseCurrency(payCcy_);
+        requiredFixings_.addFixingDate( fixingDate_, fxIndex_, paymentDate);
+        fxIndex = buildFxIndex(fxIndex_, currency.code(), payCcy.code(), engineFactory->market(),
+                               engineFactory->configuration(MarketContext::pricing));
+        npvCurrency_ = payCcy_;
+    }
     boost::shared_ptr<Instrument> commodityForward = boost::make_shared<QuantExt::CommodityForward>(
-        index, currency, position, quantity_, maturity_, strike_, physicallySettled, paymentDate);
+        index, currency, position, quantity_, maturity_, strike_, physicallySettled, paymentDate,
+        payCcy, fixingDate_, fxIndex);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<CommodityForwardEngineBuilder> commodityForwardEngineBuilder =
         boost::dynamic_pointer_cast<CommodityForwardEngineBuilder>(builder);
-    commodityForward->setPricingEngine(commodityForwardEngineBuilder->engine(currency));
+    commodityForward->setPricingEngine(commodityForwardEngineBuilder->engine(currency)); // the engine accounts for NDF if settlement data are present
 
     // set up other Trade details
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);
-    npvCurrency_ = currency_;
+    npvCurrency_ = fixingDate_==Date() ? currency_ : payCcy_;
 
     // notional_ = strike_ * quantity_;
     notional_ = Null<Real>(); // is handled by override of notional()
@@ -130,7 +143,12 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
 
     additionalData_["quantity"] = quantity_;
     additionalData_["strike"] = strike_;
-    additionalData_["strikeCurrency"] = currency_;    
+    additionalData_["strikeCurrency"] = currency_;
+    if(fixingDate_ != Date()) {
+        additionalData_["settlementCurrency"] = payCcy_;
+        additionalData_["fixingDate"] = fixingDate_;
+        additionalData_["fxIndex"] = fxIndex;
+    }
 }
 
 Real CommodityForward::notional() const {
@@ -188,6 +206,13 @@ void CommodityForward::fromXML(XMLNode* node) {
     paymentDate_ = Date();
     if (XMLNode* n = XMLUtils::getChildNode(commodityDataNode, "PaymentDate"))
         paymentDate_ = parseDate(XMLUtils::getNodeValue(n));
+
+        if (XMLNode* settlementDataNode = XMLUtils::getChildNode(commodityDataNode, "SettlementData")) {
+            // this node is used to provide data for NDF. This includes a fixing date, a settlement currency and the quote/settlement fx index.
+            payCcy_ = XMLUtils::getChildValue(settlementDataNode, "PayCurrency", true);
+            fxIndex_ = XMLUtils::getChildValue(settlementDataNode, "FXIndex", true);
+            fixingDate_ = parseDate(XMLUtils::getChildValue(settlementDataNode, "FixingDate", true));
+        }
 }
 
 XMLNode* CommodityForward::toXML(XMLDocument& doc) {
@@ -220,6 +245,14 @@ XMLNode* CommodityForward::toXML(XMLDocument& doc) {
 
     if (paymentDate_ != Date())
         XMLUtils::addChild(doc, commodityDataNode, "PaymentDate", to_string(paymentDate_));
+
+    if(fixingDate_!=Date()){ //NDF
+        XMLNode* settlementDataNode = doc.allocNode("SettlementData");
+        XMLUtils::appendNode(commodityDataNode, settlementDataNode);
+        XMLUtils::addChild(doc, settlementDataNode, "PayCurrency", payCcy_);
+        XMLUtils::addChild(doc, settlementDataNode, "FXIndex", fxIndex_);
+        XMLUtils::addChild(doc, settlementDataNode, "FixingDate", to_string(fixingDate_));
+    }
 
     return node;
 }

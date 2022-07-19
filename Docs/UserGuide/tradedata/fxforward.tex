@@ -116,7 +116,7 @@ The meanings and allowable values of the various elements in the \lstinline!FXAv
 \begin{itemize}
 \item PaymentDate: The date of the settlement cash flow. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 \item ObservationDates: Schedule data that determine the observation dates that are taken into account in the FX rate averaging. See section \ref{ss:schedule_data}
-\item FixedPayer: If true, the payoff multiplier $\omega$ is set to 1, otherwise -1.  \\ Allowable values:  Boolean.
+\item FixedPayer: If  \emph{true}, the payoff multiplier $\omega$ is set to 1, otherwise -1.  \\ Allowable values:  \emph{true},  \emph{false}
 \item ReferenceNotional: The amount to be converted into settlement currency at the average FX rate \\ Allowable values:  Any positive real number.
 \item ReferenceCurrency: The currency of the reference notional above.  \\ Allowable values: See Table \ref{tab:currency}  \lstinline!Currency!.
 \item SettlementNotional: The fixed amount to be paid or received depending on the fixed payer flag above \\ Allowable values:  Any positive real number.

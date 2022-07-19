@@ -80,7 +80,31 @@ Allowable values: Any string that evaluates to true or false as outlined in Tabl
 \item \lstinline!PaymentDate! [Optional]: If \lstinline!PhysicallySettled! is set to \lstinline!false!, this gives the cash settlement date. It must be greater than or equal to the \lstinline!Maturity! date. If omitted and the forward is cash settled, the \lstinline!Maturity! date is used. \\
 Allowable values: Any date string, see \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
+\item SettlementData [Optional]: This node is used to specify  the settlement of the cash flows for non-deliverable futures.
 \end{itemize}
+
+A \lstinline!SettlementData! node is shown in Listing \ref{lst:comm_ndf_settlement_data_node}, and the meanings and allowable values of its elements follow below.
+
+\begin{itemize}
+\item PayCurrency: The settlement currency for the payment cashflow. \\
+Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item FXIndex: The FX reference index for determining the FX fixing at the value date. This field is required if settlement is \emph{Cash} and the payment date is greater than the value date. \\
+Allowable values: The format of the \lstinline!FXIndex! is ``FX-FixingSource-CCY1-CCY2'' as described in Table \ref{tab:fxindex_data}.
+\item FixingDate: The date on which the \emph{FXIndex} is observed.
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
+
+\begin{listing}[H]
+  \begin{minted}[fontsize=\footnotesize]{xml}
+    <SettlementData>
+      <PayCurrency>EUR</PayCurrency>
+      <FXIndex>FX-ECB-EUR-USD</FXIndex>
+      <FixingDate>2021-05-28</FixingDate>
+    </SettlementData>
+  \end{minted}
+  \caption{Example \lstinline!SettlementData! node with \lstinline!Rules! sub-node}
+  \label{lst:comm_ndf_settlement_data_node}
+\end{listing}
 
 %\subsubsection{Precious Metal Forward}
 Note that a Precious Metal Forward should be represented as an FX Forward using the appropriate commodity ``currency'' (XAU, XAG, XPT, XPD).
