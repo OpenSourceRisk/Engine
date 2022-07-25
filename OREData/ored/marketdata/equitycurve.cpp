@@ -107,7 +107,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
              config->type() == EquityCurveConfig::Type::ForwardDividendPrice ||
              config->type() == EquityCurveConfig::Type::OptionPremium) &&
             wildcard) {
-            LOG("Wild card quote specified for " << config->curveID())
+            DLOG("Wild card quote specified for " << config->curveID())
         } else {
             if (config->type() == EquityCurveConfig::Type::OptionPremium) {
                 oqt.reserve(config->fwdQuotes().size());
@@ -237,8 +237,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
 
         // some checks on the quotes read
-        LOG("EquityCurve: read " << quotesRead + quotesExpired << " quotes of type " << config->type());
-        LOG("EquityCurve: ignored " << quotesExpired << " expired quotes.");
+        DLOG("EquityCurve: read " << quotesRead + quotesExpired << " quotes of type " << config->type());
+        DLOG("EquityCurve: ignored " << quotesExpired << " expired quotes.");
         QL_REQUIRE(!equitySpot.empty(), "Equity spot quote not found for " << config->curveID());
 
         if (!wildcard) {
@@ -303,14 +303,14 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
             if (quotes_.size() == 0) {
-                LOG("No Equity Forward quotes provided for " << config->curveID()
+                DLOG("No Equity Forward quotes provided for " << config->curveID()
                                                              << ", continuing without dividend curve.");
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             }
         } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
 
             if (oqt.size() == 0) {
-                LOG("No Equity Option quotes provided for " << config->curveID()
+                DLOG("No Equity Option quotes provided for " << config->curveID()
                                                             << ", continuing without dividend curve.");
                 buildCurveType = EquityCurveConfig::Type::NoDividends;
             } else {
