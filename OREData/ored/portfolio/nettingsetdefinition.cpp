@@ -148,7 +148,6 @@ void NettingSetDefinition::fromXML(XMLNode* node) {
     }
 
     activeCsaFlag_ = XMLUtils::getChildValueAsBool(node, "ActiveCSAFlag", false, true);
-    XMLNode* csaChild = XMLUtils::getChildNode(node, "CSADetails");
 
     // Load "CSA" information, if necessary
     if (activeCsaFlag_) {
