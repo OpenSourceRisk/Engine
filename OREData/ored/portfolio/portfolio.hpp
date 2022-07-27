@@ -136,7 +136,7 @@ public:
 
 private:
     // get representation as XMLDocument
-    XMLDocument doc() const;
+    void doc(XMLDocument& doc) const;
     bool buildFailedTrades_;
     std::vector<boost::shared_ptr<Trade>> trades_;
     std::map<AssetClass, std::set<std::string>> underlyingIndicesCache_;
