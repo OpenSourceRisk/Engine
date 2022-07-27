@@ -873,7 +873,7 @@ public:
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
-            const PaymentLag paymentLag = 0, const std::string& paymentCalendar = "",
+            const string& paymentLag = "0", const std::string& paymentCalendar = "",
             const std::vector<std::string>& paymentDates = std::vector<std::string>(),
             const std::vector<Indexing>& indexing = {}, const bool indexingFromAssetLeg = false,
             const string& lastPeriodDayCounter = "");
@@ -900,7 +900,7 @@ public:
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
-    const PaymentLag paymentLag() const { return paymentLag_; }
+    PaymentLag paymentLag() const { return parsePaymentLag(paymentLag_); }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     const std::string& paymentCalendar() const { return paymentCalendar_; }
     const string& legType() const { return concreteLegData_->legType(); }
@@ -953,7 +953,7 @@ private:
     double foreignAmount_;
     string fxIndex_;
     std::vector<AmortizationData> amortizationData_;
-    PaymentLag paymentLag_;
+    string paymentLag_;
     std::string paymentCalendar_;
     std::vector<std::string> paymentDates_;
     std::vector<Indexing> indexing_;
