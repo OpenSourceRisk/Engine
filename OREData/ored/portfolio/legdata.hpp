@@ -900,7 +900,7 @@ public:
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
-    PaymentLag paymentLag() const { return parsePaymentLag(paymentLag_); }
+    const string& paymentLag() const { return paymentLag_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     const std::string& paymentCalendar() const { return paymentCalendar_; }
     const string& legType() const { return concreteLegData_->legType(); }

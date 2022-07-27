@@ -926,7 +926,7 @@ Leg makeFixedLeg(const LegData& data, const QuantLib::Date& openEndDateReplaceme
 
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     applyAmortization(notionals, data, schedule, true, rates);
     Leg leg = FixedRateLeg(schedule)
                   .withNotionals(notionals)
@@ -1088,7 +1088,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         return leg;
     }
 
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     IborLeg iborLeg = IborLeg(schedule, index)
                           .withNotionals(notionals)
                           .withSpreads(spreads)
@@ -1155,7 +1155,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     Schedule schedule = makeSchedule(tmp, openEndDateReplacement);
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     Calendar paymentCalendar;
 
     if (data.paymentCalendar().empty())
@@ -2159,7 +2159,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     }
     bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
 
     ScheduleBuilder scheduleBuilder;
 

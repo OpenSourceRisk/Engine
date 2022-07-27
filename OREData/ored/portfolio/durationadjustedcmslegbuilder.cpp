@@ -56,7 +56,7 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
 
     applyAmortization(notionals, data, schedule, false);
 
-    PaymentLag paymentLag = data.paymentLag();
+    PaymentLag paymentLag = parsePaymentLag(data.paymentLag());
     DurationAdjustedCmsLeg leg = DurationAdjustedCmsLeg(schedule, index, cmsData->duration())
                                      .withNotionals(notionals)
                                      .withSpreads(spreads)
