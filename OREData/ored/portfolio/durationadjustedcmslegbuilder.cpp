@@ -56,13 +56,14 @@ Leg DurationAdjustedCmsLegBuilder::buildLeg(const LegData& data, const boost::sh
 
     applyAmortization(notionals, data, schedule, false);
 
+    PaymentLag paymentLag = data.paymentLag();
     DurationAdjustedCmsLeg leg = DurationAdjustedCmsLeg(schedule, index, cmsData->duration())
                                      .withNotionals(notionals)
                                      .withSpreads(spreads)
                                      .withGearings(gearings)
                                      .withPaymentDayCounter(dc)
                                      .withPaymentAdjustment(bdc)
-                                     .withPaymentLag(data.paymentLag())
+                                     .withPaymentLag(boost::apply_visitor(PaymentLagInteger(), paymentLag))
                                      .withFixingDays(fixingDays)
                                      .inArrears(cmsData->isInArrears());
 
