@@ -180,7 +180,10 @@ IborFallbackConfig IborFallbackConfig::defaultConfig() {
                                     {"USD-LIBOR-2M", FallbackData{"USD-SOFR", 0.0018456, Date(1, Jan, 2023)}},
                                     {"USD-LIBOR-3M", FallbackData{"USD-SOFR", 0.0026161, Date(1, Jul, 2023)}},
                                     {"USD-LIBOR-6M", FallbackData{"USD-SOFR", 0.0042826, Date(1, Jul, 2023)}},
-                                    {"USD-LIBOR-12M", FallbackData{"USD-SOFR", 0.0071513, Date(1, Jul, 2023)}}}};
+                                    {"USD-LIBOR-12M", FallbackData{"USD-SOFR", 0.0071513, Date(1, Jul, 2023)}},
+                                    {"TRY-TRLIBOR-1M", FallbackData{"TRY-TLREF", 0.0100, Date(1, July, 2022)}},
+                                    {"TRY-TRLIBOR-3M", FallbackData{"TRY-TLREF", 0.0093, Date(1, July, 2022)}},
+                                    {"TRY-TRLIBOR-6M", FallbackData{"TRY-TLREF", 0.0053, Date(1, July, 2022)}}}};
     return c;
 }
 
